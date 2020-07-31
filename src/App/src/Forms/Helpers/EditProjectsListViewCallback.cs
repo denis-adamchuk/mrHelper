@@ -28,7 +28,7 @@ namespace mrHelper.App.Forms.Helpers
          if (item.IndexOf(" ", 0, slashIndex) != -1)
          {
             User user = await _rawDataAccessor.UserAccessor.SearchUserByNameAsync(
-               item.Substring(0, slashIndex), false);
+               item.Substring(0, slashIndex));
             if (user == null)
             {
                MessageBox.Show("Project name has a space and looks like a name of a user but there is no such user",

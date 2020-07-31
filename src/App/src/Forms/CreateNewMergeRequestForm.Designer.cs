@@ -43,12 +43,15 @@
          this.buttonEditDescription = new System.Windows.Forms.Button();
          this.htmlPanelDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.groupBoxOptions = new System.Windows.Forms.GroupBox();
+         this.labelAssignee = new System.Windows.Forms.Label();
+         this.textBoxAssigneeUsername = new System.Windows.Forms.TextBox();
          this.checkBoxSquash = new System.Windows.Forms.CheckBox();
          this.checkBoxDeleteSourceBranch = new System.Windows.Forms.CheckBox();
          this.buttonSubmit = new System.Windows.Forms.Button();
          this.buttonCancel = new System.Windows.Forms.Button();
          this.groupBoxProject = new System.Windows.Forms.GroupBox();
          this.comboBoxProject = new System.Windows.Forms.ComboBox();
+         this.textBoxFirstNote = new System.Windows.Forms.TextBox();
          this.groupBoxSource.SuspendLayout();
          this.groupBoxTarget.SuspendLayout();
          this.groupBox3.SuspendLayout();
@@ -121,6 +124,7 @@
          this.buttonToggleWIP.TabIndex = 5;
          this.buttonToggleWIP.Text = "Toggle WIP status";
          this.buttonToggleWIP.UseVisualStyleBackColor = true;
+         this.buttonToggleWIP.Click += new System.EventHandler(this.buttonToggleWIP_Click);
          // 
          // buttonEditTitle
          // 
@@ -131,6 +135,7 @@
          this.buttonEditTitle.TabIndex = 4;
          this.buttonEditTitle.Text = "Edit...";
          this.buttonEditTitle.UseVisualStyleBackColor = true;
+         this.buttonEditTitle.Click += new System.EventHandler(this.buttonEditTitle_Click);
          // 
          // htmlPanelTitle
          // 
@@ -167,6 +172,7 @@
          this.buttonEditDescription.TabIndex = 5;
          this.buttonEditDescription.Text = "Edit...";
          this.buttonEditDescription.UseVisualStyleBackColor = true;
+         this.buttonEditDescription.Click += new System.EventHandler(this.buttonEditDescription_Click);
          // 
          // htmlPanelDescription
          // 
@@ -187,14 +193,33 @@
          // 
          this.groupBoxOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+         this.groupBoxOptions.Controls.Add(this.textBoxFirstNote);
+         this.groupBoxOptions.Controls.Add(this.labelAssignee);
+         this.groupBoxOptions.Controls.Add(this.textBoxAssigneeUsername);
          this.groupBoxOptions.Controls.Add(this.checkBoxSquash);
          this.groupBoxOptions.Controls.Add(this.checkBoxDeleteSourceBranch);
          this.groupBoxOptions.Location = new System.Drawing.Point(12, 298);
          this.groupBoxOptions.Name = "groupBoxOptions";
-         this.groupBoxOptions.Size = new System.Drawing.Size(568, 46);
+         this.groupBoxOptions.Size = new System.Drawing.Size(568, 76);
          this.groupBoxOptions.TabIndex = 5;
          this.groupBoxOptions.TabStop = false;
          this.groupBoxOptions.Text = "Options";
+         // 
+         // labelAssignee
+         // 
+         this.labelAssignee.AutoSize = true;
+         this.labelAssignee.Location = new System.Drawing.Point(6, 47);
+         this.labelAssignee.Name = "labelAssignee";
+         this.labelAssignee.Size = new System.Drawing.Size(102, 13);
+         this.labelAssignee.TabIndex = 3;
+         this.labelAssignee.Text = "Assignee user name";
+         // 
+         // textBoxAssigneeUsername
+         // 
+         this.textBoxAssigneeUsername.Location = new System.Drawing.Point(114, 44);
+         this.textBoxAssigneeUsername.Name = "textBoxAssigneeUsername";
+         this.textBoxAssigneeUsername.Size = new System.Drawing.Size(177, 20);
+         this.textBoxAssigneeUsername.TabIndex = 2;
          // 
          // checkBoxSquash
          // 
@@ -221,7 +246,7 @@
          // 
          this.buttonSubmit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.buttonSubmit.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonSubmit.Location = new System.Drawing.Point(12, 352);
+         this.buttonSubmit.Location = new System.Drawing.Point(12, 380);
          this.buttonSubmit.Name = "buttonSubmit";
          this.buttonSubmit.Size = new System.Drawing.Size(75, 23);
          this.buttonSubmit.TabIndex = 6;
@@ -232,7 +257,7 @@
          // 
          this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonCancel.Location = new System.Drawing.Point(505, 352);
+         this.buttonCancel.Location = new System.Drawing.Point(505, 380);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
          this.buttonCancel.TabIndex = 7;
@@ -259,12 +284,19 @@
          this.comboBoxProject.TabIndex = 0;
          this.comboBoxProject.SelectedIndexChanged += new System.EventHandler(this.comboBoxProject_SelectedIndexChanged);
          // 
+         // textBoxFirstNote
+         // 
+         this.textBoxFirstNote.Location = new System.Drawing.Point(302, 44);
+         this.textBoxFirstNote.Name = "textBoxFirstNote";
+         this.textBoxFirstNote.Size = new System.Drawing.Size(260, 20);
+         this.textBoxFirstNote.TabIndex = 4;
+         // 
          // CreateNewMergeRequestForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(592, 387);
+         this.ClientSize = new System.Drawing.Size(592, 415);
          this.Controls.Add(this.groupBoxProject);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.buttonSubmit);
@@ -309,5 +341,8 @@
       private System.Windows.Forms.ComboBox comboBoxTargetBranch;
       private System.Windows.Forms.GroupBox groupBoxProject;
       private System.Windows.Forms.ComboBox comboBoxProject;
+      private System.Windows.Forms.Label labelAssignee;
+      private System.Windows.Forms.TextBox textBoxAssigneeUsername;
+      private System.Windows.Forms.TextBox textBoxFirstNote;
    }
 }

@@ -50,7 +50,7 @@ namespace mrHelper.GitLabClient
 
       public MergeRequestCreator GetMergeRequestCreator()
       {
-         return new MergeRequestCreator(_projectKey.HostName, _settings);
+         return new MergeRequestCreator(_projectKey, _settings);
       }
 
       public SingleMergeRequestAccessor GetSingleMergeRequestAccessor(int iid)

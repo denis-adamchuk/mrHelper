@@ -1,29 +1,30 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using GitLabSharp.Accessors;
+using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Accessors
 {
-   public class MergeRequestCreator : IMergeRequestCreator, IDisposable
+   public class MergeRequestCreator : IMergeRequestCreator
    {
-      internal MergeRequestCreator(string hostname, IHostProperties hostProperties)
+      internal MergeRequestCreator(ProjectKey projectKey, IHostProperties hostProperties)
       {
-         _operator = new MergeRequestOperator(hostname, hostProperties);
+         _projectKey = projectKey;
+         _hostProperties = hostProperties;
       }
 
-      public void Dispose()
+      public Task<MergeRequest> CreateMergeRequest(CreateNewMergeRequestParameters parameters)
       {
-         _operator.Dispose();
+         using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
+            _projectKey.HostName, _hostProperties))
+         {
+            return mergeRequestOperator.CreateMergeRequest(_projectKey.ProjectName, parameters);
+         }
       }
 
-      public Task CreateMergeRequest(CreateNewMergeRequestParameters parameters)
-      {
-         return _operator.CreateMergeRequest(parameters);
-      }
-
-      private readonly MergeRequestOperator _operator;
+      private readonly ProjectKey _projectKey;
+      private readonly IHostProperties _hostProperties;
    }
 }
 

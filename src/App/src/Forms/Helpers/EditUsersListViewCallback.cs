@@ -24,7 +24,7 @@ namespace mrHelper.App.Forms.Helpers
             username = item.Substring(1);
          }
 
-         User user = await _rawDataAccessor.UserAccessor.SearchUserByNameAsync(username, true);
+         User user = await _rawDataAccessor.UserAccessor.SearchUserByUsernameAsync(username);
          if (user == null)
          {
             MessageBox.Show(String.Format("User \"{0}\" is not found at the selected host", username),

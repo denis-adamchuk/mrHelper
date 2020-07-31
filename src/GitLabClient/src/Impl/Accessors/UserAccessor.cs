@@ -30,14 +30,28 @@ namespace mrHelper.GitLabClient
          }
       }
 
-      async public Task<User> SearchUserByNameAsync(string name, bool isUsername)
+      public Task<User> SearchUserByNameAsync(string name)
       {
          using (UserOperator userOperator = new UserOperator(_hostname, _hostProperties))
          {
             try
             {
-               IEnumerable<User> users = await userOperator.SearchUserAsync(name, isUsername);
-               return users.Any() ? users.First() : null;
+               return userOperator.SearchUserByNameAsync(name);
+            }
+            catch (OperatorException)
+            {
+               return null;
+            }
+         }
+      }
+
+      public Task<User> SearchUserByUsernameAsync(string username)
+      {
+         using (UserOperator userOperator = new UserOperator(_hostname, _hostProperties))
+         {
+            try
+            {
+               return userOperator.SearchUserByUsernameAsync(username);
             }
             catch (OperatorException)
             {
@@ -50,3 +64,4 @@ namespace mrHelper.GitLabClient
       private readonly IHostProperties _hostProperties;
    }
 }
+

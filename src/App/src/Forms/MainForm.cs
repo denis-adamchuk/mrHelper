@@ -9,6 +9,7 @@ using mrHelper.Common.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.CustomActions;
 using mrHelper.GitLabClient;
+using mrHelper.App.Forms.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -109,6 +110,8 @@ namespace mrHelper.App.Forms
          new Dictionary<MergeRequestKey, HashSet<string>>();
       private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =
          new Dictionary<string, MergeRequestKey>();
+      private Dictionary<string, CreateNewMergeRequestState> _newMergeRequestDialogStatesByHosts =
+         new Dictionary<string, CreateNewMergeRequestState>();
       private ExpressionResolver _expressionResolver;
 
       private GitLabInstance _gitLabInstance;

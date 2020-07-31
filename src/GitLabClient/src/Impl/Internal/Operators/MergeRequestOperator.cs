@@ -30,9 +30,15 @@ namespace mrHelper.GitLabClient.Operators
          return mergeRequests;
       }
 
-      internal Task CreateMergeRequest(CreateNewMergeRequestParameters parameters)
+      internal Task<MergeRequest> CreateMergeRequest(string projectName, CreateNewMergeRequestParameters parameters)
       {
-         throw new NotImplementedException();
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (MergeRequest)(await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(projectName).MergeRequests.CreateNewTaskAsync(parameters)))));
       }
    }
 }

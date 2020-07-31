@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
@@ -23,15 +24,42 @@ namespace mrHelper.GitLabClient.Operators
                            await gl.CurrentUser.LoadTaskAsync())));
       }
 
-      internal Task<IEnumerable<User>> SearchUserAsync(string name, bool isUsername)
+      async internal Task<User> SearchUserByNameAsync(string name)
       {
-         return callWithSharedClient(
+         IEnumerable<User> users = await callWithSharedClient(
+         async (client) =>
+            await OperatorCallWrapper.Call(
+               async () =>
+                  (IEnumerable<User>)await client.RunAsync(
+                     async (gl) =>
+                        await  gl.Users.SearchTaskAsync(name))));
+         if (!users.Any())
+         {
+            return null;
+         }
+         return users.First();
+      }
+
+      async internal Task<User> SearchUserByUsernameAsync(string username)
+      {
+         User user = GlobalCache.GetUser(Hostname, username);
+         if (user == null)
+         {
+            var users = await callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
                      (IEnumerable<User>)await client.RunAsync(
                         async (gl) =>
-                           await (isUsername ? gl.Users.SearchByUsernameTaskAsync(name) : gl.Users.SearchTaskAsync(name)))));
+                           await gl.Users.SearchByUsernameTaskAsync(username))));
+            if (!users.Any())
+            {
+               return null;
+            }
+            user = users.First();
+            GlobalCache.AddUser(Hostname, user);
+         }
+         return user;
       }
    }
 }

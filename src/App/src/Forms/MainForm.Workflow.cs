@@ -365,7 +365,7 @@ namespace mrHelper.App.Forms
                {
                   adjustedKeyword = keyword.Substring(1);
                }
-               User user = await userAccessor.SearchUserByNameAsync(adjustedKeyword, true);
+               User user = await userAccessor.SearchUserByUsernameAsync(adjustedKeyword);
                if (user != null)
                {
                   if (!labels.Any(x => x.Item1 == user.Username))

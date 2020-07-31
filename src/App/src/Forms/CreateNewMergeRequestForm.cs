@@ -28,7 +28,18 @@ namespace mrHelper.App.src.Forms
          _projectAccessor = projectAccessor;
          _currentUser = currentUser;
          _initialState = initialState;
+
+         textBoxFirstNote.Text = DefaultFirstNote;
       }
+
+      internal string Project => getProjectName();
+      internal string SourceBranch => getSourceBranch()?.Name;
+      internal string TargetBranch => getTargetBranch()?.Name;
+      internal string AssigneeUsername => getUserName();
+      internal bool DeleteSourceBranch => checkBoxDeleteSourceBranch.Checked;
+      internal bool Squash => checkBoxSquash.Checked;
+      internal string Title => htmlPanelTitle.Text;
+      internal string Description => htmlPanelDescription.Text;
 
       async private void CreateNewMergeRequestForm_Load(object sender, EventArgs e)
       {
@@ -49,7 +60,42 @@ namespace mrHelper.App.src.Forms
       {
          _repositoryAccessor?.Cancel();
 
+         await loadCommitAsync();
          await searchTargetBranchNameAsync();
+      }
+
+      private void buttonToggleWIP_Click(object sender, EventArgs e)
+      {
+         string prefix = "WIP: ";
+         if (htmlPanelTitle.Text.StartsWith(prefix))
+         {
+            htmlPanelTitle.Text = htmlPanelTitle.Text.Substring(
+               prefix.Length, htmlPanelTitle.Text.Length - prefix.Length);
+         }
+         else
+         {
+            htmlPanelTitle.Text = prefix + htmlPanelTitle.Text;
+         }
+      }
+
+      private void buttonEditTitle_Click(object sender, EventArgs e)
+      {
+         ViewDiscussionItemForm editTitleForm = new ViewDiscussionItemForm(
+            "Edit MR title", htmlPanelTitle.Text, true);
+         if (editTitleForm.ShowDialog() == DialogResult.OK)
+         {
+            htmlPanelTitle.Text = editTitleForm.Body;
+         }
+      }
+
+      private void buttonEditDescription_Click(object sender, EventArgs e)
+      {
+         ViewDiscussionItemForm editDescriptionForm = new ViewDiscussionItemForm(
+            "Edit MR description", htmlPanelDescription.Text, true);
+         if (editDescriptionForm.ShowDialog() == DialogResult.OK)
+         {
+            htmlPanelDescription.Text = editDescriptionForm.Body;
+         }
       }
 
       async private Task loadProjectListAsync()
@@ -69,6 +115,15 @@ namespace mrHelper.App.src.Forms
          IEnumerable<Branch> branchList = await _repositoryAccessor.GetBranches();
 
          onBranchListLoadFinish(branchList);
+      }
+
+      async private Task loadCommitAsync()
+      {
+         Debug.Assert(_repositoryAccessor != null);
+         Branch sourceBranch = getSourceBranch();
+         Commit commit = await _repositoryAccessor.LoadCommit(sourceBranch?.Name);
+
+         onCommitLoaded(commit);
       }
 
       async private Task searchTargetBranchNameAsync()
@@ -130,6 +185,12 @@ namespace mrHelper.App.src.Forms
          selectBranch(comboBoxTargetBranch, x => x.Name == targetBranchName);
       }
 
+      private void onCommitLoaded(Commit commit)
+      {
+         htmlPanelTitle.Text = commit.Title;
+         htmlPanelDescription.Text = commit.Message;
+      }
+
       private void selectBranch(ComboBox comboBox, Func<Branch, bool> predicate)
       {
          if (comboBox.Items.Count == 0)
@@ -152,9 +213,19 @@ namespace mrHelper.App.src.Forms
          return comboBoxSourceBranch.SelectedItem as Branch;
       }
 
+      private Branch getTargetBranch()
+      {
+         return comboBoxTargetBranch.SelectedItem as Branch;
+      }
+
       private string getProjectName()
       {
          return comboBoxProject.SelectedItem as string;
+      }
+
+      private string getUserName()
+      {
+         return textBoxAssigneeUsername.Text;
       }
 
       private void createRepositoryAccessor()
@@ -182,6 +253,7 @@ namespace mrHelper.App.src.Forms
       }
 
       private readonly string DefaultBranchName = "master";
+      private readonly string DefaultFirstNote = "/insp ";
       private readonly ProjectAccessor _projectAccessor;
       private readonly User _currentUser;
       private readonly CreateNewMergeRequestState _initialState;
