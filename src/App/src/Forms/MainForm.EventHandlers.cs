@@ -1167,7 +1167,7 @@ namespace mrHelper.App.Forms
                item =>
                {
                   string[] splitted = ((string)item.Value).Split('|');
-                  return new CreateNewMergeRequestState(
+                  return new NewMergeRequestProperties(
                      splitted[0], splitted[1], splitted[2] == bool.TrueString, splitted[3] == bool.TrueString);
                });
          }
@@ -1421,13 +1421,13 @@ namespace mrHelper.App.Forms
          }
 
          // This state is expected to be used only once, next times class member is used
-         CreateNewMergeRequestState defaultState = new CreateNewMergeRequestState(
+         NewMergeRequestProperties defaultState = new NewMergeRequestProperties(
             currentProject.Value.ProjectName, currentUser.Username, true, true);
 
-         CreateNewMergeRequestState initialFormState =
+         NewMergeRequestProperties initialFormState =
             _newMergeRequestDialogStatesByHosts.TryGetValue(hostname, out var value) ? value : defaultState;
 
-         CreateNewMergeRequestForm form = new CreateNewMergeRequestForm(
+         MergeRequestPropertiesForm form = new NewMergeRequestForm(
             getProjectAccessor(), currentUser, initialFormState);
          if (form.ShowDialog() == DialogResult.OK)
          {
@@ -1443,7 +1443,7 @@ namespace mrHelper.App.Forms
             if (String.IsNullOrEmpty(projectName)
              || String.IsNullOrEmpty(sourceBranch)
              || String.IsNullOrEmpty(targetBranch)
-             || String.IsNullOrEmpty(assigneeUsername)
+             || String.IsNullOrEmpty(assigneeUsername) // TODO This is possible!
              || String.IsNullOrEmpty(title))
             {
                // TODO Error handling
@@ -1464,9 +1464,104 @@ namespace mrHelper.App.Forms
                sourceBranch, targetBranch, title, assignee.Id, description, deleteSourceBranch, squash);
             await Shortcuts.GetMergeRequestCreator(_gitLabInstance, projectKey).CreateMergeRequest(parameters);
 
-            _newMergeRequestDialogStatesByHosts[getHostName()] = new CreateNewMergeRequestState(
+            _newMergeRequestDialogStatesByHosts[getHostName()] = new NewMergeRequestProperties(
                projectName, assigneeUsername, squash, deleteSourceBranch);
          }
+      }
+
+      private void ListViewMergeRequests_Edit(object sender, EventArgs e)
+      {
+         Debug.Assert(!isSearchMode());
+         if (listViewMergeRequests.SelectedItems.Count < 1)
+         {
+            return;
+         }
+
+         BeginInvoke(new Action(
+            async () =>
+            {
+               string hostname = getHostName();
+               User currentUser = getCurrentUser();
+               ProjectKey? currentProject = getMergeRequestKey(null)?.ProjectKey;
+               FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
+               if (_gitLabInstance == null || currentUser == null || currentProject == null || item.MergeRequest == null)
+               {
+                  // TODO Error handling
+                  return;
+               }
+
+               MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(
+                  getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest);
+               if (form.ShowDialog() == DialogResult.OK)
+               {
+                  string newTargetBranch = form.TargetBranch;
+                  string newAssigneeUsername = form.AssigneeUsername;
+                  bool newDeleteSourceBranch = form.DeleteSourceBranch;
+                  bool newSquash = form.Squash;
+                  string newTitle = form.Title;
+                  string newDescription = form.Description;
+
+                  if (String.IsNullOrEmpty(newTargetBranch)
+                   || String.IsNullOrEmpty(newAssigneeUsername) // TODO This is possible
+                   || String.IsNullOrEmpty(newTitle))
+                  {
+                     // TODO Error handling
+                     return;
+                  }
+
+                  string oldTargetBranch = item.MergeRequest.Target_Branch ?? String.Empty;
+                  string oldAssigneeUsername = item.MergeRequest.Assignee?.Username ?? String.Empty;
+                  bool oldDeleteSourceBranch = item.MergeRequest.Should_Remove_Source_Branch;
+                  bool oldSquash = item.MergeRequest.Squash;
+                  string oldTitle = item.MergeRequest.Title;
+                  string oldDescription = item.MergeRequest.Description;
+
+                  bool changed =
+                        oldTargetBranch != newTargetBranch
+                     || oldAssigneeUsername != newAssigneeUsername
+                     || oldDeleteSourceBranch != newDeleteSourceBranch
+                     || oldSquash != newSquash
+                     || oldTitle != newTitle
+                     || oldDescription != newDescription;
+
+                  if (!changed)
+                  {
+                     return;
+                  }
+
+                  GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(_gitLabInstance);
+                  User assignee = item.MergeRequest.Assignee;
+                  if (oldAssigneeUsername != newAssigneeUsername)
+                  {
+                     assignee = await userAccessor.SearchUserByUsernameAsync(newAssigneeUsername)
+                             ?? await userAccessor.SearchUserByNameAsync(newAssigneeUsername); // fallback
+                     if (assignee == null)
+                     {
+                        // TODO Error handling
+                        return;
+                     }
+                  }
+
+                  ProjectKey projectKey = new ProjectKey(hostname, currentProject.Value.ProjectName);
+                  UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
+                     newTargetBranch, newTitle, assignee.Id, newDescription, null, newDeleteSourceBranch, newSquash);
+                  await Shortcuts.GetMergeRequestEditor(_gitLabInstance, new MergeRequestKey(projectKey, item.MergeRequest.IId))
+                     .ModifyMergeRequest(updateMergeRequestParameters);
+               }
+            }));
+      }
+
+      private void ListViewMergeRequests_Refresh(object sender, EventArgs e)
+      {
+         Debug.Assert(!isSearchMode());
+         if (listViewMergeRequests.SelectedItems.Count < 1)
+         {
+            return;
+         }
+
+         FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
+         MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
+         _liveDataCache.MergeRequestCache.RequestUpdate(mrk, new int[] { 0 }, null);
       }
    }
 }

@@ -6,7 +6,7 @@ namespace mrHelper.GitLabClient
 {
    public interface IMergeRequestEditor
    {
-      Task ModifyMergeRequest(CreateNewMergeRequestParameters parameters);
+      Task ModifyMergeRequest(UpdateMergeRequestParameters parameters);
 
       Task AddTrackedTime(TimeSpan span, bool add);
    }

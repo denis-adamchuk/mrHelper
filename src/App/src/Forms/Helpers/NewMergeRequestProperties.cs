@@ -1,8 +1,8 @@
 ﻿namespace mrHelper.App.Forms.Helpers
 {
-   internal struct CreateNewMergeRequestState
+   internal struct NewMergeRequestProperties
    {
-      public CreateNewMergeRequestState(string defaultProject, string assigneeUsername,
+      public NewMergeRequestProperties(string defaultProject, string assigneeUsername,
          bool isSquashNeeded, bool isBranchDeletionNeeded)
       {
          DefaultProject = defaultProject;

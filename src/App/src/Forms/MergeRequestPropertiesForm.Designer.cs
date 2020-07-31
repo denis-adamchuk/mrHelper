@@ -1,6 +1,6 @@
 ﻿namespace mrHelper.App.src.Forms
 {
-   partial class CreateNewMergeRequestForm
+   partial class MergeRequestPropertiesForm
    {
       /// <summary>
       /// Required designer variable.
@@ -18,8 +18,6 @@
             components.Dispose();
          }
          base.Dispose(disposing);
-
-         _repositoryAccessor.Dispose();
       }
 
       #region Windows Form Designer generated code
@@ -30,7 +28,7 @@
       /// </summary>
       private void InitializeComponent()
       {
-         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(CreateNewMergeRequestForm));
+         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MergeRequestPropertiesForm));
          this.groupBoxSource = new System.Windows.Forms.GroupBox();
          this.comboBoxSourceBranch = new System.Windows.Forms.ComboBox();
          this.groupBoxTarget = new System.Windows.Forms.GroupBox();
@@ -79,7 +77,6 @@
          this.comboBoxSourceBranch.Name = "comboBoxSourceBranch";
          this.comboBoxSourceBranch.Size = new System.Drawing.Size(171, 21);
          this.comboBoxSourceBranch.TabIndex = 0;
-         this.comboBoxSourceBranch.SelectedIndexChanged += new System.EventHandler(this.comboBoxSourceBranch_SelectedIndexChanged);
          // 
          // groupBoxTarget
          // 
@@ -282,7 +279,6 @@
          this.comboBoxProject.Name = "comboBoxProject";
          this.comboBoxProject.Size = new System.Drawing.Size(171, 21);
          this.comboBoxProject.TabIndex = 0;
-         this.comboBoxProject.SelectedIndexChanged += new System.EventHandler(this.comboBoxProject_SelectedIndexChanged);
          // 
          // textBoxFirstNote
          // 
@@ -309,7 +305,6 @@
          this.MinimumSize = new System.Drawing.Size(608, 426);
          this.Name = "CreateNewMergeRequestForm";
          this.Text = "Create New Merge Request";
-         this.Load += new System.EventHandler(this.CreateNewMergeRequestForm_Load);
          this.groupBoxSource.ResumeLayout(false);
          this.groupBoxTarget.ResumeLayout(false);
          this.groupBox3.ResumeLayout(false);
@@ -323,26 +318,26 @@
 
       #endregion
 
-      private System.Windows.Forms.GroupBox groupBoxSource;
-      private System.Windows.Forms.GroupBox groupBoxTarget;
-      private System.Windows.Forms.GroupBox groupBox3;
-      private System.Windows.Forms.Button buttonToggleWIP;
-      private System.Windows.Forms.Button buttonEditTitle;
-      private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelTitle;
-      private System.Windows.Forms.GroupBox groupBoxDescription;
-      private System.Windows.Forms.Button buttonEditDescription;
-      private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelDescription;
-      private System.Windows.Forms.GroupBox groupBoxOptions;
-      private System.Windows.Forms.CheckBox checkBoxSquash;
-      private System.Windows.Forms.CheckBox checkBoxDeleteSourceBranch;
-      private System.Windows.Forms.Button buttonSubmit;
-      private System.Windows.Forms.Button buttonCancel;
-      private System.Windows.Forms.ComboBox comboBoxSourceBranch;
-      private System.Windows.Forms.ComboBox comboBoxTargetBranch;
-      private System.Windows.Forms.GroupBox groupBoxProject;
-      private System.Windows.Forms.ComboBox comboBoxProject;
-      private System.Windows.Forms.Label labelAssignee;
-      private System.Windows.Forms.TextBox textBoxAssigneeUsername;
-      private System.Windows.Forms.TextBox textBoxFirstNote;
+      protected System.Windows.Forms.GroupBox groupBoxSource;
+      protected System.Windows.Forms.GroupBox groupBoxTarget;
+      protected System.Windows.Forms.GroupBox groupBox3;
+      protected System.Windows.Forms.Button buttonToggleWIP;
+      protected System.Windows.Forms.Button buttonEditTitle;
+      protected TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelTitle;
+      protected System.Windows.Forms.GroupBox groupBoxDescription;
+      protected System.Windows.Forms.Button buttonEditDescription;
+      protected TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelDescription;
+      protected System.Windows.Forms.GroupBox groupBoxOptions;
+      protected System.Windows.Forms.CheckBox checkBoxSquash;
+      protected System.Windows.Forms.CheckBox checkBoxDeleteSourceBranch;
+      protected System.Windows.Forms.Button buttonSubmit;
+      protected System.Windows.Forms.Button buttonCancel;
+      protected System.Windows.Forms.ComboBox comboBoxSourceBranch;
+      protected System.Windows.Forms.ComboBox comboBoxTargetBranch;
+      protected System.Windows.Forms.GroupBox groupBoxProject;
+      protected System.Windows.Forms.ComboBox comboBoxProject;
+      protected System.Windows.Forms.Label labelAssignee;
+      protected System.Windows.Forms.TextBox textBoxAssigneeUsername;
+      protected System.Windows.Forms.TextBox textBoxFirstNote;
    }
 }

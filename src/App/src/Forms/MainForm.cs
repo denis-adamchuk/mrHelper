@@ -57,6 +57,10 @@ namespace mrHelper.App.Forms
 
          listViewMergeRequests.Deselected += ListViewMergeRequests_Deselected;
          listViewFoundMergeRequests.Deselected += ListViewMergeRequests_Deselected;
+
+         listViewMergeRequests.ContextMenuStrip = new ContextMenuStrip();
+         listViewMergeRequests.ContextMenuStrip.Items.Add("&Refresh", null, ListViewMergeRequests_Refresh);
+         listViewMergeRequests.ContextMenuStrip.Items.Add("&Edit", null, ListViewMergeRequests_Edit);
       }
 
       public string GetCurrentHostName()
@@ -110,8 +114,8 @@ namespace mrHelper.App.Forms
          new Dictionary<MergeRequestKey, HashSet<string>>();
       private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =
          new Dictionary<string, MergeRequestKey>();
-      private Dictionary<string, CreateNewMergeRequestState> _newMergeRequestDialogStatesByHosts =
-         new Dictionary<string, CreateNewMergeRequestState>();
+      private Dictionary<string, NewMergeRequestProperties> _newMergeRequestDialogStatesByHosts =
+         new Dictionary<string, NewMergeRequestProperties>();
       private ExpressionResolver _expressionResolver;
 
       private GitLabInstance _gitLabInstance;

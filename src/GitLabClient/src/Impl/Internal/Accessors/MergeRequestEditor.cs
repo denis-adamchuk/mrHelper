@@ -16,9 +16,13 @@ namespace mrHelper.GitLabClient.Accessors
          _modificationListener = modificationListener;
       }
 
-      public Task ModifyMergeRequest(CreateNewMergeRequestParameters parameters)
+      public Task ModifyMergeRequest(UpdateMergeRequestParameters parameters)
       {
-         throw new NotImplementedException();
+         using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
+            _mrk.ProjectKey.HostName, _hostProperties))
+         {
+            return mergeRequestOperator.UpdateMergeRequest(_mrk, parameters);
+         }
       }
 
       async public Task AddTrackedTime(TimeSpan span, bool add)

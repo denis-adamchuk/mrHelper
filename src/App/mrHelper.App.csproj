@@ -117,11 +117,17 @@
     <Compile Include="src\Forms\AddItemForm.Designer.cs">
       <DependentUpon>AddItemForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\CreateNewMergeRequestForm.cs">
+    <Compile Include="src\Forms\NewMergeRequestForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\CreateNewMergeRequestForm.Designer.cs">
-      <DependentUpon>CreateNewMergeRequestForm.cs</DependentUpon>
+    <Compile Include="src\Forms\EditMergeRequestPropertiesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\MergeRequestPropertiesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\MergeRequestPropertiesForm.Designer.cs">
+      <DependentUpon>MergeRequestPropertiesForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\EditOrderedListViewForm.cs">
       <SubType>Form</SubType>
@@ -132,7 +138,7 @@
     <Compile Include="src\Forms\CustomFontForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\Helpers\CreateNewMergeRequestState.cs" />
+    <Compile Include="src\Forms\Helpers\NewMergeRequestProperties.cs" />
     <Compile Include="src\Forms\Helpers\EditProjectsListViewCallback.cs" />
     <Compile Include="src\Forms\Helpers\EditUsersListViewCallback.cs" />
     <Compile Include="src\Forms\Helpers\WPFHelpers.cs" />
@@ -253,8 +259,8 @@
     <EmbeddedResource Include="src\Forms\AddItemForm.resx">
       <DependentUpon>AddItemForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\CreateNewMergeRequestForm.resx">
-      <DependentUpon>CreateNewMergeRequestForm.cs</DependentUpon>
+    <EmbeddedResource Include="src\Forms\MergeRequestPropertiesForm.resx">
+      <DependentUpon>MergeRequestPropertiesForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\EditOrderedListViewForm.resx">
       <DependentUpon>EditOrderedListViewForm.cs</DependentUpon>
