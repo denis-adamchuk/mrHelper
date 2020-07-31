@@ -142,11 +142,11 @@
     <Compile Include="src\Forms\TimeSpanEditForm.Designer.cs">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\ViewDiscussionItemForm.cs">
+    <Compile Include="src\Forms\TextEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\ViewDiscussionItemForm.Designer.cs">
-      <DependentUpon>ViewDiscussionItemForm.cs</DependentUpon>
+    <Compile Include="src\Forms\TextEditForm.Designer.cs">
+      <DependentUpon>TextEditForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\AddKnownHostForm.cs">
       <SubType>Form</SubType>
@@ -262,8 +262,8 @@
     <EmbeddedResource Include="src\Forms\TimeSpanEditForm.resx">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\ViewDiscussionItemForm.resx">
-      <DependentUpon>ViewDiscussionItemForm.cs</DependentUpon>
+    <EmbeddedResource Include="src\Forms\TextEditForm.resx">
+      <DependentUpon>TextEditForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\AddKnownHostForm.resx">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>

@@ -1,6 +1,6 @@
 ﻿namespace mrHelper.App.Forms
 {
-   partial class ViewDiscussionItemForm
+   partial class TextEditForm
    {
       /// <summary>
       /// Required designer variable.

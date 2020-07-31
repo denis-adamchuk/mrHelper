@@ -89,6 +89,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageLive = new System.Windows.Forms.TabPage();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
+         this.buttonCreateNew = new System.Windows.Forms.Button();
          this.listViewMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -172,7 +173,6 @@ namespace mrHelper.App.Forms
          this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.buttonCreateNew = new System.Windows.Forms.Button();
          this.groupBoxKnownHosts.SuspendLayout();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
@@ -448,7 +448,7 @@ namespace mrHelper.App.Forms
             | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxSearch.Location = new System.Drawing.Point(3, 42);
          this.textBoxSearch.Name = "textBoxSearch";
-         this.textBoxSearch.Size = new System.Drawing.Size(316, 20);
+         this.textBoxSearch.Size = new System.Drawing.Size(496, 20);
          this.textBoxSearch.TabIndex = 1;
          this.toolTip.SetToolTip(this.textBoxSearch, "Press Enter to search");
          this.textBoxSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.TextBoxSearch_KeyDown);
@@ -646,6 +646,18 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
          // 
+         // buttonCreateNew
+         // 
+         this.buttonCreateNew.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonCreateNew.Location = new System.Drawing.Point(400, 10);
+         this.buttonCreateNew.Name = "buttonCreateNew";
+         this.buttonCreateNew.Size = new System.Drawing.Size(96, 32);
+         this.buttonCreateNew.TabIndex = 4;
+         this.buttonCreateNew.Text = "Create New...";
+         this.toolTip.SetToolTip(this.buttonCreateNew, "Create a new merge request");
+         this.buttonCreateNew.UseVisualStyleBackColor = true;
+         this.buttonCreateNew.Click += new System.EventHandler(this.buttonCreateNew_Click);
+         // 
          // listViewMergeRequests
          // 
          this.listViewMergeRequests.AllowColumnReorder = true;
@@ -762,7 +774,7 @@ namespace mrHelper.App.Forms
          this.tabPageSearch.Location = new System.Drawing.Point(4, 22);
          this.tabPageSearch.Name = "tabPageSearch";
          this.tabPageSearch.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageSearch.Size = new System.Drawing.Size(328, 832);
+         this.tabPageSearch.Size = new System.Drawing.Size(508, 832);
          this.tabPageSearch.TabIndex = 1;
          this.tabPageSearch.Text = "Search";
          this.toolTip.SetToolTip(this.tabPageSearch, "Use this mode to search closed merge requests");
@@ -777,7 +789,7 @@ namespace mrHelper.App.Forms
          this.groupBoxSearch.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSearch.Location = new System.Drawing.Point(3, 3);
          this.groupBoxSearch.Name = "groupBoxSearch";
-         this.groupBoxSearch.Size = new System.Drawing.Size(322, 826);
+         this.groupBoxSearch.Size = new System.Drawing.Size(502, 826);
          this.groupBoxSearch.TabIndex = 2;
          this.groupBoxSearch.TabStop = false;
          this.groupBoxSearch.Text = "Search Merge";
@@ -829,7 +841,7 @@ namespace mrHelper.App.Forms
          this.listViewFoundMergeRequests.MultiSelect = false;
          this.listViewFoundMergeRequests.Name = "listViewFoundMergeRequests";
          this.listViewFoundMergeRequests.OwnerDraw = true;
-         this.listViewFoundMergeRequests.Size = new System.Drawing.Size(316, 755);
+         this.listViewFoundMergeRequests.Size = new System.Drawing.Size(496, 755);
          this.listViewFoundMergeRequests.TabIndex = 3;
          this.listViewFoundMergeRequests.UseCompatibleStateImageBehavior = false;
          this.listViewFoundMergeRequests.View = System.Windows.Forms.View.Details;
@@ -1588,18 +1600,6 @@ namespace mrHelper.App.Forms
          this.panel1.Name = "panel1";
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
-         // 
-         // buttonCreateNew
-         // 
-         this.buttonCreateNew.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonCreateNew.Location = new System.Drawing.Point(400, 10);
-         this.buttonCreateNew.Name = "buttonCreateNew";
-         this.buttonCreateNew.Size = new System.Drawing.Size(96, 32);
-         this.buttonCreateNew.TabIndex = 4;
-         this.buttonCreateNew.Text = "Create New...";
-         this.toolTip.SetToolTip(this.buttonCreateNew, "Create a new merge request");
-         this.buttonCreateNew.UseVisualStyleBackColor = true;
-         this.buttonCreateNew.Click += new System.EventHandler(this.buttonCreateNew_Click);
          // 
          // MainForm
          // 

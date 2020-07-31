@@ -80,7 +80,7 @@ namespace mrHelper.App.src.Forms
 
       private void buttonEditTitle_Click(object sender, EventArgs e)
       {
-         ViewDiscussionItemForm editTitleForm = new ViewDiscussionItemForm(
+         TextEditForm editTitleForm = new TextEditForm(
             "Edit MR title", htmlPanelTitle.Text, true);
          if (editTitleForm.ShowDialog() == DialogResult.OK)
          {
@@ -90,7 +90,7 @@ namespace mrHelper.App.src.Forms
 
       private void buttonEditDescription_Click(object sender, EventArgs e)
       {
-         ViewDiscussionItemForm editDescriptionForm = new ViewDiscussionItemForm(
+         TextEditForm editDescriptionForm = new TextEditForm(
             "Edit MR description", htmlPanelDescription.Text, true);
          if (editDescriptionForm.ShowDialog() == DialogResult.OK)
          {

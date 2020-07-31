@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Windows;
 using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class ViewDiscussionItemForm : CustomFontForm
+   internal partial class TextEditForm : CustomFontForm
    {
-      internal ViewDiscussionItemForm(string caption, string initialText = "", bool editable = true)
+      internal TextEditForm(string caption, string initialText = "", bool editable = true)
       {
          InitializeComponent();
          Text = caption;

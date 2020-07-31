@@ -237,7 +237,7 @@ namespace mrHelper.App.Forms
       async private Task onAddCommentAsync(MergeRequestKey mrk, string title)
       {
          string caption = String.Format("Add comment to merge request \"{0}\"", title);
-         using (ViewDiscussionItemForm form = new ViewDiscussionItemForm(caption))
+         using (TextEditForm form = new TextEditForm(caption))
          {
             if (form.ShowDialog() == DialogResult.OK)
             {
@@ -275,7 +275,7 @@ namespace mrHelper.App.Forms
       async private Task onNewDiscussionAsync(MergeRequestKey mrk, string title)
       {
          string caption = String.Format("Create a new thread in merge request \"{0}\"", title);
-         using (ViewDiscussionItemForm form = new ViewDiscussionItemForm(caption))
+         using (TextEditForm form = new TextEditForm(caption))
          {
             if (form.ShowDialog() == DialogResult.OK)
             {
