@@ -308,7 +308,7 @@ namespace mrHelper.App.Forms
                }
                labelWorkflowStatus.Text = "Thread started";
 
-               dataCache?.DiscussionCache?.RequestUpdate(
+               dataCache.DiscussionCache?.RequestUpdate(
                   mrk, new int[]{ Constants.DiscussionCheckOnNewThreadInterval }, null);
             }
          }

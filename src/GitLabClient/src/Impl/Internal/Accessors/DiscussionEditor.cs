@@ -14,7 +14,7 @@ namespace mrHelper.GitLabClient.Accessors
       internal DiscussionEditor(MergeRequestKey mrk, string discussionId, IHostProperties hostProperties,
          IModificationListener modificationListener)
       {
-         _operator = new DiscussionOperator(mrk.ProjectKey.HostName, hostProperties);
+         _hostProperties = hostProperties;
          _mergeRequestKey = mrk;
          _discussionId = discussionId;
          _modificationListener = modificationListener;
@@ -22,82 +22,106 @@ namespace mrHelper.GitLabClient.Accessors
 
       async public Task ReplyAsync(string body)
       {
-         try
+         using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
+               _hostProperties))
          {
-            await _operator.ReplyAsync(_mergeRequestKey, _discussionId, body);
-         }
-         catch (OperatorException ex)
-         {
-            throw new DiscussionEditorException("Cannot send reply", ex);
+            try
+            {
+               await discussionOperator.ReplyAsync(_mergeRequestKey, _discussionId, body);
+            }
+            catch (OperatorException ex)
+            {
+               throw new DiscussionEditorException("Cannot send reply", ex);
+            }
          }
       }
 
       async public Task ReplyAndResolveDiscussionAsync(string body, bool resolve)
       {
-         try
+         using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
+               _hostProperties))
          {
-            await _operator.ReplyAndResolveDiscussionAsync(_mergeRequestKey, _discussionId, body, resolve);
-         }
-         catch (OperatorException ex)
-         {
-            throw new DiscussionEditorException("Cannot send reply", ex);
+            try
+            {
+               await discussionOperator.ReplyAndResolveDiscussionAsync(_mergeRequestKey, _discussionId, body, resolve);
+            }
+            catch (OperatorException ex)
+            {
+               throw new DiscussionEditorException("Cannot send reply", ex);
+            }
          }
       }
 
       async public Task<DiscussionNote> ModifyNoteBodyAsync(int noteId, string body)
       {
-         try
+         using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
+               _hostProperties))
          {
-            return await _operator.ModifyNoteBodyAsync(_mergeRequestKey, _discussionId, noteId, body);
-         }
-         catch (OperatorException ex)
-         {
-            throw new DiscussionEditorException("Cannot modify discussion body", ex);
+            try
+            {
+               return await discussionOperator.ModifyNoteBodyAsync(_mergeRequestKey, _discussionId, noteId, body);
+            }
+            catch (OperatorException ex)
+            {
+               throw new DiscussionEditorException("Cannot modify discussion body", ex);
+            }
          }
       }
 
       async public Task DeleteNoteAsync(int noteId)
       {
-         try
+         using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
+               _hostProperties))
          {
-            await _operator.DeleteNoteAsync(_mergeRequestKey, noteId);
-         }
-         catch (OperatorException ex)
-         {
-            throw new DiscussionEditorException("Cannot delete discussion note", ex);
+            try
+            {
+               await discussionOperator.DeleteNoteAsync(_mergeRequestKey, noteId);
+            }
+            catch (OperatorException ex)
+            {
+               throw new DiscussionEditorException("Cannot delete discussion note", ex);
+            }
          }
       }
 
       async public Task ResolveNoteAsync(int noteId, bool resolve)
       {
-         try
+         using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
+               _hostProperties))
          {
-            await _operator.ResolveNoteAsync(_mergeRequestKey, _discussionId, noteId, resolve);
-         }
-         catch (OperatorException ex)
-         {
-            throw new DiscussionEditorException("Cannot change discussion note resolve state", ex);
+            try
+            {
+               await discussionOperator.ResolveNoteAsync(_mergeRequestKey, _discussionId, noteId, resolve);
+            }
+            catch (OperatorException ex)
+            {
+               throw new DiscussionEditorException("Cannot change discussion note resolve state", ex);
+            }
          }
       }
 
       async public Task<Discussion> ResolveDiscussionAsync(bool resolve)
       {
-         try
+         using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
+               _hostProperties))
          {
-            return await _operator.ResolveDiscussionAsync(_mergeRequestKey, _discussionId, resolve);
-         }
-         catch (OperatorException ex)
-         {
-            throw new DiscussionEditorException("Cannot change discussion resolve state", ex);
-         }
-         finally
-         {
-            _modificationListener.OnDiscussionResolved(_mergeRequestKey);
+            try
+            {
+               return await discussionOperator.ResolveDiscussionAsync(_mergeRequestKey, _discussionId, resolve);
+            }
+            catch (OperatorException ex)
+            {
+               throw new DiscussionEditorException("Cannot change discussion resolve state", ex);
+            }
+            finally
+            {
+               _modificationListener.OnDiscussionResolved(_mergeRequestKey);
+            }
          }
       }
 
-      private readonly DiscussionOperator _operator;
       private readonly MergeRequestKey _mergeRequestKey;
+      private readonly IHostProperties _hostProperties;
       private readonly string _discussionId;
       private readonly IModificationListener _modificationListener;
    }

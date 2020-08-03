@@ -25,7 +25,7 @@ namespace mrHelper.GitLabClient
 
       public IMergeRequestEditor GetMergeRequestEditor()
       {
-         return new MergeRequestEditor(_mrk.ProjectKey.HostName, _settings, _mrk, _modificationListener);
+         return new MergeRequestEditor(_settings, _mrk, _modificationListener);
       }
 
       public DiscussionAccessor GetDiscussionAccessor()

@@ -71,7 +71,7 @@ namespace mrHelper.StorageSupport
             if (type == LocalCommitStorageType.FileStorage)
             {
                FileStorage storage = new FileStorage(ParentFolder, key, _synchronizeInvoke,
-                  _projectAccessor.GetSingleProjectAccessor(key.ProjectName).RepositoryAccessor,
+                  _projectAccessor.GetSingleProjectAccessor(key.ProjectName).GetRepositoryAccessor(),
                   _revisionsToKeep, _comparisonsToKeep, () => _fileStorages.Count);
                _fileStorages[key] = storage;
                result = storage;

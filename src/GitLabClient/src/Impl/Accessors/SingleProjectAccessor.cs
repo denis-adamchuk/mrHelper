@@ -13,7 +13,7 @@ namespace mrHelper.GitLabClient
          _modificationListener = modificationListener;
       }
 
-      public RepositoryAccessor RepositoryAccessor =>
+      public RepositoryAccessor GetRepositoryAccessor() =>
          new RepositoryAccessor(_settings, _projectKey);
 
       public MergeRequestAccessor MergeRequestAccessor =>

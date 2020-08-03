@@ -100,7 +100,7 @@ namespace mrHelper.App.src.Forms
             return null;
          }
 
-         return _projectAccessor.GetSingleProjectAccessor(projectName).RepositoryAccessor;
+         return _projectAccessor.GetSingleProjectAccessor(projectName).GetRepositoryAccessor();
       }
 
       protected void selectBranch(ComboBox comboBox, Func<Branch, bool> predicate)

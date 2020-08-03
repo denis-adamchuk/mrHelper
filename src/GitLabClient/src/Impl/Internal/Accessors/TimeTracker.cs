@@ -35,8 +35,7 @@ namespace mrHelper.GitLabClient.Accessors
          _stopwatch.Stop();
          TimeSpan span = _stopwatch.Elapsed;
 
-         MergeRequestEditor editor = new MergeRequestEditor(_mergeRequestKey.ProjectKey.HostName,
-            _hostProperties, _mergeRequestKey, _modificationListener);
+         MergeRequestEditor editor = new MergeRequestEditor(_hostProperties, _mergeRequestKey, _modificationListener);
          try
          {
             await editor.AddTrackedTime(span, true);

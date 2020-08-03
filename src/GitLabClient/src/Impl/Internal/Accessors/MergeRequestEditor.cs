@@ -8,7 +8,7 @@ namespace mrHelper.GitLabClient.Accessors
 {
    internal class MergeRequestEditor : IMergeRequestEditor
    {
-      internal MergeRequestEditor(string hostname, IHostProperties hostProperties,
+      internal MergeRequestEditor(IHostProperties hostProperties,
             MergeRequestKey mrk, IModificationListener modificationListener)
       {
          _mrk = mrk;
