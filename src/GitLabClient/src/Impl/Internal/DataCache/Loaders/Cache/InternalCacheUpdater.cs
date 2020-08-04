@@ -85,6 +85,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          _cache.UpdateMergeRequest(mrk, mergeRequest);
       }
 
+      internal void UpdateProjects(IEnumerable<ProjectKey> projectKeys)
+      {
+         _cache.SetAllProjects(projectKeys);
+      }
+
       public IInternalCache Cache => _cache;
 
       private void cleanupOldRecords(ProjectKey key,

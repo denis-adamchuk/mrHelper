@@ -59,7 +59,7 @@ namespace mrHelper.App.Forms
          listViewFoundMergeRequests.Deselected += ListViewMergeRequests_Deselected;
 
          listViewMergeRequests.ContextMenuStrip = new ContextMenuStrip();
-         listViewMergeRequests.ContextMenuStrip.Items.Add("&Refresh", null, ListViewMergeRequests_Refresh);
+         listViewMergeRequests.ContextMenuStrip.Items.Add("&Refresh selected", null, ListViewMergeRequests_Refresh);
          listViewMergeRequests.ContextMenuStrip.Items.Add("&Edit", null, ListViewMergeRequests_Edit);
       }
 

@@ -12,7 +12,7 @@ using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Loaders
 {
-   internal class VersionLoader : BaseSessionLoader, IVersionLoader
+   internal class VersionLoader : BaseDataCacheLoader, IVersionLoader
    {
       internal VersionLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater)
          : base(op)

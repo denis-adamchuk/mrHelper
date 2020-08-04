@@ -14,12 +14,12 @@ namespace mrHelper.GitLabClient.Accessors
          _hostProperties = hostProperties;
       }
 
-      public Task<MergeRequest> CreateMergeRequest(CreateNewMergeRequestParameters parameters)
+      async public Task<MergeRequest> CreateMergeRequest(CreateNewMergeRequestParameters parameters)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
             _projectKey.HostName, _hostProperties))
          {
-            return mergeRequestOperator.CreateMergeRequest(_projectKey.ProjectName, parameters);
+            return await mergeRequestOperator.CreateMergeRequest(_projectKey.ProjectName, parameters);
          }
       }
 

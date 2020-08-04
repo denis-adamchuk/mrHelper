@@ -17,22 +17,13 @@ namespace mrHelper.GitLabClient
          _modificationListener = modificationListener;
       }
 
-      public Task<IEnumerable<Project>> LoadProjects()
-      {
-         // TODO Project list changes very rarely and must be cached
-         using (ProjectOperator projectOperator = new ProjectOperator(_hostname, _settings))
-         {
-            return projectOperator.GetProjects();
-         }
-      }
-
-      public Task<Project> SearchProjectAsync(string projectname)
+      async public Task<Project> SearchProjectAsync(string projectname)
       {
          using (ProjectOperator projectOperator = new ProjectOperator(_hostname, _settings))
          {
             try
             {
-               return projectOperator.SearchProjectAsync(projectname);
+               return await projectOperator.SearchProjectAsync(projectname);
             }
             catch (OperatorException)
             {

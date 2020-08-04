@@ -20,9 +20,9 @@ namespace mrHelper.GitLabClient.Loaders
 
    /// <summary>
    /// </summary>
-   internal class BaseSessionLoader
+   internal class BaseDataCacheLoader
    {
-      internal BaseSessionLoader(DataCacheOperator op)
+      internal BaseDataCacheLoader(DataCacheOperator op)
       {
          _operator = op;
       }
@@ -37,7 +37,7 @@ namespace mrHelper.GitLabClient.Loaders
          {
             if (ex.Cancelled)
             {
-               Trace.TraceInformation(String.Format("[BaseSessionLoader] {0}", cancelMessage));
+               Trace.TraceInformation(String.Format("[BaseDataCacheLoader] {0}", cancelMessage));
                throw new BaseLoaderCancelledException();
             }
             throw new BaseLoaderException(errorMessage, ex);

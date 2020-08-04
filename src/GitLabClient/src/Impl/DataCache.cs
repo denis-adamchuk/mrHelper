@@ -41,7 +41,7 @@ namespace mrHelper.GitLabClient
 
             User currentUser = await new CurrentUserLoader(_operator).Load(hostname);
             await mergeRequestListLoader.Load();
-            _internal = createSessionInternal(cacheUpdater, hostname, hostProperties, currentUser, context);
+            _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser, context);
 
             Trace.TraceInformation(String.Format("[DataCache] Started new dataCache at {0}", hostname));
             Connected?.Invoke(hostname, currentUser);
@@ -68,7 +68,7 @@ namespace mrHelper.GitLabClient
 
       private void reset()
       {
-         Trace.TraceInformation("[Session] Canceling operations");
+         Trace.TraceInformation("[DataCache] Canceling operations");
 
          _operator?.Dispose();
          _operator = null;
@@ -85,7 +85,9 @@ namespace mrHelper.GitLabClient
 
       public ITotalTimeCache TotalTimeCache => _internal?.TotalTimeCache;
 
-      private DataCacheInternal createSessionInternal(
+      public IProjectCache ProjectCache => _internal?.ProjectCache;
+
+      private DataCacheInternal createCacheInternal(
          InternalCacheUpdater cacheUpdater,
          string hostname,
          IHostProperties hostProperties,
@@ -98,7 +100,11 @@ namespace mrHelper.GitLabClient
             _dataCacheContext, hostname, hostProperties, user, mergeRequestManager, context, _modificationNotifier);
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
             hostname, hostProperties, user, discussionManager, _modificationNotifier);
-         return new DataCacheInternal(mergeRequestManager, discussionManager, timeTrackingManager);
+
+         IProjectListLoader loader = ProjectListLoaderFactory.CreateProjectListLoader(
+            hostname, _operator, context, cacheUpdater);
+         ProjectCache projectCache = new ProjectCache(cacheUpdater, loader, _dataCacheContext);
+         return new DataCacheInternal(mergeRequestManager, discussionManager, timeTrackingManager, projectCache);
       }
 
       private DataCacheOperator _operator;

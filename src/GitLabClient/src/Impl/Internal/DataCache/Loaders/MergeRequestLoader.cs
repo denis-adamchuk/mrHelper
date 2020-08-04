@@ -9,7 +9,7 @@ using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Loaders
 {
-   internal class MergeRequestLoader : BaseSessionLoader, IMergeRequestLoader
+   internal class MergeRequestLoader : BaseDataCacheLoader, IMergeRequestLoader
    {
       internal MergeRequestLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater)
          : base(op)

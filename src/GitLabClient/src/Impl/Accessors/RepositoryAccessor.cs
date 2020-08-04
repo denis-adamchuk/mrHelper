@@ -44,9 +44,9 @@ namespace mrHelper.GitLabClient
             "Commit loading cancelled", "Cannot load commit");
       }
 
-      public Task<IEnumerable<Branch>> GetBranches()
+      public Task<IEnumerable<Branch>> GetBranches(string search)
       {
-         return call(() => _operator.GetBranches(),
+         return call(() => _operator.GetBranches(search),
             "Branch list loading cancelled", "Cannot load list of branches");
       }
 

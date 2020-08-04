@@ -12,17 +12,6 @@ namespace mrHelper.GitLabClient.Operators
       {
       }
 
-      internal Task<IEnumerable<Project>> GetProjects()
-      {
-         return callWithSharedClient(
-            async (client) =>
-               await OperatorCallWrapper.Call(
-                  async () =>
-                     (IEnumerable<Project>)await client.RunAsync(
-                        async (gl) =>
-                           await gl.Projects.LoadAllTaskAsync(new GitLabSharp.Accessors.ProjectsFilter(false, true)))));
-      }
-
       internal Task<Project> SearchProjectAsync(string projectname)
       {
          return callWithSharedClient(

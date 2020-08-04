@@ -20,14 +20,14 @@ namespace mrHelper.App.Helpers.GitLab
           || String.IsNullOrEmpty(username) // TODO This is possible!
           || String.IsNullOrEmpty(title))
          {
-            // TODO Error handling
+            // TODO WTF Error handling
             return;
          }
 
          User assignee = await getUserAsync(gitLabInstance, username);
          if (assignee == null)
          {
-            // TODO Error handling
+            // TODO WTF Error handling
             return;
          }
 
@@ -44,13 +44,13 @@ namespace mrHelper.App.Helpers.GitLab
           || String.IsNullOrEmpty(username) // TODO This is possible
           || String.IsNullOrEmpty(title))
          {
-            // TODO Error handling
+            // TODO WTF Error handling
             return;
          }
 
          string oldTargetBranch = mergeRequest.Target_Branch ?? String.Empty;
          string oldAssigneeUsername = mergeRequest.Assignee?.Username ?? String.Empty;
-         bool oldDeleteSourceBranch = mergeRequest.Should_Remove_Source_Branch;
+         bool oldDeleteSourceBranch = mergeRequest.Force_Remove_Source_Branch;
          bool oldSquash = mergeRequest.Squash;
          string oldTitle = mergeRequest.Title;
          string oldDescription = mergeRequest.Description;
@@ -71,7 +71,7 @@ namespace mrHelper.App.Helpers.GitLab
             mergeRequest.Assignee : await getUserAsync(gitLabInstance, username);
          if (assignee == null)
          {
-            // TODO Error handling
+            // TODO WTF Error handling
             return;
          }
 

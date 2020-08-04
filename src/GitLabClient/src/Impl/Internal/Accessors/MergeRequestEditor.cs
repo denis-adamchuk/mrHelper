@@ -16,12 +16,12 @@ namespace mrHelper.GitLabClient.Accessors
          _modificationListener = modificationListener;
       }
 
-      public Task ModifyMergeRequest(UpdateMergeRequestParameters parameters)
+      async public Task ModifyMergeRequest(UpdateMergeRequestParameters parameters)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
             _mrk.ProjectKey.HostName, _hostProperties))
          {
-            return mergeRequestOperator.UpdateMergeRequest(_mrk, parameters);
+            await mergeRequestOperator.UpdateMergeRequest(_mrk, parameters);
          }
       }
 

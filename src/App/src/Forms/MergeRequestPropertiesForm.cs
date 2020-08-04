@@ -72,6 +72,11 @@ namespace mrHelper.App.src.Forms
          }
       }
 
+      private void comboBoxBranch_Format(object sender, ListControlConvertEventArgs e)
+      {
+         e.Value = ((Branch)(e.ListItem)).Name;
+      }
+
       protected Branch getSourceBranch()
       {
          return comboBoxSourceBranch.SelectedItem as Branch;

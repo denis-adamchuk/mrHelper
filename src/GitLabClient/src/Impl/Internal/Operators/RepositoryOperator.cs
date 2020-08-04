@@ -61,14 +61,14 @@ namespace mrHelper.GitLabClient.Operators
                            await gitlab.Projects.Get(_projectname).Repository.Commits.Get(sha).LoadRefsTaskAsync()))));
       }
 
-      internal Task<IEnumerable<Branch>> GetBranches()
+      internal Task<IEnumerable<Branch>> GetBranches(string search)
       {
          return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
                      (IEnumerable<Branch>)(await client.RunAsync(async (gl) =>
-                        await gl.Projects.Get(_projectname).Repository.Branches.LoadAllTaskAsync()))));
+                        await gl.Projects.Get(_projectname).Repository.Branches.LoadAllTaskAsync(search)))));
       }
 
       internal Task<Branch> CreateNewBranchAsync(string name, string sha)

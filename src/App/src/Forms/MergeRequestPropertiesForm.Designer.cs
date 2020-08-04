@@ -41,6 +41,7 @@
          this.buttonEditDescription = new System.Windows.Forms.Button();
          this.htmlPanelDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.groupBoxOptions = new System.Windows.Forms.GroupBox();
+         this.textBoxFirstNote = new System.Windows.Forms.TextBox();
          this.labelAssignee = new System.Windows.Forms.Label();
          this.textBoxAssigneeUsername = new System.Windows.Forms.TextBox();
          this.checkBoxSquash = new System.Windows.Forms.CheckBox();
@@ -49,7 +50,6 @@
          this.buttonCancel = new System.Windows.Forms.Button();
          this.groupBoxProject = new System.Windows.Forms.GroupBox();
          this.comboBoxProject = new System.Windows.Forms.ComboBox();
-         this.textBoxFirstNote = new System.Windows.Forms.TextBox();
          this.groupBoxSource.SuspendLayout();
          this.groupBoxTarget.SuspendLayout();
          this.groupBox3.SuspendLayout();
@@ -77,6 +77,7 @@
          this.comboBoxSourceBranch.Name = "comboBoxSourceBranch";
          this.comboBoxSourceBranch.Size = new System.Drawing.Size(171, 21);
          this.comboBoxSourceBranch.TabIndex = 0;
+         this.comboBoxSourceBranch.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxBranch_Format);
          // 
          // groupBoxTarget
          // 
@@ -97,6 +98,7 @@
          this.comboBoxTargetBranch.Name = "comboBoxTargetBranch";
          this.comboBoxTargetBranch.Size = new System.Drawing.Size(171, 21);
          this.comboBoxTargetBranch.TabIndex = 1;
+         this.comboBoxTargetBranch.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxBranch_Format);
          // 
          // groupBox3
          // 
@@ -202,6 +204,13 @@
          this.groupBoxOptions.TabStop = false;
          this.groupBoxOptions.Text = "Options";
          // 
+         // textBoxFirstNote
+         // 
+         this.textBoxFirstNote.Location = new System.Drawing.Point(302, 44);
+         this.textBoxFirstNote.Name = "textBoxFirstNote";
+         this.textBoxFirstNote.Size = new System.Drawing.Size(260, 20);
+         this.textBoxFirstNote.TabIndex = 4;
+         // 
          // labelAssignee
          // 
          this.labelAssignee.AutoSize = true;
@@ -280,14 +289,7 @@
          this.comboBoxProject.Size = new System.Drawing.Size(171, 21);
          this.comboBoxProject.TabIndex = 0;
          // 
-         // textBoxFirstNote
-         // 
-         this.textBoxFirstNote.Location = new System.Drawing.Point(302, 44);
-         this.textBoxFirstNote.Name = "textBoxFirstNote";
-         this.textBoxFirstNote.Size = new System.Drawing.Size(260, 20);
-         this.textBoxFirstNote.TabIndex = 4;
-         // 
-         // CreateNewMergeRequestForm
+         // MergeRequestPropertiesForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -303,7 +305,7 @@
          this.Controls.Add(this.groupBoxSource);
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
          this.MinimumSize = new System.Drawing.Size(608, 426);
-         this.Name = "CreateNewMergeRequestForm";
+         this.Name = "MergeRequestPropertiesForm";
          this.Text = "Create New Merge Request";
          this.groupBoxSource.ResumeLayout(false);
          this.groupBoxTarget.ResumeLayout(false);

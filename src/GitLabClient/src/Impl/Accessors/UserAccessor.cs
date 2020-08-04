@@ -15,13 +15,13 @@ namespace mrHelper.GitLabClient
          _hostProperties = hostProperties;
       }
 
-      public Task<User> GetCurrentUserAsync()
+      async public Task<User> GetCurrentUserAsync()
       {
          using (UserOperator userOperator = new UserOperator(_hostname, _hostProperties))
          {
             try
             {
-               return userOperator.SearchCurrentUserAsync();
+               return await userOperator.SearchCurrentUserAsync();
             }
             catch (OperatorException)
             {
@@ -30,13 +30,13 @@ namespace mrHelper.GitLabClient
          }
       }
 
-      public Task<User> SearchUserByNameAsync(string name)
+      async public Task<User> SearchUserByNameAsync(string name)
       {
          using (UserOperator userOperator = new UserOperator(_hostname, _hostProperties))
          {
             try
             {
-               return userOperator.SearchUserByNameAsync(name);
+               return await userOperator.SearchUserByNameAsync(name);
             }
             catch (OperatorException)
             {
@@ -45,13 +45,13 @@ namespace mrHelper.GitLabClient
          }
       }
 
-      public Task<User> SearchUserByUsernameAsync(string username)
+      async public Task<User> SearchUserByUsernameAsync(string username)
       {
          using (UserOperator userOperator = new UserOperator(_hostname, _hostProperties))
          {
             try
             {
-               return userOperator.SearchUserByUsernameAsync(username);
+               return await userOperator.SearchUserByUsernameAsync(username);
             }
             catch (OperatorException)
             {

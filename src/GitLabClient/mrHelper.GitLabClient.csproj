@@ -47,9 +47,14 @@
     <Compile Include="src\Impl\Helpers.cs" />
     <Compile Include="src\Impl\Internal\Accessors\ModificationListenerItf.cs" />
     <Compile Include="src\Impl\Accessors\SingleDiscussionAccessor.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectBasedProjectListLoader.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectListLoaderFactory.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestListLoaderItf.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectListLoaderItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestLoaderItf.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Loaders\SearchBasedProjectListLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\VersionLoaderItf.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Managers\ProjectCache.cs" />
     <Compile Include="src\Interfaces\DiscussionCreatorItf.cs" />
     <Compile Include="src\Impl\Accessors\DiscussionAccessor.cs" />
     <Compile Include="src\Impl\Internal\Operators\BaseOperator.cs" />
@@ -68,6 +73,7 @@
     <Compile Include="src\Impl\Accessors\SingleMergeRequestAccessor.cs" />
     <Compile Include="src\Impl\Internal\Accessors\MergeRequestCreator.cs" />
     <Compile Include="src\Impl\Accessors\MergeRequestAccessor.cs" />
+    <Compile Include="src\Interfaces\ProjectCacheItf.cs" />
     <Compile Include="src\Interfaces\MergeRequestEditorItf.cs" />
     <Compile Include="src\Interfaces\MergeRequestCreatorItf.cs" />
     <Compile Include="src\Impl\Accessors\ProjectAccessor.cs" />
@@ -116,8 +122,8 @@
     <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectBasedMergeRequestLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\VersionLoader.cs" />
     <Compile Include="src\Interfaces\DataCacheConnectionContext.cs" />
-    <Compile Include="src\Impl\Internal\DataCache\Loaders\BaseSessionLoader.cs" />
-    <Compile Include="src\Impl\Internal\Operators\SessionOperator.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Loaders\BaseDataCacheLoader.cs" />
+    <Compile Include="src\Impl\Internal\Operators\DataCacheOperator.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

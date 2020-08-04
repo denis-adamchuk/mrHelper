@@ -12,17 +12,17 @@ using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Loaders
 {
-   internal class ProjectBasedMergeRequestLoader : BaseSessionLoader, IMergeRequestListLoader
+   internal class ProjectBasedMergeRequestLoader : BaseDataCacheLoader, IMergeRequestListLoader
    {
       public ProjectBasedMergeRequestLoader(DataCacheOperator op,
          IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater,
-         DataCacheConnectionContext sessionContext)
+         DataCacheConnectionContext dataCacheConnectionContext)
          : base(op)
       {
          _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
-         _sessionContext = sessionContext;
-         Debug.Assert(_sessionContext.CustomData is ProjectBasedContext);
+         _dataCacheConnectionContext = dataCacheConnectionContext;
+         Debug.Assert(_dataCacheConnectionContext.CustomData is ProjectBasedContext);
       }
 
       async public Task Load()
@@ -34,7 +34,7 @@ namespace mrHelper.GitLabClient.Loaders
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
       {
-         ProjectBasedContext pbc = (ProjectBasedContext)_sessionContext.CustomData;
+         ProjectBasedContext pbc = (ProjectBasedContext)_dataCacheConnectionContext.CustomData;
 
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests =
             new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
@@ -56,11 +56,11 @@ namespace mrHelper.GitLabClient.Loaders
             {
                if (isForbiddenProjectException(ex))
                {
-                  _sessionContext.Callbacks.OnForbiddenProject?.Invoke(project);
+                  _dataCacheConnectionContext.Callbacks.OnForbiddenProject?.Invoke(project);
                }
                else if (isNotFoundProjectException(ex))
                {
-                  _sessionContext.Callbacks.OnNotFoundProject?.Invoke(project);
+                  _dataCacheConnectionContext.Callbacks.OnNotFoundProject?.Invoke(project);
                }
                else
                {
@@ -114,7 +114,7 @@ namespace mrHelper.GitLabClient.Loaders
 
       private readonly IVersionLoader _versionLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
-      private readonly DataCacheConnectionContext _sessionContext;
+      private readonly DataCacheConnectionContext _dataCacheConnectionContext;
    }
 }
 

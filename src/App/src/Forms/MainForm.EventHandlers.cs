@@ -1158,7 +1158,7 @@ namespace mrHelper.App.Forms
 
          JObject newMergeRequestDialogStatesByHostsObj = (JObject)reader.Get("NewMergeRequestDialogStatesByHosts");
          Dictionary<string, object> newMergeRequestDialogStatesByHosts =
-            newMergeRequestDialogStatesByHostsObj.ToObject<Dictionary<string, object>>();
+            newMergeRequestDialogStatesByHostsObj?.ToObject<Dictionary<string, object>>();
          if (newMergeRequestDialogStatesByHosts != null)
          {
             _newMergeRequestDialogStatesByHosts = newMergeRequestDialogStatesByHosts
@@ -1416,7 +1416,7 @@ namespace mrHelper.App.Forms
          ProjectKey? currentProject = getMergeRequestKey(null)?.ProjectKey;
          if (_gitLabInstance == null || currentUser == null || currentProject == null)
          {
-            // TODO Error handling
+            // TODO WTF Error handling
             return;
          }
 
@@ -1428,7 +1428,7 @@ namespace mrHelper.App.Forms
             _newMergeRequestDialogStatesByHosts.TryGetValue(hostname, out var value) ? value : defaultState;
 
          MergeRequestPropertiesForm form = new NewMergeRequestForm(
-            getProjectAccessor(), currentUser, initialFormState);
+            getProjectAccessor(), currentUser, initialFormState, _liveDataCache.ProjectCache.GetProjects());
          if (form.ShowDialog() != DialogResult.OK)
          {
             return;
@@ -1469,7 +1469,7 @@ namespace mrHelper.App.Forms
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
          if (_gitLabInstance == null || currentUser == null || currentProject == null || item.MergeRequest == null)
          {
-            // TODO Error handling
+            // TODO WTF Error handling
             return;
          }
 

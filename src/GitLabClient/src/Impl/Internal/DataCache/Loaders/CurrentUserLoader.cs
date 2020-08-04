@@ -5,7 +5,7 @@ using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Loaders
 {
-   internal class CurrentUserLoader : BaseSessionLoader
+   internal class CurrentUserLoader : BaseDataCacheLoader
    {
       internal CurrentUserLoader(DataCacheOperator op)
          : base(op)

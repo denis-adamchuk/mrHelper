@@ -12,17 +12,17 @@ using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Loaders
 {
-   internal class SearchBasedMergeRequestLoader : BaseSessionLoader, IMergeRequestListLoader
+   internal class SearchBasedMergeRequestLoader : BaseDataCacheLoader, IMergeRequestListLoader
    {
       internal SearchBasedMergeRequestLoader(string hostname, DataCacheOperator op,
-         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater, DataCacheConnectionContext sessionContext)
+         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater, DataCacheConnectionContext dataCacheConnectionContext)
          : base(op)
       {
          _hostname = hostname;
          _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
-         _sessionContext = sessionContext;
-         Debug.Assert(_sessionContext.CustomData is SearchBasedContext);
+         _dataCacheConnectionContext = dataCacheConnectionContext;
+         Debug.Assert(_dataCacheConnectionContext.CustomData is SearchBasedContext);
       }
 
       async public Task Load()
@@ -34,7 +34,7 @@ namespace mrHelper.GitLabClient.Loaders
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
       {
-         SearchBasedContext sbc = (SearchBasedContext)_sessionContext.CustomData;
+         SearchBasedContext sbc = (SearchBasedContext)_dataCacheConnectionContext.CustomData;
 
          IEnumerable<MergeRequest> allMergeRequests = await call(
             () => _operator.SearchMergeRequestsAsync(sbc.SearchCriteria, sbc.MaxSearchResults, sbc.OnlyOpen),
@@ -110,7 +110,7 @@ namespace mrHelper.GitLabClient.Loaders
       private readonly string _hostname;
       private readonly IVersionLoader _versionLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
-      private readonly DataCacheConnectionContext _sessionContext;
+      private readonly DataCacheConnectionContext _dataCacheConnectionContext;
    }
 }
 

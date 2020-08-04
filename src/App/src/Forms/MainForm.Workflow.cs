@@ -13,6 +13,7 @@ using System.Collections;
 using mrHelper.Common.Constants;
 using mrHelper.GitLabClient;
 using mrHelper.App.Helpers.GitLab;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -288,6 +289,8 @@ namespace mrHelper.App.Forms
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
          unsubscribeFromLiveDataCacheInternalEvents();
+
+         _projectCacheCheckTimer?.Stop();
       }
 
       private void liveDataCacheConnected(string hostname, User user)
@@ -300,7 +303,28 @@ namespace mrHelper.App.Forms
             _currentUser.Add(hostname, user);
          }
          Program.FeedbackReporter.SetUserEMail(user.EMail);
+
+         if (_projectCacheCheckTimer == null)
+         {
+            _projectCacheCheckTimer = new System.Windows.Forms.Timer
+            {
+               Interval = 1000 // ms
+            };
+            _projectCacheCheckTimer.Tick +=
+               (s, e) =>
+            {
+               buttonCreateNew.Enabled = _liveDataCache?.ProjectCache?.GetProjects().Any() ?? false;
+               if (buttonCreateNew.Enabled)
+               {
+                  _projectCacheCheckTimer.Stop();
+               }
+            };
+         }
+         _projectCacheCheckTimer.Stop(); // just in case
+         _projectCacheCheckTimer.Start();
       }
+
+      private System.Windows.Forms.Timer _projectCacheCheckTimer;
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -430,6 +454,7 @@ namespace mrHelper.App.Forms
       private void disableAllUIControls(bool clearListView)
       {
          buttonReloadList.Enabled = false;
+         buttonCreateNew.Enabled = false;
          disableListView(listViewMergeRequests, clearListView);
          enableMergeRequestFilterControls(false);
 

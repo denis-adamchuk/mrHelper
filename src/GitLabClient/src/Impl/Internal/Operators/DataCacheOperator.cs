@@ -9,7 +9,7 @@ using mrHelper.Common.Constants;
 namespace mrHelper.GitLabClient.Operators
 {
    /// <summary>
-   /// Implements Session-related interaction with GitLab
+   /// Implements DataCache-related interaction with GitLab
    /// </summary>
    internal class DataCacheOperator : BaseOperator
    {
@@ -82,6 +82,18 @@ namespace mrHelper.GitLabClient.Operators
                      (Commit)await client.RunAsync(
                         async (gl) =>
                            await gl.Projects.Get(projectName).Repository.Commits.Get(id).LoadTaskAsync())));
+      }
+
+      internal Task<IEnumerable<Project>> GetProjects()
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (IEnumerable<Project>)await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.LoadAllTaskAsync(
+                              new GitLabSharp.Accessors.ProjectsFilter(false, true, true)))));
       }
    }
 }
