@@ -1447,19 +1447,20 @@ namespace mrHelper.App.Forms
                string title = form.Title;
                string description = form.Description;
 
-               MergeRequest mergeRequest = await MergeRequestEditHelper.SubmitNewMergeRequestAsync(_gitLabInstance,
+               MergeRequestKey? mrkOpt = await MergeRequestEditHelper.SubmitNewMergeRequestAsync(_gitLabInstance,
                   new ProjectKey(hostname, projectName), sourceBranch, targetBranch, title, assigneeUsername,
-                  description, deleteSourceBranch, squash);
-               if (mergeRequest == null)
+                  description, deleteSourceBranch, squash, form.SpecialNote, currentUser);
+               if (mrkOpt == null)
                {
                   return;
                }
 
-               MessageBox.Show(String.Format("Merge Request !{0} has been created", mergeRequest.IId),
-                  "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+               string message = String.Format("Merge Request !{0} has been created in project {1}",
+                  mrkOpt.Value.IId, projectName);
+               MessageBox.Show(message, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+               labelWorkflowStatus.Text = message;
 
-               MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostname, projectName), mergeRequest.IId);
-               _liveDataCache.MergeRequestCache.RequestUpdate(mrk, new int[] { 1 }, null);
+               _liveDataCache.MergeRequestCache.RequestUpdate(mrkOpt, new int[] { 1 }, null);
 
                _newMergeRequestDialogStatesByHosts[getHostName()] = new NewMergeRequestProperties(
                   projectName, assigneeUsername, squash, deleteSourceBranch);
@@ -1484,32 +1485,41 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
-            getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest);
-         if (form.ShowDialog() != DialogResult.OK)
-         {
-            return;
-         }
-
          BeginInvoke(new Action(
             async () =>
             {
+               MergeRequestKey mrk = new MergeRequestKey(currentProject.Value, item.MergeRequest.IId);
+               IEnumerable<Discussion> discussions = await _liveDataCache.DiscussionCache.LoadDiscussions(mrk);
+               Discussion note = discussions?
+                  .Where(x => x.Notes != null
+                           && x.Notes.Count() == 1
+                           && x.Notes.First().Body.StartsWith(Program.ServiceManager.GetSpecialNotePrefix()))
+                  .LastOrDefault();
+               string noteText = note?.Notes.First().Body ?? String.Empty;
+
+               MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
+                  getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText);
+               if (form.ShowDialog() != DialogResult.OK)
+               {
+                  return;
+               }
+
                string newTargetBranch = form.TargetBranch;
                string newAssigneeUsername = form.AssigneeUsername;
                bool newDeleteSourceBranch = form.DeleteSourceBranch;
                bool newSquash = form.Squash;
                string newTitle = form.Title;
                string newDescription = form.Description;
+               string newNoteText = form.SpecialNote;
 
                bool res = await MergeRequestEditHelper.ApplyChangesToMergeRequest(_gitLabInstance, currentProject.Value,
                   item.MergeRequest, newTargetBranch, newTitle, newAssigneeUsername, newDescription,
-                  newDeleteSourceBranch, newSquash);
+                  newDeleteSourceBranch, newSquash, noteText, newNoteText, currentUser);
                if (res)
                {
                   MessageBox.Show(String.Format("Merge Request !{0} has been updated", item.MergeRequest.IId),
                      "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                  MergeRequestKey mrk = new MergeRequestKey(currentProject.Value, item.MergeRequest.IId);
                   _liveDataCache.MergeRequestCache.RequestUpdate(mrk, new int[] { 1 }, null);
                }
             }));

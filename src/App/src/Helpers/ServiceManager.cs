@@ -125,6 +125,19 @@ namespace mrHelper.App.Helpers
          return properties != null && properties.ContainsKey("value") ? properties["value"].ToString() : String.Empty;
       }
 
+      public string GetSpecialNotePrefix()
+      {
+         int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "SpecialNotePrefix");
+         if (index == -1)
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] SpecialNotePrefix entry is missing"));
+            return String.Empty;
+         }
+
+         Dictionary<string, object> properties = _services[index].Properties;
+         return properties != null && properties.ContainsKey("value") ? properties["value"].ToString() : String.Empty;
+      }
+
       public class LatestVersionInformation
       {
          [JsonProperty]

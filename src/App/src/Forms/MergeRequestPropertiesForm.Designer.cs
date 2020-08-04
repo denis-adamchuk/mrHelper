@@ -41,7 +41,8 @@
          this.buttonEditDescription = new System.Windows.Forms.Button();
          this.htmlPanelDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.groupBoxOptions = new System.Windows.Forms.GroupBox();
-         this.textBoxFirstNote = new System.Windows.Forms.TextBox();
+         this.labelSpecialNotePrefix = new System.Windows.Forms.Label();
+         this.textBoxSpecialNote = new System.Windows.Forms.TextBox();
          this.labelAssignee = new System.Windows.Forms.Label();
          this.textBoxAssigneeUsername = new System.Windows.Forms.TextBox();
          this.checkBoxSquash = new System.Windows.Forms.CheckBox();
@@ -191,7 +192,8 @@
          // 
          this.groupBoxOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBoxOptions.Controls.Add(this.textBoxFirstNote);
+         this.groupBoxOptions.Controls.Add(this.labelSpecialNotePrefix);
+         this.groupBoxOptions.Controls.Add(this.textBoxSpecialNote);
          this.groupBoxOptions.Controls.Add(this.labelAssignee);
          this.groupBoxOptions.Controls.Add(this.textBoxAssigneeUsername);
          this.groupBoxOptions.Controls.Add(this.checkBoxSquash);
@@ -203,12 +205,21 @@
          this.groupBoxOptions.TabStop = false;
          this.groupBoxOptions.Text = "Options";
          // 
-         // textBoxFirstNote
+         // labelSpecialNotePrefix
          // 
-         this.textBoxFirstNote.Location = new System.Drawing.Point(302, 44);
-         this.textBoxFirstNote.Name = "textBoxFirstNote";
-         this.textBoxFirstNote.Size = new System.Drawing.Size(260, 20);
-         this.textBoxFirstNote.TabIndex = 4;
+         this.labelSpecialNotePrefix.AutoSize = true;
+         this.labelSpecialNotePrefix.Location = new System.Drawing.Point(434, 47);
+         this.labelSpecialNotePrefix.Name = "labelSpecialNotePrefix";
+         this.labelSpecialNotePrefix.Size = new System.Drawing.Size(34, 13);
+         this.labelSpecialNotePrefix.TabIndex = 5;
+         this.labelSpecialNotePrefix.Text = "/insp ";
+         // 
+         // textBoxSpecialNote
+         // 
+         this.textBoxSpecialNote.Location = new System.Drawing.Point(471, 44);
+         this.textBoxSpecialNote.Name = "textBoxSpecialNote";
+         this.textBoxSpecialNote.Size = new System.Drawing.Size(296, 20);
+         this.textBoxSpecialNote.TabIndex = 4;
          // 
          // labelAssignee
          // 
@@ -223,7 +234,7 @@
          // 
          this.textBoxAssigneeUsername.Location = new System.Drawing.Point(114, 44);
          this.textBoxAssigneeUsername.Name = "textBoxAssigneeUsername";
-         this.textBoxAssigneeUsername.Size = new System.Drawing.Size(177, 20);
+         this.textBoxAssigneeUsername.Size = new System.Drawing.Size(131, 20);
          this.textBoxAssigneeUsername.TabIndex = 2;
          // 
          // checkBoxSquash
@@ -339,6 +350,7 @@
       protected System.Windows.Forms.ComboBox comboBoxProject;
       protected System.Windows.Forms.Label labelAssignee;
       protected System.Windows.Forms.TextBox textBoxAssigneeUsername;
-      protected System.Windows.Forms.TextBox textBoxFirstNote;
+      protected System.Windows.Forms.TextBox textBoxSpecialNote;
+      protected System.Windows.Forms.Label labelSpecialNotePrefix;
    }
 }

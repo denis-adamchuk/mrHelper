@@ -9,11 +9,12 @@ namespace mrHelper.App.Forms
    internal class EditMergeRequestPropertiesForm : MergeRequestPropertiesForm
    {
       internal EditMergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
-         ProjectKey projectKey, MergeRequest mergeRequest)
+         ProjectKey projectKey, MergeRequest mergeRequest, string specialNote)
          : base(hostname, projectAccessor, currentUser)
       {
          _projectKey = projectKey;
          _initialMergeRequest = mergeRequest;
+         _specialNote = specialNote;
 
          buttonSubmit.Text = "Apply";
       }
@@ -59,12 +60,19 @@ namespace mrHelper.App.Forms
             textBoxAssigneeUsername.Text = _initialMergeRequest.Assignee.Username;
          }
 
+         textBoxSpecialNote.Text = String.Empty;
+         if (!String.IsNullOrEmpty(_specialNote))
+         {
+            setFirstNote(_specialNote);
+         }
+
          checkBoxSquash.Checked = _initialMergeRequest.Squash;
          checkBoxDeleteSourceBranch.Checked = _initialMergeRequest.Force_Remove_Source_Branch;
       }
 
       private readonly ProjectKey _projectKey;
       private readonly MergeRequest _initialMergeRequest;
+      private readonly string _specialNote;
    }
 }
 

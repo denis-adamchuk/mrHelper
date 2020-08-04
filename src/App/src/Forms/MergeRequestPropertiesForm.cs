@@ -29,6 +29,8 @@ namespace mrHelper.App.src.Forms
          string css = String.Format("{0}", mrHelper.App.Properties.Resources.Common_CSS);
          htmlPanelTitle.BaseStylesheet = css;
          htmlPanelDescription.BaseStylesheet = css;
+
+         labelSpecialNotePrefix.Text = Program.ServiceManager.GetSpecialNotePrefix();
       }
 
       internal string Project => getProjectName();
@@ -39,6 +41,7 @@ namespace mrHelper.App.src.Forms
       internal bool Squash => checkBoxSquash.Checked;
       internal string Title => getTitle();
       internal string Description => getDescription();
+      internal string SpecialNote => getSpecialNote();
 
       protected override void OnLoad(EventArgs e)
       {
@@ -139,6 +142,32 @@ namespace mrHelper.App.src.Forms
       protected string getDescription()
       {
          return _description;
+      }
+
+      protected string getSpecialNote()
+      {
+         if (String.IsNullOrWhiteSpace(textBoxSpecialNote.Text))
+         {
+            return String.Empty;
+         }
+         return labelSpecialNotePrefix.Text + textBoxSpecialNote.Text;
+      }
+
+      protected void setFirstNote(string firstNote)
+      {
+         if (String.IsNullOrWhiteSpace(firstNote))
+         {
+            textBoxSpecialNote.Text = String.Empty;
+         }
+         else if (firstNote.StartsWith(labelSpecialNotePrefix.Text))
+         {
+            textBoxSpecialNote.Text = firstNote.Substring(
+               labelSpecialNotePrefix.Text.Length, firstNote.Length - labelSpecialNotePrefix.Text.Length);
+         }
+         else
+         {
+            textBoxSpecialNote.Text = firstNote;
+         }
       }
 
       string convertTextToHtml(string text)
