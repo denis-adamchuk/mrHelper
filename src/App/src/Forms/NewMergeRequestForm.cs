@@ -13,15 +13,17 @@ namespace mrHelper.App.Forms
 {
    internal class NewMergeRequestForm : MergeRequestPropertiesForm
    {
-      internal NewMergeRequestForm(ProjectAccessor projectAccessor, User currentUser,
-         NewMergeRequestProperties initialState, IEnumerable<ProjectKey> projects)
-         : base(projectAccessor, currentUser)
+      internal NewMergeRequestForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
+         NewMergeRequestProperties initialState, IEnumerable<ProjectKey> projects, string sourceBranchTemplate)
+         : base(hostname, projectAccessor, currentUser)
       {
          _initialState = initialState;
          _projects = projects;
+         _sourceBranchTemplate = sourceBranchTemplate;
 
-         comboBoxSourceBranch.SelectedIndexChanged += new System.EventHandler(this.comboBoxSourceBranch_SelectedIndexChanged);
          comboBoxProject.SelectedIndexChanged += new System.EventHandler(this.comboBoxProject_SelectedIndexChanged);
+         comboBoxSourceBranch.SelectedIndexChanged += new System.EventHandler(this.comboBoxSourceBranch_SelectedIndexChanged);
+         comboBoxTargetBranch.TextChanged += new System.EventHandler(this.comboBoxTargetBranch_TextChanged);
       }
 
       protected override void Dispose(bool disposing)
@@ -47,33 +49,40 @@ namespace mrHelper.App.Forms
          await searchTargetBranchNameAsync(commit);
       }
 
+      private void comboBoxTargetBranch_TextChanged(object sender, EventArgs e)
+      {
+         updateControls();
+      }
+
       async private Task loadBranchListAsync()
       {
          onSourceBranchListLoadStart();
 
-         string search = "^task/" + _currentUser.Username + "/";
          Debug.Assert(_repositoryAccessor != null);
-         IEnumerable<Branch> branchList = await _repositoryAccessor.GetBranches(search);
+         IEnumerable<Branch> branchList = await _repositoryAccessor.GetBranches(_sourceBranchTemplate);
 
          onSourceBranchListLoadFinish(branchList);
       }
 
       private void onSourceBranchListLoadStart()
       {
-         updateRepositoryActionsState(false);
+         comboBoxSourceBranch.Items.Clear();
+         comboBoxTargetBranch.Items.Clear();
+
+         updateControls();
          groupBoxSource.Text = "Source Branch (Loading...)";
       }
 
       private void onSourceBranchListLoadFinish(IEnumerable<Branch> branchList)
       {
-         updateRepositoryActionsState(true);
+         if (branchList != null && branchList.Any())
+         {
+            comboBoxSourceBranch.Items.AddRange(branchList.ToArray());
+            comboBoxSourceBranch.SelectedIndex = 0;
+         }
 
+         updateControls();
          groupBoxSource.Text = "Source Branch";
-
-         Branch[] branchArray = branchList.ToArray();
-         comboBoxSourceBranch.Items.AddRange(branchArray);
-
-         selectBranch(comboBoxSourceBranch, x => true /* to select the first item */);
       }
 
       async private Task<Commit> loadCommitAsync()
@@ -90,46 +99,70 @@ namespace mrHelper.App.Forms
 
       private void onCommitLoading()
       {
-         htmlPanelTitle.Text = "Loading...";
-         htmlPanelDescription.Text = "Loading...";
+         setTitle("Loading...");
+         setDescription("Loading...");
+         _isLoadingCommit = true;
+         updateControls();
       }
 
       private void onCommitLoaded(Commit commit)
       {
-         htmlPanelTitle.Text = commit.Title;
-         htmlPanelDescription.Text = commit.Message;
+         setTitle(commit?.Title ?? String.Empty);
+         setDescription(trimTitleFromCommitMessage(commit));
+         _isLoadingCommit = false;
+         updateControls();
       }
 
-      async private Task searchTargetBranchNameAsync(Commit commit)
+      private static string trimTitleFromCommitMessage(Commit commit)
+      {
+         string message = commit?.Message ?? String.Empty;
+         if (message.StartsWith(commit.Title))
+         {
+            message = commit.Message.Substring(commit.Title.Length, commit.Message.Length - commit.Title.Length);
+            message = message.TrimStart(new char[] { '\n' });
+         }
+         return message;
+      }
+
+      async private Task searchTargetBranchNameAsync(Commit sourceBranchCommit)
       {
          onTargetBranchSearchStart();
-         groupBoxTarget.Text = "Target Branch (Loading...)";
 
          Debug.Assert(_repositoryAccessor != null);
          Branch sourceBranch = getSourceBranch();
-         string targetBranchName = await _repositoryAccessor.FindPreferredTargetBranchName(
-            sourceBranch?.Name, commit?.Parent_Ids.FirstOrDefault());
+         IEnumerable<string> targetBranchNames = await _repositoryAccessor.FindPreferredTargetBranchNames(
+            sourceBranch, sourceBranchCommit);
 
-         onTargetBranchSearchFinish(targetBranchName);
+         onTargetBranchSearchFinish(targetBranchNames);
       }
 
       private void onTargetBranchSearchStart()
       {
-         updateRepositoryActionsState(false);
-         groupBoxTarget.Text = "Target Branch";
+         comboBoxTargetBranch.Items.Clear();
+
+         updateControls();
+         groupBoxTarget.Text = "Target Branch (Loading...)";
       }
 
-      private void onTargetBranchSearchFinish(string targetBranchName)
+      private void onTargetBranchSearchFinish(IEnumerable<string> targetBranchNames)
       {
-         updateRepositoryActionsState(true);
+         if (targetBranchNames != null && targetBranchNames.Any())
+         {
+            comboBoxTargetBranch.Items.AddRange(targetBranchNames.ToArray());
+            comboBoxTargetBranch.SelectedIndex = 0;
+         }
 
-         selectBranch(comboBoxTargetBranch, x => x.Name == targetBranchName);
+         updateControls();
+         groupBoxTarget.Text = "Target Branch";
       }
 
       protected override void applyInitialState()
       {
          checkBoxSquash.Checked = _initialState.IsSquashNeeded;
          checkBoxDeleteSourceBranch.Checked = _initialState.IsBranchDeletionNeeded;
+         textBoxAssigneeUsername.Text = _initialState.AssigneeUsername;
+         setTitle(String.Empty);
+         setDescription(String.Empty);
 
          comboBoxProject.Items.AddRange(_projects
             .OrderBy(x => x.ProjectName)
@@ -137,21 +170,36 @@ namespace mrHelper.App.Forms
             .ToArray());
          if (comboBoxProject.Items.Count > 0)
          {
-            int defaultProjectIndex = comboBoxProject.Items.IndexOf(_initialState.DefaultProject);
+            int defaultProjectIndex = comboBoxProject.Items.IndexOf(_initialState.DefaultProject ?? String.Empty);
             comboBoxProject.SelectedIndex = defaultProjectIndex == -1 ? 0 : defaultProjectIndex;
          }
       }
 
-      private void updateRepositoryActionsState(bool enabled)
+      private void updateControls()
       {
-         bool areSourceBranchesAvailable = comboBoxSourceBranch.Items.Count > 0;
-         comboBoxSourceBranch.Enabled = enabled && areSourceBranchesAvailable;
-         comboBoxTargetBranch.Enabled = enabled && areSourceBranchesAvailable;
+         bool areSourceBranches = comboBoxSourceBranch.Items.Count > 0;
+         comboBoxSourceBranch.Enabled = areSourceBranches;
+
+         bool isSourceBranchSelected = comboBoxSourceBranch.SelectedItem != null;
+         comboBoxTargetBranch.Enabled = isSourceBranchSelected;
+
+         bool isTargetBranchSelected = !String.IsNullOrEmpty(comboBoxTargetBranch.Text);
+         bool allDetailsLoaded = isSourceBranchSelected && isTargetBranchSelected && !_isLoadingCommit;
+         buttonEditDescription.Enabled = allDetailsLoaded;
+         buttonEditTitle.Enabled = allDetailsLoaded;
+         buttonToggleWIP.Enabled = allDetailsLoaded;
+         checkBoxDeleteSourceBranch.Enabled = allDetailsLoaded;
+         checkBoxSquash.Enabled = allDetailsLoaded;
+         textBoxAssigneeUsername.Enabled = allDetailsLoaded;
+
+         buttonSubmit.Enabled = allDetailsLoaded && !String.IsNullOrEmpty(getTitle());
       }
 
-      private readonly NewMergeRequestProperties _initialState;
       protected RepositoryAccessor _repositoryAccessor;
+      private bool _isLoadingCommit;
+      private readonly NewMergeRequestProperties _initialState;
       private readonly IEnumerable<ProjectKey> _projects;
+      private readonly string _sourceBranchTemplate;
    }
 }
 

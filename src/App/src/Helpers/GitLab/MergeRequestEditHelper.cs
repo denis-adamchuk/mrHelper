@@ -9,7 +9,7 @@ namespace mrHelper.App.Helpers.GitLab
 {
    internal static class MergeRequestEditHelper
    {
-      async internal static Task SubmitNewMergeRequestAsync(GitLabInstance gitLabInstance,
+      async internal static Task<MergeRequest> SubmitNewMergeRequestAsync(GitLabInstance gitLabInstance,
          ProjectKey projectKey,
          string sourceBranch, string targetBranch, string title, string username, string description,
          bool deleteSourceBranch, bool squash)
@@ -21,22 +21,22 @@ namespace mrHelper.App.Helpers.GitLab
           || String.IsNullOrEmpty(title))
          {
             // TODO WTF Error handling
-            return;
+            return null;
          }
 
          User assignee = await getUserAsync(gitLabInstance, username);
          if (assignee == null)
          {
             // TODO WTF Error handling
-            return;
+            return null;
          }
 
          CreateNewMergeRequestParameters parameters = new CreateNewMergeRequestParameters(
             sourceBranch, targetBranch, title, assignee.Id, description, deleteSourceBranch, squash);
-         await Shortcuts.GetMergeRequestCreator(gitLabInstance, projectKey).CreateMergeRequest(parameters);
+         return await Shortcuts.GetMergeRequestCreator(gitLabInstance, projectKey).CreateMergeRequest(parameters);
       }
 
-      async internal static Task ApplyChangesToMergeRequest(GitLabInstance gitLabInstance,
+      async internal static Task<bool> ApplyChangesToMergeRequest(GitLabInstance gitLabInstance,
          ProjectKey projectKey, MergeRequest mergeRequest, string targetBranch, string title, string username,
          string description, bool deleteSourceBranch, bool squash)
       {
@@ -45,7 +45,7 @@ namespace mrHelper.App.Helpers.GitLab
           || String.IsNullOrEmpty(title))
          {
             // TODO WTF Error handling
-            return;
+            return false;
          }
 
          string oldTargetBranch = mergeRequest.Target_Branch ?? String.Empty;
@@ -64,7 +64,7 @@ namespace mrHelper.App.Helpers.GitLab
             || oldDescription != description;
          if (!changed)
          {
-            return;
+            return false;
          }
 
          User assignee = oldAssigneeUsername == username ?
@@ -72,7 +72,7 @@ namespace mrHelper.App.Helpers.GitLab
          if (assignee == null)
          {
             // TODO WTF Error handling
-            return;
+            return false;
          }
 
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
@@ -80,6 +80,7 @@ namespace mrHelper.App.Helpers.GitLab
          await Shortcuts
             .GetMergeRequestEditor(gitLabInstance, new MergeRequestKey(projectKey, mergeRequest.IId))
             .ModifyMergeRequest(updateMergeRequestParameters);
+         return true;
       }
 
       async private static Task<User> getUserAsync(GitLabInstance gitLabInstance, string username)

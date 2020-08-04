@@ -8,9 +8,9 @@ namespace mrHelper.App.Forms
 {
    internal class EditMergeRequestPropertiesForm : MergeRequestPropertiesForm
    {
-      internal EditMergeRequestPropertiesForm(ProjectAccessor projectAccessor, User currentUser,
+      internal EditMergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
          ProjectKey projectKey, MergeRequest mergeRequest)
-         : base(projectAccessor, currentUser)
+         : base(hostname, projectAccessor, currentUser)
       {
          _projectKey = projectKey;
          _initialMergeRequest = mergeRequest;
@@ -44,13 +44,13 @@ namespace mrHelper.App.Forms
          htmlPanelTitle.Text = String.Empty;
          if (!String.IsNullOrEmpty(_initialMergeRequest.Title))
          {
-            htmlPanelTitle.Text = _initialMergeRequest.Title;
+            setTitle(_initialMergeRequest.Title);
          }
 
          htmlPanelDescription.Text = String.Empty;
          if (!String.IsNullOrEmpty(_initialMergeRequest.Description))
          {
-            htmlPanelDescription.Text = _initialMergeRequest.Description;
+            setDescription(_initialMergeRequest.Description);
          }
 
          textBoxAssigneeUsername.Text = String.Empty;

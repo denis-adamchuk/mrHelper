@@ -62,9 +62,9 @@
          // 
          this.groupBoxSource.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBoxSource.Controls.Add(this.comboBoxSourceBranch);
-         this.groupBoxSource.Location = new System.Drawing.Point(208, 12);
+         this.groupBoxSource.Location = new System.Drawing.Point(277, 12);
          this.groupBoxSource.Name = "groupBoxSource";
-         this.groupBoxSource.Size = new System.Drawing.Size(183, 56);
+         this.groupBoxSource.Size = new System.Drawing.Size(251, 56);
          this.groupBoxSource.TabIndex = 0;
          this.groupBoxSource.TabStop = false;
          this.groupBoxSource.Text = "Source Branch";
@@ -75,30 +75,28 @@
          this.comboBoxSourceBranch.FormattingEnabled = true;
          this.comboBoxSourceBranch.Location = new System.Drawing.Point(6, 19);
          this.comboBoxSourceBranch.Name = "comboBoxSourceBranch";
-         this.comboBoxSourceBranch.Size = new System.Drawing.Size(171, 21);
+         this.comboBoxSourceBranch.Size = new System.Drawing.Size(239, 21);
          this.comboBoxSourceBranch.TabIndex = 0;
-         this.comboBoxSourceBranch.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxBranch_Format);
+         this.comboBoxSourceBranch.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxSourceBranch_Format);
          // 
          // groupBoxTarget
          // 
          this.groupBoxTarget.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBoxTarget.Controls.Add(this.comboBoxTargetBranch);
-         this.groupBoxTarget.Location = new System.Drawing.Point(397, 12);
+         this.groupBoxTarget.Location = new System.Drawing.Point(534, 12);
          this.groupBoxTarget.Name = "groupBoxTarget";
-         this.groupBoxTarget.Size = new System.Drawing.Size(183, 56);
+         this.groupBoxTarget.Size = new System.Drawing.Size(251, 56);
          this.groupBoxTarget.TabIndex = 1;
          this.groupBoxTarget.TabStop = false;
          this.groupBoxTarget.Text = "Target Branch";
          // 
          // comboBoxTargetBranch
          // 
-         this.comboBoxTargetBranch.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxTargetBranch.FormattingEnabled = true;
          this.comboBoxTargetBranch.Location = new System.Drawing.Point(6, 19);
          this.comboBoxTargetBranch.Name = "comboBoxTargetBranch";
-         this.comboBoxTargetBranch.Size = new System.Drawing.Size(171, 21);
+         this.comboBoxTargetBranch.Size = new System.Drawing.Size(239, 21);
          this.comboBoxTargetBranch.TabIndex = 1;
-         this.comboBoxTargetBranch.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxBranch_Format);
          // 
          // groupBox3
          // 
@@ -109,7 +107,7 @@
          this.groupBox3.Controls.Add(this.htmlPanelTitle);
          this.groupBox3.Location = new System.Drawing.Point(12, 74);
          this.groupBox3.Name = "groupBox3";
-         this.groupBox3.Size = new System.Drawing.Size(568, 78);
+         this.groupBox3.Size = new System.Drawing.Size(773, 78);
          this.groupBox3.TabIndex = 3;
          this.groupBox3.TabStop = false;
          this.groupBox3.Text = "Title";
@@ -128,7 +126,7 @@
          // buttonEditTitle
          // 
          this.buttonEditTitle.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonEditTitle.Location = new System.Drawing.Point(487, 45);
+         this.buttonEditTitle.Location = new System.Drawing.Point(692, 45);
          this.buttonEditTitle.Name = "buttonEditTitle";
          this.buttonEditTitle.Size = new System.Drawing.Size(75, 23);
          this.buttonEditTitle.TabIndex = 4;
@@ -145,19 +143,20 @@
          this.htmlPanelTitle.Dock = System.Windows.Forms.DockStyle.Top;
          this.htmlPanelTitle.Location = new System.Drawing.Point(3, 16);
          this.htmlPanelTitle.Name = "htmlPanelTitle";
-         this.htmlPanelTitle.Size = new System.Drawing.Size(562, 23);
+         this.htmlPanelTitle.Size = new System.Drawing.Size(767, 23);
          this.htmlPanelTitle.TabIndex = 3;
          this.htmlPanelTitle.Text = null;
          // 
          // groupBoxDescription
          // 
-         this.groupBoxDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+         this.groupBoxDescription.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBoxDescription.Controls.Add(this.buttonEditDescription);
          this.groupBoxDescription.Controls.Add(this.htmlPanelDescription);
          this.groupBoxDescription.Location = new System.Drawing.Point(12, 158);
          this.groupBoxDescription.Name = "groupBoxDescription";
-         this.groupBoxDescription.Size = new System.Drawing.Size(568, 134);
+         this.groupBoxDescription.Size = new System.Drawing.Size(773, 283);
          this.groupBoxDescription.TabIndex = 4;
          this.groupBoxDescription.TabStop = false;
          this.groupBoxDescription.Text = "Description";
@@ -165,7 +164,7 @@
          // buttonEditDescription
          // 
          this.buttonEditDescription.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonEditDescription.Location = new System.Drawing.Point(487, 100);
+         this.buttonEditDescription.Location = new System.Drawing.Point(692, 249);
          this.buttonEditDescription.Name = "buttonEditDescription";
          this.buttonEditDescription.Size = new System.Drawing.Size(75, 23);
          this.buttonEditDescription.TabIndex = 5;
@@ -184,22 +183,22 @@
          this.htmlPanelDescription.Cursor = System.Windows.Forms.Cursors.IBeam;
          this.htmlPanelDescription.Location = new System.Drawing.Point(6, 19);
          this.htmlPanelDescription.Name = "htmlPanelDescription";
-         this.htmlPanelDescription.Size = new System.Drawing.Size(556, 75);
+         this.htmlPanelDescription.Size = new System.Drawing.Size(761, 224);
          this.htmlPanelDescription.TabIndex = 0;
          this.htmlPanelDescription.Text = null;
          // 
          // groupBoxOptions
          // 
-         this.groupBoxOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+         this.groupBoxOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBoxOptions.Controls.Add(this.textBoxFirstNote);
          this.groupBoxOptions.Controls.Add(this.labelAssignee);
          this.groupBoxOptions.Controls.Add(this.textBoxAssigneeUsername);
          this.groupBoxOptions.Controls.Add(this.checkBoxSquash);
          this.groupBoxOptions.Controls.Add(this.checkBoxDeleteSourceBranch);
-         this.groupBoxOptions.Location = new System.Drawing.Point(12, 298);
+         this.groupBoxOptions.Location = new System.Drawing.Point(12, 447);
          this.groupBoxOptions.Name = "groupBoxOptions";
-         this.groupBoxOptions.Size = new System.Drawing.Size(568, 76);
+         this.groupBoxOptions.Size = new System.Drawing.Size(773, 76);
          this.groupBoxOptions.TabIndex = 5;
          this.groupBoxOptions.TabStop = false;
          this.groupBoxOptions.Text = "Options";
@@ -231,7 +230,7 @@
          // 
          this.checkBoxSquash.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.checkBoxSquash.AutoSize = true;
-         this.checkBoxSquash.Location = new System.Drawing.Point(302, 19);
+         this.checkBoxSquash.Location = new System.Drawing.Point(507, 19);
          this.checkBoxSquash.Name = "checkBoxSquash";
          this.checkBoxSquash.Size = new System.Drawing.Size(260, 17);
          this.checkBoxSquash.TabIndex = 1;
@@ -252,7 +251,7 @@
          // 
          this.buttonSubmit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.buttonSubmit.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonSubmit.Location = new System.Drawing.Point(12, 380);
+         this.buttonSubmit.Location = new System.Drawing.Point(12, 529);
          this.buttonSubmit.Name = "buttonSubmit";
          this.buttonSubmit.Size = new System.Drawing.Size(75, 23);
          this.buttonSubmit.TabIndex = 6;
@@ -263,7 +262,7 @@
          // 
          this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonCancel.Location = new System.Drawing.Point(505, 380);
+         this.buttonCancel.Location = new System.Drawing.Point(710, 529);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
          this.buttonCancel.TabIndex = 7;
@@ -275,7 +274,7 @@
          this.groupBoxProject.Controls.Add(this.comboBoxProject);
          this.groupBoxProject.Location = new System.Drawing.Point(12, 12);
          this.groupBoxProject.Name = "groupBoxProject";
-         this.groupBoxProject.Size = new System.Drawing.Size(183, 56);
+         this.groupBoxProject.Size = new System.Drawing.Size(251, 56);
          this.groupBoxProject.TabIndex = 1;
          this.groupBoxProject.TabStop = false;
          this.groupBoxProject.Text = "Project";
@@ -286,7 +285,7 @@
          this.comboBoxProject.FormattingEnabled = true;
          this.comboBoxProject.Location = new System.Drawing.Point(6, 19);
          this.comboBoxProject.Name = "comboBoxProject";
-         this.comboBoxProject.Size = new System.Drawing.Size(171, 21);
+         this.comboBoxProject.Size = new System.Drawing.Size(239, 21);
          this.comboBoxProject.TabIndex = 0;
          // 
          // MergeRequestPropertiesForm
@@ -294,7 +293,7 @@
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(592, 415);
+         this.ClientSize = new System.Drawing.Size(797, 564);
          this.Controls.Add(this.groupBoxProject);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.buttonSubmit);

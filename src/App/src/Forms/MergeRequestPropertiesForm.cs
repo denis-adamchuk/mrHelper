@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Linq;
+using System.Diagnostics;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
 using mrHelper.GitLabClient;
+using mrHelper.Common.Tools;
+using Markdig;
 
 namespace mrHelper.App.src.Forms
 {
    internal abstract partial class MergeRequestPropertiesForm : CustomFontForm
    {
-      internal MergeRequestPropertiesForm(ProjectAccessor projectAccessor, User currentUser)
+      internal MergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
@@ -18,18 +21,24 @@ namespace mrHelper.App.src.Forms
 
          applyFont(Program.Settings.MainWindowFontSizeName);
 
+         _hostname = hostname;
          _projectAccessor = projectAccessor;
          _currentUser = currentUser;
+         _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
+
+         string css = String.Format("{0}", mrHelper.App.Properties.Resources.Common_CSS);
+         htmlPanelTitle.BaseStylesheet = css;
+         htmlPanelDescription.BaseStylesheet = css;
       }
 
       internal string Project => getProjectName();
       internal string SourceBranch => getSourceBranch()?.Name;
-      internal string TargetBranch => getTargetBranch()?.Name;
+      internal string TargetBranch => getTargetBranch();
       internal string AssigneeUsername => getUserName();
       internal bool DeleteSourceBranch => checkBoxDeleteSourceBranch.Checked;
       internal bool Squash => checkBoxSquash.Checked;
-      internal string Title => htmlPanelTitle.Text;
-      internal string Description => htmlPanelDescription.Text;
+      internal string Title => getTitle();
+      internal string Description => getDescription();
 
       protected override void OnLoad(EventArgs e)
       {
@@ -40,41 +49,43 @@ namespace mrHelper.App.src.Forms
 
       private void buttonToggleWIP_Click(object sender, EventArgs e)
       {
-         string prefix = "WIP: ";
-         if (htmlPanelTitle.Text.StartsWith(prefix))
-         {
-            htmlPanelTitle.Text = htmlPanelTitle.Text.Substring(
-               prefix.Length, htmlPanelTitle.Text.Length - prefix.Length);
-         }
-         else
-         {
-            htmlPanelTitle.Text = prefix + htmlPanelTitle.Text;
-         }
+         toggleWIP();
       }
 
       private void buttonEditTitle_Click(object sender, EventArgs e)
       {
-         TextEditForm editTitleForm = new TextEditForm(
-            "Edit MR title", htmlPanelTitle.Text, true);
+         string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
+         TextEditForm editTitleForm = new TextEditForm("Edit Merge Request title", title, true);
          if (editTitleForm.ShowDialog() == DialogResult.OK)
          {
-            htmlPanelTitle.Text = editTitleForm.Body;
+            setTitle(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editTitleForm.Body));
          }
       }
 
       private void buttonEditDescription_Click(object sender, EventArgs e)
       {
-         TextEditForm editDescriptionForm = new TextEditForm(
-            "Edit MR description", htmlPanelDescription.Text, true);
+         string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
+         TextEditForm editDescriptionForm = new TextEditForm("Edit Merge Request description", description, true);
          if (editDescriptionForm.ShowDialog() == DialogResult.OK)
          {
-            htmlPanelDescription.Text = editDescriptionForm.Body;
+            setDescription(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editDescriptionForm.Body));
          }
       }
 
-      private void comboBoxBranch_Format(object sender, ListControlConvertEventArgs e)
+      private void comboBoxSourceBranch_Format(object sender, ListControlConvertEventArgs e)
       {
-         e.Value = ((Branch)(e.ListItem)).Name;
+         if (e.ListItem is Branch branch)
+         {
+            e.Value = branch.Name;
+         }
+         else if (e.ListItem is string branchName)
+         {
+            e.Value = branchName;
+         }
+         else
+         {
+            Debug.Assert(false);
+         }
       }
 
       protected Branch getSourceBranch()
@@ -82,9 +93,9 @@ namespace mrHelper.App.src.Forms
          return comboBoxSourceBranch.SelectedItem as Branch;
       }
 
-      protected Branch getTargetBranch()
+      protected string getTargetBranch()
       {
-         return comboBoxTargetBranch.SelectedItem as Branch;
+         return comboBoxTargetBranch.Text;
       }
 
       protected string getProjectName()
@@ -108,28 +119,54 @@ namespace mrHelper.App.src.Forms
          return _projectAccessor.GetSingleProjectAccessor(projectName).GetRepositoryAccessor();
       }
 
-      protected void selectBranch(ComboBox comboBox, Func<Branch, bool> predicate)
+      protected void setTitle(string title)
       {
-         if (comboBox.Items.Count == 0)
-         {
-            return;
-         }
+         _title = title;
+         htmlPanelTitle.Text = convertTextToHtml(title);
+      }
 
-         Branch preferredBranch = comboBox.Items.Cast<Branch>().FirstOrDefault(predicate);
-         Branch defaultBranch = comboBox.Items.Cast<Branch>().FirstOrDefault(x => x.Name == DefaultBranchName);
-         Branch selectedBranch = preferredBranch ?? defaultBranch;
-         int selectedBranchIndex = comboBox.Items.IndexOf(selectedBranch);
-         if (selectedBranchIndex != -1)
-         {
-            comboBox.SelectedIndex = selectedBranchIndex;
-         }
+      protected void setDescription(string description)
+      {
+         _description = description;
+         htmlPanelDescription.Text = convertTextToHtml(description);
+      }
+
+      protected string getTitle()
+      {
+         return _title;
+      }
+
+      protected string getDescription()
+      {
+         return _description;
+      }
+
+      string convertTextToHtml(string text)
+      {
+         string prefix = StringUtils.GetGitLabAttachmentPrefix(_hostname, getProjectName());
+         string html = MarkDownUtils.ConvertToHtml(text, prefix, _mdPipeline);
+         return String.Format(MarkDownUtils.HtmlPageTemplate, html);
+      }
+
+      private void toggleWIP()
+      {
+         string prefix = "WIP: ";
+         string currentTitle = getTitle();
+         string newTitle = currentTitle.StartsWith(prefix)
+            ? currentTitle.Substring(prefix.Length, currentTitle.Length - prefix.Length)
+            : prefix + currentTitle;
+         setTitle(newTitle);
       }
 
       protected abstract void applyInitialState();
 
-      private readonly string DefaultBranchName = "master";
+      private readonly string _hostname;
       protected readonly User _currentUser;
+      private readonly MarkdownPipeline _mdPipeline;
       protected readonly ProjectAccessor _projectAccessor;
+      private string _title;
+      private string _description;
+
    }
 }
 

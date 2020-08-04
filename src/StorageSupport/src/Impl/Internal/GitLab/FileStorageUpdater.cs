@@ -125,7 +125,7 @@ namespace mrHelper.StorageSupport
       async public Task doUpdate(bool isAwaitedUpdate, CommitStorageUpdateContext context,
          Action<string> onProgressChange)
       {
-         if (context == null || context.BaseToHeads == null || _isDisposed)
+         if (context == null || context.BaseToHeads == null || !context.BaseToHeads.Any() || _isDisposed)
          {
             return;
          }

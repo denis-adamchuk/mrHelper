@@ -56,24 +56,33 @@ namespace mrHelper.GitLabClient
             "Branch creation cancelled", "Cannot create a new branch");
       }
 
-      async public Task<string> FindPreferredTargetBranchName(string sourceBranchName, string sourceBranchCommitParentSha)
+      async public Task<IEnumerable<string>> FindPreferredTargetBranchNames(
+         Branch sourceBranch, Commit sourceBranchCommit)
       {
-         if (String.IsNullOrEmpty(sourceBranchName) || String.IsNullOrEmpty(sourceBranchCommitParentSha))
+         if (sourceBranchCommit.Parent_Ids == null || !sourceBranchCommit.Parent_Ids.Any())
          {
-            return null; // TODO Is it really neeeded?
+            Debug.Assert(false);
+            return null;
          }
 
          const int MaxCommitDepth = 5;
          for (int iDepth = 0; iDepth < MaxCommitDepth; ++iDepth)
          {
-            string sha = String.Format("{0}{1}", sourceBranchCommitParentSha, new string('^', iDepth));
+            string sha = String.Format("{0}{1}", sourceBranchCommit.Parent_Ids.First(), new string('^', iDepth));
             IEnumerable<CommitRef> refs = await call(() => _operator.LoadCommitRefsAsync(sha),
                "Commit refs loading cancelled", "Cannot load commit refs");
-            CommitRef r = refs?.FirstOrDefault(x => x.Type == "branch" && x.Name != sourceBranchName);
-            if (r != null)
+            if (refs == null || !refs.Any())
             {
-               return r.Name;
+               continue;
             }
+
+            IEnumerable<CommitRef> branchRefs = refs.Where(x => x.Type == "branch");
+            if (branchRefs.Count() == 1 && branchRefs.First().Name == sourceBranch.Name)
+            {
+               continue;
+            }
+
+            return branchRefs.Where(x => x.Name != sourceBranch.Name).Select(x => x.Name);
          }
          return null;
       }

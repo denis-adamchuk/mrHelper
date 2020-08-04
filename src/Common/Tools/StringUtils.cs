@@ -64,6 +64,11 @@ namespace mrHelper.Common.Tools
       {
          return input.Replace("\r\n", "\n");
       }
+
+      public static string GetGitLabAttachmentPrefix(string host, string projectname)
+      {
+         return String.Format("{0}/{1}", StringUtils.GetHostWithPrefix(host), projectname);
+      }
    }
 }
 
