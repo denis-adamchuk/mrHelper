@@ -170,7 +170,7 @@ namespace mrHelper.App.src.Forms
          {
             return String.Empty;
          }
-         return labelSpecialNotePrefix.Text + convertWordsToLabels(textBoxSpecialNote.Text);
+         return labelSpecialNotePrefix.Text + formatSpecialNote(textBoxSpecialNote.Text);
       }
 
       protected void setFirstNote(string firstNote)
@@ -203,19 +203,23 @@ namespace mrHelper.App.src.Forms
          setTitle(newTitle);
       }
 
-      private static string convertWordsToLabels(string text)
+      private static string formatSpecialNote(string text)
       {
+         // 1. Trim spaces
          string trimmed = text.TrimStart().TrimEnd();
          if (String.IsNullOrEmpty(trimmed))
          {
             return String.Empty;
          }
 
-         // guarantees that all names are proceeded with '@'
-         return String.Join(" ", trimmed
+         // 2. Make sure that all names are preceded with '@'
+         trimmed = String.Join(" ", trimmed
             .Replace("@", "")
             .Split(' ')
             .Select(x => Char.IsLetter(x[0]) ? "@" + x : x[0] + "@" + x.Substring(1)));
+
+         // 3. Replace commas with spaces
+         return trimmed.Replace(", ", " ").Replace(",", " ").TrimStart().TrimEnd();
       }
 
       private static string convertLabelToWord(string text)

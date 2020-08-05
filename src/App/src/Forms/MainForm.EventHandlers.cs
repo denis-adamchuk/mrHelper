@@ -1515,17 +1515,20 @@ namespace mrHelper.App.Forms
 
                bool updated = await MergeRequestEditHelper.ApplyChangesToMergeRequest(_gitLabInstance, item.ProjectKey,
                   item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser);
-               if (updated)
+               if (!updated)
                {
-                  requestUpdates(mrk,
-                     new int[] {
-                        100,
-                        Program.Settings.OneShotUpdateFirstChanceDelayMs,
-                        Program.Settings.OneShotUpdateSecondChanceDelayMs
-                     });
-
-                  labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been updated", mrk.IId);
+                  labelWorkflowStatus.Text = String.Format("No changes were made to Merge Request !{0}", mrk.IId);
+                  return;
                }
+
+               requestUpdates(mrk,
+                  new int[] {
+                     100,
+                     Program.Settings.OneShotUpdateFirstChanceDelayMs,
+                     Program.Settings.OneShotUpdateSecondChanceDelayMs
+                  });
+
+               labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been updated", mrk.IId);
             }));
       }
 
@@ -1539,7 +1542,7 @@ namespace mrHelper.App.Forms
 
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
-         requestUpdates(mrk, 100, null);
+         requestUpdates(mrk, 100, () => labelWorkflowStatus.Text = String.Format("Merge Request !{0} refreshed", mrk.IId));
       }
    }
 }

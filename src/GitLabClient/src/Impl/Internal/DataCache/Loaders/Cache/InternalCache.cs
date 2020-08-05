@@ -109,11 +109,15 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       {
          if (_mergeRequests.ContainsKey(mrk.ProjectKey))
          {
-            MergeRequest[] mergeRequests = _mergeRequests[mrk.ProjectKey].ToArray(); // make a copy
-            int index = Array.FindIndex(mergeRequests, x => x.IId == mrk.IId);
+            List<MergeRequest> mergeRequests = _mergeRequests[mrk.ProjectKey].ToList(); // make a copy
+            int index = mergeRequests.FindIndex(x => x.IId == mrk.IId);
             if (index != -1)
             {
                mergeRequests[index] = mergeRequest; // substitute an item
+            }
+            else
+            {
+               mergeRequests.Add(mergeRequest); // add an item
             }
             _mergeRequests[mrk.ProjectKey] = mergeRequests;
          }

@@ -25,6 +25,7 @@ namespace mrHelper.GitLabClient.Accessors
             }
             catch (OperatorException)
             {
+               // TODO WTF Need to wrap into another exception type
                return null;
             }
          }

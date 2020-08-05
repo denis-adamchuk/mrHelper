@@ -180,8 +180,9 @@ namespace mrHelper.App.Helpers.GitLab
             MessageBox.Show("GitLab could not modify the selected merge request", "Error",
                MessageBoxButtons.OK, MessageBoxIcon.Error);
             Trace.TraceError("[MergeRequestEditHelper] Failed to modify a merge request");
+            return result;
          }
-         return result;
+         return true;
       }
 
       async private static Task<User> getUserAsync(GitLabInstance gitLabInstance, string username)
