@@ -20,7 +20,6 @@ using Newtonsoft.Json.Linq;
 using mrHelper.App.src.Forms;
 using mrHelper.GitLabClient;
 using mrHelper.App.Helpers.GitLab;
-using GitLabSharp.Accessors;
 
 namespace mrHelper.App.Forms
 {
@@ -769,7 +768,7 @@ namespace mrHelper.App.Forms
 
             string oldButtonText = buttonReloadList.Text;
             onUpdating();
-            requestUpdates(null, new int[] { Constants.ReloadListPseudoTimerInterval }, () => onUpdated(oldButtonText));
+            requestUpdates(null, Constants.ReloadListPseudoTimerInterval, () => onUpdated(oldButtonText));
          }
       }
 
@@ -1416,11 +1415,15 @@ namespace mrHelper.App.Forms
          ProjectKey? currentProject = getMergeRequestKey(null)?.ProjectKey;
          if (_gitLabInstance == null || currentUser == null || _expressionResolver == null)
          {
-            // TODO WTF Error handling
+            Debug.Assert(false);
+            MessageBox.Show("Cannot create a merge request", "Internal error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Trace.TraceError("Unexpected application state." +
+               "_gitLabInstance is null={0}, currentUser is null={1}, _expressionResolver is null={2}",
+               _gitLabInstance == null, currentUser == null, _expressionResolver == null);
             return;
          }
 
-         // This state is expected to be used only once, next times class member is used
+         // This state is expected to be used only once, next times 'persistent storage' is used
          NewMergeRequestProperties defaultState = new NewMergeRequestProperties(
             currentProject?.ProjectName, currentUser.Username, true, true);
 
@@ -1438,32 +1441,38 @@ namespace mrHelper.App.Forms
          BeginInvoke(new Action(
             async () =>
             {
-               string projectName = form.Project;
-               string sourceBranch = form.SourceBranch;
-               string targetBranch = form.TargetBranch;
-               string assigneeUsername = form.AssigneeUsername;
-               bool deleteSourceBranch = form.DeleteSourceBranch;
-               bool squash = form.Squash;
-               string title = form.Title;
-               string description = form.Description;
+               ProjectKey projectKey = new ProjectKey(hostname, form.ProjectName);
+               MergeRequestEditHelper.SubmitNewMergeRequestParameters parameters =
+                  new MergeRequestEditHelper.SubmitNewMergeRequestParameters(projectKey,
+                  form.SourceBranch, form.TargetBranch, form.Title, form.AssigneeUsername, form.Description,
+                  form.DeleteSourceBranch, form.Squash);
+
+               buttonCreateNew.Enabled = false;
+               labelWorkflowStatus.Text = "Creating a merge request at GitLab...";
 
                MergeRequestKey? mrkOpt = await MergeRequestEditHelper.SubmitNewMergeRequestAsync(_gitLabInstance,
-                  new ProjectKey(hostname, projectName), sourceBranch, targetBranch, title, assigneeUsername,
-                  description, deleteSourceBranch, squash, form.SpecialNote, currentUser);
+                  parameters, form.SpecialNote, currentUser);
                if (mrkOpt == null)
                {
+                  // all error handling is done at the callee side
+                  labelWorkflowStatus.Text = String.Empty;
+                  buttonCreateNew.Enabled = true;
                   return;
                }
 
-               string message = String.Format("Merge Request !{0} has been created in project {1}",
-                  mrkOpt.Value.IId, projectName);
-               MessageBox.Show(message, "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-               labelWorkflowStatus.Text = message;
+               requestUpdates(mrkOpt.Value,
+                  new int[] {
+                     1000,
+                     Program.Settings.OneShotUpdateFirstChanceDelayMs,
+                     Program.Settings.OneShotUpdateSecondChanceDelayMs
+                  });
 
-               _liveDataCache.MergeRequestCache.RequestUpdate(mrkOpt, new int[] { 1 }, null);
+               labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been created in project {1}",
+                  mrkOpt.Value.IId, form.ProjectName);
+               buttonCreateNew.Enabled = true;
 
                _newMergeRequestDialogStatesByHosts[getHostName()] = new NewMergeRequestProperties(
-                  projectName, assigneeUsername, squash, deleteSourceBranch);
+                  form.ProjectName, form.AssigneeUsername, form.Squash, form.DeleteSourceBranch);
             }));
       }
 
@@ -1477,26 +1486,22 @@ namespace mrHelper.App.Forms
 
          string hostname = getHostName();
          User currentUser = getCurrentUser();
-         ProjectKey? currentProject = getMergeRequestKey(null)?.ProjectKey;
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
-         if (_gitLabInstance == null || currentUser == null || currentProject == null || item.MergeRequest == null)
+         if (_gitLabInstance == null || currentUser == null || item.MergeRequest == null)
          {
-            // TODO WTF Error handling
+            Debug.Assert(false);
+            MessageBox.Show("Cannot create a merge request", "Internal error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Trace.TraceError("Unexpected application state." +
+               "_gitLabInstance is null={0}, currentUser is null={1}, item.MergeRequest is null={2}",
+               _gitLabInstance == null, currentUser == null, item.MergeRequest == null);
             return;
          }
 
          BeginInvoke(new Action(
             async () =>
             {
-               MergeRequestKey mrk = new MergeRequestKey(currentProject.Value, item.MergeRequest.IId);
-               IEnumerable<Discussion> discussions = await _liveDataCache.DiscussionCache.LoadDiscussions(mrk);
-               Discussion note = discussions?
-                  .Where(x => x.Notes != null
-                           && x.Notes.Count() == 1
-                           && x.Notes.First().Body.StartsWith(Program.ServiceManager.GetSpecialNotePrefix()))
-                  .LastOrDefault();
-               string noteText = note?.Notes.First().Body ?? String.Empty;
-
+               MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
+               string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(_liveDataCache.DiscussionCache, mrk);
                MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
                   getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText);
                if (form.ShowDialog() != DialogResult.OK)
@@ -1504,23 +1509,22 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               string newTargetBranch = form.TargetBranch;
-               string newAssigneeUsername = form.AssigneeUsername;
-               bool newDeleteSourceBranch = form.DeleteSourceBranch;
-               bool newSquash = form.Squash;
-               string newTitle = form.Title;
-               string newDescription = form.Description;
-               string newNoteText = form.SpecialNote;
+               MergeRequestEditHelper.ApplyMergeRequestChangesParameters parameters =
+                  new MergeRequestEditHelper.ApplyMergeRequestChangesParameters(form.Title, form.AssigneeUsername,
+                  form.Description, form.DeleteSourceBranch, form.Squash);
 
-               bool res = await MergeRequestEditHelper.ApplyChangesToMergeRequest(_gitLabInstance, currentProject.Value,
-                  item.MergeRequest, newTargetBranch, newTitle, newAssigneeUsername, newDescription,
-                  newDeleteSourceBranch, newSquash, noteText, newNoteText, currentUser);
-               if (res)
+               bool updated = await MergeRequestEditHelper.ApplyChangesToMergeRequest(_gitLabInstance, item.ProjectKey,
+                  item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser);
+               if (updated)
                {
-                  MessageBox.Show(String.Format("Merge Request !{0} has been updated", item.MergeRequest.IId),
-                     "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                  requestUpdates(mrk,
+                     new int[] {
+                        100,
+                        Program.Settings.OneShotUpdateFirstChanceDelayMs,
+                        Program.Settings.OneShotUpdateSecondChanceDelayMs
+                     });
 
-                  _liveDataCache.MergeRequestCache.RequestUpdate(mrk, new int[] { 1 }, null);
+                  labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been updated", mrk.IId);
                }
             }));
       }
@@ -1535,7 +1539,7 @@ namespace mrHelper.App.Forms
 
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
-         requestUpdates(mrk, new int[] { 1 }, null);
+         requestUpdates(mrk, 100, null);
       }
    }
 }

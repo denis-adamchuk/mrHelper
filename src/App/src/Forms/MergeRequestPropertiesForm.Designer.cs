@@ -48,7 +48,7 @@
          this.checkBoxSquash = new System.Windows.Forms.CheckBox();
          this.checkBoxDeleteSourceBranch = new System.Windows.Forms.CheckBox();
          this.buttonSubmit = new System.Windows.Forms.Button();
-         this.buttonCancel = new System.Windows.Forms.Button();
+         this.buttonCancel = new CommonControls.Controls.ConfirmCancelButton();
          this.groupBoxProject = new System.Windows.Forms.GroupBox();
          this.comboBoxProject = new System.Windows.Forms.ComboBox();
          this.groupBoxSource.SuspendLayout();
@@ -77,7 +77,7 @@
          this.comboBoxSourceBranch.Location = new System.Drawing.Point(6, 19);
          this.comboBoxSourceBranch.Name = "comboBoxSourceBranch";
          this.comboBoxSourceBranch.Size = new System.Drawing.Size(239, 21);
-         this.comboBoxSourceBranch.TabIndex = 0;
+         this.comboBoxSourceBranch.TabIndex = 1;
          this.comboBoxSourceBranch.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxSourceBranch_Format);
          // 
          // groupBoxTarget
@@ -97,7 +97,7 @@
          this.comboBoxTargetBranch.Location = new System.Drawing.Point(6, 19);
          this.comboBoxTargetBranch.Name = "comboBoxTargetBranch";
          this.comboBoxTargetBranch.Size = new System.Drawing.Size(239, 21);
-         this.comboBoxTargetBranch.TabIndex = 1;
+         this.comboBoxTargetBranch.TabIndex = 2;
          // 
          // groupBox3
          // 
@@ -119,7 +119,7 @@
          this.buttonToggleWIP.Location = new System.Drawing.Point(6, 45);
          this.buttonToggleWIP.Name = "buttonToggleWIP";
          this.buttonToggleWIP.Size = new System.Drawing.Size(110, 23);
-         this.buttonToggleWIP.TabIndex = 5;
+         this.buttonToggleWIP.TabIndex = 4;
          this.buttonToggleWIP.Text = "Toggle WIP status";
          this.buttonToggleWIP.UseVisualStyleBackColor = true;
          this.buttonToggleWIP.Click += new System.EventHandler(this.buttonToggleWIP_Click);
@@ -130,7 +130,7 @@
          this.buttonEditTitle.Location = new System.Drawing.Point(692, 45);
          this.buttonEditTitle.Name = "buttonEditTitle";
          this.buttonEditTitle.Size = new System.Drawing.Size(75, 23);
-         this.buttonEditTitle.TabIndex = 4;
+         this.buttonEditTitle.TabIndex = 5;
          this.buttonEditTitle.Text = "Edit...";
          this.buttonEditTitle.UseVisualStyleBackColor = true;
          this.buttonEditTitle.Click += new System.EventHandler(this.buttonEditTitle_Click);
@@ -157,7 +157,7 @@
          this.groupBoxDescription.Controls.Add(this.htmlPanelDescription);
          this.groupBoxDescription.Location = new System.Drawing.Point(12, 158);
          this.groupBoxDescription.Name = "groupBoxDescription";
-         this.groupBoxDescription.Size = new System.Drawing.Size(773, 283);
+         this.groupBoxDescription.Size = new System.Drawing.Size(773, 174);
          this.groupBoxDescription.TabIndex = 4;
          this.groupBoxDescription.TabStop = false;
          this.groupBoxDescription.Text = "Description";
@@ -165,10 +165,10 @@
          // buttonEditDescription
          // 
          this.buttonEditDescription.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonEditDescription.Location = new System.Drawing.Point(692, 249);
+         this.buttonEditDescription.Location = new System.Drawing.Point(692, 140);
          this.buttonEditDescription.Name = "buttonEditDescription";
          this.buttonEditDescription.Size = new System.Drawing.Size(75, 23);
-         this.buttonEditDescription.TabIndex = 5;
+         this.buttonEditDescription.TabIndex = 7;
          this.buttonEditDescription.Text = "Edit...";
          this.buttonEditDescription.UseVisualStyleBackColor = true;
          this.buttonEditDescription.Click += new System.EventHandler(this.buttonEditDescription_Click);
@@ -184,8 +184,8 @@
          this.htmlPanelDescription.Cursor = System.Windows.Forms.Cursors.IBeam;
          this.htmlPanelDescription.Location = new System.Drawing.Point(6, 19);
          this.htmlPanelDescription.Name = "htmlPanelDescription";
-         this.htmlPanelDescription.Size = new System.Drawing.Size(761, 224);
-         this.htmlPanelDescription.TabIndex = 0;
+         this.htmlPanelDescription.Size = new System.Drawing.Size(761, 115);
+         this.htmlPanelDescription.TabIndex = 6;
          this.htmlPanelDescription.Text = null;
          // 
          // groupBoxOptions
@@ -198,7 +198,7 @@
          this.groupBoxOptions.Controls.Add(this.textBoxAssigneeUsername);
          this.groupBoxOptions.Controls.Add(this.checkBoxSquash);
          this.groupBoxOptions.Controls.Add(this.checkBoxDeleteSourceBranch);
-         this.groupBoxOptions.Location = new System.Drawing.Point(12, 447);
+         this.groupBoxOptions.Location = new System.Drawing.Point(12, 338);
          this.groupBoxOptions.Name = "groupBoxOptions";
          this.groupBoxOptions.Size = new System.Drawing.Size(773, 76);
          this.groupBoxOptions.TabIndex = 5;
@@ -219,7 +219,8 @@
          this.textBoxSpecialNote.Location = new System.Drawing.Point(471, 44);
          this.textBoxSpecialNote.Name = "textBoxSpecialNote";
          this.textBoxSpecialNote.Size = new System.Drawing.Size(296, 20);
-         this.textBoxSpecialNote.TabIndex = 4;
+         this.textBoxSpecialNote.TabIndex = 11;
+         this.textBoxSpecialNote.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSpecialNote_KeyDown);
          // 
          // labelAssignee
          // 
@@ -235,7 +236,8 @@
          this.textBoxAssigneeUsername.Location = new System.Drawing.Point(114, 44);
          this.textBoxAssigneeUsername.Name = "textBoxAssigneeUsername";
          this.textBoxAssigneeUsername.Size = new System.Drawing.Size(131, 20);
-         this.textBoxAssigneeUsername.TabIndex = 2;
+         this.textBoxAssigneeUsername.TabIndex = 10;
+         this.textBoxAssigneeUsername.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxAssigneeUsername_KeyDown);
          // 
          // checkBoxSquash
          // 
@@ -244,7 +246,7 @@
          this.checkBoxSquash.Location = new System.Drawing.Point(507, 19);
          this.checkBoxSquash.Name = "checkBoxSquash";
          this.checkBoxSquash.Size = new System.Drawing.Size(260, 17);
-         this.checkBoxSquash.TabIndex = 1;
+         this.checkBoxSquash.TabIndex = 9;
          this.checkBoxSquash.Text = "Squash commits when merge request is accepted";
          this.checkBoxSquash.UseVisualStyleBackColor = true;
          // 
@@ -254,7 +256,7 @@
          this.checkBoxDeleteSourceBranch.Location = new System.Drawing.Point(6, 19);
          this.checkBoxDeleteSourceBranch.Name = "checkBoxDeleteSourceBranch";
          this.checkBoxDeleteSourceBranch.Size = new System.Drawing.Size(285, 17);
-         this.checkBoxDeleteSourceBranch.TabIndex = 0;
+         this.checkBoxDeleteSourceBranch.TabIndex = 8;
          this.checkBoxDeleteSourceBranch.Text = "Delete source branch when merge request is accepted";
          this.checkBoxDeleteSourceBranch.UseVisualStyleBackColor = true;
          // 
@@ -262,10 +264,10 @@
          // 
          this.buttonSubmit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.buttonSubmit.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonSubmit.Location = new System.Drawing.Point(12, 529);
+         this.buttonSubmit.Location = new System.Drawing.Point(12, 420);
          this.buttonSubmit.Name = "buttonSubmit";
          this.buttonSubmit.Size = new System.Drawing.Size(75, 23);
-         this.buttonSubmit.TabIndex = 6;
+         this.buttonSubmit.TabIndex = 12;
          this.buttonSubmit.Text = "Submit";
          this.buttonSubmit.UseVisualStyleBackColor = true;
          // 
@@ -273,10 +275,10 @@
          // 
          this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonCancel.Location = new System.Drawing.Point(710, 529);
+         this.buttonCancel.Location = new System.Drawing.Point(710, 420);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
-         this.buttonCancel.TabIndex = 7;
+         this.buttonCancel.TabIndex = 13;
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;
          // 
@@ -304,7 +306,7 @@
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(797, 564);
+         this.ClientSize = new System.Drawing.Size(797, 455);
          this.Controls.Add(this.groupBoxProject);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.buttonSubmit);
@@ -314,7 +316,7 @@
          this.Controls.Add(this.groupBoxTarget);
          this.Controls.Add(this.groupBoxSource);
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-         this.MinimumSize = new System.Drawing.Size(608, 426);
+         this.MinimumSize = new System.Drawing.Size(813, 494);
          this.Name = "MergeRequestPropertiesForm";
          this.Text = "Create New Merge Request";
          this.groupBoxSource.ResumeLayout(false);
@@ -343,7 +345,7 @@
       protected System.Windows.Forms.CheckBox checkBoxSquash;
       protected System.Windows.Forms.CheckBox checkBoxDeleteSourceBranch;
       protected System.Windows.Forms.Button buttonSubmit;
-      protected System.Windows.Forms.Button buttonCancel;
+      protected CommonControls.Controls.ConfirmCancelButton buttonCancel;
       protected System.Windows.Forms.ComboBox comboBoxSourceBranch;
       protected System.Windows.Forms.ComboBox comboBoxTargetBranch;
       protected System.Windows.Forms.GroupBox groupBoxProject;

@@ -109,16 +109,22 @@ namespace mrHelper.App.Forms
       {
          setTitle(commit?.Title ?? String.Empty);
          setDescription(trimTitleFromCommitMessage(commit));
+         toggleWIP(); // switch on WIP by default
          _isLoadingCommit = false;
          updateControls();
       }
 
       private static string trimTitleFromCommitMessage(Commit commit)
       {
-         string message = commit?.Message ?? String.Empty;
+         if (commit == null)
+         {
+            return String.Empty;
+         }
+
+         string message = commit.Message;
          if (message.StartsWith(commit.Title))
          {
-            message = commit.Message.Substring(commit.Title.Length, commit.Message.Length - commit.Title.Length);
+            message = commit.Message.Substring(commit.Title.Length);
             message = message.TrimStart(new char[] { '\n' });
          }
          return message;

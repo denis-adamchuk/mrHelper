@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using GitLabSharp.Accessors;
+using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
 
@@ -16,12 +17,19 @@ namespace mrHelper.GitLabClient.Accessors
          _modificationListener = modificationListener;
       }
 
-      async public Task ModifyMergeRequest(UpdateMergeRequestParameters parameters)
+      async public Task<MergeRequest> ModifyMergeRequest(UpdateMergeRequestParameters parameters)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
             _mrk.ProjectKey.HostName, _hostProperties))
          {
-            await mergeRequestOperator.UpdateMergeRequest(_mrk, parameters);
+            try
+            {
+               return await mergeRequestOperator.UpdateMergeRequest(_mrk, parameters);
+            }
+            catch (OperatorException)
+            {
+               return null;
+            }
          }
       }
 

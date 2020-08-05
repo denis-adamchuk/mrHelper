@@ -56,11 +56,16 @@ namespace mrHelper.GitLabClient.Managers
          _oneShotTimers.Clear();
       }
 
-      public void RequestOneShotUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
+      public void RequestOneShotUpdate(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
+      {
+         enqueueOneShotTimer(mrk, interval, onUpdateFinished);
+      }
+
+      public void RequestOneShotUpdate(MergeRequestKey? mrk, int[] intervals)
       {
          foreach (int interval in intervals)
          {
-            enqueueOneShotTimer(mrk, interval, onUpdateFinished);
+            enqueueOneShotTimer(mrk, interval, null);
          }
       }
 

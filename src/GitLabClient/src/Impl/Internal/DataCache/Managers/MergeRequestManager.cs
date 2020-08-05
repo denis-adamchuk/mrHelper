@@ -109,11 +109,19 @@ namespace mrHelper.GitLabClient.Managers
       }
 
       /// <summary>
+      /// Request to update the specified MR after the specified time period (in milliseconds)
+      /// </summary>
+      public void RequestUpdate(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
+      {
+         _updateManager?.RequestOneShotUpdate(mrk, interval, onUpdateFinished);
+      }
+
+      /// <summary>
       /// Request to update the specified MR after the specified time periods (in milliseconds)
       /// </summary>
-      public void RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
+      public void RequestUpdate(MergeRequestKey? mrk, int[] intervals)
       {
-         _updateManager?.RequestOneShotUpdate(mrk, intervals, onUpdateFinished);
+         _updateManager?.RequestOneShotUpdate(mrk, intervals);
       }
 
       private void onUpdate(UserEvents.MergeRequestEvent e)

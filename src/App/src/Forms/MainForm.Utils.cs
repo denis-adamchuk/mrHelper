@@ -1836,7 +1836,7 @@ namespace mrHelper.App.Forms
          updateProjectsListView();
       }
 
-      private void requestUpdates(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished = null)
+      private void requestUpdates(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
       {
          bool mergeRequestUpdateFinished = false;
          bool discussionUpdateFinished = false;
@@ -1850,10 +1850,17 @@ namespace mrHelper.App.Forms
          }
 
          DataCache dataCache = getSession(true /* supported in Live only */);
-         dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals,
+         dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
             () => { mergeRequestUpdateFinished = true; onSingleUpdateFinished(); });
-         dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals,
+         dataCache?.DiscussionCache?.RequestUpdate(mrk, interval,
             () => { discussionUpdateFinished = true; onSingleUpdateFinished(); });
+      }
+
+      private void requestUpdates(MergeRequestKey? mrk, int[] intervals)
+      {
+         DataCache dataCache = getSession(true /* supported in Live only */);
+         dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals);
+         dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
       }
 
       private static void disableSSLVerification()

@@ -19,8 +19,6 @@ namespace mrHelper.App.Forms
       {
          if (e.KeyCode == Keys.Enter && Control.ModifierKeys == Keys.Control)
          {
-            e.Handled = false;
-
             buttonOK.PerformClick();
          }
       }

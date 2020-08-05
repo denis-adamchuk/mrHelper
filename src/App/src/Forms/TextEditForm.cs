@@ -43,8 +43,6 @@ namespace mrHelper.App.Forms
       {
          if (e.Key == System.Windows.Input.Key.Enter && Control.ModifierKeys == Keys.Control)
          {
-            e.Handled = false;
-
             buttonOK.PerformClick();
          }
       }

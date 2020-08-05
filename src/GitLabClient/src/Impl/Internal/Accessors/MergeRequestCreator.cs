@@ -19,7 +19,14 @@ namespace mrHelper.GitLabClient.Accessors
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
             _projectKey.HostName, _hostProperties))
          {
-            return await mergeRequestOperator.CreateMergeRequest(_projectKey.ProjectName, parameters);
+            try
+            {
+               return await mergeRequestOperator.CreateMergeRequest(_projectKey.ProjectName, parameters);
+            }
+            catch (OperatorException)
+            {
+               return null;
+            }
          }
       }
 

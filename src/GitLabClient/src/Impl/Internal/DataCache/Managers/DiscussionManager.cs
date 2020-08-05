@@ -141,10 +141,18 @@ namespace mrHelper.GitLabClient.Managers
          return _cachedDiscussions.ContainsKey(mrk) ? _cachedDiscussions[mrk].Discussions : null;
       }
 
-      /// <summary>
-      /// Request to update discussions of the specified MR after the specified time period (in milliseconds)
-      /// </summary>
-      public void RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished)
+      public void RequestUpdate(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
+      {
+         if (_timer == null)
+         {
+            // updates are disabled
+            return;
+         }
+
+         enqueueOneShotTimer(mrk, interval, onUpdateFinished);
+      }
+
+      public void RequestUpdate(MergeRequestKey? mrk, int[] intervals)
       {
          if (_timer == null)
          {
@@ -154,7 +162,7 @@ namespace mrHelper.GitLabClient.Managers
 
          foreach (int interval in intervals)
          {
-            enqueueOneShotTimer(mrk, interval, onUpdateFinished);
+            enqueueOneShotTimer(mrk, interval, null);
          }
       }
 

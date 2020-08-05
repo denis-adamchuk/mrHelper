@@ -31,12 +31,14 @@ namespace mrHelper.App.src.Forms
          htmlPanelDescription.BaseStylesheet = css;
 
          labelSpecialNotePrefix.Text = Program.ServiceManager.GetSpecialNotePrefix();
+
+         buttonCancel.ConfirmationCondition = () => true;
       }
 
-      internal string Project => getProjectName();
+      internal string ProjectName => getProjectName();
       internal string SourceBranch => getSourceBranch()?.Name;
       internal string TargetBranch => getTargetBranch();
-      internal string AssigneeUsername => getUserName();
+      internal string AssigneeUsername => getAssigneeUserName();
       internal bool DeleteSourceBranch => checkBoxDeleteSourceBranch.Checked;
       internal bool Squash => checkBoxSquash.Checked;
       internal string Title => getTitle();
@@ -91,6 +93,24 @@ namespace mrHelper.App.src.Forms
          }
       }
 
+      private void textBoxAssigneeUsername_KeyDown(object sender, KeyEventArgs e)
+      {
+         submitOnKeyDown(e.KeyCode);
+      }
+
+      private void textBoxSpecialNote_KeyDown(object sender, KeyEventArgs e)
+      {
+         submitOnKeyDown(e.KeyCode);
+      }
+
+      private void submitOnKeyDown(Keys keyCode)
+      {
+         if (buttonSubmit.Enabled && keyCode == Keys.Enter)
+         {
+            buttonSubmit.PerformClick();
+         }
+      }
+
       protected Branch getSourceBranch()
       {
          return comboBoxSourceBranch.SelectedItem as Branch;
@@ -106,9 +126,9 @@ namespace mrHelper.App.src.Forms
          return comboBoxProject.SelectedItem as string;
       }
 
-      protected string getUserName()
+      protected string getAssigneeUserName()
       {
-         return textBoxAssigneeUsername.Text;
+         return convertLabelToWord(textBoxAssigneeUsername.Text);
       }
 
       protected RepositoryAccessor createRepositoryAccessor()
@@ -150,7 +170,7 @@ namespace mrHelper.App.src.Forms
          {
             return String.Empty;
          }
-         return labelSpecialNotePrefix.Text + textBoxSpecialNote.Text;
+         return labelSpecialNotePrefix.Text + convertWordsToLabels(textBoxSpecialNote.Text);
       }
 
       protected void setFirstNote(string firstNote)
@@ -161,8 +181,7 @@ namespace mrHelper.App.src.Forms
          }
          else if (firstNote.StartsWith(labelSpecialNotePrefix.Text))
          {
-            textBoxSpecialNote.Text = firstNote.Substring(
-               labelSpecialNotePrefix.Text.Length, firstNote.Length - labelSpecialNotePrefix.Text.Length);
+            textBoxSpecialNote.Text = firstNote.Substring(labelSpecialNotePrefix.Text.Length);
          }
          else
          {
@@ -170,32 +189,54 @@ namespace mrHelper.App.src.Forms
          }
       }
 
-      string convertTextToHtml(string text)
+      private string convertTextToHtml(string text)
       {
          string prefix = StringUtils.GetGitLabAttachmentPrefix(_hostname, getProjectName());
          string html = MarkDownUtils.ConvertToHtml(text, prefix, _mdPipeline);
          return String.Format(MarkDownUtils.HtmlPageTemplate, html);
       }
 
-      private void toggleWIP()
+      protected void toggleWIP()
       {
          string prefix = "WIP: ";
-         string currentTitle = getTitle();
-         string newTitle = currentTitle.StartsWith(prefix)
-            ? currentTitle.Substring(prefix.Length, currentTitle.Length - prefix.Length)
-            : prefix + currentTitle;
+         string newTitle = getTitle().StartsWith(prefix) ? getTitle().Substring(prefix.Length) : prefix + getTitle();
          setTitle(newTitle);
+      }
+
+      private static string convertWordsToLabels(string text)
+      {
+         string trimmed = text.TrimStart().TrimEnd();
+         if (String.IsNullOrEmpty(trimmed))
+         {
+            return String.Empty;
+         }
+
+         // guarantees that all names are proceeded with '@'
+         return String.Join(" ", trimmed
+            .Replace("@", "")
+            .Split(' ')
+            .Select(x => Char.IsLetter(x[0]) ? "@" + x : x[0] + "@" + x.Substring(1)));
+      }
+
+      private static string convertLabelToWord(string text)
+      {
+         string trimmed = text.TrimStart().TrimEnd();
+         if (String.IsNullOrEmpty(trimmed))
+         {
+            return String.Empty;
+         }
+         return trimmed.StartsWith("@") ? trimmed.Substring(1) : trimmed;
       }
 
       protected abstract void applyInitialState();
 
-      private readonly string _hostname;
       protected readonly User _currentUser;
-      private readonly MarkdownPipeline _mdPipeline;
       protected readonly ProjectAccessor _projectAccessor;
+
+      private readonly string _hostname;
+      private readonly MarkdownPipeline _mdPipeline;
       private string _title;
       private string _description;
-
    }
 }
 

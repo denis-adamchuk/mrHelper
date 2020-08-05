@@ -36,7 +36,9 @@ namespace mrHelper.GitLabClient
    {
       DiscussionCount GetDiscussionCount(MergeRequestKey mrk);
 
-      void RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished);
+      void RequestUpdate(MergeRequestKey? mrk, int interval, Action onUpdateFinished);
+
+      void RequestUpdate(MergeRequestKey? mrk, int[] intervals);
 
       event Action<UserEvents.DiscussionEvent> DiscussionEvent;
    }

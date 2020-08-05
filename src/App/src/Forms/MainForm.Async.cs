@@ -38,7 +38,7 @@ namespace mrHelper.App.Forms
          if (isSearchMode())
          {
             // Pre-load discussions for MR in Search mode
-            dataCache.DiscussionCache.RequestUpdate(mrk, new int[] { Constants.ReloadListPseudoTimerInterval }, null);
+            dataCache.DiscussionCache.RequestUpdate(mrk, Constants.ReloadListPseudoTimerInterval, null);
          }
 
          IEnumerable<Discussion> discussions = await loadDiscussionsAsync(dataCache, mrk);
@@ -113,8 +113,7 @@ namespace mrHelper.App.Forms
                      "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                }
             },
-            () => dataCache?.DiscussionCache?.RequestUpdate(mrk,
-               new int[] { Constants.DiscussionCheckOnNewThreadInterval }, null));
+            () => dataCache?.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null));
             form = discussionsForm;
          }
          catch (NoDiscussionsToShow)
@@ -308,8 +307,7 @@ namespace mrHelper.App.Forms
                }
                labelWorkflowStatus.Text = "Thread started";
 
-               dataCache.DiscussionCache?.RequestUpdate(
-                  mrk, new int[]{ Constants.DiscussionCheckOnNewThreadInterval }, null);
+               dataCache.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null);
             }
          }
       }
@@ -387,7 +385,7 @@ namespace mrHelper.App.Forms
 
          string oldButtonText = buttonReloadList.Text;
          onUpdating();
-         requestUpdates(null, new int[] { 1 }, () => { updateReceived = true; onUpdated(oldButtonText); });
+         requestUpdates(null, 100, () => { updateReceived = true; onUpdated(oldButtonText); });
          await TaskUtils.WhileAsync(() => !updateReceived);
       }
 

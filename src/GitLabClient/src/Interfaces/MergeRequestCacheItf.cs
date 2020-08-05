@@ -43,7 +43,11 @@ namespace mrHelper.GitLabClient
 
       /// <summary>
       /// </summary>
-      void RequestUpdate(MergeRequestKey? mrk, int[] intervals, Action onUpdateFinished);
+      void RequestUpdate(MergeRequestKey? mrk, int interval, Action onUpdateFinished);
+
+      /// <summary>
+      /// </summary>
+      void RequestUpdate(MergeRequestKey? mrk, int[] intervals);
 
       /// <summary>
       /// </summary>
