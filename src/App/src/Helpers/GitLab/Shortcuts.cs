@@ -4,7 +4,6 @@ using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Helpers.GitLab
 {
-   // TODO WTF Add checks on gitLabInstance
    internal static class Shortcuts
    {
       internal static ProjectAccessor GetProjectAccessor(GitLabInstance gitLabInstance)

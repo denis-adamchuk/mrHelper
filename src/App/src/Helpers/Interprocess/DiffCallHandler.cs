@@ -28,38 +28,12 @@ namespace mrHelper.App.Interprocess
 
       async public Task HandleAsync(ICommitStorage gitRepository)
       {
-         if (_gitLabInstance == null)
+         if (_gitLabInstance == null || gitRepository == null)
          {
             Debug.Assert(false);
             return;
          }
-
-         if (gitRepository != null)
-         {
-            await doHandleAsync(gitRepository.Git);
-            return;
-         }
-
-         // This happens when a git parent folder was changed when a diff tool was already launched
-         Trace.TraceWarning(String.Format(
-            "[DiffCallHandler] Creating temporary GitRepo for TempFolder \"{0}\", Host {1}, Project {2}",
-            _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
-
-         // TODO WTF Do we really need this case? It creates stuff in TEMP and never cleans it up
-         GitLabClient.ProjectAccessor projectAccessor = Shortcuts.GetProjectAccessor(_gitLabInstance);
-         using (LocalCommitStorageFactory factory = new LocalCommitStorageFactory(null, projectAccessor,
-            _snapshot.TempFolder, Program.Settings.RevisionsToKeep, Program.Settings.ComparisonsToKeep))
-         {
-            ProjectKey projectKey = new ProjectKey(_snapshot.Host, _snapshot.Project);
-            LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
-            ILocalCommitStorage tempRepository = factory.GetStorage(projectKey, type);
-            if (tempRepository == null)
-            {
-               Trace.TraceError("[DiffCallHandler] Cannot create a temporary file storage");
-               return;
-            }
-            await doHandleAsync(tempRepository.Git);
-         }
+         await doHandleAsync(gitRepository.Git);
       }
 
       async public Task doHandleAsync(IGitCommandService git)

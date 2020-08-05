@@ -80,6 +80,13 @@ namespace mrHelper.App.Forms
                return;
             }
 
+            if (_storageFactory == null || _storageFactory.ParentFolder != snapshot.TempFolder)
+            {
+               MessageBox.Show("It seems that file storage folder was changed after launching diff tool. " +
+                  "Please restart diff tool.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               return;
+            }
+
             DataCache dataCache = getDataCacheByName(snapshot.DataCacheName);
             if (dataCache == null || _gitLabInstance == null || getCurrentUser() == null)
             {
@@ -103,12 +110,8 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            ICommitStorage storage = null;
-            if (_storageFactory != null && _storageFactory.ParentFolder == snapshot.TempFolder)
-            {
-               ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
-               storage = getCommitStorage(projectKey, false);
-            }
+            ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
+            ILocalCommitStorage storage = getCommitStorage(projectKey, false);
 
             try
             {
@@ -120,8 +123,7 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            MergeRequestKey mrk = new MergeRequestKey(
-               new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
+            MergeRequestKey mrk = new MergeRequestKey(projectKey, snapshot.MergeRequestIId);
             dataCache.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null);
          }
          finally
