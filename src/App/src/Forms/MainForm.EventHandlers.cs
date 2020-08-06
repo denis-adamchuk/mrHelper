@@ -1410,6 +1410,8 @@ namespace mrHelper.App.Forms
 
       private void buttonCreateNew_Click(object sender, EventArgs e)
       {
+         Debug.Assert(!isSearchMode());
+
          string hostname = getHostName();
          User currentUser = getCurrentUser();
          ProjectKey? currentProject = getMergeRequestKey(null)?.ProjectKey;
@@ -1443,9 +1445,9 @@ namespace mrHelper.App.Forms
             {
                ProjectKey projectKey = new ProjectKey(hostname, form.ProjectName);
                MergeRequestEditHelper.SubmitNewMergeRequestParameters parameters =
-                  new MergeRequestEditHelper.SubmitNewMergeRequestParameters(projectKey,
-                  form.SourceBranch, form.TargetBranch, form.Title, form.AssigneeUsername, form.Description,
-                  form.DeleteSourceBranch, form.Squash);
+                  new MergeRequestEditHelper.SubmitNewMergeRequestParameters(
+                     projectKey, form.SourceBranch, form.TargetBranch, form.Title,
+                     form.AssigneeUsername, form.Description, form.DeleteSourceBranch, form.Squash);
 
                buttonCreateNew.Enabled = false;
                labelWorkflowStatus.Text = "Creating a merge request at GitLab...";
@@ -1517,7 +1519,7 @@ namespace mrHelper.App.Forms
                   item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser);
                if (!updated)
                {
-                  labelWorkflowStatus.Text = String.Format("No changes were made to Merge Request !{0}", mrk.IId);
+                  labelWorkflowStatus.Text = String.Format("No changes have been made to Merge Request !{0}", mrk.IId);
                   return;
                }
 

@@ -32,7 +32,7 @@ namespace mrHelper.App.Helpers.GitLab
                      && x.Notes.Count() == 1
                      && x.Notes.First().Body.StartsWith(Program.ServiceManager.GetSpecialNotePrefix()))
             .LastOrDefault();
-         return note?.Notes.First().Body ?? String.Empty;
+         return note?.Notes.First().Body;
       }
 
       internal struct SubmitNewMergeRequestParameters
@@ -66,7 +66,10 @@ namespace mrHelper.App.Helpers.GitLab
          if (String.IsNullOrEmpty(parameters.ProjectKey.ProjectName)
           || String.IsNullOrEmpty(parameters.SourceBranch)
           || String.IsNullOrEmpty(parameters.TargetBranch)
-          || String.IsNullOrEmpty(parameters.Title))
+          || String.IsNullOrEmpty(parameters.Title)
+          || parameters.AssigneeUserName == null
+          || firstNote == null
+          || currentUser == null)
          {
             // this is unexpected due to UI restrictions, so don't implement detailed logging here
             MessageBox.Show("Invalid parameters for a new merge request", "Error",
@@ -75,35 +78,33 @@ namespace mrHelper.App.Helpers.GitLab
             return null;
          }
 
-         User assignee =  await getUserAsync(gitLabInstance, parameters.AssigneeUserName);
-         if (!String.IsNullOrEmpty(parameters.AssigneeUserName) && assignee == null)
-         {
-            string message = String.Format("Cannot find user {0} at {1}, assignee field will be empty",
-               parameters.AssigneeUserName, parameters.ProjectKey.HostName);
-            MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            Trace.TraceWarning("[MergeRequestEditHelper] " + message);
-         }
+         User assignee = await getUserAsync(gitLabInstance, parameters.AssigneeUserName);
+         checkFoundAssignee(parameters.ProjectKey.HostName, parameters.AssigneeUserName, assignee);
 
-         int assigneeId = assignee?.Id ?? 0; // 0 means to not assign to anyone
+         int assigneeId = assignee?.Id ?? 0; // 0 means to not assign MR to anyone
          CreateNewMergeRequestParameters creatorParameters = new CreateNewMergeRequestParameters(
             parameters.SourceBranch, parameters.TargetBranch, parameters.Title, assigneeId,
             parameters.Description, parameters.DeleteSourceBranch, parameters.Squash);
+
+         MergeRequest mergeRequest = null;
          try
          {
-            MergeRequest mergeRequest = await Shortcuts
-               .GetMergeRequestCreator(gitLabInstance, parameters.ProjectKey).CreateMergeRequest(creatorParameters);
-            MergeRequestKey mrk = new MergeRequestKey(parameters.ProjectKey, mergeRequest.IId);
-            if (!String.IsNullOrEmpty(firstNote))
-            {
-               await addComment(gitLabInstance, mrk, currentUser, firstNote);
-            }
-            return mrk;
+            mergeRequest = await Shortcuts
+               .GetMergeRequestCreator(gitLabInstance, parameters.ProjectKey)
+               .CreateMergeRequest(creatorParameters);
          }
          catch (MergeRequestCreatorException ex)
          {
             reportErrorToUser(ex);
+            return null;
          }
-         return null;
+
+         MergeRequestKey mrk = new MergeRequestKey(parameters.ProjectKey, mergeRequest.IId);
+         if (!String.IsNullOrEmpty(firstNote))
+         {
+            await addComment(gitLabInstance, mrk, currentUser, firstNote);
+         }
+         return mrk;
       }
 
       internal struct ApplyMergeRequestChangesParameters
@@ -129,7 +130,10 @@ namespace mrHelper.App.Helpers.GitLab
          ProjectKey projectKey, MergeRequest originalMergeRequest, ApplyMergeRequestChangesParameters parameters,
          string oldSpecialNote, string newSpecialNote, User currentUser)
       {
-         if (String.IsNullOrEmpty(parameters.Title))
+         if (String.IsNullOrEmpty(parameters.Title)
+          || parameters.AssigneeUserName == null
+          || newSpecialNote == null
+          || currentUser == null)
          {
             // this is unexpected due to UI restrictions, so don't implement detailed logging here
             MessageBox.Show("Invalid parameters for a merge request", "Error",
@@ -141,13 +145,7 @@ namespace mrHelper.App.Helpers.GitLab
          string oldAssigneeUsername = originalMergeRequest.Assignee?.Username ?? String.Empty;
          User assignee = oldAssigneeUsername == parameters.AssigneeUserName
             ? originalMergeRequest.Assignee : await getUserAsync(gitLabInstance, parameters.AssigneeUserName);
-         if (!String.IsNullOrEmpty(parameters.AssigneeUserName) && assignee == null)
-         {
-            string message = String.Format("Cannot find user {0} at {1}, assignee field will be empty",
-               parameters.AssigneeUserName, projectKey.HostName);
-            MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            Trace.TraceWarning("[MergeRequestEditHelper] " + message);
-         }
+         checkFoundAssignee(projectKey.HostName, parameters.AssigneeUserName, assignee);
 
          bool result = false;
          MergeRequestKey mrk = new MergeRequestKey(projectKey, originalMergeRequest.IId);
@@ -156,8 +154,8 @@ namespace mrHelper.App.Helpers.GitLab
             result = await addComment(gitLabInstance, mrk, currentUser, newSpecialNote);
          }
 
-         string oldTitle = originalMergeRequest.Title ?? String.Empty;
-         string oldDescription = originalMergeRequest.Description ?? String.Empty;
+         string oldTitle = originalMergeRequest.Title;
+         string oldDescription = originalMergeRequest.Description;
 
          bool changed =
                oldAssigneeUsername != parameters.AssigneeUserName
@@ -200,6 +198,17 @@ namespace mrHelper.App.Helpers.GitLab
              ?? await userAccessor.SearchUserByNameAsync(username); // fallback
       }
 
+      private static void checkFoundAssignee(string hostname, string username, User foundAssignee)
+      {
+         if (!String.IsNullOrEmpty(username) && foundAssignee == null)
+         {
+            string message = String.Format(
+               "Cannot find user {0} at {1}, assignee field will be empty", username, hostname);
+            MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            Trace.TraceWarning("[MergeRequestEditHelper] " + message);
+         }
+      }
+
       async private static Task<bool> addComment(GitLabInstance gitLabInstance, MergeRequestKey mrk, User currentUser,
          string commentBody)
       {
@@ -225,7 +234,7 @@ namespace mrHelper.App.Helpers.GitLab
             return;
          }
 
-         void showDialogAndLogError(string message)
+         void showDialogAndLogError(string message = "")
          {
             string defaultMessage = "GitLab could not create a merge request with the given parameters. ";
             MessageBox.Show(defaultMessage + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -255,7 +264,7 @@ namespace mrHelper.App.Helpers.GitLab
             }
          }
 
-         showDialogAndLogError("");
+         showDialogAndLogError();
       }
    }
 }

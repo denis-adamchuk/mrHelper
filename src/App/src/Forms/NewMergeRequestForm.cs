@@ -19,7 +19,7 @@ namespace mrHelper.App.Forms
       {
          _initialState = initialState;
          _projects = projects;
-         _sourceBranchTemplate = sourceBranchTemplate;
+         _sourceBranchTemplate = sourceBranchTemplate ?? String.Empty;
 
          comboBoxProject.SelectedIndexChanged += new System.EventHandler(this.comboBoxProject_SelectedIndexChanged);
          comboBoxSourceBranch.SelectedIndexChanged += new System.EventHandler(this.comboBoxSourceBranch_SelectedIndexChanged);
@@ -58,11 +58,9 @@ namespace mrHelper.App.Forms
 
       async private Task loadBranchListAsync()
       {
+         Debug.Assert(_sourceBranchTemplate != null);
          onSourceBranchListLoadStart();
-
-         Debug.Assert(_repositoryAccessor != null);
          IEnumerable<Branch> branchList = await _repositoryAccessor.GetBranches(_sourceBranchTemplate);
-
          onSourceBranchListLoadFinish(branchList);
       }
 
@@ -79,8 +77,7 @@ namespace mrHelper.App.Forms
       {
          if (branchList != null && branchList.Any())
          {
-            comboBoxSourceBranch.Items.AddRange(branchList.ToArray());
-            comboBoxSourceBranch.SelectedIndex = 0;
+            fillSourceBranchListAndSelect(branchList.ToArray());
          }
 
          updateControls();
@@ -89,40 +86,40 @@ namespace mrHelper.App.Forms
 
       async private Task<Commit> loadCommitAsync()
       {
-         onCommitLoading();
-
-         Debug.Assert(_repositoryAccessor != null);
          Branch sourceBranch = getSourceBranch();
-         Commit commit = await _repositoryAccessor.LoadCommit(sourceBranch?.Name);
+         Debug.Assert(sourceBranch != null);
 
+         onCommitLoading();
+         Commit commit = await _repositoryAccessor.LoadCommit(sourceBranch.Name);
          onCommitLoaded(commit);
          return commit;
       }
 
       private void onCommitLoading()
       {
-         setTitle("Loading...");
-         setDescription("Loading...");
+         setTitle(String.Empty);
+         setDescription(String.Empty);
+
          _isLoadingCommit = true;
          updateControls();
       }
 
       private void onCommitLoaded(Commit commit)
       {
-         setTitle(commit?.Title ?? String.Empty);
-         setDescription(trimTitleFromCommitMessage(commit));
-         toggleWIP(); // switch on WIP by default
+         if (commit != null)
+         {
+            setTitle(commit.Title);
+            setDescription(trimTitleFromCommitMessage(commit));
+            toggleWIP(); // switch on WIP by default
+         }
+
          _isLoadingCommit = false;
          updateControls();
       }
 
       private static string trimTitleFromCommitMessage(Commit commit)
       {
-         if (commit == null)
-         {
-            return String.Empty;
-         }
-
+         Debug.Assert(commit != null);
          string message = commit.Message;
          if (message.StartsWith(commit.Title))
          {
@@ -134,20 +131,21 @@ namespace mrHelper.App.Forms
 
       async private Task searchTargetBranchNameAsync(Commit sourceBranchCommit)
       {
-         onTargetBranchSearchStart();
-
-         Debug.Assert(_repositoryAccessor != null);
          Branch sourceBranch = getSourceBranch();
-         IEnumerable<string> targetBranchNames = await _repositoryAccessor.FindPreferredTargetBranchNames(
-            sourceBranch, sourceBranchCommit);
+         Debug.Assert(sourceBranch != null);
+         if (sourceBranchCommit == null)
+         {
+            return;
+         }
 
+         onTargetBranchSearchStart();
+         IEnumerable<string> targetBranchNames =
+            await _repositoryAccessor.FindPreferredTargetBranchNames( sourceBranch, sourceBranchCommit);
          onTargetBranchSearchFinish(targetBranchNames);
       }
 
       private void onTargetBranchSearchStart()
       {
-         comboBoxTargetBranch.Items.Clear();
-
          updateControls();
          groupBoxTarget.Text = "Target Branch (Loading...)";
       }
@@ -156,8 +154,7 @@ namespace mrHelper.App.Forms
       {
          if (targetBranchNames != null && targetBranchNames.Any())
          {
-            comboBoxTargetBranch.Items.AddRange(targetBranchNames.ToArray());
-            comboBoxTargetBranch.SelectedIndex = 0;
+            fillTargetBranchListAndSelect(targetBranchNames.ToArray());
          }
 
          updateControls();
@@ -168,19 +165,44 @@ namespace mrHelper.App.Forms
       {
          checkBoxSquash.Checked = _initialState.IsSquashNeeded;
          checkBoxDeleteSourceBranch.Checked = _initialState.IsBranchDeletionNeeded;
-         textBoxAssigneeUsername.Text = _initialState.AssigneeUsername;
          setTitle(String.Empty);
          setDescription(String.Empty);
+         setAssigneeUsername(_initialState.AssigneeUsername);
+         fillProjectListAndSelect();
+         updateControls();
+      }
 
+      private void fillProjectListAndSelect()
+      {
          comboBoxProject.Items.AddRange(_projects
             .OrderBy(x => x.ProjectName)
             .Select(x => x.ProjectName)
             .ToArray());
          if (comboBoxProject.Items.Count > 0)
          {
-            int defaultProjectIndex = comboBoxProject.Items.IndexOf(_initialState.DefaultProject ?? String.Empty);
-            comboBoxProject.SelectedIndex = defaultProjectIndex == -1 ? 0 : defaultProjectIndex;
+            int selectedProjectIndex = 0;
+            if (_initialState.DefaultProject != null)
+            {
+               int defaultProjectIndex = comboBoxProject.Items.IndexOf(_initialState.DefaultProject);
+               if (defaultProjectIndex != -1)
+               {
+                  selectedProjectIndex = defaultProjectIndex;
+               }
+            }
+            comboBoxProject.SelectedIndex = selectedProjectIndex;
          }
+      }
+
+      private void fillSourceBranchListAndSelect(Branch[] branches)
+      {
+         comboBoxSourceBranch.Items.AddRange(branches);
+         comboBoxSourceBranch.SelectedIndex = 0;
+      }
+
+      private void fillTargetBranchListAndSelect(string[] branchNames)
+      {
+         comboBoxTargetBranch.Items.AddRange(branchNames.ToArray());
+         comboBoxTargetBranch.SelectedIndex = 0;
       }
 
       protected override bool isLoadingCommit() => _isLoadingCommit;

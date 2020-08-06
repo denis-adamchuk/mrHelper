@@ -35,8 +35,8 @@ namespace mrHelper.App.src.Forms
          buttonCancel.ConfirmationCondition = () => true;
       }
 
-      internal string ProjectName => getProjectName();
-      internal string SourceBranch => getSourceBranch()?.Name;
+      internal string ProjectName => getProjectName() ?? String.Empty;
+      internal string SourceBranch => getSourceBranch()?.Name ?? String.Empty;
       internal string TargetBranch => getTargetBranch();
       internal string AssigneeUsername => getAssigneeUserName();
       internal bool DeleteSourceBranch => checkBoxDeleteSourceBranch.Checked;
@@ -111,26 +111,6 @@ namespace mrHelper.App.src.Forms
          }
       }
 
-      protected Branch getSourceBranch()
-      {
-         return comboBoxSourceBranch.SelectedItem as Branch;
-      }
-
-      protected string getTargetBranch()
-      {
-         return comboBoxTargetBranch.Text;
-      }
-
-      protected string getProjectName()
-      {
-         return comboBoxProject.SelectedItem as string;
-      }
-
-      protected string getAssigneeUserName()
-      {
-         return convertLabelToWord(textBoxAssigneeUsername.Text);
-      }
-
       protected RepositoryAccessor createRepositoryAccessor()
       {
          string projectName = getProjectName();
@@ -142,11 +122,36 @@ namespace mrHelper.App.src.Forms
          return _projectAccessor.GetSingleProjectAccessor(projectName).GetRepositoryAccessor();
       }
 
+      protected string getProjectName()
+      {
+         return comboBoxProject.SelectedItem as string;
+      }
+
+      protected Branch getSourceBranch()
+      {
+         return comboBoxSourceBranch.SelectedItem as Branch;
+      }
+
+      protected string getTargetBranch()
+      {
+         return comboBoxTargetBranch.Text.Trim();
+      }
+
+      protected string getTitle()
+      {
+         return _title;
+      }
+
       protected void setTitle(string title)
       {
          _title = title;
          htmlPanelTitle.Text = convertTextToHtml(title);
          updateControls();
+      }
+
+      protected string getDescription()
+      {
+         return _description;
       }
 
       protected void setDescription(string description)
@@ -156,14 +161,14 @@ namespace mrHelper.App.src.Forms
          updateControls();
       }
 
-      protected string getTitle()
+      protected string getAssigneeUserName()
       {
-         return _title ?? String.Empty;
+         return convertLabelToWord(textBoxAssigneeUsername.Text);
       }
 
-      protected string getDescription()
+      protected void setAssigneeUsername(string username)
       {
-         return _description ?? String.Empty;
+         textBoxAssigneeUsername.Text = username.Trim();
       }
 
       protected string getSpecialNote()
@@ -175,63 +180,28 @@ namespace mrHelper.App.src.Forms
          return labelSpecialNotePrefix.Text + formatSpecialNote(textBoxSpecialNote.Text);
       }
 
-      protected void setFirstNote(string firstNote)
+      protected void setSpecialNote(string specialNote)
       {
-         if (String.IsNullOrWhiteSpace(firstNote))
+         if (String.IsNullOrWhiteSpace(specialNote))
          {
             textBoxSpecialNote.Text = String.Empty;
          }
-         else if (firstNote.StartsWith(labelSpecialNotePrefix.Text))
+         else if (specialNote.StartsWith(labelSpecialNotePrefix.Text))
          {
-            textBoxSpecialNote.Text = firstNote.Substring(labelSpecialNotePrefix.Text.Length);
+            textBoxSpecialNote.Text = specialNote.Substring(labelSpecialNotePrefix.Text.Length);
          }
          else
          {
-            textBoxSpecialNote.Text = firstNote;
+            textBoxSpecialNote.Text = specialNote;
          }
-      }
-
-      private string convertTextToHtml(string text)
-      {
-         string prefix = StringUtils.GetGitLabAttachmentPrefix(_hostname, getProjectName());
-         string html = MarkDownUtils.ConvertToHtml(text, prefix, _mdPipeline);
-         return String.Format(MarkDownUtils.HtmlPageTemplate, html);
       }
 
       protected void toggleWIP()
       {
          string prefix = "WIP: ";
-         string newTitle = getTitle().StartsWith(prefix) ? getTitle().Substring(prefix.Length) : prefix + getTitle();
+         string title = getTitle();
+         string newTitle = title.StartsWith(prefix) ? title.Substring(prefix.Length) : prefix + title;
          setTitle(newTitle);
-      }
-
-      private static string formatSpecialNote(string text)
-      {
-         // 1. Trim spaces
-         string trimmed = text.TrimStart().TrimEnd();
-         if (String.IsNullOrEmpty(trimmed))
-         {
-            return String.Empty;
-         }
-
-         // 2. Make sure that all names are preceded with '@'
-         trimmed = String.Join(" ", trimmed
-            .Replace("@", "")
-            .Split(' ')
-            .Select(x => Char.IsLetter(x[0]) ? "@" + x : x[0] + "@" + x.Substring(1)));
-
-         // 3. Replace commas with spaces
-         return trimmed.Replace(", ", " ").Replace(",", " ").TrimStart().TrimEnd();
-      }
-
-      private static string convertLabelToWord(string text)
-      {
-         string trimmed = text.TrimStart().TrimEnd();
-         if (String.IsNullOrEmpty(trimmed))
-         {
-            return String.Empty;
-         }
-         return trimmed.StartsWith("@") ? trimmed.Substring(1) : trimmed;
       }
 
       protected abstract void applyInitialState();
@@ -257,6 +227,42 @@ namespace mrHelper.App.src.Forms
          textBoxAssigneeUsername.Enabled = allDetailsLoaded;
 
          buttonSubmit.Enabled = allDetailsLoaded && !String.IsNullOrEmpty(getTitle());
+      }
+
+      private string convertTextToHtml(string text)
+      {
+         string prefix = StringUtils.GetGitLabAttachmentPrefix(_hostname, getProjectName());
+         string html = MarkDownUtils.ConvertToHtml(text, prefix, _mdPipeline);
+         return String.Format(MarkDownUtils.HtmlPageTemplate, html);
+      }
+
+      private static string formatSpecialNote(string text)
+      {
+         // 1. Trim spaces
+         string trimmed = text.Trim();
+         if (String.IsNullOrEmpty(trimmed))
+         {
+            return String.Empty;
+         }
+
+         // 2. Make sure that all names are preceded with '@'
+         trimmed = String.Join(" ", trimmed
+            .Replace("@", "")
+            .Split(' ')
+            .Select(x => Char.IsLetter(x[0]) ? "@" + x : x[0] + "@" + x.Substring(1)));
+
+         // 3. Replace commas with spaces
+         return trimmed.Replace(", ", " ").Replace(",", " ").Trim();
+      }
+
+      private static string convertLabelToWord(string text)
+      {
+         string trimmed = text.Trim();
+         if (String.IsNullOrEmpty(trimmed))
+         {
+            return String.Empty;
+         }
+         return trimmed.StartsWith("@") ? trimmed.Substring(1) : trimmed;
       }
 
       protected readonly User _currentUser;

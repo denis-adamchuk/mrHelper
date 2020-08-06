@@ -461,8 +461,8 @@ namespace mrHelper.App.Forms
          this.buttonReloadList.Name = "buttonReloadList";
          this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
          this.buttonReloadList.TabIndex = 2;
-         this.buttonReloadList.Text = "Update List";
-         this.toolTip.SetToolTip(this.buttonReloadList, "Update merge request list in the background");
+         this.buttonReloadList.Text = "Refresh List";
+         this.toolTip.SetToolTip(this.buttonReloadList, "Refresh merge request list in the background");
          this.buttonReloadList.UseVisualStyleBackColor = true;
          this.buttonReloadList.Click += new System.EventHandler(this.ButtonReloadList_Click);
          // 

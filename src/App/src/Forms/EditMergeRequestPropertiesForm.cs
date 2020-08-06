@@ -12,6 +12,11 @@ namespace mrHelper.App.Forms
          ProjectKey projectKey, MergeRequest mergeRequest, string specialNote)
          : base(hostname, projectAccessor, currentUser)
       {
+         if (mergeRequest == null)
+         {
+            throw new ArgumentException("mergeRequest argument cannot be null");
+         }
+
          _projectKey = projectKey;
          _initialMergeRequest = mergeRequest;
          _specialNote = specialNote;
@@ -26,50 +31,65 @@ namespace mrHelper.App.Forms
          comboBoxProject.Enabled = false;
          if (!String.IsNullOrEmpty(_projectKey.ProjectName))
          {
-            comboBoxProject.Items.Add(_projectKey.ProjectName);
-            comboBoxProject.SelectedIndex = 0;
+            addProject(_projectKey.ProjectName);
          }
 
          comboBoxSourceBranch.Enabled = false;
          if (!String.IsNullOrEmpty(_initialMergeRequest.Source_Branch))
          {
-            comboBoxSourceBranch.Items.Add(_initialMergeRequest.Source_Branch);
-            comboBoxSourceBranch.SelectedIndex = 0;
+            addSourceBranch(_initialMergeRequest.Source_Branch);
          }
 
          comboBoxTargetBranch.Enabled = false;
          if (!String.IsNullOrEmpty(_initialMergeRequest.Target_Branch))
          {
-            comboBoxTargetBranch.Items.Add(_initialMergeRequest.Target_Branch);
-            comboBoxTargetBranch.SelectedIndex = 0;
+            addTargetBranch(_initialMergeRequest.Target_Branch);
          }
 
-         htmlPanelTitle.Text = String.Empty;
+         setTitle(String.Empty);
          if (!String.IsNullOrEmpty(_initialMergeRequest.Title))
          {
             setTitle(_initialMergeRequest.Title);
          }
 
-         htmlPanelDescription.Text = String.Empty;
+         setDescription(String.Empty);
          if (!String.IsNullOrEmpty(_initialMergeRequest.Description))
          {
             setDescription(_initialMergeRequest.Description);
          }
 
-         textBoxAssigneeUsername.Text = String.Empty;
+         setAssigneeUsername(String.Empty);
          if (!String.IsNullOrEmpty(_initialMergeRequest.Assignee?.Username))
          {
-            textBoxAssigneeUsername.Text = _initialMergeRequest.Assignee.Username;
+            setAssigneeUsername(_initialMergeRequest.Assignee.Username);
          }
 
-         textBoxSpecialNote.Text = String.Empty;
+         setSpecialNote(String.Empty);
          if (!String.IsNullOrEmpty(_specialNote))
          {
-            setFirstNote(_specialNote);
+            setSpecialNote(_specialNote);
          }
 
          checkBoxSquash.Checked = _initialMergeRequest.Squash;
          checkBoxDeleteSourceBranch.Checked = _initialMergeRequest.Force_Remove_Source_Branch;
+      }
+
+      private void addProject(string projectname)
+      {
+         comboBoxProject.Items.Add(_projectKey.ProjectName);
+         comboBoxProject.SelectedIndex = 0;
+      }
+
+      private void addSourceBranch(string branchname)
+      {
+         comboBoxSourceBranch.Items.Add(_initialMergeRequest.Source_Branch);
+         comboBoxSourceBranch.SelectedIndex = 0;
+      }
+
+      private void addTargetBranch(string branchname)
+      {
+         comboBoxTargetBranch.Items.Add(_initialMergeRequest.Target_Branch);
+         comboBoxTargetBranch.SelectedIndex = 0;
       }
 
       protected override bool isLoadingCommit() => false;
