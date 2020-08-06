@@ -48,7 +48,7 @@
          this.checkBoxSquash = new System.Windows.Forms.CheckBox();
          this.checkBoxDeleteSourceBranch = new System.Windows.Forms.CheckBox();
          this.buttonSubmit = new System.Windows.Forms.Button();
-         this.buttonCancel = new CommonControls.Controls.ConfirmCancelButton();
+         this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.groupBoxProject = new System.Windows.Forms.GroupBox();
          this.comboBoxProject = new System.Windows.Forms.ComboBox();
          this.groupBoxSource.SuspendLayout();
@@ -274,6 +274,7 @@
          // buttonCancel
          // 
          this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonCancel.ConfirmationText = "All changes will be lost, are you sure?";
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
          this.buttonCancel.Location = new System.Drawing.Point(710, 420);
          this.buttonCancel.Name = "buttonCancel";

@@ -146,22 +146,24 @@ namespace mrHelper.App.src.Forms
       {
          _title = title;
          htmlPanelTitle.Text = convertTextToHtml(title);
+         updateControls();
       }
 
       protected void setDescription(string description)
       {
          _description = description;
          htmlPanelDescription.Text = convertTextToHtml(description);
+         updateControls();
       }
 
       protected string getTitle()
       {
-         return _title;
+         return _title ?? String.Empty;
       }
 
       protected string getDescription()
       {
-         return _description;
+         return _description ?? String.Empty;
       }
 
       protected string getSpecialNote()
@@ -233,6 +235,29 @@ namespace mrHelper.App.src.Forms
       }
 
       protected abstract void applyInitialState();
+      protected abstract bool isLoadingCommit();
+
+      protected void updateControls()
+      {
+         bool isProjectSelected = comboBoxProject.SelectedItem != null;
+
+         bool areSourceBranches = comboBoxSourceBranch.Items.Count > 0;
+         comboBoxSourceBranch.Enabled = areSourceBranches;
+
+         bool isSourceBranchSelected = comboBoxSourceBranch.SelectedItem != null;
+         comboBoxTargetBranch.Enabled = isSourceBranchSelected;
+
+         bool isTargetBranchSelected = !String.IsNullOrEmpty(comboBoxTargetBranch.Text);
+         bool allDetailsLoaded = isProjectSelected && isSourceBranchSelected && isTargetBranchSelected && !isLoadingCommit();
+         buttonEditDescription.Enabled = allDetailsLoaded;
+         buttonEditTitle.Enabled = allDetailsLoaded;
+         buttonToggleWIP.Enabled = allDetailsLoaded;
+         checkBoxDeleteSourceBranch.Enabled = allDetailsLoaded;
+         checkBoxSquash.Enabled = allDetailsLoaded;
+         textBoxAssigneeUsername.Enabled = allDetailsLoaded;
+
+         buttonSubmit.Enabled = allDetailsLoaded && !String.IsNullOrEmpty(getTitle());
+      }
 
       protected readonly User _currentUser;
       protected readonly ProjectAccessor _projectAccessor;

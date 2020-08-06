@@ -1455,7 +1455,7 @@ namespace mrHelper.App.Forms
                if (mrkOpt == null)
                {
                   // all error handling is done at the callee side
-                  labelWorkflowStatus.Text = String.Empty;
+                  labelWorkflowStatus.Text = "Merge Request has not been created";
                   buttonCreateNew.Enabled = true;
                   return;
                }

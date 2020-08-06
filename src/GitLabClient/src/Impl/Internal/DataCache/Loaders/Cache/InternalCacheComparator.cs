@@ -177,28 +177,32 @@ namespace mrHelper.GitLabClient.Loaders.Cache
 
          foreach (Tuple<MergeRequestWithProject, MergeRequestWithProject> mrPair in diff.Common)
          {
-            Debug.Assert(mrPair.Item1.MergeRequest.Id == mrPair.Item2.MergeRequest.Id);
+            MergeRequest mergeRequest1 = mrPair.Item1.MergeRequest;
+            MergeRequest mergeRequest2 = mrPair.Item2.MergeRequest;
+            Debug.Assert(mergeRequest1.Id == mergeRequest2.Id);
 
-            MergeRequestKey mergeRequestKey = new MergeRequestKey(mrPair.Item2.Project, mrPair.Item2.MergeRequest.IId);
+            MergeRequestKey mergeRequestKey = new MergeRequestKey(mrPair.Item2.Project, mergeRequest2.IId);
 
             IEnumerable<Version> oldVersions = oldDetails.GetVersions(mergeRequestKey);
             IEnumerable<Version> newVersions = newDetails.GetVersions(mergeRequestKey);
 
-            bool labelsUpdated = !Enumerable.SequenceEqual(mrPair.Item1.MergeRequest.Labels,
-                                                           mrPair.Item2.MergeRequest.Labels);
+            bool labelsUpdated = !Enumerable.SequenceEqual(mergeRequest1.Labels, mergeRequest2.Labels);
             bool commitsUpdated = newVersions.Count() > oldVersions.Count();
 
             bool detailsUpdated =
-                  mrPair.Item1.MergeRequest.Author.Id     != mrPair.Item2.MergeRequest.Author.Id
-               || mrPair.Item1.MergeRequest.Source_Branch != mrPair.Item2.MergeRequest.Source_Branch
-               || mrPair.Item1.MergeRequest.Target_Branch != mrPair.Item2.MergeRequest.Target_Branch
-               || mrPair.Item1.MergeRequest.Title         != mrPair.Item2.MergeRequest.Title
-               || mrPair.Item1.MergeRequest.Description   != mrPair.Item2.MergeRequest.Description;
+                  mergeRequest1.Author.Id     != mergeRequest2.Author.Id
+               || mergeRequest1.Source_Branch != mergeRequest2.Source_Branch
+               || mergeRequest1.Target_Branch != mergeRequest2.Target_Branch
+               || mergeRequest1.Title         != mergeRequest2.Title
+               || mergeRequest1.Description   != mergeRequest2.Description
+               || mergeRequest1.Squash        != mergeRequest2.Squash
+               || mergeRequest1.Force_Remove_Source_Branch != mergeRequest2.Force_Remove_Source_Branch
+               || (mergeRequest1.Assignee?.Id ?? 0) != (mergeRequest2.Assignee?.Id ?? 0);
 
             if (labelsUpdated || commitsUpdated || detailsUpdated)
             {
                FullMergeRequestKey fmk = new FullMergeRequestKey(
-                  mergeRequestKey.ProjectKey, mrPair.Item2.MergeRequest);
+                  mergeRequestKey.ProjectKey, mergeRequest2);
 
                updates.Add(new UserEvents.MergeRequestEvent(
                   fmk, UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest,

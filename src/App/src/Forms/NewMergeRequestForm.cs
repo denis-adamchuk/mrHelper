@@ -24,6 +24,8 @@ namespace mrHelper.App.Forms
          comboBoxProject.SelectedIndexChanged += new System.EventHandler(this.comboBoxProject_SelectedIndexChanged);
          comboBoxSourceBranch.SelectedIndexChanged += new System.EventHandler(this.comboBoxSourceBranch_SelectedIndexChanged);
          comboBoxTargetBranch.TextChanged += new System.EventHandler(this.comboBoxTargetBranch_TextChanged);
+
+         buttonCancel.ConfirmationText = "Do you want to discard creating a new merge request?";
       }
 
       protected override void Dispose(bool disposing)
@@ -181,25 +183,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void updateControls()
-      {
-         bool areSourceBranches = comboBoxSourceBranch.Items.Count > 0;
-         comboBoxSourceBranch.Enabled = areSourceBranches;
-
-         bool isSourceBranchSelected = comboBoxSourceBranch.SelectedItem != null;
-         comboBoxTargetBranch.Enabled = isSourceBranchSelected;
-
-         bool isTargetBranchSelected = !String.IsNullOrEmpty(comboBoxTargetBranch.Text);
-         bool allDetailsLoaded = isSourceBranchSelected && isTargetBranchSelected && !_isLoadingCommit;
-         buttonEditDescription.Enabled = allDetailsLoaded;
-         buttonEditTitle.Enabled = allDetailsLoaded;
-         buttonToggleWIP.Enabled = allDetailsLoaded;
-         checkBoxDeleteSourceBranch.Enabled = allDetailsLoaded;
-         checkBoxSquash.Enabled = allDetailsLoaded;
-         textBoxAssigneeUsername.Enabled = allDetailsLoaded;
-
-         buttonSubmit.Enabled = allDetailsLoaded && !String.IsNullOrEmpty(getTitle());
-      }
+      protected override bool isLoadingCommit() => _isLoadingCommit;
 
       protected RepositoryAccessor _repositoryAccessor;
       private bool _isLoadingCommit;

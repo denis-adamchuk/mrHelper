@@ -23,10 +23,17 @@ namespace mrHelper.GitLabClient.Accessors
             {
                return await mergeRequestOperator.CreateMergeRequest(_projectKey.ProjectName, parameters);
             }
-            catch (OperatorException)
+            catch (OperatorException ex)
             {
-               // TODO WTF Need to wrap into another exception type
-               return null;
+               if (ex.Cancelled)
+               {
+                  throw new MergeRequestCreatorCancelledException();
+               }
+               if (ex.InnerException is GitLabRequestException glx)
+               {
+                  throw new MergeRequestCreatorException("Cannot create MR", glx);
+               }
+               throw new MergeRequestCreatorException("Cannot create MR by unknown reason", null);
             }
          }
       }

@@ -17,6 +17,8 @@ namespace mrHelper.App.Forms
          _specialNote = specialNote;
 
          buttonSubmit.Text = "Apply";
+
+         buttonCancel.ConfirmationText = "Do you want to discard editing a merge request? Changes will be lost.";
       }
 
       protected override void applyInitialState()
@@ -69,6 +71,8 @@ namespace mrHelper.App.Forms
          checkBoxSquash.Checked = _initialMergeRequest.Squash;
          checkBoxDeleteSourceBranch.Checked = _initialMergeRequest.Force_Remove_Source_Branch;
       }
+
+      protected override bool isLoadingCommit() => false;
 
       private readonly ProjectKey _projectKey;
       private readonly MergeRequest _initialMergeRequest;

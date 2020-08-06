@@ -26,10 +26,13 @@ namespace mrHelper.GitLabClient.Accessors
             {
                return await mergeRequestOperator.UpdateMergeRequest(_mrk, parameters);
             }
-            catch (OperatorException)
+            catch (OperatorException ex)
             {
-               // TODO WTF Need to wrap into another exception type
-               return null;
+               if (ex.Cancelled)
+               {
+                  throw new MergeRequestEditorCancelledException();
+               }
+               throw new MergeRequestEditorException("Cannot create MR", ex);
             }
          }
       }

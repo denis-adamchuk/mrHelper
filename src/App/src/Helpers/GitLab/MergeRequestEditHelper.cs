@@ -84,25 +84,26 @@ namespace mrHelper.App.Helpers.GitLab
             Trace.TraceWarning("[MergeRequestEditHelper] " + message);
          }
 
+         int assigneeId = assignee?.Id ?? 0; // 0 means to not assign to anyone
          CreateNewMergeRequestParameters creatorParameters = new CreateNewMergeRequestParameters(
-            parameters.SourceBranch, parameters.TargetBranch, parameters.Title, assignee?.Id,
+            parameters.SourceBranch, parameters.TargetBranch, parameters.Title, assigneeId,
             parameters.Description, parameters.DeleteSourceBranch, parameters.Squash);
-         MergeRequest mergeRequest = await Shortcuts.GetMergeRequestCreator(gitLabInstance, parameters.ProjectKey)
-            .CreateMergeRequest(creatorParameters);
-         if (mergeRequest == null)
+         try
          {
-            MessageBox.Show("GitLab could not create a merge request with the given parameters", "Error",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Trace.TraceError("[MergeRequestEditHelper] Failed to create a merge request");
-            return null;
+            MergeRequest mergeRequest = await Shortcuts
+               .GetMergeRequestCreator(gitLabInstance, parameters.ProjectKey).CreateMergeRequest(creatorParameters);
+            MergeRequestKey mrk = new MergeRequestKey(parameters.ProjectKey, mergeRequest.IId);
+            if (!String.IsNullOrEmpty(firstNote))
+            {
+               await addComment(gitLabInstance, mrk, currentUser, firstNote);
+            }
+            return mrk;
          }
-
-         MergeRequestKey mrk = new MergeRequestKey(parameters.ProjectKey, mergeRequest.IId);
-         if (!String.IsNullOrEmpty(firstNote))
+         catch (MergeRequestCreatorException ex)
          {
-            await addComment(gitLabInstance, mrk, currentUser, firstNote);
+            reportErrorToUser(ex);
          }
-         return mrk;
+         return null;
       }
 
       internal struct ApplyMergeRequestChangesParameters
@@ -131,9 +132,9 @@ namespace mrHelper.App.Helpers.GitLab
          if (String.IsNullOrEmpty(parameters.Title))
          {
             // this is unexpected due to UI restrictions, so don't implement detailed logging here
-            MessageBox.Show("Invalid parameters for a new merge request", "Error",
+            MessageBox.Show("Invalid parameters for a merge request", "Error",
                MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Trace.TraceError("[MergeRequestEditHelper] Invalid parameters for a new merge request");
+            Trace.TraceError("[MergeRequestEditHelper] Invalid parameters for a merge request");
             return false;
          }
 
@@ -169,17 +170,19 @@ namespace mrHelper.App.Helpers.GitLab
             return result;
          }
 
+         int assigneeId = assignee?.Id ?? 0; // 0 means to unassign
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
-            null, parameters.Title, assignee?.Id, parameters.Description, null, parameters.DeleteSourceBranch,
+            null, parameters.Title, assigneeId, parameters.Description, null, parameters.DeleteSourceBranch,
             parameters.Squash);
-         MergeRequest mergeRequest = await Shortcuts
-            .GetMergeRequestEditor(gitLabInstance, mrk)
-            .ModifyMergeRequest(updateMergeRequestParameters);
-         if (mergeRequest == null)
+         try
          {
-            MessageBox.Show("GitLab could not modify the selected merge request", "Error",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Trace.TraceError("[MergeRequestEditHelper] Failed to modify a merge request");
+            MergeRequest mergeRequest = await Shortcuts
+               .GetMergeRequestEditor(gitLabInstance, mrk)
+               .ModifyMergeRequest(updateMergeRequestParameters);
+         }
+         catch (MergeRequestEditorException ex)
+         {
+            reportErrorToUser(ex);
             return result;
          }
          return true;
@@ -213,6 +216,46 @@ namespace mrHelper.App.Helpers.GitLab
             ExceptionHandlers.Handle("Failed to create a note", ex);
          }
          return false;
+      }
+
+      private static void reportErrorToUser(Exception ex)
+      {
+         if (ex is MergeRequestCreatorCancelledException || ex is MergeRequestEditorCancelledException)
+         {
+            return;
+         }
+
+         void showDialogAndLogError(string message)
+         {
+            string defaultMessage = "GitLab could not create a merge request with the given parameters. ";
+            MessageBox.Show(defaultMessage + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Trace.TraceError("[MergeRequestEditHelper] " + message);
+         };
+
+         if (ex.InnerException != null && (ex.InnerException is GitLabRequestException))
+         {
+            GitLabRequestException rx = ex.InnerException as GitLabRequestException;
+            if (rx.InnerException is System.Net.WebException wx && wx.Response != null)
+            {
+               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
+               switch (response.StatusCode)
+               {
+                  case System.Net.HttpStatusCode.Conflict:
+                     showDialogAndLogError("Another open merge request already exists for this source branch");
+                     return;
+
+                  case System.Net.HttpStatusCode.Forbidden:
+                     showDialogAndLogError("Access denied");
+                     return;
+
+                  case System.Net.HttpStatusCode.BadRequest:
+                     showDialogAndLogError("Bad parameters");
+                     return;
+               }
+            }
+         }
+
+         showDialogAndLogError("");
       }
    }
 }
