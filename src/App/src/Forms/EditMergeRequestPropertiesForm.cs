@@ -10,7 +10,7 @@ namespace mrHelper.App.Forms
    {
       internal EditMergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
          ProjectKey projectKey, MergeRequest mergeRequest, string specialNote)
-         : base(hostname, projectAccessor, currentUser)
+         : base(hostname, projectAccessor, currentUser, false)
       {
          if (mergeRequest == null)
          {
@@ -28,19 +28,16 @@ namespace mrHelper.App.Forms
 
       protected override void applyInitialState()
       {
-         comboBoxProject.Enabled = false;
          if (!String.IsNullOrEmpty(_projectKey.ProjectName))
          {
             addProject(_projectKey.ProjectName);
          }
 
-         comboBoxSourceBranch.Enabled = false;
          if (!String.IsNullOrEmpty(_initialMergeRequest.Source_Branch))
          {
             addSourceBranch(_initialMergeRequest.Source_Branch);
          }
 
-         comboBoxTargetBranch.Enabled = false;
          if (!String.IsNullOrEmpty(_initialMergeRequest.Target_Branch))
          {
             addTargetBranch(_initialMergeRequest.Target_Branch);
@@ -72,6 +69,7 @@ namespace mrHelper.App.Forms
 
          checkBoxSquash.Checked = _initialMergeRequest.Squash;
          checkBoxDeleteSourceBranch.Checked = _initialMergeRequest.Force_Remove_Source_Branch;
+         updateControls();
       }
 
       private void addProject(string projectname)

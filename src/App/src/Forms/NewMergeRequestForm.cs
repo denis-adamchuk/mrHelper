@@ -15,7 +15,7 @@ namespace mrHelper.App.Forms
    {
       internal NewMergeRequestForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
          NewMergeRequestProperties initialState, IEnumerable<ProjectKey> projects, string sourceBranchTemplate)
-         : base(hostname, projectAccessor, currentUser)
+         : base(hostname, projectAccessor, currentUser, true)
       {
          _initialState = initialState;
          _projects = projects;

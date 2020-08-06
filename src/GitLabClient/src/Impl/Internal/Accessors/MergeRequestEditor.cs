@@ -32,7 +32,11 @@ namespace mrHelper.GitLabClient.Accessors
                {
                   throw new MergeRequestEditorCancelledException();
                }
-               throw new MergeRequestEditorException("Cannot create MR", ex);
+               if (ex.InnerException is GitLabRequestException glx)
+               {
+                  throw new MergeRequestEditorException("Cannot edit MR", glx);
+               }
+               throw new MergeRequestEditorException("Cannot edit MR by unknown reason", null);
             }
          }
       }

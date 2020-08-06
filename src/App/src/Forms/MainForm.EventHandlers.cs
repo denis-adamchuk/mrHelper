@@ -1513,7 +1513,7 @@ namespace mrHelper.App.Forms
 
                MergeRequestEditHelper.ApplyMergeRequestChangesParameters parameters =
                   new MergeRequestEditHelper.ApplyMergeRequestChangesParameters(form.Title, form.AssigneeUsername,
-                  form.Description, form.DeleteSourceBranch, form.Squash);
+                  form.Description, form.TargetBranch, form.DeleteSourceBranch, form.Squash);
 
                bool updated = await MergeRequestEditHelper.ApplyChangesToMergeRequest(_gitLabInstance, item.ProjectKey,
                   item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser);

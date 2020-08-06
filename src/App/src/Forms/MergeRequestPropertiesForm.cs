@@ -12,7 +12,8 @@ namespace mrHelper.App.src.Forms
 {
    internal abstract partial class MergeRequestPropertiesForm : CustomFontForm
    {
-      internal MergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser)
+      internal MergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
+         bool allowChangeSource)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
@@ -25,6 +26,7 @@ namespace mrHelper.App.src.Forms
          _projectAccessor = projectAccessor;
          _currentUser = currentUser;
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
+         _allowChangeSource = allowChangeSource;
 
          string css = String.Format("{0}", mrHelper.App.Properties.Resources.Common_CSS);
          htmlPanelTitle.BaseStylesheet = css;
@@ -210,9 +212,10 @@ namespace mrHelper.App.src.Forms
       protected void updateControls()
       {
          bool isProjectSelected = comboBoxProject.SelectedItem != null;
+         comboBoxProject.Enabled = _allowChangeSource;
 
          bool areSourceBranches = comboBoxSourceBranch.Items.Count > 0;
-         comboBoxSourceBranch.Enabled = areSourceBranches;
+         comboBoxSourceBranch.Enabled = areSourceBranches && _allowChangeSource;
 
          bool isSourceBranchSelected = comboBoxSourceBranch.SelectedItem != null;
          comboBoxTargetBranch.Enabled = isSourceBranchSelected;
@@ -270,6 +273,7 @@ namespace mrHelper.App.src.Forms
 
       private readonly string _hostname;
       private readonly MarkdownPipeline _mdPipeline;
+      private readonly bool _allowChangeSource;
       private string _title;
       private string _description;
    }

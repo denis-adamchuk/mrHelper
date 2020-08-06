@@ -109,15 +109,17 @@ namespace mrHelper.App.Helpers.GitLab
          internal string Title { get; }
          internal string AssigneeUserName { get; }
          internal string Description { get; }
+         internal string TargetBranch { get; }
          internal bool DeleteSourceBranch { get; }
          internal bool Squash { get; }
 
          public ApplyMergeRequestChangesParameters(string title, string assigneeUserName, string description,
-            bool deleteSourceBranch, bool squash)
+            string targetBranch, bool deleteSourceBranch, bool squash)
          {
             Title = title;
             AssigneeUserName = assigneeUserName;
             Description = description;
+            TargetBranch = targetBranch;
             DeleteSourceBranch = deleteSourceBranch;
             Squash = squash;
          }
@@ -128,6 +130,7 @@ namespace mrHelper.App.Helpers.GitLab
          string oldSpecialNote, string newSpecialNote, User currentUser)
       {
          if (String.IsNullOrEmpty(parameters.Title)
+          || String.IsNullOrEmpty(parameters.TargetBranch)
           || parameters.AssigneeUserName == null
           || newSpecialNote == null
           || currentUser == null)
@@ -151,15 +154,13 @@ namespace mrHelper.App.Helpers.GitLab
             result = await addComment(gitLabInstance, mrk, currentUser, newSpecialNote);
          }
 
-         string oldTitle = originalMergeRequest.Title;
-         string oldDescription = originalMergeRequest.Description;
-
          bool changed =
                oldAssigneeUsername != parameters.AssigneeUserName
             || originalMergeRequest.Force_Remove_Source_Branch != parameters.DeleteSourceBranch
             || originalMergeRequest.Squash != parameters.Squash
-            || oldTitle != parameters.Title
-            || oldDescription != parameters.Description;
+            || originalMergeRequest.Target_Branch != parameters.TargetBranch
+            || originalMergeRequest.Title != parameters.Title
+            || originalMergeRequest.Description != parameters.Description;
          if (!changed)
          {
             return result;
@@ -167,8 +168,8 @@ namespace mrHelper.App.Helpers.GitLab
 
          int assigneeId = assignee?.Id ?? 0; // 0 means to unassign
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
-            null, parameters.Title, assigneeId, parameters.Description, null, parameters.DeleteSourceBranch,
-            parameters.Squash);
+            parameters.TargetBranch, parameters.Title, assigneeId, parameters.Description,
+            null, parameters.DeleteSourceBranch, parameters.Squash);
          try
          {
             MergeRequest mergeRequest = await Shortcuts
@@ -238,7 +239,7 @@ namespace mrHelper.App.Helpers.GitLab
 
          void showDialogAndLogError(string message = "")
          {
-            string defaultMessage = "GitLab could not create a merge request with the given parameters. ";
+            string defaultMessage = "GitLab could not create a merge request with the given parameters: ";
             MessageBox.Show(defaultMessage + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Trace.TraceError("[MergeRequestEditHelper] " + message);
          };
@@ -249,6 +250,7 @@ namespace mrHelper.App.Helpers.GitLab
             if (rx.InnerException is System.Net.WebException wx && wx.Response != null)
             {
                System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
+               const int unprocessableEntity = 422;
                switch (response.StatusCode)
                {
                   case System.Net.HttpStatusCode.Conflict:
@@ -261,6 +263,10 @@ namespace mrHelper.App.Helpers.GitLab
 
                   case System.Net.HttpStatusCode.BadRequest:
                      showDialogAndLogError("Bad parameters");
+                     return;
+
+                  case (System.Net.HttpStatusCode)unprocessableEntity:
+                     showDialogAndLogError("You can't use same project/branch for source and target");
                      return;
                }
             }
