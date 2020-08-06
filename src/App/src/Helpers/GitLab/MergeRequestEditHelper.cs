@@ -100,10 +100,7 @@ namespace mrHelper.App.Helpers.GitLab
          }
 
          MergeRequestKey mrk = new MergeRequestKey(parameters.ProjectKey, mergeRequest.IId);
-         if (!String.IsNullOrEmpty(firstNote))
-         {
-            await addComment(gitLabInstance, mrk, currentUser, firstNote);
-         }
+         await addComment(gitLabInstance, mrk, currentUser, firstNote);
          return mrk;
       }
 
@@ -212,6 +209,11 @@ namespace mrHelper.App.Helpers.GitLab
       async private static Task<bool> addComment(GitLabInstance gitLabInstance, MergeRequestKey mrk, User currentUser,
          string commentBody)
       {
+         if (String.IsNullOrEmpty(commentBody))
+         {
+            return false;
+         }
+
          try
          {
             IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(gitLabInstance, mrk, currentUser);

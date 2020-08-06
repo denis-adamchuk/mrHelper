@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace mrHelper.GitLabClient
 {
@@ -19,13 +20,12 @@ namespace mrHelper.GitLabClient
 
       public override bool Equals(object obj)
       {
-         return obj is SearchCriteria criteria &&
-                EqualityComparer<IEnumerable<object>>.Default.Equals(Criteria, criteria.Criteria);
+         return obj is SearchCriteria criteria && Enumerable.SequenceEqual(Criteria, criteria.Criteria);
       }
 
       public override int GetHashCode()
       {
-         return 1163963580 + EqualityComparer<IEnumerable<object>>.Default.GetHashCode(Criteria);
+         return 1163963580 + ToString().GetHashCode();
       }
    }
 

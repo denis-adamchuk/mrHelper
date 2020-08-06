@@ -13,7 +13,7 @@ namespace mrHelper.GitLabClient.Loaders.Cache
    /// </summary>
    internal class InternalMergeRequestCacheComparator
    {
-      private struct TwoListDifference<T> : IEquatable<TwoListDifference<T>>
+      private struct TwoListDifference<T>
       {
          public TwoListDifference(List<T> firstOnly, List<T> secondOnly, List<Tuple<T, T>> common)
          {
@@ -25,27 +25,6 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          public List<T> FirstOnly { get; }
          public List<T> SecondOnly { get; }
          public List<Tuple<T, T>> Common { get; }
-
-         public override bool Equals(object obj)
-         {
-            return obj is TwoListDifference<T> difference && Equals(difference);
-         }
-
-         public bool Equals(TwoListDifference<T> other)
-         {
-            return EqualityComparer<List<T>>.Default.Equals(FirstOnly, other.FirstOnly) &&
-                   EqualityComparer<List<T>>.Default.Equals(SecondOnly, other.SecondOnly) &&
-                   EqualityComparer<List<Tuple<T, T>>>.Default.Equals(Common, other.Common);
-         }
-
-         public override int GetHashCode()
-         {
-            int hashCode = 1732896134;
-            hashCode = hashCode * -1521134295 + EqualityComparer<List<T>>.Default.GetHashCode(FirstOnly);
-            hashCode = hashCode * -1521134295 + EqualityComparer<List<T>>.Default.GetHashCode(SecondOnly);
-            hashCode = hashCode * -1521134295 + EqualityComparer<List<Tuple<T, T>>>.Default.GetHashCode(Common);
-            return hashCode;
-         }
       }
 
       private struct MergeRequestWithProject : IEquatable<MergeRequestWithProject>
@@ -188,16 +167,7 @@ namespace mrHelper.GitLabClient.Loaders.Cache
 
             bool labelsUpdated = !Enumerable.SequenceEqual(mergeRequest1.Labels, mergeRequest2.Labels);
             bool commitsUpdated = newVersions.Count() > oldVersions.Count();
-
-            bool detailsUpdated =
-                  mergeRequest1.Author.Id     != mergeRequest2.Author.Id
-               || mergeRequest1.Source_Branch != mergeRequest2.Source_Branch
-               || mergeRequest1.Target_Branch != mergeRequest2.Target_Branch
-               || mergeRequest1.Title         != mergeRequest2.Title
-               || mergeRequest1.Description   != mergeRequest2.Description
-               || mergeRequest1.Squash        != mergeRequest2.Squash
-               || mergeRequest1.Force_Remove_Source_Branch != mergeRequest2.Force_Remove_Source_Branch
-               || (mergeRequest1.Assignee?.Id ?? 0) != (mergeRequest2.Assignee?.Id ?? 0);
+            bool detailsUpdated = !mergeRequest1.Equals(mergeRequest2);
 
             if (labelsUpdated || commitsUpdated || detailsUpdated)
             {

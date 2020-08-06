@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using mrHelper.Core.Matching;
 
 namespace mrHelper.Core.Context
@@ -109,16 +110,13 @@ namespace mrHelper.Core.Context
 
       public bool Equals(DiffContext other)
       {
-         return EqualityComparer<IEnumerable<Line>>.Default.Equals(Lines, other.Lines) &&
+         return Enumerable.SequenceEqual(Lines, other.Lines) &&
                 SelectedIndex == other.SelectedIndex;
       }
 
       public override int GetHashCode()
       {
-         int hashCode = 1852560556;
-         hashCode = hashCode * -1521134295 + EqualityComparer<IEnumerable<Line>>.Default.GetHashCode(Lines);
-         hashCode = hashCode * -1521134295 + SelectedIndex.GetHashCode();
-         return hashCode;
+         throw new NotImplementedException();
       }
    }
 
