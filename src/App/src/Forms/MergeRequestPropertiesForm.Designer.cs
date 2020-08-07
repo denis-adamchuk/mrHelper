@@ -98,6 +98,7 @@
          this.comboBoxTargetBranch.Name = "comboBoxTargetBranch";
          this.comboBoxTargetBranch.Size = new System.Drawing.Size(239, 21);
          this.comboBoxTargetBranch.TabIndex = 2;
+         this.comboBoxTargetBranch.TextChanged += new System.EventHandler(this.comboBoxTargetBranch_TextChanged);
          // 
          // groupBox3
          // 
@@ -263,13 +264,13 @@
          // buttonSubmit
          // 
          this.buttonSubmit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-         this.buttonSubmit.DialogResult = System.Windows.Forms.DialogResult.OK;
          this.buttonSubmit.Location = new System.Drawing.Point(12, 420);
          this.buttonSubmit.Name = "buttonSubmit";
          this.buttonSubmit.Size = new System.Drawing.Size(75, 23);
          this.buttonSubmit.TabIndex = 12;
          this.buttonSubmit.Text = "Submit";
          this.buttonSubmit.UseVisualStyleBackColor = true;
+         this.buttonSubmit.Click += new System.EventHandler(this.buttonSubmit_Click);
          // 
          // buttonCancel
          // 

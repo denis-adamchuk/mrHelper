@@ -80,7 +80,8 @@ namespace mrHelper.App.Forms
 
       private void addSourceBranch(string branchname)
       {
-         comboBoxSourceBranch.Items.Add(_initialMergeRequest.Source_Branch);
+         Branch dummyBranch = new Branch(_initialMergeRequest.Source_Branch, null /* no Commit */);
+         comboBoxSourceBranch.Items.Add(dummyBranch);
          comboBoxSourceBranch.SelectedIndex = 0;
       }
 

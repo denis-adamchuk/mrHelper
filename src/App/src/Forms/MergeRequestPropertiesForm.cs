@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Diagnostics;
 using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
 using mrHelper.GitLabClient;
@@ -37,9 +39,9 @@ namespace mrHelper.App.src.Forms
          buttonCancel.ConfirmationCondition = () => true;
       }
 
-      internal string ProjectName => getProjectName() ?? String.Empty;
-      internal string SourceBranch => getSourceBranch()?.Name ?? String.Empty;
-      internal string TargetBranch => getTargetBranch();
+      internal string ProjectName => getProjectName();
+      internal string SourceBranch => getSourceBranchName();
+      internal string TargetBranch => getTargetBranchName();
       internal string AssigneeUsername => getAssigneeUserName();
       internal bool DeleteSourceBranch => checkBoxDeleteSourceBranch.Checked;
       internal bool Squash => checkBoxSquash.Checked;
@@ -85,10 +87,6 @@ namespace mrHelper.App.src.Forms
          {
             e.Value = branch.Name;
          }
-         else if (e.ListItem is string branchName)
-         {
-            e.Value = branchName;
-         }
          else
          {
             Debug.Assert(false);
@@ -113,11 +111,53 @@ namespace mrHelper.App.src.Forms
          }
       }
 
+      private void comboBoxTargetBranch_TextChanged(object sender, EventArgs e)
+      {
+         updateControls();
+      }
+
+      async private void buttonSubmit_Click(object sender, EventArgs e)
+      {
+         if (await verifyInputData())
+         {
+            Close();
+            DialogResult = DialogResult.OK;
+         }
+      }
+
+      async private Task<bool> verifyInputData()
+      {
+         if (!await verifyTargetBranch())
+         {
+            MessageBox.Show("Cannot submit changes due to invalid Target Branch", "Warning",
+               MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            return false;
+         }
+         return true;
+      }
+
+      async private Task<bool> verifyTargetBranch()
+      {
+         if (String.IsNullOrEmpty(getTargetBranchName()))
+         {
+            return false;
+         }
+
+         using (RepositoryAccessor repositoryAccessor = createRepositoryAccessor())
+         {
+            // Trim special characters to avoid search by mask
+            string targetBranch = getTargetBranchName().TrimStart('^').TrimEnd('$');
+            IEnumerable<Branch> branches = await repositoryAccessor.GetBranches(targetBranch);
+            return branches != null && branches.Any();
+         }
+      }
+
       protected RepositoryAccessor createRepositoryAccessor()
       {
          string projectName = getProjectName();
-         if (projectName == null)
+         if (String.IsNullOrEmpty(projectName))
          {
+            Debug.Assert(false);
             return null;
          }
 
@@ -126,7 +166,7 @@ namespace mrHelper.App.src.Forms
 
       protected string getProjectName()
       {
-         return comboBoxProject.SelectedItem as string;
+         return (comboBoxProject.SelectedItem as string) ?? String.Empty;
       }
 
       protected Branch getSourceBranch()
@@ -134,7 +174,12 @@ namespace mrHelper.App.src.Forms
          return comboBoxSourceBranch.SelectedItem as Branch;
       }
 
-      protected string getTargetBranch()
+      protected string getSourceBranchName()
+      {
+         return getSourceBranch()?.Name ?? String.Empty;
+      }
+
+      protected string getTargetBranchName()
       {
          return comboBoxTargetBranch.Text.Trim();
       }
@@ -211,16 +256,16 @@ namespace mrHelper.App.src.Forms
 
       protected void updateControls()
       {
-         bool isProjectSelected = comboBoxProject.SelectedItem != null;
+         bool isProjectSelected = !String.IsNullOrEmpty(getProjectName());
          comboBoxProject.Enabled = _allowChangeSource;
 
          bool areSourceBranches = comboBoxSourceBranch.Items.Count > 0;
          comboBoxSourceBranch.Enabled = areSourceBranches && _allowChangeSource;
 
-         bool isSourceBranchSelected = comboBoxSourceBranch.SelectedItem != null;
+         bool isSourceBranchSelected = !String.IsNullOrEmpty(getSourceBranchName());
          comboBoxTargetBranch.Enabled = isSourceBranchSelected;
 
-         bool isTargetBranchSelected = !String.IsNullOrEmpty(comboBoxTargetBranch.Text);
+         bool isTargetBranchSelected = !String.IsNullOrEmpty(getTargetBranchName());
          bool allDetailsLoaded = isProjectSelected && isSourceBranchSelected && isTargetBranchSelected && !isLoadingCommit();
          buttonEditDescription.Enabled = allDetailsLoaded;
          buttonEditTitle.Enabled = allDetailsLoaded;

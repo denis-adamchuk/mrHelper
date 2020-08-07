@@ -23,7 +23,6 @@ namespace mrHelper.App.Forms
 
          comboBoxProject.SelectedIndexChanged += new System.EventHandler(this.comboBoxProject_SelectedIndexChanged);
          comboBoxSourceBranch.SelectedIndexChanged += new System.EventHandler(this.comboBoxSourceBranch_SelectedIndexChanged);
-         comboBoxTargetBranch.TextChanged += new System.EventHandler(this.comboBoxTargetBranch_TextChanged);
 
          buttonCancel.ConfirmationText = "Do you want to discard creating a new merge request?";
       }
@@ -49,11 +48,6 @@ namespace mrHelper.App.Forms
 
          Commit commit = await loadCommitAsync();
          await searchTargetBranchNameAsync(commit);
-      }
-
-      private void comboBoxTargetBranch_TextChanged(object sender, EventArgs e)
-      {
-         updateControls();
       }
 
       async private Task loadBranchListAsync()
