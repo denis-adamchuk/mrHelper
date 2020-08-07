@@ -64,10 +64,12 @@ namespace mrHelper.App.Forms
          updateTabControlSelection();
          try
          {
+            _gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
             await startWorkflowAsync(getHostName());
          }
          catch (Exception ex)
          {
+            _gitLabInstance = null;
             if (exceptionHandler == null)
             {
                exceptionHandler = new Func<Exception, bool>((e) => startWorkflowDefaultExceptionHandler(e));
@@ -104,8 +106,6 @@ namespace mrHelper.App.Forms
       /// <returns>false if operation was cancelled</returns>
       async private Task startWorkflowAsync(string hostname)
       {
-         _gitLabInstance = new GitLabInstance(hostname, Program.Settings);
-
          // When this thing happens, everything reconnects. If there are some things at gitlab that user
          // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
          // we will miss them. It might be ok when host changes, but if this method used to "refresh"

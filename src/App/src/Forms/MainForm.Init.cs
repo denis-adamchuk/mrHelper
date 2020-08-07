@@ -470,7 +470,13 @@ namespace mrHelper.App.Forms
          // TODO Argument manipulation shall be rewritten to avoid copy/paste of option names
          string[] arguments = Environment.GetCommandLineArgs();
          string url = arguments.Length > 1 && arguments[1] != "-m" ? arguments[1] : String.Empty;
-         enqueueUrlConnectionRequest(url, true);
+
+         if (_requestedUrl.Count > 0)
+         {
+            Debug.Assert(false);
+            return;
+         }
+         enqueueUrl(url);
       }
 
       private void createLiveSessionAndDependencies()

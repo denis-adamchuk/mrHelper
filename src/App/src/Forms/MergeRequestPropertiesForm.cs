@@ -9,8 +9,10 @@ using mrHelper.App.Forms;
 using mrHelper.GitLabClient;
 using mrHelper.Common.Tools;
 using Markdig;
+using mrHelper.CommonControls.Tools;
+using mrHelper.Common.Interfaces;
 
-namespace mrHelper.App.src.Forms
+namespace mrHelper.App.Forms
 {
    internal abstract partial class MergeRequestPropertiesForm : CustomFontForm
    {
@@ -129,7 +131,7 @@ namespace mrHelper.App.src.Forms
       {
          if (!await verifyTargetBranch())
          {
-            MessageBox.Show("Cannot submit changes due to invalid Target Branch", "Warning",
+            MessageBox.Show("Cannot submit changes due to invalid target branch", "Warning",
                MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return false;
          }
@@ -251,6 +253,30 @@ namespace mrHelper.App.src.Forms
          setTitle(newTitle);
       }
 
+      protected void fillProjectListAndSelect(IEnumerable<ProjectKey> projects, string defaultProjectName)
+      {
+         comboBoxProject.Items.AddRange(projects
+            .OrderBy(x => x.ProjectName)
+            .Select(x => x.ProjectName)
+            .ToArray());
+         WinFormsHelpers.SelectComboBoxItem(comboBoxProject, String.IsNullOrWhiteSpace(defaultProjectName)
+            ? null : new Func<object, bool>(o => (o as string) == defaultProjectName));
+      }
+
+      protected void fillSourceBranchListAndSelect(Branch[] branches, string defaultSourceBrachName)
+      {
+         comboBoxSourceBranch.Items.AddRange(branches);
+         WinFormsHelpers.SelectComboBoxItem(comboBoxSourceBranch, String.IsNullOrWhiteSpace(defaultSourceBrachName)
+            ? null : new Func<object, bool>(o => (o as Branch).Name == defaultSourceBrachName));
+      }
+
+      protected void fillTargetBranchListAndSelect(string[] branchNames, string defaultTargetBranchName)
+      {
+         comboBoxTargetBranch.Items.AddRange(branchNames.ToArray());
+         WinFormsHelpers.SelectComboBoxItem(comboBoxTargetBranch, String.IsNullOrWhiteSpace(defaultTargetBranchName)
+            ? null : new Func<object, bool>(o => (o as string) == defaultTargetBranchName));
+      }
+
       protected abstract void applyInitialState();
       protected abstract bool isLoadingCommit();
 
@@ -315,8 +341,8 @@ namespace mrHelper.App.src.Forms
 
       protected readonly User _currentUser;
       protected readonly ProjectAccessor _projectAccessor;
+      protected readonly string _hostname;
 
-      private readonly string _hostname;
       private readonly MarkdownPipeline _mdPipeline;
       private readonly bool _allowChangeSource;
       private string _title;

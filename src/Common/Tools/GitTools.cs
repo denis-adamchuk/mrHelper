@@ -231,26 +231,32 @@ namespace mrHelper.Common.Tools
             return value;
          }
 
-         _repositoryKeys.Add(path, null);
-         string repositoryName = getRepositoryName(path);
-         if (!String.IsNullOrWhiteSpace(repositoryName))
+         ProjectKey? projectKey = GetProjectKeyByRemoteUrl(getRemoteUrl(path));
+         _repositoryKeys.Add(path, projectKey);
+         return projectKey;
+      }
+
+      public static ProjectKey? GetProjectKeyByRemoteUrl(string remoteUrl)
+      {
+         if (String.IsNullOrWhiteSpace(remoteUrl))
          {
-            Match m = gitRepo_re.Match(repositoryName);
-            if (m.Success && m.Groups.Count == 5 && m.Groups[3].Success && m.Groups[4].Success)
-            {
-               string hostname = StringUtils.GetHostWithPrefix(m.Groups[3].Value);
-
-               string gitSuffix = ".git";
-               int startIndex = m.Groups[4].Value.StartsWith(":") ? 1 : 0;
-               int endIndex = m.Groups[4].Value.EndsWith(gitSuffix)
-                  ? m.Groups[4].Value.Length - gitSuffix.Length : m.Groups[4].Value.Length;
-
-               string project = m.Groups[4].Value.Substring(startIndex, endIndex - startIndex);
-               _repositoryKeys[path] = new ProjectKey(hostname, project);
-            }
+            return null;
          }
 
-         return _repositoryKeys[path];
+         Match m = gitRepo_re.Match(remoteUrl);
+         if (m.Success && m.Groups.Count == 5 && m.Groups[3].Success && m.Groups[4].Success)
+         {
+            string hostname = StringUtils.GetHostWithPrefix(m.Groups[3].Value);
+
+            string gitSuffix = ".git";
+            int startIndex = m.Groups[4].Value.StartsWith(":") ? 1 : 0;
+            int endIndex = m.Groups[4].Value.EndsWith(gitSuffix)
+               ? m.Groups[4].Value.Length - gitSuffix.Length : m.Groups[4].Value.Length;
+
+            string project = m.Groups[4].Value.Substring(startIndex, endIndex - startIndex);
+            return new ProjectKey(hostname, project);
+         }
+         return null;
       }
 
       public static bool IsSingleCommitFetchSupported(string path)
@@ -267,7 +273,7 @@ namespace mrHelper.Common.Tools
          ExternalProcess.Start("git", config, true, path);
       }
 
-      private static string getRepositoryName(string path)
+      private static string getRemoteUrl(string path)
       {
          try
          {

@@ -15,6 +15,7 @@ using mrHelper.Common.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using mrHelper.App.Helpers.GitLab;
+using mrHelper.App.Forms.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -83,7 +84,8 @@ namespace mrHelper.App.Forms
             if (_storageFactory == null || _storageFactory.ParentFolder != snapshot.TempFolder)
             {
                MessageBox.Show("It seems that file storage folder was changed after launching diff tool. " +
-                  "Please restart diff tool.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                  "Please restart diff tool.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning,
+                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
                return;
             }
 
@@ -144,63 +146,115 @@ namespace mrHelper.App.Forms
          string url = arguments[1];
 
          Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
-         enqueueUrlConnectionRequest(url, false);
+         enqueueUrl(url);
       }
 
       readonly Queue<string> _requestedUrl = new Queue<string>();
-      private void enqueueUrlConnectionRequest(string url, bool startup)
+      private void enqueueUrl(string url)
       {
          _requestedUrl.Enqueue(url);
          if (_requestedUrl.Count == 1)
          {
-            BeginInvoke(new Action(
-               async () =>
-            {
-               if (!await processUrlConnectionQueue() && startup)
-               {
-                  selectHost(PreferredSelection.Initial);
-                  switchHostToSelected();
-               }
-            }));
+            BeginInvoke(new Action(async () => await processUrlQueue()));
          }
       }
 
-      async private Task<bool> processUrlConnectionQueue()
+      async private Task processUrlQueue()
       {
          if (!_requestedUrl.Any())
          {
-            return true;
+            return;
          }
 
          string url = _requestedUrl.Peek();
          try
          {
-            if (String.IsNullOrWhiteSpace(url))
-            {
-               return false;
-            }
-
-            await connectToUrlAsyncInternal(url);
-            return true;
-         }
-         catch (UrlConnectionException ex)
-         {
-            if (ex.InnerException is DataCacheConnectionCancelledException)
-            {
-               return true;
-            }
-
-            reportErrorOnConnect(url, ex.OriginalMessage, ex.InnerException);
-            return false;
+            await processUrl(url);
          }
          finally
          {
             if (_requestedUrl.Any())
             {
                _requestedUrl.Dequeue();
-               BeginInvoke(new Action(async () => await processUrlConnectionQueue()));
+               BeginInvoke(new Action(async () => await processUrlQueue()));
             }
          }
+      }
+
+      private async Task processUrl(string url)
+      {
+         try
+         {
+            if (String.IsNullOrEmpty(url))
+            {
+               return;
+            }
+
+            Trace.TraceInformation(String.Format("[MainForm.Workflow] Processing URL {0}", url));
+
+            object parsed = UrlHelper.Parse(url);
+            if (parsed is UrlParser.ParsedMergeRequestUrl parsedMergeRequestUrl)
+            {
+               throwOnUnknownHost(parsedMergeRequestUrl.Host);
+               await connectToUrlAsyncInternal(url, parsedMergeRequestUrl);
+            }
+            else if (parsed is ParsedNewMergeRequestUrl parsedNewMergeRequestUrl)
+            {
+               if (_gitLabInstance == null || getHostName() != parsedNewMergeRequestUrl.ProjectKey.HostName)
+               {
+                  throwOnUnknownHost(parsedNewMergeRequestUrl.ProjectKey.HostName);
+                  await restartWorkflowByUrlAsync(parsedNewMergeRequestUrl.ProjectKey.HostName);
+               }
+               createMergeRequestFromUrl(parsedNewMergeRequestUrl);
+            }
+            else if (parsed == null)
+            {
+               MessageBox.Show("Failed to parse URL", "Error",
+                  MessageBoxButtons.OK, MessageBoxIcon.Error,
+                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+            }
+         }
+         catch (UrlConnectionException ex)
+         {
+            if (!(ex.InnerException is DataCacheConnectionCancelledException))
+            {
+               reportErrorOnConnect(url, ex.OriginalMessage, ex.InnerException);
+               return;
+            }
+         }
+         finally
+         {
+            if (_gitLabInstance == null)
+            {
+               selectHost(PreferredSelection.Initial);
+               switchHostToSelected();
+            }
+         }
+      }
+
+      private void throwOnUnknownHost(string hostname)
+      {
+         if (Program.Settings.GetAccessToken(hostname) == String.Empty)
+         {
+            throw new UrlConnectionException(String.Format(
+               "Cannot connect to {0} because it is not in the list of known hosts. ", hostname), null);
+         }
+      }
+
+      private void createMergeRequestFromUrl(ParsedNewMergeRequestUrl parsedNewMergeRequestUrl)
+      {
+         if (!checkIfMergeRequestCanBeCreated())
+         {
+            return;
+         }
+
+         NewMergeRequestProperties defaultProperties = getDefaultNewMergeRequestProperties(
+            getHostName(), getCurrentUser(), null);
+         NewMergeRequestProperties initialProperties = new NewMergeRequestProperties(
+            parsedNewMergeRequestUrl.ProjectKey.ProjectName, parsedNewMergeRequestUrl.SourceBranch,
+            parsedNewMergeRequestUrl.TargetBranch, defaultProperties.AssigneeUsername,
+            defaultProperties.IsSquashNeeded, defaultProperties.IsBranchDeletionNeeded);
+         createNewMergeRequest(getHostName(), getCurrentUser(), initialProperties);
       }
 
       private class UrlConnectionException : ExceptionEx
@@ -209,20 +263,11 @@ namespace mrHelper.App.Forms
             : base(message, innerException) { }
       }
 
-      async private Task connectToUrlAsyncInternal(string originalUrl)
+      async private Task connectToUrlAsyncInternal(string url, UrlParser.ParsedMergeRequestUrl parsedUrl)
       {
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Initializing Workflow with URL {0}", originalUrl));
-
-         string prefix = Constants.CustomProtocolName + "://";
-         string url = originalUrl.StartsWith(prefix) ? originalUrl.Substring(prefix.Length) : originalUrl;
-         MergeRequestKey mrk = parseUrlIntoMergeRequestKey(url);
-         if (Program.Settings.GetAccessToken(mrk.ProjectKey.HostName) == String.Empty)
-         {
-            throw new UrlConnectionException(String.Format(
-               "Cannot connect to {0} because it is not in the list of known hosts. ", mrk.ProjectKey.HostName), null);
-         }
-
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
+         MergeRequestKey mrk = parseUrlIntoMergeRequestKey(parsedUrl);
+
          // It is possible that we don't have _gitLabInstance so far (e.g. on application startup from URL)
          GitLabInstance tempInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
          MergeRequest mergeRequest = await Shortcuts
@@ -428,22 +473,9 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private MergeRequestKey parseUrlIntoMergeRequestKey(string url)
+      private MergeRequestKey parseUrlIntoMergeRequestKey(UrlParser.ParsedMergeRequestUrl parsedUrl)
       {
-         try
-         {
-            UrlParser.ParsedMergeRequestUrl originalParsed = UrlParser.ParseMergeRequestUrl(url);
-            UrlParser.ParsedMergeRequestUrl mergeRequestUrl = new UrlParser.ParsedMergeRequestUrl(
-               StringUtils.GetHostWithPrefix(originalParsed.Host), originalParsed.Project, originalParsed.IId);
-
-            return new MergeRequestKey(new ProjectKey(mergeRequestUrl.Host, mergeRequestUrl.Project),
-               mergeRequestUrl.IId);
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(ex is UriFormatException);
-            throw new UrlConnectionException(String.Empty, ex);
-         }
+         return new MergeRequestKey(new ProjectKey(parsedUrl.Host, parsedUrl.Project), parsedUrl.IId);
       }
 
       private static bool isProjectInTheList(ProjectKey projectKey)

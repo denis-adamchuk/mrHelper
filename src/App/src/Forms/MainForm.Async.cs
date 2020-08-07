@@ -15,6 +15,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.GitLabClient;
+using mrHelper.App.Forms.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -434,6 +435,70 @@ namespace mrHelper.App.Forms
             updateStorageDependentControlState(mrk);
             labelWorkflowStatus.Text = getStorageSummaryUpdateInformation();
          }
+      }
+
+      private async Task createNewMergeRequestAsync(SubmitNewMergeRequestParameters parameters, string firstNote)
+      {
+         buttonCreateNew.Enabled = false;
+         labelWorkflowStatus.Text = "Creating a merge request at GitLab...";
+
+         MergeRequestKey? mrkOpt = await MergeRequestEditHelper.SubmitNewMergeRequestAsync(_gitLabInstance,
+            parameters, firstNote, getCurrentUser());
+         if (mrkOpt == null)
+         {
+            // all error handling is done at the callee side
+            labelWorkflowStatus.Text = "Merge Request has not been created";
+            buttonCreateNew.Enabled = true;
+            return;
+         }
+
+         requestUpdates(mrkOpt.Value,
+            new int[] {
+               1000,
+               Program.Settings.OneShotUpdateFirstChanceDelayMs,
+               Program.Settings.OneShotUpdateSecondChanceDelayMs
+            });
+
+         labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been created in project {1}",
+            mrkOpt.Value.IId, parameters.ProjectKey.ProjectName);
+         buttonCreateNew.Enabled = true;
+
+         _newMergeRequestDialogStatesByHosts[getHostName()] = new NewMergeRequestProperties(
+            parameters.ProjectKey.ProjectName, null, null, parameters.AssigneeUserName, parameters.Squash,
+            parameters.DeleteSourceBranch);
+      }
+
+      private async Task applyChangesToMergeRequestAsync(string hostname, User currentUser, FullMergeRequestKey item)
+      {
+         MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
+         string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(_liveDataCache.DiscussionCache, mrk);
+         MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
+            getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText);
+         if (form.ShowDialog() != DialogResult.OK)
+         {
+            return;
+         }
+
+         ApplyMergeRequestChangesParameters parameters =
+            new ApplyMergeRequestChangesParameters(form.Title, form.AssigneeUsername,
+            form.Description, form.TargetBranch, form.DeleteSourceBranch, form.Squash);
+
+         bool updated = await MergeRequestEditHelper.ApplyChangesToMergeRequest(_gitLabInstance, item.ProjectKey,
+            item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser);
+         if (!updated)
+         {
+            labelWorkflowStatus.Text = String.Format("No changes have been made to Merge Request !{0}", mrk.IId);
+            return;
+         }
+
+         requestUpdates(mrk,
+            new int[] {
+                     100,
+                     Program.Settings.OneShotUpdateFirstChanceDelayMs,
+                     Program.Settings.OneShotUpdateSecondChanceDelayMs
+            });
+
+         labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been updated", mrk.IId);
       }
    }
 }

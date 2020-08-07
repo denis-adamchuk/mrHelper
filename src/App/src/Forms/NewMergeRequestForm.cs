@@ -3,11 +3,14 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
-using mrHelper.App.src.Forms;
 using mrHelper.GitLabClient;
 using mrHelper.Common.Interfaces;
+using mrHelper.CommonControls.Tools;
+using System.Windows.Forms;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Forms
 {
@@ -15,14 +18,19 @@ namespace mrHelper.App.Forms
    {
       internal NewMergeRequestForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
          NewMergeRequestProperties initialState, IEnumerable<ProjectKey> projects, string sourceBranchTemplate)
-         : base(hostname, projectAccessor, currentUser, true)
+         : base(hostname, projectAccessor, currentUser, allowChangeSource(initialState))
       {
          _initialState = initialState;
-         _projects = projects;
+         _projects = projects ?? throw new ArgumentException("projects argument cannot be null");
          _sourceBranchTemplate = sourceBranchTemplate ?? String.Empty;
 
-         comboBoxProject.SelectedIndexChanged += new System.EventHandler(this.comboBoxProject_SelectedIndexChanged);
-         comboBoxSourceBranch.SelectedIndexChanged += new System.EventHandler(this.comboBoxSourceBranch_SelectedIndexChanged);
+         if (allowChangeSource(_initialState))
+         {
+            comboBoxProject.SelectedIndexChanged +=
+               new System.EventHandler(this.comboBoxProject_SelectedIndexChanged);
+            comboBoxSourceBranch.SelectedIndexChanged +=
+               new System.EventHandler(this.comboBoxSourceBranch_SelectedIndexChanged);
+         }
 
          buttonCancel.ConfirmationText = "Do you want to discard creating a new merge request?";
       }
@@ -32,6 +40,12 @@ namespace mrHelper.App.Forms
          base.Dispose(disposing);
 
          _repositoryAccessor?.Dispose();
+      }
+
+      protected override void OnLoad(EventArgs e)
+      {
+         checkSourceBranchTemplate();
+         base.OnLoad(e);
       }
 
       async private void comboBoxProject_SelectedIndexChanged(object sender, EventArgs e)
@@ -46,7 +60,16 @@ namespace mrHelper.App.Forms
       {
          _repositoryAccessor?.Cancel();
 
-         Commit commit = await loadCommitAsync();
+         Commit commit = null;
+         try
+         {
+            commit = await loadCommitAsync();
+         }
+         catch (RepositoryAccessorException ex)
+         {
+            string message = String.Format("Cannot find a commit for branch {0}", getSourceBranchName());
+            ExceptionHandlers.Handle(message, ex);
+         }
          await searchTargetBranchNameAsync(commit);
       }
 
@@ -54,7 +77,17 @@ namespace mrHelper.App.Forms
       {
          Debug.Assert(_sourceBranchTemplate != null);
          onSourceBranchListLoadStart();
-         IEnumerable<Branch> branchList = await _repositoryAccessor.GetBranches(_sourceBranchTemplate);
+
+         IEnumerable<Branch> branchList = null;;
+         try
+         {
+            branchList = await _repositoryAccessor.GetBranches(_sourceBranchTemplate);
+         }
+         catch (RepositoryAccessorException ex)
+         {
+            string message = String.Format("Cannot load a list of branches by template {0}", _sourceBranchTemplate);
+            ExceptionHandlers.Handle(message, ex);
+         }
          onSourceBranchListLoadFinish(branchList);
       }
 
@@ -71,7 +104,7 @@ namespace mrHelper.App.Forms
       {
          if (branchList != null && branchList.Any())
          {
-            fillSourceBranchListAndSelect(branchList.ToArray());
+            fillSourceBranchListAndSelect(branchList.ToArray(), null);
          }
 
          updateControls();
@@ -133,8 +166,17 @@ namespace mrHelper.App.Forms
          }
 
          onTargetBranchSearchStart();
-         IEnumerable<string> targetBranchNames =
-            await _repositoryAccessor.FindPreferredTargetBranchNames( sourceBranch, sourceBranchCommit);
+         IEnumerable<string> targetBranchNames = null;
+         try
+         {
+            targetBranchNames =
+               await _repositoryAccessor.FindPreferredTargetBranchNames(sourceBranch, sourceBranchCommit);
+         }
+         catch (RepositoryAccessorException ex)
+         {
+            string message = String.Format("Cannot find a target branch for {0}", sourceBranch.Name);
+            ExceptionHandlers.Handle(message, ex);
+         }
          onTargetBranchSearchFinish(targetBranchNames);
       }
 
@@ -148,7 +190,7 @@ namespace mrHelper.App.Forms
       {
          if (targetBranchNames != null && targetBranchNames.Any())
          {
-            fillTargetBranchListAndSelect(targetBranchNames.ToArray());
+            fillTargetBranchListAndSelect(targetBranchNames.ToArray(), null);
          }
 
          updateControls();
@@ -162,41 +204,70 @@ namespace mrHelper.App.Forms
          setTitle(String.Empty);
          setDescription(String.Empty);
          setAssigneeUsername(_initialState.AssigneeUsername);
-         fillProjectListAndSelect();
+
+         if (allowChangeSource(_initialState))
+         {
+            fillProjectListAndSelect(_projects, _initialState.DefaultProject);
+         }
+         else
+         {
+            fillProjectListAndSelect(new ProjectKey[] { new ProjectKey(_hostname, _initialState.DefaultProject) }, null);
+            fillSourceBranchListAndSelect(new Branch[] { new Branch(_initialState.SourceBranch, null) }, null);
+            fillTargetBranchListAndSelect(new string[] { _initialState.TargetBranch }, null);
+
+            BeginInvoke(new Action(
+               async () =>
+               {
+                  Debug.Assert(_repositoryAccessor == null);
+                  _repositoryAccessor = createRepositoryAccessor();
+                  try
+                  {
+                     Commit commit = await loadCommitAsync();
+                  }
+                  catch (RepositoryAccessorException ex)
+                  {
+                     string message = String.Format("Cannot find branch {0} in project {1}",
+                        _initialState.SourceBranch, _initialState.DefaultProject);
+                     ExceptionHandlers.Handle(message, ex);
+                     MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                     DialogResult = DialogResult.Cancel;
+                     Close();
+                  }
+               }));
+         }
+
          updateControls();
       }
 
-      private void fillProjectListAndSelect()
+      private static bool allowChangeSource(NewMergeRequestProperties initialState)
       {
-         comboBoxProject.Items.AddRange(_projects
-            .OrderBy(x => x.ProjectName)
-            .Select(x => x.ProjectName)
-            .ToArray());
-         if (comboBoxProject.Items.Count > 0)
+         return String.IsNullOrEmpty(initialState.DefaultProject)
+             || String.IsNullOrEmpty(initialState.SourceBranch)
+             || String.IsNullOrEmpty(initialState.TargetBranch);
+      }
+
+      private void checkSourceBranchTemplate()
+      {
+         if (String.IsNullOrWhiteSpace(_initialState.SourceBranch) || String.IsNullOrEmpty(_sourceBranchTemplate))
          {
-            int selectedProjectIndex = 0;
-            if (_initialState.DefaultProject != null)
-            {
-               int defaultProjectIndex = comboBoxProject.Items.IndexOf(_initialState.DefaultProject);
-               if (defaultProjectIndex != -1)
-               {
-                  selectedProjectIndex = defaultProjectIndex;
-               }
-            }
-            comboBoxProject.SelectedIndex = selectedProjectIndex;
+            return;
          }
-      }
 
-      private void fillSourceBranchListAndSelect(Branch[] branches)
-      {
-         comboBoxSourceBranch.Items.AddRange(branches);
-         comboBoxSourceBranch.SelectedIndex = 0;
-      }
-
-      private void fillTargetBranchListAndSelect(string[] branchNames)
-      {
-         comboBoxTargetBranch.Items.AddRange(branchNames.ToArray());
-         comboBoxTargetBranch.SelectedIndex = 0;
+         Regex re = new Regex(_sourceBranchTemplate, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+         if (!re.Match(_initialState.SourceBranch).Success)
+         {
+            string message = String.Format("Source branch {0} does not match template {1}. Do you want to continue?",
+               _initialState.SourceBranch, _sourceBranchTemplate);
+            if (MessageBox.Show(message, "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.No)
+            {
+               DialogResult = DialogResult.Cancel;
+               Close();
+            }
+            else
+            {
+               _sourceBranchTemplate = _initialState.SourceBranch;
+            }
+         }
       }
 
       protected override bool isLoadingCommit() => _isLoadingCommit;
@@ -205,7 +276,7 @@ namespace mrHelper.App.Forms
       private bool _isLoadingCommit;
       private readonly NewMergeRequestProperties _initialState;
       private readonly IEnumerable<ProjectKey> _projects;
-      private readonly string _sourceBranchTemplate;
+      private string _sourceBranchTemplate;
    }
 }
 

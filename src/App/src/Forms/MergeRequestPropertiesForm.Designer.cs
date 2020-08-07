@@ -1,4 +1,4 @@
-﻿namespace mrHelper.App.src.Forms
+﻿namespace mrHelper.App.Forms
 {
    partial class MergeRequestPropertiesForm
    {

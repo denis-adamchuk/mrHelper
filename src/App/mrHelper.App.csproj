@@ -214,6 +214,7 @@
     <Compile Include="src\Helpers\GitLab\DiscussionFilter.cs" />
     <Compile Include="src\Helpers\GitLab\DiscussionSort.cs" />
     <Compile Include="src\Helpers\GitLab\ExpressionResolver.cs" />
+    <Compile Include="src\Helpers\Url\NewMergeRequestUrlParser.cs" />
     <Compile Include="src\Helpers\GitLab\MergeRequestEditHelper.cs" />
     <Compile Include="src\Helpers\GitLab\PositionConverter.cs" />
     <Compile Include="src\Helpers\ContextProviders\VersionBasedContextProvider.cs" />
@@ -237,6 +238,7 @@
     <Compile Include="src\Helpers\ServiceManager.cs" />
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserItem.cs" />
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserModel.cs" />
+    <Compile Include="src\Helpers\Url\GenericUrlParser.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
     <EmbeddedResource Include="src\Controls\DiscussionActionsPanel.resx">

@@ -12,6 +12,52 @@ using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Helpers.GitLab
 {
+   internal struct SubmitNewMergeRequestParameters
+   {
+      public SubmitNewMergeRequestParameters(ProjectKey projectKey, string sourceBranch, string targetBranch,
+         string title, string assigneeUserName, string description, bool deleteSourceBranch, bool squash)
+      {
+         ProjectKey = projectKey;
+         SourceBranch = sourceBranch;
+         TargetBranch = targetBranch;
+         Title = title;
+         AssigneeUserName = assigneeUserName;
+         Description = description;
+         DeleteSourceBranch = deleteSourceBranch;
+         Squash = squash;
+      }
+
+      internal ProjectKey ProjectKey { get; }
+      internal string SourceBranch { get; }
+      internal string TargetBranch { get; }
+      internal string Title { get; }
+      internal string AssigneeUserName { get; }
+      internal string Description { get; }
+      internal bool DeleteSourceBranch { get; }
+      internal bool Squash { get; }
+   }
+
+   internal struct ApplyMergeRequestChangesParameters
+   {
+      internal string Title { get; }
+      internal string AssigneeUserName { get; }
+      internal string Description { get; }
+      internal string TargetBranch { get; }
+      internal bool DeleteSourceBranch { get; }
+      internal bool Squash { get; }
+
+      public ApplyMergeRequestChangesParameters(string title, string assigneeUserName, string description,
+         string targetBranch, bool deleteSourceBranch, bool squash)
+      {
+         Title = title;
+         AssigneeUserName = assigneeUserName;
+         Description = description;
+         TargetBranch = targetBranch;
+         DeleteSourceBranch = deleteSourceBranch;
+         Squash = squash;
+      }
+   }
+
    internal static class MergeRequestEditHelper
    {
       async internal static Task<string> GetLatestSpecialNote(IDiscussionCache discussionCache, MergeRequestKey mrk)
@@ -33,31 +79,6 @@ namespace mrHelper.App.Helpers.GitLab
                      && x.Notes.First().Body.StartsWith(Program.ServiceManager.GetSpecialNotePrefix()))
             .LastOrDefault();
          return note?.Notes.First().Body;
-      }
-
-      internal struct SubmitNewMergeRequestParameters
-      {
-         public SubmitNewMergeRequestParameters(ProjectKey projectKey, string sourceBranch, string targetBranch,
-            string title, string assigneeUserName, string description, bool deleteSourceBranch, bool squash)
-         {
-            ProjectKey = projectKey;
-            SourceBranch = sourceBranch;
-            TargetBranch = targetBranch;
-            Title = title;
-            AssigneeUserName = assigneeUserName;
-            Description = description;
-            DeleteSourceBranch = deleteSourceBranch;
-            Squash = squash;
-         }
-
-         internal ProjectKey ProjectKey { get; }
-         internal string SourceBranch { get; }
-         internal string TargetBranch { get; }
-         internal string Title { get; }
-         internal string AssigneeUserName { get; }
-         internal string Description { get; }
-         internal bool DeleteSourceBranch { get; }
-         internal bool Squash { get; }
       }
 
       async internal static Task<MergeRequestKey?> SubmitNewMergeRequestAsync(GitLabInstance gitLabInstance,
@@ -102,27 +123,6 @@ namespace mrHelper.App.Helpers.GitLab
          MergeRequestKey mrk = new MergeRequestKey(parameters.ProjectKey, mergeRequest.IId);
          await addComment(gitLabInstance, mrk, currentUser, firstNote);
          return mrk;
-      }
-
-      internal struct ApplyMergeRequestChangesParameters
-      {
-         internal string Title { get; }
-         internal string AssigneeUserName { get; }
-         internal string Description { get; }
-         internal string TargetBranch { get; }
-         internal bool DeleteSourceBranch { get; }
-         internal bool Squash { get; }
-
-         public ApplyMergeRequestChangesParameters(string title, string assigneeUserName, string description,
-            string targetBranch, bool deleteSourceBranch, bool squash)
-         {
-            Title = title;
-            AssigneeUserName = assigneeUserName;
-            Description = description;
-            TargetBranch = targetBranch;
-            DeleteSourceBranch = deleteSourceBranch;
-            Squash = squash;
-         }
       }
 
       async internal static Task<bool> ApplyChangesToMergeRequest(GitLabInstance gitLabInstance,

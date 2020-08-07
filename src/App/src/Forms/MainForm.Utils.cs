@@ -18,6 +18,8 @@ using mrHelper.Common.Interfaces;
 using mrHelper.StorageSupport;
 using static mrHelper.App.Controls.MergeRequestListView;
 using mrHelper.GitLabClient;
+using mrHelper.App.Forms.Helpers;
+using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Forms
 {
@@ -2011,6 +2013,70 @@ namespace mrHelper.App.Forms
          return Environment.GetEnvironmentVariable("TEMP");
       }
 
+      private bool checkIfMergeRequestCanBeCreated()
+      {
+         string hostname = getHostName();
+         User currentUser = getCurrentUser();
+         if (_gitLabInstance == null || currentUser == null || _expressionResolver == null)
+         {
+            Debug.Assert(false);
+            MessageBox.Show("Cannot create a merge request", "Internal error",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Trace.TraceError("Unexpected application state." +
+               "_gitLabInstance is null={0}, currentUser is null={1}, _expressionResolver is null={2}",
+               _gitLabInstance == null, currentUser == null, _expressionResolver == null);
+            return false;
+         }
+         return true;
+      }
+
+      private bool checkIfMergeRequestCanBeEdited()
+      {
+         string hostname = getHostName();
+         User currentUser = getCurrentUser();
+         FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
+         if (_gitLabInstance == null || currentUser == null || item.MergeRequest == null)
+         {
+            Debug.Assert(false);
+            MessageBox.Show("Cannot create a merge request", "Internal error",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Trace.TraceError("Unexpected application state." +
+               "_gitLabInstance is null={0}, currentUser is null={1}, item.MergeRequest is null={2}",
+               _gitLabInstance == null, currentUser == null, item.MergeRequest == null);
+            return false;
+         }
+         return true;
+      }
+
+      private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties)
+      {
+         MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
+            getProjectAccessor(), currentUser, initialProperties, _liveDataCache.ProjectCache.GetProjects(),
+            _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()));
+         if (form.ShowDialog() != DialogResult.OK)
+         {
+            return;
+         }
+
+         BeginInvoke(new Action(
+            async () =>
+            {
+               ProjectKey projectKey = new ProjectKey(hostname, form.ProjectName);
+               SubmitNewMergeRequestParameters parameters = new SubmitNewMergeRequestParameters(
+                  projectKey, form.SourceBranch, form.TargetBranch, form.Title,
+                  form.AssigneeUsername, form.Description, form.DeleteSourceBranch, form.Squash);
+               await createNewMergeRequestAsync(parameters, form.SpecialNote);
+            }));
+      }
+
+      private NewMergeRequestProperties getDefaultNewMergeRequestProperties(string hostname,
+         User currentUser, ProjectKey? currentProject)
+      {
+         // This state is expected to be used only once, next times 'persistent storage' is used
+         NewMergeRequestProperties factoryProperties = new NewMergeRequestProperties(
+            currentProject?.ProjectName, null, null, currentUser.Username, true, true);
+         return _newMergeRequestDialogStatesByHosts.TryGetValue(hostname, out var value) ? value : factoryProperties;
+      }
    }
 }
 

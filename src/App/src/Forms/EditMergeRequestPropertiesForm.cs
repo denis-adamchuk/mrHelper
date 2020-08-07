@@ -1,6 +1,5 @@
 ﻿using System;
 using GitLabSharp.Entities;
-using mrHelper.App.src.Forms;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 
@@ -12,13 +11,8 @@ namespace mrHelper.App.Forms
          ProjectKey projectKey, MergeRequest mergeRequest, string specialNote)
          : base(hostname, projectAccessor, currentUser, false)
       {
-         if (mergeRequest == null)
-         {
-            throw new ArgumentException("mergeRequest argument cannot be null");
-         }
-
          _projectKey = projectKey;
-         _initialMergeRequest = mergeRequest;
+         _initialMergeRequest = mergeRequest ?? throw new ArgumentException("mergeRequest argument cannot be null");
          _specialNote = specialNote;
 
          buttonSubmit.Text = "Apply";
@@ -30,17 +24,17 @@ namespace mrHelper.App.Forms
       {
          if (!String.IsNullOrEmpty(_projectKey.ProjectName))
          {
-            addProject(_projectKey.ProjectName);
+            fillProjectListAndSelect(new ProjectKey[] { _projectKey }, null);
          }
 
          if (!String.IsNullOrEmpty(_initialMergeRequest.Source_Branch))
          {
-            addSourceBranch(_initialMergeRequest.Source_Branch);
+            fillSourceBranchListAndSelect(new Branch[] { new Branch(_initialMergeRequest.Source_Branch, null) }, null);
          }
 
          if (!String.IsNullOrEmpty(_initialMergeRequest.Target_Branch))
          {
-            addTargetBranch(_initialMergeRequest.Target_Branch);
+            fillTargetBranchListAndSelect(new string[] { _initialMergeRequest.Target_Branch }, null);
          }
 
          setTitle(String.Empty);
@@ -70,25 +64,6 @@ namespace mrHelper.App.Forms
          checkBoxSquash.Checked = _initialMergeRequest.Squash;
          checkBoxDeleteSourceBranch.Checked = _initialMergeRequest.Force_Remove_Source_Branch;
          updateControls();
-      }
-
-      private void addProject(string projectname)
-      {
-         comboBoxProject.Items.Add(_projectKey.ProjectName);
-         comboBoxProject.SelectedIndex = 0;
-      }
-
-      private void addSourceBranch(string branchname)
-      {
-         Branch dummyBranch = new Branch(_initialMergeRequest.Source_Branch, null /* no Commit */);
-         comboBoxSourceBranch.Items.Add(dummyBranch);
-         comboBoxSourceBranch.SelectedIndex = 0;
-      }
-
-      private void addTargetBranch(string branchname)
-      {
-         comboBoxTargetBranch.Items.Add(_initialMergeRequest.Target_Branch);
-         comboBoxTargetBranch.SelectedIndex = 0;
       }
 
       protected override bool isLoadingCommit() => false;
