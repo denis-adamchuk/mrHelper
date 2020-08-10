@@ -22,8 +22,8 @@ namespace mrHelper.App.Forms
       /// ArgumentException
       /// </summary>
       internal DiscussionsForm(
-         DataCache dataCache, GitLabInstance gitLabInstance, IGitCommandService git,
-         User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
+         DataCache dataCache, GitLabInstance gitLabInstance, IModificationListener modificationListener,
+         IGitCommandService git, User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
          Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit, Action onDiscussionModified)
@@ -39,6 +39,7 @@ namespace mrHelper.App.Forms
 
          _dataCache = dataCache;
          _gitLabInstance = gitLabInstance;
+         _modificationListener = modificationListener;
          _updateGit = updateGit;
          _onDiscussionModified = onDiscussionModified;
 
@@ -337,7 +338,7 @@ namespace mrHelper.App.Forms
             }
 
             SingleDiscussionAccessor accessor = Shortcuts.GetSingleDiscussionAccessor(
-               _gitLabInstance, _mergeRequestKey, discussion.Id);
+               _gitLabInstance, _modificationListener, _mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _diffContextDepth, _colorScheme,
@@ -514,6 +515,7 @@ namespace mrHelper.App.Forms
       private readonly User _currentUser;
       private readonly DataCache _dataCache;
       private readonly GitLabInstance _gitLabInstance;
+      private readonly IModificationListener _modificationListener;
       private readonly Func<MergeRequestKey, IEnumerable<Discussion>, Task> _updateGit;
       private readonly Action _onDiscussionModified;
 

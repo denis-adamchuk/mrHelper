@@ -185,10 +185,9 @@ namespace mrHelper.App.Forms
          Debug.Assert(getMergeRequest(null) != null);
          MergeRequest mr = getMergeRequest(null);
 
-         Debug.Assert(_gitLabInstance != null);
          Debug.Assert(!isSearchMode());
-
-         IMergeRequestEditor editor = Shortcuts.GetMergeRequestEditor(_gitLabInstance, mrk);
+         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
+         IMergeRequestEditor editor = Shortcuts.GetMergeRequestEditor(gitLabInstance, _modificationNotifier, mrk);
          DataCache dataCache = getSession(true /* supported in Live only */);
          TimeSpan? oldSpanOpt = dataCache?.TotalTimeCache?.GetTotalTime(mrk).Amount;
          if (!oldSpanOpt.HasValue)
@@ -961,10 +960,11 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Start();
 
          // Reset and start stopwatch
-         Debug.Assert(_gitLabInstance != null);
          Debug.Assert(getMergeRequestKey(null).HasValue);
          _timeTrackingTabPage = tabControlMode.SelectedTab;
-         _timeTracker = Shortcuts.GetTimeTracker(_gitLabInstance, getMergeRequestKey(null).Value);
+
+         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
+         _timeTracker = Shortcuts.GetTimeTracker(gitLabInstance, _modificationNotifier, getMergeRequestKey(null).Value);
          _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
@@ -1208,9 +1208,11 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
          Debug.Assert(projects != null);
 
+         GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _modificationNotifier);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects",
             "Add project", "Type project name in group/project format",
-            projects, new EditProjectsListViewCallback(new RawDataAccessor(_gitLabInstance)), true))
+            projects, new EditProjectsListViewCallback(rawDataAccessor), true))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {
@@ -1242,9 +1244,11 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> users = ConfigurationHelper.GetUsersForHost(host, Program.Settings);
          Debug.Assert(users != null);
 
+         GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _modificationNotifier);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users",
             "Add username", "Type a name of GitLab user, teams allowed",
-            users, new EditUsersListViewCallback(new RawDataAccessor(_gitLabInstance)), false))
+            users, new EditUsersListViewCallback(rawDataAccessor), false))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {

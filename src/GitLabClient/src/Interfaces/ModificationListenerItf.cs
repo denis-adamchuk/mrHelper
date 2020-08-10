@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace mrHelper.GitLabClient.Accessors
+namespace mrHelper.GitLabClient
 {
-   internal interface IModificationListener
+   public interface IModificationListener
    {
       void OnMergeRequestModified(MergeRequestKey mergeRequestKey);
 

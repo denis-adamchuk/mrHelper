@@ -776,13 +776,14 @@ namespace mrHelper.App.Forms
 
       private ProjectAccessor getProjectAccessor()
       {
-         if (_gitLabInstance == null)
+         if (getHostName() == String.Empty)
          {
             Debug.Assert(false);
             return null;
          }
 
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(_gitLabInstance);
+         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _modificationNotifier);
          return rawDataAccessor.ProjectAccessor;
       }
 
@@ -2017,14 +2018,14 @@ namespace mrHelper.App.Forms
       {
          string hostname = getHostName();
          User currentUser = getCurrentUser();
-         if (_gitLabInstance == null || currentUser == null || _expressionResolver == null)
+         if (hostname == String.Empty || currentUser == null || _expressionResolver == null)
          {
             Debug.Assert(false);
             MessageBox.Show("Cannot create a merge request", "Internal error",
                MessageBoxButtons.OK, MessageBoxIcon.Error);
             Trace.TraceError("Unexpected application state." +
-               "_gitLabInstance is null={0}, currentUser is null={1}, _expressionResolver is null={2}",
-               _gitLabInstance == null, currentUser == null, _expressionResolver == null);
+               "hostname is empty string={0}, currentUser is null={1}, _expressionResolver is null={2}",
+               hostname == String.Empty, currentUser == null, _expressionResolver == null);
             return false;
          }
          return true;
@@ -2035,14 +2036,14 @@ namespace mrHelper.App.Forms
          string hostname = getHostName();
          User currentUser = getCurrentUser();
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
-         if (_gitLabInstance == null || currentUser == null || item.MergeRequest == null)
+         if (hostname == String.Empty || currentUser == null || item.MergeRequest == null)
          {
             Debug.Assert(false);
             MessageBox.Show("Cannot create a merge request", "Internal error",
                MessageBoxButtons.OK, MessageBoxIcon.Error);
             Trace.TraceError("Unexpected application state." +
-               "_gitLabInstance is null={0}, currentUser is null={1}, item.MergeRequest is null={2}",
-               _gitLabInstance == null, currentUser == null, item.MergeRequest == null);
+               "hostname is empty string={0}, currentUser is null={1}, item.MergeRequest is null={2}",
+               hostname == String.Empty, currentUser == null, item.MergeRequest == null);
             return false;
          }
          return true;

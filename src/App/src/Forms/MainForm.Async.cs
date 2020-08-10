@@ -29,8 +29,8 @@ namespace mrHelper.App.Forms
          // Store data before async/await
          User currentUser = getCurrentUser();
          DataCache dataCache = getSession(!isSearchMode());
-         GitLabInstance gitLabInstance = _gitLabInstance;
-         if (dataCache == null || gitLabInstance == null)
+         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
+         if (dataCache == null)
          {
             Debug.Assert(false);
             return;
@@ -91,8 +91,8 @@ namespace mrHelper.App.Forms
          {
             IAsyncGitCommandService git = storage?.Git;
 
-            DiscussionsForm discussionsForm = new DiscussionsForm(dataCache, gitLabInstance, git,
-               currentUser, mrk, discussions, title, author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
+            DiscussionsForm discussionsForm = new DiscussionsForm(dataCache, gitLabInstance, _modificationNotifier,
+               git, currentUser, mrk, discussions, title, author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
                async (key, discussionsUpdated) =>
             {
                if (storage != null && storage.Updater != null)
@@ -248,16 +248,12 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               if (_gitLabInstance == null)
-               {
-                  Debug.Assert(false);
-                  return;
-               }
-
                labelWorkflowStatus.Text = "Adding a comment...";
                try
                {
-                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(_gitLabInstance, mrk, getCurrentUser());
+                  GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
+                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
+                     gitLabInstance, _modificationNotifier, mrk, getCurrentUser());
                   await creator.CreateNoteAsync(new CreateNewNoteParameters(form.Body));
                }
                catch (DiscussionCreatorException)
@@ -287,7 +283,7 @@ namespace mrHelper.App.Forms
                }
 
                DataCache dataCache = getSession(!isSearchMode());
-               if (dataCache == null || _gitLabInstance == null)
+               if (dataCache == null)
                {
                   Debug.Assert(false);
                   return;
@@ -296,7 +292,9 @@ namespace mrHelper.App.Forms
                labelWorkflowStatus.Text = "Creating a discussion...";
                try
                {
-                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(_gitLabInstance, mrk, getCurrentUser());
+                  GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
+                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
+                     gitLabInstance, _modificationNotifier, mrk, getCurrentUser());
                   await creator.CreateDiscussionAsync(new NewDiscussionParameters(form.Body, null), false);
                }
                catch (DiscussionCreatorException)
@@ -442,8 +440,9 @@ namespace mrHelper.App.Forms
          buttonCreateNew.Enabled = false;
          labelWorkflowStatus.Text = "Creating a merge request at GitLab...";
 
-         MergeRequestKey? mrkOpt = await MergeRequestEditHelper.SubmitNewMergeRequestAsync(_gitLabInstance,
-            parameters, firstNote, getCurrentUser());
+         GitLabInstance gitLabInstance = new GitLabInstance(parameters.ProjectKey.HostName, Program.Settings);
+         MergeRequestKey? mrkOpt = await MergeRequestEditHelper.SubmitNewMergeRequestAsync(gitLabInstance,
+            _modificationNotifier, parameters, firstNote, getCurrentUser());
          if (mrkOpt == null)
          {
             // all error handling is done at the callee side
@@ -483,8 +482,9 @@ namespace mrHelper.App.Forms
             new ApplyMergeRequestChangesParameters(form.Title, form.AssigneeUsername,
             form.Description, form.TargetBranch, form.DeleteSourceBranch, form.Squash);
 
-         bool updated = await MergeRequestEditHelper.ApplyChangesToMergeRequest(_gitLabInstance, item.ProjectKey,
-            item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser);
+         GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings);
+         bool updated = await MergeRequestEditHelper.ApplyChangesToMergeRequest(gitLabInstance, _modificationNotifier,
+            item.ProjectKey, item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser);
          if (!updated)
          {
             labelWorkflowStatus.Text = String.Format("No changes have been made to Merge Request !{0}", mrk.IId);

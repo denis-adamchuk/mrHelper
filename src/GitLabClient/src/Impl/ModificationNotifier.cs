@@ -2,7 +2,7 @@ using System;
 
 namespace mrHelper.GitLabClient.Accessors
 {
-   internal class ModificationNotifier : IModificationListener, IModificationNotifier
+   public class ModificationNotifier : IModificationListener, IModificationNotifier
    {
       public void OnMergeRequestModified(MergeRequestKey mergeRequestKey)
       {

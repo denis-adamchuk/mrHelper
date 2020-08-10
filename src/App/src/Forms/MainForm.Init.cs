@@ -481,7 +481,8 @@ namespace mrHelper.App.Forms
 
       private void createLiveSessionAndDependencies()
       {
-         _liveDataCache = new DataCache(new DataCacheContext(this, _mergeRequestFilter, _keywords));
+         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords);
+         _liveDataCache = new DataCache(dataCacheContext, _modificationNotifier);
          _expressionResolver = new ExpressionResolver(_liveDataCache);
          _eventFilter = new EventFilter(Program.Settings, _liveDataCache, _mergeRequestFilter);
          _userNotifier = new UserNotifier(_liveDataCache, _eventFilter, _trayIcon);
@@ -489,7 +490,8 @@ namespace mrHelper.App.Forms
 
       private void createSearchSession()
       {
-         _searchDataCache = new DataCache(new DataCacheContext(this, _mergeRequestFilter, _keywords));
+         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords);
+         _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier);
       }
 
       private void disposeLiveSessionDependencies()

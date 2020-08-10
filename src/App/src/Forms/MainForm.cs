@@ -118,7 +118,8 @@ namespace mrHelper.App.Forms
          new Dictionary<string, NewMergeRequestProperties>();
       private ExpressionResolver _expressionResolver;
 
-      private GitLabInstance _gitLabInstance;
+      private readonly GitLabClient.Accessors.ModificationNotifier _modificationNotifier
+         = new GitLabClient.Accessors.ModificationNotifier();
       private DataCache _liveDataCache;
       private DataCache _searchDataCache;
       private DataCache getDataCacheByName(string name) =>

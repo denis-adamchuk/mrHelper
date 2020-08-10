@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitLabClient.Accessors;
 using mrHelper.GitLabClient.Loaders;
 using mrHelper.GitLabClient.Loaders.Cache;
 using mrHelper.GitLabClient.Managers;
@@ -13,9 +12,10 @@ namespace mrHelper.GitLabClient
 {
    public class DataCache : IDisposable
    {
-      public DataCache(DataCacheContext dataCacheContext)
+      public DataCache(DataCacheContext dataCacheContext, IModificationNotifier modificationNotifier)
       {
          _dataCacheContext = dataCacheContext;
+         _modificationNotifier = modificationNotifier;
       }
 
       public event Action<string, User> Connected;
@@ -23,8 +23,6 @@ namespace mrHelper.GitLabClient
 
       async public Task Connect(GitLabInstance gitLabInstance, DataCacheConnectionContext context)
       {
-         _modificationNotifier = gitLabInstance.ModificationNotifier;
-
          reset();
 
          string hostname = gitLabInstance.HostName;
@@ -111,6 +109,7 @@ namespace mrHelper.GitLabClient
       private DataCacheInternal _internal;
       private readonly DataCacheContext _dataCacheContext;
       private IModificationNotifier _modificationNotifier;
+      private DataCacheContext dataCacheContext;
    }
 }
 

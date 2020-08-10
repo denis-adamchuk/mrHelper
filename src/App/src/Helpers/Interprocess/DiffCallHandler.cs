@@ -2,27 +2,27 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 using mrHelper.App.Forms;
-using mrHelper.App.Helpers;
+using mrHelper.App.Helpers.GitLab;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Core.Matching;
 using mrHelper.StorageSupport;
-using GitLabSharp.Entities;
 using mrHelper.GitLabClient;
-using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Interprocess
 {
    internal class DiffCallHandler
    {
       internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot,
-         GitLabInstance gitLabInstance, User currentUser)
+         GitLabInstance gitLabInstance, IModificationListener modificationListener, User currentUser)
       {
          _matchInfo = matchInfo;
          _snapshot = snapshot;
          _gitLabInstance = gitLabInstance;
+         _modificationListener = modificationListener;
          _currentUser = currentUser;
       }
 
@@ -156,8 +156,10 @@ namespace mrHelper.App.Interprocess
          NewDiscussionParameters parameters = new NewDiscussionParameters(
             body, includeContext ? createPositionParameters(position) : new PositionParameters?());
 
-         MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
-         IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(_gitLabInstance, mrk, _currentUser);
+         ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
+         MergeRequestKey mrk = new MergeRequestKey(projectKey, snapshot.MergeRequestIId);
+         IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
+            _gitLabInstance, _modificationListener, mrk, _currentUser);
 
          try
          {
@@ -194,6 +196,7 @@ namespace mrHelper.App.Interprocess
       private readonly MatchInfo _matchInfo;
       private readonly Snapshot _snapshot;
       private readonly GitLabInstance _gitLabInstance;
+      private readonly IModificationListener _modificationListener;
       private readonly User _currentUser;
    }
 }

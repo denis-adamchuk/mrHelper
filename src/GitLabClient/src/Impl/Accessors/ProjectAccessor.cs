@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitLabClient.Accessors;
 using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient

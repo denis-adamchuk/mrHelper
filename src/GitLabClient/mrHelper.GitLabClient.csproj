@@ -45,8 +45,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\Impl\ConnectionChecker.cs" />
     <Compile Include="src\Impl\Helpers.cs" />
-    <Compile Include="src\Impl\Internal\Accessors\ModificationListenerItf.cs" />
+    <Compile Include="src\Interfaces\ModificationListenerItf.cs" />
     <Compile Include="src\Impl\Accessors\SingleDiscussionAccessor.cs" />
+    <Compile Include="src\Impl\ModificationNotifier.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectBasedProjectListLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectListLoaderFactory.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestListLoaderItf.cs" />
@@ -65,10 +66,9 @@
     <Compile Include="src\Impl\Internal\Operators\SearchProcessors\MergeRequestSearchProcessorAbstract.cs" />
     <Compile Include="src\Impl\Internal\Operators\SearchProcessors\MergeRequestSearchProcessor.cs" />
     <Compile Include="src\Impl\Internal\Operators\SearchProcessors\MergeRequestSearchProcessorFactory.cs" />
-    <Compile Include="src\Impl\Internal\Accessors\ModificationNotifier.cs" />
     <Compile Include="src\Impl\Accessors\UserAccessor.cs" />
     <Compile Include="src\Impl\Internal\Operators\UserOperator.cs" />
-    <Compile Include="src\Impl\Internal\Accessors\ModificationNotifierItf.cs" />
+    <Compile Include="src\Interfaces\ModificationNotifierItf.cs" />
     <Compile Include="src\Impl\Internal\Accessors\MergeRequestEditor.cs" />
     <Compile Include="src\Impl\Accessors\SingleMergeRequestAccessor.cs" />
     <Compile Include="src\Impl\Internal\Accessors\MergeRequestCreator.cs" />

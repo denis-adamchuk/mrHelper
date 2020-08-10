@@ -64,12 +64,10 @@ namespace mrHelper.App.Forms
          updateTabControlSelection();
          try
          {
-            _gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
             await startWorkflowAsync(getHostName());
          }
          catch (Exception ex)
          {
-            _gitLabInstance = null;
             if (exceptionHandler == null)
             {
                exceptionHandler = new Func<Exception, bool>((e) => startWorkflowDefaultExceptionHandler(e));
@@ -162,7 +160,7 @@ namespace mrHelper.App.Forms
             new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
             new ProjectBasedContext(enabledProjects.ToArray()));
 
-         await _liveDataCache.Connect(_gitLabInstance, connectionContext);
+         await _liveDataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
 
          onAllMergeRequestsLoaded(hostname, enabledProjects);
          cleanupReviewedRevisions(hostname);
@@ -177,7 +175,7 @@ namespace mrHelper.App.Forms
             new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
             getCustomDataForUserBasedWorkflow());
 
-         await _liveDataCache.Connect(_gitLabInstance, connectionContext);
+         await _liveDataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
 
          onAllMergeRequestsLoaded(hostname, _liveDataCache.MergeRequestCache.GetProjects());
          cleanupReviewedRevisions(hostname);
@@ -285,6 +283,8 @@ namespace mrHelper.App.Forms
 
       private void liveDataCacheDisconnected()
       {
+         Trace.TraceInformation("[MainForm.Workflow] Reset GitLabInstance");
+
          closeAllFormsExceptMain();
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
@@ -344,7 +344,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         GitLabClient.ProjectAccessor projectAccessor = Shortcuts.GetProjectAccessor(_gitLabInstance);
+         GitLabClient.ProjectAccessor projectAccessor = Shortcuts.GetProjectAccessor(
+            new GitLabInstance(hostname, Program.Settings), _modificationNotifier);
 
          labelWorkflowStatus.Text = "Preparing workflow to the first launch...";
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
@@ -374,7 +375,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(_gitLabInstance);
+         GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(
+            new GitLabInstance(hostname, Program.Settings), _modificationNotifier);
 
          bool migratedLabels = false;
          labelWorkflowStatus.Text = "Preparing workflow to the first launch...";

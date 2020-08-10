@@ -82,7 +82,8 @@ namespace mrHelper.App.Helpers.GitLab
       }
 
       async internal static Task<MergeRequestKey?> SubmitNewMergeRequestAsync(GitLabInstance gitLabInstance,
-         SubmitNewMergeRequestParameters parameters, string firstNote, User currentUser)
+         IModificationListener modificationListener, SubmitNewMergeRequestParameters parameters,
+         string firstNote, User currentUser)
       {
          if (String.IsNullOrEmpty(parameters.ProjectKey.ProjectName)
           || String.IsNullOrEmpty(parameters.SourceBranch)
@@ -99,7 +100,7 @@ namespace mrHelper.App.Helpers.GitLab
             return null;
          }
 
-         User assignee = await getUserAsync(gitLabInstance, parameters.AssigneeUserName);
+         User assignee = await getUserAsync(gitLabInstance, modificationListener, parameters.AssigneeUserName);
          checkFoundAssignee(parameters.ProjectKey.HostName, parameters.AssigneeUserName, assignee);
 
          int assigneeId = assignee?.Id ?? 0; // 0 means to not assign MR to anyone
@@ -111,7 +112,7 @@ namespace mrHelper.App.Helpers.GitLab
          try
          {
             mergeRequest = await Shortcuts
-               .GetMergeRequestCreator(gitLabInstance, parameters.ProjectKey)
+               .GetMergeRequestCreator(gitLabInstance, modificationListener, parameters.ProjectKey)
                .CreateMergeRequest(creatorParameters);
          }
          catch (MergeRequestCreatorException ex)
@@ -121,11 +122,12 @@ namespace mrHelper.App.Helpers.GitLab
          }
 
          MergeRequestKey mrk = new MergeRequestKey(parameters.ProjectKey, mergeRequest.IId);
-         await addComment(gitLabInstance, mrk, currentUser, firstNote);
+         await addComment(gitLabInstance, modificationListener, mrk, currentUser, firstNote);
          return mrk;
       }
 
       async internal static Task<bool> ApplyChangesToMergeRequest(GitLabInstance gitLabInstance,
+         IModificationListener modificationListener,
          ProjectKey projectKey, MergeRequest originalMergeRequest, ApplyMergeRequestChangesParameters parameters,
          string oldSpecialNote, string newSpecialNote, User currentUser)
       {
@@ -144,14 +146,15 @@ namespace mrHelper.App.Helpers.GitLab
 
          string oldAssigneeUsername = originalMergeRequest.Assignee?.Username ?? String.Empty;
          User assignee = oldAssigneeUsername == parameters.AssigneeUserName
-            ? originalMergeRequest.Assignee : await getUserAsync(gitLabInstance, parameters.AssigneeUserName);
+            ? originalMergeRequest.Assignee
+            : await getUserAsync(gitLabInstance, modificationListener, parameters.AssigneeUserName);
          checkFoundAssignee(projectKey.HostName, parameters.AssigneeUserName, assignee);
 
          bool result = false;
          MergeRequestKey mrk = new MergeRequestKey(projectKey, originalMergeRequest.IId);
          if (oldSpecialNote != newSpecialNote)
          {
-            result = await addComment(gitLabInstance, mrk, currentUser, newSpecialNote);
+            result = await addComment(gitLabInstance, modificationListener, mrk, currentUser, newSpecialNote);
          }
 
          bool changed =
@@ -173,7 +176,7 @@ namespace mrHelper.App.Helpers.GitLab
          try
          {
             MergeRequest mergeRequest = await Shortcuts
-               .GetMergeRequestEditor(gitLabInstance, mrk)
+               .GetMergeRequestEditor(gitLabInstance, modificationListener, mrk)
                .ModifyMergeRequest(updateMergeRequestParameters);
          }
          catch (MergeRequestEditorException ex)
@@ -184,14 +187,15 @@ namespace mrHelper.App.Helpers.GitLab
          return true;
       }
 
-      async private static Task<User> getUserAsync(GitLabInstance gitLabInstance, string username)
+      async private static Task<User> getUserAsync(
+         GitLabInstance gitLabInstance, IModificationListener modificationListener, string username)
       {
          if (String.IsNullOrEmpty(username))
          {
             return null;
          }
 
-         GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(gitLabInstance);
+         GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(gitLabInstance, modificationListener);
          return await userAccessor.SearchUserByUsernameAsync(username)
              ?? await userAccessor.SearchUserByNameAsync(username); // fallback
       }
@@ -207,8 +211,8 @@ namespace mrHelper.App.Helpers.GitLab
          }
       }
 
-      async private static Task<bool> addComment(GitLabInstance gitLabInstance, MergeRequestKey mrk, User currentUser,
-         string commentBody)
+      async private static Task<bool> addComment(GitLabInstance gitLabInstance,
+         IModificationListener modificationListener, MergeRequestKey mrk, User currentUser, string commentBody)
       {
          if (String.IsNullOrEmpty(commentBody))
          {
@@ -217,7 +221,8 @@ namespace mrHelper.App.Helpers.GitLab
 
          try
          {
-            IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(gitLabInstance, mrk, currentUser);
+            IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
+               gitLabInstance, modificationListener, mrk, currentUser);
             await creator.CreateNoteAsync(new CreateNewNoteParameters(commentBody));
             return true;
          }

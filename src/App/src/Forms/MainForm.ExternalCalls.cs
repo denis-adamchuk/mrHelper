@@ -90,7 +90,7 @@ namespace mrHelper.App.Forms
             }
 
             DataCache dataCache = getDataCacheByName(snapshot.DataCacheName);
-            if (dataCache == null || _gitLabInstance == null || getCurrentUser() == null)
+            if (dataCache == null || getCurrentUser() == null)
             {
                // It is unexpected to get here when we are not connected to a host
                Debug.Assert(false);
@@ -101,7 +101,9 @@ namespace mrHelper.App.Forms
             DiffCallHandler handler;
             try
             {
-               handler = new DiffCallHandler(diffArgumentParser.Parse(), snapshot, _gitLabInstance, getCurrentUser());
+               GitLabInstance gitLabInstance = new GitLabInstance(snapshot.Host, Program.Settings);
+               handler = new DiffCallHandler(
+                  diffArgumentParser.Parse(), snapshot, gitLabInstance, _modificationNotifier, getCurrentUser());
             }
             catch (ArgumentException ex)
             {
@@ -183,29 +185,32 @@ namespace mrHelper.App.Forms
 
       private async Task processUrl(string url)
       {
+         if (String.IsNullOrEmpty(url))
+         {
+            selectHost(PreferredSelection.Initial);
+            switchHostToSelected();
+            return;
+         }
+
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] Processing URL {0}", url));
          try
          {
-            if (String.IsNullOrEmpty(url))
-            {
-               return;
-            }
-
-            Trace.TraceInformation(String.Format("[MainForm.Workflow] Processing URL {0}", url));
-
             object parsed = UrlHelper.Parse(url);
             if (parsed is UrlParser.ParsedMergeRequestUrl parsedMergeRequestUrl)
             {
                throwOnUnknownHost(parsedMergeRequestUrl.Host);
                await connectToUrlAsyncInternal(url, parsedMergeRequestUrl);
+               return;
             }
             else if (parsed is ParsedNewMergeRequestUrl parsedNewMergeRequestUrl)
             {
-               if (_gitLabInstance == null || getHostName() != parsedNewMergeRequestUrl.ProjectKey.HostName)
+               if (getHostName() != parsedNewMergeRequestUrl.ProjectKey.HostName)
                {
                   throwOnUnknownHost(parsedNewMergeRequestUrl.ProjectKey.HostName);
                   await restartWorkflowByUrlAsync(parsedNewMergeRequestUrl.ProjectKey.HostName);
                }
                createMergeRequestFromUrl(parsedNewMergeRequestUrl);
+               return;
             }
             else if (parsed == null)
             {
@@ -216,20 +221,15 @@ namespace mrHelper.App.Forms
          }
          catch (UrlConnectionException ex)
          {
-            if (!(ex.InnerException is DataCacheConnectionCancelledException))
+            if (ex.InnerException is DataCacheConnectionCancelledException)
             {
-               reportErrorOnConnect(url, ex.OriginalMessage, ex.InnerException);
                return;
             }
+            reportErrorOnConnect(url, ex.OriginalMessage, ex.InnerException);
          }
-         finally
-         {
-            if (_gitLabInstance == null)
-            {
-               selectHost(PreferredSelection.Initial);
-               switchHostToSelected();
-            }
-         }
+
+         selectHost(PreferredSelection.Initial);
+         switchHostToSelected();
       }
 
       private void throwOnUnknownHost(string hostname)
@@ -268,10 +268,9 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
          MergeRequestKey mrk = parseUrlIntoMergeRequestKey(parsedUrl);
 
-         // It is possible that we don't have _gitLabInstance so far (e.g. on application startup from URL)
-         GitLabInstance tempInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
+         GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
          MergeRequest mergeRequest = await Shortcuts
-            .GetMergeRequestAccessor(tempInstance, mrk.ProjectKey)
+            .GetMergeRequestAccessor(gitLabInstance, _modificationNotifier, mrk.ProjectKey)
             .SearchMergeRequestAsync(mrk.IId);
          if (mergeRequest == null)
          {

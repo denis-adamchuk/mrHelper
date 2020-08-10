@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace mrHelper.GitLabClient.Accessors
+namespace mrHelper.GitLabClient
 {
-   internal interface IModificationNotifier
+   public interface IModificationNotifier
    {
       event Action<MergeRequestKey> MergeRequestModified;
 

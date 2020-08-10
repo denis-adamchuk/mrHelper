@@ -1,5 +1,4 @@
 ﻿using mrHelper.Common.Interfaces;
-using mrHelper.GitLabClient.Accessors;
 
 namespace mrHelper.GitLabClient
 {
@@ -11,7 +10,6 @@ namespace mrHelper.GitLabClient
          HostName = hostname;
       }
 
-      internal ModificationNotifier ModificationNotifier { get; } = new ModificationNotifier();
       internal IHostProperties HostProperties { get; }
       internal string HostName { get; }
    }

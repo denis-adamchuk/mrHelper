@@ -113,7 +113,7 @@ namespace mrHelper.App.Forms
             new DataCacheUpdateRules(null, null),
             new SearchBasedContext(searchCriteria, maxResults, false));
 
-         await _searchDataCache.Connect(_gitLabInstance, sessionContext);
+         await _searchDataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
 
          foreach (ProjectKey projectKey in _searchDataCache.MergeRequestCache.GetProjects())
          {
