@@ -4,7 +4,7 @@ using System.Linq;
 using System.Diagnostics;
 using System.ComponentModel;
 using mrHelper.Common.Interfaces;
-using mrHelper.Client.Repository;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.StorageSupport
 {
@@ -32,7 +32,7 @@ namespace mrHelper.StorageSupport
       /// <summary>
       /// </summary>
       internal FileStorage(string parentFolder, ProjectKey projectKey,
-         ISynchronizeInvoke synchronizeInvoke, IRepositoryAccessor repositoryAccessor, int revisionsToKeep,
+         ISynchronizeInvoke synchronizeInvoke, RepositoryAccessor repositoryAccessor, int revisionsToKeep,
          int comparisonsToKeep, Func<int> getStorageCount)
       {
          Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey, LocalCommitStorageType.FileStorage);
@@ -69,11 +69,6 @@ namespace mrHelper.StorageSupport
       public override string ToString()
       {
          return String.Format("[FileStorage] {0} at {1}", ProjectKey.ProjectName, ProjectKey.HostName);
-      }
-
-      private static bool isEmptyFolder(string path)
-      {
-         return !Directory.Exists(path) || !Directory.EnumerateFileSystemEntries(path).Any();
       }
 
       private GitCommandService _commandService;

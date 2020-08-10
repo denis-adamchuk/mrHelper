@@ -8,10 +8,6 @@ using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.App.Forms.Helpers;
-using mrHelper.Client.Types;
-using mrHelper.Client.Common;
-using mrHelper.Client.Session;
-using mrHelper.Client.TimeTracking;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
@@ -21,6 +17,8 @@ using mrHelper.StorageSupport;
 using mrHelper.CommonControls.Tools;
 using static mrHelper.App.Controls.MergeRequestListView;
 using Newtonsoft.Json.Linq;
+using mrHelper.GitLabClient;
+using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Forms
 {
@@ -158,16 +156,16 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeTrackingStart_Click(object sender, EventArgs e)
       {
-         ISession session = getSession(!isSearchMode());
+         DataCache dataCache = getSession(!isSearchMode());
 
          if (isTrackingTime())
          {
             await onStopTimer(true);
-            onTimerStopped(session?.TotalTimeCache);
+            onTimerStopped(dataCache?.TotalTimeCache);
          }
          else
          {
-            onStartTimer(session);
+            onStartTimer(dataCache);
          }
       }
 
@@ -188,8 +186,10 @@ namespace mrHelper.App.Forms
          MergeRequest mr = getMergeRequest(null);
 
          Debug.Assert(!isSearchMode());
-         ISession session = getSession(true /* supported in Live only */);
-         TimeSpan? oldSpanOpt = session?.TotalTimeCache?.GetTotalTime(mrk).Amount;
+         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
+         IMergeRequestEditor editor = Shortcuts.GetMergeRequestEditor(gitLabInstance, _modificationNotifier, mrk);
+         DataCache dataCache = getSession(true /* supported in Live only */);
+         TimeSpan? oldSpanOpt = dataCache?.TotalTimeCache?.GetTotalTime(mrk).Amount;
          if (!oldSpanOpt.HasValue)
          {
             return;
@@ -203,27 +203,29 @@ namespace mrHelper.App.Forms
                TimeSpan newSpan = form.TimeSpan;
                bool add = newSpan > oldSpan;
                TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
-               if (diff != TimeSpan.Zero && session?.TotalTimeCache != null)
+               if (diff == TimeSpan.Zero || dataCache?.TotalTimeCache == null)
                {
-                  try
-                  {
-                     await session.TotalTimeCache.AddSpan(add, diff, mrk);
-                  }
-                  catch (TimeTrackingException ex)
-                  {
-                     string message = "Cannot edit total tracked time";
-                     ExceptionHandlers.Handle(message, ex);
-                     MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                     return;
-                  }
-
-                  updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName, session.TotalTimeCache);
-
-                  labelWorkflowStatus.Text = "Total spent time updated";
-
-                  Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
-                     mrk.IId, mrk.ProjectKey.ProjectName, diff.ToString()));
+                  return;
                }
+
+               try
+               {
+                  await editor.AddTrackedTime(diff, add);
+               }
+               catch (TimeTrackingException ex)
+               {
+                  string message = "Cannot edit total tracked time";
+                  ExceptionHandlers.Handle(message, ex);
+                  MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  return;
+               }
+
+               updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName, dataCache.TotalTimeCache);
+
+               labelWorkflowStatus.Text = "Total spent time updated";
+
+               Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
+                  mrk.IId, mrk.ProjectKey.ProjectName, diff.ToString()));
             }
          }
       }
@@ -329,10 +331,10 @@ namespace mrHelper.App.Forms
                e.ColumnIndex == columnHeaderLabels.Index : e.ColumnIndex == columnHeaderFoundLabels.Index;
 
          bool isResolvedColumnItem() =>
-            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderResolved.Index; 
+            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderResolved.Index;
 
          bool isTotalTimeColumnItem() =>
-            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderTotalTime.Index; 
+            e.Item.ListView == listViewMergeRequests && e.ColumnIndex == columnHeaderTotalTime.Index;
 
          if (isClickable)
          {
@@ -490,12 +492,12 @@ namespace mrHelper.App.Forms
             }
 
             string hostname = StringUtils.GetHostWithPrefix(form.Host);
-            GitLabClientManager.ConnectionCheckStatus status =
-               await _gitlabClientManager.VerifyConnection(hostname, form.AccessToken);
-            if (status != GitLabClientManager.ConnectionCheckStatus.OK)
+            ConnectionChecker connectionChecker = new ConnectionChecker();
+            ConnectionCheckStatus status = await connectionChecker.CheckConnection(hostname, form.AccessToken);
+            if (status != ConnectionCheckStatus.OK)
             {
                string message =
-                  status == GitLabClientManager.ConnectionCheckStatus.BadAccessToken
+                  status == ConnectionCheckStatus.BadAccessToken
                      ? "Bad access token"
                      : "Invalid hostname";
                MessageBox.Show(message, "Cannot connect to the host",
@@ -764,7 +766,7 @@ namespace mrHelper.App.Forms
 
             string oldButtonText = buttonReloadList.Text;
             onUpdating();
-            requestUpdates(null, new int[] { Constants.ReloadListPseudoTimerInterval }, () => onUpdated(oldButtonText));
+            requestUpdates(null, Constants.ReloadListPseudoTimerInterval, () => onUpdated(oldButtonText));
          }
       }
 
@@ -944,7 +946,7 @@ namespace mrHelper.App.Forms
          checkForApplicationUpdates();
       }
 
-      private void onStartTimer(ISession session)
+      private void onStartTimer(DataCache dataCache)
       {
          Debug.Assert(!isTrackingTime());
 
@@ -959,9 +961,11 @@ namespace mrHelper.App.Forms
 
          // Reset and start stopwatch
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         _timeTrackingSession = session;
-         _timeTracker = session?.GetTimeTracker(getMergeRequestKey(null).Value);
-         _timeTracker?.Start();
+         _timeTrackingTabPage = tabControlMode.SelectedTab;
+
+         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
+         _timeTracker = Shortcuts.GetTimeTracker(gitLabInstance, _modificationNotifier, getMergeRequestKey(null).Value);
+         _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
          updateTotalTime(null, null, null, null);
@@ -983,7 +987,7 @@ namespace mrHelper.App.Forms
          // Reset member right now to not send tracked time again on re-entrance
          ITimeTracker timeTracker = _timeTracker;
          _timeTracker = null;
-         _timeTrackingSession = null;
+         _timeTrackingTabPage = null;
 
          // Stop stopwatch and send tracked time
          if (send)
@@ -1050,14 +1054,14 @@ namespace mrHelper.App.Forms
 
       private void linkLabelTimeTrackingMergeRequest_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         if (_timeTracker == null || _timeTrackingSession == null)
+         if (_timeTracker == null || _timeTrackingTabPage == null)
          {
             return;
          }
 
-         if (_timeTrackingSession != getSession(!isSearchMode()))
+         if (_timeTrackingTabPage != tabControlMode.SelectedTab)
          {
-            tabControlMode.SelectedTab = isSearchMode() ? tabPageLive : tabPageSearch;
+            tabControlMode.SelectedTab = _timeTrackingTabPage;
          }
 
          ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
@@ -1079,6 +1083,15 @@ namespace mrHelper.App.Forms
                item => item.Value.ProjectKey.HostName + "|" + item.Value.ProjectKey.ProjectName,
                item => item.Value.IId.ToString());
          writer.Set("MergeRequestsByHosts", mergeRequestsByHosts);
+
+         Dictionary<string, string> newMergeRequestDialogStatesByHosts =
+            _newMergeRequestDialogStatesByHosts.ToDictionary(
+               item => item.Key,
+               item => item.Value.DefaultProject + "|"
+                     + item.Value.AssigneeUsername + "|"
+                     + item.Value.IsBranchDeletionNeeded.ToString() + "|"
+                     + item.Value.IsSquashNeeded.ToString());
+         writer.Set("NewMergeRequestDialogStatesByHosts", newMergeRequestDialogStatesByHosts);
       }
 
       private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
@@ -1140,6 +1153,23 @@ namespace mrHelper.App.Forms
                   return new MergeRequestKey(new ProjectKey(hostname2, projectname), iid);
                });
          }
+
+         JObject newMergeRequestDialogStatesByHostsObj = (JObject)reader.Get("NewMergeRequestDialogStatesByHosts");
+         Dictionary<string, object> newMergeRequestDialogStatesByHosts =
+            newMergeRequestDialogStatesByHostsObj?.ToObject<Dictionary<string, object>>();
+         if (newMergeRequestDialogStatesByHosts != null)
+         {
+            _newMergeRequestDialogStatesByHosts = newMergeRequestDialogStatesByHosts
+               .Where(x => ((string)x.Value).Split('|').Length == 4).ToDictionary(
+               item => item.Key,
+               item =>
+               {
+                  string[] splitted = ((string)item.Value).Split('|');
+                  return new NewMergeRequestProperties(
+                     splitted[0], null, null, splitted[1],
+                     splitted[2] == bool.TrueString, splitted[3] == bool.TrueString);
+               });
+         }
       }
 
       private void comboBoxThemes_SelectionChangeCommitted(object sender, EventArgs e)
@@ -1178,9 +1208,11 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
          Debug.Assert(projects != null);
 
+         GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _modificationNotifier);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects",
             "Add project", "Type project name in group/project format",
-            projects, new EditProjectsListViewCallback(host, _gitlabClientManager.SearchManager), true))
+            projects, new EditProjectsListViewCallback(rawDataAccessor), true))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {
@@ -1212,9 +1244,11 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> users = ConfigurationHelper.GetUsersForHost(host, Program.Settings);
          Debug.Assert(users != null);
 
+         GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _modificationNotifier);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users",
             "Add username", "Type a name of GitLab user, teams allowed",
-            users, new EditUsersListViewCallback(host, _gitlabClientManager.SearchManager), false))
+            users, new EditUsersListViewCallback(rawDataAccessor), false))
          {
             if (form.ShowDialog() != DialogResult.OK)
             {
@@ -1376,6 +1410,45 @@ namespace mrHelper.App.Forms
          {
             openBrowser(helpUrl);
          }
+      }
+
+      private void buttonCreateNew_Click(object sender, EventArgs e)
+      {
+         Debug.Assert(!isSearchMode());
+         if (!checkIfMergeRequestCanBeCreated())
+         {
+            return;
+         }
+
+         ProjectKey? currentProject = getMergeRequestKey(null)?.ProjectKey;
+         NewMergeRequestProperties initialFormState = getDefaultNewMergeRequestProperties(
+            getHostName(), getCurrentUser(), currentProject);
+         createNewMergeRequest(getHostName(), getCurrentUser(), initialFormState);
+      }
+
+      private void ListViewMergeRequests_Edit(object sender, EventArgs e)
+      {
+         Debug.Assert(!isSearchMode());
+         if (listViewMergeRequests.SelectedItems.Count < 1 || !checkIfMergeRequestCanBeEdited())
+         {
+            return;
+         }
+
+         FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
+         BeginInvoke(new Action(async () => await applyChangesToMergeRequestAsync(getHostName(), getCurrentUser(), item)));
+      }
+
+      private void ListViewMergeRequests_Refresh(object sender, EventArgs e)
+      {
+         Debug.Assert(!isSearchMode());
+         if (listViewMergeRequests.SelectedItems.Count < 1)
+         {
+            return;
+         }
+
+         FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
+         MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
+         requestUpdates(mrk, 100, () => labelWorkflowStatus.Text = String.Format("Merge Request !{0} refreshed", mrk.IId));
       }
    }
 }

@@ -3,17 +3,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using mrHelper.Client.Common;
 using GitLabSharp.Entities;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms.Helpers
 {
    public class EditProjectsListViewCallback : IEditOrderedListViewCallback
    {
-      public EditProjectsListViewCallback(string hostname, ISearchManager searchManager)
+      public EditProjectsListViewCallback(RawDataAccessor rawDataAccessor)
       {
-         _hostname = hostname;
-         _searchManager = searchManager;
+         _rawDataAccessor = rawDataAccessor;
       }
 
       public async Task<string> CanAddItem(string item, IEnumerable<string> currentItems)
@@ -28,7 +27,8 @@ namespace mrHelper.App.Forms.Helpers
          int slashIndex = item.IndexOf('/');
          if (item.IndexOf(" ", 0, slashIndex) != -1)
          {
-            User user = await _searchManager.SearchUserByNameAsync(_hostname, item.Substring(0, slashIndex), false);
+            User user = await _rawDataAccessor.UserAccessor.SearchUserByNameAsync(
+               item.Substring(0, slashIndex));
             if (user == null)
             {
                MessageBox.Show("Project name has a space and looks like a name of a user but there is no such user",
@@ -39,10 +39,10 @@ namespace mrHelper.App.Forms.Helpers
             item = user.Username + item.Substring(slashIndex);
          }
 
-         Project project = await _searchManager.SearchProjectAsync(_hostname, item);
+         Project project = await _rawDataAccessor.ProjectAccessor.SearchProjectAsync(item);
          if (project == null)
          {
-            MessageBox.Show(String.Format("There is no project {0} at {1}", item, _hostname),
+            MessageBox.Show(String.Format("There is no project {0} at the selected host", item),
                "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return null;
          }
@@ -57,8 +57,7 @@ namespace mrHelper.App.Forms.Helpers
          return project.Path_With_Namespace;
       }
 
-      private readonly string _hostname;
-      private readonly ISearchManager _searchManager;
+      private readonly RawDataAccessor _rawDataAccessor;
    }
 }
 

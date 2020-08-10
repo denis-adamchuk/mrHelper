@@ -8,7 +8,7 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.Repository;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.StorageSupport
 {
@@ -48,7 +48,7 @@ namespace mrHelper.StorageSupport
       internal FileStorageUpdater(
          ISynchronizeInvoke synchronizeInvoke,
          IFileStorage fileStorage,
-         IRepositoryAccessor repositoryAccessor,
+         RepositoryAccessor repositoryAccessor,
          Func<int> getStorageCount)
       {
          _synchronizeInvoke = synchronizeInvoke;
@@ -125,7 +125,7 @@ namespace mrHelper.StorageSupport
       async public Task doUpdate(bool isAwaitedUpdate, CommitStorageUpdateContext context,
          Action<string> onProgressChange)
       {
-         if (context == null || context.BaseToHeads == null || _isDisposed)
+         if (context == null || context.BaseToHeads == null || !context.BaseToHeads.Any() || _isDisposed)
          {
             return;
          }
@@ -147,7 +147,7 @@ namespace mrHelper.StorageSupport
          }
 
          reportProgress(onProgressChange, "Starting to download files from GitLab...");
-         await processComparisonsAsync(isAwaitedUpdate, context, onProgressChange, comparisons);
+         await processComparisonsAsync(isAwaitedUpdate, onProgressChange, comparisons);
          reportProgress(onProgressChange, "Files downloaded");
       }
 
@@ -226,7 +226,7 @@ namespace mrHelper.StorageSupport
          }
 
          traceDebug(String.Format("Fetching comparison {0} vs {1}...", baseSha, headSha));
-         comparison = await _repositoryAccessor.Compare(_fileStorage.ProjectKey, baseSha, headSha);
+         comparison = await _repositoryAccessor.Compare(baseSha, headSha);
          if (comparison == null)
          {
             return null;
@@ -237,7 +237,7 @@ namespace mrHelper.StorageSupport
          return comparison;
       }
 
-      private async Task processComparisonsAsync(bool isAwaitedUpdate, CommitStorageUpdateContext context,
+      private async Task processComparisonsAsync(bool isAwaitedUpdate,
          Action<string> onProgressChange, IEnumerable<ComparisonInternal> comparisons)
       {
          List<FileInternal> allFiles = new List<FileInternal>();
@@ -297,7 +297,7 @@ namespace mrHelper.StorageSupport
       async private Task<bool> fetchSingleFileAsync(FileInternal file)
       {
          traceDebug(String.Format("Fetching file {0} with SHA {1}...", file.Path, file.SHA));
-         File gitlabFile = await _repositoryAccessor.LoadFile(_fileStorage.ProjectKey, file.Path, file.SHA);
+         File gitlabFile = await _repositoryAccessor.LoadFile(file.Path, file.SHA);
          if (gitlabFile == null)
          {
             return false;
@@ -407,7 +407,7 @@ namespace mrHelper.StorageSupport
 
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly IFileStorage _fileStorage;
-      private readonly IRepositoryAccessor _repositoryAccessor;
+      private readonly RepositoryAccessor _repositoryAccessor;
       private readonly Func<int> _getStorageCount;
 
       private bool _isDisposed;

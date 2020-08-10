@@ -9,15 +9,12 @@ using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
 using mrHelper.DiffTool;
-using mrHelper.Client.Types;
-using mrHelper.Client.Session;
-using mrHelper.Client.Common;
-using mrHelper.Client.TimeTracking;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms
 {
@@ -336,7 +333,6 @@ namespace mrHelper.App.Forms
          restoreState();
          prepareFormToStart();
 
-         createGitLabClientManager();
          createLiveSessionAndDependencies();
          subscribeToLiveSession();
          createSearchSession();
@@ -346,13 +342,6 @@ namespace mrHelper.App.Forms
          initializeBadgeScheme();
       }
 
-      private void createGitLabClientManager()
-      {
-         GitLabClientContext clientContext = new GitLabClientContext
-            (this, Program.Settings, _mergeRequestFilter, _keywords, Program.Settings.AutoUpdatePeriodMs);
-         _gitlabClientManager = new Client.Common.GitLabClientManager(clientContext);
-      }
-
       private void finalizeWork()
       {
          _requestedDiff.Clear();
@@ -360,7 +349,7 @@ namespace mrHelper.App.Forms
 
          Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
 
-         unsubscribeFromLiveSession();
+         unsubscribeFromLiveDataCache();
 
          saveState();
          Interprocess.SnapshotSerializer.CleanUpSnapshots();
@@ -481,20 +470,28 @@ namespace mrHelper.App.Forms
          // TODO Argument manipulation shall be rewritten to avoid copy/paste of option names
          string[] arguments = Environment.GetCommandLineArgs();
          string url = arguments.Length > 1 && arguments[1] != "-m" ? arguments[1] : String.Empty;
-         enqueueUrlConnectionRequest(url, true);
+
+         if (_requestedUrl.Count > 0)
+         {
+            Debug.Assert(false);
+            return;
+         }
+         enqueueUrl(url);
       }
 
       private void createLiveSessionAndDependencies()
       {
-         _liveSession = _gitlabClientManager.SessionManager.CreateSession();
-         _expressionResolver = new ExpressionResolver(_liveSession);
-         _eventFilter = new EventFilter(Program.Settings, _liveSession, _mergeRequestFilter);
-         _userNotifier = new UserNotifier(_liveSession, _eventFilter, _trayIcon);
+         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords);
+         _liveDataCache = new DataCache(dataCacheContext, _modificationNotifier);
+         _expressionResolver = new ExpressionResolver(_liveDataCache);
+         _eventFilter = new EventFilter(Program.Settings, _liveDataCache, _mergeRequestFilter);
+         _userNotifier = new UserNotifier(_liveDataCache, _eventFilter, _trayIcon);
       }
 
       private void createSearchSession()
       {
-         _searchSession = _gitlabClientManager.SessionManager.CreateSession();
+         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords);
+         _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier);
       }
 
       private void disposeLiveSessionDependencies()
@@ -506,65 +503,65 @@ namespace mrHelper.App.Forms
 
       private void subscribeToLiveSession()
       {
-         if (_liveSession != null)
+         if (_liveDataCache != null)
          {
-            _liveSession.Stopped += liveSessionStopped;
-            _liveSession.Started += liveSessionStarted;
+            _liveDataCache.Disconnected += liveDataCacheDisconnected;
+            _liveDataCache.Connected += liveDataCacheConnected;
          }
       }
 
-      private void subscribeToLiveSessionInternalEvents()
+      private void subscribeToLiveDataCacheInternalEvents()
       {
-         if (_liveSession?.MergeRequestCache != null)
+         if (_liveDataCache?.MergeRequestCache != null)
          {
-            _liveSession.MergeRequestCache.MergeRequestEvent += processUpdate;
+            _liveDataCache.MergeRequestCache.MergeRequestEvent += processUpdate;
          }
 
-         if (_liveSession?.TotalTimeCache != null)
+         if (_liveDataCache?.TotalTimeCache != null)
          {
-            _liveSession.TotalTimeCache.TotalTimeLoading += onPreLoadTrackedTime;
-            _liveSession.TotalTimeCache.TotalTimeLoaded += onPostLoadTrackedTime;
+            _liveDataCache.TotalTimeCache.TotalTimeLoading += onPreLoadTrackedTime;
+            _liveDataCache.TotalTimeCache.TotalTimeLoaded += onPostLoadTrackedTime;
          }
 
-         if (_liveSession?.DiscussionCache != null)
+         if (_liveDataCache?.DiscussionCache != null)
          {
-            _liveSession.DiscussionCache.DiscussionsLoading += onPreLoadDiscussions;
-            _liveSession.DiscussionCache.DiscussionsLoaded += onPostLoadDiscussions;
+            _liveDataCache.DiscussionCache.DiscussionsLoading += onPreLoadDiscussions;
+            _liveDataCache.DiscussionCache.DiscussionsLoaded += onPostLoadDiscussions;
          }
       }
 
-      private void unsubscribeFromLiveSession()
+      private void unsubscribeFromLiveDataCache()
       {
-         if (_liveSession != null)
+         if (_liveDataCache != null)
          {
-            _liveSession.Stopped -= liveSessionStopped;
-            _liveSession.Started -= liveSessionStarted;
+            _liveDataCache.Disconnected -= liveDataCacheDisconnected;
+            _liveDataCache.Connected -= liveDataCacheConnected;
          }
       }
 
-      private void unsubscribeFromLiveSessionInternalEvents()
+      private void unsubscribeFromLiveDataCacheInternalEvents()
       {
-         if (_liveSession?.MergeRequestCache != null)
+         if (_liveDataCache?.MergeRequestCache != null)
          {
-            _liveSession.MergeRequestCache.MergeRequestEvent -= processUpdate;
+            _liveDataCache.MergeRequestCache.MergeRequestEvent -= processUpdate;
          }
 
-         if (_liveSession?.TotalTimeCache != null)
+         if (_liveDataCache?.TotalTimeCache != null)
          {
-            _liveSession.TotalTimeCache.TotalTimeLoading -= onPreLoadTrackedTime;
-            _liveSession.TotalTimeCache.TotalTimeLoaded -= onPostLoadTrackedTime;
+            _liveDataCache.TotalTimeCache.TotalTimeLoading -= onPreLoadTrackedTime;
+            _liveDataCache.TotalTimeCache.TotalTimeLoaded -= onPostLoadTrackedTime;
          }
 
-         if (_liveSession?.DiscussionCache != null)
+         if (_liveDataCache?.DiscussionCache != null)
          {
-            _liveSession.DiscussionCache.DiscussionsLoading -= onPreLoadDiscussions;
-            _liveSession.DiscussionCache.DiscussionsLoaded -= onPostLoadDiscussions;
+            _liveDataCache.DiscussionCache.DiscussionsLoading -= onPreLoadDiscussions;
+            _liveDataCache.DiscussionCache.DiscussionsLoaded -= onPostLoadDiscussions;
          }
       }
 
-      private void createGitHelpers(ISession session, ILocalCommitStorageFactory factory)
+      private void createGitHelpers(DataCache dataCache, ILocalCommitStorageFactory factory)
       {
-         if (session.MergeRequestCache == null || session.DiscussionCache == null)
+         if (dataCache.MergeRequestCache == null || dataCache.DiscussionCache == null)
          {
             return;
          }
@@ -575,18 +572,18 @@ namespace mrHelper.App.Forms
 
          _gitDataUpdater = Program.Settings.CacheRevisionsPeriodMs > 0
             ? new GitDataUpdater(
-               session.MergeRequestCache, session.DiscussionCache, this, factory,
+               dataCache.MergeRequestCache, dataCache.DiscussionCache, this, factory,
                Program.Settings.CacheRevisionsPeriodMs, _mergeRequestFilter, isGitStorageUsed)
             : null;
 
          if (Program.Settings.UseGitBasedSizeCollection)
          {
             _diffStatProvider = new GitBasedDiffStatProvider(
-               session.MergeRequestCache, session.DiscussionCache, this, factory);
+               dataCache.MergeRequestCache, dataCache.DiscussionCache, this, factory);
          }
          else
          {
-            _diffStatProvider = new DiscussionBasedDiffStatProvider(session.DiscussionCache);
+            _diffStatProvider = new DiscussionBasedDiffStatProvider(dataCache.DiscussionCache);
          }
          _diffStatProvider.Update += onGitStatisticManagerUpdate;
       }
@@ -599,7 +596,10 @@ namespace mrHelper.App.Forms
          if (_diffStatProvider != null)
          {
             _diffStatProvider.Update -= onGitStatisticManagerUpdate;
-            _diffStatProvider.Dispose();
+            if (_diffStatProvider is IDisposable disposableDiffStatProvider)
+            {
+               disposableDiffStatProvider.Dispose();
+            }
             _diffStatProvider = null;
          }
       }

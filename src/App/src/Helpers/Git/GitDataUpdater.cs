@@ -10,9 +10,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.StorageSupport;
-using mrHelper.Client.Types;
-using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Discussions;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Helpers
 {

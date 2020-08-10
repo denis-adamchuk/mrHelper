@@ -40,10 +40,6 @@ namespace mrHelper.App
          Application.Exit();
       }
 
-      private static readonly Regex url_re = new Regex(String.Format(
-         @"({0}:\/\/)?{1}", Constants.CustomProtocolName, GitLabSharp.UrlParser.RegEx),
-         RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
       internal static UserDefinedSettings Settings = new UserDefinedSettings();
       internal static ServiceManager ServiceManager;
       internal static FeedbackReporter FeedbackReporter;
@@ -279,11 +275,11 @@ namespace mrHelper.App
                return true;
             }
 
-            Match m = url_re.Match(context.Arguments[1]);
-            if (!m.Success)
+            if (!context.Arguments[1].StartsWith(Constants.CustomProtocolName + "://"))
             {
-               Trace.TraceError(String.Format("Invalid URL {0}", context.Arguments[1]));
-               MessageBox.Show("Invalid URL", "mrHelper - Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               string message = String.Format("Unsupported protocol found in URL {0}", context.Arguments[1]);
+               Trace.TraceError(message);
+               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                return false;
             }
          }

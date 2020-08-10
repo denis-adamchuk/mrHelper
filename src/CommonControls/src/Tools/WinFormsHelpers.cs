@@ -38,6 +38,24 @@ namespace mrHelper.CommonControls.Tools
          }
       }
 
+      public static void SelectComboBoxItem(ComboBox comboBox, Func<object, bool> predicate)
+      {
+         if (comboBox.Items.Count > 0)
+         {
+            int selectedIndex = 0;
+            if (predicate != null)
+            {
+               object item = comboBox.Items.Cast<object>().SingleOrDefault(x => predicate(x));
+               int defaultIndex = item == null ? -1 : comboBox.Items.IndexOf(item);
+               if (defaultIndex != -1)
+               {
+                  selectedIndex = defaultIndex;
+               }
+            }
+            comboBox.SelectedIndex = selectedIndex;
+         }
+      }
+
       public static Dictionary<string, int> GetListViewDisplayIndices(ListView listView)
       {
          Dictionary<string, int> columnIndices = new Dictionary<string, int>();

@@ -21,7 +21,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      bool _initializing;
+      readonly bool _initializing;
       internal RevisionBrowser()
       {
          _initializing = true;

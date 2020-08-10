@@ -2,30 +2,28 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
-using mrHelper.Client.MergeRequests;
-using mrHelper.Client.Types;
-using mrHelper.Client.Session;
-using static mrHelper.Client.Types.UserEvents;
+using mrHelper.GitLabClient;
+using static mrHelper.GitLabClient.UserEvents;
 
 namespace mrHelper.App.Helpers
 {
    internal class EventFilter : IDisposable
    {
-      internal EventFilter(UserDefinedSettings settings, ISession session, MergeRequestFilter mergeRequestFilter)
+      internal EventFilter(UserDefinedSettings settings, DataCache dataCache, MergeRequestFilter mergeRequestFilter)
       {
          _settings = settings;
 
-         _session = session;
-         _session.Stopped += onSessionStopped;
-         _session.Started += onSessionStarted;
+         _dataCache = dataCache;
+         _dataCache.Disconnected += onDataCacheDisconnected;
+         _dataCache.Connected += onDataCacheConnected;
 
          _mergeRequestFilter = mergeRequestFilter;
       }
 
       public void Dispose()
       {
-         _session.Stopped -= onSessionStopped;
-         _session.Started -= onSessionStarted;
+         _dataCache.Disconnected -= onDataCacheDisconnected;
+         _dataCache.Connected -= onDataCacheConnected;
       }
 
       internal bool NeedSuppressEvent(MergeRequestEvent e)
@@ -126,23 +124,23 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private void onSessionStopped()
+      private void onDataCacheDisconnected()
       {
          _currentUser = null;
          _mergeRequestCache = null;
       }
 
-      private void onSessionStarted(string hostname, User user)
+      private void onDataCacheConnected(string hostname, User user)
       {
          _currentUser = user;
-         _mergeRequestCache = _session.MergeRequestCache;
+         _mergeRequestCache = _dataCache.MergeRequestCache;
       }
 
       private User _currentUser;
       private IMergeRequestCache _mergeRequestCache;
 
       private readonly UserDefinedSettings _settings;
-      private readonly ISession _session;
+      private readonly DataCache _dataCache;
       private readonly MergeRequestFilter _mergeRequestFilter;
    }
 }

@@ -7,13 +7,13 @@ using System.Windows.Forms;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
-using mrHelper.Client.Types;
-using mrHelper.Client.Session;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.Client.MergeRequests;
 using System.Collections;
 using mrHelper.Common.Constants;
+using mrHelper.GitLabClient;
+using mrHelper.App.Helpers.GitLab;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -33,14 +33,14 @@ namespace mrHelper.App.Forms
    {
       private bool startWorkflowDefaultExceptionHandler(Exception ex)
       {
-         if (ex is SessionException || ex is UnknownHostException || ex is NoProjectsException)
+         if (ex is DataCacheException || ex is UnknownHostException || ex is NoProjectsException)
          {
-            if (!(ex is SessionStartCancelledException))
+            if (!(ex is DataCacheConnectionCancelledException))
             {
                disableAllUIControls(true);
                ExceptionHandlers.Handle("Cannot switch host", ex);
                string message = ex.Message;
-               if (ex is SessionException wx)
+               if (ex is DataCacheException wx)
                {
                   message = wx.UserMessage;
                }
@@ -89,7 +89,7 @@ namespace mrHelper.App.Forms
 
          onSingleMergeRequestLoaded(fmk);
 
-         IMergeRequestCache cache = _liveSession.MergeRequestCache;
+         IMergeRequestCache cache = _liveDataCache.MergeRequestCache;
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
          GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
          onComparableEntitiesLoaded(latestVersion, fmk.MergeRequest, cache.GetCommits(mrk), cache.GetVersions(mrk));
@@ -98,7 +98,7 @@ namespace mrHelper.App.Forms
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
       /// <summary>
-      /// Connects Live Session to GitLab
+      /// Connects Live DataCache to GitLab
       /// </summary>
       /// <param name="hostname"></param>
       /// <returns>false if operation was cancelled</returns>
@@ -116,7 +116,7 @@ namespace mrHelper.App.Forms
 
          disableAllUIControls(true);
          disableAllSearchUIControls(true);
-         _searchSession.Stop();
+         _searchDataCache.Disconnect();
          textBoxSearch.Enabled = false;
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", hostname);
 
@@ -155,12 +155,12 @@ namespace mrHelper.App.Forms
 
          onLoadAllMergeRequests(enabledProjects, hostname);
 
-         SessionContext sessionContext = new SessionContext(
-            new SessionCallbacks(onForbiddenProject, onNotFoundProject),
-            new SessionUpdateRules(true, true),
+         DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(
+            new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
+            new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
             new ProjectBasedContext(enabledProjects.ToArray()));
 
-         await _liveSession.Start(hostname, sessionContext);
+         await _liveDataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
 
          onAllMergeRequestsLoaded(hostname, enabledProjects);
          cleanupReviewedRevisions(hostname);
@@ -170,14 +170,14 @@ namespace mrHelper.App.Forms
       {
          onLoadAllMergeRequests(hostname);
 
-         SessionContext sessionContext = new SessionContext(
-            new SessionCallbacks(onForbiddenProject, onNotFoundProject),
-            new SessionUpdateRules(true, true),
+         DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(
+            new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
+            new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
             getCustomDataForUserBasedWorkflow());
 
-         await _liveSession.Start(hostname, sessionContext);
+         await _liveDataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
 
-         onAllMergeRequestsLoaded(hostname, _liveSession.MergeRequestCache.GetProjects());
+         onAllMergeRequestsLoaded(hostname, _liveDataCache.MergeRequestCache.GetProjects());
          cleanupReviewedRevisions(hostname);
       }
 
@@ -264,7 +264,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         onSingleMergeRequestLoadedCommon(fmk, _liveSession);
+         onSingleMergeRequestLoadedCommon(fmk, _liveDataCache);
       }
 
       private void onComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,
@@ -281,25 +281,50 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void liveSessionStopped()
+      private void liveDataCacheDisconnected()
       {
+         Trace.TraceInformation("[MainForm.Workflow] Reset GitLabInstance");
+
          closeAllFormsExceptMain();
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
-         unsubscribeFromLiveSessionInternalEvents();
+         unsubscribeFromLiveDataCacheInternalEvents();
+
+         _projectCacheCheckTimer?.Stop();
       }
 
-      private void liveSessionStarted(string hostname, User user)
+      private void liveDataCacheConnected(string hostname, User user)
       {
-         subscribeToLiveSessionInternalEvents();
-         createGitHelpers(_liveSession, getCommitStorageFactory(false));
+         subscribeToLiveDataCacheInternalEvents();
+         createGitHelpers(_liveDataCache, getCommitStorageFactory(false));
 
          if (!_currentUser.ContainsKey(hostname))
          {
             _currentUser.Add(hostname, user);
          }
          Program.FeedbackReporter.SetUserEMail(user.EMail);
+
+         if (_projectCacheCheckTimer == null)
+         {
+            _projectCacheCheckTimer = new System.Windows.Forms.Timer
+            {
+               Interval = 1000 // ms
+            };
+            _projectCacheCheckTimer.Tick +=
+               (s, e) =>
+            {
+               buttonCreateNew.Enabled = _liveDataCache?.ProjectCache?.GetProjects().Any() ?? false;
+               if (buttonCreateNew.Enabled)
+               {
+                  _projectCacheCheckTimer.Stop();
+               }
+            };
+         }
+         _projectCacheCheckTimer.Stop(); // just in case
+         _projectCacheCheckTimer.Start();
       }
+
+      private System.Windows.Forms.Timer _projectCacheCheckTimer;
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -319,13 +344,16 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         GitLabClient.ProjectAccessor projectAccessor = Shortcuts.GetProjectAccessor(
+            new GitLabInstance(hostname, Program.Settings), _modificationNotifier);
+
          labelWorkflowStatus.Text = "Preparing workflow to the first launch...";
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
             hostname, Program.Settings);
          List<Tuple<string, bool>> upgraded = new List<Tuple<string, bool>>();
          foreach (var project in projects)
          {
-            Project p = await _gitlabClientManager.SearchManager.SearchProjectAsync(hostname, project.Item1);
+            Project p = await projectAccessor.SearchProjectAsync(project.Item1);
             if (p != null)
             {
                if (!upgraded.Any(x => x.Item1 == p.Path_With_Namespace))
@@ -347,6 +375,9 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(
+            new GitLabInstance(hostname, Program.Settings), _modificationNotifier);
+
          bool migratedLabels = false;
          labelWorkflowStatus.Text = "Preparing workflow to the first launch...";
          List<Tuple<string, bool>> labels = new List<Tuple<string, bool>>();
@@ -360,8 +391,7 @@ namespace mrHelper.App.Forms
                {
                   adjustedKeyword = keyword.Substring(1);
                }
-               User user = await _gitlabClientManager.SearchManager.
-                  SearchUserByNameAsync(hostname, adjustedKeyword, true);
+               User user = await userAccessor.SearchUserByUsernameAsync(adjustedKeyword);
                if (user != null)
                {
                   if (!labels.Any(x => x.Item1 == user.Username))
@@ -373,7 +403,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         User currentUser = await _gitlabClientManager.SearchManager.GetCurrentUserAsync(hostname);
+         User currentUser = await userAccessor.GetCurrentUserAsync();
          if (currentUser != null)
          {
             if (!labels.Any(x => x.Item1 == currentUser.Username))
@@ -426,6 +456,7 @@ namespace mrHelper.App.Forms
       private void disableAllUIControls(bool clearListView)
       {
          buttonReloadList.Enabled = false;
+         buttonCreateNew.Enabled = false;
          disableListView(listViewMergeRequests, clearListView);
          enableMergeRequestFilterControls(false);
 

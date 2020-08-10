@@ -8,12 +8,10 @@ using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.App.Controls;
-using mrHelper.Client.Discussions;
-using mrHelper.Client.Types;
 using mrHelper.Common.Exceptions;
-using mrHelper.Client.Session;
-using mrHelper.Common.Interfaces;
 using mrHelper.StorageSupport;
+using mrHelper.App.Helpers.GitLab;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms
 {
@@ -24,8 +22,8 @@ namespace mrHelper.App.Forms
       /// ArgumentException
       /// </summary>
       internal DiscussionsForm(
-         ISession session, IGitCommandService git,
-         User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
+         DataCache dataCache, GitLabInstance gitLabInstance, IModificationListener modificationListener,
+         IGitCommandService git, User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
          Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit, Action onDiscussionModified)
@@ -39,7 +37,9 @@ namespace mrHelper.App.Forms
 
          _colorScheme = colorScheme;
 
-         _session = session;
+         _dataCache = dataCache;
+         _gitLabInstance = gitLabInstance;
+         _modificationListener = modificationListener;
          _updateGit = updateGit;
          _onDiscussionModified = onDiscussionModified;
 
@@ -206,7 +206,7 @@ namespace mrHelper.App.Forms
 
       async private Task<IEnumerable<Discussion>> loadDiscussionsAsync()
       {
-         if (_session?.DiscussionCache == null)
+         if (_dataCache?.DiscussionCache == null)
          {
             return null;
          }
@@ -220,7 +220,7 @@ namespace mrHelper.App.Forms
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _session.DiscussionCache.LoadDiscussions(_mergeRequestKey);
+            discussions = await _dataCache.DiscussionCache.LoadDiscussions(_mergeRequestKey);
          }
          catch (DiscussionCacheException ex)
          {
@@ -330,15 +330,16 @@ namespace mrHelper.App.Forms
 
       private void createDiscussionBoxes(IEnumerable<Discussion> discussions)
       {
-         foreach (var discussion in discussions)
+         foreach (Discussion discussion in discussions)
          {
             if (!SystemFilter.DoesMatchFilter(discussion))
             {
                continue;
             }
 
-            IDiscussionEditor editor = _session.GetDiscussionEditor(_mergeRequestKey, discussion.Id);
-            DiscussionBox box = new DiscussionBox(this, editor, _git, _currentUser,
+            SingleDiscussionAccessor accessor = Shortcuts.GetSingleDiscussionAccessor(
+               _gitLabInstance, _modificationListener, _mergeRequestKey, discussion.Id);
+            DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _diffContextDepth, _colorScheme,
                // pre-content-change
@@ -512,7 +513,9 @@ namespace mrHelper.App.Forms
       private readonly ColorScheme _colorScheme;
 
       private readonly User _currentUser;
-      private readonly ISession _session;
+      private readonly DataCache _dataCache;
+      private readonly GitLabInstance _gitLabInstance;
+      private readonly IModificationListener _modificationListener;
       private readonly Func<MergeRequestKey, IEnumerable<Discussion>, Task> _updateGit;
       private readonly Action _onDiscussionModified;
 

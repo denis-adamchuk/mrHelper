@@ -10,7 +10,7 @@ namespace mrHelper.StorageSupport
       FileStorage
    }
 
-   public interface ILocalCommitStorageFactory : System.IDisposable
+   public interface ILocalCommitStorageFactory
    {
       string ParentFolder { get; }
 

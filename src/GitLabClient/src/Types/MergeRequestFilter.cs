@@ -5,7 +5,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using System.Collections.Generic;
 
-namespace mrHelper.Client.Types
+namespace mrHelper.GitLabClient
 {
    public struct MergeRequestFilterState : IEquatable<MergeRequestFilterState>
    {
@@ -25,16 +25,13 @@ namespace mrHelper.Client.Types
 
       public bool Equals(MergeRequestFilterState other)
       {
-         return EqualityComparer<string[]>.Default.Equals(Keywords, other.Keywords) &&
+         return Enumerable.SequenceEqual(Keywords, other.Keywords) &&
                 Enabled == other.Enabled;
       }
 
       public override int GetHashCode()
       {
-         int hashCode = 1563885307;
-         hashCode = hashCode * -1521134295 + EqualityComparer<string[]>.Default.GetHashCode(Keywords);
-         hashCode = hashCode * -1521134295 + Enabled.GetHashCode();
-         return hashCode;
+         throw new NotImplementedException();
       }
    }
 

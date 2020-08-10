@@ -117,6 +117,18 @@
     <Compile Include="src\Forms\AddItemForm.Designer.cs">
       <DependentUpon>AddItemForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Forms\NewMergeRequestForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\EditMergeRequestPropertiesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\MergeRequestPropertiesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\MergeRequestPropertiesForm.Designer.cs">
+      <DependentUpon>MergeRequestPropertiesForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Forms\EditOrderedListViewForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -126,6 +138,7 @@
     <Compile Include="src\Forms\CustomFontForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="src\Forms\Helpers\NewMergeRequestProperties.cs" />
     <Compile Include="src\Forms\Helpers\EditProjectsListViewCallback.cs" />
     <Compile Include="src\Forms\Helpers\EditUsersListViewCallback.cs" />
     <Compile Include="src\Forms\Helpers\WPFHelpers.cs" />
@@ -135,11 +148,11 @@
     <Compile Include="src\Forms\TimeSpanEditForm.Designer.cs">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\ViewDiscussionItemForm.cs">
+    <Compile Include="src\Forms\TextEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\ViewDiscussionItemForm.Designer.cs">
-      <DependentUpon>ViewDiscussionItemForm.cs</DependentUpon>
+    <Compile Include="src\Forms\TextEditForm.Designer.cs">
+      <DependentUpon>TextEditForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\AddKnownHostForm.cs">
       <SubType>Form</SubType>
@@ -198,12 +211,15 @@
     <Compile Include="src\Helpers\Configuration\Configuration.cs" />
     <Compile Include="src\Helpers\Configuration\ConfigurationHelper.cs" />
     <Compile Include="src\Helpers\Configuration\DictionaryStringHelper.cs" />
-    <Compile Include="src\Helpers\GitLabSharp\DiscussionFilter.cs" />
-    <Compile Include="src\Helpers\GitLabSharp\DiscussionSort.cs" />
-    <Compile Include="src\Helpers\GitLabSharp\ExpressionResolver.cs" />
-    <Compile Include="src\Helpers\GitLabSharp\PositionConverter.cs" />
+    <Compile Include="src\Helpers\GitLab\DiscussionFilter.cs" />
+    <Compile Include="src\Helpers\GitLab\DiscussionSort.cs" />
+    <Compile Include="src\Helpers\GitLab\ExpressionResolver.cs" />
+    <Compile Include="src\Helpers\Url\NewMergeRequestUrlParser.cs" />
+    <Compile Include="src\Helpers\GitLab\MergeRequestEditHelper.cs" />
+    <Compile Include="src\Helpers\GitLab\PositionConverter.cs" />
     <Compile Include="src\Helpers\ContextProviders\VersionBasedContextProvider.cs" />
     <Compile Include="src\Helpers\ContextProviders\DiscussionBasedContextProvider.cs" />
+    <Compile Include="src\Helpers\GitLab\Shortcuts.cs" />
     <Compile Include="src\Helpers\Git\GitDataUpdater.cs" />
     <Compile Include="src\Helpers\Git\BaseGitHelper.cs" />
     <Compile Include="src\Helpers\DiffStatistic\DiscussionBasedDiffStatProvider.cs" />
@@ -222,6 +238,7 @@
     <Compile Include="src\Helpers\ServiceManager.cs" />
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserItem.cs" />
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserModel.cs" />
+    <Compile Include="src\Helpers\Url\GenericUrlParser.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
     <EmbeddedResource Include="src\Controls\DiscussionActionsPanel.resx">
@@ -245,14 +262,17 @@
     <EmbeddedResource Include="src\Forms\AddItemForm.resx">
       <DependentUpon>AddItemForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="src\Forms\MergeRequestPropertiesForm.resx">
+      <DependentUpon>MergeRequestPropertiesForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\EditOrderedListViewForm.resx">
       <DependentUpon>EditOrderedListViewForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\TimeSpanEditForm.resx">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\ViewDiscussionItemForm.resx">
-      <DependentUpon>ViewDiscussionItemForm.cs</DependentUpon>
+    <EmbeddedResource Include="src\Forms\TextEditForm.resx">
+      <DependentUpon>TextEditForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\AddKnownHostForm.resx">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>

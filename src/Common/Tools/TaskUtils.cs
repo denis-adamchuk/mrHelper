@@ -10,19 +10,19 @@ namespace mrHelper.Common.Tools
 {
    public static class TaskUtils
    {
-      async public static Task IfAsync(Func<bool> condition, int delay = 50)
+      async public static Task IfAsync(Func<bool> condition, int millisecondsDelay = 50)
       {
          if (condition())
          {
-            await Task.Delay(delay);
+            await Task.Delay(millisecondsDelay);
          }
       }
 
-      async public static Task WhileAsync(Func<bool> condition, int delay = 50)
+      async public static Task WhileAsync(Func<bool> condition, int millisecondsDelay = 50)
       {
          while (condition()) //-V3120
          {
-            await Task.Delay(delay);
+            await Task.Delay(millisecondsDelay);
          }
       }
 

@@ -1,6 +1,6 @@
 ﻿using GitLabSharp.Entities;
 
-namespace mrHelper.Client.Types
+namespace mrHelper.GitLabClient
 {
    public interface IMergeRequestFilterChecker
    {

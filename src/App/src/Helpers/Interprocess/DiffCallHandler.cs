@@ -2,54 +2,38 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 using mrHelper.App.Forms;
-using mrHelper.App.Helpers;
-using mrHelper.Client.Types;
-using mrHelper.Client.Discussions;
+using mrHelper.App.Helpers.GitLab;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Core.Matching;
 using mrHelper.StorageSupport;
-using mrHelper.Client.Session;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Interprocess
 {
    internal class DiffCallHandler
    {
-      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot, ISession session)
+      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot,
+         GitLabInstance gitLabInstance, IModificationListener modificationListener, User currentUser)
       {
          _matchInfo = matchInfo;
          _snapshot = snapshot;
-         _session = session;
+         _gitLabInstance = gitLabInstance;
+         _modificationListener = modificationListener;
+         _currentUser = currentUser;
       }
 
       async public Task HandleAsync(ICommitStorage gitRepository)
       {
-         if (gitRepository != null)
+         if (_gitLabInstance == null || gitRepository == null)
          {
-            await doHandleAsync(gitRepository.Git);
+            Debug.Assert(false);
             return;
          }
-
-         // This happens when a git parent folder was changed when a diff tool was already launched
-         Trace.TraceWarning(String.Format(
-            "[DiffCallHandler] Creating temporary GitRepo for TempFolder \"{0}\", Host {1}, Project {2}",
-            _snapshot.TempFolder, _snapshot.Host, _snapshot.Project));
-
-         ProjectKey projectKey = new ProjectKey(_snapshot.Host, _snapshot.Project);
-
-         LocalCommitStorageFactory factory = new LocalCommitStorageFactory(null, _session, _snapshot.TempFolder,
-            Program.Settings.RevisionsToKeep, Program.Settings.ComparisonsToKeep);
-         LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
-         ILocalCommitStorage tempRepository = factory.GetStorage(projectKey, type);
-         if (tempRepository == null)
-         {
-            Trace.TraceError("[DiffCallHandler] Cannot create a temporary GitRepo");
-            return;
-         }
-         await doHandleAsync(tempRepository.Git);
-         factory.Dispose();
+         await doHandleAsync(gitRepository.Git);
       }
 
       async public Task doHandleAsync(IGitCommandService git)
@@ -172,9 +156,10 @@ namespace mrHelper.App.Interprocess
          NewDiscussionParameters parameters = new NewDiscussionParameters(
             body, includeContext ? createPositionParameters(position) : new PositionParameters?());
 
-         MergeRequestKey mergeRequestKey = new MergeRequestKey(
-            new ProjectKey(snapshot.Host, snapshot.Project), snapshot.MergeRequestIId);
-         IDiscussionCreator creator = _session.GetDiscussionCreator(mergeRequestKey);
+         ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
+         MergeRequestKey mrk = new MergeRequestKey(projectKey, snapshot.MergeRequestIId);
+         IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
+            _gitLabInstance, _modificationListener, mrk, _currentUser);
 
          try
          {
@@ -210,7 +195,9 @@ namespace mrHelper.App.Interprocess
 
       private readonly MatchInfo _matchInfo;
       private readonly Snapshot _snapshot;
-      private readonly ISession _session;
+      private readonly GitLabInstance _gitLabInstance;
+      private readonly IModificationListener _modificationListener;
+      private readonly User _currentUser;
    }
 }
 
