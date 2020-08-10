@@ -20,6 +20,7 @@ using static mrHelper.App.Controls.MergeRequestListView;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers.GitLab;
+using mrHelper.App.Interprocess;
 
 namespace mrHelper.App.Forms
 {

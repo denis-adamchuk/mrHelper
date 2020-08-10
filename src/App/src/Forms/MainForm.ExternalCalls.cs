@@ -102,8 +102,9 @@ namespace mrHelper.App.Forms
             try
             {
                GitLabInstance gitLabInstance = new GitLabInstance(snapshot.Host, Program.Settings);
-               handler = new DiffCallHandler(
-                  diffArgumentParser.Parse(), snapshot, gitLabInstance, _modificationNotifier, getCurrentUser());
+               Core.Matching.MatchInfo matchInfo = diffArgumentParser.Parse(getDiffTempFolder(snapshot));
+               handler = new DiffCallHandler(matchInfo, snapshot, gitLabInstance, _modificationNotifier,
+                  getCurrentUser());
             }
             catch (ArgumentException ex)
             {
