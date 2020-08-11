@@ -182,6 +182,8 @@ namespace mrHelper.App.Forms
 
       private void onTargetBranchSearchStart()
       {
+         comboBoxTargetBranch.Items.Clear();
+
          updateControls();
          groupBoxTarget.Text = "Target Branch (Loading...)";
       }

@@ -7,6 +7,7 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
 using mrHelper.Common.Exceptions;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.GitLabClient
 {
@@ -65,7 +66,7 @@ namespace mrHelper.GitLabClient
             return null;
          }
 
-         const int MaxCommitDepth = 5;
+         int MaxCommitDepth = Constants.MaxCommitDepth;
          for (int iDepth = 0; iDepth < MaxCommitDepth; ++iDepth)
          {
             string sha = String.Format("{0}{1}", sourceBranchCommit.Parent_Ids.First(), new string('^', iDepth));

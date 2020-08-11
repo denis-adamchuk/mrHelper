@@ -47,9 +47,8 @@ namespace mrHelper.App.Helpers.GitLab
    {
       public static readonly string RegEx =
          @"create\/mr" +
-         @"\?(?:remote_url\=(?'remote_url'.*))" +
-         @"\&(?:source_branch\=(?'source_branch'[\w_\-\/]+))" +
-         @"\&(?:target_branch\=(?'target_branch'[\w_\-\/]+))";
+         @"\?(?:path\=(?'path'.*))" +
+         @"\&(?:source_branch\=(?'source_branch'[\w_\-\/]+))";
 
       private static readonly Regex url_re = new Regex(RegEx, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
@@ -64,21 +63,27 @@ namespace mrHelper.App.Helpers.GitLab
             throw new UriFormatException("Failed to parse URL");
          }
 
-         Group remoteUrl = m.Groups["remote_url"];
+         Group path = m.Groups["path"];
          Group sourceBranch = m.Groups["source_branch"];
-         Group targetBranch = m.Groups["target_branch"];
-         if (!remoteUrl.Success || !sourceBranch.Success || !targetBranch.Success)
+         if (!path.Success || !sourceBranch.Success)
          {
             throw new UriFormatException("Unsupported URL format");
          }
 
-         ProjectKey? projectKey = GitTools.GetProjectKeyByRemoteUrl(remoteUrl.Value);
+         ProjectKey? projectKey = GitTools.GetRepositoryProjectKey(path.Value);
          if (!projectKey.HasValue)
          {
-            throw new UriFormatException("Bad format of remote_url field");
+            throw new UriFormatException(String.Format("\"{0}\" is not a git repository", path.Value));
          }
 
-         return new ParsedNewMergeRequestUrl(projectKey.Value, sourceBranch.Value, targetBranch.Value);
+         string targetBranch = findTargetBranch(path.Value, sourceBranch.Value);
+         return new ParsedNewMergeRequestUrl(projectKey.Value, sourceBranch.Value, targetBranch);
+      }
+
+      private static string findTargetBranch(string path, string sourceBranch)
+      {
+         // TODO
+         return "master";
       }
    }
 }

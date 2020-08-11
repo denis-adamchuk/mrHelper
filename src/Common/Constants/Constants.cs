@@ -69,6 +69,7 @@ namespace mrHelper.Common.Constants
       public static int MaxSearchByTitleAndDescriptionResults = 20;
       public static int MaxCommitsToLoad = 50;
       public static int MaxAllowedDiffsInComparison = 1000;
+      public static int MaxCommitDepth = 10;
 
       public static TaskUtils.BatchLimits MergeRequestLoaderProjectBatchLimits = new TaskUtils.BatchLimits
       {
