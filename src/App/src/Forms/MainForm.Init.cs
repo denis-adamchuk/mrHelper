@@ -152,9 +152,35 @@ namespace mrHelper.App.Forms
          checkBoxRunWhenWindowsStarts.Checked = Program.Settings.RunWhenWindowsStarts;
          applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
-         checkBoxAutoSelectNewestRevision.Checked = Program.Settings.AutoSelectNewestRevision;
-         checkBoxShowVersionsByDefault.Checked = Program.Settings.ShowVersionsByDefault;
          checkBoxNewDiscussionIsTopMostForm.Checked = Program.Settings.NewDiscussionIsTopMostForm;
+
+         var autoSelectionMode = ConfigurationHelper.GetRevisionAutoSelectionMode(Program.Settings);
+         switch (autoSelectionMode)
+         {
+            case ConfigurationHelper.RevisionAutoSelectionMode.LastVsNext:
+               radioButtonLastVsNext.Checked = true;
+               break;
+
+            case ConfigurationHelper.RevisionAutoSelectionMode.LastVsLatest:
+               radioButtonLastVsLatest.Checked = true;
+               break;
+
+            case ConfigurationHelper.RevisionAutoSelectionMode.BaseVsLatest:
+               radioButtonBaseVsLatest.Checked = true;
+               break;
+         }
+
+         RevisionType defaultRevisionType = ConfigurationHelper.GetDefaultRevisionType(Program.Settings);
+         switch (defaultRevisionType)
+         {
+            case RevisionType.Commit:
+               radioButtonCommits.Checked = true;
+               break;
+
+            case RevisionType.Version:
+               radioButtonVersions.Checked = true;
+               break;
+         }
 
          _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());
          _mergeRequestFilter.FilterChanged += updateVisibleMergeRequests;

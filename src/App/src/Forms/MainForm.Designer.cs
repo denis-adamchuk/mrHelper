@@ -51,7 +51,6 @@ namespace mrHelper.App.Forms
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
-         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
          this.groupBoxKnownHosts = new System.Windows.Forms.GroupBox();
          this.buttonRemoveKnownHost = new System.Windows.Forms.Button();
          this.buttonAddKnownHost = new System.Windows.Forms.Button();
@@ -74,8 +73,6 @@ namespace mrHelper.App.Forms
          this.textBoxDisplayFilter = new mrHelper.CommonControls.Controls.DelayedTextBox();
          this.textBoxSearch = new System.Windows.Forms.TextBox();
          this.buttonReloadList = new System.Windows.Forms.Button();
-         this.checkBoxShowVersionsByDefault = new System.Windows.Forms.CheckBox();
-         this.checkBoxAutoSelectNewestRevision = new System.Windows.Forms.CheckBox();
          this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
          this.checkBoxMinimizeOnClose = new System.Windows.Forms.CheckBox();
          this.radioButtonSelectByProjects = new System.Windows.Forms.RadioButton();
@@ -173,6 +170,13 @@ namespace mrHelper.App.Forms
          this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
+         this.groupBoxAutoSelection = new System.Windows.Forms.GroupBox();
+         this.radioButtonLastVsNext = new System.Windows.Forms.RadioButton();
+         this.radioButtonLastVsLatest = new System.Windows.Forms.RadioButton();
+         this.radioButtonBaseVsLatest = new System.Windows.Forms.RadioButton();
+         this.groupBoxRevisionType = new System.Windows.Forms.GroupBox();
+         this.radioButtonCommits = new System.Windows.Forms.RadioButton();
+         this.radioButtonVersions = new System.Windows.Forms.RadioButton();
          this.groupBoxKnownHosts.SuspendLayout();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
@@ -204,6 +208,8 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.SuspendLayout();
          this.groupBoxReview.SuspendLayout();
          this.groupBoxSelectRevisions.SuspendLayout();
+         this.groupBoxAutoSelection.SuspendLayout();
+         this.groupBoxRevisionType.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBoxKnownHosts
@@ -465,31 +471,6 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.buttonReloadList, "Refresh merge request list in the background");
          this.buttonReloadList.UseVisualStyleBackColor = true;
          this.buttonReloadList.Click += new System.EventHandler(this.ButtonReloadList_Click);
-         // 
-         // checkBoxShowVersionsByDefault
-         // 
-         this.checkBoxShowVersionsByDefault.AutoSize = true;
-         this.checkBoxShowVersionsByDefault.Location = new System.Drawing.Point(6, 197);
-         this.checkBoxShowVersionsByDefault.Name = "checkBoxShowVersionsByDefault";
-         this.checkBoxShowVersionsByDefault.Size = new System.Drawing.Size(195, 17);
-         this.checkBoxShowVersionsByDefault.TabIndex = 14;
-         this.checkBoxShowVersionsByDefault.Text = "Expand list of versions automatically";
-         this.toolTip.SetToolTip(this.checkBoxShowVersionsByDefault, resources.GetString("checkBoxShowVersionsByDefault.ToolTip"));
-         this.checkBoxShowVersionsByDefault.UseVisualStyleBackColor = true;
-         this.checkBoxShowVersionsByDefault.CheckedChanged += new System.EventHandler(this.checkBoxShowVersionsByDefault_CheckedChanged);
-         // 
-         // checkBoxAutoSelectNewestRevision
-         // 
-         this.checkBoxAutoSelectNewestRevision.AutoSize = true;
-         this.checkBoxAutoSelectNewestRevision.Location = new System.Drawing.Point(6, 174);
-         this.checkBoxAutoSelectNewestRevision.Name = "checkBoxAutoSelectNewestRevision";
-         this.checkBoxAutoSelectNewestRevision.Size = new System.Drawing.Size(152, 17);
-         this.checkBoxAutoSelectNewestRevision.TabIndex = 13;
-         this.checkBoxAutoSelectNewestRevision.Text = "Auto-select newest commit";
-         this.toolTip.SetToolTip(this.checkBoxAutoSelectNewestRevision, "When a merge request is selected, select the most recent available revision for d" +
-        "iff tool");
-         this.checkBoxAutoSelectNewestRevision.UseVisualStyleBackColor = true;
-         this.checkBoxAutoSelectNewestRevision.CheckedChanged += new System.EventHandler(this.checkBoxAutoSelectNewestRevision_CheckedChanged);
          // 
          // checkBoxDisableSplitterRestrictions
          // 
@@ -944,7 +925,7 @@ namespace mrHelper.App.Forms
          // checkBoxRunWhenWindowsStarts
          // 
          this.checkBoxRunWhenWindowsStarts.AutoSize = true;
-         this.checkBoxRunWhenWindowsStarts.Location = new System.Drawing.Point(6, 220);
+         this.checkBoxRunWhenWindowsStarts.Location = new System.Drawing.Point(6, 173);
          this.checkBoxRunWhenWindowsStarts.Name = "checkBoxRunWhenWindowsStarts";
          this.checkBoxRunWhenWindowsStarts.Size = new System.Drawing.Size(195, 17);
          this.checkBoxRunWhenWindowsStarts.TabIndex = 16;
@@ -956,7 +937,7 @@ namespace mrHelper.App.Forms
          // checkBoxNewDiscussionIsTopMostForm
          // 
          this.checkBoxNewDiscussionIsTopMostForm.AutoSize = true;
-         this.checkBoxNewDiscussionIsTopMostForm.Location = new System.Drawing.Point(6, 243);
+         this.checkBoxNewDiscussionIsTopMostForm.Location = new System.Drawing.Point(6, 196);
          this.checkBoxNewDiscussionIsTopMostForm.Name = "checkBoxNewDiscussionIsTopMostForm";
          this.checkBoxNewDiscussionIsTopMostForm.Size = new System.Drawing.Size(288, 17);
          this.checkBoxNewDiscussionIsTopMostForm.TabIndex = 17;
@@ -1016,6 +997,8 @@ namespace mrHelper.App.Forms
          // 
          // tabPageSettings
          // 
+         this.tabPageSettings.Controls.Add(this.groupBoxRevisionType);
+         this.tabPageSettings.Controls.Add(this.groupBoxAutoSelection);
          this.tabPageSettings.Controls.Add(this.groupBoxNotifications);
          this.tabPageSettings.Controls.Add(this.groupBoxOther);
          this.tabPageSettings.Controls.Add(this.groupBoxStorage);
@@ -1138,8 +1121,6 @@ namespace mrHelper.App.Forms
          // 
          this.groupBoxOther.Controls.Add(this.checkBoxNewDiscussionIsTopMostForm);
          this.groupBoxOther.Controls.Add(this.checkBoxRunWhenWindowsStarts);
-         this.groupBoxOther.Controls.Add(this.checkBoxShowVersionsByDefault);
-         this.groupBoxOther.Controls.Add(this.checkBoxAutoSelectNewestRevision);
          this.groupBoxOther.Controls.Add(this.checkBoxDisableSplitterRestrictions);
          this.groupBoxOther.Controls.Add(this.labelFontSize);
          this.groupBoxOther.Controls.Add(this.comboBoxFonts);
@@ -1152,7 +1133,7 @@ namespace mrHelper.App.Forms
          this.groupBoxOther.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxOther.Location = new System.Drawing.Point(6, 405);
          this.groupBoxOther.Name = "groupBoxOther";
-         this.groupBoxOther.Size = new System.Drawing.Size(301, 267);
+         this.groupBoxOther.Size = new System.Drawing.Size(301, 225);
          this.groupBoxOther.TabIndex = 2;
          this.groupBoxOther.TabStop = false;
          this.groupBoxOther.Text = "Other";
@@ -1601,6 +1582,94 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
+         // groupBoxAutoSelection
+         // 
+         this.groupBoxAutoSelection.Controls.Add(this.radioButtonBaseVsLatest);
+         this.groupBoxAutoSelection.Controls.Add(this.radioButtonLastVsLatest);
+         this.groupBoxAutoSelection.Controls.Add(this.radioButtonLastVsNext);
+         this.groupBoxAutoSelection.Location = new System.Drawing.Point(313, 405);
+         this.groupBoxAutoSelection.Name = "groupBoxAutoSelection";
+         this.groupBoxAutoSelection.Size = new System.Drawing.Size(206, 89);
+         this.groupBoxAutoSelection.TabIndex = 5;
+         this.groupBoxAutoSelection.TabStop = false;
+         this.groupBoxAutoSelection.Text = "Revision auto-selection mode";
+         // 
+         // radioButtonLastVsNext
+         // 
+         this.radioButtonLastVsNext.AutoSize = true;
+         this.radioButtonLastVsNext.Location = new System.Drawing.Point(6, 19);
+         this.radioButtonLastVsNext.Name = "radioButtonLastVsNext";
+         this.radioButtonLastVsNext.Size = new System.Drawing.Size(135, 17);
+         this.radioButtonLastVsNext.TabIndex = 0;
+         this.radioButtonLastVsNext.TabStop = true;
+         this.radioButtonLastVsNext.Text = "Last Reviewed vs Next";
+         this.toolTip.SetToolTip(this.radioButtonLastVsNext, "Select the most recent reviewed revision for comparison with the next one");
+         this.radioButtonLastVsNext.UseVisualStyleBackColor = true;
+         this.radioButtonLastVsNext.CheckedChanged += new System.EventHandler(this.radioButtonAutoSelectionMode_CheckedChanged);
+         // 
+         // radioButtonLastVsLatest
+         // 
+         this.radioButtonLastVsLatest.AutoSize = true;
+         this.radioButtonLastVsLatest.Checked = true;
+         this.radioButtonLastVsLatest.Location = new System.Drawing.Point(6, 42);
+         this.radioButtonLastVsLatest.Name = "radioButtonLastVsLatest";
+         this.radioButtonLastVsLatest.Size = new System.Drawing.Size(142, 17);
+         this.radioButtonLastVsLatest.TabIndex = 1;
+         this.radioButtonLastVsLatest.Text = "Last Reviewed vs Latest";
+         this.toolTip.SetToolTip(this.radioButtonLastVsLatest, "Select the most recent reviewed revision for comparison with the latest one");
+         this.radioButtonLastVsLatest.UseVisualStyleBackColor = true;
+         this.radioButtonLastVsLatest.CheckedChanged += new System.EventHandler(this.radioButtonAutoSelectionMode_CheckedChanged);
+         // 
+         // radioButtonBaseVsLatest
+         // 
+         this.radioButtonBaseVsLatest.AutoSize = true;
+         this.radioButtonBaseVsLatest.Location = new System.Drawing.Point(6, 65);
+         this.radioButtonBaseVsLatest.Name = "radioButtonBaseVsLatest";
+         this.radioButtonBaseVsLatest.Size = new System.Drawing.Size(95, 17);
+         this.radioButtonBaseVsLatest.TabIndex = 2;
+         this.radioButtonBaseVsLatest.Text = "Base vs Latest";
+         this.toolTip.SetToolTip(this.radioButtonBaseVsLatest, "Select the latest revision for comparison with the base revision");
+         this.radioButtonBaseVsLatest.UseVisualStyleBackColor = true;
+         this.radioButtonBaseVsLatest.CheckedChanged += new System.EventHandler(this.radioButtonAutoSelectionMode_CheckedChanged);
+         // 
+         // groupBoxRevisionType
+         // 
+         this.groupBoxRevisionType.Controls.Add(this.radioButtonVersions);
+         this.groupBoxRevisionType.Controls.Add(this.radioButtonCommits);
+         this.groupBoxRevisionType.Location = new System.Drawing.Point(313, 500);
+         this.groupBoxRevisionType.Name = "groupBoxRevisionType";
+         this.groupBoxRevisionType.Size = new System.Drawing.Size(206, 73);
+         this.groupBoxRevisionType.TabIndex = 6;
+         this.groupBoxRevisionType.TabStop = false;
+         this.groupBoxRevisionType.Text = "Default revision type";
+         // 
+         // radioButtonCommits
+         // 
+         this.radioButtonCommits.AutoSize = true;
+         this.radioButtonCommits.Location = new System.Drawing.Point(6, 19);
+         this.radioButtonCommits.Name = "radioButtonCommits";
+         this.radioButtonCommits.Size = new System.Drawing.Size(64, 17);
+         this.radioButtonCommits.TabIndex = 0;
+         this.radioButtonCommits.TabStop = true;
+         this.radioButtonCommits.Text = "Commits";
+         this.toolTip.SetToolTip(this.radioButtonCommits, "Expand a list of commits in the revision tree when merge request is selected");
+         this.radioButtonCommits.UseVisualStyleBackColor = true;
+         this.radioButtonCommits.CheckedChanged += new System.EventHandler(this.radioButtonRevisionType_CheckedChanged);
+         // 
+         // radioButtonVersions
+         // 
+         this.radioButtonVersions.AutoSize = true;
+         this.radioButtonVersions.Checked = true;
+         this.radioButtonVersions.Location = new System.Drawing.Point(6, 42);
+         this.radioButtonVersions.Name = "radioButtonVersions";
+         this.radioButtonVersions.Size = new System.Drawing.Size(65, 17);
+         this.radioButtonVersions.TabIndex = 1;
+         this.radioButtonVersions.Text = "Versions";
+         this.toolTip.SetToolTip(this.radioButtonVersions, "Expand a list of versions in the revision tree when merge request is selected (si" +
+        "milar to Changes tab of GitLab Web UI)");
+         this.radioButtonVersions.UseVisualStyleBackColor = true;
+         this.radioButtonVersions.CheckedChanged += new System.EventHandler(this.radioButtonRevisionType_CheckedChanged);
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1651,6 +1720,10 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.ResumeLayout(false);
          this.groupBoxReview.ResumeLayout(false);
          this.groupBoxSelectRevisions.ResumeLayout(false);
+         this.groupBoxAutoSelection.ResumeLayout(false);
+         this.groupBoxAutoSelection.PerformLayout();
+         this.groupBoxRevisionType.ResumeLayout(false);
+         this.groupBoxRevisionType.PerformLayout();
          this.ResumeLayout(false);
 
       }
@@ -1763,8 +1836,6 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ColumnHeader columnHeaderFoundState;
         private System.Windows.Forms.RadioButton radioButtonSearchByTargetBranch;
         private System.Windows.Forms.RadioButton radioButtonSearchByTitleAndDescription;
-      private System.Windows.Forms.CheckBox checkBoxAutoSelectNewestRevision;
-      private System.Windows.Forms.CheckBox checkBoxShowVersionsByDefault;
         private System.Windows.Forms.RadioButton radioButtonSelectByProjects;
         private System.Windows.Forms.Button buttonEditUsers;
         private System.Windows.Forms.ListView listViewUsers;
@@ -1778,6 +1849,13 @@ namespace mrHelper.App.Forms
       private CheckBox checkBoxNewDiscussionIsTopMostForm;
       private LinkLabel linkLabelCommitStorageDescription;
       private Button buttonCreateNew;
+      private GroupBox groupBoxAutoSelection;
+      private RadioButton radioButtonBaseVsLatest;
+      private RadioButton radioButtonLastVsLatest;
+      private RadioButton radioButtonLastVsNext;
+      private GroupBox groupBoxRevisionType;
+      private RadioButton radioButtonVersions;
+      private RadioButton radioButtonCommits;
    }
 }
 

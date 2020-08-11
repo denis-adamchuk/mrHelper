@@ -23,11 +23,11 @@ namespace mrHelper.App.Helpers
       private static readonly string LocalGitFolderKeyName = "LocalGitFolder";
       private static readonly string LocalGitFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");
 
-      private static readonly string AutoSelectNewestCommitKeyName      = "AutoSelectNewestCommit";
-      private static readonly bool   AutoSelectNewestCommitDefaultValue = false;
+      private static readonly string AutoSelectionModeKeyName      = "AutoSelectionMode";
+      private static readonly string AutoSelectionModeDefaultValue = "LastVsLatest";
 
-      private static readonly string ShowVersionsKeyName      = "ShowVersionsByDefault";
-      private static readonly bool   ShowVersionsDefaultValue = true;
+      private static readonly string RevisionTypeKeyName      = "RevisionType";
+      private static readonly string RevisionTypeDefaultValue = "Version";
 
       private static readonly string GitUsageForStorageKeyName       = "GitUsageForStorage";
       private static readonly string GitUsageForStorageDefaultValue  = "DontUseGit";
@@ -224,26 +224,16 @@ namespace mrHelper.App.Helpers
          set { setValue(LocalGitFolderKeyName, value); }
       }
 
-      public bool AutoSelectNewestRevision
+      public string AutoSelectionMode
       {
-         get
-         {
-            return bool.TryParse(getValue(
-               AutoSelectNewestCommitKeyName, boolToString(AutoSelectNewestCommitDefaultValue)),
-                  out bool result) ? result : AutoSelectNewestCommitDefaultValue;
-         }
-         set { setValue(AutoSelectNewestCommitKeyName, boolToString(value)); }
+         get { return getValue(AutoSelectionModeKeyName, AutoSelectionModeDefaultValue); }
+         set { setValue(AutoSelectionModeKeyName, value); }
       }
 
-      public bool ShowVersionsByDefault
+      public string RevisionType
       {
-         get
-         {
-            return bool.TryParse(getValue(
-               ShowVersionsKeyName, boolToString(ShowVersionsDefaultValue)),
-                  out bool result) ? result : ShowVersionsDefaultValue;
-         }
-         set { setValue(ShowVersionsKeyName, boolToString(value)); }
+         get { return getValue(RevisionTypeKeyName, RevisionTypeDefaultValue); }
+         set { setValue(RevisionTypeKeyName, value); }
       }
 
       public string GitUsageForStorage

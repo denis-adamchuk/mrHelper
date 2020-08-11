@@ -10,6 +10,48 @@ namespace mrHelper.App.Helpers
 {
    public static class ConfigurationHelper
    {
+      public enum RevisionAutoSelectionMode
+      {
+         LastVsNext,
+         LastVsLatest,
+         BaseVsLatest
+      }
+
+      public static RevisionAutoSelectionMode GetRevisionAutoSelectionMode(UserDefinedSettings settings)
+      {
+         if (Program.Settings.AutoSelectionMode == "LastVsNext")
+         {
+            return RevisionAutoSelectionMode.LastVsNext;
+         }
+         else if (Program.Settings.AutoSelectionMode == "LastVsLatest")
+         {
+            return RevisionAutoSelectionMode.LastVsLatest;
+         }
+         else
+         {
+            Debug.Assert(Program.Settings.AutoSelectionMode == "BaseVsLatest");
+            return RevisionAutoSelectionMode.BaseVsLatest;
+         }
+      }
+
+      public static void SelectAutoSelectionMode(UserDefinedSettings settings, RevisionAutoSelectionMode mode)
+      {
+         switch (mode)
+         {
+            case ConfigurationHelper.RevisionAutoSelectionMode.LastVsNext:
+               Program.Settings.AutoSelectionMode = "LastVsNext";
+               break;
+
+            case ConfigurationHelper.RevisionAutoSelectionMode.LastVsLatest:
+               Program.Settings.AutoSelectionMode = "LastVsLatest";
+               break;
+
+            case ConfigurationHelper.RevisionAutoSelectionMode.BaseVsLatest:
+               Program.Settings.AutoSelectionMode = "BaseVsLatest";
+               break;
+         }
+      }
+
       public static LocalCommitStorageType GetPreferredStorageType(UserDefinedSettings settings)
       {
          if (Program.Settings.GitUsageForStorage == "UseGitWithFullClone")
@@ -45,7 +87,29 @@ namespace mrHelper.App.Helpers
 
       public static RevisionType GetDefaultRevisionType(UserDefinedSettings settings)
       {
-         return settings.ShowVersionsByDefault ? RevisionType.Version : RevisionType.Commit;
+         if (settings.RevisionType == "Commit")
+         {
+            return RevisionType.Commit;
+         }
+         else
+         {
+            Debug.Assert(settings.RevisionType == "Version");
+            return RevisionType.Version;
+         }
+      }
+
+      public static void SelectRevisionType(UserDefinedSettings settings, RevisionType type)
+      {
+         switch (type)
+         {
+            case RevisionType.Commit:
+               settings.RevisionType = "Commit";
+               break;
+
+            case RevisionType.Version:
+               settings.RevisionType = "Version";
+               break;
+         }
       }
 
       public static string[] GetDisplayFilterKeywords(UserDefinedSettings settings)

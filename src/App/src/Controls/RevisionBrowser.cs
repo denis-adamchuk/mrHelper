@@ -160,21 +160,31 @@ namespace mrHelper.App.Controls
          {
             newestRevisionNode.IsSelected = true;
          }
-         else if (Program.Settings.AutoSelectNewestRevision)
-         {
-            newestReviewedRevisionNode.IsSelected = true;
-            if (newestReviewedRevisionNode != newestRevisionNode)
-            {
-               newestRevisionNode.IsSelected = true;
-            }
-         }
          else
          {
-            newestReviewedRevisionNode.IsSelected = true;
-            TreeNodeAdv earliestNotReviewedRevisionNode = newestReviewedRevisionNode.PreviousNode;
-            if (earliestNotReviewedRevisionNode != null)
+            var mode = ConfigurationHelper.GetRevisionAutoSelectionMode(Program.Settings);
+            switch (mode)
             {
-               earliestNotReviewedRevisionNode.IsSelected = true;
+               case ConfigurationHelper.RevisionAutoSelectionMode.LastVsLatest:
+                  newestReviewedRevisionNode.IsSelected = true;
+                  if (newestReviewedRevisionNode != newestRevisionNode)
+                  {
+                     newestRevisionNode.IsSelected = true;
+                  }
+                  break;
+
+               case ConfigurationHelper.RevisionAutoSelectionMode.LastVsNext:
+                  newestReviewedRevisionNode.IsSelected = true;
+                  TreeNodeAdv earliestNotReviewedRevisionNode = newestReviewedRevisionNode.PreviousNode;
+                  if (earliestNotReviewedRevisionNode != null)
+                  {
+                     earliestNotReviewedRevisionNode.IsSelected = true;
+                  }
+                  break;
+
+               case ConfigurationHelper.RevisionAutoSelectionMode.BaseVsLatest:
+                  newestReviewedRevisionNode.IsSelected = true;
+                  break;
             }
          }
       }

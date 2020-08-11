@@ -461,9 +461,25 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void checkBoxShowVersionsByDefault_CheckedChanged(object sender, EventArgs e)
+      private void radioButtonRevisionType_CheckedChanged(object sender, EventArgs e)
       {
-         Program.Settings.ShowVersionsByDefault = (sender as CheckBox).Checked;
+         if (!(sender as RadioButton).Checked)
+         {
+            return;
+         }
+
+         if (!_loadingConfiguration)
+         {
+            if (radioButtonCommits.Checked)
+            {
+               ConfigurationHelper.SelectRevisionType(Program.Settings, RevisionType.Commit);
+            }
+            else
+            {
+               Debug.Assert(radioButtonVersions.Checked);
+               ConfigurationHelper.SelectRevisionType(Program.Settings, RevisionType.Version);
+            }
+         }
       }
 
       private void ComboBoxHost_Format(object sender, ListControlConvertEventArgs e)
@@ -596,9 +612,30 @@ namespace mrHelper.App.Forms
          resetMergeRequestTabMinimumSizes();
       }
 
-      private void checkBoxAutoSelectNewestRevision_CheckedChanged(object sender, EventArgs e)
+      private void radioButtonAutoSelectionMode_CheckedChanged(object sender, EventArgs e)
       {
-         Program.Settings.AutoSelectNewestRevision = (sender as CheckBox).Checked;
+         if (!(sender as RadioButton).Checked)
+         {
+            return;
+         }
+
+         if (!_loadingConfiguration)
+         {
+            var mode = ConfigurationHelper.RevisionAutoSelectionMode.LastVsLatest;
+            if (radioButtonLastVsLatest.Checked)
+            {
+               mode = ConfigurationHelper.RevisionAutoSelectionMode.LastVsLatest;
+            }
+            else if (radioButtonLastVsNext.Checked)
+            {
+               mode = ConfigurationHelper.RevisionAutoSelectionMode.LastVsNext;
+            }
+            else if (radioButtonBaseVsLatest.Checked)
+            {
+               mode = ConfigurationHelper.RevisionAutoSelectionMode.BaseVsLatest;
+            }
+            ConfigurationHelper.SelectAutoSelectionMode(Program.Settings, mode);
+         }
       }
 
       private void checkBoxNotifications_CheckedChanged(object sender, EventArgs e)
