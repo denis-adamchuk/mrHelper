@@ -36,6 +36,9 @@ class CommandLineArgs:
       msixHelp = 'Build (and deploy) MSIX'
       parser.add_argument('-x', '--msix', action='store_true', help=msixHelp)
 
+      betaHelp = 'Deploy to Beta folder'
+      parser.add_argument('-b', '--beta', action='store_true', help=betaHelp)
+
       self.args = parser.parse_known_args(argv)[0]
 
       if not self.args.version:
@@ -64,6 +67,9 @@ class CommandLineArgs:
 
    def msix(self):
       return self.args.msix
+
+   def beta(self):
+      return self.args.beta
 
    def _validateVersion(self, version):
       version_rex = re.compile(r'^(?:[0-9]+\.){3}[0-9]+$')
@@ -119,6 +125,9 @@ class ScriptConfigParser:
    def deploy_path(self):
       return self.config.get('Deploy', 'path')
 
+   def beta_path(self):
+      return self.config.get('Deploy', 'beta_path')
+
    def _initialize(self, filename):
       self._addOption('Path', 'repository', '.')
       self._addOption('Path', 'Extras', 'extras')
@@ -132,6 +141,7 @@ class ScriptConfigParser:
       self._addOption('Installer', 'msix_target_name_template', '')
       self._addOption('Deploy', 'latest_version_filename', 'latest')
       self._addOption('Deploy', 'path', '')
+      self._addOption('Deploy', 'beta_path', '')
 
       with open(filename, 'w') as configFile:
          self.config.write(configFile)
@@ -152,6 +162,7 @@ class ScriptConfigParser:
       self._validateFileInConfig(self.config, 'Version', 'AssemblyInfo')
       self._validateFileInConfig(self.config, 'Installer', 'msix_manifest')
       self._validatePathInConfig(self.config, 'Deploy', 'path')
+      self._validatePathInConfig(self.config, 'Deploy', 'beta_path')
 
    def _validatePathInConfig(self, config, section, option):
       path = self.config.get(section, option)
@@ -375,14 +386,16 @@ try:
       builder.build(config.msix_build_script(), msix_filepath + " " + config.msix_manifest())
 
    if args.deploy():
-      deployer = DeployHelper(config.deploy_path())
+      deployer = DeployHelper(config.beta_path() if args.beta() else config.deploy_path())
       dest_msi = deployer.deploy(args.version(), msi_filepath).replace("\\", "/")
       if args.msix():
          dest_msix = deployer.deploy(args.version(), msix_filepath).replace("\\", "/")
-         json = f'{{ "VersionNumber": "{args.version()}", "InstallerFilePath": "{dest_msi}", "XInstallerFilePath": "{dest_msix}" }}'
-      else:
-         json = f'{{ "VersionNumber": "{args.version()}", "InstallerFilePath": "{dest_msi}" }}'
-      deployer.update_version_information(args.version(), json)
+      if not args.beta():
+         if args.msix():
+            json = f'{{ "VersionNumber": "{args.version()}", "InstallerFilePath": "{dest_msi}", "XInstallerFilePath": "{dest_msix}" }}'
+         else:
+            json = f'{{ "VersionNumber": "{args.version()}", "InstallerFilePath": "{dest_msi}" }}'
+         deployer.update_version_information(args.version(), json)
 
    if args.push():
       repository = RepositoryHelper(config.repository())
