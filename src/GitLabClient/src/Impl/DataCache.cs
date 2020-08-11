@@ -108,8 +108,7 @@ namespace mrHelper.GitLabClient
       private DataCacheOperator _operator;
       private DataCacheInternal _internal;
       private readonly DataCacheContext _dataCacheContext;
-      private IModificationNotifier _modificationNotifier;
-      private DataCacheContext dataCacheContext;
+      private readonly IModificationNotifier _modificationNotifier;
    }
 }
 

@@ -295,7 +295,7 @@ namespace mrHelper.Common.Tools
       }
 
       // from https://stackoverflow.com/a/2514986/9195131
-      private static string GitRepositoryRegularExpression = @"(\w+://)?(.+@)*([\w\d\.]+)/*(.*)";
+      private static readonly string GitRepositoryRegularExpression = @"(\w+://)?(.+@)*([\w\d\.]+)/*(.*)";
       private static readonly Regex gitRepo_re = new Regex(GitRepositoryRegularExpression,
          RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
