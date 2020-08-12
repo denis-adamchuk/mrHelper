@@ -265,6 +265,23 @@ namespace mrHelper.Common.Tools
          return true;
       }
 
+      public static IEnumerable<string> GetRemotePointsAt(string path, string sha)
+      {
+         try
+         {
+            string arguments = String.Format("branch --format=%(refname:short) --remote --points-at \"{0}\"", sha);
+            return ExternalProcess.Start("git", arguments, true, path).StdOut;
+         }
+         catch (Exception ex)
+         {
+            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
+            {
+               return Array.Empty<string>();
+            }
+            throw;
+         }
+      }
+
       private static void setConfigKeyValueUnsafe(ConfigScope scope, string key, string value, string path)
       {
          string mode = value == null ? "unset" : "";
