@@ -14,6 +14,10 @@ namespace mrHelper.Common.Constants
       public static string MainWindowCaption = "Merge Request Helper";
       public static string StartNewThreadCaption = "Start New Thread";
 
+      public static string CreateMergeRequestCustomActionName = "Create Merge Request";
+      public static string CreateMergeRequestBashScriptName = "create-new-merge-request.sh";
+      public static string BashFileName = "bash.exe";
+
       public static int MaxLabelRows = 3;
       public static string MoreLabelsHint = "See more labels in tooltip";
 

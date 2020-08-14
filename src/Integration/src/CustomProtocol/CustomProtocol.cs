@@ -2,7 +2,7 @@ using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 
-namespace mrHelper.Integration
+namespace mrHelper.Integration.CustomProtocol
 {
    public class CustomProtocol
    {

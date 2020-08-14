@@ -1,7 +1,7 @@
 using mrHelper.Common.Exceptions;
 using System;
 
-namespace mrHelper.DiffTool
+namespace mrHelper.Integration.DiffTool
 {
    public class DiffToolIntegrationException : ExceptionEx
    {

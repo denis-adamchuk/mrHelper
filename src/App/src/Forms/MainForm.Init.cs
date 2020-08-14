@@ -8,7 +8,6 @@ using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
-using mrHelper.DiffTool;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
@@ -272,87 +271,6 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private bool integrateInTools()
-      {
-         if (!GitTools.IsGit2Installed())
-         {
-            MessageBox.Show(
-               "Git for Windows (version 2) is not installed. "
-             + "It must be installed at least for the current user. Application cannot start.",
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
-         }
-
-         string pathEV = System.Environment.GetEnvironmentVariable("PATH");
-         System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + GitTools.GetBinaryFolder());
-         Trace.TraceInformation(String.Format("Updated PATH variable: {0}",
-            System.Environment.GetEnvironmentVariable("PATH")));
-         System.Environment.SetEnvironmentVariable("GIT_TERMINAL_PROMPT", "0");
-         Trace.TraceInformation("Set GIT_TERMINAL_PROMPT=0");
-         Trace.TraceInformation(String.Format("TEMP variable: {0}",
-            System.Environment.GetEnvironmentVariable("TEMP")));
-
-         IIntegratedDiffTool diffTool = new BC3Tool();
-         DiffToolIntegration integration = new DiffToolIntegration();
-
-         string self = _runningAsUwp
-            ? Constants.UWP_Launcher_Name
-            : Process.GetCurrentProcess().MainModule.FileName;
-
-         try
-         {
-            integration.Integrate(diffTool, self);
-         }
-         catch (Exception ex)
-         {
-            if (ex is DiffToolNotInstalledException)
-            {
-               MessageBox.Show(
-                  "Beyond Compare 3 is not installed. It must be installed at least for the current user. " +
-                  "Application cannot start", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else
-            {
-               MessageBox.Show("Beyond Compare 3 integration failed. Application cannot start. See logs for details",
-                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               ExceptionHandlers.Handle(String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()), ex);
-            }
-            return false;
-         }
-         finally
-         {
-            GitTools.TraceGitConfiguration();
-         }
-
-         return true;
-      }
-
-      private void revertOldInstallations()
-      {
-         string defaultInstallLocation = StringUtils.GetDefaultInstallLocation(
-            Windows.ApplicationModel.Package.Current.PublisherDisplayName);
-         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "mrHelper" });
-         if (appInfo != null
-          || Directory.Exists(defaultInstallLocation)
-          || System.IO.File.Exists(StringUtils.GetShortcutFilePath()))
-         {
-            MessageBox.Show("mrHelper needs to uninstall an old version of itself on this launch. "
-              + "It takes a few seconds, please wait...", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            string currentPackagePath = Windows.ApplicationModel.Package.Current.InstalledLocation.Path;
-            string revertMsiProjectFolder = "mrHelper.RevertMSI";
-            string revertMsiProjectName = "mrHelper.RevertMSI.exe";
-            ProcessStartInfo startInfo = new ProcessStartInfo
-            {
-               FileName = System.IO.Path.Combine(currentPackagePath, revertMsiProjectFolder, revertMsiProjectName),
-               WorkingDirectory = System.IO.Path.Combine(currentPackagePath, revertMsiProjectFolder),
-               Verb = "runas", // revert implies work with registry
-            };
-            Process p = Process.Start(startInfo);
-            p.WaitForExit();
-            Trace.TraceInformation(String.Format("[MainForm] {0} exited with code {1}", revertMsiProjectName, p.ExitCode));
-         }
-      }
 
       private void initializeWork()
       {
@@ -493,16 +411,12 @@ namespace mrHelper.App.Forms
 
       private void connectOnStartup()
       {
-         // TODO Argument manipulation shall be rewritten to avoid copy/paste of option names
-         string[] arguments = Environment.GetCommandLineArgs();
-         string url = arguments.Length > 1 && arguments[1] != "-m" ? arguments[1] : String.Empty;
-
          if (_requestedUrl.Count > 0)
          {
             Debug.Assert(false);
             return;
          }
-         enqueueUrl(url);
+         enqueueUrl(_startUrl);
       }
 
       private void createLiveSessionAndDependencies()

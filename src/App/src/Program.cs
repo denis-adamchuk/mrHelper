@@ -3,13 +3,16 @@ using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using System.Windows.Forms;
-using System.Text.RegularExpressions;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonNative;
+using System.Collections.Generic;
+using mrHelper.Integration.GitUI;
+using mrHelper.Integration.DiffTool;
+using mrHelper.Integration.CustomProtocol;
 
 namespace mrHelper.App
 {
@@ -54,150 +57,147 @@ namespace mrHelper.App
          {
             Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
 
-            string currentLogFileName = getLogFileName(context);
-            CustomTraceListener listener = null;
             try
             {
-                listener = new CustomTraceListener(currentLogFileName,
-                  String.Format("Merge Request Helper {0} started. PID {1}",
-                     Application.ProductVersion, Process.GetCurrentProcess().Id));
-               Trace.Listeners.Add(listener);
-            }
-            catch (ArgumentException)
-            {
-               // Cannot do anything good here
-               return;
-            }
-
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(context.CurrentProcess.MainModule.FileName));
-            ServiceManager = new ServiceManager();
-
-            FeedbackReporter = new FeedbackReporter(
-               () =>
-            {
-               listener.Flush();
-               listener.Close();
-               Trace.Listeners.Remove(listener);
-            },
-               () =>
-            {
+               string currentLogFileName = getLogFileName(context);
+               CustomTraceListener listener = null;
                try
                {
-                  listener = new CustomTraceListener(currentLogFileName, null);
+                  listener = new CustomTraceListener(currentLogFileName,
+                    String.Format("Merge Request Helper {0} started. PID {1}",
+                       Application.ProductVersion, Process.GetCurrentProcess().Id));
                   Trace.Listeners.Add(listener);
                }
-               catch (Exception)
+               catch (ArgumentException)
                {
                   // Cannot do anything good here
+                  return;
                }
-            },
-            getApplicationDataPath());
 
-            if (context.IsRunningSingleInstance)
-            {
-               onLaunchMainInstace(context);
+               Directory.SetCurrentDirectory(Path.GetDirectoryName(context.CurrentProcess.MainModule.FileName));
+               ServiceManager = new ServiceManager();
+
+               FeedbackReporter = new FeedbackReporter(
+                  () =>
+               {
+                  listener.Flush();
+                  listener.Close();
+                  Trace.Listeners.Remove(listener);
+               },
+                  () =>
+               {
+                  try
+                  {
+                     listener = new CustomTraceListener(currentLogFileName, null);
+                     Trace.Listeners.Add(listener);
+                  }
+                  catch (Exception)
+                  {
+                     // Cannot do anything good here
+                  }
+               },
+               getApplicationDataPath());
+
+               LaunchOptions options = LaunchOptions.FromContext(context);
+               switch (options.Mode)
+               {
+                  case LaunchOptions.LaunchMode.DiffTool:
+                     onLaunchFromDiffTool(options);
+                     break;
+
+                  case LaunchOptions.LaunchMode.Register:
+                     if (registerCustomProtocol())
+                     {
+                        integrateInGitUI();
+                     }
+                     break;
+
+                  case LaunchOptions.LaunchMode.Unregister:
+                     unregisterCustomProtocol();
+                     break;
+
+                  case LaunchOptions.LaunchMode.Normal:
+                     if (context.IsRunningSingleInstance)
+                     {
+                        onLaunchMainInstace(options);
+                     }
+                     else
+                     {
+                        onLaunchAnotherInstance(options, context);
+                     }
+                     break;
+
+                  default:
+                     Debug.Assert(false);
+                     break;
+               }
             }
-            else
+            catch (Exception ex) // whatever unhandled exception
             {
-               onLaunchAnotherInstance(context);
+               HandleUnhandledException(ex);
             }
          }
       }
 
-      private static void onLaunchMainInstace(LaunchContext context)
+      private static void onLaunchMainInstace(LaunchOptions options)
       {
          Application.EnableVisualStyles();
          Application.SetCompatibleTextRenderingDefault(false);
 
-         try
+         cleanUpOldFiles();
+
+         bool runningAsUwp = new DesktopBridge.Helpers().IsRunningAsUwp();
+         Trace.TraceInformation(String.Format("[MainForm] Running as UWP = {0}", runningAsUwp ? "Yes" : "No"));
+         revertOldInstallations(runningAsUwp);
+
+         string path = runningAsUwp ? Constants.UWP_Launcher_Name : Process.GetCurrentProcess().MainModule.FileName;
+         if (!prepareGitEnvironment() || !integrateInDiffTool(path))
          {
-            System.Threading.Tasks.Task.Run(
-               () =>
-            {
-               try
-               {
-                  cleanupLogFiles(Settings);
-               }
-               catch (Exception ex)
-               {
-                  ExceptionHandlers.Handle("Failed to clean-up log files", ex);
-               }
-            });
-
-            if (!checkArguments(context))
-            {
-               return;
-            }
-
-            if (context.Arguments.Length > 2 && context.Arguments[1] == "diff")
-            {
-               onLaunchFromDiffTool(context);
-               return;
-            }
-
-            Version currentVersion = Environment.OSVersion.Version;
-            Trace.TraceInformation(String.Format("OS Version is {0}", currentVersion.ToString()));
-
-            bool startMinimized = context.Arguments.Length == 2 && context.Arguments[1] == "-m";
-            Application.Run(new MainForm(startMinimized));
+            return;
          }
-         catch (Exception ex) // whatever unhandled exception
-         {
-            HandleUnhandledException(ex);
-         }
+
+         integrateInGitUI();
+         Version currentVersion = Environment.OSVersion.Version;
+         Trace.TraceInformation(String.Format("OS Version is {0}", currentVersion.ToString()));
+
+         LaunchOptions.NormalModeOptions normalOptions = options.SpecialOptions as LaunchOptions.NormalModeOptions;
+         Application.Run(new MainForm(normalOptions.StartMinimized, runningAsUwp, normalOptions.StartUrl));
       }
 
-      private static void onLaunchAnotherInstance(LaunchContext context)
+      private static void onLaunchAnotherInstance(LaunchOptions options, LaunchContext context)
       {
-         try
+         IntPtr mainWindow = context.GetWindowByCaption(Constants.MainWindowCaption, true);
+         if (mainWindow != IntPtr.Zero)
          {
-            if (!checkArguments(context))
+            if (context.Arguments.Length > 1)
             {
-               return;
+               string message = String.Join("|", context.Arguments);
+               Win32Tools.SendMessageToWindow(mainWindow, message);
             }
+            Win32Tools.ForceWindowIntoForeground(mainWindow);
+         }
+         else
+         {
+            // This may happen if a custom protocol link is quickly clicked more than once in a row
 
-            if (context.Arguments.Length > 2 && context.Arguments[1] == "diff")
-            {
-               onLaunchFromDiffTool(context);
-               return;
-            }
+            Trace.TraceInformation(String.Format("Cannot find Main Window"));
 
-            IntPtr mainWindow = context.GetWindowByCaption(Constants.MainWindowCaption, true);
-            if (mainWindow != IntPtr.Zero)
+            // bring to front any window
+            IntPtr window = context.GetWindowByCaption(String.Empty, true);
+            if (window != IntPtr.Zero)
             {
-               if (context.Arguments.Length > 1)
-               {
-                  string message = String.Join("|", context.Arguments);
-                  Win32Tools.SendMessageToWindow(mainWindow, message);
-               }
-               Win32Tools.ForceWindowIntoForeground(mainWindow);
+               Win32Tools.ForceWindowIntoForeground(window);
             }
             else
             {
-               // This may happen if a custom protocol link is quickly clicked more than once in a row
-
-               Trace.TraceInformation(String.Format("Cannot find Main Window"));
-
-               // bring to front any window
-               IntPtr window = context.GetWindowByCaption(String.Empty, true);
-               if (window != IntPtr.Zero)
-               {
-                  Win32Tools.ForceWindowIntoForeground(window);
-               }
-               else
-               {
-                  Trace.TraceInformation(String.Format("Cannot find application windows"));
-               }
+               Trace.TraceInformation(String.Format("Cannot find application windows"));
             }
-         }
-         catch (Exception ex) // whatever unhandled exception
-         {
-            HandleUnhandledException(ex);
          }
       }
 
-      private static void onLaunchFromDiffTool(LaunchContext context)
+      private static void onLaunchFromDiffTool(LaunchOptions launchOptions)
       {
+         LaunchContext context = launchOptions.SpecialOptions as LaunchContext;
          if (context.IsRunningSingleInstance)
          {
             Trace.TraceWarning("Merge Request Helper is not running");
@@ -217,8 +217,7 @@ namespace mrHelper.App
          int parentToolPID = -1;
          try
          {
-            // TODO Don't create BC3Tool explicitly here and inside MainForm, use a factory
-            string diffToolName = System.IO.Path.GetFileNameWithoutExtension(new DiffTool.BC3Tool().GetToolCommand());
+            string diffToolName = Path.GetFileNameWithoutExtension(createDiffTool().GetToolCommand());
             StorageSupport.LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
             string toolProcessName = type == StorageSupport.LocalCommitStorageType.FileStorage ? diffToolName : "git";
             parentToolPID = getParentProcessId(context.CurrentProcess, toolProcessName);
@@ -256,21 +255,9 @@ namespace mrHelper.App
 
       private static bool checkArguments(LaunchContext context)
       {
-         if (context.Arguments.Length > 2)
+         if (context.Arguments.Length == 2)
          {
-            if (context.Arguments[1] == "diff")
-            {
-               return true;
-            }
-
-            string arguments = String.Join(" ", context.Arguments);
-            Trace.TraceError(String.Format("Invalid arguments {0}", arguments));
-            MessageBox.Show("Invalid arguments", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
-         }
-         else if (context.Arguments.Length == 2)
-         {
-            if (context.Arguments[1] == "-m")
+            if (context.Arguments[1] == "-m" || context.Arguments[1] == "-u")
             {
                return true;
             }
@@ -283,7 +270,117 @@ namespace mrHelper.App
                return false;
             }
          }
+         else if (context.Arguments.Length == 3)
+         {
+            if (context.Arguments[1] == "-r" && Directory.Exists(context.Arguments[2]))
+            {
+               return true;
+            }
+
+            return false;
+         }
+         else if (context.Arguments.Length > 3)
+         {
+            if (context.Arguments[1] == "diff")
+            {
+               return true;
+            }
+
+            string arguments = String.Join(" ", context.Arguments);
+            Trace.TraceError(String.Format("Invalid arguments {0}", arguments));
+            MessageBox.Show("Invalid arguments", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+         }
          return true;
+      }
+
+      private static bool prepareGitEnvironment()
+      {
+         if (!GitTools.IsGit2Installed())
+         {
+            MessageBox.Show(
+               "Git for Windows (version 2) is not installed. "
+             + "It must be installed at least for the current user. Application cannot start.",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+         }
+
+         string pathEV = System.Environment.GetEnvironmentVariable("PATH");
+         System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + GitTools.GetBinaryFolder());
+         Trace.TraceInformation(String.Format("Updated PATH variable: {0}",
+            System.Environment.GetEnvironmentVariable("PATH")));
+         System.Environment.SetEnvironmentVariable("GIT_TERMINAL_PROMPT", "0");
+         Trace.TraceInformation("Set GIT_TERMINAL_PROMPT=0");
+         Trace.TraceInformation(String.Format("TEMP variable: {0}",
+            System.Environment.GetEnvironmentVariable("TEMP")));
+         return true;
+      }
+
+      private static bool integrateInDiffTool(string applicationFullPath)
+      {
+         IIntegratedDiffTool diffTool = createDiffTool();
+         DiffToolIntegration integration = new DiffToolIntegration();
+
+         try
+         {
+            integration.Integrate(diffTool, applicationFullPath);
+         }
+         catch (Exception ex)
+         {
+            if (ex is DiffToolNotInstalledException)
+            {
+               string message = String.Format(
+                  "{0} is not installed. It must be installed at least for the current user. Application cannot start",
+                  diffTool.GetToolName());
+               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+               string message = String.Format("{0} integration failed. Application cannot start. See logs for details",
+                  diffTool.GetToolName());
+               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               ExceptionHandlers.Handle(String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()), ex);
+            }
+            return false;
+         }
+         finally
+         {
+            GitTools.TraceGitConfiguration();
+         }
+
+         return true;
+      }
+
+      private static void revertOldInstallations(bool runningAsUwp)
+      {
+         if (!runningAsUwp)
+         {
+            return;
+         }
+
+         string defaultInstallLocation = StringUtils.GetDefaultInstallLocation(
+            Windows.ApplicationModel.Package.Current.PublisherDisplayName);
+         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "mrHelper" });
+         if (appInfo != null
+          || Directory.Exists(defaultInstallLocation)
+          || System.IO.File.Exists(StringUtils.GetShortcutFilePath()))
+         {
+            MessageBox.Show("mrHelper needs to uninstall an old version of itself on this launch. "
+              + "It takes a few seconds, please wait...", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            string currentPackagePath = Windows.ApplicationModel.Package.Current.InstalledLocation.Path;
+            string revertMsiProjectFolder = "mrHelper.RevertMSI";
+            string revertMsiProjectName = "mrHelper.RevertMSI.exe";
+            ProcessStartInfo startInfo = new ProcessStartInfo
+            {
+               FileName = System.IO.Path.Combine(currentPackagePath, revertMsiProjectFolder, revertMsiProjectName),
+               WorkingDirectory = System.IO.Path.Combine(currentPackagePath, revertMsiProjectFolder),
+               Verb = "runas", // revert implies work with registry
+            };
+            Process p = Process.Start(startInfo);
+            p.WaitForExit();
+            Trace.TraceInformation(String.Format("[MainForm] {0} exited with code {1}", revertMsiProjectName, p.ExitCode));
+         }
       }
 
       /// <summary>
@@ -364,6 +461,100 @@ namespace mrHelper.App
                File.Delete(Path.Combine(path, filename));
             }
          }
+      }
+
+      private static void cleanUpTempFolder(string template)
+      {
+         string tempFolder = Environment.GetEnvironmentVariable("TEMP");
+         foreach (string f in System.IO.Directory.EnumerateFiles(tempFolder, template))
+         {
+            try
+            {
+               System.IO.File.Delete(f);
+            }
+            catch (Exception ex)
+            {
+               ExceptionHandlers.Handle(String.Format("Cannot delete file \"{0}\"", f), ex);
+            }
+         }
+      }
+
+      private static void cleanUpOldFiles()
+      {
+         try
+         {
+            cleanupLogFiles(Settings);
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle("Failed to clean-up log files", ex);
+         }
+
+         cleanUpTempFolder("mrHelper.*.msi");
+         cleanUpTempFolder("mrHelper.*.msix");
+         cleanUpTempFolder("mrHelper.logs.*.zip");
+      }
+
+      static private bool registerCustomProtocol()
+      {
+         string binaryFilePath = Process.GetCurrentProcess().MainModule.FileName;
+         string defaultIconString = String.Format("\"{0}\", 0", binaryFilePath);
+         string commandString = String.Format("\"{0}\" \"%1\"", binaryFilePath);
+
+         const string ProtocolDescription = "Merge Request Helper for GitLab link protocol";
+         CustomProtocol protocol = new CustomProtocol(Constants.CustomProtocolName);
+         Dictionary<string, string> commands = new Dictionary<string, string> { { "open", commandString } };
+         try
+         {
+            protocol.RegisterInRegistry(ProtocolDescription, commands, defaultIconString);
+         }
+         catch (UnauthorizedAccessException ex)
+         {
+            MessageBox.Show("Operation failed. Run mrHelper as Administrator to register or unregister Custom Protocol.",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle("Cannot register custom protocol", ex);
+            return false;
+         }
+         return true;
+      }
+
+      static private bool unregisterCustomProtocol()
+      {
+         try
+         {
+            new CustomProtocol(Constants.CustomProtocolName).RemoveFromRegistry();
+         }
+         catch (UnauthorizedAccessException ex)
+         {
+            MessageBox.Show("Operation failed. Run mrHelper as Administrator to register or unregister Custom Protocol.",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle("Cannot register custom protocol", ex);
+            return false;
+         }
+         return true;
+      }
+
+      static private void integrateInGitUI()
+      {
+         string scriptPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+         try
+         {
+            GitExtensionsIntegrationHelper.AddCustomActions(scriptPath);
+            SourceTreeIntegrationHelper.AddCustomActions(scriptPath);
+         }
+         catch (GitExtensionsIntegrationHelperException ex)
+         {
+            ExceptionHandlers.Handle("Cannot integrate mrHelper in Git Extensions", ex);
+         }
+         catch (SourceTreeIntegrationHelperException ex)
+         {
+            ExceptionHandlers.Handle("Cannot integrate mrHelper in Source Tree", ex);
+         }
+      }
+
+      static private IIntegratedDiffTool createDiffTool()
+      {
+         return new BC3Tool();
       }
    }
 }

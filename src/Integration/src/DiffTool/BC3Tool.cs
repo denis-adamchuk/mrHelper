@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Xml;
 
-namespace mrHelper.DiffTool
+namespace mrHelper.Integration.DiffTool
 {
    public class BC3Tool : IIntegratedDiffTool
    {

@@ -31,20 +31,6 @@ namespace mrHelper.App.Forms
       {
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
 
-         if (_runningAsUwp)
-         {
-            revertOldInstallations();
-         }
-
-         if (!integrateInTools())
-         {
-            doClose();
-            return;
-         }
-
-         cleanUpTempFolder("mrHelper.*.msi");
-         cleanUpTempFolder("mrHelper.*.msix");
-         cleanUpTempFolder("mrHelper.logs.*.zip");
          checkForApplicationUpdates();
 
          initializeWork();

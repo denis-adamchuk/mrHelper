@@ -1,4 +1,4 @@
-﻿namespace mrHelper.DiffTool
+﻿namespace mrHelper.Integration.DiffTool
 {
    public interface IIntegratedDiffTool
    {

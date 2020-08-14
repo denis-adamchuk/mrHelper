@@ -11,13 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.Core", "src\Core\m
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.CustomActions", "src\CustomActions\mrHelper.CustomActions.csproj", "{CB91AD53-06A4-45C2-B568-215BD24033BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.DiffTool", "src\DiffTool\mrHelper.DiffTool.csproj", "{B3A4A6EB-E9DF-47B1-BDF4-089DF6ED0DA5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.Integration", "src\Integration\mrHelper.Integration.csproj", "{B3A4A6EB-E9DF-47B1-BDF4-089DF6ED0DA5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.Common", "src\Common\mrHelper.Common.csproj", "{5D0CE433-F70E-448E-B9F5-ECCB7ABD880A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GitLabSharp", "submodules\GitLabSharp\GitLabSharp.csproj", "{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.Integration", "src\Integration\mrHelper.Integration.csproj", "{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mrHelper.CommonControls", "src\CommonControls\mrHelper.CommonControls.csproj", "{2C6BDBB7-C1E2-46B6-A850-47892837F0C3}"
 EndProject
@@ -253,35 +251,6 @@ Global
 		{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}.Release|x64.Build.0 = Release|Any CPU
 		{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}.Release|x86.ActiveCfg = Release|Any CPU
 		{44EC19BF-2FCE-4B8C-9D50-A61BD69A27C0}.Release|x86.Build.0 = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Debug|ARM.ActiveCfg = Debug|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Debug|ARM.Build.0 = Debug|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Debug|x64.Build.0 = Debug|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Debug|x86.Build.0 = Debug|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Install|Any CPU.ActiveCfg = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Install|ARM.ActiveCfg = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Install|ARM.Build.0 = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Install|ARM64.ActiveCfg = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Install|ARM64.Build.0 = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Install|x64.ActiveCfg = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Install|x64.Build.0 = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Install|x86.ActiveCfg = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Install|x86.Build.0 = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|ARM.ActiveCfg = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|ARM.Build.0 = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|ARM64.Build.0 = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|x64.ActiveCfg = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|x64.Build.0 = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|x86.ActiveCfg = Release|Any CPU
-		{0AE768B1-4F8B-4B8B-A5C0-437ADF02E42B}.Release|x86.Build.0 = Release|Any CPU
 		{2C6BDBB7-C1E2-46B6-A850-47892837F0C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2C6BDBB7-C1E2-46B6-A850-47892837F0C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C6BDBB7-C1E2-46B6-A850-47892837F0C3}.Debug|ARM.ActiveCfg = Debug|Any CPU

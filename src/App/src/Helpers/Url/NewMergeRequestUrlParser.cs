@@ -112,7 +112,7 @@ namespace mrHelper.App.Helpers.GitLab
          {
             string sha = String.Format("{0}{1}", remoteSourceBranch, new string('^', iDepth));
             IEnumerable<string> refs = GitTools.GetRemotePointsAt(path, sha).Where(x => x != remoteSourceBranch);
-            if (refs != null && refs.Any())
+            if (refs.Any())
             {
                return refs.First();
             }

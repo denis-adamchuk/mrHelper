@@ -24,17 +24,17 @@ namespace mrHelper.App.Forms
       private const string DefaultColorSchemeName = "Default";
       private const string ColorSchemeFileNamePrefix = "colors.json";
 
-      internal MainForm(bool startMinimized)
+      internal MainForm(bool startMinimized, bool runningAsUwp, string startUrl)
       {
          _startMinimized = startMinimized;
+         _startUrl = startUrl;
 
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
-         _runningAsUwp = new DesktopBridge.Helpers().IsRunningAsUwp();
-         Trace.TraceInformation(String.Format("[MainForm] Running as UWP = {0}", _runningAsUwp ? "Yes" : "No"));
-         checkBoxRunWhenWindowsStarts.Enabled = !_runningAsUwp;
+         _allowAutoStartApplication = runningAsUwp;
+         checkBoxRunWhenWindowsStarts.Enabled = !_allowAutoStartApplication;
 
          _trayIcon = new TrayIcon(notifyIcon);
          _mdPipeline =
@@ -99,7 +99,8 @@ namespace mrHelper.App.Forms
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mdPipeline;
       private readonly bool _canSwitchTab = true;
-      private readonly bool _runningAsUwp = false;
+      private readonly bool _allowAutoStartApplication = false;
+      private readonly string _startUrl;
 
       private LocalCommitStorageFactory _storageFactory;
       private GitDataUpdater _gitDataUpdater;

@@ -239,6 +239,7 @@
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserItem.cs" />
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserModel.cs" />
     <Compile Include="src\Helpers\Url\GenericUrlParser.cs" />
+    <Compile Include="src\LaunchOptions.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
     <EmbeddedResource Include="src\Controls\DiscussionActionsPanel.resx">
@@ -324,6 +325,10 @@
       <Project>{3789e25d-b132-4661-9bfc-99385e606572}</Project>
       <Name>mrHelper.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Integration\mrHelper.Integration.csproj">
+      <Project>{B3A4A6EB-E9DF-47B1-BDF4-089DF6ED0DA5}</Project>
+      <Name>mrHelper.Integration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\StorageSupport\mrHelper.StorageSupport.csproj">
       <Project>{B86A3683-7D3C-4AF7-8B4A-6BBF237A818E}</Project>
       <Name>mrHelper.StorageSupport</Name>
@@ -335,10 +340,6 @@
     <ProjectReference Include="..\CustomActions\mrHelper.CustomActions.csproj">
       <Project>{cb91ad53-06a4-45c2-b568-215bd24033bc}</Project>
       <Name>mrHelper.CustomActions</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\DiffTool\mrHelper.DiffTool.csproj">
-      <Project>{b3a4a6eb-e9df-47b1-bdf4-089df6ed0da5}</Project>
-      <Name>mrHelper.DiffTool</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

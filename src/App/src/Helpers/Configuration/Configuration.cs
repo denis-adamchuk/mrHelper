@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Collections.Generic;
 using System.Configuration;
@@ -180,9 +181,10 @@ namespace mrHelper.App.Helpers
 
       internal UserDefinedSettings()
       {
-         string configFilePath = System.IO.Path.Combine(
+         string configFileName = Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName) + ".config";
+         string configFilePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-               Constants.ApplicationDataFolderName, "mrHelper.exe.config");
+               Constants.ApplicationDataFolderName, configFileName);
 
          ExeConfigurationFileMap configFileMap = new ExeConfigurationFileMap
          {

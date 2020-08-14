@@ -4,7 +4,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 
-namespace mrHelper.DiffTool
+namespace mrHelper.Integration.DiffTool
 {
    /// <summary>
    /// Performs integration of the application into the specific DiffTool. Registers special difftool in git.

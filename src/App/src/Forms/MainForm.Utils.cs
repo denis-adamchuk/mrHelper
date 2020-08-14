@@ -1363,22 +1363,6 @@ namespace mrHelper.App.Forms
          });
       }
 
-      private void cleanUpTempFolder(string template)
-      {
-         string tempFolder = Environment.GetEnvironmentVariable("TEMP");
-         foreach (string f in System.IO.Directory.EnumerateFiles(tempFolder, template))
-         {
-            try
-            {
-               System.IO.File.Delete(f);
-            }
-            catch (Exception ex)
-            {
-               ExceptionHandlers.Handle(String.Format("Cannot delete file \"{0}\"", f), ex);
-            }
-         }
-      }
-
       private void updateCaption()
       {
          Text = Constants.MainWindowCaption
@@ -1952,7 +1936,7 @@ namespace mrHelper.App.Forms
 
       private void applyAutostartSetting(bool enabled)
       {
-         if (_runningAsUwp)
+         if (_allowAutoStartApplication)
          {
             return;
          }
