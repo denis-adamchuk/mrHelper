@@ -226,7 +226,7 @@ namespace mrHelper.App.Forms
          {
             return String.Empty;
          }
-         return labelSpecialNotePrefix.Text + formatSpecialNote(textBoxSpecialNote.Text);
+         return Program.ServiceManager.GetSpecialNotePrefix() + formatSpecialNote(textBoxSpecialNote.Text);
       }
 
       protected void setSpecialNote(string specialNote)
@@ -319,13 +319,18 @@ namespace mrHelper.App.Forms
             return String.Empty;
          }
 
-         // 2. Make sure that all names are preceded with '@'
+         // 2. Trim prefix
+         trimmed = trimmed.StartsWith(Program.ServiceManager.GetSpecialNotePrefix())
+            ? trimmed.Substring(Program.ServiceManager.GetSpecialNotePrefix().Length)
+            : trimmed;
+
+         // 3. Make sure that all names are preceded with '@'
          trimmed = String.Join(" ", trimmed
             .Replace("@", "")
             .Split(' ')
             .Select(x => Char.IsLetter(x[0]) ? "@" + x : x[0] + "@" + x.Substring(1)));
 
-         // 3. Replace commas with spaces
+         // 4. Replace commas with spaces
          return trimmed.Replace(", ", " ").Replace(",", " ").Trim();
       }
 
