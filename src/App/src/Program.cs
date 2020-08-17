@@ -197,7 +197,7 @@ namespace mrHelper.App
 
       private static void onLaunchFromDiffTool(LaunchOptions launchOptions)
       {
-         LaunchContext context = launchOptions.SpecialOptions as LaunchContext;
+         LaunchContext context = (launchOptions.SpecialOptions as LaunchOptions.DiffToolModeOptions).LaunchContext;
          if (context.IsRunningSingleInstance)
          {
             Trace.TraceWarning("Merge Request Helper is not running");
