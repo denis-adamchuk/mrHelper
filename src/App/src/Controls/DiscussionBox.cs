@@ -83,16 +83,13 @@ namespace mrHelper.App.Controls
 
          if (e.KeyCode == Keys.F4)
          {
-            if (!Discussion.Individual_Note)
+            if (Control.ModifierKeys == Keys.Shift)
             {
-               if (Control.ModifierKeys == Keys.Shift)
-               {
-                  await onReplyAsyncDone();
-               }
-               else if (textBox?.Parent?.Parent != null)
-               {
-                  await onReplyToDiscussionAsync();
-               }
+               await onReplyAsyncDoneAndResolve();
+            }
+            else if (textBox?.Parent?.Parent != null)
+            {
+               await onReplyToDiscussionAsync();
             }
          }
       }
@@ -111,16 +108,13 @@ namespace mrHelper.App.Controls
          }
          else if (e.KeyCode == Keys.F4)
          {
-            if (!Discussion.Individual_Note)
+            if (Control.ModifierKeys == Keys.Shift)
             {
-               if (Control.ModifierKeys == Keys.Shift)
-               {
-                  await onReplyAsyncDone();
-               }
-               else if (noteControl.Parent?.Parent != null)
-               {
-                  await onReplyToDiscussionAsync();
-               }
+               await onReplyAsyncDoneAndResolve();
+            }
+            else if (noteControl.Parent?.Parent != null)
+            {
+               await onReplyToDiscussionAsync();
             }
          }
       }
@@ -141,7 +135,7 @@ namespace mrHelper.App.Controls
          Control control = (Control)(menuItem.Tag);
          if (control?.Parent?.Parent != null)
          {
-            await onReplyAsyncDone();
+            await onReplyAsyncDoneAndResolve();
          }
       }
 
@@ -458,8 +452,9 @@ namespace mrHelper.App.Controls
          Debug.Assert(noteControl is HtmlPanel);
          HtmlPanel htmlPanel = noteControl as HtmlPanel;
          htmlPanel.BaseStylesheet = String.Format(
-            "{0} body div {{ font-size: {1}px; padding-left: 4px; padding-right: 20px; }}",
-            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(noteControl));
+            "{0} body div {{ font-size: {1}px; padding-left: 4px; padding-right: {2}px; }}",
+            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(noteControl),
+            SystemInformation.VerticalScrollBarWidth * 2); // this is really weird
 
          // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
          int prevWidth = noteControl.Width;
@@ -535,7 +530,7 @@ namespace mrHelper.App.Controls
          {
             Tag = noteControl,
             Text = (discussionResolved ? "Unresolve" : "Resolve") + " Thread",
-            Enabled = note.Resolvable
+            Enabled = isDiscussionResolvable()
          };
          menuItemToggleDiscussionResolve.Click += MenuItemToggleResolveDiscussion_Click;
          contextMenu.MenuItems.Add(menuItemToggleDiscussionResolve);
@@ -570,7 +565,7 @@ namespace mrHelper.App.Controls
          MenuItem menuItemReply = new MenuItem
          {
             Tag = noteControl,
-            Enabled = !Discussion.Individual_Note,
+            Enabled = true,
             Text = "Reply\t(F4)"
          };
          menuItemReply.Click += MenuItemReply_Click;
@@ -579,7 +574,7 @@ namespace mrHelper.App.Controls
          MenuItem menuItemReplyDone = new MenuItem
          {
             Tag = noteControl,
-            Enabled = !Discussion.Individual_Note,
+            Enabled = isDiscussionResolvable(),
             Text = "Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread" + "\t(Shift-F4)"
          };
          menuItemReplyDone.Click += MenuItemReplyDone_Click;
@@ -605,7 +600,7 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Text = "Resolve/Unresolve Thread",
-            Enabled = firstNote.Resolvable
+            Enabled = isDiscussionResolvable()
          };
          menuItemToggleDiscussionResolve.Click += MenuItemToggleResolveDiscussion_Click;
          contextMenu.MenuItems.Add(menuItemToggleDiscussionResolve);
@@ -613,7 +608,7 @@ namespace mrHelper.App.Controls
          MenuItem menuItemReply = new MenuItem
          {
             Tag = textBox,
-            Enabled = !Discussion.Individual_Note,
+            Enabled = true,
             Text = "Reply\t(F4)"
          };
          menuItemReply.Click += MenuItemReply_Click;
@@ -622,7 +617,7 @@ namespace mrHelper.App.Controls
          MenuItem menuItemReplyDone = new MenuItem
          {
             Tag = textBox,
-            Enabled = !Discussion.Individual_Note,
+            Enabled = isDiscussionResolvable(),
             Text = "Reply \"Done\" and Resolve/Unresolve Thread" + "\t(Shift-F4)"
          };
          menuItemReplyDone.Click += MenuItemReplyDone_Click;
@@ -691,7 +686,8 @@ namespace mrHelper.App.Controls
             foreach (Control noteControl in _textboxesNotes)
             {
                HtmlPanel htmlPanel = noteControl as HtmlPanel;
-               if (!isServiceDiscussionNote(getNoteFromControl(noteControl)))
+               DiscussionNote note = getNoteFromControl(noteControl);
+               if (note != null && !isServiceDiscussionNote(note))
                {
                   resizeLimitedWidthHtmlPanel(htmlPanel, width * NotesWidth / 100);
                }
@@ -843,18 +839,23 @@ namespace mrHelper.App.Controls
                }
 
                string proposedBody = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
-               await onReplyAsync(proposedBody);
+               await onReplyAsync(proposedBody, false);
             }
          }
       }
 
-      async private Task onReplyAsyncDone()
+      async private Task onReplyAsyncDoneAndResolve()
       {
          await onReplyAsync("Done", true);
       }
 
-      async private Task onReplyAsync(string body, bool toggleResolve = false)
+      async private Task onReplyAsync(string body, bool toggleResolve)
       {
+         if (!isDiscussionResolvable() && toggleResolve)
+         {
+            return;
+         }
+
          bool wasResolved = isDiscussionResolved();
          disableAllNoteControls();
 
@@ -1111,6 +1112,11 @@ namespace mrHelper.App.Controls
             }
          }
          return result;
+      }
+
+      private bool isDiscussionResolvable()
+      {
+         return !Discussion?.Individual_Note ?? false;
       }
 
       private DiscussionNote getNoteFromControl(Control noteControl)
