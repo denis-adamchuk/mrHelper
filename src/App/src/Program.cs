@@ -148,7 +148,10 @@ namespace mrHelper.App
 
          bool runningAsUwp = new DesktopBridge.Helpers().IsRunningAsUwp();
          Trace.TraceInformation(String.Format("[MainForm] Running as UWP = {0}", runningAsUwp ? "Yes" : "No"));
-         revertOldInstallations(runningAsUwp);
+         if (runningAsUwp)
+         {
+            revertOldInstallations();
+         }
 
          string path = runningAsUwp ? Constants.UWP_Launcher_Name : Process.GetCurrentProcess().MainModule.FileName;
          if (!prepareGitEnvironment() || !integrateInDiffTool(path))
@@ -351,13 +354,8 @@ namespace mrHelper.App
          return true;
       }
 
-      private static void revertOldInstallations(bool runningAsUwp)
+      private static void revertOldInstallations()
       {
-         if (!runningAsUwp)
-         {
-            return;
-         }
-
          string defaultInstallLocation = StringUtils.GetDefaultInstallLocation(
             Windows.ApplicationModel.Package.Current.PublisherDisplayName);
          AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "mrHelper" });
