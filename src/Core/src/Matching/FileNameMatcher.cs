@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using mrHelper.Core.Git;
 using mrHelper.StorageSupport;
 
 namespace mrHelper.Core.Matching
@@ -11,7 +10,9 @@ namespace mrHelper.Core.Matching
    public class FileNameMatcher
    {
       public FileNameMatcher(IGitCommandService git,
-         Action<string, string> onFileMove, Func<string, string, string, bool> onFileRename, Func<bool> onWrongMatch)
+         Action<string, string> onFileMove,
+         Func<string, string, string, bool> onFileRename,
+         Func<string, bool> onWrongMatch)
       {
          _git = git;
          _onFileMove = onFileMove;
@@ -120,7 +121,7 @@ namespace mrHelper.Core.Matching
                if (sourceCurrentName != sourceOppositeName)
                {
                   // wrong match, propose to re-match
-                  if (_onWrongMatch())
+                  if (_onWrongMatch(sourceCurrentName))
                   {
                      trace("wrong match (continue)", isLeftSide, refs, sourceCurrentName, sourceOppositeName, sourceCurrentName);
                      return sourceCurrentName;
@@ -169,7 +170,7 @@ namespace mrHelper.Core.Matching
       /// <summary>
       /// Notify user about impossible match
       /// </summary>
-      private readonly Func<bool> _onWrongMatch;
+      private readonly Func<string, bool> _onWrongMatch;
 
       /// <summary>
       /// Notify user about file move

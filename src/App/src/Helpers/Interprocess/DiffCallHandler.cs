@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 using mrHelper.App.Forms;
@@ -72,7 +73,7 @@ namespace mrHelper.App.Interprocess
             {
                try
                {
-                  await submitDiscussionAsync(_snapshot, _matchInfo, position, form.Body, form.IncludeContext);
+                  await submitDiscussionAsync(position, form.Body, form.IncludeContext);
                }
                catch (DiscussionCreatorException ex)
                {
@@ -104,6 +105,11 @@ namespace mrHelper.App.Interprocess
          },
             (currentName, anotherName, status) =>
          {
+            if (needSuppressWarning(currentName))
+            {
+               return true;
+            }
+
             string question = String.Empty;
             if (status == "new" || status == "deleted")
             {
@@ -117,7 +123,8 @@ namespace mrHelper.App.Interprocess
             {
                Debug.Assert(false);
             }
-            return MessageBox.Show(
+
+            bool isWarningIgnoredByUser = MessageBox.Show(
                   "Merge Request Helper detected that current file is a renamed version of another file. "
                   + question
                   + "It is recommended to press \"No\" and match files manually in the diff tool.\n"
@@ -129,21 +136,35 @@ namespace mrHelper.App.Interprocess
                   MessageBoxButtons.YesNo, MessageBoxIcon.Information,
                   MessageBoxDefaultButton.Button2, MessageBoxOptions.ServiceNotification)
                == DialogResult.Yes;
+            if (isWarningIgnoredByUser)
+            {
+               addFileToWhitelist(currentName);
+            }
+            return isWarningIgnoredByUser;
          },
-            () =>
+            (currentName) =>
          {
+            if (needSuppressWarning(currentName))
+            {
+               return true;
+            }
+
             string question = "Do you really want to continue reviewing this file against the selected file? ";
-            return MessageBox.Show(
+            bool isWarningIgnoredByUser = MessageBox.Show(
                   "Merge Request Helper detected that selected files do not match to each other. "
                   + question, "Files do not match",
                   MessageBoxButtons.YesNo, MessageBoxIcon.Warning,
                   MessageBoxDefaultButton.Button2, MessageBoxOptions.ServiceNotification)
                == DialogResult.Yes;
+            if (isWarningIgnoredByUser)
+            {
+               addFileToWhitelist(currentName);
+            }
+            return isWarningIgnoredByUser;
          });
       }
 
-      async private Task submitDiscussionAsync(Snapshot snapshot, MatchInfo matchInfo, DiffPosition position,
-        string body, bool includeContext)
+      async private Task submitDiscussionAsync(DiffPosition position, string body, bool includeContext)
       {
          if (body.Length == 0)
          {
@@ -156,8 +177,7 @@ namespace mrHelper.App.Interprocess
          NewDiscussionParameters parameters = new NewDiscussionParameters(
             body, includeContext ? createPositionParameters(position) : new PositionParameters?());
 
-         ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
-         MergeRequestKey mrk = new MergeRequestKey(projectKey, snapshot.MergeRequestIId);
+         MergeRequestKey mrk = getMergeRequestKey(_snapshot);
          IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
             _gitLabInstance, _modificationListener, mrk, _currentUser);
 
@@ -176,8 +196,8 @@ namespace mrHelper.App.Interprocess
                   "Body:\n{4}",
                   position.ToString(),
                   includeContext.ToString(),
-                  snapshot.Refs.ToString(),
-                  matchInfo.ToString(),
+                  _snapshot.Refs.ToString(),
+                  _matchInfo.ToString(),
                   body);
 
             if (!ex.Handled)
@@ -193,11 +213,69 @@ namespace mrHelper.App.Interprocess
             position.RightLine, position.Refs.LeftSHA, position.Refs.RightSHA, position.Refs.LeftSHA);
       }
 
+      private bool needSuppressWarning(string filename)
+      {
+         if (Program.Settings.SuppressWarningsOnFileMismatch)
+         {
+            return true;
+         }
+
+         MergeRequestKey mrk = getMergeRequestKey(_snapshot);
+         MismatchWhitelistKey key = new MismatchWhitelistKey(mrk, filename);
+         return _mismatchWhitelist.Contains(key);
+      }
+
+      private void addFileToWhitelist(string filename)
+      {
+         MergeRequestKey mrk = getMergeRequestKey(_snapshot);
+         MismatchWhitelistKey key = new MismatchWhitelistKey(mrk, filename);
+         _mismatchWhitelist.Add(key);
+      }
+
+      private static MergeRequestKey getMergeRequestKey(Snapshot snapshot)
+      {
+         ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
+         return new MergeRequestKey(projectKey, snapshot.MergeRequestIId);
+      }
+
       private readonly MatchInfo _matchInfo;
       private readonly Snapshot _snapshot;
       private readonly GitLabInstance _gitLabInstance;
       private readonly IModificationListener _modificationListener;
       private readonly User _currentUser;
+
+      private struct MismatchWhitelistKey : IEquatable<MismatchWhitelistKey>
+      {
+         public MismatchWhitelistKey(MergeRequestKey mergeRequestKey, string fileName) : this()
+         {
+            MergeRequestKey = mergeRequestKey;
+            FileName = fileName;
+         }
+
+         internal MergeRequestKey MergeRequestKey { get; }
+         internal string FileName { get; }
+
+         public override bool Equals(object obj)
+         {
+            return obj is MismatchWhitelistKey && Equals((MismatchWhitelistKey)obj);
+         }
+
+         public bool Equals(MismatchWhitelistKey other)
+         {
+            return MergeRequestKey.Equals(other.MergeRequestKey) &&
+                   FileName == other.FileName;
+         }
+
+         public override int GetHashCode()
+         {
+            var hashCode = 1704511527;
+            hashCode = hashCode * -1521134295 + EqualityComparer<MergeRequestKey>.Default.GetHashCode(MergeRequestKey);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(FileName);
+            return hashCode;
+         }
+      }
+
+      private static readonly HashSet<MismatchWhitelistKey> _mismatchWhitelist = new HashSet<MismatchWhitelistKey>();
    }
 }
 

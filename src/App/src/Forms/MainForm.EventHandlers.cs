@@ -582,6 +582,11 @@ namespace mrHelper.App.Forms
          Program.Settings.NewDiscussionIsTopMostForm = (sender as CheckBox).Checked;
       }
 
+      private void CheckBoxSuppressWarningsOnFileMismatch_CheckedChanged(object sender, EventArgs e)
+      {
+         Program.Settings.SuppressWarningsOnFileMismatch = (sender as CheckBox).Checked;
+      }
+
       private void checkBoxRunWhenWindowsStarts_CheckedChanged(object sender, EventArgs e)
       {
          Program.Settings.RunWhenWindowsStarts = (sender as CheckBox).Checked;

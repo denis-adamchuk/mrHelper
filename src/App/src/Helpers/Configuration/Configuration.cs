@@ -63,6 +63,9 @@ namespace mrHelper.App.Helpers
       private static readonly string NewDiscussionIsTopMostFormKeyName        = "NewDiscussionIsTopMostForm";
       private static readonly bool   NewDiscussionIsTopMostFormDefaultValue   = false;
 
+      private static readonly string SuppressWarningsOnFileMismatchKeyName       = "SuppressWarningsOnFileMismatch";
+      private static readonly bool   SuppressWarningsOnFileMismatchDefaultValue  = false;
+
       private static readonly string ShowWarningOnReloadListKeyName      = "ShowWarningOnReloadList";
       private static readonly bool   ShowWarningOnReloadListDefaultValue = true;
 
@@ -336,6 +339,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : NewDiscussionIsTopMostFormDefaultValue;
          }
          set { setValue(NewDiscussionIsTopMostFormKeyName, boolToString(value)); }
+      }
+
+      public bool SuppressWarningsOnFileMismatch
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               SuppressWarningsOnFileMismatchKeyName, boolToString(SuppressWarningsOnFileMismatchDefaultValue)),
+                  out bool result) ? result : SuppressWarningsOnFileMismatchDefaultValue;
+         }
+         set { setValue(SuppressWarningsOnFileMismatchKeyName, boolToString(value)); }
       }
 
       public bool ShowWarningOnReloadList
