@@ -28,12 +28,15 @@
       /// </summary>
       private void InitializeComponent()
       {
+         this.components = new System.ComponentModel.Container();
          this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.checkBoxIncludeContext = new System.Windows.Forms.CheckBox();
          this.textBoxFileName = new System.Windows.Forms.TextBox();
          this.buttonOK = new System.Windows.Forms.Button();
          this.htmlContextCanvas = new System.Windows.Forms.Panel();
          this.textBoxDiscussionBodyHost = new System.Windows.Forms.Integration.ElementHost();
+         this.buttonInsertCode = new System.Windows.Forms.Button();
+         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.SuspendLayout();
          // 
          // buttonCancel
@@ -57,7 +60,7 @@
          this.checkBoxIncludeContext.Location = new System.Drawing.Point(545, 14);
          this.checkBoxIncludeContext.Name = "checkBoxIncludeContext";
          this.checkBoxIncludeContext.Size = new System.Drawing.Size(197, 17);
-         this.checkBoxIncludeContext.TabIndex = 2;
+         this.checkBoxIncludeContext.TabIndex = 5;
          this.checkBoxIncludeContext.Text = "Include diff context in the discussion";
          this.checkBoxIncludeContext.UseVisualStyleBackColor = true;
          // 
@@ -70,12 +73,13 @@
          this.textBoxFileName.ReadOnly = true;
          this.textBoxFileName.Size = new System.Drawing.Size(527, 20);
          this.textBoxFileName.TabIndex = 0;
+         this.textBoxFileName.TabStop = false;
          // 
          // buttonOK
          // 
          this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonOK.Location = new System.Drawing.Point(667, 127);
+         this.buttonOK.Location = new System.Drawing.Point(667, 157);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
          this.buttonOK.TabIndex = 3;
@@ -104,12 +108,25 @@
          this.textBoxDiscussionBodyHost.Text = "textBoxDiscussionBodyHost";
          this.textBoxDiscussionBodyHost.Child = null;
          // 
+         // buttonInsertCode
+         // 
+         this.buttonInsertCode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonInsertCode.Location = new System.Drawing.Point(667, 127);
+         this.buttonInsertCode.Name = "buttonInsertCode";
+         this.buttonInsertCode.Size = new System.Drawing.Size(75, 23);
+         this.buttonInsertCode.TabIndex = 12;
+         this.buttonInsertCode.Text = "Insert code";
+         this.toolTip.SetToolTip(this.buttonInsertCode, "Insert a placeholder for a code snippet");
+         this.buttonInsertCode.UseVisualStyleBackColor = true;
+         this.buttonInsertCode.Click += new System.EventHandler(this.buttonInsertCode_Click);
+         // 
          // NewDiscussionForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(754, 221);
+         this.Controls.Add(this.buttonInsertCode);
          this.Controls.Add(this.textBoxDiscussionBodyHost);
          this.Controls.Add(this.htmlContextCanvas);
          this.Controls.Add(this.checkBoxIncludeContext);
@@ -137,5 +154,7 @@
         private System.Windows.Forms.Panel htmlContextCanvas;
       private System.Windows.Controls.TextBox textBoxDiscussionBody;
       private System.Windows.Forms.Integration.ElementHost textBoxDiscussionBodyHost;
+      private System.Windows.Forms.Button buttonInsertCode;
+      private System.Windows.Forms.ToolTip toolTip;
    }
 }
