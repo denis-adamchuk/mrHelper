@@ -451,12 +451,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         requestUpdates(mrkOpt.Value,
-            new int[] {
-               1000,
-               Program.Settings.OneShotUpdateFirstChanceDelayMs,
-               Program.Settings.OneShotUpdateSecondChanceDelayMs
-            });
+         requestUpdates(null, new int[] { Constants.CreateNewMergeRequestRefreshListTimerInterval });
 
          labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been created in project {1}",
             mrkOpt.Value.IId, parameters.ProjectKey.ProjectName);

@@ -45,6 +45,8 @@ namespace mrHelper.Common.Constants
       public static int DiscussionCheckOnNewThreadInterval = 1000 * 3; // 3 seconds
       public static int DiscussionCheckOnNewThreadFromDiffToolInterval = 1000 * 15; // 15 seconds
 
+      public static int CreateNewMergeRequestRefreshListTimerInterval = 1000 * 3; // 3 seconds
+
       public static int ReloadListPseudoTimerInterval = 100 * 1; // 0.1 second
 
       public static string[] ThemeNames = { "Default", "New Year 2020" };
