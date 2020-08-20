@@ -47,30 +47,8 @@ namespace mrHelper.App.Forms
 
       private void buttonInsertCode_Click(object sender, EventArgs e)
       {
-         insertCodePlaceholderIntoTextBox(textBoxDiscussionBody);
+         Helpers.WPFHelpers.InsertCodePlaceholderIntoTextBox(textBoxDiscussionBody);
          textBoxDiscussionBody.Focus();
-      }
-
-      private static void insertCodePlaceholderIntoTextBox(System.Windows.Controls.TextBox textBox)
-      {
-         int selectionStartIndex = textBox.SelectionStart;
-         int selectionLength = textBox.SelectionLength;
-         int selectionEndIndex = selectionStartIndex + selectionLength - 1; // less than start index if nothing selected
-
-         string text = textBox.Text;
-         bool addNewLineBeforeCursor = selectionStartIndex > 0 && text[selectionStartIndex - 1] != '\n';
-         bool addNewLineAfterCursor = selectionEndIndex < text.Length - 1 && text[selectionEndIndex + 1] != '\r';
-
-         string afterCursorText = String.Format("\r\n```{0}", addNewLineAfterCursor ? "\r\n" : String.Empty);
-         string beforeCursorText = String.Format("{0}```\r\n", addNewLineBeforeCursor ? "\r\n" : String.Empty);
-
-         int beforeCursorTextPos = Math.Max(0, selectionStartIndex);
-         int afterCursorTextPos = beforeCursorTextPos + beforeCursorText.Length + selectionLength;
-
-         textBox.Text = textBox.Text.Insert(beforeCursorTextPos, beforeCursorText);
-         textBox.Text = textBox.Text.Insert(afterCursorTextPos, afterCursorText);
-
-         textBox.SelectionStart = beforeCursorTextPos + beforeCursorText.Length;
       }
 
       private void NewDiscussionForm_Shown(object sender, EventArgs e)
@@ -124,7 +102,7 @@ namespace mrHelper.App.Forms
 
       private void createWPFTextBox()
       {
-         textBoxDiscussionBody = Helpers.WPFHelpers.CreateWPFTextBox(textBoxDiscussionBodyHost, false, String.Empty);
+         textBoxDiscussionBody = Helpers.WPFHelpers.CreateWPFTextBox(textBoxDiscussionBodyHost, false, String.Empty, true);
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
       }
 

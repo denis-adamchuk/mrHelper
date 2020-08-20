@@ -5,12 +5,12 @@ namespace mrHelper.App.Forms
 {
    internal partial class TextEditForm : CustomFontForm
    {
-      internal TextEditForm(string caption, string initialText = "", bool editable = true)
+      internal TextEditForm(string caption, string initialText, bool editable, bool multiline, bool acceptCode)
       {
          InitializeComponent();
          Text = caption;
 
-         createWPFTextBox(initialText, editable);
+         createWPFTextBox(initialText, editable, multiline);
          applyFont(Program.Settings.MainWindowFontSizeName);
          adjustFormHeight();
 
@@ -18,13 +18,15 @@ namespace mrHelper.App.Forms
             () => initialText != String.Empty
                   ? textBox.Text != initialText
                   : textBox.Text.Length > MaximumTextLengthTocancelWithoutConfirmation;
+
+         buttonInsertCode.Visible = acceptCode;
       }
 
       internal string Body => textBox.Text;
 
-      private void createWPFTextBox(string initialText, bool editable)
+      private void createWPFTextBox(string initialText, bool editable, bool multiline)
       {
-         textBox = Helpers.WPFHelpers.CreateWPFTextBox(textBoxHost, !editable, initialText);
+         textBox = Helpers.WPFHelpers.CreateWPFTextBox(textBoxHost, !editable, initialText, multiline);
          textBox.KeyDown += textBox_KeyDown;
       }
 
@@ -49,6 +51,12 @@ namespace mrHelper.App.Forms
 
       private void ViewDiscussionItemForm_Shown(object sender, System.EventArgs e)
       {
+         textBox.Focus();
+      }
+
+      private void buttonInsertCode_Click(object sender, EventArgs e)
+      {
+         Helpers.WPFHelpers.InsertCodePlaceholderIntoTextBox(textBox);
          textBox.Focus();
       }
 

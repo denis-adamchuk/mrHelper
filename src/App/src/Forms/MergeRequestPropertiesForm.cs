@@ -66,7 +66,8 @@ namespace mrHelper.App.Forms
       private void buttonEditTitle_Click(object sender, EventArgs e)
       {
          string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
-         TextEditForm editTitleForm = new TextEditForm("Edit Merge Request title", title, true);
+         string formCaption = "Edit Merge Request title";
+         TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, false);
          if (editTitleForm.ShowDialog() == DialogResult.OK)
          {
             setTitle(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editTitleForm.Body));
@@ -76,7 +77,8 @@ namespace mrHelper.App.Forms
       private void buttonEditDescription_Click(object sender, EventArgs e)
       {
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
-         TextEditForm editDescriptionForm = new TextEditForm("Edit Merge Request description", description, true);
+         string formCaption = "Edit Merge Request description";
+         TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, true);
          if (editDescriptionForm.ShowDialog() == DialogResult.OK)
          {
             setDescription(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editDescriptionForm.Body));
