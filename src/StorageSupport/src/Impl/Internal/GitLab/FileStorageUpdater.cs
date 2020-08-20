@@ -9,6 +9,7 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient;
+using static mrHelper.StorageSupport.HeadInfo;
 
 namespace mrHelper.StorageSupport
 {
@@ -125,7 +126,7 @@ namespace mrHelper.StorageSupport
       async public Task doUpdate(bool isAwaitedUpdate, CommitStorageUpdateContext context,
          Action<string> onProgressChange)
       {
-         if (context == null || context.BaseToHeads == null || !context.BaseToHeads.Any() || _isDisposed)
+         if (context == null || context.BaseToHeads.Data == null || !context.BaseToHeads.Data.Any() || _isDisposed)
          {
             return;
          }
@@ -154,14 +155,16 @@ namespace mrHelper.StorageSupport
       async private Task<IEnumerable<ComparisonInternal>> fetchComparisonsAsync(bool isAwaitedUpdate,
          CommitStorageUpdateContext context)
       {
-         List<Tuple<string, string>> baseToHeads = context.BaseToHeads
-            .SelectMany(x => x.Value, (kv, headSha) => new Tuple<string, string>(kv.Key, headSha))
+         List<Tuple<string, string, IEnumerable<FileInfo>>> baseToHeads = context.BaseToHeads.Data
+            .SelectMany(
+               (x) => x.Value,
+               (kv, head) => new Tuple<string, string, IEnumerable<FileInfo>>(kv.Key.Sha, head.Sha, head.Files))
             .ToList();
 
          bool cancelled = _isDisposed;
          Exception exception = null;
          List<ComparisonInternal> comparisons = new List<ComparisonInternal>();
-         async Task doFetch(Tuple<string, string> baseShaToHeadSha)
+         async Task doFetch(Tuple<string, string, IEnumerable<FileInfo>> baseShaToHeadSha)
          {
             if (cancelled)
             {
@@ -186,7 +189,12 @@ namespace mrHelper.StorageSupport
                cancelled = true;
                return;
             }
-            comparisons.Add(new ComparisonInternal(comparison.Diffs, baseShaToHeadSha.Item1, baseShaToHeadSha.Item2));
+
+            IEnumerable<DiffStruct> filteredDiffs = filterDiffs(comparison.Diffs, baseShaToHeadSha.Item3);
+            if (filteredDiffs.Any())
+            {
+               comparisons.Add(new ComparisonInternal(filteredDiffs, baseShaToHeadSha.Item1, baseShaToHeadSha.Item2));
+            }
          }
 
          await TaskUtils.RunConcurrentFunctionsAsync(baseToHeads, doFetch,
@@ -209,6 +217,16 @@ namespace mrHelper.StorageSupport
          {
             throw new LocalCommitStorageUpdaterLimitException("GitLab failed to compare selected revisions");
          }
+      }
+
+      private static IEnumerable<DiffStruct> filterDiffs(IEnumerable<DiffStruct> diffs, IEnumerable<FileInfo> filter)
+      {
+         bool doesDiffMatchFileInfo(DiffStruct diff, FileInfo fileInfo)
+         {
+            return diff.New_Path == fileInfo.NewPath
+                && diff.Old_Path == fileInfo.OldPath;
+         }
+         return diffs.Where(diff => filter?.Any(fileInfo => doesDiffMatchFileInfo(diff, fileInfo)) ?? true);
       }
 
       private static async Task suspendProcessingOfNonAwaitedUpdate(bool isAwaitedUpdate)
@@ -318,12 +336,12 @@ namespace mrHelper.StorageSupport
 
       private IEnumerable<FileInternal> extractFilesFromComparison(ComparisonInternal comparison)
       {
-         IEnumerable<FileInternal> baseFiles = converDiffToFiles(comparison.Diffs, comparison.BaseSha, true);
-         IEnumerable<FileInternal> headFiles = converDiffToFiles(comparison.Diffs, comparison.HeadSha, false);
+         IEnumerable<FileInternal> baseFiles = convertDiffToFiles(comparison.Diffs, comparison.BaseSha, true);
+         IEnumerable<FileInternal> headFiles = convertDiffToFiles(comparison.Diffs, comparison.HeadSha, false);
          return baseFiles.Concat(headFiles);
       }
 
-      private IEnumerable<FileInternal> converDiffToFiles(IEnumerable<DiffStruct> diffs, string sha, bool old)
+      private IEnumerable<FileInternal> convertDiffToFiles(IEnumerable<DiffStruct> diffs, string sha, bool old)
       {
          return FileStorageUtils.TransformDiffs<FileInternal>(diffs, sha, old);
       }

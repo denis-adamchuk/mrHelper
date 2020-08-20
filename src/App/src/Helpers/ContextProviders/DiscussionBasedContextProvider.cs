@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.StorageSupport;
+using static mrHelper.StorageSupport.HeadInfo;
 
 namespace mrHelper.App.Helpers
 {
@@ -19,7 +20,8 @@ namespace mrHelper.App.Helpers
                _discussions
                .Where(x => x.Notes != null && x.Notes.Any() && x.Notes.First().Type == "DiffNote");
 
-         Dictionary<string, HashSet<string>> baseToHeads = new Dictionary<string, HashSet<string>>();
+         Dictionary<string, Dictionary<string, HashSet<FileInfo>>> baseToHeads =
+            new Dictionary<string, Dictionary<string, HashSet<FileInfo>>>();
          foreach (Discussion diffNote in diffNotes)
          {
             string baseSha = diffNote.Notes.First().Position.Base_SHA;
@@ -28,13 +30,25 @@ namespace mrHelper.App.Helpers
             {
                if (!baseToHeads.ContainsKey(baseSha))
                {
-                  baseToHeads[baseSha] = new HashSet<string>();
+                  baseToHeads[baseSha] = new Dictionary<string, HashSet<FileInfo>>();
                }
-               baseToHeads[baseSha].Add(headSha);
+
+               if (!baseToHeads[baseSha].ContainsKey(headSha))
+               {
+                  baseToHeads[baseSha][headSha] = new HashSet<FileInfo>();
+               }
+
+               string oldPath = diffNote.Notes.First().Position.Old_Path;
+               string newPath = diffNote.Notes.First().Position.New_Path;
+               baseToHeads[baseSha][headSha].Add(new FileInfo(oldPath, newPath));
             }
          }
 
-         return new PartialUpdateContext(baseToHeads.ToDictionary(item => item.Key, item => item.Value.AsEnumerable()));
+         return new PartialUpdateContext(
+            new BaseToHeadsCollection(
+               baseToHeads.ToDictionary(
+                  item => new BaseInfo(item.Key),
+                  item => item.Value.Select(x => new HeadInfo(x.Key, x.Value)))));
       }
 
       public override string ToString()

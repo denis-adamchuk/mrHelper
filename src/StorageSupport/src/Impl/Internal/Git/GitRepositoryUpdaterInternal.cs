@@ -122,7 +122,7 @@ namespace mrHelper.StorageSupport
       async public Task doUpdate(bool isAwaitedUpdate, CommitStorageUpdateContext context,
          Action<string> onProgressChange, Action onUpdateStateChange)
       {
-         if (context == null || context.BaseToHeads == null || _isDisposed)
+         if (context == null || context.BaseToHeads.Data == null || _isDisposed)
          {
             return;
          }
@@ -170,13 +170,13 @@ namespace mrHelper.StorageSupport
             : new InternalUpdateContext[] { new InternalUpdateContext(flatContext) };
       }
 
-      static private IEnumerable<string> flattenDictionary(Dictionary<string, IEnumerable<string>> dict)
+      static private IEnumerable<string> flattenDictionary(BaseToHeadsCollection dict)
       {
          List<string> result = new List<string>();
-         result.AddRange(dict.Keys);
-         foreach (IEnumerable<string> values in dict.Values)
+         result.AddRange(dict.Data.Keys.Select(x => x.Sha));
+         foreach (IEnumerable<HeadInfo> values in dict.Data.Values)
          {
-            result.AddRange(values);
+            result.AddRange(values.Select(x => x.Sha));
          }
          return result;
       }

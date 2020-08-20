@@ -14,8 +14,9 @@ namespace mrHelper.StorageSupport
 
       public CommitStorageUpdateContext GetContext()
       {
-         Dictionary<string, IEnumerable<string>> baseToHeads =
-            new Dictionary<string, IEnumerable<string>>{ { _baseSha, _heads.Where(x => x != _baseSha) } };
+         BaseToHeadsCollection baseToHeads = new BaseToHeadsCollection(
+            new Dictionary<BaseInfo, IEnumerable<HeadInfo>>
+               { { new BaseInfo(_baseSha), _heads.Where(x => x != _baseSha).Select(x => new HeadInfo(x, null)) } });
          return new PartialUpdateContext(baseToHeads);
       }
 

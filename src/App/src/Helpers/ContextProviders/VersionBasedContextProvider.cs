@@ -47,7 +47,10 @@ namespace mrHelper.App.Helpers
 
          Version latestVersion = _versions.OrderBy(x => x.Created_At).LastOrDefault();
          return new FullUpdateContext(latestVersion.Created_At,
-            baseToHeads.ToDictionary(item => item.Key, item => item.Value.AsEnumerable()));
+            new BaseToHeadsCollection(
+               baseToHeads.ToDictionary(
+                  item => new BaseInfo(item.Key),
+                  item => item.Value.Select(x => new HeadInfo(x, null)))));
       }
 
       public override string ToString()
