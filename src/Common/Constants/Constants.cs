@@ -49,6 +49,8 @@ namespace mrHelper.Common.Constants
 
       public static int ReloadListPseudoTimerInterval = 100 * 1; // 0.1 second
 
+      public static int ClipboardCheckingTimerInterval = 1000 * 1; // 1 second
+
       public static string[] ThemeNames = { "Default", "New Year 2020" };
       public static string DefaultThemeName = "Default";
 

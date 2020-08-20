@@ -12,8 +12,12 @@ namespace mrHelper.App.Helpers
    {
       internal static object Parse(string originalUrl)
       {
-         string prefix = Constants.CustomProtocolName + "://";
-         string url = originalUrl.StartsWith(prefix) ? originalUrl.Substring(prefix.Length) : originalUrl;
+         if (String.IsNullOrEmpty(originalUrl))
+         {
+            return null;
+         }
+
+         string url = trimPrefix(originalUrl);
 
          List<Exception> exceptions = new List<Exception>();
          try
@@ -41,6 +45,35 @@ namespace mrHelper.App.Helpers
 
          exceptions.ForEach(ex => ExceptionHandlers.Handle("Input URL cannot be parsed", ex));
          return null;
+      }
+
+      internal static bool Check(string originalUrl)
+      {
+         if (String.IsNullOrEmpty(originalUrl))
+         {
+            return false;
+         }
+
+         string url = trimPrefix(originalUrl);
+
+         try
+         {
+            UrlParser.ParseMergeRequestUrl(url);
+            NewMergeRequestUrlParser.Parse(url);
+            return true;
+         }
+         catch (Exception)
+         {
+            // no need to handle, just return false
+         }
+
+         return false;
+      }
+
+      private static string trimPrefix(string originalUrl)
+      {
+         string prefix = Constants.CustomProtocolName + "://";
+         return originalUrl.StartsWith(prefix) ? originalUrl.Substring(prefix.Length) : originalUrl;
       }
    }
 }

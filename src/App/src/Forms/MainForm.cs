@@ -21,8 +21,11 @@ namespace mrHelper.App.Forms
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
       private static readonly int timeTrackingTimerInterval = 1000; // ms
 
-      private const string DefaultColorSchemeName = "Default";
-      private const string ColorSchemeFileNamePrefix = "colors.json";
+      private static readonly string DefaultColorSchemeName = "Default";
+      private static readonly string ColorSchemeFileNamePrefix = "colors.json";
+
+      private static readonly string openFromClipboardEnabledText = "Open from Clipboard";
+      private static readonly string openFromClipboardDisabledText = "Open from Clipboard (Copy GitLab MR URL to activate)";
 
       internal MainForm(bool startMinimized, bool runningAsUwp, string startUrl)
       {
@@ -101,6 +104,10 @@ namespace mrHelper.App.Forms
       private readonly bool _canSwitchTab = true;
       private readonly bool _allowAutoStartApplication = false;
       private readonly string _startUrl;
+      private readonly System.Windows.Forms.Timer _clipboardCheckingTimer = new System.Windows.Forms.Timer
+      {
+         Interval = Constants.ClipboardCheckingTimerInterval
+      };
 
       private LocalCommitStorageFactory _storageFactory;
       private GitDataUpdater _gitDataUpdater;

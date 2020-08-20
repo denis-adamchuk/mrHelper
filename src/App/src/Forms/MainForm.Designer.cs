@@ -35,6 +35,9 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer?.Stop();
          _timeTrackingTimer?.Dispose();
 
+         _clipboardCheckingTimer?.Stop();
+         _clipboardCheckingTimer?.Dispose();
+
          // This allows to handle all pending invocations that other threads are
          // already ready to make before we dispose ourselves
          Application.DoEvents();
@@ -51,6 +54,7 @@ namespace mrHelper.App.Forms
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
+         this.revisionBrowser = new Controls.RevisionBrowser();
          this.groupBoxKnownHosts = new System.Windows.Forms.GroupBox();
          this.buttonRemoveKnownHost = new System.Windows.Forms.Button();
          this.buttonAddKnownHost = new System.Windows.Forms.Button();
@@ -122,6 +126,7 @@ namespace mrHelper.App.Forms
          this.radioButtonBaseVsLatest = new System.Windows.Forms.RadioButton();
          this.radioButtonCommits = new System.Windows.Forms.RadioButton();
          this.radioButtonVersions = new System.Windows.Forms.RadioButton();
+         this.checkBoxSuppressWarningsOnFileMismatch = new System.Windows.Forms.CheckBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -157,6 +162,7 @@ namespace mrHelper.App.Forms
          this.tabPageMR = new System.Windows.Forms.TabPage();
          this.splitContainer1 = new System.Windows.Forms.SplitContainer();
          this.tabControlMode = new System.Windows.Forms.TabControl();
+         this.linkLabelFromClipboard = new System.Windows.Forms.LinkLabel();
          this.splitContainer2 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectedMR = new System.Windows.Forms.GroupBox();
          this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
@@ -174,10 +180,8 @@ namespace mrHelper.App.Forms
          this.linkLabelTimeTrackingMergeRequest = new System.Windows.Forms.LinkLabel();
          this.groupBoxReview = new System.Windows.Forms.GroupBox();
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
-         this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.checkBoxSuppressWarningsOnFileMismatch = new System.Windows.Forms.CheckBox();
          this.groupBoxKnownHosts.SuspendLayout();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
@@ -212,6 +216,15 @@ namespace mrHelper.App.Forms
          this.groupBoxReview.SuspendLayout();
          this.groupBoxSelectRevisions.SuspendLayout();
          this.SuspendLayout();
+         // 
+         // revisionBrowser
+         // 
+         this.revisionBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.revisionBrowser.Location = new System.Drawing.Point(3, 16);
+         this.revisionBrowser.Name = "revisionBrowser";
+         this.revisionBrowser.Size = new System.Drawing.Size(740, 181);
+         this.revisionBrowser.TabIndex = 0;
+         this.revisionBrowser.SelectionChanged += new System.EventHandler(this.RevisionBrowser_SelectionChanged);
          // 
          // groupBoxKnownHosts
          // 
@@ -1014,6 +1027,18 @@ namespace mrHelper.App.Forms
          this.radioButtonVersions.UseVisualStyleBackColor = true;
          this.radioButtonVersions.CheckedChanged += new System.EventHandler(this.radioButtonRevisionType_CheckedChanged);
          // 
+         // checkBoxSuppressWarningsOnFileMismatch
+         // 
+         this.checkBoxSuppressWarningsOnFileMismatch.AutoSize = true;
+         this.checkBoxSuppressWarningsOnFileMismatch.Location = new System.Drawing.Point(6, 219);
+         this.checkBoxSuppressWarningsOnFileMismatch.Name = "checkBoxSuppressWarningsOnFileMismatch";
+         this.checkBoxSuppressWarningsOnFileMismatch.Size = new System.Drawing.Size(193, 17);
+         this.checkBoxSuppressWarningsOnFileMismatch.TabIndex = 18;
+         this.checkBoxSuppressWarningsOnFileMismatch.Text = "Suppress warnings on file mismatch";
+         this.toolTip.SetToolTip(this.checkBoxSuppressWarningsOnFileMismatch, "Disable notifications about incorrect file comparison during review in a diff too" +
+        "l");
+         this.checkBoxSuppressWarningsOnFileMismatch.UseVisualStyleBackColor = true;
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1395,6 +1420,7 @@ namespace mrHelper.App.Forms
          // 
          // splitContainer1.Panel1
          // 
+         this.splitContainer1.Panel1.Controls.Add(this.linkLabelFromClipboard);
          this.splitContainer1.Panel1.Controls.Add(this.tabControlMode);
          // 
          // splitContainer1.Panel2
@@ -1420,6 +1446,20 @@ namespace mrHelper.App.Forms
          this.tabControlMode.TabIndex = 0;
          this.tabControlMode.SelectedIndexChanged += new System.EventHandler(this.tabControlMode_SelectedIndexChanged);
          this.tabControlMode.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
+         this.tabControlMode.SizeChanged += new System.EventHandler(this.tabControlMode_SizeChanged);
+         // 
+         // linkLabelFromClipboard
+         // 
+         this.linkLabelFromClipboard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+         this.linkLabelFromClipboard.AutoSize = true;
+         this.linkLabelFromClipboard.Enabled = false;
+         this.linkLabelFromClipboard.Location = new System.Drawing.Point(200, 2);
+         this.linkLabelFromClipboard.Name = "linkLabelFromClipboard";
+         this.linkLabelFromClipboard.Size = new System.Drawing.Size(103, 13);
+         this.linkLabelFromClipboard.TabIndex = 3;
+         this.linkLabelFromClipboard.TabStop = true;
+         this.linkLabelFromClipboard.Text = "Open from Clipboard";
+         this.linkLabelFromClipboard.LinkClicked += LinkLabelFromClipboard_LinkClicked;
          // 
          // splitContainer2
          // 
@@ -1649,15 +1689,6 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectRevisions.TabStop = false;
          this.groupBoxSelectRevisions.Text = "Select revisions for comparison";
          // 
-         // revisionBrowser
-         // 
-         this.revisionBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.revisionBrowser.Location = new System.Drawing.Point(3, 16);
-         this.revisionBrowser.Name = "revisionBrowser";
-         this.revisionBrowser.Size = new System.Drawing.Size(740, 181);
-         this.revisionBrowser.TabIndex = 0;
-         this.revisionBrowser.SelectionChanged += new System.EventHandler(this.RevisionBrowser_SelectionChanged);
-         // 
          // panel4
          // 
          this.panel4.Dock = System.Windows.Forms.DockStyle.Top;
@@ -1673,18 +1704,6 @@ namespace mrHelper.App.Forms
          this.panel1.Name = "panel1";
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
-         // 
-         // checkBoxSuppressWarningsOnFileMismatch
-         // 
-         this.checkBoxSuppressWarningsOnFileMismatch.AutoSize = true;
-         this.checkBoxSuppressWarningsOnFileMismatch.Location = new System.Drawing.Point(6, 219);
-         this.checkBoxSuppressWarningsOnFileMismatch.Name = "checkBoxSuppressWarningsOnFileMismatch";
-         this.checkBoxSuppressWarningsOnFileMismatch.Size = new System.Drawing.Size(193, 17);
-         this.checkBoxSuppressWarningsOnFileMismatch.TabIndex = 18;
-         this.checkBoxSuppressWarningsOnFileMismatch.Text = "Suppress warnings on file mismatch";
-         this.toolTip.SetToolTip(this.checkBoxSuppressWarningsOnFileMismatch, "Disable notifications about incorrect file comparison during review in a diff too" +
-        "l");
-         this.checkBoxSuppressWarningsOnFileMismatch.UseVisualStyleBackColor = true;
          // 
          // MainForm
          // 
@@ -1722,6 +1741,7 @@ namespace mrHelper.App.Forms
          this.groupBoxHost.PerformLayout();
          this.tabPageMR.ResumeLayout(false);
          this.splitContainer1.Panel1.ResumeLayout(false);
+         this.splitContainer1.Panel1.PerformLayout();
          this.splitContainer1.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
          this.splitContainer1.ResumeLayout(false);
@@ -1873,6 +1893,7 @@ namespace mrHelper.App.Forms
       private RadioButton radioButtonVersions;
       private RadioButton radioButtonCommits;
       private CheckBox checkBoxSuppressWarningsOnFileMismatch;
+      private LinkLabel linkLabelFromClipboard;
    }
 }
 

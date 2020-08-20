@@ -376,6 +376,9 @@ namespace mrHelper.App.Forms
                Constants.MaxSearchByTitleAndDescriptionResults));
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
+
+         _clipboardCheckingTimer.Tick += new EventHandler(onClipboardCheckingTimer);
+         _clipboardCheckingTimer.Start();
       }
 
       private void prepareSizeToStart()

@@ -1478,6 +1478,38 @@ namespace mrHelper.App.Forms
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          requestUpdates(mrk, 100, () => labelWorkflowStatus.Text = String.Format("Merge Request !{0} refreshed", mrk.IId));
       }
+
+      private void tabControlMode_SizeChanged(object sender, EventArgs e)
+      {
+         int tabCount = tabControlMode.TabPages.Count;
+         Rectangle tabRect = tabControlMode.GetTabRect(tabCount - 1);
+
+         int linkLabelTopRelativeToTabRect = tabRect.Height / 2 - linkLabelFromClipboard.Height / 2;
+         int linkLabelTop = tabRect.Top + linkLabelTopRelativeToTabRect;
+
+         int linkLabelHorizontalOffsetFromRightmostTab = 20;
+         int linkLabelLeft = tabRect.X + tabRect.Width + linkLabelHorizontalOffsetFromRightmostTab;
+
+         linkLabelFromClipboard.Location = new System.Drawing.Point(linkLabelLeft, linkLabelTop);
+      }
+
+      private void LinkLabelFromClipboard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         if (doesClipboardContainValidUrl())
+         {
+            enqueueUrl(Clipboard.GetText());
+         }
+      }
+
+      private void onClipboardCheckingTimer(object sender, EventArgs e)
+      {
+         bool isValidUrl = doesClipboardContainValidUrl();
+         linkLabelFromClipboard.Enabled = isValidUrl;
+         linkLabelFromClipboard.Text = isValidUrl ? openFromClipboardEnabledText : openFromClipboardDisabledText;
+
+         string tooltip = isValidUrl ? Clipboard.GetText() : "N/A";
+         toolTip.SetToolTip(linkLabelFromClipboard, tooltip);
+      }
    }
 }
 

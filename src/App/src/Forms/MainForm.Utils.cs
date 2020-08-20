@@ -2063,6 +2063,11 @@ namespace mrHelper.App.Forms
             currentProject?.ProjectName, null, null, currentUser.Username, true, true);
          return _newMergeRequestDialogStatesByHosts.TryGetValue(hostname, out var value) ? value : factoryProperties;
       }
+
+      private bool doesClipboardContainValidUrl()
+      {
+         return UrlHelper.Check(Clipboard.GetText());
+      }
    }
 }
 

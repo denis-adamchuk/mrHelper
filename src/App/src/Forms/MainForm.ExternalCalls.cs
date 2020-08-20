@@ -11,7 +11,6 @@ using mrHelper.App.Interprocess;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.Common.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using mrHelper.App.Helpers.GitLab;
