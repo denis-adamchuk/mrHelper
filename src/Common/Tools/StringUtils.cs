@@ -69,6 +69,28 @@ namespace mrHelper.Common.Tools
       {
          return String.Format("{0}/{1}", StringUtils.GetHostWithPrefix(host), projectname);
       }
+
+      public static string AddAtSignToLetterSubstring(string word)
+      {
+         if (String.IsNullOrEmpty(word))
+         {
+            return String.Empty;
+         }
+
+         for (int iChar = 0; iChar < word.Length; ++iChar)
+         {
+            if (Char.IsLetter(word[iChar]))
+            {
+               if (iChar > 0 && word[iChar - 1] == '@')
+               {
+                  return word;
+               }
+               return word.Insert(iChar, "@");
+            }
+         }
+
+         return word;
+      }
    }
 }
 

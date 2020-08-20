@@ -314,8 +314,14 @@ namespace mrHelper.App.Forms
 
       private static string formatSpecialNote(string text)
       {
-         // 1. Trim spaces
-         string trimmed = text.Trim();
+         // 0. Prerequisite check
+         if (String.IsNullOrEmpty(text))
+         {
+            return String.Empty;
+         }
+
+         // 1. Replace commas with spaces and trim extra spaces
+         string trimmed = text.Replace(" ,", " ").Replace(", ", " ").Replace(",", " ").Trim();
          if (String.IsNullOrEmpty(trimmed))
          {
             return String.Empty;
@@ -326,14 +332,11 @@ namespace mrHelper.App.Forms
             ? trimmed.Substring(Program.ServiceManager.GetSpecialNotePrefix().Length)
             : trimmed;
 
-         // 3. Make sure that all names are preceded with '@'
-         trimmed = String.Join(" ", trimmed
-            .Replace("@", "")
-            .Split(' ')
-            .Select(x => Char.IsLetter(x[0]) ? "@" + x : x[0] + "@" + x.Substring(1)));
+         // 3. Split in words and convert them to names
+         var names = trimmed.Split(' ').Select(word => StringUtils.AddAtSignToLetterSubstring(word));
 
-         // 4. Replace commas with spaces
-         return trimmed.Replace(", ", " ").Replace(",", " ").Trim();
+         // 4. Combine names into a string
+         return String.Join(" ", names);
       }
 
       private static string convertLabelToWord(string text)
