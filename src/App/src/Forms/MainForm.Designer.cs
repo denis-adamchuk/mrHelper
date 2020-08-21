@@ -54,7 +54,6 @@ namespace mrHelper.App.Forms
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
-         this.revisionBrowser = new Controls.RevisionBrowser();
          this.groupBoxKnownHosts = new System.Windows.Forms.GroupBox();
          this.buttonRemoveKnownHost = new System.Windows.Forms.Button();
          this.buttonAddKnownHost = new System.Windows.Forms.Button();
@@ -1090,6 +1089,7 @@ namespace mrHelper.App.Forms
          // 
          // tabPageSettings
          // 
+         this.tabPageSettings.AutoScroll = true;
          this.tabPageSettings.Controls.Add(this.groupBoxRevisionType);
          this.tabPageSettings.Controls.Add(this.groupBoxAutoSelection);
          this.tabPageSettings.Controls.Add(this.groupBoxNotifications);
@@ -1420,11 +1420,13 @@ namespace mrHelper.App.Forms
          // 
          // splitContainer1.Panel1
          // 
+         this.splitContainer1.Panel1.AutoScroll = true;
          this.splitContainer1.Panel1.Controls.Add(this.linkLabelFromClipboard);
          this.splitContainer1.Panel1.Controls.Add(this.tabControlMode);
          // 
          // splitContainer1.Panel2
          // 
+         this.splitContainer1.Panel2.AutoScroll = true;
          this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
          this.splitContainer1.Size = new System.Drawing.Size(1270, 858);
          this.splitContainer1.SplitterDistance = 516;
@@ -1470,10 +1472,12 @@ namespace mrHelper.App.Forms
          // 
          // splitContainer2.Panel1
          // 
+         this.splitContainer2.Panel1.AutoScroll = true;
          this.splitContainer2.Panel1.Controls.Add(this.groupBoxSelectedMR);
          // 
          // splitContainer2.Panel2
          // 
+         this.splitContainer2.Panel2.AutoScroll = true;
          this.splitContainer2.Panel2.Controls.Add(this.panelFreeSpace);
          this.splitContainer2.Panel2.Controls.Add(this.panelStatusBar);
          this.splitContainer2.Panel2.Controls.Add(this.panelBottomMenu);

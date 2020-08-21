@@ -33,6 +33,7 @@ namespace mrHelper.App.Forms
          _startUrl = startUrl;
 
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
+         revisionBrowser = new Controls.RevisionBrowser();
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 

@@ -1564,6 +1564,7 @@ namespace mrHelper.App.Forms
 
          if (!preventOverlap && res < 0)
          {
+            // This may occur on small resolutions (e.g. 1366x768)
             Trace.TraceWarning(
                "calcVertDistance() returns negative value ({0}). " +
                "topControl: {1} (Location: {{{2}, {3}}}, Size: {{{4}, {5}}}), " +
@@ -1577,7 +1578,6 @@ namespace mrHelper.App.Forms
                bottomControl?.Location.X.ToString() ?? "N/A", bottomControl?.Location.Y.ToString() ?? "N/A",
                bottomControl?.Size.Width.ToString() ?? "N/A", bottomControl?.Size.Height.ToString() ?? "N/A",
                preventOverlap);
-            Debug.Assert(false);
          }
 
          return res < 0 && preventOverlap ? 10 : res;
