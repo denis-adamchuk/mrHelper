@@ -152,21 +152,20 @@ namespace mrHelper.App.Forms
          applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxNewDiscussionIsTopMostForm.Checked = Program.Settings.NewDiscussionIsTopMostForm;
-         checkBoxSuppressWarningsOnFileMismatch.Checked = Program.Settings.SuppressWarningsOnFileMismatch;
 
-         var autoSelectionMode = ConfigurationHelper.GetRevisionAutoSelectionMode(Program.Settings);
-         switch (autoSelectionMode)
+         var showWarningsOnFileMismatchMode = ConfigurationHelper.GetShowWarningsOnFileMismatchMode(Program.Settings);
+         switch (showWarningsOnFileMismatchMode)
          {
-            case ConfigurationHelper.RevisionAutoSelectionMode.LastVsNext:
-               radioButtonLastVsNext.Checked = true;
+            case ConfigurationHelper.ShowWarningsOnFileMismatchMode.Always:
+               radioButtonShowWarningsAlways.Checked = true;
                break;
 
-            case ConfigurationHelper.RevisionAutoSelectionMode.LastVsLatest:
-               radioButtonLastVsLatest.Checked = true;
+            case ConfigurationHelper.ShowWarningsOnFileMismatchMode.Never:
+               radioButtonShowWarningsNever.Checked = true;
                break;
 
-            case ConfigurationHelper.RevisionAutoSelectionMode.BaseVsLatest:
-               radioButtonBaseVsLatest.Checked = true;
+            case ConfigurationHelper.ShowWarningsOnFileMismatchMode.UntilUserIgnoresFile:
+               radioButtonShowWarningsOnce.Checked = true;
                break;
          }
 
@@ -362,6 +361,8 @@ namespace mrHelper.App.Forms
          {
             linkLabelHelp.Visible = true;
             toolTip.SetToolTip(linkLabelHelp, Program.ServiceManager.GetHelpUrl());
+            toolTip.SetToolTip(linkLabelCommitStorageDescription, Program.ServiceManager.GetHelpUrl());
+            toolTip.SetToolTip(linkLabelWorkflowDescription, Program.ServiceManager.GetHelpUrl());
          }
 
          if (Program.ServiceManager.GetBugReportEmail() != String.Empty)

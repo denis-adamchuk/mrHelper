@@ -12,6 +12,8 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Core.Matching;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
+using mrHelper.App.Helpers;
+using static mrHelper.App.Helpers.ConfigurationHelper;
 
 namespace mrHelper.App.Interprocess
 {
@@ -215,14 +217,24 @@ namespace mrHelper.App.Interprocess
 
       private bool needSuppressWarning(string filename)
       {
-         if (Program.Settings.SuppressWarningsOnFileMismatch)
+         switch (GetShowWarningsOnFileMismatchMode(Program.Settings))
          {
-            return true;
+            case ShowWarningsOnFileMismatchMode.Always:
+               return false;
+
+            case ShowWarningsOnFileMismatchMode.Never:
+               return true;
+
+            case ShowWarningsOnFileMismatchMode.UntilUserIgnoresFile:
+               {
+                  MergeRequestKey mrk = getMergeRequestKey(_snapshot);
+                  MismatchWhitelistKey key = new MismatchWhitelistKey(mrk, filename);
+                  return _mismatchWhitelist.Contains(key);
+               }
          }
 
-         MergeRequestKey mrk = getMergeRequestKey(_snapshot);
-         MismatchWhitelistKey key = new MismatchWhitelistKey(mrk, filename);
-         return _mismatchWhitelist.Contains(key);
+         Debug.Assert(false);
+         return false;
       }
 
       private void addFileToWhitelist(string filename)

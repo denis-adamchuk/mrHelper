@@ -22,7 +22,7 @@ namespace mrHelper.App.Controls
       }
 
       readonly bool _initializing;
-      internal RevisionBrowser()
+      public RevisionBrowser()
       {
          _initializing = true;
          InitializeComponent();

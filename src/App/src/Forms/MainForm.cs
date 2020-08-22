@@ -33,7 +33,6 @@ namespace mrHelper.App.Forms
          _startUrl = startUrl;
 
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
-         revisionBrowser = new Controls.RevisionBrowser();
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
@@ -97,7 +96,6 @@ namespace mrHelper.App.Forms
       FormWindowState _prevWindowState;
       private bool _loadingConfiguration = false;
       private bool _exiting = false;
-      private bool _requireShowingTooltipOnHideToTray = true;
       private bool _userIsMovingSplitter1 = false;
       private bool _userIsMovingSplitter2 = false;
       private readonly TrayIcon _trayIcon;

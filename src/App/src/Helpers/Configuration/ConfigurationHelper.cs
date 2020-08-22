@@ -10,6 +10,49 @@ namespace mrHelper.App.Helpers
 {
    public static class ConfigurationHelper
    {
+      public enum ShowWarningsOnFileMismatchMode
+      {
+         Always,
+         UntilUserIgnoresFile,
+         Never
+      }
+
+      public static ShowWarningsOnFileMismatchMode GetShowWarningsOnFileMismatchMode(UserDefinedSettings settings)
+      {
+         if (Program.Settings.ShowWarningsOnFileMismatchMode == "always")
+         {
+            return ShowWarningsOnFileMismatchMode.Always;
+         }
+         else if (Program.Settings.ShowWarningsOnFileMismatchMode == "until_user_ignores_file")
+         {
+            return ShowWarningsOnFileMismatchMode.UntilUserIgnoresFile;
+         }
+         else
+         {
+            Debug.Assert(Program.Settings.ShowWarningsOnFileMismatchMode == "never");
+            return ShowWarningsOnFileMismatchMode.Never;
+         }
+      }
+
+      public static void SetShowWarningsOnFileMismatchMode(
+         UserDefinedSettings settings, ShowWarningsOnFileMismatchMode mode)
+      {
+         switch (mode)
+         {
+            case ShowWarningsOnFileMismatchMode.Always:
+               Program.Settings.ShowWarningsOnFileMismatchMode = "always";
+               break;
+
+            case ShowWarningsOnFileMismatchMode.UntilUserIgnoresFile:
+               Program.Settings.ShowWarningsOnFileMismatchMode = "until_user_ignores_file";
+               break;
+
+            case ShowWarningsOnFileMismatchMode.Never:
+               Program.Settings.ShowWarningsOnFileMismatchMode = "never";
+               break;
+         }
+      }
+
       public enum RevisionAutoSelectionMode
       {
          LastVsNext,

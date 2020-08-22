@@ -267,21 +267,6 @@ namespace mrHelper.App.Forms
          switchHostToSelected();
       }
 
-      private void drawComboBoxEdit(DrawItemEventArgs e, ComboBox comboBox, Color backColor, string text)
-      {
-         if (backColor == SystemColors.Window)
-         {
-            backColor = Color.FromArgb(225, 225, 225); // Gray shade similar to original one
-         }
-         using (Brush brush = new SolidBrush(backColor))
-         {
-            e.Graphics.FillRectangle(brush, e.Bounds);
-         }
-
-         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-         e.Graphics.DrawString(text, comboBox.Font, SystemBrushes.ControlText, e.Bounds);
-      }
-
       private void ListViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
       {
          if (e.Item.ListView == null)
@@ -582,11 +567,6 @@ namespace mrHelper.App.Forms
          Program.Settings.NewDiscussionIsTopMostForm = (sender as CheckBox).Checked;
       }
 
-      private void CheckBoxSuppressWarningsOnFileMismatch_CheckedChanged(object sender, EventArgs e)
-      {
-         Program.Settings.SuppressWarningsOnFileMismatch = (sender as CheckBox).Checked;
-      }
-
       private void checkBoxRunWhenWindowsStarts_CheckedChanged(object sender, EventArgs e)
       {
          Program.Settings.RunWhenWindowsStarts = (sender as CheckBox).Checked;
@@ -626,6 +606,32 @@ namespace mrHelper.App.Forms
                mode = ConfigurationHelper.RevisionAutoSelectionMode.BaseVsLatest;
             }
             ConfigurationHelper.SelectAutoSelectionMode(Program.Settings, mode);
+         }
+      }
+
+      private void radioButtonShowWarningsOnFileMismatchMode_CheckedChanged(object sender, EventArgs e)
+      {
+         if (!(sender as RadioButton).Checked)
+         {
+            return;
+         }
+
+         if (!_loadingConfiguration)
+         {
+            var mode = ConfigurationHelper.ShowWarningsOnFileMismatchMode.Never;
+            if (radioButtonShowWarningsNever.Checked)
+            {
+               mode = ConfigurationHelper.ShowWarningsOnFileMismatchMode.Never;
+            }
+            else if (radioButtonShowWarningsAlways.Checked)
+            {
+               mode = ConfigurationHelper.ShowWarningsOnFileMismatchMode.Always;
+            }
+            else if (radioButtonShowWarningsOnce.Checked)
+            {
+               mode = ConfigurationHelper.ShowWarningsOnFileMismatchMode.UntilUserIgnoresFile;
+            }
+            ConfigurationHelper.SetShowWarningsOnFileMismatchMode(Program.Settings, mode);
          }
       }
 
@@ -948,13 +954,10 @@ namespace mrHelper.App.Forms
 
       private void onHideToTray()
       {
-         if (_requireShowingTooltipOnHideToTray)
+         if (Program.Settings.ShowWarningOnHideToTray)
          {
-            // TODO: Maybe it's a good idea to save the requireShowingTooltipOnHideToTray state
-            // so it's only shown once in a lifetime
-            _trayIcon.ShowTooltipBalloon(
-               new TrayIcon.BalloonText("Information", "I will now live in your tray"));
-            _requireShowingTooltipOnHideToTray = false;
+            _trayIcon.ShowTooltipBalloon(new TrayIcon.BalloonText("Information", "I will now live in your tray"));
+            Program.Settings.ShowWarningOnHideToTray = false;
          }
          Hide();
       }
@@ -1433,6 +1436,16 @@ namespace mrHelper.App.Forms
       private void linkLabelCommitStorageDescription_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          Trace.TraceInformation("Clicked on link label for commit storage selection");
+         string helpUrl = Program.ServiceManager.GetHelpUrl();
+         if (helpUrl != String.Empty)
+         {
+            openBrowser(helpUrl);
+         }
+      }
+
+      private void linkLabelWorkflowDescription_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         Trace.TraceInformation("Clicked on link label for workflow type selection");
          string helpUrl = Program.ServiceManager.GetHelpUrl();
          if (helpUrl != String.Empty)
          {

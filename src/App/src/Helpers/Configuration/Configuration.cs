@@ -63,14 +63,17 @@ namespace mrHelper.App.Helpers
       private static readonly string NewDiscussionIsTopMostFormKeyName        = "NewDiscussionIsTopMostForm";
       private static readonly bool   NewDiscussionIsTopMostFormDefaultValue   = false;
 
-      private static readonly string SuppressWarningsOnFileMismatchKeyName       = "SuppressWarningsOnFileMismatch";
-      private static readonly bool   SuppressWarningsOnFileMismatchDefaultValue  = false;
+      private static readonly string ShowWarningsOnFileMismatchKeyName       = "ShowWarningsOnFileMismatch";
+      private static readonly string ShowWarningsOnFileMismatchDefaultValue  = "until_user_ignores_file";
 
       private static readonly string ShowWarningOnReloadListKeyName      = "ShowWarningOnReloadList";
       private static readonly bool   ShowWarningOnReloadListDefaultValue = true;
 
       private static readonly string ShowWarningOnFilterMigrationKeyName      = "ShowWarningOnFilterMigration";
       private static readonly bool   ShowWarningOnFilterMigrationDefaultValue = true;
+
+      private static readonly string ShowWarningOnHideToTrayKeyName      = "ShowWarningOnHideToTray";
+      private static readonly bool   ShowWarningOnHideToTrayDefaultValue = true;
 
       private static readonly string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
       private static readonly string ColorSchemeFileNameDefaultValue = "";
@@ -341,15 +344,10 @@ namespace mrHelper.App.Helpers
          set { setValue(NewDiscussionIsTopMostFormKeyName, boolToString(value)); }
       }
 
-      public bool SuppressWarningsOnFileMismatch
+      public string ShowWarningsOnFileMismatchMode
       {
-         get
-         {
-            return bool.TryParse(getValue(
-               SuppressWarningsOnFileMismatchKeyName, boolToString(SuppressWarningsOnFileMismatchDefaultValue)),
-                  out bool result) ? result : SuppressWarningsOnFileMismatchDefaultValue;
-         }
-         set { setValue(SuppressWarningsOnFileMismatchKeyName, boolToString(value)); }
+         get { return getValue(ShowWarningsOnFileMismatchKeyName, ShowWarningsOnFileMismatchDefaultValue); }
+         set { setValue(ShowWarningsOnFileMismatchKeyName, value); }
       }
 
       public bool ShowWarningOnReloadList
@@ -372,6 +370,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : ShowWarningOnFilterMigrationDefaultValue;
          }
          set { setValue(ShowWarningOnFilterMigrationKeyName, boolToString(value)); }
+      }
+
+      public bool ShowWarningOnHideToTray
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               ShowWarningOnHideToTrayKeyName, boolToString(ShowWarningOnHideToTrayDefaultValue)),
+                  out bool result) ? result : ShowWarningOnHideToTrayDefaultValue;
+         }
+         set { setValue(ShowWarningOnHideToTrayKeyName, boolToString(value)); }
       }
 
       public string DiffContextDepth
