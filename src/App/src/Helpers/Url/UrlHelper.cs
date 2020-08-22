@@ -47,7 +47,7 @@ namespace mrHelper.App.Helpers
          return null;
       }
 
-      internal static bool Check(string originalUrl)
+      internal static bool CheckMergeRequestUrl(string originalUrl)
       {
          if (String.IsNullOrEmpty(originalUrl))
          {
@@ -55,19 +55,7 @@ namespace mrHelper.App.Helpers
          }
 
          string url = trimPrefix(originalUrl);
-
-         try
-         {
-            UrlParser.ParseMergeRequestUrl(url);
-            NewMergeRequestUrlParser.Parse(url);
-            return true;
-         }
-         catch (Exception)
-         {
-            // no need to handle, just return false
-         }
-
-         return false;
+         return UrlParser.Check(url);
       }
 
       private static string trimPrefix(string originalUrl)

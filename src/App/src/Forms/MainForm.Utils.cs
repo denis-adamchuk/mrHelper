@@ -2066,7 +2066,7 @@ namespace mrHelper.App.Forms
 
       private bool doesClipboardContainValidUrl()
       {
-         return UrlHelper.Check(Clipboard.GetText());
+         return UrlHelper.CheckMergeRequestUrl(Clipboard.GetText());
       }
    }
 }

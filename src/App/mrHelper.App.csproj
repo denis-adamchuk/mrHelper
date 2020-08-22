@@ -238,7 +238,7 @@
     <Compile Include="src\Helpers\ServiceManager.cs" />
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserItem.cs" />
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserModel.cs" />
-    <Compile Include="src\Helpers\Url\GenericUrlParser.cs" />
+    <Compile Include="src\Helpers\Url\UrlHelper.cs" />
     <Compile Include="src\LaunchOptions.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
