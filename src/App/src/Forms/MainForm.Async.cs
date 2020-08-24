@@ -387,7 +387,7 @@ namespace mrHelper.App.Forms
          await TaskUtils.WhileAsync(() => !updateReceived);
       }
 
-      private async Task<bool> prepareCommitStorage(
+      async private Task<bool> prepareCommitStorage(
          MergeRequestKey mrk, ILocalCommitStorage storage, ICommitStorageUpdateContextProvider contextProvider,
          bool isLimitExceptionFatal)
       {
@@ -434,7 +434,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private async Task createNewMergeRequestAsync(SubmitNewMergeRequestParameters parameters, string firstNote)
+      async private Task createNewMergeRequestAsync(SubmitNewMergeRequestParameters parameters, string firstNote)
       {
          buttonCreateNew.Enabled = false;
          labelWorkflowStatus.Text = "Creating a merge request at GitLab...";
@@ -461,7 +461,7 @@ namespace mrHelper.App.Forms
             parameters.DeleteSourceBranch);
       }
 
-      private async Task applyChangesToMergeRequestAsync(string hostname, User currentUser, FullMergeRequestKey item)
+      async private Task applyChangesToMergeRequestAsync(string hostname, User currentUser, FullMergeRequestKey item)
       {
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(_liveDataCache.DiscussionCache, mrk);
@@ -493,6 +493,18 @@ namespace mrHelper.App.Forms
             });
 
          labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been updated", mrk.IId);
+      }
+
+      async private Task closeMergeRequestAsync(string hostname, FullMergeRequestKey item)
+      {
+         MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
+         string message =
+            "Do you really want to close (cancel) merge request? It will not be merged to the target branch.";
+         if (MessageBox.Show(message, "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+         {
+            GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings);
+            await MergeRequestEditHelper.CloseMergeRequest(gitLabInstance, _modificationNotifier, mrk);
+         }
       }
    }
 }

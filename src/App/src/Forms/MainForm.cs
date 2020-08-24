@@ -64,6 +64,7 @@ namespace mrHelper.App.Forms
          listViewMergeRequests.ContextMenuStrip = new ContextMenuStrip();
          listViewMergeRequests.ContextMenuStrip.Items.Add("&Refresh selected", null, ListViewMergeRequests_Refresh);
          listViewMergeRequests.ContextMenuStrip.Items.Add("&Edit", null, ListViewMergeRequests_Edit);
+         listViewMergeRequests.ContextMenuStrip.Items.Add("&Close", null, ListViewMergeRequests_Close);
       }
 
       public string GetCurrentHostName()

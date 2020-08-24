@@ -1463,6 +1463,18 @@ namespace mrHelper.App.Forms
          BeginInvoke(new Action(async () => await applyChangesToMergeRequestAsync(getHostName(), getCurrentUser(), item)));
       }
 
+      private void ListViewMergeRequests_Close(object sender, EventArgs e)
+      {
+         Debug.Assert(!isSearchMode());
+         if (listViewMergeRequests.SelectedItems.Count < 1 || !checkIfMergeRequestCanBeEdited())
+         {
+            return;
+         }
+
+         FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
+         BeginInvoke(new Action(async () => await closeMergeRequestAsync(getHostName(), item)));
+      }
+
       private void ListViewMergeRequests_Refresh(object sender, EventArgs e)
       {
          Debug.Assert(!isSearchMode());

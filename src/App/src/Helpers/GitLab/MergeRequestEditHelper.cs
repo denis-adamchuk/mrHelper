@@ -187,6 +187,25 @@ namespace mrHelper.App.Helpers.GitLab
          return true;
       }
 
+      async internal static Task<bool> CloseMergeRequest(GitLabInstance gitLabInstance,
+         IModificationListener modificationListener, MergeRequestKey mrk)
+      {
+         UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
+            null, null, null, null, "close", null, null);
+         try
+         {
+            MergeRequest mergeRequest = await Shortcuts
+               .GetMergeRequestEditor(gitLabInstance, modificationListener, mrk)
+               .ModifyMergeRequest(updateMergeRequestParameters);
+         }
+         catch (MergeRequestEditorException ex)
+         {
+            reportErrorToUser(ex);
+            return false;
+         }
+         return true;
+      }
+
       async private static Task<User> getUserAsync(
          GitLabInstance gitLabInstance, IModificationListener modificationListener, string username)
       {
