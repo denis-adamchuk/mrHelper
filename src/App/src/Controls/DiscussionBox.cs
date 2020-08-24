@@ -1116,7 +1116,7 @@ namespace mrHelper.App.Controls
 
       private bool isDiscussionResolvable()
       {
-         return !Discussion?.Individual_Note ?? false;
+         return Discussion != null && !Discussion.Individual_Note;
       }
 
       private DiscussionNote getNoteFromControl(Control noteControl)

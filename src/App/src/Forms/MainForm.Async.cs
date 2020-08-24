@@ -28,7 +28,7 @@ namespace mrHelper.App.Forms
 
          // Store data before async/await
          User currentUser = getCurrentUser();
-         DataCache dataCache = getSession(!isSearchMode());
+         DataCache dataCache = getDataCache(!isSearchMode());
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
          if (dataCache == null)
          {
@@ -48,7 +48,6 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         // TODO WTF Try host switch while prepare storage for discussions is running
          ILocalCommitStorage storage = getCommitStorage(mrk.ProjectKey, true);
          if (!await prepareStorageForDiscussionsForm(mrk, storage, discussions) || _exiting)
          {
@@ -146,7 +145,7 @@ namespace mrHelper.App.Forms
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
       {
          // Keep data before async/await
-         DataCache dataCache = getSession(!isSearchMode());
+         DataCache dataCache = getDataCache(!isSearchMode());
          getShaForDiffTool(out string leftSHA, out string rightSHA,
             out IEnumerable<string> includedSHA, out RevisionType? type);
          string accessToken = Program.Settings.GetAccessToken(mrk.ProjectKey.HostName);
@@ -282,7 +281,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               DataCache dataCache = getSession(!isSearchMode());
+               DataCache dataCache = getDataCache(!isSearchMode());
                if (dataCache == null)
                {
                   Debug.Assert(false);
@@ -367,7 +366,7 @@ namespace mrHelper.App.Forms
 
       private void requestCommitStorageUpdate(ProjectKey projectKey)
       {
-         DataCache dataCache = getSession(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(true /* supported in Live only */);
 
          IEnumerable<GitLabSharp.Entities.Version> versions = dataCache?.MergeRequestCache?.GetVersions(projectKey);
          if (versions != null)

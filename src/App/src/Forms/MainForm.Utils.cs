@@ -65,7 +65,7 @@ namespace mrHelper.App.Forms
          return null;
       }
 
-      private DataCache getSession(bool live)
+      private DataCache getDataCache(bool live)
       {
          return live ? _liveDataCache : _searchDataCache;
       }
@@ -661,7 +661,7 @@ namespace mrHelper.App.Forms
 
       private string getDiscussionCount(MergeRequestKey mrk)
       {
-         DataCache dataCache = getSession(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(true /* supported in Live only */);
          if (dataCache?.DiscussionCache == null)
          {
             return "N/A";
@@ -899,7 +899,7 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
       {
-         DataCache dataCache = getSession(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(true /* supported in Live only */);
          DiscussionCount dc = dataCache?.DiscussionCache?.GetDiscussionCount(
             new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId)) ?? default(DiscussionCount);
 
@@ -968,7 +968,7 @@ namespace mrHelper.App.Forms
 
       private void updateVisibleMergeRequests()
       {
-         DataCache dataCache = getSession(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(true /* supported in Live only */);
          IMergeRequestCache mergeRequestCache = dataCache?.MergeRequestCache;
          if (mergeRequestCache == null)
          {
@@ -1799,16 +1799,40 @@ namespace mrHelper.App.Forms
 
       private void updateTabControlSelection()
       {
-         bool configured = listViewKnownHosts.Items.Count > 0
-                        && textBoxStorageFolder.Text.Length > 0
-                        && Directory.Exists(textBoxStorageFolder.Text);
-         if (configured)
+         bool areAnyHosts = listViewKnownHosts.Items.Count > 0;
+         bool isStorageValid = textBoxStorageFolder.Text.Length > 0 && Directory.Exists(textBoxStorageFolder.Text);
+         if (areAnyHosts && isStorageValid)
          {
             tabControl.SelectedTab = tabPageMR;
          }
-         else
+         else if (!isStorageValid)
          {
             tabControl.SelectedTab = tabPageSettings;
+            tabControlSettings.SelectedTab = tabPageSettingsStorage;
+         }
+         else if (!areAnyHosts)
+         {
+            tabControl.SelectedTab = tabPageSettings;
+            tabControlSettings.SelectedTab = tabPageSettingsAccessTokens;
+         }
+      }
+
+      private void changeStorageFolder(string newFolder)
+      {
+         if (_storageFactory == null || _storageFactory.ParentFolder != newFolder)
+         {
+            textBoxStorageFolder.Text = storageFolderBrowser.SelectedPath;
+            Program.Settings.LocalGitFolder = storageFolderBrowser.SelectedPath;
+
+            MessageBox.Show("Storage folder is changed.\n Please restart Diff Tool if you have already launched it.",
+               "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            labelWorkflowStatus.Text = "File storage folder changed";
+            Trace.TraceInformation(String.Format("[MainForm] File storage changed to {0}", newFolder));
+
+            // Emulating a host switch here to trigger GitDataUpdater to work at the new location
+            Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on file storage change"));
+            switchHostToSelected();
          }
       }
 
@@ -1837,7 +1861,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         DataCache dataCache = getSession(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(true /* supported in Live only */);
          dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
             () => { mergeRequestUpdateFinished = true; onSingleUpdateFinished(); });
          dataCache?.DiscussionCache?.RequestUpdate(mrk, interval,
@@ -1846,7 +1870,7 @@ namespace mrHelper.App.Forms
 
       private void requestUpdates(MergeRequestKey? mrk, int[] intervals)
       {
-         DataCache dataCache = getSession(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(true /* supported in Live only */);
          dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals);
          dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
       }
@@ -2024,7 +2048,7 @@ namespace mrHelper.App.Forms
          if (hostname == String.Empty || currentUser == null || item.MergeRequest == null)
          {
             Debug.Assert(false);
-            MessageBox.Show("Cannot create a merge request", "Internal error",
+            MessageBox.Show("Cannot modify a merge request", "Internal error",
                MessageBoxButtons.OK, MessageBoxIcon.Error);
             Trace.TraceError("Unexpected application state." +
                "hostname is empty string={0}, currentUser is null={1}, item.MergeRequest is null={2}",

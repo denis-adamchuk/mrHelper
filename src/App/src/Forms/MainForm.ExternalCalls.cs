@@ -279,7 +279,7 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = String.Empty;
 
          bool canOpenAtLiveTab = mergeRequest.State == "opened" && checkIfCanOpenAtLiveTab(mrk, true);
-         bool needReload = (canOpenAtLiveTab && getSession(canOpenAtLiveTab).MergeRequestCache == null)
+         bool needReload = (canOpenAtLiveTab && getDataCache(canOpenAtLiveTab).MergeRequestCache == null)
                         || mrk.ProjectKey.HostName != getHostName();
          if (needReload)
          {
@@ -321,7 +321,7 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> openUrlAtLiveTabAsync(MergeRequestKey mrk, string url, bool updateIfNeeded)
       {
-         DataCache dataCache = getSession(true);
+         DataCache dataCache = getDataCache(true);
          if (dataCache?.MergeRequestCache == null)
          {
             throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);

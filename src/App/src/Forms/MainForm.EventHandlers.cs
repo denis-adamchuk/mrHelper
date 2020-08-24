@@ -142,7 +142,7 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeTrackingStart_Click(object sender, EventArgs e)
       {
-         DataCache dataCache = getSession(!isSearchMode());
+         DataCache dataCache = getDataCache(!isSearchMode());
 
          if (isTrackingTime())
          {
@@ -159,7 +159,7 @@ namespace mrHelper.App.Forms
       {
          Debug.Assert(isTrackingTime());
          await onStopTimer(false);
-         onTimerStopped(getSession(!isSearchMode())?.TotalTimeCache);
+         onTimerStopped(getDataCache(!isSearchMode())?.TotalTimeCache);
       }
 
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
@@ -174,7 +174,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(!isSearchMode());
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
          IMergeRequestEditor editor = Shortcuts.GetMergeRequestEditor(gitLabInstance, _modificationNotifier, mrk);
-         DataCache dataCache = getSession(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(true /* supported in Live only */);
          TimeSpan? oldSpanOpt = dataCache?.TotalTimeCache?.GetTotalTime(mrk).Amount;
          if (!oldSpanOpt.HasValue)
          {
@@ -228,25 +228,8 @@ namespace mrHelper.App.Forms
          if (storageFolderBrowser.ShowDialog() == DialogResult.OK)
          {
             string newFolder = storageFolderBrowser.SelectedPath;
-            Trace.TraceInformation(String.Format("[MainForm] User decided to change parent folder to {0}", newFolder));
-
-            if (_storageFactory == null || _storageFactory.ParentFolder != newFolder)
-            {
-               textBoxStorageFolder.Text = storageFolderBrowser.SelectedPath;
-               Program.Settings.LocalGitFolder = storageFolderBrowser.SelectedPath;
-
-               MessageBox.Show("Git folder is changed.\n" +
-                               "It is recommended to restart Diff Tool if you have already launched it.",
-                  "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-               labelWorkflowStatus.Text = "Parent folder for git repositories changed";
-               Trace.TraceInformation(String.Format("[MainForm] Parent folder changed to {0}",
-                  newFolder));
-
-               // Emulating a host switch here to trigger GitDataUpdater to work at the new location
-               Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on parent folder change"));
-               switchHostToSelected();
-            }
+            Trace.TraceInformation(String.Format("[MainForm] User decided to change file storage to {0}", newFolder));
+            changeStorageFolder(newFolder);
          }
       }
 
@@ -1312,16 +1295,16 @@ namespace mrHelper.App.Forms
 
       private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
       {
-         onSessionSelectionChanged(tabControlMode.SelectedTab == tabPageLive);
+         onDataCacheSelectionChanged(tabControlMode.SelectedTab == tabPageLive);
       }
 
-      private void onSessionSelectionChanged(bool isLiveSessionSelected)
+      private void onDataCacheSelectionChanged(bool isLiveDataCacheSelected)
       {
          deselectAllListViewItems(listViewMergeRequests);
          deselectAllListViewItems(listViewFoundMergeRequests);
 
-         labelTimeTrackingTrackedLabel.Visible = isLiveSessionSelected;
-         buttonEditTime.Visible = isLiveSessionSelected;
+         labelTimeTrackingTrackedLabel.Visible = isLiveDataCacheSelected;
+         buttonEditTime.Visible = isLiveDataCacheSelected;
          labelWorkflowStatus.Text = String.Empty;
          disableCommonUIControls();
       }
@@ -1495,6 +1478,8 @@ namespace mrHelper.App.Forms
       private void tabControlMode_SizeChanged(object sender, EventArgs e)
       {
          int tabCount = tabControlMode.TabPages.Count;
+         Debug.Assert(tabCount > 0);
+
          Rectangle tabRect = tabControlMode.GetTabRect(tabCount - 1);
 
          int linkLabelTopRelativeToTabRect = tabRect.Height / 2 - linkLabelFromClipboard.Height / 2;
@@ -1510,7 +1495,9 @@ namespace mrHelper.App.Forms
       {
          if (doesClipboardContainValidUrl())
          {
-            enqueueUrl(Clipboard.GetText());
+            string url = Clipboard.GetText();
+            Trace.TraceInformation(String.Format("[Mainform] Connecting to URL from clipboard: {0}", url.ToString()));
+            enqueueUrl(url);
          }
       }
 

@@ -69,7 +69,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               ITotalTimeCache totalTimeCache = getSession(!isSearchMode())?.TotalTimeCache;
+               ITotalTimeCache totalTimeCache = getDataCache(!isSearchMode())?.TotalTimeCache;
 
                labelWorkflowStatus.Text = "Command " + name + " is in progress";
                try
@@ -277,9 +277,9 @@ namespace mrHelper.App.Forms
          restoreState();
          prepareFormToStart();
 
-         createLiveSessionAndDependencies();
-         subscribeToLiveSession();
-         createSearchSession();
+         createLiveDataCacheAndDependencies();
+         subscribeToLiveDataCache();
+         createSearchDataCache();
 
          initializeColorScheme();
          initializeIconScheme();
@@ -424,7 +424,7 @@ namespace mrHelper.App.Forms
          enqueueUrl(_startUrl);
       }
 
-      private void createLiveSessionAndDependencies()
+      private void createLiveDataCacheAndDependencies()
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords);
          _liveDataCache = new DataCache(dataCacheContext, _modificationNotifier);
@@ -433,20 +433,20 @@ namespace mrHelper.App.Forms
          _userNotifier = new UserNotifier(_liveDataCache, _eventFilter, _trayIcon);
       }
 
-      private void createSearchSession()
+      private void createSearchDataCache()
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords);
          _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier);
       }
 
-      private void disposeLiveSessionDependencies()
+      private void disposeLiveDataCacheDependencies()
       {
          _userNotifier?.Dispose();
          _eventFilter?.Dispose();
          _expressionResolver?.Dispose();
       }
 
-      private void subscribeToLiveSession()
+      private void subscribeToLiveDataCache()
       {
          if (_liveDataCache != null)
          {

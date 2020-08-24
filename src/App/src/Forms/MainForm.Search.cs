@@ -32,9 +32,6 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      /// <summary>
-      /// </summary>
-      /// <returns>Was switch successful</returns>
       private void searchMergeRequests(object query, int? maxResults, Func<Exception, bool> exceptionHandler = null)
       {
          BeginInvoke(new Action(async () => await searchMergeRequestsAsync(query, maxResults, exceptionHandler)), null);
@@ -84,7 +81,6 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Connects Search DataCache to GitLab
       /// </summary>
-      /// <returns>false if operation was cancelled</returns>
       async private Task startSearchWorkflowAsync(string hostname, object query, int? maxResults)
       {
          labelWorkflowStatus.Text = String.Empty;

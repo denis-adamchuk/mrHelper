@@ -35,6 +35,16 @@ namespace mrHelper.StorageSupport
             }
          }
 
+         if (projectAccessor == null)
+         {
+            throw new ArgumentException("projectAccessor argument cannot be null");
+         }
+
+         if (synchronizeInvoke == null)
+         {
+            throw new ArgumentException("synchronizeInvoke argument cannot be null");
+         }
+
          ParentFolder = parentFolder;
          _synchronizeInvoke = synchronizeInvoke;
          _projectAccessor = projectAccessor;

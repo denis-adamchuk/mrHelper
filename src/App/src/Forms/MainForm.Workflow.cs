@@ -51,9 +51,6 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      /// <summary>
-      /// </summary>
-      /// <returns>Was switch successful</returns>
       private void switchHostToSelected(Func<Exception, bool> exceptionHandler = null)
       {
          BeginInvoke(new Action(async () => await switchHostToSelectedAsync(exceptionHandler)), null);
@@ -100,8 +97,6 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Connects Live DataCache to GitLab
       /// </summary>
-      /// <param name="hostname"></param>
-      /// <returns>false if operation was cancelled</returns>
       async private Task startWorkflowAsync(string hostname)
       {
          // When this thing happens, everything reconnects. If there are some things at gitlab that user
