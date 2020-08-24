@@ -340,6 +340,7 @@ namespace mrHelper.App.Forms
          fillColorSchemesList();
          prepareControlsToStart();
          prepareSizeToStart();
+         selectHost(PreferredSelection.Initial);
       }
 
       private void prepareControlsToStart()
@@ -414,14 +415,9 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void connectOnStartup()
+      private void reconnect(string url = null)
       {
-         if (_requestedUrl.Count > 0)
-         {
-            Debug.Assert(false);
-            return;
-         }
-         enqueueUrl(_startUrl);
+         enqueueUrl(url);
       }
 
       private void createLiveDataCacheAndDependencies()

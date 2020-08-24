@@ -934,7 +934,7 @@ namespace mrHelper.App.Forms
          this.radioButtonSelectByProjects.Text = "Project-based workflow";
          this.toolTip.SetToolTip(this.radioButtonSelectByProjects, "All merge requests from selected projects will be loaded from GitLab");
          this.radioButtonSelectByProjects.UseVisualStyleBackColor = true;
-         this.radioButtonSelectByProjects.CheckedChanged += new System.EventHandler(this.radioButtonMergeRequestSelectingMode_CheckedChanged);
+         this.radioButtonSelectByProjects.CheckedChanged += new System.EventHandler(this.radioButtonWorkflowType_CheckedChanged);
          // 
          // buttonEditUsers
          // 
@@ -978,9 +978,9 @@ namespace mrHelper.App.Forms
          this.radioButtonSelectByUsernames.TabIndex = 19;
          this.radioButtonSelectByUsernames.TabStop = true;
          this.radioButtonSelectByUsernames.Text = "User-based workflow";
-         this.toolTip.SetToolTip(this.radioButtonSelectByUsernames, "Select usernames to track only their merge requests");
+         this.toolTip.SetToolTip(this.radioButtonSelectByUsernames, "Select user names to track only their merge requests");
          this.radioButtonSelectByUsernames.UseVisualStyleBackColor = true;
-         this.radioButtonSelectByUsernames.CheckedChanged += new System.EventHandler(this.radioButtonMergeRequestSelectingMode_CheckedChanged);
+         this.radioButtonSelectByUsernames.CheckedChanged += new System.EventHandler(this.radioButtonWorkflowType_CheckedChanged);
          // 
          // buttonEditProjects
          // 

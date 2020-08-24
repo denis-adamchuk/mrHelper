@@ -148,7 +148,7 @@ namespace mrHelper.App.Forms
          string url = arguments[1];
 
          Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
-         enqueueUrl(url);
+         reconnect(url);
       }
 
       readonly Queue<string> _requestedUrl = new Queue<string>();
@@ -187,12 +187,10 @@ namespace mrHelper.App.Forms
       {
          if (String.IsNullOrEmpty(url))
          {
-            selectHost(PreferredSelection.Initial);
-            switchHostToSelected();
+            await switchHostToSelectedAsync(null);
             return;
          }
 
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Processing URL {0}", url));
          try
          {
             object parsed = UrlHelper.Parse(url);
@@ -228,8 +226,7 @@ namespace mrHelper.App.Forms
             reportErrorOnConnect(url, ex.OriginalMessage, ex.InnerException);
          }
 
-         selectHost(PreferredSelection.Initial);
-         switchHostToSelected();
+         await switchHostToSelectedAsync(null);
       }
 
       private void throwOnUnknownHost(string hostname)
@@ -313,7 +310,7 @@ namespace mrHelper.App.Forms
 
       async private Task restartWorkflowByUrlAsync(string hostname)
       {
-         _initialHostName = hostname;
+         setInitialHostName(Common.Tools.StringUtils.GetHostWithPrefix(hostname));
          selectHost(PreferredSelection.Initial);
          await switchHostToSelectedAsync(new Func<Exception, bool>(x =>
             throw new UrlConnectionException("Failed to connect to GitLab. ", x)));

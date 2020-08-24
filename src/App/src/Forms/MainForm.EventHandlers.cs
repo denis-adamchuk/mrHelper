@@ -34,7 +34,9 @@ namespace mrHelper.App.Forms
          checkForApplicationUpdates();
 
          initializeWork();
-         connectOnStartup();
+
+         Trace.TraceInformation(String.Format("[Mainform] Connecting to URL on startup {0}", _startUrl.ToString()));
+         reconnect(_startUrl);
       }
 
       private void closeAllFormsExceptMain()
@@ -241,13 +243,12 @@ namespace mrHelper.App.Forms
 
       private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
       {
-         string hostname = (sender as ComboBox).Text;
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}", hostname));
-
          updateProjectsListView();
          updateUsersListView();
-         switchHostToSelected();
+
+         string hostname = (sender as ComboBox).Text;
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}", hostname));
+         reconnect();
       }
 
       private void ListViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
@@ -485,7 +486,7 @@ namespace mrHelper.App.Forms
             updateKnownHostAndTokensInSettings();
             updateHostsDropdownList();
             selectHost(PreferredSelection.Latest);
-            switchHostToSelected();
+            reconnect();
          }
       }
 
@@ -522,7 +523,7 @@ namespace mrHelper.App.Forms
             }
 
             // calling this unconditionally to drop current sessions and disable UI
-            switchHostToSelected();
+            reconnect();
          }
       }
 
@@ -1113,7 +1114,7 @@ namespace mrHelper.App.Forms
          string hostname = (string)reader.Get("SelectedHost");
          if (hostname != null)
          {
-            _initialHostName = StringUtils.GetHostWithPrefix(hostname);
+            setInitialHostName(StringUtils.GetHostWithPrefix(hostname));
          }
 
          JObject reviewedRevisionsObj = (JObject)reader.Get("ReviewedCommits");
@@ -1240,8 +1241,8 @@ namespace mrHelper.App.Forms
 
                if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
                {
-                  Trace.TraceInformation("[MainForm] Reloading merge request list after project list change");
-                  switchHostToSelected();
+                  Trace.TraceInformation("[MainForm] Reconnecting after project list change");
+                  reconnect();
                }
             }
          }
@@ -1276,8 +1277,8 @@ namespace mrHelper.App.Forms
 
                if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
                {
-                  Trace.TraceInformation("[MainForm] Reloading merge request list after user list change");
-                  switchHostToSelected();
+                  Trace.TraceInformation("[MainForm] Reconnecting after user list change");
+                  reconnect();
                }
             }
          }
@@ -1317,7 +1318,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void radioButtonMergeRequestSelectingMode_CheckedChanged(object sender, EventArgs e)
+      private void radioButtonWorkflowType_CheckedChanged(object sender, EventArgs e)
       {
          if (!(sender as RadioButton).Checked)
          {
@@ -1338,8 +1339,8 @@ namespace mrHelper.App.Forms
                ConfigurationHelper.SelectUserBasedWorkflow(Program.Settings);
             }
 
-            Trace.TraceInformation("[MainForm] Reloading merge request list after mode change");
-            switchHostToSelected();
+            Trace.TraceInformation("[MainForm] Reconnecting after workflow type change");
+            reconnect();
          }
       }
 
@@ -1359,8 +1360,8 @@ namespace mrHelper.App.Forms
                   : LocalCommitStorageType.ShallowGitRepository);
             ConfigurationHelper.SelectPreferredStorageType(Program.Settings, type);
 
-            Trace.TraceInformation("[MainForm] Reloading merge request list after storage type change");
-            switchHostToSelected();
+            Trace.TraceInformation("[MainForm] Reconnecting after storage type change");
+            reconnect();
          }
       }
 
@@ -1497,7 +1498,7 @@ namespace mrHelper.App.Forms
          {
             string url = Clipboard.GetText();
             Trace.TraceInformation(String.Format("[Mainform] Connecting to URL from clipboard: {0}", url.ToString()));
-            enqueueUrl(url);
+            reconnect(url);
          }
       }
 

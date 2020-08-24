@@ -115,7 +115,7 @@ namespace mrHelper.App.Forms
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
 
-      private string _initialHostName = String.Empty;
+      private string _initialHostName;
 
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedRevisions =
          new Dictionary<MergeRequestKey, HashSet<string>>();
