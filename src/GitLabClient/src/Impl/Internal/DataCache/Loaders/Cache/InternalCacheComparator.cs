@@ -45,15 +45,14 @@ namespace mrHelper.GitLabClient.Loaders.Cache
 
          public bool Equals(MergeRequestWithProject other)
          {
-            return EqualityComparer<MergeRequest>.Default.Equals(MergeRequest, other.MergeRequest) &&
-                   Project.Equals(other.Project);
+            return Project.Equals(other.Project) && MergeRequest.IId == other.MergeRequest.IId;
          }
 
          public override int GetHashCode()
          {
             int hashCode = -1994398954;
-            hashCode = hashCode * -1521134295 + EqualityComparer<MergeRequest>.Default.GetHashCode(MergeRequest);
             hashCode = hashCode * -1521134295 + Project.GetHashCode();
+            hashCode = hashCode * -1521134295 + MergeRequest.IId.GetHashCode();
             return hashCode;
          }
       }
@@ -167,7 +166,7 @@ namespace mrHelper.GitLabClient.Loaders.Cache
 
             bool labelsUpdated = !Enumerable.SequenceEqual(mergeRequest1.Labels, mergeRequest2.Labels);
             bool commitsUpdated = newVersions.Count() > oldVersions.Count();
-            bool detailsUpdated = !mergeRequest1.Equals(mergeRequest2);
+            bool detailsUpdated = areMergeRequestsDifferentInDetails(mergeRequest1, mergeRequest2);
 
             if (labelsUpdated || commitsUpdated || detailsUpdated)
             {
@@ -181,6 +180,26 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          }
 
          return updates;
+      }
+
+      private bool areMergeRequestsDifferentInDetails(MergeRequest mergeRequest1, MergeRequest mergeRequest2)
+      {
+         return
+             mergeRequest1.Id != mergeRequest2.Id
+          || mergeRequest1.IId != mergeRequest2.IId
+          || mergeRequest1.Title != mergeRequest2.Title
+          || mergeRequest1.Description != mergeRequest2.Description
+          || mergeRequest1.Source_Branch != mergeRequest2.Source_Branch
+          || mergeRequest1.Target_Branch != mergeRequest2.Target_Branch
+          || mergeRequest1.State != mergeRequest2.State
+          || mergeRequest1.Web_Url != mergeRequest2.Web_Url
+          || mergeRequest1.Work_In_Progress != mergeRequest2.Work_In_Progress
+          || mergeRequest1.Project_Id != mergeRequest2.Project_Id
+          || mergeRequest1.Squash != mergeRequest2.Squash
+          || mergeRequest1.Should_Remove_Source_Branch != mergeRequest2.Should_Remove_Source_Branch
+          || mergeRequest1.Force_Remove_Source_Branch != mergeRequest2.Force_Remove_Source_Branch
+          || (mergeRequest1.Author?.Id ?? 0) != (mergeRequest2.Author?.Id ?? 0)
+          || (mergeRequest1.Assignee?.Id ?? 0) != (mergeRequest2.Assignee?.Id ?? 0);
       }
    }
 }

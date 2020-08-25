@@ -54,7 +54,7 @@ namespace mrHelper.Core.Matching
                 RightPath == position.RightPath &&
                 LeftLine == position.LeftLine &&
                 RightLine == position.RightLine &&
-                EqualityComparer<DiffRefs>.Default.Equals(Refs, position.Refs);
+                Refs.ToString() == position.Refs.ToString();
       }
 
       public override int GetHashCode()
@@ -64,7 +64,7 @@ namespace mrHelper.Core.Matching
          hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(RightPath);
          hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(LeftLine);
          hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(RightLine);
-         hashCode = hashCode * -1521134295 + EqualityComparer<DiffRefs>.Default.GetHashCode(Refs);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Refs.ToString());
          return hashCode;
       }
 
