@@ -199,7 +199,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
           || mergeRequest1.Should_Remove_Source_Branch != mergeRequest2.Should_Remove_Source_Branch
           || mergeRequest1.Force_Remove_Source_Branch != mergeRequest2.Force_Remove_Source_Branch
           || (mergeRequest1.Author?.Id ?? 0) != (mergeRequest2.Author?.Id ?? 0)
-          || (mergeRequest1.Assignee?.Id ?? 0) != (mergeRequest2.Assignee?.Id ?? 0);
+          || (mergeRequest1.Assignee?.Id ?? 0) != (mergeRequest2.Assignee?.Id ?? 0)
+          || mergeRequest1.Merge_Status != mergeRequest2.Merge_Status
+          || mergeRequest1.Rebase_In_Progress != mergeRequest2.Rebase_In_Progress
+          || mergeRequest1.Has_Conflicts != mergeRequest2.Has_Conflicts
+          || mergeRequest1.Blocking_Discussions_Resolved != mergeRequest2.Blocking_Discussions_Resolved;
       }
    }
 }

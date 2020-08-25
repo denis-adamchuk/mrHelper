@@ -22,6 +22,17 @@ namespace mrHelper.Integration.GitUI
    {
       private static string SettingsPath = @"Atlassian\SourceTree\customactions.xml";
 
+      public static bool IsInstalled()
+      {
+         // TODO WTF
+         // 1. Check in AppFinder
+         return true;
+      }
+
+      public static void Browse(string path)
+      {
+      }
+
       public static void AddCustomActions(string scriptPath)
       {
          string gitbash = Path.Combine(GitTools.GetBinaryFolder(), Constants.BashFileName);

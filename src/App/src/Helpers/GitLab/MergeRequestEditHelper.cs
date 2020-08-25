@@ -100,7 +100,7 @@ namespace mrHelper.App.Helpers.GitLab
             return null;
          }
 
-         User assignee = await getUserAsync(gitLabInstance, modificationListener, parameters.AssigneeUserName);
+         User assignee = await getUserAsync(gitLabInstance, parameters.AssigneeUserName);
          checkFoundAssignee(parameters.ProjectKey.HostName, parameters.AssigneeUserName, assignee);
 
          int assigneeId = assignee?.Id ?? 0; // 0 means to not assign MR to anyone
@@ -147,7 +147,7 @@ namespace mrHelper.App.Helpers.GitLab
          string oldAssigneeUsername = originalMergeRequest.Assignee?.Username ?? String.Empty;
          User assignee = oldAssigneeUsername == parameters.AssigneeUserName
             ? originalMergeRequest.Assignee
-            : await getUserAsync(gitLabInstance, modificationListener, parameters.AssigneeUserName);
+            : await getUserAsync(gitLabInstance, parameters.AssigneeUserName);
          checkFoundAssignee(projectKey.HostName, parameters.AssigneeUserName, assignee);
 
          bool result = false;
@@ -206,15 +206,14 @@ namespace mrHelper.App.Helpers.GitLab
          return true;
       }
 
-      async private static Task<User> getUserAsync(
-         GitLabInstance gitLabInstance, IModificationListener modificationListener, string username)
+      async private static Task<User> getUserAsync(GitLabInstance gitLabInstance, string username)
       {
          if (String.IsNullOrEmpty(username))
          {
             return null;
          }
 
-         GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(gitLabInstance, modificationListener);
+         GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(gitLabInstance);
          return await userAccessor.SearchUserByUsernameAsync(username)
              ?? await userAccessor.SearchUserByNameAsync(username); // fallback
       }
@@ -263,7 +262,7 @@ namespace mrHelper.App.Helpers.GitLab
 
          void showDialogAndLogError(string message = "")
          {
-            string defaultMessage = "GitLab could not create a merge request with the given parameters: ";
+            string defaultMessage = "GitLab could not create a merge request with the given parameters. Reason: ";
             MessageBox.Show(defaultMessage + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Trace.TraceError("[MergeRequestEditHelper] " + message);
          };

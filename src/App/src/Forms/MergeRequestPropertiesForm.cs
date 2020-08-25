@@ -249,10 +249,7 @@ namespace mrHelper.App.Forms
 
       protected void toggleWIP()
       {
-         string prefix = "WIP: ";
-         string title = getTitle();
-         string newTitle = title.StartsWith(prefix) ? title.Substring(prefix.Length) : prefix + title;
-         setTitle(newTitle);
+         setTitle(StringUtils.ToggleWorkInProgressTitle(getTitle()));
       }
 
       protected void fillProjectListAndSelect(IEnumerable<ProjectKey> projects, string defaultProjectName)

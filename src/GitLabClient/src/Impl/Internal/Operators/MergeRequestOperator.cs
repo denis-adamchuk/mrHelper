@@ -52,6 +52,30 @@ namespace mrHelper.GitLabClient.Operators
                            await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId)
                               .UpdateMergeRequestTaskAsync(parameters)))));
       }
+
+      internal Task<MergeRequestRebaseResponse> RebaseMergeRequest(MergeRequestKey mrk, bool? skipCI)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (MergeRequestRebaseResponse)(await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId)
+                              .RebaseMergeRequestTaskAsync(skipCI)))));
+      }
+
+      internal Task<MergeRequest> AcceptMergeRequest(MergeRequestKey mrk, AcceptMergeRequestParameters parameters)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (MergeRequest)(await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId)
+                              .AcceptMergeRequestTaskAsync(parameters)))));
+      }
    }
 }
 

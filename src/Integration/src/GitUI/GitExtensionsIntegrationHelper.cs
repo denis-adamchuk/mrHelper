@@ -22,6 +22,18 @@ namespace mrHelper.Integration.GitUI
    {
       private static string SettingsPath = @"GitExtensions/GitExtensions/GitExtensions.settings";
 
+      public static bool IsInstalled()
+      {
+         // TODO WTF
+         // 1. Check 'where gitex.cmd' command output
+         return true;
+      }
+
+      public static void Browse(string path)
+      {
+         ExternalProcess.Start("gitex.cmd", String.Format("browse \"{0}\"", path), false, ".");
+      }
+
       public static void AddCustomActions(string scriptPath)
       {
          string roamingPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);

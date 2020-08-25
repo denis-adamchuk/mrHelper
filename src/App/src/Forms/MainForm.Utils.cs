@@ -778,8 +778,8 @@ namespace mrHelper.App.Forms
          }
 
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _modificationNotifier);
-         return rawDataAccessor.ProjectAccessor;
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
+         return rawDataAccessor.GetProjectAccessor(_modificationNotifier);
       }
 
       private ILocalCommitStorageFactory getCommitStorageFactory(bool showMessageBoxOnError)
@@ -2080,6 +2080,17 @@ namespace mrHelper.App.Forms
       private bool doesClipboardContainValidUrl()
       {
          return UrlHelper.CheckMergeRequestUrl(Clipboard.GetText());
+      }
+
+      private void acceptMergeRequest(string hostname, FullMergeRequestKey item)
+      {
+         MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
+         AcceptMergeRequestForm form = new AcceptMergeRequestForm(mrk,
+            getCommitStorage(mrk.ProjectKey, false)?.Path,
+            _liveDataCache?.MergeRequestCache,
+            Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName),
+            showDiscussionsFormAsync);
+         form.Show();
       }
    }
 }

@@ -366,7 +366,7 @@ namespace mrHelper.App.Forms
          }
 
          GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(
-            new GitLabInstance(hostname, Program.Settings), _modificationNotifier);
+            new GitLabInstance(hostname, Program.Settings));
 
          bool migratedLabels = false;
          labelWorkflowStatus.Text = "Preparing workflow to the first launch...";

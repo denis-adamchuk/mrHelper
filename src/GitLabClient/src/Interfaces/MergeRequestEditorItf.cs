@@ -26,6 +26,10 @@ namespace mrHelper.GitLabClient
       Task<MergeRequest> ModifyMergeRequest(UpdateMergeRequestParameters parameters);
 
       Task AddTrackedTime(TimeSpan span, bool add);
+
+      Task<MergeRequestRebaseResponse> Rebase(bool? skipCI);
+
+      Task<MergeRequest> Merge(AcceptMergeRequestParameters parameters);
    }
 }
 

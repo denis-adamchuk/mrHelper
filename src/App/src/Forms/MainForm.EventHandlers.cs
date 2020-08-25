@@ -35,7 +35,8 @@ namespace mrHelper.App.Forms
 
          initializeWork();
 
-         Trace.TraceInformation(String.Format("[Mainform] Connecting to URL on startup {0}", _startUrl.ToString()));
+         Trace.TraceInformation(String.Format("[Mainform] Connecting to URL on startup {0}",
+            _startUrl?.ToString() ?? "null"));
          reconnect(_startUrl);
       }
 
@@ -1224,7 +1225,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(projects != null);
 
          GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _modificationNotifier);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects",
             "Add project", "Type project name in group/project format",
             projects, new EditProjectsListViewCallback(rawDataAccessor), true))
@@ -1260,7 +1261,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(users != null);
 
          GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _modificationNotifier);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users",
             "Add username", "Type a name of GitLab user, teams allowed",
             users, new EditUsersListViewCallback(rawDataAccessor), false))
@@ -1461,6 +1462,18 @@ namespace mrHelper.App.Forms
 
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
          BeginInvoke(new Action(async () => await applyChangesToMergeRequestAsync(getHostName(), getCurrentUser(), item)));
+      }
+
+      private void ListViewMergeRequests_Accept(object sender, EventArgs e)
+      {
+         Debug.Assert(!isSearchMode());
+         if (listViewMergeRequests.SelectedItems.Count < 1 || !checkIfMergeRequestCanBeEdited())
+         {
+            return;
+         }
+
+         FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
+         acceptMergeRequest(getHostName(), item);
       }
 
       private void ListViewMergeRequests_Close(object sender, EventArgs e)

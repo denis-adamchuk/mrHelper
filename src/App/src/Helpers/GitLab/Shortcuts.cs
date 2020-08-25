@@ -9,23 +9,29 @@ namespace mrHelper.App.Helpers.GitLab
       internal static ProjectAccessor GetProjectAccessor(GitLabInstance gitLabInstance,
          IModificationListener modificationListener)
       {
-         return new RawDataAccessor(gitLabInstance, modificationListener)
-            .ProjectAccessor;
+         return new RawDataAccessor(gitLabInstance)
+            .GetProjectAccessor(modificationListener);
       }
 
-      internal static UserAccessor GetUserAccessor(GitLabInstance gitLabInstance,
-         IModificationListener modificationListener)
+      internal static UserAccessor GetUserAccessor(GitLabInstance gitLabInstance)
       {
-         return new RawDataAccessor(gitLabInstance, modificationListener)
+         return new RawDataAccessor(gitLabInstance)
             .UserAccessor;
       }
 
       internal static MergeRequestAccessor GetMergeRequestAccessor(GitLabInstance gitLabInstance,
          IModificationListener modificationListener, ProjectKey projectKey)
       {
-         return new RawDataAccessor(gitLabInstance, modificationListener)
-            .ProjectAccessor
+         return new RawDataAccessor(gitLabInstance)
+            .GetProjectAccessor(modificationListener)
             .GetSingleProjectAccessor(projectKey.ProjectName)
+            .MergeRequestAccessor;
+      }
+
+      internal static MergeRequestAccessor GetMergeRequestAccessor(ProjectAccessor projectAccessor, string projectName)
+      {
+         return projectAccessor
+            .GetSingleProjectAccessor(projectName)
             .MergeRequestAccessor;
       }
 

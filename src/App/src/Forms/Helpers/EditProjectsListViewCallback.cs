@@ -39,7 +39,7 @@ namespace mrHelper.App.Forms.Helpers
             item = user.Username + item.Substring(slashIndex);
          }
 
-         Project project = await _rawDataAccessor.ProjectAccessor.SearchProjectAsync(item);
+         Project project = await _rawDataAccessor.GetProjectAccessor(null).SearchProjectAsync(item);
          if (project == null)
          {
             MessageBox.Show(String.Format("There is no project {0} at the selected host", item),
