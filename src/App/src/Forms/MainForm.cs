@@ -60,13 +60,6 @@ namespace mrHelper.App.Forms
 
          listViewMergeRequests.Deselected += ListViewMergeRequests_Deselected;
          listViewFoundMergeRequests.Deselected += ListViewMergeRequests_Deselected;
-
-         listViewMergeRequests.ContextMenuStrip = new ContextMenuStrip();
-         listViewMergeRequests.ContextMenuStrip.Items.Add("&Refresh selected", null, ListViewMergeRequests_Refresh);
-         listViewMergeRequests.ContextMenuStrip.Items.Add("-", null, null);
-         listViewMergeRequests.ContextMenuStrip.Items.Add("&Edit...", null, ListViewMergeRequests_Edit);
-         listViewMergeRequests.ContextMenuStrip.Items.Add("&Merge...", null, ListViewMergeRequests_Accept);
-         listViewMergeRequests.ContextMenuStrip.Items.Add("&Close", null, ListViewMergeRequests_Close);
       }
 
       public string GetCurrentHostName()
@@ -110,6 +103,11 @@ namespace mrHelper.App.Forms
       {
          Interval = Constants.ClipboardCheckingTimerInterval
       };
+      private readonly System.Windows.Forms.Timer _projectCacheCheckTimer = new System.Windows.Forms.Timer
+      {
+         Interval = 1000 // ms
+      };
+      private readonly List<Action<bool>> _projectCacheCheckActions = new List<Action<bool>>();
 
       private LocalCommitStorageFactory _storageFactory;
       private GitDataUpdater _gitDataUpdater;

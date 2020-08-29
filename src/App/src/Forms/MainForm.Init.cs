@@ -379,8 +379,41 @@ namespace mrHelper.App.Forms
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
+         _projectCacheCheckActions.Add(isCacheReady => buttonCreateNew.Enabled = isCacheReady);
+
+         startClipboardCheckTimer();
+         startProjectCacheCheckTimer();
+         createListViewContextMenu();
+      }
+
+      private void startClipboardCheckTimer()
+      {
          _clipboardCheckingTimer.Tick += new EventHandler(onClipboardCheckingTimer);
          _clipboardCheckingTimer.Start();
+      }
+
+      private void createListViewContextMenu()
+      {
+         listViewMergeRequests.ContextMenuStrip = new ContextMenuStrip();
+         ToolStripItemCollection items = listViewMergeRequests.ContextMenuStrip.Items;
+         items.Add("&Refresh selected", null, ListViewMergeRequests_Refresh);
+         items.Add("-", null, null);
+         items.Add("&Edit...", null, ListViewMergeRequests_Edit);
+         ToolStripItem mergeItem = items.Add("&Merge...", null, ListViewMergeRequests_Accept);
+         items.Add("&Close", null, ListViewMergeRequests_Close);
+
+         _projectCacheCheckActions.Add(isCacheReady => mergeItem.Enabled = isCacheReady);
+      }
+
+      private void startProjectCacheCheckTimer()
+      {
+         _projectCacheCheckTimer.Tick +=
+            (s, e) =>
+            {
+               bool isCacheReady = _liveDataCache?.ProjectCache?.GetProjects().Any() ?? false;
+               _projectCacheCheckActions.ForEach(action => action?.Invoke(isCacheReady));
+            };
+         _projectCacheCheckTimer.Start();
       }
 
       private void prepareSizeToStart()

@@ -20,7 +20,7 @@ namespace mrHelper.Integration.GitUI
 
    public static class GitExtensionsIntegrationHelper
    {
-      private static string SettingsPath = @"GitExtensions/GitExtensions/GitExtensions.settings";
+      private static readonly string SettingsPath = @"GitExtensions/GitExtensions/GitExtensions.settings";
 
       public static bool IsInstalled()
       {

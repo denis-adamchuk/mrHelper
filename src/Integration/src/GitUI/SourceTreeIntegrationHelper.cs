@@ -20,7 +20,7 @@ namespace mrHelper.Integration.GitUI
 
    public static class SourceTreeIntegrationHelper
    {
-      private static string SettingsPath = @"Atlassian\SourceTree\customactions.xml";
+      private static readonly string SettingsPath = @"Atlassian\SourceTree\customactions.xml";
 
       public static bool IsInstalled()
       {

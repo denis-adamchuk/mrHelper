@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Loaders;
@@ -18,10 +18,10 @@ namespace mrHelper.GitLabClient.Managers
          _context = context;
       }
 
-      public IEnumerable<ProjectKey> GetProjects()
+      public IEnumerable<Project> GetProjects()
       {
          // lazy load
-         IEnumerable<ProjectKey> projects = _cacheUpdater.Cache.GetAllProjects();
+         IEnumerable<Project> projects = _cacheUpdater.Cache.GetAllProjects();
          if (projects == null && !_requestedList)
          {
             _requestedList = true;
@@ -42,7 +42,7 @@ namespace mrHelper.GitLabClient.Managers
                }
             }), null);
          }
-         return projects == null ? Array.Empty<ProjectKey>() : projects;
+         return projects ?? Array.Empty<Project>();
       }
 
       private readonly InternalCacheUpdater _cacheUpdater;

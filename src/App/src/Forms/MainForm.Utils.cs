@@ -1491,11 +1491,11 @@ namespace mrHelper.App.Forms
       {
          listViewProjects.Items.Clear();
 
-         foreach (string project in
-            ConfigurationHelper.GetEnabledProjects(getHostName(), Program.Settings)
-            .Select(x => x.Path_With_Namespace))
+         foreach (string projectName in
+            ConfigurationHelper.GetEnabledProjectNames(getHostName(), Program.Settings)
+            .Select(x => x))
          {
-            listViewProjects.Items.Add(project);
+            listViewProjects.Items.Add(projectName);
          }
       }
 
@@ -2047,10 +2047,11 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties)
+      private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties,
+         IEnumerable<Project> fullProjectList)
       {
          MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
-            getProjectAccessor(), currentUser, initialProperties, _liveDataCache.ProjectCache.GetProjects(),
+            getProjectAccessor(), currentUser, initialProperties, fullProjectList,
             _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()));
          if (form.ShowDialog() != DialogResult.OK)
          {
@@ -2082,15 +2083,33 @@ namespace mrHelper.App.Forms
          return UrlHelper.CheckMergeRequestUrl(Clipboard.GetText());
       }
 
-      private void acceptMergeRequest(string hostname, FullMergeRequestKey item)
+      private void acceptMergeRequest(string hostname, FullMergeRequestKey item, IEnumerable<Project> fullProjectList)
       {
+         Project selectedProject = fullProjectList
+            .SingleOrDefault(project => project.Path_With_Namespace == item.ProjectKey.ProjectName);
+         if (selectedProject == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
-         AcceptMergeRequestForm form = new AcceptMergeRequestForm(mrk,
-            getCommitStorage(mrk.ProjectKey, false)?.Path,
-            _liveDataCache?.MergeRequestCache,
-            Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName),
-            showDiscussionsFormAsync);
-         form.Show();
+         try
+         {
+            AcceptMergeRequestForm form = new AcceptMergeRequestForm(mrk,
+               getCommitStorage(mrk.ProjectKey, false)?.Path,
+               _liveDataCache?.MergeRequestCache,
+               Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName),
+               showDiscussionsFormAsync, selectedProject.Merge_Method);
+            form.Show();
+         }
+         catch (UnsupportedMergeMethodException ex)
+         {
+            Trace.TraceError("[MainForm] Unsupported merge method {0} detected in project {1}",
+               selectedProject.Merge_Method, selectedProject.Path_With_Namespace);
+            MessageBox.Show(ex.Message, "Unsupported project merge method",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
    }
 }

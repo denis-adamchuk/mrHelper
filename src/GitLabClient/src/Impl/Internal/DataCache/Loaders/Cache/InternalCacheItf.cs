@@ -35,7 +35,7 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       /// <summary>
       /// Return a list of all projects
       /// </summary>
-      IEnumerable<ProjectKey> GetAllProjects();
+      IEnumerable<Project> GetAllProjects();
    }
 }
 

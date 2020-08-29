@@ -100,9 +100,10 @@ namespace mrHelper.GitLabClient.Loaders
             return projectKeyOpt.Value;
          }
 
-         ProjectKey projectKey = await call(() => _operator.GetProjectAsync(projectId.ToString()),
+         Project project = await call(() => _operator.GetProjectAsync(projectId.ToString()),
             String.Format("Cancelled resolving project with Id \"{0}\"", projectId),
             String.Format("Cannot load project with Id \"{0}\"", projectId));
+         ProjectKey projectKey = new ProjectKey(_hostname, project.Path_With_Namespace);
          GlobalCache.AddProjectKey(_hostname, projectId, projectKey);
          return projectKey;
       }

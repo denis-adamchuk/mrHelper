@@ -1446,10 +1446,18 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         IEnumerable<Project> fullProjectList = _liveDataCache?.ProjectCache?.GetProjects();
+         bool isProjectListReady = fullProjectList?.Any() ?? false;
+         if (!isProjectListReady)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
          ProjectKey? currentProject = getMergeRequestKey(null)?.ProjectKey;
          NewMergeRequestProperties initialFormState = getDefaultNewMergeRequestProperties(
             getHostName(), getCurrentUser(), currentProject);
-         createNewMergeRequest(getHostName(), getCurrentUser(), initialFormState);
+         createNewMergeRequest(getHostName(), getCurrentUser(), initialFormState, fullProjectList);
       }
 
       private void ListViewMergeRequests_Edit(object sender, EventArgs e)
@@ -1472,8 +1480,16 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         IEnumerable<Project> fullProjectList = _liveDataCache?.ProjectCache?.GetProjects();
+         bool isProjectListReady = fullProjectList?.Any() ?? false;
+         if (!isProjectListReady)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
-         acceptMergeRequest(getHostName(), item);
+         acceptMergeRequest(getHostName(), item, fullProjectList);
       }
 
       private void ListViewMergeRequests_Close(object sender, EventArgs e)

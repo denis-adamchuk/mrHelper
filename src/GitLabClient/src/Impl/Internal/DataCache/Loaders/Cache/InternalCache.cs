@@ -132,18 +132,18 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          _commits.Remove(mrk);
       }
 
-      public IEnumerable<ProjectKey> GetAllProjects()
+      public IEnumerable<Project> GetAllProjects()
       {
          return _projects;
       }
 
-      internal void SetAllProjects(IEnumerable<ProjectKey> projectKeys)
+      internal void SetAllProjects(IEnumerable<Project> projects)
       {
-         _projects = projectKeys.ToArray();
+         _projects = projects.ToArray();
       }
 
       // collection of all projects
-      private ProjectKey[] _projects;
+      private Project[] _projects;
 
       // maps unique project id to list of merge requests
       private Dictionary<ProjectKey, IEnumerable<MergeRequest>> _mergeRequests;

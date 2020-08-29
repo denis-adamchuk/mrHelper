@@ -13,15 +13,29 @@ using mrHelper.Integration.GitUI;
 
 namespace mrHelper.App.Forms
 {
+   internal class UnsupportedMergeMethodException : Exception
+   {
+      internal UnsupportedMergeMethodException(string message)
+         : base(message)
+      {
+      }
+   }
+
    public partial class AcceptMergeRequestForm : CustomFontForm
    {
       internal AcceptMergeRequestForm(MergeRequestKey mrk, string repositoryPath,
          IMergeRequestCache dataCache, GitLabClient.MergeRequestAccessor mergeRequestAccessor,
-         Func<MergeRequestKey, string, User, Task> onOpenDiscussions)
+         Func<MergeRequestKey, string, User, Task> onOpenDiscussions, string mergeMethod)
       {
          if (dataCache == null)
          {
             throw new ArgumentException("dataCache argument cannot be null");
+         }
+
+         if (mergeMethod != "ff")
+         {
+            throw new UnsupportedMergeMethodException(
+               "Current version supports projects with Fast Forward merge method only");
          }
 
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
@@ -45,8 +59,6 @@ namespace mrHelper.App.Forms
 
          createSynchronizationWithGitLabTimer();
          startSynchronizationTimer();
-
-         // TODO WTF Check that project has ff merge type
       }
 
       private void buttonDiscussions_Click(object sender, EventArgs e)

@@ -7,8 +7,6 @@ using System.Text.RegularExpressions;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.GitLabClient;
-using mrHelper.Common.Interfaces;
-using mrHelper.CommonControls.Tools;
 using System.Windows.Forms;
 using mrHelper.Common.Exceptions;
 
@@ -17,14 +15,14 @@ namespace mrHelper.App.Forms
    internal class NewMergeRequestForm : MergeRequestPropertiesForm
    {
       internal NewMergeRequestForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
-         NewMergeRequestProperties initialState, IEnumerable<ProjectKey> projects, string sourceBranchTemplate)
-         : base(hostname, projectAccessor, currentUser, allowChangeSource(initialState))
+         NewMergeRequestProperties initialState, IEnumerable<Project> projects, string sourceBranchTemplate)
+         : base(hostname, projectAccessor, currentUser, isAllowedToChangeSource(initialState))
       {
          _initialState = initialState;
          _projects = projects ?? throw new ArgumentException("projects argument cannot be null");
          _sourceBranchTemplate = sourceBranchTemplate ?? String.Empty;
 
-         if (allowChangeSource(_initialState))
+         if (isAllowedToChangeSource(_initialState))
          {
             comboBoxProject.SelectedIndexChanged +=
                new System.EventHandler(this.comboBoxProject_SelectedIndexChanged);
@@ -207,13 +205,14 @@ namespace mrHelper.App.Forms
          setDescription(String.Empty);
          setAssigneeUsername(_initialState.AssigneeUsername);
 
-         if (allowChangeSource(_initialState))
+         if (isAllowedToChangeSource(_initialState))
          {
-            fillProjectListAndSelect(_projects, _initialState.DefaultProject);
+            IEnumerable<string> projectNames = _projects.Select(project => project.Path_With_Namespace);
+            fillProjectListAndSelect(projectNames, _initialState.DefaultProject);
          }
          else
          {
-            fillProjectListAndSelect(new ProjectKey[] { new ProjectKey(_hostname, _initialState.DefaultProject) }, null);
+            fillProjectListAndSelect(new string[] { _initialState.DefaultProject }, null);
             fillSourceBranchListAndSelect(new Branch[] { new Branch(_initialState.SourceBranch, null) }, null);
             fillTargetBranchListAndSelect(new string[] { _initialState.TargetBranch }, null);
 
@@ -241,7 +240,7 @@ namespace mrHelper.App.Forms
          updateControls();
       }
 
-      private static bool allowChangeSource(NewMergeRequestProperties initialState)
+      private static bool isAllowedToChangeSource(NewMergeRequestProperties initialState)
       {
          return String.IsNullOrEmpty(initialState.DefaultProject)
              || String.IsNullOrEmpty(initialState.SourceBranch)
@@ -277,7 +276,7 @@ namespace mrHelper.App.Forms
       protected RepositoryAccessor _repositoryAccessor;
       private bool _isLoadingCommit;
       private readonly NewMergeRequestProperties _initialState;
-      private readonly IEnumerable<ProjectKey> _projects;
+      private readonly IEnumerable<Project> _projects;
       private string _sourceBranchTemplate;
    }
 }

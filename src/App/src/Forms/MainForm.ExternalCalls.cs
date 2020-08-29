@@ -251,7 +251,8 @@ namespace mrHelper.App.Forms
             parsedNewMergeRequestUrl.ProjectKey.ProjectName, parsedNewMergeRequestUrl.SourceBranch,
             parsedNewMergeRequestUrl.TargetBranch, defaultProperties.AssigneeUsername,
             defaultProperties.IsSquashNeeded, defaultProperties.IsBranchDeletionNeeded);
-         createNewMergeRequest(getHostName(), getCurrentUser(), initialProperties);
+         var fullProjectList = _liveDataCache?.ProjectCache?.GetProjects() ?? Array.Empty<Project>();
+         createNewMergeRequest(getHostName(), getCurrentUser(), initialProperties, fullProjectList);
       }
 
       private class UrlConnectionException : ExceptionEx

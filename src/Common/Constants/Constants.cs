@@ -85,6 +85,12 @@ namespace mrHelper.Common.Constants
          Delay = 0
       };
 
+      public static TaskUtils.BatchLimits ProjectListLoaderBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 5,
+         Delay = 0
+      };
+
       public static TaskUtils.BatchLimits VersionLoaderMergeRequestBatchLimits = new TaskUtils.BatchLimits
       {
          Size = 20,
