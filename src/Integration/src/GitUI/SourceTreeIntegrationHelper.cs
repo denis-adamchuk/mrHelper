@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Xml.Linq;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
@@ -22,15 +20,28 @@ namespace mrHelper.Integration.GitUI
    {
       private static readonly string SettingsPath = @"Atlassian\SourceTree\customactions.xml";
 
+      private static readonly string RegistryDisplayName = "SourceTree";
+
+      private static readonly string BinaryFileName = "SourceTree.exe";
+
       public static bool IsInstalled()
       {
-         // TODO WTF
-         // 1. Check in AppFinder
-         return true;
+         return getBinaryFilePath() != null;
       }
 
       public static void Browse(string path)
       {
+         if (IsInstalled())
+         {
+            ExternalProcess.Start(getBinaryFilePath(), String.Format("-f \"{0}\"", path), false, ".");
+         }
+      }
+
+      private static string getBinaryFilePath()
+      {
+         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { RegistryDisplayName });
+         return appInfo != null && !String.IsNullOrWhiteSpace(appInfo.InstallPath)
+            ? Path.Combine(appInfo.InstallPath, BinaryFileName) : null;
       }
 
       public static void AddCustomActions(string scriptPath)

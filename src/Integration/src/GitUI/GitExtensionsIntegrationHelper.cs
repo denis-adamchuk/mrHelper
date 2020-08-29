@@ -22,16 +22,22 @@ namespace mrHelper.Integration.GitUI
    {
       private static readonly string SettingsPath = @"GitExtensions/GitExtensions/GitExtensions.settings";
 
+      private static readonly string BinaryFileName = "gitex.cmd";
+
       public static bool IsInstalled()
       {
-         // TODO WTF
-         // 1. Check 'where gitex.cmd' command output
-         return true;
+         IEnumerable<string> whereOutput = ExternalProcess.Start("where", BinaryFileName, true, ".").StdOut;
+         return whereOutput != null
+             && whereOutput.Any()
+             && !whereOutput.First().Contains("Could not find files for the given pattern(s)");
       }
 
       public static void Browse(string path)
       {
-         ExternalProcess.Start("gitex.cmd", String.Format("browse \"{0}\"", path), false, ".");
+         if (IsInstalled())
+         {
+            ExternalProcess.Start(BinaryFileName, String.Format("browse \"{0}\"", path), false, ".");
+         }
       }
 
       public static void AddCustomActions(string scriptPath)
