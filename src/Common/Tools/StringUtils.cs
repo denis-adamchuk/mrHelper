@@ -94,11 +94,16 @@ namespace mrHelper.Common.Tools
 
       public static bool IsWorkInProgressTitle(string title)
       {
-         return title.StartsWith(WorkInProgressPrefix);
+         return title != null && title.StartsWith(WorkInProgressPrefix);
       }
 
       public static string ToggleWorkInProgressTitle(string title)
       {
+         if (title == null)
+         {
+            return title;
+         }
+
          return title.StartsWith(WorkInProgressPrefix)
             ? title.Substring(WorkInProgressPrefix.Length) : WorkInProgressPrefix + title;
       }

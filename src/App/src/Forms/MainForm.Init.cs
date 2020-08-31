@@ -400,6 +400,7 @@ namespace mrHelper.App.Forms
          items.Add("-", null, null);
          items.Add("&Edit...", null, ListViewMergeRequests_Edit);
          ToolStripItem mergeItem = items.Add("&Merge...", null, ListViewMergeRequests_Accept);
+         mergeItem.Enabled = false;
          items.Add("&Close", null, ListViewMergeRequests_Close);
 
          _projectCacheCheckActions.Add(isCacheReady => mergeItem.Enabled = isCacheReady);

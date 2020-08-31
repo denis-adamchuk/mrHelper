@@ -33,7 +33,8 @@ namespace mrHelper.Integration.GitUI
       {
          if (IsInstalled())
          {
-            ExternalProcess.Start(getBinaryFilePath(), String.Format("-f \"{0}\"", path), false, ".");
+            ExternalProcess.Start(getBinaryFilePath(),
+               String.Format("-f {0}", StringUtils.EscapeSpaces(path)), false, ".");
          }
       }
 

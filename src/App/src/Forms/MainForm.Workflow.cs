@@ -279,8 +279,6 @@ namespace mrHelper.App.Forms
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
          unsubscribeFromLiveDataCacheInternalEvents();
-
-         _projectCacheCheckTimer?.Stop();
       }
 
       private void liveDataCacheConnected(string hostname, User user)

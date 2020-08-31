@@ -350,7 +350,7 @@ namespace mrHelper.App.Forms
          bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
          if (clickable)
          {
-            openBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
+            UrlHelper.OpenBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
          }
       }
 
@@ -445,7 +445,7 @@ namespace mrHelper.App.Forms
 
       private void LinkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         openBrowser((sender as LinkLabel).Text);
+         UrlHelper.OpenBrowser((sender as LinkLabel).Text);
       }
 
       private void listViewKnownHosts_SelectedIndexChanged(object sender, EventArgs e)
@@ -875,7 +875,7 @@ namespace mrHelper.App.Forms
          string helpUrl = Program.ServiceManager.GetHelpUrl();
          if (helpUrl != String.Empty)
          {
-            openBrowser(helpUrl);
+            UrlHelper.OpenBrowser(helpUrl);
          }
       }
 
@@ -1424,7 +1424,7 @@ namespace mrHelper.App.Forms
          string helpUrl = Program.ServiceManager.GetHelpUrl();
          if (helpUrl != String.Empty)
          {
-            openBrowser(helpUrl);
+            UrlHelper.OpenBrowser(helpUrl);
          }
       }
 
@@ -1434,7 +1434,7 @@ namespace mrHelper.App.Forms
          string helpUrl = Program.ServiceManager.GetHelpUrl();
          if (helpUrl != String.Empty)
          {
-            openBrowser(helpUrl);
+            UrlHelper.OpenBrowser(helpUrl);
          }
       }
 

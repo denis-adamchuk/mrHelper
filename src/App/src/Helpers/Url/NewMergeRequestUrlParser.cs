@@ -90,9 +90,9 @@ namespace mrHelper.App.Helpers.GitLab
             throw new UriFormatException(String.Format("\"{0}\" does not point to a remote branch", sourceBranch.Value));
          }
 
-         string remoteTargetBranch = findTargetBranch(path.Value, remoteSourceBranch);
-
          string remoteOrigin = "origin/";
+         string remoteTargetBranch = findTargetBranch(path.Value, remoteSourceBranch, remoteOrigin);
+
          Debug.Assert(remoteSourceBranch.StartsWith(remoteOrigin));
          Debug.Assert(remoteTargetBranch.StartsWith(remoteOrigin));
          string sourceBranchName = remoteSourceBranch.Substring(remoteOrigin.Length);
@@ -106,18 +106,20 @@ namespace mrHelper.App.Helpers.GitLab
          return refs != null ? refs.FirstOrDefault() : null;
       }
 
-      private static string findTargetBranch(string path, string remoteSourceBranch)
+      private static string findTargetBranch(string path, string remoteSourceBranch, string remoteOrigin)
       {
          for (int iDepth = 0; iDepth < Constants.MaxCommitDepth; ++iDepth)
          {
             string sha = String.Format("{0}{1}", remoteSourceBranch, new string('^', iDepth));
-            IEnumerable<string> refs = GitTools.GetRemotePointsAt(path, sha).Where(x => x != remoteSourceBranch);
+            IEnumerable<string> refs = GitTools.GetRemotePointsAt(path, sha)
+               .Where(x => x != remoteSourceBranch)
+               .Where(x => x != String.Format("{0}HEAD", remoteOrigin));
             if (refs.Any())
             {
                return refs.First();
             }
          }
-         return "origin/master";
+         return String.Format("{0}master", remoteOrigin);
       }
    }
 }

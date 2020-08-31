@@ -1205,22 +1205,6 @@ namespace mrHelper.App.Forms
          listView.SmallImageList = imgList;
       }
 
-      private void openBrowser(string text)
-      {
-         Trace.TraceInformation(String.Format("[Mainform] Opening browser with URL {0}", text));
-
-         try
-         {
-            Process.Start(text);
-         }
-         catch (Exception ex) // see Process.Start exception list
-         {
-            string errorMessage = "Cannot open URL";
-            ExceptionHandlers.Handle(errorMessage, ex);
-            MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-      }
-
       private void processUpdate(UserEvents.MergeRequestEvent e)
       {
          if (e.New || e.Commits)
@@ -2100,7 +2084,8 @@ namespace mrHelper.App.Forms
                getCommitStorage(mrk.ProjectKey, false)?.Path,
                _liveDataCache?.MergeRequestCache,
                Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName),
-               showDiscussionsFormAsync, selectedProject.Merge_Method);
+               showDiscussionsFormAsync, selectedProject.Merge_Method,
+               () => requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval }));
             form.Show();
          }
          catch (UnsupportedMergeMethodException ex)

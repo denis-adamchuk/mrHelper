@@ -82,6 +82,11 @@ namespace mrHelper.App.Forms
       private void showDiscussionForm(GitLabInstance gitLabInstance, DataCache dataCache, ILocalCommitStorage storage,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author)
       {
+         if (currentUser == null || discussions == null || author == null)
+         {
+            return;
+         }
+
          labelWorkflowStatus.Text = "Rendering discussion contexts...";
          labelWorkflowStatus.Refresh();
 
@@ -450,7 +455,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         requestUpdates(null, new int[] { Constants.CreateNewMergeRequestRefreshListTimerInterval });
+         requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval });
 
          labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been created in project {1}",
             mrkOpt.Value.IId, parameters.ProjectKey.ProjectName);
@@ -504,6 +509,8 @@ namespace mrHelper.App.Forms
          {
             GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings);
             await MergeRequestEditHelper.CloseMergeRequest(gitLabInstance, _modificationNotifier, mrk);
+
+            requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval });
          }
       }
    }

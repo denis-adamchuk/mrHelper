@@ -38,6 +38,9 @@ namespace mrHelper.App.Forms
          _clipboardCheckingTimer?.Stop();
          _clipboardCheckingTimer?.Dispose();
 
+         _projectCacheCheckTimer?.Stop();
+         _projectCacheCheckTimer?.Dispose();
+
          // This allows to handle all pending invocations that other threads are
          // already ready to make before we dispose ourselves
          Application.DoEvents();
@@ -446,6 +449,7 @@ namespace mrHelper.App.Forms
          // buttonCreateNew
          // 
          this.buttonCreateNew.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonCreateNew.Enabled = false;
          this.buttonCreateNew.Location = new System.Drawing.Point(400, 10);
          this.buttonCreateNew.Name = "buttonCreateNew";
          this.buttonCreateNew.Size = new System.Drawing.Size(96, 32);

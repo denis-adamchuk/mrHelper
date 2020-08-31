@@ -36,7 +36,8 @@ namespace mrHelper.Integration.GitUI
       {
          if (IsInstalled())
          {
-            ExternalProcess.Start(BinaryFileName, String.Format("browse \"{0}\"", path), false, ".");
+            ExternalProcess.Start(BinaryFileName,
+               String.Format("browse {0}", StringUtils.EscapeSpaces(path)), false, ".");
          }
       }
 

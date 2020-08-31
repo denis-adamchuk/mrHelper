@@ -18,6 +18,9 @@
             components.Dispose();
          }
          base.Dispose(disposing);
+
+         stopSynchronizationTimer();
+         _synchronizationTimer?.Dispose();
       }
 
       #region Windows Form Designer generated code
@@ -28,20 +31,12 @@
       /// </summary>
       private void InitializeComponent()
       {
+         this.components = new System.ComponentModel.Container();
          System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AcceptMergeRequestForm));
-         this.groupBoxRebase = new System.Windows.Forms.GroupBox();
-         this.buttonRebase = new System.Windows.Forms.Button();
-         this.labelRebaseStatus = new System.Windows.Forms.Label();
          this.linkLabelOpenGitExtensions = new System.Windows.Forms.LinkLabel();
          this.linkLabelOpenSourceTree = new System.Windows.Forms.LinkLabel();
          this.linkLabelOpenExplorer = new System.Windows.Forms.LinkLabel();
          this.buttonClose = new System.Windows.Forms.Button();
-         this.groupBoxDiscussions = new System.Windows.Forms.GroupBox();
-         this.buttonDiscussions = new System.Windows.Forms.Button();
-         this.labelDiscussionStatus = new System.Windows.Forms.Label();
-         this.groupBoxWorkInProgress = new System.Windows.Forms.GroupBox();
-         this.buttonToggleWIP = new System.Windows.Forms.Button();
-         this.labelWIPStatus = new System.Windows.Forms.Label();
          this.groupBoxMerge = new System.Windows.Forms.GroupBox();
          this.groupBoxMergeCommitMessage = new System.Windows.Forms.GroupBox();
          this.labelCommitMessageLabel = new System.Windows.Forms.Label();
@@ -62,51 +57,32 @@
          this.labelSourceBranch = new System.Windows.Forms.Label();
          this.labelTargetBranchLabel = new System.Windows.Forms.Label();
          this.labelSourceBranchLabel = new System.Windows.Forms.Label();
-         this.groupBoxRebase.SuspendLayout();
-         this.groupBoxDiscussions.SuspendLayout();
-         this.groupBoxWorkInProgress.SuspendLayout();
+         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.buttonToggleWIP = new System.Windows.Forms.Button();
+         this.buttonDiscussions = new System.Windows.Forms.Button();
+         this.buttonRebase = new System.Windows.Forms.Button();
+         this.linkLabelOpenAtGitLab = new System.Windows.Forms.LinkLabel();
+         this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+         this.groupBoxRebase = new System.Windows.Forms.GroupBox();
+         this.labelRebaseStatus = new System.Windows.Forms.Label();
+         this.groupBoxDiscussions = new System.Windows.Forms.GroupBox();
+         this.labelDiscussionStatus = new System.Windows.Forms.Label();
+         this.groupBoxWorkInProgress = new System.Windows.Forms.GroupBox();
+         this.labelWIPStatus = new System.Windows.Forms.Label();
          this.groupBoxMerge.SuspendLayout();
          this.groupBoxMergeCommitMessage.SuspendLayout();
          this.groupBoxMergeRequestInformation.SuspendLayout();
+         this.tableLayoutPanel1.SuspendLayout();
+         this.groupBoxRebase.SuspendLayout();
+         this.groupBoxDiscussions.SuspendLayout();
+         this.groupBoxWorkInProgress.SuspendLayout();
          this.SuspendLayout();
-         // 
-         // groupBoxRebase
-         // 
-         this.groupBoxRebase.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBoxRebase.Controls.Add(this.buttonRebase);
-         this.groupBoxRebase.Controls.Add(this.labelRebaseStatus);
-         this.groupBoxRebase.Location = new System.Drawing.Point(12, 210);
-         this.groupBoxRebase.Name = "groupBoxRebase";
-         this.groupBoxRebase.Size = new System.Drawing.Size(692, 80);
-         this.groupBoxRebase.TabIndex = 0;
-         this.groupBoxRebase.TabStop = false;
-         this.groupBoxRebase.Text = "Rebase";
-         // 
-         // buttonRebase
-         // 
-         this.buttonRebase.Location = new System.Drawing.Point(9, 38);
-         this.buttonRebase.Name = "buttonRebase";
-         this.buttonRebase.Size = new System.Drawing.Size(96, 32);
-         this.buttonRebase.TabIndex = 1;
-         this.buttonRebase.Text = "Rebase";
-         this.buttonRebase.UseVisualStyleBackColor = true;
-         this.buttonRebase.Click += new System.EventHandler(this.buttonRebase_Click);
-         // 
-         // labelRebaseStatus
-         // 
-         this.labelRebaseStatus.AutoSize = true;
-         this.labelRebaseStatus.Location = new System.Drawing.Point(6, 20);
-         this.labelRebaseStatus.Name = "labelRebaseStatus";
-         this.labelRebaseStatus.Size = new System.Drawing.Size(111, 13);
-         this.labelRebaseStatus.TabIndex = 0;
-         this.labelRebaseStatus.Text = "<Rebase status here>";
          // 
          // linkLabelOpenGitExtensions
          // 
          this.linkLabelOpenGitExtensions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.linkLabelOpenGitExtensions.AutoSize = true;
-         this.linkLabelOpenGitExtensions.Location = new System.Drawing.Point(9, 574);
+         this.linkLabelOpenGitExtensions.Location = new System.Drawing.Point(105, 492);
          this.linkLabelOpenGitExtensions.Name = "linkLabelOpenGitExtensions";
          this.linkLabelOpenGitExtensions.Size = new System.Drawing.Size(103, 13);
          this.linkLabelOpenGitExtensions.TabIndex = 3;
@@ -118,7 +94,7 @@
          // 
          this.linkLabelOpenSourceTree.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.linkLabelOpenSourceTree.AutoSize = true;
-         this.linkLabelOpenSourceTree.Location = new System.Drawing.Point(152, 574);
+         this.linkLabelOpenSourceTree.Location = new System.Drawing.Point(105, 511);
          this.linkLabelOpenSourceTree.Name = "linkLabelOpenSourceTree";
          this.linkLabelOpenSourceTree.Size = new System.Drawing.Size(95, 13);
          this.linkLabelOpenSourceTree.TabIndex = 5;
@@ -130,7 +106,7 @@
          // 
          this.linkLabelOpenExplorer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.linkLabelOpenExplorer.AutoSize = true;
-         this.linkLabelOpenExplorer.Location = new System.Drawing.Point(284, 574);
+         this.linkLabelOpenExplorer.Location = new System.Drawing.Point(9, 492);
          this.linkLabelOpenExplorer.Name = "linkLabelOpenExplorer";
          this.linkLabelOpenExplorer.Size = new System.Drawing.Size(74, 13);
          this.linkLabelOpenExplorer.TabIndex = 3;
@@ -142,7 +118,7 @@
          // 
          this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonClose.Location = new System.Drawing.Point(608, 574);
+         this.buttonClose.Location = new System.Drawing.Point(608, 492);
          this.buttonClose.Name = "buttonClose";
          this.buttonClose.Size = new System.Drawing.Size(96, 32);
          this.buttonClose.TabIndex = 7;
@@ -150,81 +126,19 @@
          this.buttonClose.UseVisualStyleBackColor = true;
          this.buttonClose.Click += new System.EventHandler(this.buttonClose_Click);
          // 
-         // groupBoxDiscussions
-         // 
-         this.groupBoxDiscussions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBoxDiscussions.Controls.Add(this.buttonDiscussions);
-         this.groupBoxDiscussions.Controls.Add(this.labelDiscussionStatus);
-         this.groupBoxDiscussions.Location = new System.Drawing.Point(12, 124);
-         this.groupBoxDiscussions.Name = "groupBoxDiscussions";
-         this.groupBoxDiscussions.Size = new System.Drawing.Size(335, 80);
-         this.groupBoxDiscussions.TabIndex = 8;
-         this.groupBoxDiscussions.TabStop = false;
-         this.groupBoxDiscussions.Text = "Discussions";
-         // 
-         // buttonDiscussions
-         // 
-         this.buttonDiscussions.Location = new System.Drawing.Point(9, 38);
-         this.buttonDiscussions.Name = "buttonDiscussions";
-         this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
-         this.buttonDiscussions.TabIndex = 3;
-         this.buttonDiscussions.Text = "Discussions";
-         this.buttonDiscussions.UseVisualStyleBackColor = true;
-         this.buttonDiscussions.Click += new System.EventHandler(this.buttonDiscussions_Click);
-         // 
-         // labelDiscussionStatus
-         // 
-         this.labelDiscussionStatus.AutoSize = true;
-         this.labelDiscussionStatus.Location = new System.Drawing.Point(8, 20);
-         this.labelDiscussionStatus.Name = "labelDiscussionStatus";
-         this.labelDiscussionStatus.Size = new System.Drawing.Size(130, 13);
-         this.labelDiscussionStatus.TabIndex = 0;
-         this.labelDiscussionStatus.Text = "<Discussions status here>";
-         // 
-         // groupBoxWorkInProgress
-         // 
-         this.groupBoxWorkInProgress.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBoxWorkInProgress.Controls.Add(this.buttonToggleWIP);
-         this.groupBoxWorkInProgress.Controls.Add(this.labelWIPStatus);
-         this.groupBoxWorkInProgress.Location = new System.Drawing.Point(369, 124);
-         this.groupBoxWorkInProgress.Name = "groupBoxWorkInProgress";
-         this.groupBoxWorkInProgress.Size = new System.Drawing.Size(335, 80);
-         this.groupBoxWorkInProgress.TabIndex = 9;
-         this.groupBoxWorkInProgress.TabStop = false;
-         this.groupBoxWorkInProgress.Text = "Work In Progress";
-         // 
-         // buttonToggleWIP
-         // 
-         this.buttonToggleWIP.Location = new System.Drawing.Point(9, 38);
-         this.buttonToggleWIP.Name = "buttonToggleWIP";
-         this.buttonToggleWIP.Size = new System.Drawing.Size(129, 32);
-         this.buttonToggleWIP.TabIndex = 2;
-         this.buttonToggleWIP.Text = "Toggle WIP Status";
-         this.buttonToggleWIP.UseVisualStyleBackColor = true;
-         this.buttonToggleWIP.Click += new System.EventHandler(this.buttonToggleWIP_Click);
-         // 
-         // labelWIPStatus
-         // 
-         this.labelWIPStatus.AutoSize = true;
-         this.labelWIPStatus.Location = new System.Drawing.Point(8, 20);
-         this.labelWIPStatus.Name = "labelWIPStatus";
-         this.labelWIPStatus.Size = new System.Drawing.Size(95, 13);
-         this.labelWIPStatus.TabIndex = 0;
-         this.labelWIPStatus.Text = "<WIP status here>";
-         // 
          // groupBoxMerge
          // 
-         this.groupBoxMerge.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+         this.groupBoxMerge.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBoxMerge.Controls.Add(this.groupBoxMergeCommitMessage);
          this.groupBoxMerge.Controls.Add(this.checkBoxSquash);
          this.groupBoxMerge.Controls.Add(this.checkBoxDeleteSourceBranch);
          this.groupBoxMerge.Controls.Add(this.buttonMerge);
          this.groupBoxMerge.Controls.Add(this.labelMergeStatus);
-         this.groupBoxMerge.Location = new System.Drawing.Point(12, 296);
+         this.groupBoxMerge.Location = new System.Drawing.Point(12, 218);
          this.groupBoxMerge.Name = "groupBoxMerge";
-         this.groupBoxMerge.Size = new System.Drawing.Size(692, 272);
+         this.groupBoxMerge.Size = new System.Drawing.Size(692, 268);
          this.groupBoxMerge.TabIndex = 6;
          this.groupBoxMerge.TabStop = false;
          this.groupBoxMerge.Text = "Merge";
@@ -239,7 +153,7 @@
          this.groupBoxMergeCommitMessage.Controls.Add(this.textBoxCommitMessage);
          this.groupBoxMergeCommitMessage.Location = new System.Drawing.Point(9, 63);
          this.groupBoxMergeCommitMessage.Name = "groupBoxMergeCommitMessage";
-         this.groupBoxMergeCommitMessage.Size = new System.Drawing.Size(670, 165);
+         this.groupBoxMergeCommitMessage.Size = new System.Drawing.Size(670, 161);
          this.groupBoxMergeCommitMessage.TabIndex = 12;
          this.groupBoxMergeCommitMessage.TabStop = false;
          this.groupBoxMergeCommitMessage.Text = "Merge Commit Message";
@@ -257,12 +171,14 @@
          // comboBoxCommit
          // 
          this.comboBoxCommit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.comboBoxCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxCommit.FormattingEnabled = true;
          this.comboBoxCommit.Location = new System.Drawing.Point(299, 19);
          this.comboBoxCommit.Name = "comboBoxCommit";
          this.comboBoxCommit.Size = new System.Drawing.Size(365, 21);
          this.comboBoxCommit.TabIndex = 1;
          this.comboBoxCommit.SelectedIndexChanged += new System.EventHandler(this.comboBoxCommit_SelectedIndexChanged);
+         this.comboBoxCommit.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxCommit_Format);
          // 
          // textBoxCommitMessage
          // 
@@ -272,7 +188,7 @@
          this.textBoxCommitMessage.Location = new System.Drawing.Point(6, 47);
          this.textBoxCommitMessage.Multiline = true;
          this.textBoxCommitMessage.Name = "textBoxCommitMessage";
-         this.textBoxCommitMessage.Size = new System.Drawing.Size(658, 112);
+         this.textBoxCommitMessage.Size = new System.Drawing.Size(658, 108);
          this.textBoxCommitMessage.TabIndex = 0;
          // 
          // checkBoxSquash
@@ -296,11 +212,12 @@
          this.checkBoxDeleteSourceBranch.TabIndex = 10;
          this.checkBoxDeleteSourceBranch.Text = "Delete source branch when merge request is accepted";
          this.checkBoxDeleteSourceBranch.UseVisualStyleBackColor = true;
+         this.checkBoxDeleteSourceBranch.CheckedChanged += new System.EventHandler(this.checkBoxDeleteSourceBranch_CheckedChanged);
          // 
          // buttonMerge
          // 
          this.buttonMerge.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-         this.buttonMerge.Location = new System.Drawing.Point(9, 234);
+         this.buttonMerge.Location = new System.Drawing.Point(9, 230);
          this.buttonMerge.Name = "buttonMerge";
          this.buttonMerge.Size = new System.Drawing.Size(96, 32);
          this.buttonMerge.TabIndex = 1;
@@ -311,9 +228,10 @@
          // labelMergeStatus
          // 
          this.labelMergeStatus.AutoSize = true;
+         this.labelMergeStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.labelMergeStatus.Location = new System.Drawing.Point(8, 20);
          this.labelMergeStatus.Name = "labelMergeStatus";
-         this.labelMergeStatus.Size = new System.Drawing.Size(108, 13);
+         this.labelMergeStatus.Size = new System.Drawing.Size(127, 13);
          this.labelMergeStatus.TabIndex = 0;
          this.labelMergeStatus.Text = "<Merge Status Here>";
          // 
@@ -391,7 +309,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
          this.htmlPanelTitle.AutoScroll = true;
          this.htmlPanelTitle.BackColor = System.Drawing.SystemColors.Window;
-         this.htmlPanelTitle.BaseStylesheet = null;
+         this.htmlPanelTitle.BaseStylesheet = resources.GetString("htmlPanelTitle.BaseStylesheet");
          this.htmlPanelTitle.Cursor = System.Windows.Forms.Cursors.IBeam;
          this.htmlPanelTitle.Location = new System.Drawing.Point(96, 19);
          this.htmlPanelTitle.Name = "htmlPanelTitle";
@@ -437,58 +355,181 @@
          this.labelSourceBranchLabel.TabIndex = 2;
          this.labelSourceBranchLabel.Text = "Source Branch:";
          // 
+         // buttonToggleWIP
+         // 
+         this.buttonToggleWIP.Location = new System.Drawing.Point(6, 44);
+         this.buttonToggleWIP.Name = "buttonToggleWIP";
+         this.buttonToggleWIP.Size = new System.Drawing.Size(129, 32);
+         this.buttonToggleWIP.TabIndex = 2;
+         this.buttonToggleWIP.Text = "Toggle WIP Status";
+         this.toolTip.SetToolTip(this.buttonToggleWIP, "Set or reset WIP state");
+         this.buttonToggleWIP.UseVisualStyleBackColor = true;
+         this.buttonToggleWIP.Click += new System.EventHandler(this.buttonToggleWIP_Click);
+         // 
+         // buttonDiscussions
+         // 
+         this.buttonDiscussions.Location = new System.Drawing.Point(6, 44);
+         this.buttonDiscussions.Name = "buttonDiscussions";
+         this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
+         this.buttonDiscussions.TabIndex = 3;
+         this.buttonDiscussions.Text = "Discussions";
+         this.toolTip.SetToolTip(this.buttonDiscussions, "Open Discussions view");
+         this.buttonDiscussions.UseVisualStyleBackColor = true;
+         this.buttonDiscussions.Click += new System.EventHandler(this.buttonDiscussions_Click);
+         // 
+         // buttonRebase
+         // 
+         this.buttonRebase.Location = new System.Drawing.Point(6, 44);
+         this.buttonRebase.Name = "buttonRebase";
+         this.buttonRebase.Size = new System.Drawing.Size(96, 32);
+         this.buttonRebase.TabIndex = 1;
+         this.buttonRebase.Text = "Rebase";
+         this.toolTip.SetToolTip(this.buttonRebase, "Rebase the source branch onto the target branch to allow this merge request to be" +
+        " merged");
+         this.buttonRebase.UseVisualStyleBackColor = true;
+         this.buttonRebase.Click += new System.EventHandler(this.buttonRebase_Click);
+         // 
+         // linkLabelOpenAtGitLab
+         // 
+         this.linkLabelOpenAtGitLab.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+         this.linkLabelOpenAtGitLab.AutoSize = true;
+         this.linkLabelOpenAtGitLab.Location = new System.Drawing.Point(9, 511);
+         this.linkLabelOpenAtGitLab.Name = "linkLabelOpenAtGitLab";
+         this.linkLabelOpenAtGitLab.Size = new System.Drawing.Size(79, 13);
+         this.linkLabelOpenAtGitLab.TabIndex = 11;
+         this.linkLabelOpenAtGitLab.TabStop = true;
+         this.linkLabelOpenAtGitLab.Text = "Open at GitLab";
+         this.linkLabelOpenAtGitLab.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelOpenAtGitLab_LinkClicked);
+         // 
+         // tableLayoutPanel1
+         // 
+         this.tableLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.tableLayoutPanel1.ColumnCount = 3;
+         this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+         this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+         this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+         this.tableLayoutPanel1.Controls.Add(this.groupBoxRebase, 2, 0);
+         this.tableLayoutPanel1.Controls.Add(this.groupBoxDiscussions, 1, 0);
+         this.tableLayoutPanel1.Controls.Add(this.groupBoxWorkInProgress, 0, 0);
+         this.tableLayoutPanel1.GrowStyle = System.Windows.Forms.TableLayoutPanelGrowStyle.FixedSize;
+         this.tableLayoutPanel1.Location = new System.Drawing.Point(12, 124);
+         this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+         this.tableLayoutPanel1.RowCount = 1;
+         this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+         this.tableLayoutPanel1.Size = new System.Drawing.Size(692, 88);
+         this.tableLayoutPanel1.TabIndex = 22;
+         // 
+         // groupBoxRebase
+         // 
+         this.groupBoxRebase.Controls.Add(this.buttonRebase);
+         this.groupBoxRebase.Controls.Add(this.labelRebaseStatus);
+         this.groupBoxRebase.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.groupBoxRebase.Location = new System.Drawing.Point(463, 3);
+         this.groupBoxRebase.Name = "groupBoxRebase";
+         this.groupBoxRebase.Size = new System.Drawing.Size(226, 82);
+         this.groupBoxRebase.TabIndex = 24;
+         this.groupBoxRebase.TabStop = false;
+         this.groupBoxRebase.Text = "Rebase";
+         // 
+         // labelRebaseStatus
+         // 
+         this.labelRebaseStatus.AutoSize = true;
+         this.labelRebaseStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelRebaseStatus.ForeColor = System.Drawing.SystemColors.ControlText;
+         this.labelRebaseStatus.Location = new System.Drawing.Point(6, 20);
+         this.labelRebaseStatus.Name = "labelRebaseStatus";
+         this.labelRebaseStatus.Size = new System.Drawing.Size(131, 13);
+         this.labelRebaseStatus.TabIndex = 0;
+         this.labelRebaseStatus.Text = "<Rebase status here>";
+         // 
+         // groupBoxDiscussions
+         // 
+         this.groupBoxDiscussions.Controls.Add(this.buttonDiscussions);
+         this.groupBoxDiscussions.Controls.Add(this.labelDiscussionStatus);
+         this.groupBoxDiscussions.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.groupBoxDiscussions.Location = new System.Drawing.Point(233, 3);
+         this.groupBoxDiscussions.Name = "groupBoxDiscussions";
+         this.groupBoxDiscussions.Size = new System.Drawing.Size(224, 82);
+         this.groupBoxDiscussions.TabIndex = 23;
+         this.groupBoxDiscussions.TabStop = false;
+         this.groupBoxDiscussions.Text = "Discussions";
+         // 
+         // labelDiscussionStatus
+         // 
+         this.labelDiscussionStatus.AutoSize = true;
+         this.labelDiscussionStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelDiscussionStatus.Location = new System.Drawing.Point(8, 20);
+         this.labelDiscussionStatus.Name = "labelDiscussionStatus";
+         this.labelDiscussionStatus.Size = new System.Drawing.Size(155, 13);
+         this.labelDiscussionStatus.TabIndex = 0;
+         this.labelDiscussionStatus.Text = "<Discussions status here>";
+         // 
+         // groupBoxWorkInProgress
+         // 
+         this.groupBoxWorkInProgress.Controls.Add(this.buttonToggleWIP);
+         this.groupBoxWorkInProgress.Controls.Add(this.labelWIPStatus);
+         this.groupBoxWorkInProgress.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.groupBoxWorkInProgress.Location = new System.Drawing.Point(3, 3);
+         this.groupBoxWorkInProgress.Name = "groupBoxWorkInProgress";
+         this.groupBoxWorkInProgress.Size = new System.Drawing.Size(224, 82);
+         this.groupBoxWorkInProgress.TabIndex = 22;
+         this.groupBoxWorkInProgress.TabStop = false;
+         this.groupBoxWorkInProgress.Text = "Work In Progress";
+         // 
+         // labelWIPStatus
+         // 
+         this.labelWIPStatus.AutoSize = true;
+         this.labelWIPStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelWIPStatus.Location = new System.Drawing.Point(8, 20);
+         this.labelWIPStatus.Name = "labelWIPStatus";
+         this.labelWIPStatus.Size = new System.Drawing.Size(112, 13);
+         this.labelWIPStatus.TabIndex = 0;
+         this.labelWIPStatus.Text = "<WIP status here>";
+         // 
          // AcceptMergeRequestForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.AutoScroll = true;
          this.CancelButton = this.buttonClose;
-         this.ClientSize = new System.Drawing.Size(716, 619);
+         this.ClientSize = new System.Drawing.Size(716, 537);
+         this.Controls.Add(this.tableLayoutPanel1);
+         this.Controls.Add(this.linkLabelOpenAtGitLab);
          this.Controls.Add(this.groupBoxMergeRequestInformation);
          this.Controls.Add(this.groupBoxMerge);
-         this.Controls.Add(this.groupBoxWorkInProgress);
-         this.Controls.Add(this.groupBoxDiscussions);
          this.Controls.Add(this.buttonClose);
          this.Controls.Add(this.linkLabelOpenSourceTree);
          this.Controls.Add(this.linkLabelOpenGitExtensions);
          this.Controls.Add(this.linkLabelOpenExplorer);
-         this.Controls.Add(this.groupBoxRebase);
-         this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-         this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+         this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
+         this.MinimumSize = new System.Drawing.Size(732, 576);
          this.Name = "AcceptMergeRequestForm";
          this.Text = "Request to merge";
-         this.groupBoxRebase.ResumeLayout(false);
-         this.groupBoxRebase.PerformLayout();
-         this.groupBoxDiscussions.ResumeLayout(false);
-         this.groupBoxDiscussions.PerformLayout();
-         this.groupBoxWorkInProgress.ResumeLayout(false);
-         this.groupBoxWorkInProgress.PerformLayout();
          this.groupBoxMerge.ResumeLayout(false);
          this.groupBoxMerge.PerformLayout();
          this.groupBoxMergeCommitMessage.ResumeLayout(false);
          this.groupBoxMergeCommitMessage.PerformLayout();
          this.groupBoxMergeRequestInformation.ResumeLayout(false);
          this.groupBoxMergeRequestInformation.PerformLayout();
+         this.tableLayoutPanel1.ResumeLayout(false);
+         this.groupBoxRebase.ResumeLayout(false);
+         this.groupBoxRebase.PerformLayout();
+         this.groupBoxDiscussions.ResumeLayout(false);
+         this.groupBoxDiscussions.PerformLayout();
+         this.groupBoxWorkInProgress.ResumeLayout(false);
+         this.groupBoxWorkInProgress.PerformLayout();
          this.ResumeLayout(false);
          this.PerformLayout();
 
       }
 
       #endregion
-
-      private System.Windows.Forms.GroupBox groupBoxRebase;
-      private System.Windows.Forms.Button buttonRebase;
-      private System.Windows.Forms.Label labelRebaseStatus;
       private System.Windows.Forms.LinkLabel linkLabelOpenGitExtensions;
       private System.Windows.Forms.LinkLabel linkLabelOpenSourceTree;
       private System.Windows.Forms.LinkLabel linkLabelOpenExplorer;
       private System.Windows.Forms.Button buttonClose;
-      private System.Windows.Forms.GroupBox groupBoxDiscussions;
-      private System.Windows.Forms.Label labelDiscussionStatus;
-      private System.Windows.Forms.GroupBox groupBoxWorkInProgress;
-      private System.Windows.Forms.Button buttonToggleWIP;
-      private System.Windows.Forms.Label labelWIPStatus;
       private System.Windows.Forms.GroupBox groupBoxMerge;
       private System.Windows.Forms.Button buttonMerge;
       private System.Windows.Forms.Label labelMergeStatus;
@@ -505,10 +546,21 @@
       protected TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelTitle;
       protected System.Windows.Forms.CheckBox checkBoxSquash;
       protected System.Windows.Forms.CheckBox checkBoxDeleteSourceBranch;
-      private System.Windows.Forms.Button buttonDiscussions;
       private System.Windows.Forms.GroupBox groupBoxMergeCommitMessage;
       private System.Windows.Forms.Label labelCommitMessageLabel;
       private System.Windows.Forms.ComboBox comboBoxCommit;
       private System.Windows.Forms.TextBox textBoxCommitMessage;
+      private System.Windows.Forms.ToolTip toolTip;
+      private System.Windows.Forms.LinkLabel linkLabelOpenAtGitLab;
+      private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+      private System.Windows.Forms.GroupBox groupBoxRebase;
+      private System.Windows.Forms.Button buttonRebase;
+      private System.Windows.Forms.Label labelRebaseStatus;
+      private System.Windows.Forms.GroupBox groupBoxDiscussions;
+      private System.Windows.Forms.Button buttonDiscussions;
+      private System.Windows.Forms.Label labelDiscussionStatus;
+      private System.Windows.Forms.GroupBox groupBoxWorkInProgress;
+      private System.Windows.Forms.Button buttonToggleWIP;
+      private System.Windows.Forms.Label labelWIPStatus;
    }
 }

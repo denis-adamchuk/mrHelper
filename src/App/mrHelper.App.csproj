@@ -112,6 +112,10 @@
       <DependentUpon>RevisionBrowser.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Controls\TextControls.cs" />
+    <Compile Include="src\Forms\AcceptMergeRequestForm.UI.cs">
+      <DependentUpon>AcceptMergeRequestForm.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="src\Forms\AddItemForm.cs">
       <SubType>Form</SubType>
     </Compile>
