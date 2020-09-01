@@ -61,8 +61,14 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         MessageBox.Show("Something went wrong at GitLab during merge, try again at Web UI", "Error",
-            MessageBoxButtons.OK, MessageBoxIcon.Error);
+         string errorMessage = "Something went wrong at GitLab during merge, try again at Web UI";
+         if (!String.IsNullOrEmpty(mergeRequest.Merge_Error))
+         {
+            errorMessage = String.Format(
+               "GitLab reported error: \"{0}\". Try to resolve it and repeat operation.", mergeRequest.Merge_Error);
+         }
+
+         MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
 
       private void applyInitialMergeRequestState(IMergeRequestCache dataCache)
@@ -242,10 +248,10 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<MergeRequest> mergeAsync(string squashCommitMessage, bool squash, bool deleteSourceBranch)
+      async private Task<MergeRequest> mergeAsync(string squashCommitMessage, bool shouldRemoveSourceBranch)
       {
          AcceptMergeRequestParameters parameters = new AcceptMergeRequestParameters(
-            null, squashCommitMessage, squash, deleteSourceBranch, null, null);
+            null, squashCommitMessage, null, shouldRemoveSourceBranch, null, null);
 
          stopSynchronizationTimer();
          try
@@ -262,11 +268,22 @@ namespace mrHelper.App.Forms
       {
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
             null, _title, null, null, null, null, null);
+         return await applyModification(updateMergeRequestParameters);
+      }
 
+      async private Task<MergeRequest> setSquashAsync(bool squash)
+      {
+         UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
+            null, null, null, null, null, null, squash);
+         return await applyModification(updateMergeRequestParameters);
+      }
+
+      async private Task<MergeRequest> applyModification(UpdateMergeRequestParameters parameters)
+      {
          stopSynchronizationTimer();
          try
          {
-            return await getEditor().ModifyMergeRequest(updateMergeRequestParameters);
+            return await getEditor().ModifyMergeRequest(parameters);
          }
          finally
          {

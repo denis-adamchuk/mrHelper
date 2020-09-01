@@ -52,8 +52,13 @@ namespace mrHelper.App.Forms
          try
          {
             showMergeInProgress();
-            MergeRequest mergeRequest = await mergeAsync(
-               getSquashCommitMessage(), _isSquashNeeded, _isRemoteBranchDeletionNeeded);
+            // Modify MR manually here because for some reason "squash" query parameter
+            // sometimes does not affect the merge. For instance, this occurs when
+            // Merge_Error is already set to "Failed to squash", in this case simply
+            // set "squash=false" has no effect.
+            MergeRequest mergeRequest = await setSquashAsync(_isSquashNeeded);
+            Debug.Assert(mergeRequest.Squash == _isSquashNeeded);
+            mergeRequest = await mergeAsync(getSquashCommitMessage(), _isRemoteBranchDeletionNeeded);
             postProcessMerge(mergeRequest);
          }
          catch (MergeRequestEditorException ex)
@@ -61,6 +66,11 @@ namespace mrHelper.App.Forms
             if (!areConflictsFoundAtMerge(ex))
             {
                reportErrorToUser(ex);
+            }
+            else
+            {
+               MessageBox.Show("GitLab was unable to complete the merge. Rebase branch locally and try again",
+                  "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
          }
       }
