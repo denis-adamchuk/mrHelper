@@ -106,6 +106,7 @@ namespace mrHelper.App.Forms
 
          disableAllUIControls(true);
          disableAllSearchUIControls(true);
+         _liveDataCache.Disconnect();
          _searchDataCache.Disconnect();
          textBoxSearch.Enabled = false;
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", hostname);

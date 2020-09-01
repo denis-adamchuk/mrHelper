@@ -796,8 +796,11 @@ namespace mrHelper.App.Forms
 
       async private void ButtonDiscussions_Click(object sender, EventArgs e)
       {
-         Debug.Assert(getMergeRequestKey(null).HasValue);
-         Debug.Assert(getMergeRequest(null) != null);
+         if (getMergeRequest(null) == null || !getMergeRequestKey(null).HasValue)
+         {
+            Debug.Assert(false);
+            return;
+         }
 
          MergeRequest mergeRequest = getMergeRequest(null);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
