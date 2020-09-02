@@ -1492,7 +1492,7 @@ namespace mrHelper.App.Forms
          }
 
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
-         acceptMergeRequest(getHostName(), item, fullProjectList);
+         acceptMergeRequest(getHostName(), item);
       }
 
       private void ListViewMergeRequests_Close(object sender, EventArgs e)

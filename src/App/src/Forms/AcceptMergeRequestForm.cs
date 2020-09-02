@@ -8,27 +8,20 @@ using GitLabSharp.Entities;
 using Markdig;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
+using System.Collections.Generic;
 
 namespace mrHelper.App.Forms
 {
    public partial class AcceptMergeRequestForm : CustomFontForm
    {
-      internal AcceptMergeRequestForm(MergeRequestKey mrk, string repositoryPath,
-         IMergeRequestCache dataCache, GitLabClient.MergeRequestAccessor mergeRequestAccessor,
-         Func<MergeRequestKey, string, User, Task> onOpenDiscussions, string mergeMethod,
-         Action onMerged)
+      internal AcceptMergeRequestForm(
+         MergeRequestKey mrk,
+         string repositoryPath,
+         Action onMerged,
+         Func<MergeRequestKey, string, User, Task> onOpenDiscussions,
+         Func<Task<DataCache>> fetchCache,
+         Func<GitLabClient.MergeRequestAccessor> getMergeRequestAccessor)
       {
-         if (dataCache == null)
-         {
-            throw new ArgumentException("dataCache argument cannot be null");
-         }
-
-         if (mergeMethod != "ff")
-         {
-            throw new UnsupportedMergeMethodException(
-               "Current version supports projects with Fast Forward merge method only");
-         }
-
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
@@ -40,13 +33,13 @@ namespace mrHelper.App.Forms
 
          _mergeRequestKey = mrk;
          _repositoryPath = repositoryPath ?? throw new ArgumentException("repositoryPath argument cannot be null");
-         _mergeRequestAccessor = mergeRequestAccessor ?? throw new ArgumentException("mergeRequestAccessor argument cannot be null");
+         _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
          _onOpenDiscussions = onOpenDiscussions;
          _onMerged = onMerged;
-         _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
+         _fetchCache = fetchCache;
+         _getMergeRequestAccessor = getMergeRequestAccessor;
 
          initializeGitUILinks();
-         applyInitialMergeRequestState(dataCache);
 
          createSynchronizationWithGitLabTimer();
          startSynchronizationTimer();
@@ -71,18 +64,24 @@ namespace mrHelper.App.Forms
          MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
       }
 
-      private void applyInitialMergeRequestState(IMergeRequestCache dataCache)
+      private void refreshCommits(IMergeRequestCache mergeRequestCache)
       {
-         MergeRequest mergeRequest = dataCache.GetMergeRequest(_mergeRequestKey);
-         if (mergeRequest.State != "opened")
-         {
-            throw new InvalidMergeRequestState("Only Open Merge Requests can be merged");
-         }
+         _commits = mergeRequestCache.GetCommits(_mergeRequestKey).ToArray();
+      }
 
-         _isSquashNeeded = mergeRequest.Squash;
-         _isRemoteBranchDeletionNeeded = mergeRequest.Force_Remove_Source_Branch;
-         _commits = dataCache.GetCommits(_mergeRequestKey).ToArray();
-         applyMergeRequest(mergeRequest);
+      private void checkProjectProperties(IProjectCache projectCache)
+      {
+         IEnumerable<Project> fullProjectList = projectCache.GetProjects();
+         Project selectedProject = fullProjectList
+            .SingleOrDefault(project => project.Path_With_Namespace == _mergeRequestKey.ProjectKey.ProjectName);
+         if (selectedProject.Merge_Method != "ff")
+         {
+            Trace.TraceError("[AcceptMergeRequestForm] Unsupported merge method {0} detected in project {1}",
+               selectedProject.Merge_Method, selectedProject.Path_With_Namespace);
+            string message = "Current version supports projects with Fast Forward merge method only";
+            MessageBox.Show(message, "Unsupported project merge method", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Close();
+         }
       }
 
       private void applyMergeRequest(MergeRequest mergeRequest)
@@ -108,12 +107,29 @@ namespace mrHelper.App.Forms
 
       private void updateMergeRequestInformation(MergeRequest mergeRequest)
       {
+         if (mergeRequest.State != "opened")
+         {
+            string message = "Only Open Merge Requests can be merged";
+            MessageBox.Show(message, "Bad Merge Request state", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            Close();
+            return;
+         }
+
          setTitle(mergeRequest.Title);
          _author = mergeRequest.Author;
          _sourceBranchName = mergeRequest.Source_Branch ?? String.Empty;
          _targetBranchName = mergeRequest.Target_Branch ?? String.Empty;
          _webUrl = mergeRequest.Web_Url;
          _state = mergeRequest.State;
+
+         if (!_isSquashNeeded.HasValue)
+         {
+            _isSquashNeeded = mergeRequest.Squash;
+         }
+         if (!_isRemoteBranchDeletionNeeded.HasValue)
+         {
+            _isRemoteBranchDeletionNeeded = mergeRequest.Force_Remove_Source_Branch;
+         }
       }
 
       private void updateWorkInProgressStatus(MergeRequest mergeRequest)
@@ -191,7 +207,7 @@ namespace mrHelper.App.Forms
 
       private string getSquashCommitMessage()
       {
-         return _isSquashNeeded ? textBoxCommitMessage.Text : null;
+         return _isSquashNeeded.HasValue && _isSquashNeeded.Value ? textBoxCommitMessage.Text : null;
       }
 
       private void createSynchronizationWithGitLabTimer()
@@ -211,23 +227,38 @@ namespace mrHelper.App.Forms
 
       async private Task onSynchronizationTimer()
       {
-         MergeRequest mergeRequest = await loadMergeRequestFromServerAsync();
+         MergeRequest mergeRequest = await fetchUpdatedMergeRequest();
          applyMergeRequest(mergeRequest);
       }
 
       private IMergeRequestEditor getEditor()
       {
-         return _mergeRequestAccessor
+         GitLabClient.MergeRequestAccessor accessor = _getMergeRequestAccessor();
+         if (accessor == null)
+         {
+            return null;
+         }
+
+         return accessor
             .GetSingleMergeRequestAccessor(_mergeRequestKey.IId)
             .GetMergeRequestEditor();
       }
 
-      async private Task<MergeRequest> loadMergeRequestFromServerAsync()
+      async private Task<MergeRequest> fetchUpdatedMergeRequest()
       {
          stopSynchronizationTimer();
          try
          {
-            return await _mergeRequestAccessor.SearchMergeRequestAsync(_mergeRequestKey.IId);
+            DataCache dataCache = await _fetchCache();
+            if (dataCache == null || dataCache.MergeRequestCache == null || dataCache.ProjectCache == null)
+            {
+               Debug.Assert(false);
+               return null;
+            }
+
+            checkProjectProperties(dataCache.ProjectCache);
+            refreshCommits(dataCache.MergeRequestCache);
+            return dataCache.MergeRequestCache.GetMergeRequest(_mergeRequestKey);
          }
          finally
          {
@@ -240,7 +271,13 @@ namespace mrHelper.App.Forms
          stopSynchronizationTimer();
          try
          {
-            return await getEditor().Rebase(null);
+            IMergeRequestEditor editor = getEditor();
+            if (editor == null)
+            {
+               return null;
+            }
+
+            return await editor.Rebase(null);
          }
          finally
          {
@@ -256,7 +293,13 @@ namespace mrHelper.App.Forms
          stopSynchronizationTimer();
          try
          {
-            return await getEditor().Merge(parameters);
+            IMergeRequestEditor editor = getEditor();
+            if (editor == null)
+            {
+               return null;
+            }
+
+            return await editor.Merge(parameters);
          }
          finally
          {
@@ -283,7 +326,13 @@ namespace mrHelper.App.Forms
          stopSynchronizationTimer();
          try
          {
-            return await getEditor().ModifyMergeRequest(parameters);
+            IMergeRequestEditor editor = getEditor();
+            if (editor == null)
+            {
+               return null;
+            }
+
+            return await editor.ModifyMergeRequest(parameters);
          }
          finally
          {
@@ -354,11 +403,12 @@ namespace mrHelper.App.Forms
       };
 
       private readonly string _repositoryPath;
-      private readonly GitLabClient.MergeRequestAccessor _mergeRequestAccessor;
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly Func<MergeRequestKey, string, User, Task> _onOpenDiscussions;
       private readonly Action _onMerged;
       private readonly MarkdownPipeline _mdPipeline;
+      private readonly Func<Task<DataCache>> _fetchCache;
+      private readonly Func<GitLabClient.MergeRequestAccessor> _getMergeRequestAccessor;
 
       private enum DiscussionsState
       {
@@ -397,8 +447,8 @@ namespace mrHelper.App.Forms
       private RemoteRebaseState _rebaseState = RemoteRebaseState.NotAvailable;
       private string _rebaseError;
       private MergeStatus _mergeStatus = MergeStatus.NotAvailable;
-      private bool _isSquashNeeded;
-      private bool _isRemoteBranchDeletionNeeded;
+      private bool? _isSquashNeeded;
+      private bool? _isRemoteBranchDeletionNeeded;
       private Commit[] _commits;
       private string _webUrl;
       private string _state;

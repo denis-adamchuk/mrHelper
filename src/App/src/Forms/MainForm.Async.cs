@@ -382,13 +382,13 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task checkForUpdatesAsync()
+      async private Task checkForUpdatesAsync(MergeRequestKey? mrk)
       {
          bool updateReceived = false;
 
          string oldButtonText = buttonReloadList.Text;
          onUpdating();
-         requestUpdates(null, 100, () => { updateReceived = true; onUpdated(oldButtonText); });
+         requestUpdates(mrk, 100, () => { updateReceived = true; onUpdated(oldButtonText); });
          await TaskUtils.WhileAsync(() => !updateReceived);
       }
 

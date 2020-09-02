@@ -332,7 +332,7 @@ namespace mrHelper.App.Forms
             {
                labelWorkflowStatus.Text = String.Format(
                   "Merge Request with IId {0} is not found in the cache, updating the list...", mrk.IId);
-               await checkForUpdatesAsync();
+               await checkForUpdatesAsync(null);
                if (getHostName() != mrk.ProjectKey.HostName || dataCache.MergeRequestCache == null)
                {
                   throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);

@@ -2067,34 +2067,21 @@ namespace mrHelper.App.Forms
          return UrlHelper.CheckMergeRequestUrl(Clipboard.GetText());
       }
 
-      private void acceptMergeRequest(string hostname, FullMergeRequestKey item, IEnumerable<Project> fullProjectList)
+      private void acceptMergeRequest(string hostname, FullMergeRequestKey item)
       {
-         Project selectedProject = fullProjectList
-            .SingleOrDefault(project => project.Path_With_Namespace == item.ProjectKey.ProjectName);
-         if (selectedProject == null)
-         {
-            Debug.Assert(false);
-            return;
-         }
-
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
-         try
-         {
-            AcceptMergeRequestForm form = new AcceptMergeRequestForm(mrk,
-               getCommitStorage(mrk.ProjectKey, false)?.Path,
-               _liveDataCache?.MergeRequestCache,
-               Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName),
-               showDiscussionsFormAsync, selectedProject.Merge_Method,
-               () => requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval }));
-            form.Show();
-         }
-         catch (UnsupportedMergeMethodException ex)
-         {
-            Trace.TraceError("[MainForm] Unsupported merge method {0} detected in project {1}",
-               selectedProject.Merge_Method, selectedProject.Path_With_Namespace);
-            MessageBox.Show(ex.Message, "Unsupported project merge method",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
+         AcceptMergeRequestForm form = new AcceptMergeRequestForm(
+            mrk,
+            getCommitStorage(mrk.ProjectKey, false)?.Path,
+            () => requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval }),
+            showDiscussionsFormAsync,
+            async () =>
+            {
+               await checkForUpdatesAsync(mrk);
+               return _liveDataCache;
+            },
+            () => Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName));
+         form.Show();
       }
    }
 }

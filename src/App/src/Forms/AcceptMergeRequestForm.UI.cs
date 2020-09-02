@@ -13,6 +13,12 @@ namespace mrHelper.App.Forms
 {
    partial class AcceptMergeRequestForm
    {
+      private void AcceptMergeRequestForm_Load(object sender, EventArgs e)
+      {
+         // to speed-up the first occurrence of the timer
+         BeginInvoke(new Action(async () => await onSynchronizationTimer()), null);
+      }
+
       private void buttonDiscussions_Click(object sender, EventArgs e)
       {
          BeginInvoke(new Action(async () => await _onOpenDiscussions?.Invoke(_mergeRequestKey, _title, _author)));
@@ -56,22 +62,20 @@ namespace mrHelper.App.Forms
             // sometimes does not affect the merge. For instance, this occurs when
             // Merge_Error is already set to "Failed to squash", in this case simply
             // set "squash=false" has no effect.
-            MergeRequest mergeRequest = await setSquashAsync(_isSquashNeeded);
-            Debug.Assert(mergeRequest.Squash == _isSquashNeeded);
-            mergeRequest = await mergeAsync(getSquashCommitMessage(), _isRemoteBranchDeletionNeeded);
+            MergeRequest mergeRequest = await setSquashAsync(_isSquashNeeded.Value);
+            Debug.Assert(mergeRequest.Squash == _isSquashNeeded.Value);
+            mergeRequest = await mergeAsync(getSquashCommitMessage(), _isRemoteBranchDeletionNeeded.Value);
             postProcessMerge(mergeRequest);
          }
          catch (MergeRequestEditorException ex)
          {
-            if (!areConflictsFoundAtMerge(ex))
-            {
-               reportErrorToUser(ex);
-            }
-            else
+            if (areConflictsFoundAtMerge(ex))
             {
                MessageBox.Show("GitLab was unable to complete the merge. Rebase branch locally and try again",
                   "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               return;
             }
+            reportErrorToUser(ex);
          }
       }
 
@@ -102,7 +106,7 @@ namespace mrHelper.App.Forms
       {
          Debug.Assert(sender == checkBoxSquash);
          _isSquashNeeded = checkBoxSquash.Checked;
-         if (_isSquashNeeded)
+         if (_isSquashNeeded.Value)
          {
             int newFormHeight = _formDefaultMinimumHeight - _groupBoxCommitMessageDefaultHeight;
             this.MinimumSize = new System.Drawing.Size(this.MinimumSize.Width, newFormHeight);
@@ -189,8 +193,8 @@ namespace mrHelper.App.Forms
             }
          }
 
-         checkBoxSquash.Checked = _isSquashNeeded;
-         checkBoxDeleteSourceBranch.Checked = _isRemoteBranchDeletionNeeded;
+         checkBoxSquash.Checked = _isSquashNeeded.Value;
+         checkBoxDeleteSourceBranch.Checked = _isRemoteBranchDeletionNeeded.Value;
 
          string urlTooltip = String.IsNullOrEmpty(_webUrl) ? String.Empty : _webUrl;
          toolTip.SetToolTip(linkLabelOpenAtGitLab, urlTooltip);
@@ -199,7 +203,7 @@ namespace mrHelper.App.Forms
       private void updateWorkInProgressControls(bool isWIP)
       {
          labelWIPStatus.Text = isWIP ? "This is a Work in Progress" : "This is not a Work in Progress";
-         labelWIPStatus.ForeColor = isWIP ? Color.Red : Color.LightGreen;
+         labelWIPStatus.ForeColor = isWIP ? Color.Red : Color.Green;
          buttonToggleWIP.Enabled = isWIP;
       }
 
@@ -207,7 +211,7 @@ namespace mrHelper.App.Forms
       {
          labelDiscussionStatus.Text = areUnresolvedDiscussions
             ? "Please resolve unresolved threads" : "All discussions resolved";
-         labelDiscussionStatus.ForeColor = areUnresolvedDiscussions ? Color.Red : Color.LightGreen;
+         labelDiscussionStatus.ForeColor = areUnresolvedDiscussions ? Color.Red : Color.Green;
          buttonDiscussions.Enabled = areUnresolvedDiscussions;
       }
 
@@ -240,7 +244,7 @@ namespace mrHelper.App.Forms
 
             case MergeStatus.CanBeMerged:
                labelMergeStatus.Text = "Can be merged. Merge type: Fast-forward merge without a merge commit";
-               labelMergeStatus.ForeColor = Color.LightGreen;
+               labelMergeStatus.ForeColor = Color.Green;
                buttonMerge.Enabled = true;
                break;
 
@@ -281,7 +285,7 @@ namespace mrHelper.App.Forms
 
             case RemoteRebaseState.SucceededOrNotNeeded:
                labelRebaseStatus.Text = "Rebase is unneeded";
-               labelRebaseStatus.ForeColor = Color.LightGreen;
+               labelRebaseStatus.ForeColor = Color.Green;
                buttonRebase.Enabled = false;
                break;
          }
