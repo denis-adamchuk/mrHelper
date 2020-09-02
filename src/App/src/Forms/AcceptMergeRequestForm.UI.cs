@@ -16,7 +16,7 @@ namespace mrHelper.App.Forms
       private void AcceptMergeRequestForm_Load(object sender, EventArgs e)
       {
          // to speed-up the first occurrence of the timer
-         BeginInvoke(new Action(async () => await onSynchronizationTimer()), null);
+         onSynchronizationTimer(sender, e);
       }
 
       private void buttonDiscussions_Click(object sender, EventArgs e)

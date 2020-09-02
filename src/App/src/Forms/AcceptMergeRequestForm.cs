@@ -40,9 +40,7 @@ namespace mrHelper.App.Forms
          _getMergeRequestAccessor = getMergeRequestAccessor;
 
          initializeGitUILinks();
-
-         createSynchronizationWithGitLabTimer();
-         startSynchronizationTimer();
+         subscribeToTimer();
       }
 
       private void postProcessMerge(MergeRequest mergeRequest)
@@ -210,25 +208,49 @@ namespace mrHelper.App.Forms
          return _isSquashNeeded.HasValue && _isSquashNeeded.Value ? textBoxCommitMessage.Text : null;
       }
 
-      private void createSynchronizationWithGitLabTimer()
+      private void subscribeToTimer()
       {
-         _synchronizationTimer.Tick += async (s, a) => await onSynchronizationTimer();
+         if (_synchronizationTimerUsers == 0)
+         {
+            _synchronizationTimer = new Timer
+            {
+               Interval = rebaseStatusUpdateInterval
+            };
+            _synchronizationTimer.Start();
+         }
+         ++_synchronizationTimerUsers;
+         startProcessingTimer();
       }
 
-      private void startSynchronizationTimer()
+      private void unsubscribeFromTimer()
       {
-         _synchronizationTimer.Start();
+         stopProcessingTimer();
+         --_synchronizationTimerUsers;
+         if (_synchronizationTimerUsers == 0)
+         {
+            _synchronizationTimer.Stop();
+            _synchronizationTimer.Dispose();
+            _synchronizationTimer = null;
+         }
       }
 
-      private void stopSynchronizationTimer()
+      private void startProcessingTimer()
       {
-         _synchronizationTimer.Stop();
+         _synchronizationTimer.Tick += onSynchronizationTimer;
       }
 
-      async private Task onSynchronizationTimer()
+      private void stopProcessingTimer()
       {
-         MergeRequest mergeRequest = await fetchUpdatedMergeRequest();
-         applyMergeRequest(mergeRequest);
+         _synchronizationTimer.Tick -= onSynchronizationTimer;
+      }
+
+      private void onSynchronizationTimer(object sender, EventArgs e)
+      {
+         BeginInvoke(new Action(async () =>
+         {
+            MergeRequest mergeRequest = await fetchUpdatedMergeRequest();
+            applyMergeRequest(mergeRequest);
+         }), null);
       }
 
       private IMergeRequestEditor getEditor()
@@ -246,7 +268,7 @@ namespace mrHelper.App.Forms
 
       async private Task<MergeRequest> fetchUpdatedMergeRequest()
       {
-         stopSynchronizationTimer();
+         stopProcessingTimer();
          try
          {
             DataCache dataCache = await _fetchCache();
@@ -262,13 +284,13 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            startSynchronizationTimer();
+            startProcessingTimer();
          }
       }
 
       async private Task<MergeRequestRebaseResponse> rebaseAsync()
       {
-         stopSynchronizationTimer();
+         stopProcessingTimer();
          try
          {
             IMergeRequestEditor editor = getEditor();
@@ -281,7 +303,7 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            startSynchronizationTimer();
+            startProcessingTimer();
          }
       }
 
@@ -290,7 +312,7 @@ namespace mrHelper.App.Forms
          AcceptMergeRequestParameters parameters = new AcceptMergeRequestParameters(
             null, squashCommitMessage, null, shouldRemoveSourceBranch, null, null);
 
-         stopSynchronizationTimer();
+         stopProcessingTimer();
          try
          {
             IMergeRequestEditor editor = getEditor();
@@ -303,7 +325,7 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            startSynchronizationTimer();
+            startProcessingTimer();
          }
       }
 
@@ -323,7 +345,7 @@ namespace mrHelper.App.Forms
 
       async private Task<MergeRequest> applyModification(UpdateMergeRequestParameters parameters)
       {
-         stopSynchronizationTimer();
+         stopProcessingTimer();
          try
          {
             IMergeRequestEditor editor = getEditor();
@@ -336,7 +358,7 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            startSynchronizationTimer();
+            startProcessingTimer();
          }
       }
 
@@ -396,11 +418,8 @@ namespace mrHelper.App.Forms
       }
 
       private static readonly int rebaseStatusUpdateInterval = 1000; // ms
-
-      private readonly Timer _synchronizationTimer = new Timer
-      {
-         Interval = rebaseStatusUpdateInterval
-      };
+      private static Timer _synchronizationTimer;
+      private static int _synchronizationTimerUsers = 0;
 
       private readonly string _repositoryPath;
       private readonly MergeRequestKey _mergeRequestKey;

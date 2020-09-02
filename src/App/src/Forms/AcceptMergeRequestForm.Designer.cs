@@ -19,8 +19,7 @@
          }
          base.Dispose(disposing);
 
-         stopSynchronizationTimer();
-         _synchronizationTimer?.Dispose();
+         unsubscribeFromTimer();
       }
 
       #region Windows Form Designer generated code
