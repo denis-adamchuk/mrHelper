@@ -2070,6 +2070,14 @@ namespace mrHelper.App.Forms
       private void acceptMergeRequest(string hostname, FullMergeRequestKey item)
       {
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
+         bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
+         Form formExisting = findFormByTag("AcceptMergeRequestForm", doesMatchTag);
+         if (formExisting != null)
+         {
+            formExisting.Activate();
+            return;
+         }
+
          AcceptMergeRequestForm form = new AcceptMergeRequestForm(
             mrk,
             getCommitStorage(mrk.ProjectKey, false)?.Path,
@@ -2080,7 +2088,10 @@ namespace mrHelper.App.Forms
                await checkForUpdatesAsync(mrk);
                return _liveDataCache;
             },
-            () => Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName));
+            () => Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName))
+         {
+            Tag = mrk
+         };
          form.Show();
       }
    }

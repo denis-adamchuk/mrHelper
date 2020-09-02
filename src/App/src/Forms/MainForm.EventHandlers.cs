@@ -44,11 +44,25 @@ namespace mrHelper.App.Forms
       {
          for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
          {
-            if (Application.OpenForms[iForm] != this)
+            Form form = Application.OpenForms[iForm];
+            if (form != this)
             {
-               Application.OpenForms[iForm].Close();
+               form.Close();
             }
          }
+      }
+
+      private Form findFormByTag(string name, Func<object, bool> doesMatchTag)
+      {
+         for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
+         {
+            Form form = Application.OpenForms[iForm];
+            if (form.Name == name && doesMatchTag(form.Tag))
+            {
+               return form;
+            }
+         }
+         return null;
       }
 
       private void MainForm_FormClosing(object sender, FormClosingEventArgs e)

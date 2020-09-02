@@ -87,6 +87,14 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
+         Form formExisting = findFormByTag("DiscussionsForm", doesMatchTag);
+         if (formExisting != null)
+         {
+            formExisting.Activate();
+            return;
+         }
+
          labelWorkflowStatus.Text = "Rendering discussion contexts...";
          labelWorkflowStatus.Refresh();
 
@@ -118,7 +126,10 @@ namespace mrHelper.App.Forms
                      "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                }
             },
-            () => dataCache?.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null));
+            () => dataCache?.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null))
+            {
+               Tag = mrk
+            };
             form = discussionsForm;
          }
          catch (NoDiscussionsToShow)
