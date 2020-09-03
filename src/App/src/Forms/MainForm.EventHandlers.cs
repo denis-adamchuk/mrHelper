@@ -1437,7 +1437,7 @@ namespace mrHelper.App.Forms
 
       private void linkLabelCommitStorageDescription_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         Trace.TraceInformation("Clicked on link label for commit storage selection");
+         Trace.TraceInformation("[MainForm] Clicked on link label for commit storage selection");
          string helpUrl = Program.ServiceManager.GetHelpUrl();
          if (helpUrl != String.Empty)
          {
@@ -1447,7 +1447,7 @@ namespace mrHelper.App.Forms
 
       private void linkLabelWorkflowDescription_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         Trace.TraceInformation("Clicked on link label for workflow type selection");
+         Trace.TraceInformation("[MainForm] Clicked on link label for workflow type selection");
          string helpUrl = Program.ServiceManager.GetHelpUrl();
          if (helpUrl != String.Empty)
          {
@@ -1468,6 +1468,7 @@ namespace mrHelper.App.Forms
          if (!isProjectListReady)
          {
             Debug.Assert(false);
+            Trace.TraceError("[MainForm] Project List is not ready at the moment of Create New click");
             return;
          }
 
@@ -1502,6 +1503,7 @@ namespace mrHelper.App.Forms
          if (!isProjectListReady)
          {
             Debug.Assert(false);
+            Trace.TraceError("[MainForm] Project List is not ready at the moment of Accept click");
             return;
          }
 
@@ -1554,7 +1556,7 @@ namespace mrHelper.App.Forms
       {
          if (doesClipboardContainValidUrl())
          {
-            string url = Clipboard.GetText();
+            string url = getClipboardText();
             Trace.TraceInformation(String.Format("[Mainform] Connecting to URL from clipboard: {0}", url.ToString()));
             reconnect(url);
          }
@@ -1566,7 +1568,7 @@ namespace mrHelper.App.Forms
          linkLabelFromClipboard.Enabled = isValidUrl;
          linkLabelFromClipboard.Text = isValidUrl ? openFromClipboardEnabledText : openFromClipboardDisabledText;
 
-         string tooltip = isValidUrl ? Clipboard.GetText() : "N/A";
+         string tooltip = isValidUrl ? getClipboardText() : "N/A";
          toolTip.SetToolTip(linkLabelFromClipboard, tooltip);
       }
    }

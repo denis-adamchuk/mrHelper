@@ -19,6 +19,7 @@ namespace mrHelper.App.Forms
          string repositoryPath,
          Action onMerged,
          Func<MergeRequestKey, string, User, Task> onOpenDiscussions,
+         Func<DataCache> getCache,
          Func<Task<DataCache>> fetchCache,
          Func<GitLabClient.MergeRequestAccessor> getMergeRequestAccessor)
       {
@@ -36,6 +37,7 @@ namespace mrHelper.App.Forms
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
          _onOpenDiscussions = onOpenDiscussions;
          _onMerged = onMerged;
+         _getCache = getCache;
          _fetchCache = fetchCache;
          _getMergeRequestAccessor = getMergeRequestAccessor;
 
@@ -47,24 +49,33 @@ namespace mrHelper.App.Forms
       {
          if (mergeRequest.State == "merged")
          {
+            traceInformation("Merge completed successfully");
             Close();
             _onMerged();
             return;
          }
 
-         string errorMessage = "Something went wrong at GitLab during merge, try again at Web UI";
+         string warningMessage = "Something went wrong at GitLab during merge, try again at Web UI";
          if (!String.IsNullOrEmpty(mergeRequest.Merge_Error))
          {
-            errorMessage = String.Format(
+            warningMessage = String.Format(
                "GitLab reported error: \"{0}\". Try to resolve it and repeat operation.", mergeRequest.Merge_Error);
          }
 
-         MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         traceWarning(warningMessage);
+         MessageBox.Show(warningMessage, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
       }
 
       private void refreshCommits(IMergeRequestCache mergeRequestCache)
       {
+         int prevCommitCount = _commits?.Length ?? 0;
+
          _commits = mergeRequestCache.GetCommits(_mergeRequestKey).ToArray();
+
+         if (prevCommitCount != _commits.Length)
+         {
+            traceInformation(String.Format("Changed _commits.Length to {0}", _commits.Length.ToString()));
+         }
       }
 
       private void checkProjectProperties(IProjectCache projectCache)
@@ -74,8 +85,8 @@ namespace mrHelper.App.Forms
             .SingleOrDefault(project => project.Path_With_Namespace == _mergeRequestKey.ProjectKey.ProjectName);
          if (selectedProject.Merge_Method != "ff")
          {
-            Trace.TraceError("[AcceptMergeRequestForm] Unsupported merge method {0} detected in project {1}",
-               selectedProject.Merge_Method, selectedProject.Path_With_Namespace);
+            traceError(String.Format("Unsupported merge method {0} detected in project {1}",
+               selectedProject.Merge_Method, selectedProject.Path_With_Namespace));
             string message = "Current version supports projects with Fast Forward merge method only";
             MessageBox.Show(message, "Unsupported project merge method", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
@@ -89,7 +100,11 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         updateMergeRequestInformation(mergeRequest);
+         updateStaticMergeRequestProperties(mergeRequest);
+         updateMergeRequestTitle(mergeRequest);
+         updateMergeRequestState(mergeRequest);
+         updateMergeRequestBranches(mergeRequest);
+         updateMergeRequestMergeFlags(mergeRequest);
          updateWorkInProgressStatus(mergeRequest);
          updateRebaseStatus(mergeRequest);
          updateMergeStatus(mergeRequest);
@@ -103,54 +118,131 @@ namespace mrHelper.App.Forms
          updateControls();
       }
 
-      private void updateMergeRequestInformation(MergeRequest mergeRequest)
+      private void updateStaticMergeRequestProperties(MergeRequest mergeRequest)
       {
-         if (mergeRequest.State != "opened")
+         _author = mergeRequest.Author;
+         _webUrl = mergeRequest.Web_Url;
+      }
+
+      private void updateMergeRequestTitle(MergeRequest mergeRequest)
+      {
+         string prevTitle = _title;
+
+         _title = mergeRequest.Title == null ? String.Empty : mergeRequest.Title;
+
+         if (prevTitle != _title)
          {
+            traceInformation(String.Format("Changed _title to {0}", _title.ToString()));
+         }
+      }
+
+      private void updateMergeRequestState(MergeRequest mergeRequest)
+      {
+         if (mergeRequest.State != "opened" && mergeRequest.State != "merged")
+         {
+            traceWarning(String.Format("Unexpected merge request state {0}", mergeRequest.State.ToString()));
+
             string message = "Only Open Merge Requests can be merged";
-            MessageBox.Show(message, "Bad Merge Request state", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(message, "Unexpected Merge Request state", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             Close();
             return;
          }
 
-         setTitle(mergeRequest.Title);
-         _author = mergeRequest.Author;
+         string prevState = _state;
+
+         _state = mergeRequest.State;
+
+         if (prevState != _state)
+         {
+            traceInformation(String.Format("Changed _state to {0}", _state.ToString()));
+         }
+      }
+
+      private void updateMergeRequestBranches(MergeRequest mergeRequest)
+      {
+         string prevSourceBranch = _sourceBranchName;
+         string prevTargetBranch = _targetBranchName;
+
          _sourceBranchName = mergeRequest.Source_Branch ?? String.Empty;
          _targetBranchName = mergeRequest.Target_Branch ?? String.Empty;
-         _webUrl = mergeRequest.Web_Url;
-         _state = mergeRequest.State;
+
+         if (prevSourceBranch != _sourceBranchName)
+         {
+            traceInformation(String.Format("Changed _sourceBranchName to {0}", _sourceBranchName.ToString()));
+         }
+
+         if (prevTargetBranch != _targetBranchName)
+         {
+            traceInformation(String.Format("Changed _targetBranchName to {0}", _targetBranchName.ToString()));
+         }
+      }
+
+      private void updateMergeRequestMergeFlags(MergeRequest mergeRequest)
+      {
+         bool? prevSquashNeeded = _isSquashNeeded;
+         bool? prevRemoteBranchDeletionNeeded = _isRemoteBranchDeletionNeeded;
 
          if (!_isSquashNeeded.HasValue)
          {
             _isSquashNeeded = mergeRequest.Squash;
          }
+
          if (!_isRemoteBranchDeletionNeeded.HasValue)
          {
             _isRemoteBranchDeletionNeeded = mergeRequest.Force_Remove_Source_Branch;
+         }
+
+         if (prevSquashNeeded != _isSquashNeeded)
+         {
+            traceInformation(String.Format("Changed _isSquashNeeded to {0}", _isSquashNeeded.ToString()));
+         }
+
+         if (prevRemoteBranchDeletionNeeded != _isRemoteBranchDeletionNeeded)
+         {
+            traceInformation(String.Format("Changed _isRemoteBranchDeletionNeeded to {0}", _isRemoteBranchDeletionNeeded.ToString()));
          }
       }
 
       private void updateWorkInProgressStatus(MergeRequest mergeRequest)
       {
+         WorkInProgressState prevState = _wipStatus;
+
          _wipStatus = StringUtils.IsWorkInProgressTitle(mergeRequest.Title)
             ? WorkInProgressState.Yes : WorkInProgressState.No;
+
+         if (prevState != _wipStatus)
+         {
+            traceInformation(String.Format("Changed _wipStatus to {0}", _wipStatus.ToString()));
+         }
       }
 
       private void updateDiscussionState(MergeRequest mergeRequest)
       {
+         DiscussionsState prevState = _discussionState;
+
          _discussionState = mergeRequest.Blocking_Discussions_Resolved
             ? DiscussionsState.Resolved : DiscussionsState.NotResolved;
+
+         if (prevState != _discussionState)
+         {
+            traceInformation(String.Format("Changed _discussionState to {0}", _discussionState.ToString()));
+         }
       }
 
       private void updateRebaseStatus(MergeRequest mergeRequest)
       {
+         RemoteRebaseState prevState = _rebaseState;
+         string prevError = _rebaseError;
+
+         _rebaseError = String.Empty;
          if (mergeRequest.Rebase_In_Progress.HasValue && mergeRequest.Rebase_In_Progress.Value)
          {
             _rebaseState = RemoteRebaseState.InProgress;
          }
          else if (mergeRequest.Merge_Error == null)
          {
-            _rebaseState = mergeRequest.Has_Conflicts ? RemoteRebaseState.Required : RemoteRebaseState.SucceededOrNotNeeded;
+            _rebaseState = mergeRequest.Has_Conflicts
+               ? RemoteRebaseState.Required : RemoteRebaseState.SucceededOrNotNeeded;
          }
          else
          {
@@ -167,31 +259,52 @@ namespace mrHelper.App.Forms
                _rebaseState = RemoteRebaseState.SucceededOrNotNeeded;
             }
          }
+
+         if (prevState != _rebaseState)
+         {
+            traceInformation(String.Format("Changed _rebaseState to {0}", _rebaseState.ToString()));
+         }
+
+         if (prevError != _rebaseError)
+         {
+            traceInformation(String.Format("Changed _rebaseError to {0}", _rebaseError.ToString()));
+         }
       }
 
       private void updateRebaseStatus(MergeRequestRebaseResponse rebaseResponse)
       {
+         RemoteRebaseState prevState = _rebaseState;
+
+         _rebaseError = String.Empty;
          if (rebaseResponse.Rebase_In_Progress)
          {
             _rebaseState = RemoteRebaseState.InProgress;
+         }
+
+         if (prevState != _rebaseState)
+         {
+            traceInformation(String.Format("Changed _rebaseState to {0}", _rebaseState.ToString()));
          }
       }
 
       private void updateMergeStatus(MergeRequest mergeRequest)
       {
+         MergeStatus prevStatus = _mergeStatus;
+
          if (mergeRequest.Merge_Status == null)
          {
             _mergeStatus = MergeStatus.NotAvailable;
-            return;
+         }
+         else
+         {
+            _mergeStatus = mergeRequest.Merge_Status == "can_be_merged"
+               ? MergeStatus.CanBeMerged : MergeStatus.CannotBeMerged;
          }
 
-         _mergeStatus = mergeRequest.Merge_Status == "can_be_merged"
-            ? MergeStatus.CanBeMerged : MergeStatus.CannotBeMerged;
-      }
-
-      private void setTitle(string title)
-      {
-         _title = title == null ? String.Empty : title;
+         if (prevStatus != _mergeStatus)
+         {
+            traceInformation(String.Format("Changed _mergeStatus to {0}", _mergeStatus.ToString()));
+         }
       }
 
       private string convertTextToHtml(string text)
@@ -236,21 +349,28 @@ namespace mrHelper.App.Forms
 
       private void startProcessingTimer()
       {
-         _synchronizationTimer.Tick += onSynchronizationTimer;
+         if (_synchronizationTimer != null)
+         {
+            _synchronizationTimer.Tick += onSynchronizationTimer;
+         }
       }
 
       private void stopProcessingTimer()
       {
-         _synchronizationTimer.Tick -= onSynchronizationTimer;
+         if (_synchronizationTimer != null)
+         {
+            _synchronizationTimer.Tick -= onSynchronizationTimer;
+         }
       }
 
       private void onSynchronizationTimer(object sender, EventArgs e)
       {
-         BeginInvoke(new Action(async () =>
-         {
-            MergeRequest mergeRequest = await fetchUpdatedMergeRequest();
-            applyMergeRequest(mergeRequest);
-         }), null);
+         invokeFetchAndApply(false);
+      }
+
+      private void invokeFetchAndApply(bool isSynchronousFetch)
+      {
+         BeginInvoke(new Action(async () => applyMergeRequest(await fetchUpdatedMergeRequest(isSynchronousFetch))), null);
       }
 
       private IMergeRequestEditor getEditor()
@@ -266,12 +386,12 @@ namespace mrHelper.App.Forms
             .GetMergeRequestEditor();
       }
 
-      async private Task<MergeRequest> fetchUpdatedMergeRequest()
+      async private Task<MergeRequest> fetchUpdatedMergeRequest(bool isSynchronousFetch)
       {
          stopProcessingTimer();
          try
          {
-            DataCache dataCache = await _fetchCache();
+            DataCache dataCache = isSynchronousFetch ? _getCache() : await _fetchCache();
             if (dataCache == null || dataCache.MergeRequestCache == null || dataCache.ProjectCache == null)
             {
                Debug.Assert(false);
@@ -331,8 +451,9 @@ namespace mrHelper.App.Forms
 
       async private Task<MergeRequest> toggleWipAsync()
       {
+         string newTitle = StringUtils.ToggleWorkInProgressTitle(_title);
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
-            null, _title, null, null, null, null, null);
+            null, newTitle, null, null, null, null, null);
          return await applyModification(updateMergeRequestParameters);
       }
 
@@ -362,18 +483,18 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private static void reportErrorToUser(MergeRequestEditorException ex)
+      private void reportErrorToUser(MergeRequestEditorException ex)
       {
          if (ex is MergeRequestEditorCancelledException)
          {
             return;
          }
 
-         void showDialogAndLogError(string message = "")
+         void showDialogAndLogError(string message = "Unknown")
          {
             string defaultMessage = "GitLab could not perform a requested operation. Reason: ";
             MessageBox.Show(defaultMessage + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Trace.TraceError("[RebaseMergeRequestForm] " + message);
+            traceError(defaultMessage + message);
          };
 
          if (ex.InnerException != null && (ex.InnerException is GitLabRequestException))
@@ -417,6 +538,27 @@ namespace mrHelper.App.Forms
          return false;
       }
 
+      private void traceInformation(string message)
+      {
+         Trace.TraceInformation(getCommonTraceMessage(message));
+      }
+
+      private void traceWarning(string message)
+      {
+         Trace.TraceWarning(getCommonTraceMessage(message));
+      }
+
+      private void traceError(string message)
+      {
+         Trace.TraceError(getCommonTraceMessage(message));
+      }
+
+      private string getCommonTraceMessage(string message)
+      {
+         return String.Format("[AcceptMergeRequestForm] {0}. MRK: IId={1}, Project={2}",
+            message, _mergeRequestKey.IId, _mergeRequestKey.ProjectKey.ProjectName);
+      }
+
       private static readonly int rebaseStatusUpdateInterval = 1000; // ms
       private static Timer _synchronizationTimer;
       private static int _synchronizationTimerUsers = 0;
@@ -427,6 +569,7 @@ namespace mrHelper.App.Forms
       private readonly Action _onMerged;
       private readonly MarkdownPipeline _mdPipeline;
       private readonly Func<Task<DataCache>> _fetchCache;
+      private readonly Func<DataCache> _getCache;
       private readonly Func<GitLabClient.MergeRequestAccessor> _getMergeRequestAccessor;
 
       private enum DiscussionsState

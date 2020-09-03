@@ -62,7 +62,7 @@ namespace mrHelper.App.Helpers
 
       internal static void OpenBrowser(string url)
       {
-         Trace.TraceInformation(String.Format("Opening browser with URL {0}", url));
+         Trace.TraceInformation("Opening browser with URL {0}", url);
 
          try
          {

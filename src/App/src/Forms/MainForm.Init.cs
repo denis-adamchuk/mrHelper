@@ -84,9 +84,11 @@ namespace mrHelper.App.Forms
                   labelWorkflowStatus.Text = "Command " + name + " failed";
                   return;
                }
-               labelWorkflowStatus.Text = "Command " + name + " completed";
 
-               Trace.TraceInformation(String.Format("Custom action {0} completed", name));
+               string statusMessage = String.Format("Command {0} completed for merge request !{1} in project {2}",
+                  name, mergeRequestKey.Value.IId, mergeRequestKey.Value.ProjectKey.ProjectName);
+               labelWorkflowStatus.Text = statusMessage;
+               Trace.TraceInformation(String.Format("[MainForm] {0}", statusMessage));
 
                if (command.GetStopTimer())
                {

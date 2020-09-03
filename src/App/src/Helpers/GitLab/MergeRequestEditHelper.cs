@@ -257,14 +257,15 @@ namespace mrHelper.App.Helpers.GitLab
       {
          if (ex is MergeRequestCreatorCancelledException || ex is MergeRequestEditorCancelledException)
          {
+            Trace.TraceWarning("[MergeRequestEditHelper] Cancelled operation");
             return;
          }
 
-         void showDialogAndLogError(string message = "")
+         void showDialogAndLogError(string message = "Unknown")
          {
             string defaultMessage = "GitLab could not create a merge request with the given parameters. Reason: ";
             MessageBox.Show(defaultMessage + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Trace.TraceError("[MergeRequestEditHelper] " + message);
+            Trace.TraceError("[MergeRequestEditHelper] " + defaultMessage + message);
          };
 
          if (ex.InnerException != null && (ex.InnerException is GitLabRequestException))

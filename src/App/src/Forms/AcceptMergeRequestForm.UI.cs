@@ -2,9 +2,11 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
+using mrHelper.Common.Exceptions;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.Integration.GitUI;
@@ -15,8 +17,7 @@ namespace mrHelper.App.Forms
    {
       private void AcceptMergeRequestForm_Load(object sender, EventArgs e)
       {
-         // to speed-up the first occurrence of the timer
-         onSynchronizationTimer(sender, e);
+         invokeFetchAndApply(true);
       }
 
       private void buttonDiscussions_Click(object sender, EventArgs e)
@@ -26,7 +27,7 @@ namespace mrHelper.App.Forms
 
       async private void buttonToggleWIP_Click(object sender, EventArgs e)
       {
-         setTitle(StringUtils.ToggleWorkInProgressTitle(_title));
+         traceInformation("Changing WIP by user request");
          try
          {
             buttonToggleWIP.Enabled = false;
@@ -41,6 +42,7 @@ namespace mrHelper.App.Forms
 
       async private void buttonRebase_Click(object sender, EventArgs e)
       {
+         traceInformation("Starting Rebase by user request");
          try
          {
             showRebaseInProgress();
@@ -55,20 +57,21 @@ namespace mrHelper.App.Forms
 
       async private void buttonMerge_Click(object sender, EventArgs e)
       {
+         string traceMessage = String.Format(
+            "Starting Merge by user request. _isSquashNeeded: {0}, _isRemoteBranchDeletionNeeded: {1}",
+            _isSquashNeeded.ToString(), _isRemoteBranchDeletionNeeded.ToString());
+         traceInformation(traceMessage);
+
          try
          {
             showMergeInProgress();
-            // Modify MR manually here because for some reason "squash" query parameter
-            // sometimes does not affect the merge. For instance, this occurs when
-            // Merge_Error is already set to "Failed to squash", in this case simply
-            // set "squash=false" has no effect.
-            MergeRequest mergeRequest = await setSquashAsync(_isSquashNeeded.Value);
-            Debug.Assert(mergeRequest.Squash == _isSquashNeeded.Value);
-            mergeRequest = await mergeAsync(getSquashCommitMessage(), _isRemoteBranchDeletionNeeded.Value);
+            await fixupSquashFlagAsync();
+            MergeRequest mergeRequest = await mergeAsync(getSquashCommitMessage(), _isRemoteBranchDeletionNeeded.Value);
             postProcessMerge(mergeRequest);
          }
          catch (MergeRequestEditorException ex)
          {
+            ExceptionHandlers.Handle("Failed to merge", ex);
             if (areConflictsFoundAtMerge(ex))
             {
                MessageBox.Show("GitLab was unable to complete the merge. Rebase branch locally and try again",
@@ -79,18 +82,31 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private async Task fixupSquashFlagAsync()
+      {
+         // Modify MR manually here because for some reason "squash" query parameter
+         // sometimes does not affect the merge. For instance, this occurs when
+         // Merge_Error is already set to "Failed to squash", in this case simply
+         // set "squash=false" has no effect.
+         MergeRequest mergeRequest = await setSquashAsync(_isSquashNeeded.Value);
+         Debug.Assert(mergeRequest.Squash == _isSquashNeeded.Value);
+      }
+
       private void linkLabelOpenGitExtensions_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
+         traceInformation(String.Format("Launch Git Extensions for {0}", _repositoryPath));
          GitExtensionsIntegrationHelper.Browse(_repositoryPath);
       }
 
       private void linkLabelOpenSourceTree_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
+         traceInformation(String.Format("Launch Source Tree for {0}", _repositoryPath));
          SourceTreeIntegrationHelper.Browse(_repositoryPath);
       }
 
       private void linkLabelOpenExplorer_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
+         traceInformation(String.Format("Launch Explorer for {0}", _repositoryPath));
          ExternalProcess.Start("explorer", StringUtils.EscapeSpaces(_repositoryPath), false, ".");
       }
 
@@ -147,17 +163,25 @@ namespace mrHelper.App.Forms
 
       private void buttonClose_Click(object sender, EventArgs e)
       {
+         Trace.TraceInformation("[MainForm] User cancelled merge");
          Close();
       }
 
       private void initializeGitUILinks()
       {
          var storageType = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
-         bool isGitRepositoryUsed = storageType != StorageSupport.LocalCommitStorageType.FileStorage;
+         bool isGitRepositoryUsed = storageType == StorageSupport.LocalCommitStorageType.FullGitRepository;
          bool isRepositoryAvailable = isGitRepositoryUsed && !String.IsNullOrEmpty(_repositoryPath);
+
          linkLabelOpenGitExtensions.Visible = isRepositoryAvailable && GitExtensionsIntegrationHelper.IsInstalled();
          linkLabelOpenSourceTree.Visible = isRepositoryAvailable && SourceTreeIntegrationHelper.IsInstalled();
          linkLabelOpenExplorer.Visible = isRepositoryAvailable;
+
+         traceInformation(String.Format(
+            "GitUI link label visibility: Git Extensions: {0}, Source Tree: {1}, Explorer: {2}",
+            linkLabelOpenGitExtensions.Visible.ToString(),
+            linkLabelOpenSourceTree.Visible.ToString(),
+            linkLabelOpenExplorer.Visible.ToString()));
       }
 
       private void updateControls()
@@ -217,7 +241,8 @@ namespace mrHelper.App.Forms
 
       private void updateMergeControls(bool areDependenciesResolved)
       {
-         if (_state != "opened")
+         Debug.Assert(_state == "merged" || _state == "opened"); // see updateMergeRequestInformation()
+         if (_state == "merged")
          {
             labelMergeStatus.Text = "Already merged";
             labelMergeStatus.ForeColor = Color.Green;
@@ -259,6 +284,12 @@ namespace mrHelper.App.Forms
 
       private void updateRebaseControls()
       {
+         if (_state == "merged")
+         {
+            showRebaseUnneeded();
+            return;
+         }
+
          switch (_rebaseState)
          {
             case RemoteRebaseState.NotAvailable:
@@ -284,9 +315,7 @@ namespace mrHelper.App.Forms
                break;
 
             case RemoteRebaseState.SucceededOrNotNeeded:
-               labelRebaseStatus.Text = "Rebase is unneeded";
-               labelRebaseStatus.ForeColor = Color.Green;
-               buttonRebase.Enabled = false;
+               showRebaseUnneeded();
                break;
          }
       }
@@ -295,6 +324,13 @@ namespace mrHelper.App.Forms
       {
          labelRebaseStatus.Text = "Rebase is in progress...";
          labelRebaseStatus.ForeColor = Color.Blue;
+         buttonRebase.Enabled = false;
+      }
+
+      private void showRebaseUnneeded()
+      {
+         labelRebaseStatus.Text = "Rebase is unneeded";
+         labelRebaseStatus.ForeColor = Color.Green;
          buttonRebase.Enabled = false;
       }
 

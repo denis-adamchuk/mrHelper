@@ -396,10 +396,22 @@ namespace mrHelper.App.Forms
       async private Task checkForUpdatesAsync(MergeRequestKey? mrk)
       {
          bool updateReceived = false;
+         bool updatingWholeList = !mrk.HasValue;
 
          string oldButtonText = buttonReloadList.Text;
-         onUpdating();
-         requestUpdates(mrk, 100, () => { updateReceived = true; onUpdated(oldButtonText); });
+         if (updatingWholeList)
+         {
+            onUpdating();
+         }
+         requestUpdates(mrk, 100,
+            () =>
+            {
+               updateReceived = true;
+               if (updatingWholeList)
+               {
+                  onUpdated(oldButtonText);
+               }
+            });
          await TaskUtils.WhileAsync(() => !updateReceived);
       }
 
@@ -461,8 +473,10 @@ namespace mrHelper.App.Forms
          if (mrkOpt == null)
          {
             // all error handling is done at the callee side
-            labelWorkflowStatus.Text = "Merge Request has not been created";
+            string message = "Merge Request has not been created";
+            labelWorkflowStatus.Text = message;
             buttonCreateNew.Enabled = true;
+            Trace.TraceInformation("[MainForm] {0}", message);
             return;
          }
 
@@ -475,6 +489,12 @@ namespace mrHelper.App.Forms
          _newMergeRequestDialogStatesByHosts[getHostName()] = new NewMergeRequestProperties(
             parameters.ProjectKey.ProjectName, null, null, parameters.AssigneeUserName, parameters.Squash,
             parameters.DeleteSourceBranch);
+
+         Trace.TraceInformation(
+            "[MainForm] Created a new merge request. " +
+            "Project: {0}, SourceBranch: {1}, TargetBranch: {2}, Assignee: {3}, firstNote: {4}",
+            parameters.ProjectKey.ProjectName, parameters.SourceBranch, parameters.TargetBranch,
+            parameters.AssigneeUserName, firstNote);
       }
 
       async private Task applyChangesToMergeRequestAsync(string hostname, User currentUser, FullMergeRequestKey item)
@@ -485,6 +505,7 @@ namespace mrHelper.App.Forms
             getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText);
          if (form.ShowDialog() != DialogResult.OK)
          {
+            Trace.TraceInformation("[MainForm] User declined to modify a merge request");
             return;
          }
 
@@ -493,22 +514,24 @@ namespace mrHelper.App.Forms
             form.Description, form.TargetBranch, form.DeleteSourceBranch, form.Squash);
 
          GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings);
-         bool updated = await MergeRequestEditHelper.ApplyChangesToMergeRequest(gitLabInstance, _modificationNotifier,
+         bool modified = await MergeRequestEditHelper.ApplyChangesToMergeRequest(gitLabInstance, _modificationNotifier,
             item.ProjectKey, item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser);
-         if (!updated)
+
+         string statusMessage = modified
+            ? String.Format("Merge Request !{0} has been modified", mrk.IId)
+            : String.Format("No changes have been made to Merge Request !{0}", mrk.IId);
+         labelWorkflowStatus.Text = statusMessage;
+         Trace.TraceInformation("[MainForm] {0}", statusMessage);
+
+         if (modified)
          {
-            labelWorkflowStatus.Text = String.Format("No changes have been made to Merge Request !{0}", mrk.IId);
-            return;
+            requestUpdates(mrk,
+               new int[] {
+                        100,
+                        Program.Settings.OneShotUpdateFirstChanceDelayMs,
+                        Program.Settings.OneShotUpdateSecondChanceDelayMs
+               });
          }
-
-         requestUpdates(mrk,
-            new int[] {
-                     100,
-                     Program.Settings.OneShotUpdateFirstChanceDelayMs,
-                     Program.Settings.OneShotUpdateSecondChanceDelayMs
-            });
-
-         labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been updated", mrk.IId);
       }
 
       async private Task closeMergeRequestAsync(string hostname, FullMergeRequestKey item)
@@ -521,7 +544,15 @@ namespace mrHelper.App.Forms
             GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings);
             await MergeRequestEditHelper.CloseMergeRequest(gitLabInstance, _modificationNotifier, mrk);
 
+            string statusMessage = String.Format("Merge Request !{0} has been closed", mrk.IId);
+            labelWorkflowStatus.Text = statusMessage;
+            Trace.TraceInformation("[MainForm] {0}", statusMessage);
+
             requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval });
+         }
+         else
+         {
+            Trace.TraceInformation("[MainForm] User declined to close a merge request");
          }
       }
    }

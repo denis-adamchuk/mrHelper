@@ -2039,6 +2039,7 @@ namespace mrHelper.App.Forms
             _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()));
          if (form.ShowDialog() != DialogResult.OK)
          {
+            Trace.TraceInformation("[MainForm] User declined to create a merge request");
             return;
          }
 
@@ -2064,7 +2065,20 @@ namespace mrHelper.App.Forms
 
       private bool doesClipboardContainValidUrl()
       {
-         return UrlHelper.CheckMergeRequestUrl(Clipboard.GetText());
+         return UrlHelper.CheckMergeRequestUrl(getClipboardText());
+      }
+
+      private string getClipboardText()
+      {
+         try
+         {
+            return Clipboard.GetText();
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(ex is System.Runtime.InteropServices.ExternalException);
+            return String.Empty;
+         }
       }
 
       private void acceptMergeRequest(string hostname, FullMergeRequestKey item)
@@ -2081,8 +2095,13 @@ namespace mrHelper.App.Forms
          AcceptMergeRequestForm form = new AcceptMergeRequestForm(
             mrk,
             getCommitStorage(mrk.ProjectKey, false)?.Path,
-            () => requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval }),
+            () =>
+            {
+               labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been merged successfully", mrk.IId);
+               requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval });
+            },
             showDiscussionsFormAsync,
+            () => _liveDataCache,
             async () =>
             {
                await checkForUpdatesAsync(mrk);
