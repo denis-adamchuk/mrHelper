@@ -233,7 +233,7 @@ namespace mrHelper.App.Forms
 
             fillProjectListAndSelect(new string[] { _initialState.DefaultProject }, null);
             fillSourceBranchListAndSelect(adjustedArray, null);
-            fillTargetBranchListAndSelect(new string[] { _initialState.TargetBranch }, null);
+            fillTargetBranchListAndSelect(_initialState.TargetBranchCandidates, null);
 
             BeginInvoke(new Action(
                async () =>
@@ -263,7 +263,7 @@ namespace mrHelper.App.Forms
       {
          return String.IsNullOrEmpty(initialState.DefaultProject)
              || String.IsNullOrEmpty(initialState.SourceBranch)
-             || String.IsNullOrEmpty(initialState.TargetBranch);
+             || initialState.TargetBranchCandidates == null;
       }
 
       private void checkSourceBranchTemplate()

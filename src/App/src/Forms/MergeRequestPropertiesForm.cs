@@ -254,21 +254,19 @@ namespace mrHelper.App.Forms
 
       protected void fillProjectListAndSelect(IEnumerable<string> projects, string defaultProjectName)
       {
-         comboBoxProject.Items.AddRange(projects
-            .OrderBy(x => x)
-            .ToArray());
+         comboBoxProject.Items.AddRange(projects.OrderBy(x => x).ToArray());
          WinFormsHelpers.SelectComboBoxItem(comboBoxProject, String.IsNullOrWhiteSpace(defaultProjectName)
             ? null : new Func<object, bool>(o => (o as string) == defaultProjectName));
       }
 
-      protected void fillSourceBranchListAndSelect(Branch[] branches, string defaultSourceBrachName)
+      protected void fillSourceBranchListAndSelect(IEnumerable<Branch> branches, string defaultSourceBrachName)
       {
-         comboBoxSourceBranch.Items.AddRange(branches);
+         comboBoxSourceBranch.Items.AddRange(branches.ToArray());
          WinFormsHelpers.SelectComboBoxItem(comboBoxSourceBranch, String.IsNullOrWhiteSpace(defaultSourceBrachName)
             ? null : new Func<object, bool>(o => (o as Branch).Name == defaultSourceBrachName));
       }
 
-      protected void fillTargetBranchListAndSelect(string[] branchNames, string defaultTargetBranchName)
+      protected void fillTargetBranchListAndSelect(IEnumerable<string> branchNames, string defaultTargetBranchName)
       {
          comboBoxTargetBranch.Items.AddRange(branchNames.ToArray());
          WinFormsHelpers.SelectComboBoxItem(comboBoxTargetBranch, String.IsNullOrWhiteSpace(defaultTargetBranchName)

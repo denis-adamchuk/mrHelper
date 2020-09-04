@@ -9,39 +9,19 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Helpers.GitLab
 {
-   public struct ParsedNewMergeRequestUrl : IEquatable<ParsedNewMergeRequestUrl>
+   public struct ParsedNewMergeRequestUrl
    {
-      public ParsedNewMergeRequestUrl(ProjectKey projectKey, string sourceBranch, string targetBranch)
+      public ParsedNewMergeRequestUrl(ProjectKey projectKey, string sourceBranch,
+         IEnumerable<string> targetBranchCandidates)
       {
          ProjectKey = projectKey;
          SourceBranch = sourceBranch;
-         TargetBranch = targetBranch;
+         TargetBranchCandidates = targetBranchCandidates;
       }
 
       public ProjectKey ProjectKey { get; }
       public string SourceBranch { get; }
-      public string TargetBranch { get; }
-
-      public override bool Equals(object obj)
-      {
-         return obj is ParsedNewMergeRequestUrl url && Equals(url);
-      }
-
-      public bool Equals(ParsedNewMergeRequestUrl other)
-      {
-         return ProjectKey.Equals(other.ProjectKey) &&
-                SourceBranch == other.SourceBranch &&
-                TargetBranch == other.TargetBranch;
-      }
-
-      public override int GetHashCode()
-      {
-         int hashCode = 741791702;
-         hashCode = hashCode * -1521134295 + ProjectKey.GetHashCode();
-         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(SourceBranch);
-         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(TargetBranch);
-         return hashCode;
-      }
+      public IEnumerable<string> TargetBranchCandidates { get; }
    }
 
    /// <summary>
@@ -90,13 +70,9 @@ namespace mrHelper.App.Helpers.GitLab
             throw new UriFormatException(String.Format("\"{0}\" does not point to a remote branch", sourceBranch.Value));
          }
 
-         string remoteOrigin = "origin/";
-         string remoteTargetBranch = findTargetBranch(path.Value, remoteSourceBranch, remoteOrigin);
-
-         Debug.Assert(remoteSourceBranch.StartsWith(remoteOrigin));
-         Debug.Assert(remoteTargetBranch.StartsWith(remoteOrigin));
-         string sourceBranchName = remoteSourceBranch.Substring(remoteOrigin.Length);
-         string targetBranchName = remoteTargetBranch.Substring(remoteOrigin.Length);
+         string sourceBranchName = trimRemoteOrigin(remoteSourceBranch);
+         IEnumerable<string> targetBranchName = findTargetBranch(path.Value, remoteSourceBranch)
+            .Select(fullName => trimRemoteOrigin(fullName));
          return new ParsedNewMergeRequestUrl(projectKey.Value, sourceBranchName, targetBranchName);
       }
 
@@ -106,21 +82,28 @@ namespace mrHelper.App.Helpers.GitLab
          return refs != null ? refs.FirstOrDefault() : null;
       }
 
-      private static string findTargetBranch(string path, string remoteSourceBranch, string remoteOrigin)
+      private static IEnumerable<string> findTargetBranch(string path, string remoteSourceBranch)
       {
          for (int iDepth = 0; iDepth < Constants.MaxCommitDepth; ++iDepth)
          {
             string sha = String.Format("{0}{1}", remoteSourceBranch, new string('^', iDepth));
             IEnumerable<string> refs = GitTools.GetRemotePointsAt(path, sha)
                .Where(x => x != remoteSourceBranch)
-               .Where(x => x != String.Format("{0}HEAD", remoteOrigin));
+               .Where(x => x != String.Format("{0}HEAD", RemoteOrigin));
             if (refs.Any())
             {
-               return refs.First();
+               return refs;
             }
          }
-         return String.Format("{0}master", remoteOrigin);
+         return new string[] { String.Format("{0}master", RemoteOrigin) };
       }
+
+      private static string trimRemoteOrigin(string name)
+      {
+         Debug.Assert(name.StartsWith(RemoteOrigin));
+         return name.Substring(RemoteOrigin.Length);
+      }
+      private static string RemoteOrigin = "origin/";
    }
 }
 
