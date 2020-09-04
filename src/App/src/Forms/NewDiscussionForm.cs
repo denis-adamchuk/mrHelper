@@ -8,13 +8,14 @@ using mrHelper.CommonNative;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
+using System.Threading.Tasks;
 
 namespace mrHelper.App.Forms
 {
    internal partial class NewDiscussionForm : CustomFontForm
    {
       internal NewDiscussionForm(string leftSideFileName, string rightSideFileName,
-         DiffPosition position, IGitCommandService git)
+         DiffPosition position, IGitCommandService git, Func<string, bool, Task> onSubmitDiscussion)
       {
          InitializeComponent();
          this.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
@@ -32,10 +33,22 @@ namespace mrHelper.App.Forms
 
          buttonCancel.ConfirmationCondition =
             () => textBoxDiscussionBody.Text.Length > MaximumTextLengthTocancelWithoutConfirmation;
+         _onSubmitDiscussion = onSubmitDiscussion;
       }
 
       public bool IncludeContext { get { return checkBoxIncludeContext.Checked; } }
       public string Body { get { return textBoxDiscussionBody.Text; } }
+
+      async private void buttonOK_Click(object sender, EventArgs e)
+      {
+         await _onSubmitDiscussion?.Invoke(Body, IncludeContext);
+         Close();
+      }
+
+      private void buttonCancel_Click(object sender, EventArgs e)
+      {
+         Close();
+      }
 
       private void textBoxDiscussionBody_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
       {
@@ -57,9 +70,6 @@ namespace mrHelper.App.Forms
          textBoxDiscussionBody.Focus();
       }
 
-      /// <summary>
-      /// Throws ArgumentException.
-      /// </summary>
       private void showDiscussionContext(string leftSideFileName, string rightSideFileName,
          DiffPosition position, IGitCommandService git)
       {
@@ -107,6 +117,8 @@ namespace mrHelper.App.Forms
       }
 
       private static int MaximumTextLengthTocancelWithoutConfirmation = 5;
+
+      private Func<string, bool, Task> _onSubmitDiscussion;
    }
 }
 

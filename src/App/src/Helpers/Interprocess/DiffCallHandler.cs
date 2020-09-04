@@ -12,48 +12,36 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Core.Matching;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
-using mrHelper.App.Helpers;
 using static mrHelper.App.Helpers.ConfigurationHelper;
 
 namespace mrHelper.App.Interprocess
 {
    internal class DiffCallHandler
    {
-      internal DiffCallHandler(MatchInfo matchInfo, Snapshot snapshot,
-         GitLabInstance gitLabInstance, IModificationListener modificationListener, User currentUser)
+      internal DiffCallHandler(IGitCommandService git, IModificationListener modificationListener,
+         User currentUser, Action<MergeRequestKey> onDiscussionSubmitted)
       {
-         _matchInfo = matchInfo;
-         _snapshot = snapshot;
-         _gitLabInstance = gitLabInstance;
+         _git = git ?? throw new ArgumentException("git argument cannot be null");
          _modificationListener = modificationListener;
          _currentUser = currentUser;
+         _onDiscussionSubmitted = onDiscussionSubmitted;
       }
 
-      async public Task HandleAsync(ICommitStorage gitRepository)
+      public void Handle(MatchInfo matchInfo, Snapshot snapshot)
       {
-         if (_gitLabInstance == null || gitRepository == null)
-         {
-            Debug.Assert(false);
-            return;
-         }
-         await doHandleAsync(gitRepository.Git);
-      }
+         FileNameMatcher fileNameMatcher = getFileNameMatcher(_git, getMergeRequestKey(snapshot));
+         LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(_git);
 
-      async public Task doHandleAsync(IGitCommandService git)
-      {
-         FileNameMatcher fileNameMatcher = getFileNameMatcher(git);
-         LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(git);
-
-         DiffPosition position = new DiffPosition(null, null, null, null, _snapshot.Refs);
+         DiffPosition position = new DiffPosition(null, null, null, null, snapshot.Refs);
 
          try
          {
-            if (!fileNameMatcher.Match(_matchInfo, position, out position))
+            if (!fileNameMatcher.Match(matchInfo, position, out position))
             {
                return;
             }
 
-            lineNumberMatcher.Match(_matchInfo, position, out position);
+            lineNumberMatcher.Match(matchInfo, position, out position);
          }
          catch (Exception ex)
          {
@@ -68,14 +56,14 @@ namespace mrHelper.App.Interprocess
             throw;
          }
 
-         using (NewDiscussionForm form = new NewDiscussionForm(
-            _matchInfo.LeftFileName, _matchInfo.RightFileName, position, git))
-         {
-            if (form.ShowDialog() == DialogResult.OK)
+         NewDiscussionForm form = new NewDiscussionForm(
+            matchInfo.LeftFileName, matchInfo.RightFileName, position, _git,
+            async (body, includeContext) =>
             {
                try
                {
-                  await submitDiscussionAsync(position, form.Body, form.IncludeContext);
+                  await submitDiscussionAsync(matchInfo, snapshot, position, body, includeContext);
+                  _onDiscussionSubmitted?.Invoke(getMergeRequestKey(snapshot));
                }
                catch (DiscussionCreatorException ex)
                {
@@ -85,11 +73,11 @@ namespace mrHelper.App.Interprocess
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
                      MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
                }
-            }
-         }
+            });
+         form.Show();
       }
 
-      private FileNameMatcher getFileNameMatcher(IGitCommandService git)
+      private FileNameMatcher getFileNameMatcher(IGitCommandService git, MergeRequestKey mrk)
       {
          return new FileNameMatcher(git,
             (currentName, anotherName) =>
@@ -107,7 +95,7 @@ namespace mrHelper.App.Interprocess
          },
             (currentName, anotherName, status) =>
          {
-            if (needSuppressWarning(currentName))
+            if (needSuppressWarning(currentName, mrk))
             {
                return true;
             }
@@ -140,13 +128,13 @@ namespace mrHelper.App.Interprocess
                == DialogResult.Yes;
             if (isWarningIgnoredByUser)
             {
-               addFileToWhitelist(currentName);
+               addFileToWhitelist(currentName, mrk);
             }
             return isWarningIgnoredByUser;
          },
             (currentName) =>
          {
-            if (needSuppressWarning(currentName))
+            if (needSuppressWarning(currentName, mrk))
             {
                return true;
             }
@@ -160,13 +148,14 @@ namespace mrHelper.App.Interprocess
                == DialogResult.Yes;
             if (isWarningIgnoredByUser)
             {
-               addFileToWhitelist(currentName);
+               addFileToWhitelist(currentName, mrk);
             }
             return isWarningIgnoredByUser;
          });
       }
 
-      async private Task submitDiscussionAsync(DiffPosition position, string body, bool includeContext)
+      async private Task submitDiscussionAsync(MatchInfo matchInfo, Snapshot snapshot, DiffPosition position,
+         string body, bool includeContext)
       {
          if (body.Length == 0)
          {
@@ -179,9 +168,10 @@ namespace mrHelper.App.Interprocess
          NewDiscussionParameters parameters = new NewDiscussionParameters(
             body, includeContext ? createPositionParameters(position) : new PositionParameters?());
 
-         MergeRequestKey mrk = getMergeRequestKey(_snapshot);
+         MergeRequestKey mrk = getMergeRequestKey(snapshot);
+         GitLabInstance gitLabInstance = new GitLabInstance(snapshot.Host, Program.Settings);
          IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-            _gitLabInstance, _modificationListener, mrk, _currentUser);
+            gitLabInstance, _modificationListener, mrk, _currentUser);
 
          try
          {
@@ -198,8 +188,8 @@ namespace mrHelper.App.Interprocess
                   "Body:\n{4}",
                   position.ToString(),
                   includeContext.ToString(),
-                  _snapshot.Refs.ToString(),
-                  _matchInfo.ToString(),
+                  snapshot.Refs.ToString(),
+                  matchInfo.ToString(),
                   body);
 
             if (!ex.Handled)
@@ -215,7 +205,7 @@ namespace mrHelper.App.Interprocess
             position.RightLine, position.Refs.LeftSHA, position.Refs.RightSHA, position.Refs.LeftSHA);
       }
 
-      private bool needSuppressWarning(string filename)
+      private bool needSuppressWarning(string filename, MergeRequestKey mrk)
       {
          switch (GetShowWarningsOnFileMismatchMode(Program.Settings))
          {
@@ -227,7 +217,6 @@ namespace mrHelper.App.Interprocess
 
             case ShowWarningsOnFileMismatchMode.UntilUserIgnoresFile:
                {
-                  MergeRequestKey mrk = getMergeRequestKey(_snapshot);
                   MismatchWhitelistKey key = new MismatchWhitelistKey(mrk, filename);
                   return _mismatchWhitelist.Contains(key);
                }
@@ -237,9 +226,8 @@ namespace mrHelper.App.Interprocess
          return false;
       }
 
-      private void addFileToWhitelist(string filename)
+      private void addFileToWhitelist(string filename, MergeRequestKey mrk)
       {
-         MergeRequestKey mrk = getMergeRequestKey(_snapshot);
          MismatchWhitelistKey key = new MismatchWhitelistKey(mrk, filename);
          _mismatchWhitelist.Add(key);
       }
@@ -250,11 +238,10 @@ namespace mrHelper.App.Interprocess
          return new MergeRequestKey(projectKey, snapshot.MergeRequestIId);
       }
 
-      private readonly MatchInfo _matchInfo;
-      private readonly Snapshot _snapshot;
-      private readonly GitLabInstance _gitLabInstance;
+      private readonly IGitCommandService _git;
       private readonly IModificationListener _modificationListener;
       private readonly User _currentUser;
+      private readonly Action<MergeRequestKey> _onDiscussionSubmitted;
 
       private struct MismatchWhitelistKey : IEquatable<MismatchWhitelistKey>
       {

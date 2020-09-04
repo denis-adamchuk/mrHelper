@@ -50,6 +50,7 @@
          this.buttonCancel.TabIndex = 4;
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;
+         this.buttonCancel.Click += new System.EventHandler(this.buttonCancel_Click);
          // 
          // checkBoxIncludeContext
          // 
@@ -85,6 +86,7 @@
          this.buttonOK.TabIndex = 3;
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
+         this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
          // 
          // htmlContextCanvas
          // 
@@ -135,7 +137,6 @@
          this.Controls.Add(this.buttonCancel);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
-         this.MinimizeBox = false;
          this.MinimumSize = new System.Drawing.Size(770, 260);
          this.Name = "NewDiscussionForm";
          this.Text = "Start New Thread";

@@ -49,11 +49,11 @@ namespace mrHelper.App.Forms
          _requestedDiff.Enqueue(diffRequest);
          if (_requestedDiff.Count == 1)
          {
-            BeginInvoke(new Action(async () => await processDiffQueue()));
+            BeginInvoke(new Action(() => processDiffQueue()));
          }
       }
 
-      async private Task processDiffQueue()
+      private void processDiffQueue()
       {
          if (!_requestedDiff.Any())
          {
@@ -82,28 +82,19 @@ namespace mrHelper.App.Forms
 
             if (_storageFactory == null || _storageFactory.ParentFolder != snapshot.TempFolder)
             {
+               Trace.TraceWarning("[MainForm] File Storage folder was changed after launching diff tool");
                MessageBox.Show("It seems that file storage folder was changed after launching diff tool. " +
                   "Please restart diff tool.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning,
                   MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
                return;
             }
 
-            DataCache dataCache = getDataCacheByName(snapshot.DataCacheName);
-            if (dataCache == null || getCurrentUser() == null)
-            {
-               // It is unexpected to get here when we are not connected to a host
-               Debug.Assert(false);
-               return;
-            }
-
-            DiffArgumentParser diffArgumentParser = new DiffArgumentParser(diffRequest.DiffArguments);
-            DiffCallHandler handler;
+            Core.Matching.MatchInfo matchInfo;
             try
             {
-               GitLabInstance gitLabInstance = new GitLabInstance(snapshot.Host, Program.Settings);
-               Core.Matching.MatchInfo matchInfo = diffArgumentParser.Parse(getDiffTempFolder(snapshot));
-               handler = new DiffCallHandler(matchInfo, snapshot, gitLabInstance, _modificationNotifier,
-                  getCurrentUser());
+               DiffArgumentParser diffArgumentParser = new DiffArgumentParser(diffRequest.DiffArguments);
+               matchInfo = diffArgumentParser.Parse(getDiffTempFolder(snapshot));
+               Debug.Assert(matchInfo != null);
             }
             catch (ArgumentException ex)
             {
@@ -116,26 +107,35 @@ namespace mrHelper.App.Forms
 
             ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
             ILocalCommitStorage storage = getCommitStorage(projectKey, false);
-
-            try
+            if (storage.Git == null)
             {
-               await handler.HandleAsync(storage);
-            }
-            catch (DiscussionCreatorException)
-            {
+               Trace.TraceError("[MainForm] storage.Git is null");
                Debug.Assert(false);
                return;
             }
 
-            MergeRequestKey mrk = new MergeRequestKey(projectKey, snapshot.MergeRequestIId);
-            dataCache.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null);
+            DataCache dataCache = getDataCacheByName(snapshot.DataCacheName);
+            if (dataCache == null || getCurrentUser() == null)
+            {
+               // It is unexpected to get here when we are not connected to a host
+               Debug.Assert(false);
+               return;
+            }
+
+            DiffCallHandler handler = new DiffCallHandler(storage.Git, _modificationNotifier, getCurrentUser(),
+               (mrk) =>
+               {
+                  dataCache.DiscussionCache?.RequestUpdate(mrk,
+                     Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null);
+               });
+            handler.Handle(matchInfo, snapshot);
          }
          finally
          {
             if (_requestedDiff.Any())
             {
                _requestedDiff.Dequeue();
-               BeginInvoke(new Action(async () => await processDiffQueue()));
+               BeginInvoke(new Action(() => processDiffQueue()));
             }
          }
       }
