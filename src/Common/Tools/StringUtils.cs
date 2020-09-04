@@ -91,6 +91,24 @@ namespace mrHelper.Common.Tools
 
          return word;
       }
+
+      public static bool IsWorkInProgressTitle(string title)
+      {
+         return title != null && title.StartsWith(WorkInProgressPrefix);
+      }
+
+      public static string ToggleWorkInProgressTitle(string title)
+      {
+         if (title == null)
+         {
+            return title;
+         }
+
+         return title.StartsWith(WorkInProgressPrefix)
+            ? title.Substring(WorkInProgressPrefix.Length) : WorkInProgressPrefix + title;
+      }
+
+      private static string WorkInProgressPrefix = "WIP: ";
    }
 }
 

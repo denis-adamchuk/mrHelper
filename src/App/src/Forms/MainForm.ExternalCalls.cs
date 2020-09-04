@@ -49,11 +49,11 @@ namespace mrHelper.App.Forms
          _requestedDiff.Enqueue(diffRequest);
          if (_requestedDiff.Count == 1)
          {
-            BeginInvoke(new Action(async () => await processDiffQueue()));
+            BeginInvoke(new Action(() => processDiffQueue()));
          }
       }
 
-      async private Task processDiffQueue()
+      private void processDiffQueue()
       {
          if (!_requestedDiff.Any())
          {
@@ -82,28 +82,19 @@ namespace mrHelper.App.Forms
 
             if (_storageFactory == null || _storageFactory.ParentFolder != snapshot.TempFolder)
             {
+               Trace.TraceWarning("[MainForm] File Storage folder was changed after launching diff tool");
                MessageBox.Show("It seems that file storage folder was changed after launching diff tool. " +
                   "Please restart diff tool.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning,
                   MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
                return;
             }
 
-            DataCache dataCache = getDataCacheByName(snapshot.DataCacheName);
-            if (dataCache == null || getCurrentUser() == null)
-            {
-               // It is unexpected to get here when we are not connected to a host
-               Debug.Assert(false);
-               return;
-            }
-
-            DiffArgumentParser diffArgumentParser = new DiffArgumentParser(diffRequest.DiffArguments);
-            DiffCallHandler handler;
+            Core.Matching.MatchInfo matchInfo;
             try
             {
-               GitLabInstance gitLabInstance = new GitLabInstance(snapshot.Host, Program.Settings);
-               Core.Matching.MatchInfo matchInfo = diffArgumentParser.Parse(getDiffTempFolder(snapshot));
-               handler = new DiffCallHandler(matchInfo, snapshot, gitLabInstance, _modificationNotifier,
-                  getCurrentUser());
+               DiffArgumentParser diffArgumentParser = new DiffArgumentParser(diffRequest.DiffArguments);
+               matchInfo = diffArgumentParser.Parse(getDiffTempFolder(snapshot));
+               Debug.Assert(matchInfo != null);
             }
             catch (ArgumentException ex)
             {
@@ -116,26 +107,35 @@ namespace mrHelper.App.Forms
 
             ProjectKey projectKey = new ProjectKey(snapshot.Host, snapshot.Project);
             ILocalCommitStorage storage = getCommitStorage(projectKey, false);
-
-            try
+            if (storage.Git == null)
             {
-               await handler.HandleAsync(storage);
-            }
-            catch (DiscussionCreatorException)
-            {
+               Trace.TraceError("[MainForm] storage.Git is null");
                Debug.Assert(false);
                return;
             }
 
-            MergeRequestKey mrk = new MergeRequestKey(projectKey, snapshot.MergeRequestIId);
-            dataCache.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null);
+            DataCache dataCache = getDataCacheByName(snapshot.DataCacheName);
+            if (dataCache == null || getCurrentUser() == null)
+            {
+               // It is unexpected to get here when we are not connected to a host
+               Debug.Assert(false);
+               return;
+            }
+
+            DiffCallHandler handler = new DiffCallHandler(storage.Git, _modificationNotifier, getCurrentUser(),
+               (mrk) =>
+               {
+                  dataCache.DiscussionCache?.RequestUpdate(mrk,
+                     Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null);
+               });
+            handler.Handle(matchInfo, snapshot);
          }
          finally
          {
             if (_requestedDiff.Any())
             {
                _requestedDiff.Dequeue();
-               BeginInvoke(new Action(async () => await processDiffQueue()));
+               BeginInvoke(new Action(() => processDiffQueue()));
             }
          }
       }
@@ -148,7 +148,7 @@ namespace mrHelper.App.Forms
          string url = arguments[1];
 
          Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
-         enqueueUrl(url);
+         reconnect(url);
       }
 
       readonly Queue<string> _requestedUrl = new Queue<string>();
@@ -187,12 +187,10 @@ namespace mrHelper.App.Forms
       {
          if (String.IsNullOrEmpty(url))
          {
-            selectHost(PreferredSelection.Initial);
-            switchHostToSelected();
+            await switchHostToSelectedAsync(null);
             return;
          }
 
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] Processing URL {0}", url));
          try
          {
             object parsed = UrlHelper.Parse(url);
@@ -228,8 +226,7 @@ namespace mrHelper.App.Forms
             reportErrorOnConnect(url, ex.OriginalMessage, ex.InnerException);
          }
 
-         selectHost(PreferredSelection.Initial);
-         switchHostToSelected();
+         await switchHostToSelectedAsync(null);
       }
 
       private void throwOnUnknownHost(string hostname)
@@ -252,9 +249,11 @@ namespace mrHelper.App.Forms
             getHostName(), getCurrentUser(), null);
          NewMergeRequestProperties initialProperties = new NewMergeRequestProperties(
             parsedNewMergeRequestUrl.ProjectKey.ProjectName, parsedNewMergeRequestUrl.SourceBranch,
-            parsedNewMergeRequestUrl.TargetBranch, defaultProperties.AssigneeUsername,
+            parsedNewMergeRequestUrl.TargetBranchCandidates, defaultProperties.AssigneeUsername,
             defaultProperties.IsSquashNeeded, defaultProperties.IsBranchDeletionNeeded);
-         createNewMergeRequest(getHostName(), getCurrentUser(), initialProperties);
+         var fullProjectList = _liveDataCache?.ProjectCache?.GetProjects() ?? Array.Empty<Project>();
+
+         createNewMergeRequest(getHostName(), getCurrentUser(), initialProperties, fullProjectList);
       }
 
       private class UrlConnectionException : ExceptionEx
@@ -313,7 +312,7 @@ namespace mrHelper.App.Forms
 
       async private Task restartWorkflowByUrlAsync(string hostname)
       {
-         _initialHostName = hostname;
+         setInitialHostName(Common.Tools.StringUtils.GetHostWithPrefix(hostname));
          selectHost(PreferredSelection.Initial);
          await switchHostToSelectedAsync(new Func<Exception, bool>(x =>
             throw new UrlConnectionException("Failed to connect to GitLab. ", x)));
@@ -334,7 +333,7 @@ namespace mrHelper.App.Forms
             {
                labelWorkflowStatus.Text = String.Format(
                   "Merge Request with IId {0} is not found in the cache, updating the list...", mrk.IId);
-               await checkForUpdatesAsync();
+               await checkForUpdatesAsync(null);
                if (getHostName() != mrk.ProjectKey.HostName || dataCache.MergeRequestCache == null)
                {
                   throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);

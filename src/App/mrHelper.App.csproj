@@ -112,6 +112,10 @@
       <DependentUpon>RevisionBrowser.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Controls\TextControls.cs" />
+    <Compile Include="src\Forms\AcceptMergeRequestForm.UI.cs">
+      <DependentUpon>AcceptMergeRequestForm.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="src\Forms\AddItemForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -143,6 +147,12 @@
     <Compile Include="src\Forms\Helpers\EditProjectsListViewCallback.cs" />
     <Compile Include="src\Forms\Helpers\EditUsersListViewCallback.cs" />
     <Compile Include="src\Forms\Helpers\WPFHelpers.cs" />
+    <Compile Include="src\Forms\AcceptMergeRequestForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\AcceptMergeRequestForm.Designer.cs">
+      <DependentUpon>AcceptMergeRequestForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Forms\TimeSpanEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -269,6 +279,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\EditOrderedListViewForm.resx">
       <DependentUpon>EditOrderedListViewForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Forms\AcceptMergeRequestForm.resx">
+      <DependentUpon>AcceptMergeRequestForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\TimeSpanEditForm.resx">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>

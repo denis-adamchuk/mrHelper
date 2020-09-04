@@ -17,7 +17,7 @@ namespace mrHelper.App.Forms
    internal abstract partial class MergeRequestPropertiesForm : CustomFontForm
    {
       internal MergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
-         bool allowChangeSource)
+         bool isAllowedToChangeSource)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
@@ -30,7 +30,7 @@ namespace mrHelper.App.Forms
          _projectAccessor = projectAccessor;
          _currentUser = currentUser;
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
-         _allowChangeSource = allowChangeSource;
+         _isAllowedToChangeSource = isAllowedToChangeSource;
 
          string css = String.Format("{0}", mrHelper.App.Properties.Resources.Common_CSS);
          htmlPanelTitle.BaseStylesheet = css;
@@ -249,30 +249,24 @@ namespace mrHelper.App.Forms
 
       protected void toggleWIP()
       {
-         string prefix = "WIP: ";
-         string title = getTitle();
-         string newTitle = title.StartsWith(prefix) ? title.Substring(prefix.Length) : prefix + title;
-         setTitle(newTitle);
+         setTitle(StringUtils.ToggleWorkInProgressTitle(getTitle()));
       }
 
-      protected void fillProjectListAndSelect(IEnumerable<ProjectKey> projects, string defaultProjectName)
+      protected void fillProjectListAndSelect(IEnumerable<string> projects, string defaultProjectName)
       {
-         comboBoxProject.Items.AddRange(projects
-            .OrderBy(x => x.ProjectName)
-            .Select(x => x.ProjectName)
-            .ToArray());
+         comboBoxProject.Items.AddRange(projects.OrderBy(x => x).ToArray());
          WinFormsHelpers.SelectComboBoxItem(comboBoxProject, String.IsNullOrWhiteSpace(defaultProjectName)
             ? null : new Func<object, bool>(o => (o as string) == defaultProjectName));
       }
 
-      protected void fillSourceBranchListAndSelect(Branch[] branches, string defaultSourceBrachName)
+      protected void fillSourceBranchListAndSelect(IEnumerable<Branch> branches, string defaultSourceBrachName)
       {
-         comboBoxSourceBranch.Items.AddRange(branches);
+         comboBoxSourceBranch.Items.AddRange(branches.ToArray());
          WinFormsHelpers.SelectComboBoxItem(comboBoxSourceBranch, String.IsNullOrWhiteSpace(defaultSourceBrachName)
             ? null : new Func<object, bool>(o => (o as Branch).Name == defaultSourceBrachName));
       }
 
-      protected void fillTargetBranchListAndSelect(string[] branchNames, string defaultTargetBranchName)
+      protected void fillTargetBranchListAndSelect(IEnumerable<string> branchNames, string defaultTargetBranchName)
       {
          comboBoxTargetBranch.Items.AddRange(branchNames.ToArray());
          WinFormsHelpers.SelectComboBoxItem(comboBoxTargetBranch, String.IsNullOrWhiteSpace(defaultTargetBranchName)
@@ -285,10 +279,10 @@ namespace mrHelper.App.Forms
       protected void updateControls()
       {
          bool isProjectSelected = !String.IsNullOrEmpty(getProjectName());
-         comboBoxProject.Enabled = _allowChangeSource;
+         comboBoxProject.Enabled = _isAllowedToChangeSource;
 
          bool areSourceBranches = comboBoxSourceBranch.Items.Count > 0;
-         comboBoxSourceBranch.Enabled = areSourceBranches && _allowChangeSource;
+         comboBoxSourceBranch.Enabled = areSourceBranches && _isAllowedToChangeSource;
 
          bool isSourceBranchSelected = !String.IsNullOrEmpty(getSourceBranchName());
          comboBoxTargetBranch.Enabled = isSourceBranchSelected;
@@ -354,7 +348,7 @@ namespace mrHelper.App.Forms
       protected readonly string _hostname;
 
       private readonly MarkdownPipeline _mdPipeline;
-      private readonly bool _allowChangeSource;
+      private readonly bool _isAllowedToChangeSource;
       private string _title;
       private string _description;
    }

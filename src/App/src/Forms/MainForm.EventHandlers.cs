@@ -34,18 +34,35 @@ namespace mrHelper.App.Forms
          checkForApplicationUpdates();
 
          initializeWork();
-         connectOnStartup();
+
+         Trace.TraceInformation(String.Format("[Mainform] Connecting to URL on startup {0}",
+            _startUrl?.ToString() ?? "null"));
+         reconnect(_startUrl);
       }
 
       private void closeAllFormsExceptMain()
       {
          for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
          {
-            if (Application.OpenForms[iForm] != this)
+            Form form = Application.OpenForms[iForm];
+            if (form != this)
             {
-               Application.OpenForms[iForm].Close();
+               form.Close();
             }
          }
+      }
+
+      private Form findFormByTag(string name, Func<object, bool> doesMatchTag)
+      {
+         for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
+         {
+            Form form = Application.OpenForms[iForm];
+            if (form.Name == name && doesMatchTag(form.Tag))
+            {
+               return form;
+            }
+         }
+         return null;
       }
 
       private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -241,13 +258,12 @@ namespace mrHelper.App.Forms
 
       private void ComboBoxHost_SelectionChangeCommited(object sender, EventArgs e)
       {
-         string hostname = (sender as ComboBox).Text;
-
-         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}", hostname));
-
          updateProjectsListView();
          updateUsersListView();
-         switchHostToSelected();
+
+         string hostname = (sender as ComboBox).Text;
+         Trace.TraceInformation(String.Format("[MainForm.Workflow] User requested to change host to {0}", hostname));
+         reconnect();
       }
 
       private void ListViewMergeRequests_DrawSubItem(object sender, DrawListViewSubItemEventArgs e)
@@ -348,7 +364,7 @@ namespace mrHelper.App.Forms
          bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
          if (clickable)
          {
-            openBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
+            UrlHelper.OpenBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
          }
       }
 
@@ -443,7 +459,7 @@ namespace mrHelper.App.Forms
 
       private void LinkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         openBrowser((sender as LinkLabel).Text);
+         UrlHelper.OpenBrowser((sender as LinkLabel).Text);
       }
 
       private void listViewKnownHosts_SelectedIndexChanged(object sender, EventArgs e)
@@ -485,7 +501,7 @@ namespace mrHelper.App.Forms
             updateKnownHostAndTokensInSettings();
             updateHostsDropdownList();
             selectHost(PreferredSelection.Latest);
-            switchHostToSelected();
+            reconnect();
          }
       }
 
@@ -522,7 +538,7 @@ namespace mrHelper.App.Forms
             }
 
             // calling this unconditionally to drop current sessions and disable UI
-            switchHostToSelected();
+            reconnect();
          }
       }
 
@@ -794,8 +810,11 @@ namespace mrHelper.App.Forms
 
       async private void ButtonDiscussions_Click(object sender, EventArgs e)
       {
-         Debug.Assert(getMergeRequestKey(null).HasValue);
-         Debug.Assert(getMergeRequest(null) != null);
+         if (getMergeRequest(null) == null || !getMergeRequestKey(null).HasValue)
+         {
+            Debug.Assert(false);
+            return;
+         }
 
          MergeRequest mergeRequest = getMergeRequest(null);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
@@ -873,7 +892,7 @@ namespace mrHelper.App.Forms
          string helpUrl = Program.ServiceManager.GetHelpUrl();
          if (helpUrl != String.Empty)
          {
-            openBrowser(helpUrl);
+            UrlHelper.OpenBrowser(helpUrl);
          }
       }
 
@@ -1113,7 +1132,7 @@ namespace mrHelper.App.Forms
          string hostname = (string)reader.Get("SelectedHost");
          if (hostname != null)
          {
-            _initialHostName = StringUtils.GetHostWithPrefix(hostname);
+            setInitialHostName(StringUtils.GetHostWithPrefix(hostname));
          }
 
          JObject reviewedRevisionsObj = (JObject)reader.Get("ReviewedCommits");
@@ -1223,7 +1242,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(projects != null);
 
          GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _modificationNotifier);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects",
             "Add project", "Type project name in group/project format",
             projects, new EditProjectsListViewCallback(rawDataAccessor), true))
@@ -1240,8 +1259,8 @@ namespace mrHelper.App.Forms
 
                if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
                {
-                  Trace.TraceInformation("[MainForm] Reloading merge request list after project list change");
-                  switchHostToSelected();
+                  Trace.TraceInformation("[MainForm] Reconnecting after project list change");
+                  reconnect();
                }
             }
          }
@@ -1259,7 +1278,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(users != null);
 
          GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _modificationNotifier);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users",
             "Add username", "Type a name of GitLab user, teams allowed",
             users, new EditUsersListViewCallback(rawDataAccessor), false))
@@ -1276,8 +1295,8 @@ namespace mrHelper.App.Forms
 
                if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
                {
-                  Trace.TraceInformation("[MainForm] Reloading merge request list after user list change");
-                  switchHostToSelected();
+                  Trace.TraceInformation("[MainForm] Reconnecting after user list change");
+                  reconnect();
                }
             }
          }
@@ -1317,7 +1336,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void radioButtonMergeRequestSelectingMode_CheckedChanged(object sender, EventArgs e)
+      private void radioButtonWorkflowType_CheckedChanged(object sender, EventArgs e)
       {
          if (!(sender as RadioButton).Checked)
          {
@@ -1338,8 +1357,8 @@ namespace mrHelper.App.Forms
                ConfigurationHelper.SelectUserBasedWorkflow(Program.Settings);
             }
 
-            Trace.TraceInformation("[MainForm] Reloading merge request list after mode change");
-            switchHostToSelected();
+            Trace.TraceInformation("[MainForm] Reconnecting after workflow type change");
+            reconnect();
          }
       }
 
@@ -1359,8 +1378,8 @@ namespace mrHelper.App.Forms
                   : LocalCommitStorageType.ShallowGitRepository);
             ConfigurationHelper.SelectPreferredStorageType(Program.Settings, type);
 
-            Trace.TraceInformation("[MainForm] Reloading merge request list after storage type change");
-            switchHostToSelected();
+            Trace.TraceInformation("[MainForm] Reconnecting after storage type change");
+            reconnect();
          }
       }
 
@@ -1418,21 +1437,21 @@ namespace mrHelper.App.Forms
 
       private void linkLabelCommitStorageDescription_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         Trace.TraceInformation("Clicked on link label for commit storage selection");
+         Trace.TraceInformation("[MainForm] Clicked on link label for commit storage selection");
          string helpUrl = Program.ServiceManager.GetHelpUrl();
          if (helpUrl != String.Empty)
          {
-            openBrowser(helpUrl);
+            UrlHelper.OpenBrowser(helpUrl);
          }
       }
 
       private void linkLabelWorkflowDescription_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         Trace.TraceInformation("Clicked on link label for workflow type selection");
+         Trace.TraceInformation("[MainForm] Clicked on link label for workflow type selection");
          string helpUrl = Program.ServiceManager.GetHelpUrl();
          if (helpUrl != String.Empty)
          {
-            openBrowser(helpUrl);
+            UrlHelper.OpenBrowser(helpUrl);
          }
       }
 
@@ -1444,10 +1463,19 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         IEnumerable<Project> fullProjectList = _liveDataCache?.ProjectCache?.GetProjects();
+         bool isProjectListReady = fullProjectList?.Any() ?? false;
+         if (!isProjectListReady)
+         {
+            Debug.Assert(false);
+            Trace.TraceError("[MainForm] Project List is not ready at the moment of Create New click");
+            return;
+         }
+
          ProjectKey? currentProject = getMergeRequestKey(null)?.ProjectKey;
          NewMergeRequestProperties initialFormState = getDefaultNewMergeRequestProperties(
             getHostName(), getCurrentUser(), currentProject);
-         createNewMergeRequest(getHostName(), getCurrentUser(), initialFormState);
+         createNewMergeRequest(getHostName(), getCurrentUser(), initialFormState, fullProjectList);
       }
 
       private void ListViewMergeRequests_Edit(object sender, EventArgs e)
@@ -1460,6 +1488,39 @@ namespace mrHelper.App.Forms
 
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
          BeginInvoke(new Action(async () => await applyChangesToMergeRequestAsync(getHostName(), getCurrentUser(), item)));
+      }
+
+      private void ListViewMergeRequests_Accept(object sender, EventArgs e)
+      {
+         Debug.Assert(!isSearchMode());
+         if (listViewMergeRequests.SelectedItems.Count < 1 || !checkIfMergeRequestCanBeEdited())
+         {
+            return;
+         }
+
+         IEnumerable<Project> fullProjectList = _liveDataCache?.ProjectCache?.GetProjects();
+         bool isProjectListReady = fullProjectList?.Any() ?? false;
+         if (!isProjectListReady)
+         {
+            Debug.Assert(false);
+            Trace.TraceError("[MainForm] Project List is not ready at the moment of Accept click");
+            return;
+         }
+
+         FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
+         acceptMergeRequest(getHostName(), item);
+      }
+
+      private void ListViewMergeRequests_Close(object sender, EventArgs e)
+      {
+         Debug.Assert(!isSearchMode());
+         if (listViewMergeRequests.SelectedItems.Count < 1 || !checkIfMergeRequestCanBeEdited())
+         {
+            return;
+         }
+
+         FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
+         BeginInvoke(new Action(async () => await closeMergeRequestAsync(getHostName(), item)));
       }
 
       private void ListViewMergeRequests_Refresh(object sender, EventArgs e)
@@ -1495,9 +1556,9 @@ namespace mrHelper.App.Forms
       {
          if (doesClipboardContainValidUrl())
          {
-            string url = Clipboard.GetText();
+            string url = getClipboardText();
             Trace.TraceInformation(String.Format("[Mainform] Connecting to URL from clipboard: {0}", url.ToString()));
-            enqueueUrl(url);
+            reconnect(url);
          }
       }
 
@@ -1507,7 +1568,7 @@ namespace mrHelper.App.Forms
          linkLabelFromClipboard.Enabled = isValidUrl;
          linkLabelFromClipboard.Text = isValidUrl ? openFromClipboardEnabledText : openFromClipboardDisabledText;
 
-         string tooltip = isValidUrl ? Clipboard.GetText() : "N/A";
+         string tooltip = isValidUrl ? getClipboardText() : "N/A";
          toolTip.SetToolTip(linkLabelFromClipboard, tooltip);
       }
    }

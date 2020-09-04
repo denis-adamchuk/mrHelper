@@ -94,7 +94,7 @@ namespace mrHelper.GitLabClient
             {
                return obj is KeywordDescription description &&
                       Keyword == description.Keyword &&
-                      EqualityComparer<User>.Default.Equals(Author, description.Author);
+                      (Author?.Id ?? 0) == (description.Author?.Id ?? 0);
             }
 
             public override int GetHashCode()

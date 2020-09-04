@@ -13,7 +13,7 @@ namespace mrHelper.GitLabClient
       }
 
       public ProjectKey ProjectKey { get; }
-      public MergeRequest MergeRequest { get; }
+      public MergeRequest MergeRequest { get; } // Reference type
 
       public override bool Equals(object obj)
       {

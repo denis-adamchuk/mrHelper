@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using mrHelper.Common.Interfaces;
+using GitLabSharp.Entities;
 
 namespace mrHelper.GitLabClient
 {
    public interface IProjectCache
    {
-      IEnumerable<ProjectKey> GetProjects();
+      IEnumerable<Project> GetProjects();
    }
 }
 

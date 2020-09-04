@@ -45,7 +45,7 @@ namespace mrHelper.Common.Constants
       public static int DiscussionCheckOnNewThreadInterval = 1000 * 3; // 3 seconds
       public static int DiscussionCheckOnNewThreadFromDiffToolInterval = 1000 * 15; // 15 seconds
 
-      public static int CreateNewMergeRequestRefreshListTimerInterval = 1000 * 3; // 3 seconds
+      public static int NewOrClosedMergeRequestRefreshListTimerInterval = 1000 * 3; // 3 seconds
 
       public static int ReloadListPseudoTimerInterval = 100 * 1; // 0.1 second
 
@@ -82,6 +82,12 @@ namespace mrHelper.Common.Constants
       public static TaskUtils.BatchLimits MergeRequestLoaderProjectBatchLimits = new TaskUtils.BatchLimits
       {
          Size = 20,
+         Delay = 0
+      };
+
+      public static TaskUtils.BatchLimits ProjectListLoaderBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 5,
          Delay = 0
       };
 

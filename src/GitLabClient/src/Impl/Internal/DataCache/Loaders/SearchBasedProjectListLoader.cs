@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
-using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Loaders.Cache;
 using mrHelper.GitLabClient.Operators;
 
@@ -23,15 +21,13 @@ namespace mrHelper.GitLabClient.Loaders
 
       async public Task Load()
       {
-         IEnumerable<ProjectKey> projects = await loadProjectsAsync();
+         IEnumerable<Project> projects = await loadProjectsAsync();
          _cacheUpdater.UpdateProjects(projects);
       }
 
-      async private Task<IEnumerable<ProjectKey>> loadProjectsAsync()
+      async private Task<IEnumerable<Project>> loadProjectsAsync()
       {
-         IEnumerable<Project> allProjects = await call(
-            () => _operator.GetProjects(), "Cancelled loading projects", "Cannot load projects");
-         return allProjects.Select(x => new ProjectKey(_hostname, x.Path_With_Namespace));
+         return await call(() => _operator.GetProjects(), "Cancelled loading projects", "Cannot load projects");
       }
 
       private readonly string _hostname;

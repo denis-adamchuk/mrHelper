@@ -51,12 +51,7 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private void switchHostToSelected(Func<Exception, bool> exceptionHandler = null)
-      {
-         BeginInvoke(new Action(async () => await switchHostToSelectedAsync(exceptionHandler)), null);
-      }
-
-      async private Task switchHostToSelectedAsync(Func<Exception, bool> exceptionHandler = null)
+      async private Task switchHostToSelectedAsync(Func<Exception, bool> exceptionHandler)
       {
          updateTabControlSelection();
          try
@@ -111,6 +106,7 @@ namespace mrHelper.App.Forms
 
          disableAllUIControls(true);
          disableAllSearchUIControls(true);
+         _liveDataCache.Disconnect();
          _searchDataCache.Disconnect();
          textBoxSearch.Enabled = false;
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", hostname);
@@ -141,9 +137,9 @@ namespace mrHelper.App.Forms
       private async Task startProjectBasedWorkflowAsync(string hostname)
       {
          IEnumerable<ProjectKey> enabledProjects =
-            ConfigurationHelper.GetEnabledProjects(hostname, Program.Settings)
-            .Select(x => new ProjectKey(hostname, x.Path_With_Namespace));
-         if (enabledProjects.Count() == 0)
+            ConfigurationHelper.GetEnabledProjectNames(hostname, Program.Settings)
+            .Select(x => new ProjectKey(hostname, x));
+         if (!enabledProjects.Any())
          {
             throw new NoProjectsException(hostname);
          }
@@ -284,8 +280,6 @@ namespace mrHelper.App.Forms
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
          unsubscribeFromLiveDataCacheInternalEvents();
-
-         _projectCacheCheckTimer?.Stop();
       }
 
       private void liveDataCacheConnected(string hostname, User user)
@@ -298,28 +292,7 @@ namespace mrHelper.App.Forms
             _currentUser.Add(hostname, user);
          }
          Program.FeedbackReporter.SetUserEMail(user.EMail);
-
-         if (_projectCacheCheckTimer == null)
-         {
-            _projectCacheCheckTimer = new System.Windows.Forms.Timer
-            {
-               Interval = 1000 // ms
-            };
-            _projectCacheCheckTimer.Tick +=
-               (s, e) =>
-            {
-               buttonCreateNew.Enabled = _liveDataCache?.ProjectCache?.GetProjects().Any() ?? false;
-               if (buttonCreateNew.Enabled)
-               {
-                  _projectCacheCheckTimer.Stop();
-               }
-            };
-         }
-         _projectCacheCheckTimer.Stop(); // just in case
-         _projectCacheCheckTimer.Start();
       }
-
-      private System.Windows.Forms.Timer _projectCacheCheckTimer;
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -371,7 +344,7 @@ namespace mrHelper.App.Forms
          }
 
          GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(
-            new GitLabInstance(hostname, Program.Settings), _modificationNotifier);
+            new GitLabInstance(hostname, Program.Settings));
 
          bool migratedLabels = false;
          labelWorkflowStatus.Text = "Preparing workflow to the first launch...";

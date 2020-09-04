@@ -58,6 +58,55 @@ namespace mrHelper.GitLabClient.Accessors
          }
       }
 
+      async public Task<MergeRequestRebaseResponse> Rebase(bool? skipCI)
+      {
+         using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
+            _mrk.ProjectKey.HostName, _hostProperties))
+         {
+            try
+            {
+               return await mergeRequestOperator.RebaseMergeRequest(_mrk, skipCI);
+            }
+            catch (OperatorException ex)
+            {
+               if (ex.Cancelled)
+               {
+                  throw new MergeRequestEditorCancelledException();
+               }
+               if (ex.InnerException is GitLabRequestException glx)
+               {
+                  throw new MergeRequestEditorException("Cannot rebase MR", glx);
+               }
+               throw new MergeRequestEditorException("Cannot rebase MR by unknown reason", null);
+            }
+         }
+      }
+
+      async public Task<MergeRequest> Merge(AcceptMergeRequestParameters parameters)
+      {
+         using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
+            _mrk.ProjectKey.HostName, _hostProperties))
+         {
+            try
+            {
+               return await mergeRequestOperator.AcceptMergeRequest(_mrk, parameters);
+            }
+            catch (OperatorException ex)
+            {
+               if (ex.Cancelled)
+               {
+                  throw new MergeRequestEditorCancelledException();
+               }
+               if (ex.InnerException is GitLabRequestException glx)
+               {
+                  throw new MergeRequestEditorException("Cannot merge MR", glx);
+               }
+               throw new MergeRequestEditorException("Cannot merge MR by unknown reason", null);
+            }
+         }
+      }
+
+
       private readonly MergeRequestKey _mrk;
       private readonly IHostProperties _hostProperties;
       private readonly IModificationListener _modificationListener;

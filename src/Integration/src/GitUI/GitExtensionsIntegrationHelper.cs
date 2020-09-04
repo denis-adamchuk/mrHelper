@@ -20,7 +20,26 @@ namespace mrHelper.Integration.GitUI
 
    public static class GitExtensionsIntegrationHelper
    {
-      private static string SettingsPath = @"GitExtensions/GitExtensions/GitExtensions.settings";
+      private static readonly string SettingsPath = @"GitExtensions/GitExtensions/GitExtensions.settings";
+
+      private static readonly string BinaryFileName = "gitex.cmd";
+
+      public static bool IsInstalled()
+      {
+         IEnumerable<string> whereOutput = ExternalProcess.Start("where", BinaryFileName, true, ".").StdOut;
+         return whereOutput != null
+             && whereOutput.Any()
+             && !whereOutput.First().Contains("Could not find files for the given pattern(s)");
+      }
+
+      public static void Browse(string path)
+      {
+         if (IsInstalled())
+         {
+            ExternalProcess.Start(BinaryFileName,
+               String.Format("browse {0}", StringUtils.EscapeSpaces(path)), false, ".");
+         }
+      }
 
       public static void AddCustomActions(string scriptPath)
       {

@@ -141,21 +141,15 @@ namespace mrHelper.App.Forms
 
          comboBoxHost.SelectedIndex = -1;
 
-         HostComboBoxItem initialSelectedItem = comboBoxHost.Items.Cast<HostComboBoxItem>().SingleOrDefault(
-            x => x.Host == getInitialHostName()); // `null` if not found
-
          HostComboBoxItem defaultSelectedItem = (HostComboBoxItem)comboBoxHost.Items[comboBoxHost.Items.Count - 1];
          switch (preferred)
          {
             case PreferredSelection.Initial:
-               if (initialSelectedItem != null && !String.IsNullOrEmpty(initialSelectedItem.Host))
-               {
-                  comboBoxHost.SelectedItem = initialSelectedItem;
-               }
-               else
-               {
-                  comboBoxHost.SelectedItem = defaultSelectedItem;
-               }
+               HostComboBoxItem initialSelectedItem = comboBoxHost.Items
+                  .Cast<HostComboBoxItem>()
+                  .SingleOrDefault(x => x.Host == getInitialHostNameIfKnown()); // `null` if not found
+               bool isValidSelection = initialSelectedItem != null && !String.IsNullOrEmpty(initialSelectedItem.Host);
+               comboBoxHost.SelectedItem = isValidSelection ? initialSelectedItem : defaultSelectedItem;
                break;
 
             case PreferredSelection.Latest:
@@ -784,8 +778,8 @@ namespace mrHelper.App.Forms
          }
 
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _modificationNotifier);
-         return rawDataAccessor.ProjectAccessor;
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
+         return rawDataAccessor.GetProjectAccessor(_modificationNotifier);
       }
 
       private ILocalCommitStorageFactory getCommitStorageFactory(bool showMessageBoxOnError)
@@ -854,18 +848,14 @@ namespace mrHelper.App.Forms
          return repo;
       }
 
-      private string getInitialHostName()
+      private string getInitialHostNameIfKnown()
       {
-         // If Last Selected Host is in the list, select it as initial host.
-         // Otherwise, select the first host from the list.
-         for (int iKnownHost = 0; iKnownHost < Program.Settings.KnownHosts.Count(); ++iKnownHost)
-         {
-            if (Program.Settings.KnownHosts[iKnownHost] == _initialHostName)
-            {
-               return _initialHostName;
-            }
-         }
-         return Program.Settings.KnownHosts.Count() > 0 ? Program.Settings.KnownHosts[0] : String.Empty;
+         return Program.Settings.KnownHosts.Any(host => host == _initialHostName) ? _initialHostName : null;
+      }
+
+      private void setInitialHostName(string hostname)
+      {
+         _initialHostName = hostname;
       }
 
       private bool isTrackingTime()
@@ -1215,22 +1205,6 @@ namespace mrHelper.App.Forms
          listView.SmallImageList = imgList;
       }
 
-      private void openBrowser(string text)
-      {
-         Trace.TraceInformation(String.Format("[Mainform] Opening browser with URL {0}", text));
-
-         try
-         {
-            Process.Start(text);
-         }
-         catch (Exception ex) // see Process.Start exception list
-         {
-            string errorMessage = "Cannot open URL";
-            ExceptionHandlers.Handle(errorMessage, ex);
-            MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-      }
-
       private void processUpdate(UserEvents.MergeRequestEvent e)
       {
          if (e.New || e.Commits)
@@ -1501,11 +1475,11 @@ namespace mrHelper.App.Forms
       {
          listViewProjects.Items.Clear();
 
-         foreach (string project in
-            ConfigurationHelper.GetEnabledProjects(getHostName(), Program.Settings)
-            .Select(x => x.Path_With_Namespace))
+         foreach (string projectName in
+            ConfigurationHelper.GetEnabledProjectNames(getHostName(), Program.Settings)
+            .Select(x => x))
          {
-            listViewProjects.Items.Add(project);
+            listViewProjects.Items.Add(projectName);
          }
       }
 
@@ -1830,9 +1804,8 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = "File storage folder changed";
             Trace.TraceInformation(String.Format("[MainForm] File storage changed to {0}", newFolder));
 
-            // Emulating a host switch here to trigger GitDataUpdater to work at the new location
-            Trace.TraceInformation(String.Format("[MainForm] Emulating host switch on file storage change"));
-            switchHostToSelected();
+            Trace.TraceInformation(String.Format("[MainForm] Reconnecting after file storage path change"));
+            reconnect();
          }
       }
 
@@ -2058,13 +2031,17 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties)
+      private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties,
+         IEnumerable<Project> fullProjectList)
       {
+         var sourceBranchesInUse = GitLabClient.Helpers.GetSourceBranchesByUser(getCurrentUser(), _liveDataCache);
+
          MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
-            getProjectAccessor(), currentUser, initialProperties, _liveDataCache.ProjectCache.GetProjects(),
+            getProjectAccessor(), currentUser, initialProperties, fullProjectList, sourceBranchesInUse,
             _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()));
          if (form.ShowDialog() != DialogResult.OK)
          {
+            Trace.TraceInformation("[MainForm] User declined to create a merge request");
             return;
          }
 
@@ -2090,7 +2067,53 @@ namespace mrHelper.App.Forms
 
       private bool doesClipboardContainValidUrl()
       {
-         return UrlHelper.CheckMergeRequestUrl(Clipboard.GetText());
+         return UrlHelper.CheckMergeRequestUrl(getClipboardText());
+      }
+
+      private string getClipboardText()
+      {
+         try
+         {
+            return Clipboard.GetText();
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(ex is System.Runtime.InteropServices.ExternalException);
+            return String.Empty;
+         }
+      }
+
+      private void acceptMergeRequest(string hostname, FullMergeRequestKey item)
+      {
+         MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
+         bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
+         Form formExisting = findFormByTag("AcceptMergeRequestForm", doesMatchTag);
+         if (formExisting != null)
+         {
+            formExisting.Activate();
+            return;
+         }
+
+         AcceptMergeRequestForm form = new AcceptMergeRequestForm(
+            mrk,
+            getCommitStorage(mrk.ProjectKey, false)?.Path,
+            () =>
+            {
+               labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been merged successfully", mrk.IId);
+               requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval });
+            },
+            showDiscussionsFormAsync,
+            () => _liveDataCache,
+            async () =>
+            {
+               await checkForUpdatesAsync(mrk);
+               return _liveDataCache;
+            },
+            () => Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName))
+         {
+            Tag = mrk
+         };
+         form.Show();
       }
    }
 }

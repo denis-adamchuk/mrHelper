@@ -38,6 +38,9 @@ namespace mrHelper.App.Forms
          _clipboardCheckingTimer?.Stop();
          _clipboardCheckingTimer?.Dispose();
 
+         _projectCacheCheckTimer?.Stop();
+         _projectCacheCheckTimer?.Dispose();
+
          // This allows to handle all pending invocations that other threads are
          // already ready to make before we dispose ourselves
          Application.DoEvents();
@@ -446,6 +449,7 @@ namespace mrHelper.App.Forms
          // buttonCreateNew
          // 
          this.buttonCreateNew.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonCreateNew.Enabled = false;
          this.buttonCreateNew.Location = new System.Drawing.Point(400, 10);
          this.buttonCreateNew.Name = "buttonCreateNew";
          this.buttonCreateNew.Size = new System.Drawing.Size(96, 32);
@@ -934,7 +938,7 @@ namespace mrHelper.App.Forms
          this.radioButtonSelectByProjects.Text = "Project-based workflow";
          this.toolTip.SetToolTip(this.radioButtonSelectByProjects, "All merge requests from selected projects will be loaded from GitLab");
          this.radioButtonSelectByProjects.UseVisualStyleBackColor = true;
-         this.radioButtonSelectByProjects.CheckedChanged += new System.EventHandler(this.radioButtonMergeRequestSelectingMode_CheckedChanged);
+         this.radioButtonSelectByProjects.CheckedChanged += new System.EventHandler(this.radioButtonWorkflowType_CheckedChanged);
          // 
          // buttonEditUsers
          // 
@@ -978,9 +982,9 @@ namespace mrHelper.App.Forms
          this.radioButtonSelectByUsernames.TabIndex = 19;
          this.radioButtonSelectByUsernames.TabStop = true;
          this.radioButtonSelectByUsernames.Text = "User-based workflow";
-         this.toolTip.SetToolTip(this.radioButtonSelectByUsernames, "Select usernames to track only their merge requests");
+         this.toolTip.SetToolTip(this.radioButtonSelectByUsernames, "Select user names to track only their merge requests");
          this.radioButtonSelectByUsernames.UseVisualStyleBackColor = true;
-         this.radioButtonSelectByUsernames.CheckedChanged += new System.EventHandler(this.radioButtonMergeRequestSelectingMode_CheckedChanged);
+         this.radioButtonSelectByUsernames.CheckedChanged += new System.EventHandler(this.radioButtonWorkflowType_CheckedChanged);
          // 
          // buttonEditProjects
          // 

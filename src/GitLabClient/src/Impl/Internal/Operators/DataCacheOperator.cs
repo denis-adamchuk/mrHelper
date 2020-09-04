@@ -27,15 +27,15 @@ namespace mrHelper.GitLabClient.Operators
                      CommonOperator.SearchCurrentUserAsync(client)));
       }
 
-      internal Task<ProjectKey> GetProjectAsync(string projectName)
+      internal Task<Project> GetProjectAsync(string projectName)
       {
          return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
-                     new ProjectKey(Hostname, ((Project)await client.RunAsync(
+                     (Project)await client.RunAsync(
                         async (gl) =>
-                           await gl.Projects.Get(projectName).LoadTaskAsync())).Path_With_Namespace)));
+                           await gl.Projects.Get(projectName).LoadTaskAsync())));
       }
 
       internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(

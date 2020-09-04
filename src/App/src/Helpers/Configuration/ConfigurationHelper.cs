@@ -240,10 +240,10 @@ namespace mrHelper.App.Helpers
             .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) ? result : false));
       }
 
-      public static IEnumerable<Project> GetEnabledProjects(string hostname, UserDefinedSettings settings)
+      public static IEnumerable<string> GetEnabledProjectNames(string hostname, UserDefinedSettings settings)
       {
          return GetProjectsForHost(hostname, settings)
-            .Where(x => x.Item2).Select(x => x.Item1).Select(x => new Project(x));
+            .Where(x => x.Item2).Select(x => x.Item1);
       }
 
       public static IEnumerable<string> GetEnabledUsers(string hostname, UserDefinedSettings settings)

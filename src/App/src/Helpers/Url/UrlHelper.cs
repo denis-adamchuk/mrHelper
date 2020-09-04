@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Windows.Forms;
 using GitLabSharp;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.Common.Constants;
@@ -56,6 +58,22 @@ namespace mrHelper.App.Helpers
 
          string url = trimPrefix(originalUrl);
          return UrlParser.Check(url);
+      }
+
+      internal static void OpenBrowser(string url)
+      {
+         Trace.TraceInformation("Opening browser with URL {0}", url);
+
+         try
+         {
+            Process.Start(url);
+         }
+         catch (Exception ex) // see Process.Start exception list
+         {
+            string errorMessage = "Cannot open URL";
+            ExceptionHandlers.Handle(errorMessage, ex);
+            MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
       }
 
       private static string trimPrefix(string originalUrl)
