@@ -2034,8 +2034,10 @@ namespace mrHelper.App.Forms
       private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties,
          IEnumerable<Project> fullProjectList)
       {
+         var sourceBranchesInUse = GitLabClient.Helpers.GetSourceBranchesByUser(getCurrentUser(), _liveDataCache);
+
          MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
-            getProjectAccessor(), currentUser, initialProperties, fullProjectList,
+            getProjectAccessor(), currentUser, initialProperties, fullProjectList, sourceBranchesInUse,
             _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()));
          if (form.ShowDialog() != DialogResult.OK)
          {

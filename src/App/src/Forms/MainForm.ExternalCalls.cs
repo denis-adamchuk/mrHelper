@@ -252,6 +252,7 @@ namespace mrHelper.App.Forms
             parsedNewMergeRequestUrl.TargetBranch, defaultProperties.AssigneeUsername,
             defaultProperties.IsSquashNeeded, defaultProperties.IsBranchDeletionNeeded);
          var fullProjectList = _liveDataCache?.ProjectCache?.GetProjects() ?? Array.Empty<Project>();
+
          createNewMergeRequest(getHostName(), getCurrentUser(), initialProperties, fullProjectList);
       }
 

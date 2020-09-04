@@ -15,12 +15,14 @@ namespace mrHelper.App.Forms
    internal class NewMergeRequestForm : MergeRequestPropertiesForm
    {
       internal NewMergeRequestForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
-         NewMergeRequestProperties initialState, IEnumerable<Project> projects, string sourceBranchTemplate)
+         NewMergeRequestProperties initialState, IEnumerable<Project> projects,
+         IEnumerable<string> sourceBranchesInUse, string sourceBranchTemplate)
          : base(hostname, projectAccessor, currentUser, isAllowedToChangeSource(initialState))
       {
          _initialState = initialState;
          _projects = projects ?? throw new ArgumentException("projects argument cannot be null");
          _sourceBranchTemplate = sourceBranchTemplate ?? String.Empty;
+         _sourceBranchesInUse = sourceBranchesInUse;
 
          if (isAllowedToChangeSource(_initialState))
          {
@@ -100,9 +102,13 @@ namespace mrHelper.App.Forms
 
       private void onSourceBranchListLoadFinish(IEnumerable<Branch> branchList)
       {
-         if (branchList != null && branchList.Any())
+         if (branchList != null)
          {
-            fillSourceBranchListAndSelect(branchList.ToArray(), null);
+            IEnumerable<Branch> availableBranches = excludeBranchesInUse(branchList.ToArray());
+            if (availableBranches.Any())
+            {
+               fillSourceBranchListAndSelect(availableBranches.ToArray(), null);
+            }
          }
 
          updateControls();
@@ -212,8 +218,21 @@ namespace mrHelper.App.Forms
          }
          else
          {
+            IEnumerable<Branch> singleValueArray = new Branch[] { new Branch(_initialState.SourceBranch, null) };
+            Branch[] adjustedArray = excludeBranchesInUse(singleValueArray).ToArray();
+            if (!adjustedArray.Any())
+            {
+               string message = String.Format(
+                  "A merge request for the source branch {0} already exists", _initialState.SourceBranch);
+               MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               Trace.TraceWarning("[MainForm] Cannot create MR: {0}", message);
+               DialogResult = DialogResult.Cancel;
+               Close();
+               return;
+            }
+
             fillProjectListAndSelect(new string[] { _initialState.DefaultProject }, null);
-            fillSourceBranchListAndSelect(new Branch[] { new Branch(_initialState.SourceBranch, null) }, null);
+            fillSourceBranchListAndSelect(adjustedArray, null);
             fillTargetBranchListAndSelect(new string[] { _initialState.TargetBranch }, null);
 
             BeginInvoke(new Action(
@@ -271,12 +290,20 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private IEnumerable<Branch> excludeBranchesInUse(IEnumerable<Branch> branches)
+      {
+         // Exclude source branches that already have MR
+         return branches.Where(branch => !_sourceBranchesInUse.Any(branchName => branchName == branch.Name));
+      }
+
       protected override bool isLoadingCommit() => _isLoadingCommit;
+
+      private readonly NewMergeRequestProperties _initialState;
+      private readonly IEnumerable<Project> _projects;
+      private readonly IEnumerable<string> _sourceBranchesInUse;
 
       protected RepositoryAccessor _repositoryAccessor;
       private bool _isLoadingCommit;
-      private readonly NewMergeRequestProperties _initialState;
-      private readonly IEnumerable<Project> _projects;
       private string _sourceBranchTemplate;
    }
 }

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
 using mrHelper.Common.Constants;
@@ -42,6 +44,24 @@ namespace mrHelper.GitLabClient
          }
 
          return false;
+      }
+
+      public static IEnumerable<string> GetSourceBranchesByUser(User user, DataCache dataCache)
+      {
+         if (dataCache == null || dataCache.MergeRequestCache == null)
+         {
+            Debug.Assert(false);
+            return Array.Empty<string>();
+         }
+
+         List<string> result = new List<string>();
+         foreach (var projectKey in dataCache.MergeRequestCache.GetProjects())
+         {
+            IEnumerable<MergeRequest> mergeRequestsByUser = dataCache.MergeRequestCache.GetMergeRequests(projectKey)
+               .Where(mergeRequest => mergeRequest.Author.Id == user.Id);
+            result.AddRange(mergeRequestsByUser.Select(mergeRequest => mergeRequest.Source_Branch));
+         }
+         return result;
       }
    }
 }
