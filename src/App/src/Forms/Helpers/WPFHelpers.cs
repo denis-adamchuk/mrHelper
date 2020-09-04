@@ -5,7 +5,8 @@ namespace mrHelper.App.Forms.Helpers
    internal static class WPFHelpers
    {
       internal static System.Windows.Controls.TextBox CreateWPFTextBox(
-         System.Windows.Forms.Integration.ElementHost host, bool isReadOnly, string text, bool multiline)
+         System.Windows.Forms.Integration.ElementHost host, bool isReadOnly, string text, bool multiline,
+         bool isSpellCheckEnabled)
       {
          System.Windows.Controls.TextBox textbox = new System.Windows.Controls.TextBox
          {
@@ -16,7 +17,7 @@ namespace mrHelper.App.Forms.Helpers
             HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto
          };
-         textbox.SpellCheck.IsEnabled = true;
+         textbox.SpellCheck.IsEnabled = isSpellCheckEnabled;
          host.Child = textbox;
          return textbox;
       }

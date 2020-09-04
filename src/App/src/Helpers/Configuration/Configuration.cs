@@ -54,6 +54,9 @@ namespace mrHelper.App.Helpers
       private static readonly string RunWhenWindowsStartsKeyName        = "RunWhenWindowsStarts";
       private static readonly bool   RunWhenWindowsStartsDefaultValue   = false;
 
+      private static readonly string DisableSpellCheckerKeyName      = "DisableSpellChecker";
+      private static readonly bool   DisableSpellCheckerDefaultValue = false;
+
       private static readonly string WasMaximizedBeforeCloseKeyName       = "WasMaximizedBeforeClose";
       private static readonly bool   WasMaximizedBeforeCloseDefaultValue  = true;
 
@@ -309,6 +312,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : RunWhenWindowsStartsDefaultValue;
          }
          set { setValue(RunWhenWindowsStartsKeyName, boolToString(value)); }
+      }
+
+      public bool DisableSpellChecker
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               DisableSpellCheckerKeyName, boolToString(DisableSpellCheckerDefaultValue)),
+                  out bool result) ? result : DisableSpellCheckerDefaultValue;
+         }
+         set { setValue(DisableSpellCheckerKeyName, boolToString(value)); }
       }
 
       public bool WasMaximizedBeforeClose

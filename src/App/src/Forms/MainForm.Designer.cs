@@ -130,6 +130,7 @@ namespace mrHelper.App.Forms
          this.listViewKnownHosts = new System.Windows.Forms.ListView();
          this.columnHeaderHost = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAccessToken = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.checkBoxDisableSpellChecker = new System.Windows.Forms.CheckBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -179,6 +180,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowOnMention = new System.Windows.Forms.CheckBox();
          this.tabPageWorkflow = new System.Windows.Forms.TabPage();
          this.groupBoxSelectWorkflow = new System.Windows.Forms.GroupBox();
+         this.linkLabelWorkflowDescription = new System.Windows.Forms.LinkLabel();
          this.groupBoxConfigureProjectBasedWorkflow = new System.Windows.Forms.GroupBox();
          this.groupBoxConfigureUserBasedWorkflow = new System.Windows.Forms.GroupBox();
          this.groupBoxSelectHost = new System.Windows.Forms.GroupBox();
@@ -205,7 +207,6 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.linkLabelWorkflowDescription = new System.Windows.Forms.LinkLabel();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -1090,6 +1091,18 @@ namespace mrHelper.App.Forms
          this.columnHeaderAccessToken.Text = "AccessToken";
          this.columnHeaderAccessToken.Width = 180;
          // 
+         // checkBoxDisableSpellChecker
+         // 
+         this.checkBoxDisableSpellChecker.AutoSize = true;
+         this.checkBoxDisableSpellChecker.Location = new System.Drawing.Point(374, 18);
+         this.checkBoxDisableSpellChecker.Name = "checkBoxDisableSpellChecker";
+         this.checkBoxDisableSpellChecker.Size = new System.Drawing.Size(192, 17);
+         this.checkBoxDisableSpellChecker.TabIndex = 23;
+         this.checkBoxDisableSpellChecker.Text = "Disable spell checker in text entries";
+         this.toolTip.SetToolTip(this.checkBoxDisableSpellChecker, "Switch-off spell-checking functionality");
+         this.checkBoxDisableSpellChecker.UseVisualStyleBackColor = true;
+         this.checkBoxDisableSpellChecker.CheckedChanged += new System.EventHandler(this.checkBoxDisableSpellChecker_CheckedChanged);
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1479,6 +1492,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxGeneralBehavior
          // 
+         this.groupBoxGeneralBehavior.Controls.Add(this.checkBoxDisableSpellChecker);
          this.groupBoxGeneralBehavior.Controls.Add(this.checkBoxRunWhenWindowsStarts);
          this.groupBoxGeneralBehavior.Controls.Add(this.checkBoxMinimizeOnClose);
          this.groupBoxGeneralBehavior.Location = new System.Drawing.Point(6, 6);
@@ -1628,6 +1642,17 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectWorkflow.TabIndex = 20;
          this.groupBoxSelectWorkflow.TabStop = false;
          this.groupBoxSelectWorkflow.Text = "Select Workflow";
+         // 
+         // linkLabelWorkflowDescription
+         // 
+         this.linkLabelWorkflowDescription.AutoSize = true;
+         this.linkLabelWorkflowDescription.Location = new System.Drawing.Point(441, 21);
+         this.linkLabelWorkflowDescription.Name = "linkLabelWorkflowDescription";
+         this.linkLabelWorkflowDescription.Size = new System.Drawing.Size(128, 13);
+         this.linkLabelWorkflowDescription.TabIndex = 31;
+         this.linkLabelWorkflowDescription.TabStop = true;
+         this.linkLabelWorkflowDescription.Text = "Show detailed description";
+         this.linkLabelWorkflowDescription.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelWorkflowDescription_LinkClicked);
          // 
          // groupBoxConfigureProjectBasedWorkflow
          // 
@@ -1969,17 +1994,6 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
-         // linkLabelWorkflowDescription
-         // 
-         this.linkLabelWorkflowDescription.AutoSize = true;
-         this.linkLabelWorkflowDescription.Location = new System.Drawing.Point(441, 21);
-         this.linkLabelWorkflowDescription.Name = "linkLabelWorkflowDescription";
-         this.linkLabelWorkflowDescription.Size = new System.Drawing.Size(128, 13);
-         this.linkLabelWorkflowDescription.TabIndex = 31;
-         this.linkLabelWorkflowDescription.TabStop = true;
-         this.linkLabelWorkflowDescription.Text = "Show detailed description";
-         this.linkLabelWorkflowDescription.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelWorkflowDescription_LinkClicked);
-         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2213,6 +2227,7 @@ namespace mrHelper.App.Forms
       private GroupBox groupBoxConfigureUserBasedWorkflow;
       private GroupBox groupBoxSelectWorkflow;
       private LinkLabel linkLabelWorkflowDescription;
+      private CheckBox checkBoxDisableSpellChecker;
    }
 }
 

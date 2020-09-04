@@ -26,7 +26,8 @@ namespace mrHelper.App.Forms
 
       private void createWPFTextBox(string initialText, bool editable, bool multiline)
       {
-         textBox = Helpers.WPFHelpers.CreateWPFTextBox(textBoxHost, !editable, initialText, multiline);
+         textBox = Helpers.WPFHelpers.CreateWPFTextBox(textBoxHost, !editable, initialText, multiline,
+            !Program.Settings.DisableSpellChecker);
          textBox.KeyDown += textBox_KeyDown;
       }
 
