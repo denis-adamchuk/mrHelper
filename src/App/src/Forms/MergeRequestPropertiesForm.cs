@@ -67,7 +67,7 @@ namespace mrHelper.App.Forms
       {
          string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
          string formCaption = "Edit Merge Request title";
-         TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, false);
+         TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, null);
          if (editTitleForm.ShowDialog() == DialogResult.OK)
          {
             setTitle(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editTitleForm.Body));
@@ -78,7 +78,7 @@ namespace mrHelper.App.Forms
       {
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
-         TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, true);
+         TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null);
          if (editDescriptionForm.ShowDialog() == DialogResult.OK)
          {
             setDescription(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editDescriptionForm.Body));

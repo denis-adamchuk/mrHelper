@@ -252,8 +252,10 @@ namespace mrHelper.App.Forms
       async private Task onAddCommentAsync(MergeRequestKey mrk, string title)
       {
          string caption = String.Format("Add comment to merge request \"{0}\"", title);
-         using (TextEditForm form = new TextEditForm(caption, "", true, true, true))
+         DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
+         using (TextEditForm form = new TextEditForm(caption, "", true, true, actions))
          {
+            actions.SetTextbox(form.TextBox);
             if (form.ShowDialog() == DialogResult.OK)
             {
                if (form.Body.Length == 0)
@@ -286,8 +288,10 @@ namespace mrHelper.App.Forms
       async private Task onNewDiscussionAsync(MergeRequestKey mrk, string title)
       {
          string caption = String.Format("Create a new thread in merge request \"{0}\"", title);
-         using (TextEditForm form = new TextEditForm(caption, "", true, true, true))
+         DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
+         using (TextEditForm form = new TextEditForm(caption, "", true, true, actions))
          {
+            actions.SetTextbox(form.TextBox);
             if (form.ShowDialog() == DialogResult.OK)
             {
                if (form.Body.Length == 0)

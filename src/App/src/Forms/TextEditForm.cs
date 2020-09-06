@@ -5,24 +5,35 @@ namespace mrHelper.App.Forms
 {
    internal partial class TextEditForm : CustomFontForm
    {
-      internal TextEditForm(string caption, string initialText, bool editable, bool multiline, bool acceptCode)
+      internal TextEditForm(string caption, string initialText, bool editable, bool multiline,
+         Control extraActionsControl)
       {
+         CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
+            (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
+         CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
          Text = caption;
 
          createWPFTextBox(initialText, editable, multiline);
-         applyFont(Program.Settings.MainWindowFontSizeName);
-         adjustFormHeight();
 
          buttonCancel.ConfirmationCondition =
             () => initialText != String.Empty
                   ? textBox.Text != initialText
                   : textBox.Text.Length > MaximumTextLengthTocancelWithoutConfirmation;
 
-         buttonInsertCode.Visible = acceptCode;
+         if (extraActionsControl != null)
+         {
+            panelExtraActions.Controls.Add(extraActionsControl);
+            extraActionsControl.Dock = DockStyle.Fill;
+         }
+
+         applyFont(Program.Settings.MainWindowFontSizeName);
+         adjustFormHeight();
       }
 
       internal string Body => textBox.Text;
+
+      internal System.Windows.Controls.TextBox TextBox => textBox;
 
       private void createWPFTextBox(string initialText, bool editable, bool multiline)
       {
@@ -52,12 +63,6 @@ namespace mrHelper.App.Forms
 
       private void ViewDiscussionItemForm_Shown(object sender, System.EventArgs e)
       {
-         textBox.Focus();
-      }
-
-      private void buttonInsertCode_Click(object sender, EventArgs e)
-      {
-         Helpers.WPFHelpers.InsertCodePlaceholderIntoTextBox(textBox);
          textBox.Focus();
       }
 

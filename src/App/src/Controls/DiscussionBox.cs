@@ -77,55 +77,23 @@ namespace mrHelper.App.Controls
 
       internal Discussion Discussion { get; private set; }
 
-      async private void FilenameTextBox_KeyDown(object sender, KeyEventArgs e)
-      {
-         TextBox textBox = (TextBox)(sender);
-
-         if (e.KeyCode == Keys.F4)
-         {
-            if (Control.ModifierKeys == Keys.Shift)
-            {
-               await onReplyAsyncDoneAndResolve();
-            }
-            else if (textBox?.Parent?.Parent != null)
-            {
-               await onReplyToDiscussionAsync();
-            }
-         }
-      }
-
-      async private void DiscussionNote_KeyDown(object sender, KeyEventArgs e)
-      {
-         HtmlPanel noteControl = (HtmlPanel)(sender);
-
-         if (e.KeyCode == Keys.F2)
-         {
-            await onEditDiscussionNoteAsync(noteControl);
-         }
-         else if (e.KeyCode == Keys.F6)
-         {
-            onViewDiscussionNote(noteControl);
-         }
-         else if (e.KeyCode == Keys.F4)
-         {
-            if (Control.ModifierKeys == Keys.Shift)
-            {
-               await onReplyAsyncDoneAndResolve();
-            }
-            else if (noteControl.Parent?.Parent != null)
-            {
-               await onReplyToDiscussionAsync();
-            }
-         }
-      }
-
       async private void MenuItemReply_Click(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          Control control = (Control)(menuItem.Tag);
          if (control?.Parent?.Parent != null)
          {
-            await onReplyToDiscussionAsync();
+            await onReplyToDiscussionAsync(false);
+         }
+      }
+
+      async private void MenuItemReplyAndResolve_Click(object sender, EventArgs e)
+      {
+         MenuItem menuItem = (MenuItem)(sender);
+         Control control = (Control)(menuItem.Tag);
+         if (control?.Parent?.Parent != null)
+         {
+            await onReplyToDiscussionAsync(true);
          }
       }
 
@@ -135,7 +103,7 @@ namespace mrHelper.App.Controls
          Control control = (Control)(menuItem.Tag);
          if (control?.Parent?.Parent != null)
          {
-            await onReplyAsyncDoneAndResolve();
+            await onReplyAsync("Done", true);
          }
       }
 
@@ -347,7 +315,6 @@ namespace mrHelper.App.Controls
             Multiline = true
          };
          textBox.GotFocus += Control_GotFocus;
-         textBox.KeyDown += FilenameTextBox_KeyDown;
          textBox.ContextMenu = createContextMenuForFilename(firstNote, textBox);
          return textBox;
       }
@@ -413,7 +380,6 @@ namespace mrHelper.App.Controls
                IsContextMenuEnabled = false
             };
             noteControl.GotFocus += Control_GotFocus;
-            noteControl.KeyDown += DiscussionNote_KeyDown;
             noteControl.ContextMenu = createContextMenuForDiscussionNote(note, noteControl, discussionResolved);
             noteControl.FontChanged += (sender, e) =>
                setDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
@@ -544,6 +510,8 @@ namespace mrHelper.App.Controls
          menuItemToggleResolve.Click += MenuItemToggleResolveNote_Click;
          contextMenu.MenuItems.Add(menuItemToggleResolve);
 
+         contextMenu.MenuItems.Add("-");
+
          MenuItem menuItemDeleteNote = new MenuItem
          {
             Tag = noteControl,
@@ -557,7 +525,8 @@ namespace mrHelper.App.Controls
          {
             Tag = noteControl,
             Enabled = canBeModified(note),
-            Text = "Edit Note\t(F2)"
+            Text = "Edit Note",
+            Shortcut = Shortcut.F2
          };
          menuItemEditNote.Click += MenuItemEditNote_Click;
          contextMenu.MenuItems.Add(menuItemEditNote);
@@ -566,25 +535,40 @@ namespace mrHelper.App.Controls
          {
             Tag = noteControl,
             Enabled = true,
-            Text = "Reply\t(F4)"
+            Text = "Reply",
+            Shortcut = Shortcut.F3
          };
          menuItemReply.Click += MenuItemReply_Click;
          contextMenu.MenuItems.Add(menuItemReply);
+
+         MenuItem menuItemReplyAndResolve = new MenuItem
+         {
+            Tag = noteControl,
+            Enabled = true,
+            Text = "Reply and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread",
+            Shortcut = Shortcut.ShiftF3
+         };
+         menuItemReplyAndResolve.Click += MenuItemReplyAndResolve_Click;
+         contextMenu.MenuItems.Add(menuItemReplyAndResolve);
 
          MenuItem menuItemReplyDone = new MenuItem
          {
             Tag = noteControl,
             Enabled = isDiscussionResolvable(),
-            Text = "Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread" + "\t(Shift-F4)"
+            Text = "Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread",
+            Shortcut = Shortcut.ShiftF4
          };
          menuItemReplyDone.Click += MenuItemReplyDone_Click;
          contextMenu.MenuItems.Add(menuItemReplyDone);
+
+         contextMenu.MenuItems.Add("-");
 
          MenuItem menuItemViewNote = new MenuItem
          {
             Tag = noteControl,
             Enabled = true,
-            Text = "View Note as plain text\t(F6)"
+            Text = "View Note as plain text",
+            Shortcut = Shortcut.F6
          };
          menuItemViewNote.Click += MenuItemViewNote_Click;
          contextMenu.MenuItems.Add(menuItemViewNote);
@@ -605,20 +589,34 @@ namespace mrHelper.App.Controls
          menuItemToggleDiscussionResolve.Click += MenuItemToggleResolveDiscussion_Click;
          contextMenu.MenuItems.Add(menuItemToggleDiscussionResolve);
 
+         contextMenu.MenuItems.Add("-");
+
          MenuItem menuItemReply = new MenuItem
          {
             Tag = textBox,
             Enabled = true,
-            Text = "Reply\t(F4)"
+            Text = "Reply",
+            Shortcut = Shortcut.F3
          };
          menuItemReply.Click += MenuItemReply_Click;
          contextMenu.MenuItems.Add(menuItemReply);
+
+         MenuItem menuItemReplyAndResolve = new MenuItem
+         {
+            Tag = textBox,
+            Enabled = true,
+            Text = "Reply and Resolve/Unresolve Thread",
+            Shortcut = Shortcut.ShiftF3
+         };
+         menuItemReplyAndResolve.Click += MenuItemReplyAndResolve_Click;
+         contextMenu.MenuItems.Add(menuItemReplyAndResolve);
 
          MenuItem menuItemReplyDone = new MenuItem
          {
             Tag = textBox,
             Enabled = isDiscussionResolvable(),
-            Text = "Reply \"Done\" and Resolve/Unresolve Thread" + "\t(Shift-F4)"
+            Text = "Reply \"Done\" and Resolve/Unresolve Thread",
+            Shortcut = Shortcut.ShiftF4
          };
          menuItemReplyDone.Click += MenuItemReplyDone_Click;
          contextMenu.MenuItems.Add(menuItemReplyDone);
@@ -786,12 +784,14 @@ namespace mrHelper.App.Controls
          }
 
          string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
-         using (TextEditForm form = new TextEditForm("Edit Discussion Note", currentBody, true, true, true))
+         DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
+         using (TextEditForm form = new TextEditForm("Edit Discussion Note", currentBody, true, true, actions))
          {
             Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
             form.StartPosition = FormStartPosition.Manual;
             form.Location = locationAtScreen;
 
+            actions.SetTextbox(form.TextBox);
             if (form.ShowDialog() == DialogResult.OK)
             {
                if (form.Body.Length == 0)
@@ -816,7 +816,7 @@ namespace mrHelper.App.Controls
          }
 
          string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
-         using (TextEditForm form = new TextEditForm("View Discussion Note", currentBody, false, true, false))
+         using (TextEditForm form = new TextEditForm("View Discussion Note", currentBody, false, true, null))
          {
             Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
             form.StartPosition = FormStartPosition.Manual;
@@ -825,10 +825,14 @@ namespace mrHelper.App.Controls
          }
       }
 
-      async private Task onReplyToDiscussionAsync()
+      async private Task onReplyToDiscussionAsync(bool proposeUserToToggleResolveOnReply)
       {
-         using (TextEditForm form = new TextEditForm("Reply to Discussion", "", true, true, true))
+         bool isAlreadyResolved = isDiscussionResolved();
+         string resolveText = String.Format("{0} Thread", (isAlreadyResolved ? "Unresolve" : "Resolve"));
+         DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel(resolveText, proposeUserToToggleResolveOnReply);
+         using (TextEditForm form = new TextEditForm("Reply to Discussion", "", true, true, actions))
          {
+            actions.SetTextbox(form.TextBox);
             if (form.ShowDialog() == DialogResult.OK)
             {
                if (form.Body.Length == 0)
@@ -839,30 +843,20 @@ namespace mrHelper.App.Controls
                }
 
                string proposedBody = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
-               await onReplyAsync(proposedBody, false);
+               await onReplyAsync(proposedBody, actions.IsResolveActionChecked);
             }
          }
       }
 
-      async private Task onReplyAsyncDoneAndResolve()
-      {
-         await onReplyAsync("Done", true);
-      }
-
       async private Task onReplyAsync(string body, bool toggleResolve)
       {
-         if (!isDiscussionResolvable() && toggleResolve)
-         {
-            return;
-         }
-
          bool wasResolved = isDiscussionResolved();
          disableAllNoteControls();
 
          Discussion discussion = null;
          try
          {
-            if (toggleResolve)
+            if (isDiscussionResolvable() && toggleResolve)
             {
                await _editor.ReplyAndResolveDiscussionAsync(body, !wasResolved);
             }

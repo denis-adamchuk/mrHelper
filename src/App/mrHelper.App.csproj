@@ -122,6 +122,12 @@
     <Compile Include="src\Forms\AddItemForm.Designer.cs">
       <DependentUpon>AddItemForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\DiscussionNoteEditPanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\DiscussionNoteEditPanel.Designer.cs">
+      <DependentUpon>DiscussionNoteEditPanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Forms\NewMergeRequestForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -273,6 +279,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\AddItemForm.resx">
       <DependentUpon>AddItemForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Controls\DiscussionNoteEditPanel.resx">
+      <DependentUpon>DiscussionNoteEditPanel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\MergeRequestPropertiesForm.resx">
       <DependentUpon>MergeRequestPropertiesForm.cs</DependentUpon>
