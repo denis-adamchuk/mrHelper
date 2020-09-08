@@ -90,6 +90,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          _cache.SetAllProjects(projects);
       }
 
+      internal void UpdateUsers(IEnumerable<User> users)
+      {
+         _cache.SetAllUsers(users);
+      }
+
       public IInternalCache Cache => _cache;
 
       private void cleanupOldRecords(ProjectKey key,

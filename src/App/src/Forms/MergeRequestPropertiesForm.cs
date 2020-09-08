@@ -16,7 +16,7 @@ namespace mrHelper.App.Forms
    internal abstract partial class MergeRequestPropertiesForm : CustomFontForm
    {
       internal MergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
-         bool isAllowedToChangeSource)
+         bool isAllowedToChangeSource, IEnumerable<User> users)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
@@ -39,8 +39,16 @@ namespace mrHelper.App.Forms
 
          buttonCancel.ConfirmationCondition = () => true;
 
-         comboBoxProject.SelectedIndexChanged +=
-            new System.EventHandler(this.comboBoxProject_SelectedIndexChanged_Base);
+         if (users == null || !users.Any())
+         {
+            // This may happen when new MR creation is requested by URL and mrHelper is not launched.
+            // In this case User Cache is still not filled. Let's load project users.
+            comboBoxProject.SelectedIndexChanged += new System.EventHandler(loadProjectUsersForAutoCompletion);
+         }
+         else
+         {
+            textBoxSpecialNote.SetUsers(users);
+         }
       }
 
       private void MergeRequestPropertiesForm_Deactivate(object sender, EventArgs e)
@@ -58,7 +66,7 @@ namespace mrHelper.App.Forms
          textBoxSpecialNote.HideAutoCompleteBox(TextBoxWithUserAutoComplete.HidingReason.FormMovedOrResized);
       }
 
-      private void comboBoxProject_SelectedIndexChanged_Base(object sender, EventArgs e)
+      private void loadProjectUsersForAutoCompletion(object sender, EventArgs e)
       {
          BeginInvoke(new Action(async () =>
          {

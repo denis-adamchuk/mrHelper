@@ -103,11 +103,11 @@ namespace mrHelper.App.Forms
       {
          Interval = Constants.ClipboardCheckingTimerInterval
       };
-      private readonly System.Windows.Forms.Timer _projectCacheCheckTimer = new System.Windows.Forms.Timer
+      private readonly System.Windows.Forms.Timer _projectAndUserCacheCheckTimer = new System.Windows.Forms.Timer
       {
          Interval = 1000 // ms
       };
-      private readonly List<Action<bool>> _projectCacheCheckActions = new List<Action<bool>>();
+      private readonly List<Action<bool>> _projectAndUserCacheCheckActions = new List<Action<bool>>();
 
       private LocalCommitStorageFactory _storageFactory;
       private GitDataUpdater _gitDataUpdater;

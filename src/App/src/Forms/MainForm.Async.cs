@@ -425,12 +425,13 @@ namespace mrHelper.App.Forms
             parameters.AssigneeUserName, firstNote);
       }
 
-      async private Task applyChangesToMergeRequestAsync(string hostname, User currentUser, FullMergeRequestKey item)
+      async private Task applyChangesToMergeRequestAsync(string hostname, User currentUser, FullMergeRequestKey item,
+         IEnumerable<User> fullUserList)
       {
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(_liveDataCache.DiscussionCache, mrk);
          MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
-            getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText);
+            getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList);
          if (form.ShowDialog() != DialogResult.OK)
          {
             Trace.TraceInformation("[MainForm] User declined to modify a merge request");

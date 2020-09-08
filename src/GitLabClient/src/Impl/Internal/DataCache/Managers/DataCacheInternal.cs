@@ -8,12 +8,14 @@ namespace mrHelper.GitLabClient.Managers
          MergeRequestManager mergeRequestManager,
          DiscussionManager discussionManager,
          TimeTrackingManager timeTrackingManager,
-         ProjectCache projectCache)
+         ProjectCache projectCache,
+         UserCache userCache)
       {
          _mergeRequestManager = mergeRequestManager;
          _discussionManager = discussionManager;
          _timeTrackingManager = timeTrackingManager;
          _projectCache = projectCache;
+         _userCache = userCache;
       }
 
       public void Dispose()
@@ -31,10 +33,13 @@ namespace mrHelper.GitLabClient.Managers
 
       public IProjectCache ProjectCache => _projectCache;
 
+      public IUserCache UserCache => _userCache;
+
       private readonly MergeRequestManager _mergeRequestManager;
       private readonly DiscussionManager _discussionManager;
       private readonly TimeTrackingManager _timeTrackingManager;
       private readonly ProjectCache _projectCache;
+      private readonly UserCache _userCache;
    }
 }
 

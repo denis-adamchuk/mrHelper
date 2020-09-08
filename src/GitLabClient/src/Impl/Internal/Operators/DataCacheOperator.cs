@@ -95,6 +95,17 @@ namespace mrHelper.GitLabClient.Operators
                            await gl.Projects.LoadAllTaskAsync(
                               new GitLabSharp.Accessors.ProjectsFilter(false, true, true)))));
       }
+
+      internal Task<IEnumerable<User>> GetUsers()
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (IEnumerable<User>)await client.RunAsync(
+                        async (gl) =>
+                           await gl.Users.LoadAllTaskAsync())));
+      }
    }
 }
 

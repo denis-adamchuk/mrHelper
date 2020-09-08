@@ -381,10 +381,10 @@ namespace mrHelper.App.Forms
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
-         _projectCacheCheckActions.Add(isCacheReady => buttonCreateNew.Enabled = isCacheReady);
+         _projectAndUserCacheCheckActions.Add(isCacheReady => buttonCreateNew.Enabled = isCacheReady);
 
          startClipboardCheckTimer();
-         startProjectCacheCheckTimer();
+         startProjectAndUserCachesCheckTimer();
          createListViewContextMenu();
       }
 
@@ -400,23 +400,26 @@ namespace mrHelper.App.Forms
          ToolStripItemCollection items = listViewMergeRequests.ContextMenuStrip.Items;
          items.Add("&Refresh selected", null, ListViewMergeRequests_Refresh);
          items.Add("-", null, null);
-         items.Add("&Edit...", null, ListViewMergeRequests_Edit);
+         ToolStripItem editItem = items.Add("&Edit...", null, ListViewMergeRequests_Edit);
+         editItem.Enabled = false;
          ToolStripItem mergeItem = items.Add("&Merge...", null, ListViewMergeRequests_Accept);
          mergeItem.Enabled = false;
          items.Add("&Close", null, ListViewMergeRequests_Close);
 
-         _projectCacheCheckActions.Add(isCacheReady => mergeItem.Enabled = isCacheReady);
+         _projectAndUserCacheCheckActions.Add(isCacheReady => mergeItem.Enabled = isCacheReady);
       }
 
-      private void startProjectCacheCheckTimer()
+      private void startProjectAndUserCachesCheckTimer()
       {
-         _projectCacheCheckTimer.Tick +=
+         _projectAndUserCacheCheckTimer.Tick +=
             (s, e) =>
             {
-               bool isCacheReady = _liveDataCache?.ProjectCache?.GetProjects().Any() ?? false;
-               _projectCacheCheckActions.ForEach(action => action?.Invoke(isCacheReady));
+               bool isProjectCacheReady = _liveDataCache?.ProjectCache?.GetProjects().Any() ?? false;
+               bool isUserCacheReady = _liveDataCache?.UserCache?.GetUsers().Any() ?? false;
+               _projectAndUserCacheCheckActions.ForEach(
+                  action => action?.Invoke(isProjectCacheReady && isUserCacheReady));
             };
-         _projectCacheCheckTimer.Start();
+         _projectAndUserCacheCheckTimer.Start();
       }
 
       private void prepareSizeToStart()
