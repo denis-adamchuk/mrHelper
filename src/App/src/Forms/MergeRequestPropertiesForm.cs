@@ -5,12 +5,10 @@ using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
-using mrHelper.App.Forms;
 using mrHelper.GitLabClient;
 using mrHelper.Common.Tools;
-using Markdig;
 using mrHelper.CommonControls.Tools;
-using mrHelper.Common.Interfaces;
+using Markdig;
 
 namespace mrHelper.App.Forms
 {
@@ -39,6 +37,34 @@ namespace mrHelper.App.Forms
          labelSpecialNotePrefix.Text = Program.ServiceManager.GetSpecialNotePrefix();
 
          buttonCancel.ConfirmationCondition = () => true;
+
+         comboBoxProject.SelectedIndexChanged +=
+            new System.EventHandler(this.comboBoxProject_SelectedIndexChanged_Base);
+      }
+
+      private void MergeRequestPropertiesForm_Deactivate(object sender, EventArgs e)
+      {
+         textBoxSpecialNote.HideAutoCompleteBox();
+      }
+
+      private void MergeRequestPropertiesForm_LocationChanged(object sender, EventArgs e)
+      {
+         textBoxSpecialNote.HideAutoCompleteBox();
+      }
+
+      private void MergeRequestPropertiesForm_SizeChanged(object sender, EventArgs e)
+      {
+         textBoxSpecialNote.HideAutoCompleteBox();
+      }
+
+      private void comboBoxProject_SelectedIndexChanged_Base(object sender, EventArgs e)
+      {
+         BeginInvoke(new Action(async () =>
+         {
+            string projectName = getProjectName();
+            IEnumerable<User> users = await _projectAccessor.GetSingleProjectAccessor(projectName).GetUsersAsync();
+            textBoxSpecialNote.SetUsers(users);
+         }));
       }
 
       internal string ProjectName => getProjectName();
@@ -104,7 +130,8 @@ namespace mrHelper.App.Forms
 
       private void textBoxSpecialNote_KeyDown(object sender, KeyEventArgs e)
       {
-         submitOnKeyDown(e.KeyCode);
+         // TODO WTF
+         //submitOnKeyDown(e.KeyCode);
       }
 
       private void submitOnKeyDown(Keys keyCode)

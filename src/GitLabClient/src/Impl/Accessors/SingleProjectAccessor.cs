@@ -1,5 +1,9 @@
-﻿using mrHelper.Common.Interfaces;
+﻿using System.Threading.Tasks;
+using System.Collections.Generic;
+using GitLabSharp.Entities;
+using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Accessors;
+using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient
 {
@@ -11,6 +15,21 @@ namespace mrHelper.GitLabClient
          _projectKey = projectKey;
          _settings = settings;
          _modificationListener = modificationListener;
+      }
+
+      async public Task<IEnumerable<User>> GetUsersAsync()
+      {
+         using (ProjectOperator projectOperator = new ProjectOperator(_projectKey.HostName, _settings))
+         {
+            try
+            {
+               return await projectOperator.GetUsersAsync(_projectKey.ProjectName);
+            }
+            catch (OperatorException)
+            {
+               return null;
+            }
+         }
       }
 
       public RepositoryAccessor GetRepositoryAccessor() =>

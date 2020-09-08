@@ -42,11 +42,11 @@
          this.htmlPanelDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.groupBoxOptions = new System.Windows.Forms.GroupBox();
          this.labelSpecialNotePrefix = new System.Windows.Forms.Label();
-         this.textBoxSpecialNote = new System.Windows.Forms.TextBox();
          this.labelAssignee = new System.Windows.Forms.Label();
          this.textBoxAssigneeUsername = new System.Windows.Forms.TextBox();
          this.checkBoxSquash = new System.Windows.Forms.CheckBox();
          this.checkBoxDeleteSourceBranch = new System.Windows.Forms.CheckBox();
+         this.textBoxSpecialNote = new mrHelper.App.Controls.TextBoxWithUserAutoComplete();
          this.buttonSubmit = new System.Windows.Forms.Button();
          this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.groupBoxProject = new System.Windows.Forms.GroupBox();
@@ -194,11 +194,11 @@
          this.groupBoxOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBoxOptions.Controls.Add(this.labelSpecialNotePrefix);
-         this.groupBoxOptions.Controls.Add(this.textBoxSpecialNote);
          this.groupBoxOptions.Controls.Add(this.labelAssignee);
          this.groupBoxOptions.Controls.Add(this.textBoxAssigneeUsername);
          this.groupBoxOptions.Controls.Add(this.checkBoxSquash);
          this.groupBoxOptions.Controls.Add(this.checkBoxDeleteSourceBranch);
+         this.groupBoxOptions.Controls.Add(this.textBoxSpecialNote);
          this.groupBoxOptions.Location = new System.Drawing.Point(12, 338);
          this.groupBoxOptions.Name = "groupBoxOptions";
          this.groupBoxOptions.Size = new System.Drawing.Size(773, 76);
@@ -214,14 +214,6 @@
          this.labelSpecialNotePrefix.Size = new System.Drawing.Size(34, 13);
          this.labelSpecialNotePrefix.TabIndex = 5;
          this.labelSpecialNotePrefix.Text = "/insp ";
-         // 
-         // textBoxSpecialNote
-         // 
-         this.textBoxSpecialNote.Location = new System.Drawing.Point(471, 44);
-         this.textBoxSpecialNote.Name = "textBoxSpecialNote";
-         this.textBoxSpecialNote.Size = new System.Drawing.Size(296, 20);
-         this.textBoxSpecialNote.TabIndex = 11;
-         this.textBoxSpecialNote.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSpecialNote_KeyDown);
          // 
          // labelAssignee
          // 
@@ -260,6 +252,14 @@
          this.checkBoxDeleteSourceBranch.TabIndex = 8;
          this.checkBoxDeleteSourceBranch.Text = "Delete source branch when merge request is accepted";
          this.checkBoxDeleteSourceBranch.UseVisualStyleBackColor = true;
+         // 
+         // textBoxSpecialNote
+         // 
+         this.textBoxSpecialNote.BackColor = System.Drawing.SystemColors.Control;
+         this.textBoxSpecialNote.Location = new System.Drawing.Point(471, 44);
+         this.textBoxSpecialNote.Name = "textBoxSpecialNote";
+         this.textBoxSpecialNote.Size = new System.Drawing.Size(296, 22);
+         this.textBoxSpecialNote.TabIndex = 11;
          // 
          // buttonSubmit
          // 
@@ -309,10 +309,10 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(797, 455);
+         this.Controls.Add(this.groupBoxOptions);
          this.Controls.Add(this.groupBoxProject);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.buttonSubmit);
-         this.Controls.Add(this.groupBoxOptions);
          this.Controls.Add(this.groupBoxDescription);
          this.Controls.Add(this.groupBox3);
          this.Controls.Add(this.groupBoxTarget);
@@ -321,6 +321,9 @@
          this.MinimumSize = new System.Drawing.Size(813, 494);
          this.Name = "MergeRequestPropertiesForm";
          this.Text = "Create New Merge Request";
+         this.Deactivate += new System.EventHandler(this.MergeRequestPropertiesForm_Deactivate);
+         this.LocationChanged += new System.EventHandler(this.MergeRequestPropertiesForm_LocationChanged);
+         this.SizeChanged += new System.EventHandler(this.MergeRequestPropertiesForm_SizeChanged);
          this.groupBoxSource.ResumeLayout(false);
          this.groupBoxTarget.ResumeLayout(false);
          this.groupBox3.ResumeLayout(false);
@@ -354,7 +357,7 @@
       protected System.Windows.Forms.ComboBox comboBoxProject;
       protected System.Windows.Forms.Label labelAssignee;
       protected System.Windows.Forms.TextBox textBoxAssigneeUsername;
-      protected System.Windows.Forms.TextBox textBoxSpecialNote;
+      protected mrHelper.App.Controls.TextBoxWithUserAutoComplete textBoxSpecialNote;
       protected System.Windows.Forms.Label labelSpecialNotePrefix;
    }
 }

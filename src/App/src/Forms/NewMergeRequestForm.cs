@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.GitLabClient;
-using System.Windows.Forms;
 using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Forms
