@@ -1,4 +1,5 @@
 ﻿using GitLabSharp.Entities;
+using mrHelper.Common.Constants;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -98,7 +99,7 @@ namespace mrHelper.App.Controls
 
       private string formatUser(User user)
       {
-         return String.Format("{0} ({1}{2})", user.Name, Common.Constants.Constants.GitLabLabelPrefix, user.Username);
+         return String.Format("{0} ({1}{2})", user.Name, Constants.GitLabLabelPrefix, user.Username);
       }
 
       private string getLastWord(TextBox txt)
@@ -109,6 +110,8 @@ namespace mrHelper.App.Controls
       private void showAutoCompleteList()
       {
          string lastWord = getLastWord(textBoxAutoComplete).ToLower();
+         lastWord = lastWord.StartsWith(Constants.GitLabLabelPrefix)
+            ? lastWord.Substring(Constants.GitLabLabelPrefix.Length) : lastWord;
          object[] objects = _users?
             .Where(user => user.Name.ToLower().Contains(lastWord) || user.Username.ToLower().Contains(lastWord))
             .Cast<object>()
@@ -210,7 +213,7 @@ namespace mrHelper.App.Controls
          string substitutionWord = ((User)(_listBoxAutoComplete.SelectedItem)).Username;
          textBoxAutoComplete.Text =
             textBoxAutoComplete.Text.Substring(0, textBoxAutoComplete.Text.Length - lastWord.Length);
-         textBoxAutoComplete.AppendText(Common.Constants.Constants.GitLabLabelPrefix);
+         textBoxAutoComplete.AppendText(Constants.GitLabLabelPrefix);
          textBoxAutoComplete.AppendText(substitutionWord);
       }
 

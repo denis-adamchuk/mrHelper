@@ -397,7 +397,8 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task checkForUpdatesAsync(MergeRequestKey? mrk)
+      async private Task checkForUpdatesAsync(MergeRequestKey? mrk,
+         DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
       {
          bool updateReceived = false;
          bool updatingWholeList = !mrk.HasValue;
@@ -415,7 +416,8 @@ namespace mrHelper.App.Forms
                {
                   onUpdated(oldButtonText);
                }
-            });
+            },
+            kind);
          await TaskUtils.WhileAsync(() => !updateReceived);
       }
 

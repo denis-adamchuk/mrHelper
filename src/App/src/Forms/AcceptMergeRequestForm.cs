@@ -185,6 +185,7 @@ namespace mrHelper.App.Forms
          if (!_isSquashNeeded.HasValue)
          {
             _isSquashNeeded = mergeRequest.Squash;
+            applySquashCommitMessageVisibility();
          }
 
          if (!_isRemoteBranchDeletionNeeded.HasValue)
@@ -318,7 +319,12 @@ namespace mrHelper.App.Forms
 
       private string getSquashCommitMessage()
       {
-         return _isSquashNeeded.HasValue && _isSquashNeeded.Value ? textBoxCommitMessage.Text : null;
+         if (!_isSquashNeeded.HasValue || !_isSquashNeeded.Value)
+         {
+            return null;
+         }
+
+         return StringUtils.ConvertNewlineWindowsToUnix(textBoxCommitMessage.Text);
       }
 
       private void subscribeToTimer()

@@ -20,9 +20,16 @@ namespace mrHelper.GitLabClient.Loaders
 
       async public Task LoadMergeRequest(MergeRequestKey mrk)
       {
+         // The idea is that:
+         // 1. Already cached MR that became closed remotely will not be removed from the cache
+         // 2. Open MR that are missing in the cache, will be added to the cache
+         // 3. Open MR that exist in the cache, will be updated
+         bool fetchOnlyOpenMergeRequests = true;
+
          IEnumerable<MergeRequest> mergeRequests = await call(
             () => _operator.SearchMergeRequestsAsync(
-               new SearchCriteria(new object[] { new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId) }), null, false),
+               new SearchCriteria(new object[] { new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId) }), null,
+               fetchOnlyOpenMergeRequests),
             String.Format("Cancelled loading MR with IId {0}", mrk.IId),
             String.Format("Cannot load merge request with IId {0}", mrk.IId));
 

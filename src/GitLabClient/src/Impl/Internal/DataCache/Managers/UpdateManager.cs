@@ -76,14 +76,14 @@ namespace mrHelper.GitLabClient.Managers
             return;
          }
 
-         System.Timers.Timer timer = new System.Timers.Timer
+         System.Timers.Timer oneShotTimer = new System.Timers.Timer
          {
             Interval = interval,
             AutoReset = false,
             SynchronizingObject = _timer?.SynchronizingObject
          };
 
-         timer.Elapsed +=
+         oneShotTimer.Elapsed +=
             async (s, e) =>
          {
             IEnumerable<UserEvents.MergeRequestEvent> updates =
@@ -96,11 +96,12 @@ namespace mrHelper.GitLabClient.Managers
 
             onUpdateFinished?.Invoke();
             _timer?.Start();
+            _oneShotTimers.Remove(oneShotTimer);
          };
          _timer?.Stop();
-         timer.Start();
+         oneShotTimer.Start();
 
-         _oneShotTimers.Add(timer);
+         _oneShotTimers.Add(oneShotTimer);
       }
 
       /// <summary>

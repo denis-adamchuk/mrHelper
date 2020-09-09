@@ -1821,7 +1821,16 @@ namespace mrHelper.App.Forms
          updateProjectsListView();
       }
 
-      private void requestUpdates(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
+      [Flags]
+      private enum DataCacheUpdateKind
+      {
+         MergeRequest = 1,
+         Discussions  = 2,
+         MergeRequestAndDiscussions = MergeRequest | Discussions
+      }
+
+      private void requestUpdates(MergeRequestKey? mrk, int interval, Action onUpdateFinished,
+         DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
       {
          bool mergeRequestUpdateFinished = false;
          bool discussionUpdateFinished = false;
@@ -1835,10 +1844,33 @@ namespace mrHelper.App.Forms
          }
 
          DataCache dataCache = getDataCache(true /* supported in Live only */);
-         dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
-            () => { mergeRequestUpdateFinished = true; onSingleUpdateFinished(); });
-         dataCache?.DiscussionCache?.RequestUpdate(mrk, interval,
-            () => { discussionUpdateFinished = true; onSingleUpdateFinished(); });
+         if (kind.HasFlag(DataCacheUpdateKind.MergeRequest))
+         {
+            dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
+               () =>
+               {
+                  mergeRequestUpdateFinished = true;
+                  onSingleUpdateFinished();
+               });
+         }
+         else
+         {
+            mergeRequestUpdateFinished = true;
+         }
+
+         if (kind.HasFlag(DataCacheUpdateKind.Discussions))
+         {
+            dataCache?.DiscussionCache?.RequestUpdate(mrk, interval,
+               () =>
+               {
+                  discussionUpdateFinished = true;
+                  onSingleUpdateFinished();
+               });
+         }
+         else
+         {
+            discussionUpdateFinished = true;
+         }
       }
 
       private void requestUpdates(MergeRequestKey? mrk, int[] intervals)
@@ -2106,7 +2138,7 @@ namespace mrHelper.App.Forms
             () => _liveDataCache,
             async () =>
             {
-               await checkForUpdatesAsync(mrk);
+               await checkForUpdatesAsync(mrk, DataCacheUpdateKind.MergeRequest);
                return _liveDataCache;
             },
             () => Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName))

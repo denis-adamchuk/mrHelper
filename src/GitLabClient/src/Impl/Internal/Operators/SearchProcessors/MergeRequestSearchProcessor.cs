@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Accessors;
@@ -19,7 +20,19 @@ namespace mrHelper.GitLabClient.Operators.Search
       public async override Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? _)
       {
          MergeRequest mergeRequest = await gl.Projects.Get(_projectname).MergeRequests.Get(_iid).LoadTaskAsync();
-         return new MergeRequest[] { mergeRequest };
+         if (mergeRequest == null)
+         {
+            return Array.Empty<MergeRequest>();
+         }
+
+         if (_stateFilter == MergeRequestsFilter.StateFilter.All
+         || (_stateFilter == MergeRequestsFilter.StateFilter.Closed && mergeRequest.State == "closed")
+         || (_stateFilter == MergeRequestsFilter.StateFilter.Merged && mergeRequest.State == "merged"
+         || (_stateFilter == MergeRequestsFilter.StateFilter.Open   && mergeRequest.State == "opened")))
+         {
+            return new MergeRequest[] { mergeRequest };
+         }
+         return Array.Empty<MergeRequest>();
       }
 
       private readonly int _iid;

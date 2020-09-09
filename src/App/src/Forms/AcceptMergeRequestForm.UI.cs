@@ -122,7 +122,12 @@ namespace mrHelper.App.Forms
       {
          Debug.Assert(sender == checkBoxSquash);
          _isSquashNeeded = checkBoxSquash.Checked;
-         if (_isSquashNeeded.Value)
+         applySquashCommitMessageVisibility();
+      }
+
+      private void applySquashCommitMessageVisibility()
+      {
+         if (!_isSquashNeeded.Value)
          {
             int newFormHeight = _formDefaultMinimumHeight - _groupBoxCommitMessageDefaultHeight;
             this.MinimumSize = new System.Drawing.Size(this.MinimumSize.Width, newFormHeight);
@@ -152,7 +157,9 @@ namespace mrHelper.App.Forms
          {
             return;
          }
-         textBoxCommitMessage.Text = (comboBoxCommit.SelectedItem as Commit).Message;
+
+         Commit commit = comboBoxCommit.SelectedItem as Commit;
+         textBoxCommitMessage.Text = StringUtils.ConvertNewlineUnixToWindows(commit.Message);
       }
 
       private void comboBoxCommit_Format(object sender, ListControlConvertEventArgs e)
