@@ -33,7 +33,7 @@
          this.comboBoxSourceBranch = new System.Windows.Forms.ComboBox();
          this.groupBoxTarget = new System.Windows.Forms.GroupBox();
          this.comboBoxTargetBranch = new System.Windows.Forms.ComboBox();
-         this.groupBox3 = new System.Windows.Forms.GroupBox();
+         this.groupBoxTitle = new System.Windows.Forms.GroupBox();
          this.buttonToggleWIP = new System.Windows.Forms.Button();
          this.buttonEditTitle = new System.Windows.Forms.Button();
          this.htmlPanelTitle = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
@@ -53,7 +53,7 @@
          this.comboBoxProject = new System.Windows.Forms.ComboBox();
          this.groupBoxSource.SuspendLayout();
          this.groupBoxTarget.SuspendLayout();
-         this.groupBox3.SuspendLayout();
+         this.groupBoxTitle.SuspendLayout();
          this.groupBoxDescription.SuspendLayout();
          this.groupBoxOptions.SuspendLayout();
          this.groupBoxProject.SuspendLayout();
@@ -102,17 +102,17 @@
          // 
          // groupBox3
          // 
-         this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+         this.groupBoxTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBox3.Controls.Add(this.buttonToggleWIP);
-         this.groupBox3.Controls.Add(this.buttonEditTitle);
-         this.groupBox3.Controls.Add(this.htmlPanelTitle);
-         this.groupBox3.Location = new System.Drawing.Point(12, 74);
-         this.groupBox3.Name = "groupBox3";
-         this.groupBox3.Size = new System.Drawing.Size(773, 78);
-         this.groupBox3.TabIndex = 3;
-         this.groupBox3.TabStop = false;
-         this.groupBox3.Text = "Title";
+         this.groupBoxTitle.Controls.Add(this.buttonToggleWIP);
+         this.groupBoxTitle.Controls.Add(this.buttonEditTitle);
+         this.groupBoxTitle.Controls.Add(this.htmlPanelTitle);
+         this.groupBoxTitle.Location = new System.Drawing.Point(12, 74);
+         this.groupBoxTitle.Name = "groupBox3";
+         this.groupBoxTitle.Size = new System.Drawing.Size(773, 78);
+         this.groupBoxTitle.TabIndex = 3;
+         this.groupBoxTitle.TabStop = false;
+         this.groupBoxTitle.Text = "Title";
          // 
          // buttonToggleWIP
          // 
@@ -314,7 +314,7 @@
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.buttonSubmit);
          this.Controls.Add(this.groupBoxDescription);
-         this.Controls.Add(this.groupBox3);
+         this.Controls.Add(this.groupBoxTitle);
          this.Controls.Add(this.groupBoxTarget);
          this.Controls.Add(this.groupBoxSource);
          this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -326,7 +326,7 @@
          this.SizeChanged += new System.EventHandler(this.MergeRequestPropertiesForm_SizeChanged);
          this.groupBoxSource.ResumeLayout(false);
          this.groupBoxTarget.ResumeLayout(false);
-         this.groupBox3.ResumeLayout(false);
+         this.groupBoxTitle.ResumeLayout(false);
          this.groupBoxDescription.ResumeLayout(false);
          this.groupBoxOptions.ResumeLayout(false);
          this.groupBoxOptions.PerformLayout();
@@ -339,7 +339,7 @@
 
       protected System.Windows.Forms.GroupBox groupBoxSource;
       protected System.Windows.Forms.GroupBox groupBoxTarget;
-      protected System.Windows.Forms.GroupBox groupBox3;
+      protected System.Windows.Forms.GroupBox groupBoxTitle;
       protected System.Windows.Forms.Button buttonToggleWIP;
       protected System.Windows.Forms.Button buttonEditTitle;
       protected TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelTitle;

@@ -18,6 +18,9 @@
             components.Dispose();
          }
          base.Dispose(disposing);
+
+         _delayedHidingTimer?.Stop();
+         _delayedHidingTimer?.Dispose();
       }
 
       #region Component Designer generated code
@@ -28,7 +31,7 @@
       /// </summary>
       private void InitializeComponent()
       {
-         this.textBoxAutoComplete = new System.Windows.Forms.TextBox();
+         this.textBoxAutoComplete = new System.Windows.Forms.RichTextBox();
          this.SuspendLayout();
          // 
          // textBoxAutoComplete
@@ -56,6 +59,6 @@
       }
       #endregion
 
-      private System.Windows.Forms.TextBox textBoxAutoComplete;
+      private System.Windows.Forms.RichTextBox textBoxAutoComplete;
    }
 }

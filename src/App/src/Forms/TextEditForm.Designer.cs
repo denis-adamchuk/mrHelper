@@ -92,7 +92,7 @@
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
          this.MinimizeBox = false;
-         this.MinimumSize = new System.Drawing.Size(640, 162);
+         this.MinimumSize = new System.Drawing.Size(640, 183);
          this.Name = "TextEditForm";
          this.Text = "Dialog caption";
          this.ResumeLayout(false);

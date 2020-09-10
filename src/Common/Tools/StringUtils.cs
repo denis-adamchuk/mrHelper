@@ -92,6 +92,43 @@ namespace mrHelper.Common.Tools
          return word;
       }
 
+      public class WordInfo
+      {
+         public WordInfo(int start, string word)
+         {
+            Start = start;
+            Word = word;
+            IsValid = true;
+         }
+
+         public static WordInfo Invalid => new WordInfo();
+
+         public readonly int Start;
+         public readonly string Word;
+         public readonly bool IsValid;
+
+         private WordInfo()
+         {
+            IsValid = false;
+         }
+      }
+
+      public static WordInfo GetCurrentWord(string text, int position)
+      {
+         if (position < 0 || position >= text.Length || text.Length == 0 || text[position] == ' ')
+         {
+            return WordInfo.Invalid;
+         }
+
+         int start = position;
+         while (start > 0 && text[start - 1] != ' ') { --start; }
+
+         int end = position;
+         while (end < text.Length && text[end] != ' ') { ++end; }
+
+         return new WordInfo(start, text.Substring(start, end - start));
+      }
+
       public static bool IsWorkInProgressTitle(string title)
       {
          return title != null && title.StartsWith(WorkInProgressPrefix);

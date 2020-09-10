@@ -1832,8 +1832,11 @@ namespace mrHelper.App.Forms
       private void requestUpdates(MergeRequestKey? mrk, int interval, Action onUpdateFinished,
          DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
       {
-         bool mergeRequestUpdateFinished = false;
-         bool discussionUpdateFinished = false;
+         bool needUpdateMergeRequest = kind.HasFlag(DataCacheUpdateKind.MergeRequest);
+         bool needUpdateDiscussions = kind.HasFlag(DataCacheUpdateKind.Discussions);
+
+         bool mergeRequestUpdateFinished = !needUpdateMergeRequest;
+         bool discussionUpdateFinished = !needUpdateDiscussions;
 
          void onSingleUpdateFinished()
          {
@@ -1844,7 +1847,7 @@ namespace mrHelper.App.Forms
          }
 
          DataCache dataCache = getDataCache(true /* supported in Live only */);
-         if (kind.HasFlag(DataCacheUpdateKind.MergeRequest))
+         if (needUpdateMergeRequest)
          {
             dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
                () =>
@@ -1853,12 +1856,8 @@ namespace mrHelper.App.Forms
                   onSingleUpdateFinished();
                });
          }
-         else
-         {
-            mergeRequestUpdateFinished = true;
-         }
 
-         if (kind.HasFlag(DataCacheUpdateKind.Discussions))
+         if (needUpdateDiscussions)
          {
             dataCache?.DiscussionCache?.RequestUpdate(mrk, interval,
                () =>
@@ -1866,10 +1865,6 @@ namespace mrHelper.App.Forms
                   discussionUpdateFinished = true;
                   onSingleUpdateFinished();
                });
-         }
-         else
-         {
-            discussionUpdateFinished = true;
          }
       }
 

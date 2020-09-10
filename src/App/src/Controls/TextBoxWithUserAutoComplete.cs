@@ -1,5 +1,6 @@
 ﻿using GitLabSharp.Entities;
 using mrHelper.Common.Constants;
+using mrHelper.Common.Tools;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -13,14 +14,31 @@ namespace mrHelper.App.Controls
       public TextBoxWithUserAutoComplete()
       {
          InitializeComponent();
+         _delayedHidingTimer.Tick +=
+            (s, e) =>
+            {
+               hideAutoCompleteList();
+               cancelDelayedHiding();
+            };
       }
 
-      public void HideAutoCompleteBox()
+      public enum HidingReason
       {
-         if (!_suppressExternalHideRequests)
+         FormDeactivation,
+         FormMovedOrResized
+      }
+
+      public void HideAutoCompleteBox(HidingReason reason)
+      {
+         if (reason == HidingReason.FormDeactivation)
          {
-            hideAutoCompleteList();
+            // Need to delay hiding on form deactivation when a mouse click on list box occurs
+            // to not hide the list box immediately but process the click event.
+            scheduleDelayedHiding();
+            return;
          }
+
+         hideAutoCompleteList();
       }
 
       public void SetUsers(IEnumerable<User> users)
@@ -75,7 +93,10 @@ namespace mrHelper.App.Controls
          }
          else if (e.KeyCode == Keys.Tab)
          {
-            applyAutoCompleteListSelection();
+            if (!e.Modifiers.HasFlag(Keys.Shift))
+            {
+               applyAutoCompleteListSelection();
+            }
             hideAutoCompleteList();
          }
       }
@@ -92,7 +113,7 @@ namespace mrHelper.App.Controls
          e.Value = formatUser(item);
       }
 
-      private void ListBox_LostFocus(object sender, EventArgs e)
+      private void listBox_LostFocus(object sender, EventArgs e)
       {
          hideAutoCompleteList();
       }
@@ -102,23 +123,30 @@ namespace mrHelper.App.Controls
          return String.Format("{0} ({1}{2})", user.Name, Constants.GitLabLabelPrefix, user.Username);
       }
 
-      private string getLastWord(TextBox txt)
+      private StringUtils.WordInfo getCurrentWord(RichTextBox txt)
       {
-         return txt.Text.Split(' ').LastOrDefault() ?? String.Empty;
+         return StringUtils.GetCurrentWord(txt.Text, txt.SelectionStart - 1);
       }
 
       private void showAutoCompleteList()
       {
-         string lastWord = getLastWord(textBoxAutoComplete).ToLower();
-         lastWord = lastWord.StartsWith(Constants.GitLabLabelPrefix)
-            ? lastWord.Substring(Constants.GitLabLabelPrefix.Length) : lastWord;
+         StringUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
+         if (!currentWordInfo.IsValid)
+         {
+            return;
+         }
+
+         string currentWord = currentWordInfo.Word.ToLower();
+         string pureCurrentWord = currentWord.StartsWith(Constants.GitLabLabelPrefix)
+            ? currentWord.Substring(Constants.GitLabLabelPrefix.Length) : currentWord;
          object[] objects = _users?
-            .Where(user => user.Name.ToLower().Contains(lastWord) || user.Username.ToLower().Contains(lastWord))
+            .Where(user => user.Name.ToLower().Contains(pureCurrentWord)
+                        || user.Username.ToLower().Contains(pureCurrentWord))
             .Cast<object>()
             .ToArray() ?? Array.Empty<object>();
 
          hideAutoCompleteList();
-         if (lastWord == String.Empty || objects.Length == 0)
+         if (currentWord == String.Empty || objects.Length == 0)
          {
             return;
          }
@@ -135,10 +163,13 @@ namespace mrHelper.App.Controls
 
       private void showPopupWindow()
       {
-         string lastWord = getLastWord(textBoxAutoComplete);
-         int currentPosition = Math.Max(0, textBoxAutoComplete.SelectionStart - lastWord.Length);
-         Point position = textBoxAutoComplete.GetPositionFromCharIndex(currentPosition);
+         StringUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
+         if (!currentWordInfo.IsValid)
+         {
+            return;
+         }
 
+         Point position = textBoxAutoComplete.GetPositionFromCharIndex(currentWordInfo.Start);
          Point pt = PointToScreen(new Point(position.X, position.Y + textBoxAutoComplete.Height));
          _popupWindow.Show(pt);
       }
@@ -148,17 +179,40 @@ namespace mrHelper.App.Controls
          _popupWindow = new PopupWindow(listBox, PopupWindowPadding);
       }
 
+      private class ListBoxEx : ListBox
+      {
+         const int WM_NCLBUTTONDOWN = 0x00A1;
+         const int WM_NCRBUTTONDOWN = 0x00A4;
+         protected override void WndProc(ref Message m)
+         {
+            if (m.Msg == WM_NCLBUTTONDOWN || m.Msg == WM_NCRBUTTONDOWN)
+            {
+               NCMouseButtonDown?.Invoke(this, null);
+            }
+            base.WndProc(ref m);
+         }
+
+         internal event EventHandler NCMouseButtonDown;
+      }
+
       private ListBox createListBox()
       {
-         ListBox listBox = new ListBox();
+         ListBoxEx listBox = new ListBoxEx();
          listBox.BorderStyle = BorderStyle.None;
          listBox.FormattingEnabled = true;
          listBox.Click += new System.EventHandler(listBox_Click);
+         listBox.Font = this.Font;
          listBox.Format += new System.Windows.Forms.ListControlConvertEventHandler(listBox_Format);
          listBox.KeyDown += new System.Windows.Forms.KeyEventHandler(listBox_KeyDown);
          listBox.PreviewKeyDown += listBox_PreviewKeyDown;
-         listBox.LostFocus += ListBox_LostFocus;
+         listBox.LostFocus += listBox_LostFocus;
+         listBox.NCMouseButtonDown += listBox_NCMouseButtonDown;
          return listBox;
+      }
+
+      private void listBox_NCMouseButtonDown(object sender, EventArgs e)
+      {
+         cancelDelayedHiding();
       }
 
       private void fillListBox(ListBox listBox, object[] objects)
@@ -169,13 +223,15 @@ namespace mrHelper.App.Controls
       private void resizeListBox(ListBox listBox, object[] objects)
       {
          User longestObject = objects.Cast<User>().OrderByDescending(user => formatUser(user).Length).First();
-         int preferredWidth = TextRenderer.MeasureText(formatUser(longestObject), Font).Width;
+         int preferredWidth = TextRenderer.MeasureText(formatUser(longestObject), listBox.Font).Width;
          if (objects.Length > MaxRowsToShowInListBox)
          {
             preferredWidth += SystemInformation.VerticalScrollBarWidth;
          }
 
-         int calcPreferredHeight(int rows) => rows * listBox.ItemHeight;
+         // Cannot use listBox.ItemHeight because it does not change on high DPI
+         int singleLineWithoutBorderHeight = TextRenderer.MeasureText(Alphabet, listBox.Font).Height;
+         int calcPreferredHeight(int rows) => rows * singleLineWithoutBorderHeight;
          listBox.Size = new Size(preferredWidth, calcPreferredHeight(objects.Length));
          listBox.MaximumSize = new Size(preferredWidth, calcPreferredHeight(MaxRowsToShowInListBox));
       }
@@ -184,18 +240,15 @@ namespace mrHelper.App.Controls
       {
          if (_listBoxAutoComplete != null)
          {
-            // _listBoxAutoComplete.Focus() causes Form.Deactivate() which should normally hide the list box
-            // but in this particular case it should not.
-            _suppressExternalHideRequests = true;
-            _listBoxAutoComplete.Focus();
-            _suppressExternalHideRequests = false;
             _listBoxAutoComplete.SelectedIndex = 0;
+            _listBoxAutoComplete.Focus();
+            cancelDelayedHiding(); // Focus() caused Form Deactivation and scheduled list box hiding, stop it
          }
       }
 
       private void hideAutoCompleteList()
       {
-         var popupWindow = _popupWindow;
+         PopupWindow popupWindow = _popupWindow;
          _popupWindow = null;
          popupWindow?.Close();
          popupWindow?.Dispose();
@@ -204,26 +257,43 @@ namespace mrHelper.App.Controls
 
       private void applyAutoCompleteListSelection()
       {
-         if (_listBoxAutoComplete.SelectedItem == null)
+         StringUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
+         if (_listBoxAutoComplete.SelectedItem == null || !currentWordInfo.IsValid)
          {
             return;
          }
 
-         string lastWord = getLastWord(textBoxAutoComplete);
-         string substitutionWord = ((User)(_listBoxAutoComplete.SelectedItem)).Username;
-         textBoxAutoComplete.Text =
-            textBoxAutoComplete.Text.Substring(0, textBoxAutoComplete.Text.Length - lastWord.Length);
-         textBoxAutoComplete.AppendText(Constants.GitLabLabelPrefix);
-         textBoxAutoComplete.AppendText(substitutionWord);
+         string prefix = textBoxAutoComplete.Text.Substring(0, currentWordInfo.Start);
+         string substitutionWord = Constants.GitLabLabelPrefix + ((User)(_listBoxAutoComplete.SelectedItem)).Username;
+         string suffix = textBoxAutoComplete.Text.Substring(currentWordInfo.Start + currentWordInfo.Word.Length);
+         textBoxAutoComplete.Text = String.Format("{0}{1}{2}", prefix, substitutionWord, suffix);
+         textBoxAutoComplete.SelectionStart = currentWordInfo.Start + substitutionWord.Length;
       }
+
+      private void cancelDelayedHiding()
+      {
+         _delayedHidingTimer.Stop();
+      }
+
+      private void scheduleDelayedHiding()
+      {
+         _delayedHidingTimer.Start();
+      }
+
+      private System.Windows.Forms.Timer _delayedHidingTimer = new System.Windows.Forms.Timer
+      {
+         Interval = 250
+      };
 
       private ListBox _listBoxAutoComplete;
       private PopupWindow _popupWindow;
       private IEnumerable<User> _users;
-      private bool _suppressExternalHideRequests;
 
       private static readonly Padding PopupWindowPadding = new Padding(1, 2, 1, 2);
       private static readonly int MaxRowsToShowInListBox = 5;
+
+      private static readonly string Alphabet =
+         "ABCDEFGHIJKLMONPQRSTUVWXYZabcdefghijklmonpqrstuvwxyz1234567890!@#$%^&*()";
    }
 }
 

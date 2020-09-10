@@ -9,6 +9,7 @@ using mrHelper.GitLabClient;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
 using Markdig;
+using mrHelper.App.Controls;
 
 namespace mrHelper.App.Forms
 {
@@ -44,17 +45,17 @@ namespace mrHelper.App.Forms
 
       private void MergeRequestPropertiesForm_Deactivate(object sender, EventArgs e)
       {
-         textBoxSpecialNote.HideAutoCompleteBox();
+         textBoxSpecialNote.HideAutoCompleteBox(TextBoxWithUserAutoComplete.HidingReason.FormDeactivation);
       }
 
       private void MergeRequestPropertiesForm_LocationChanged(object sender, EventArgs e)
       {
-         textBoxSpecialNote.HideAutoCompleteBox();
+         textBoxSpecialNote.HideAutoCompleteBox(TextBoxWithUserAutoComplete.HidingReason.FormMovedOrResized);
       }
 
       private void MergeRequestPropertiesForm_SizeChanged(object sender, EventArgs e)
       {
-         textBoxSpecialNote.HideAutoCompleteBox();
+         textBoxSpecialNote.HideAutoCompleteBox(TextBoxWithUserAutoComplete.HidingReason.FormMovedOrResized);
       }
 
       private void comboBoxProject_SelectedIndexChanged_Base(object sender, EventArgs e)
