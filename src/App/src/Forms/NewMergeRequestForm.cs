@@ -9,6 +9,8 @@ using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.GitLabClient;
 using mrHelper.Common.Exceptions;
+using static mrHelper.GitLabClient.Helpers;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -16,7 +18,7 @@ namespace mrHelper.App.Forms
    {
       internal NewMergeRequestForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
          NewMergeRequestProperties initialState, IEnumerable<Project> projects,
-         IEnumerable<string> sourceBranchesInUse, string sourceBranchTemplate)
+         IEnumerable<ProjectBranchKey> sourceBranchesInUse, string sourceBranchTemplate)
          : base(hostname, projectAccessor, currentUser, isAllowedToChangeSource(initialState))
       {
          _initialState = initialState;
@@ -104,7 +106,7 @@ namespace mrHelper.App.Forms
       {
          if (branchList != null)
          {
-            IEnumerable<Branch> availableBranches = excludeBranchesInUse(branchList.ToArray());
+            IEnumerable<Branch> availableBranches = excludeBranchesInUse(getProjectName(), branchList.ToArray());
             if (availableBranches.Any())
             {
                fillSourceBranchListAndSelect(availableBranches.ToArray(), null);
@@ -219,7 +221,7 @@ namespace mrHelper.App.Forms
          else
          {
             IEnumerable<Branch> singleValueArray = new Branch[] { new Branch(_initialState.SourceBranch, null) };
-            Branch[] adjustedArray = excludeBranchesInUse(singleValueArray).ToArray();
+            Branch[] adjustedArray = excludeBranchesInUse(_initialState.DefaultProject, singleValueArray).ToArray();
             if (!adjustedArray.Any())
             {
                string message = String.Format(
@@ -290,17 +292,19 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private IEnumerable<Branch> excludeBranchesInUse(IEnumerable<Branch> branches)
+      private IEnumerable<Branch> excludeBranchesInUse(string projectName, IEnumerable<Branch> branches)
       {
          // Exclude source branches that already have MR
-         return branches.Where(branch => !_sourceBranchesInUse.Any(branchName => branchName == branch.Name));
+         return branches.Where(branch =>
+            !_sourceBranchesInUse.Any(branchKey =>
+               branchKey.ProjectName == projectName && branchKey.BranchName == branch.Name));
       }
 
       protected override bool isLoadingCommit() => _isLoadingCommit;
 
       private readonly NewMergeRequestProperties _initialState;
       private readonly IEnumerable<Project> _projects;
-      private readonly IEnumerable<string> _sourceBranchesInUse;
+      private readonly IEnumerable<ProjectBranchKey> _sourceBranchesInUse;
 
       protected RepositoryAccessor _repositoryAccessor;
       private bool _isLoadingCommit;

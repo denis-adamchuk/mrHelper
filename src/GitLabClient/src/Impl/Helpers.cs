@@ -5,6 +5,7 @@ using System.Diagnostics;
 using GitLabSharp.Entities;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.GitLabClient
 {
@@ -46,20 +47,52 @@ namespace mrHelper.GitLabClient
          return false;
       }
 
-      public static IEnumerable<string> GetSourceBranchesByUser(User user, DataCache dataCache)
+      public struct ProjectBranchKey : IEquatable<ProjectBranchKey>
+      {
+         public ProjectBranchKey(string projectName, string branchName) : this()
+         {
+            ProjectName = projectName;
+            BranchName = branchName;
+         }
+
+         public string ProjectName { get; }
+         public string BranchName { get; }
+
+         public override bool Equals(object obj)
+         {
+            return obj is ProjectBranchKey && Equals((ProjectBranchKey)obj);
+         }
+
+         public bool Equals(ProjectBranchKey other)
+         {
+            return ProjectName == other.ProjectName &&
+                   BranchName == other.BranchName;
+         }
+
+         public override int GetHashCode()
+         {
+            var hashCode = -872655413;
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ProjectName);
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(BranchName);
+            return hashCode;
+         }
+      }
+
+      public static IEnumerable<ProjectBranchKey> GetSourceBranchesByUser(User user, DataCache dataCache)
       {
          if (dataCache == null || dataCache.MergeRequestCache == null)
          {
             Debug.Assert(false);
-            return Array.Empty<string>();
+            return Array.Empty<ProjectBranchKey>();
          }
 
-         List<string> result = new List<string>();
-         foreach (var projectKey in dataCache.MergeRequestCache.GetProjects())
+         List<ProjectBranchKey> result = new List<ProjectBranchKey>();
+         foreach (ProjectKey projectKey in dataCache.MergeRequestCache.GetProjects())
          {
             IEnumerable<MergeRequest> mergeRequestsByUser = dataCache.MergeRequestCache.GetMergeRequests(projectKey)
                .Where(mergeRequest => mergeRequest.Author.Id == user.Id);
-            result.AddRange(mergeRequestsByUser.Select(mergeRequest => mergeRequest.Source_Branch));
+            result.AddRange(mergeRequestsByUser
+               .Select(mergeRequest => new ProjectBranchKey(projectKey.ProjectName, mergeRequest.Source_Branch)));
          }
          return result;
       }
