@@ -100,7 +100,7 @@
          this.comboBoxTargetBranch.TabIndex = 2;
          this.comboBoxTargetBranch.TextChanged += new System.EventHandler(this.comboBoxTargetBranch_TextChanged);
          // 
-         // groupBox3
+         // groupBoxTitle
          // 
          this.groupBoxTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -108,7 +108,7 @@
          this.groupBoxTitle.Controls.Add(this.buttonEditTitle);
          this.groupBoxTitle.Controls.Add(this.htmlPanelTitle);
          this.groupBoxTitle.Location = new System.Drawing.Point(12, 74);
-         this.groupBoxTitle.Name = "groupBox3";
+         this.groupBoxTitle.Name = "groupBoxTitle";
          this.groupBoxTitle.Size = new System.Drawing.Size(773, 78);
          this.groupBoxTitle.TabIndex = 3;
          this.groupBoxTitle.TabStop = false;
@@ -260,6 +260,7 @@
          this.textBoxSpecialNote.Name = "textBoxSpecialNote";
          this.textBoxSpecialNote.Size = new System.Drawing.Size(296, 22);
          this.textBoxSpecialNote.TabIndex = 11;
+         this.textBoxSpecialNote.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSpecialNote_KeyDown);
          // 
          // buttonSubmit
          // 

@@ -46,6 +46,18 @@ namespace mrHelper.App.Controls
          _users = users;
       }
 
+      public override string Text
+      {
+         get
+         {
+            return textBoxAutoComplete.Text;
+         }
+         set
+         {
+            textBoxAutoComplete.Text = value;
+         }
+      }
+
       private void textBoxAutoComplete_TextChanged(object sender, EventArgs e)
       {
          showAutoCompleteList();
@@ -56,6 +68,10 @@ namespace mrHelper.App.Controls
          if (e.KeyCode == Keys.Down)
          {
             activateAutoCompleteList();
+         }
+         else
+         {
+            OnKeyDown(e);
          }
       }
 

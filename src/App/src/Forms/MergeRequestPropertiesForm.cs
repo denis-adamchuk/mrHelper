@@ -131,8 +131,7 @@ namespace mrHelper.App.Forms
 
       private void textBoxSpecialNote_KeyDown(object sender, KeyEventArgs e)
       {
-         // TODO WTF
-         //submitOnKeyDown(e.KeyCode);
+         submitOnKeyDown(e.KeyCode);
       }
 
       private void submitOnKeyDown(Keys keyCode)
