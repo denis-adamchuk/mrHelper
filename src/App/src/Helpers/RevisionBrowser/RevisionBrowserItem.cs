@@ -48,12 +48,13 @@ namespace mrHelper.App.Helpers
    internal class RevisionBrowserItem : RevisionBrowserBaseItem
    {
       internal RevisionBrowserItem(string name, DateTime timestamp, string sha,
-         RevisionBrowserBaseItem parent, RevisionBrowserModel owner, string tooltipText, bool isReviewed)
+         RevisionBrowserBaseItem parent, RevisionBrowserModel owner, string tooltipText, bool isReviewed,
+         int invertedDisplayIndex)
          : base(parent, owner)
       {
          Name = name;
-         OriginalTimestamp = timestamp.ToLocalTime();
-         Timestamp = OriginalTimestamp.ToString(Constants.TimeStampFormat);
+         InvertedDisplayIndex = invertedDisplayIndex;
+         Timestamp = timestamp.ToString(Constants.TimeStampFormat);
          FullSHA = sha;
          TooltipText = tooltipText;
          IsReviewed = isReviewed;
@@ -61,7 +62,7 @@ namespace mrHelper.App.Helpers
 
       public override string Name { get; }
       public override string Timestamp { get; }
-      public DateTime OriginalTimestamp { get; }
+      public int InvertedDisplayIndex { get; }
       public string FullSHA { get; }
       public string TooltipText { get; }
       public bool IsReviewed { get; }

@@ -76,7 +76,7 @@ namespace mrHelper.App.Helpers
                   getItemProperties(iItem, item,
                      out string fullSha, out string name, out DateTime timestamp, out string tooltipText);
                   bool isReviewed = _data.ReviewedRevisions.Contains(fullSha);
-                  items.Add(new RevisionBrowserItem(name, timestamp, fullSha, parent, this, tooltipText, isReviewed));
+                  items.Add(new RevisionBrowserItem(name, timestamp, fullSha, parent, this, tooltipText, isReviewed, iItem));
                   --iItem;
                }
             }
@@ -96,43 +96,24 @@ namespace mrHelper.App.Helpers
 
       private IEnumerable<object> sortAndFilter(IEnumerable<object> objects)
       {
-         DateTime getTimeStamp(object x)
+         if (objects == null || !objects.Any())
          {
-            if (x is Commit c)
-            {
-               return c.Created_At;
-            }
-            else if (x is Version v)
-            {
-               return v.Created_At;
-            }
-            else
-            {
-               throw new NotImplementedException();
-            }
-         };
+            return Array.Empty<object>();
+         }
 
-         string getSha(object x)
+         bool areCommitsProvided = objects.First() is Commit;
+         if (areCommitsProvided)
          {
-            if (x is Commit c)
-            {
-               return c.Id;
-            }
-            else if (x is Version v)
-            {
-               return v.Head_Commit_SHA;
-            }
-            else
-            {
-               throw new NotImplementedException();
-            }
-         };
+            // Commits are already sorted in chronological order and they don't have duplicates (unlike Versions).
+            return objects;
+         }
 
          return objects
-            .OrderByDescending(x => getTimeStamp(x))
+            .Cast<Version>()
+            .OrderByDescending(version => version.Created_At)
             // filter out versions pointing to the same HEAD:
-            .GroupBy(x => getSha(x))
-            .Select(g => g.First());
+            .GroupBy(version => version.Head_Commit_SHA)
+            .Select(versions => versions.First());
       }
 
       private void getItemProperties(int iItem, object item,

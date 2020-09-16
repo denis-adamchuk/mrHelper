@@ -46,13 +46,13 @@ namespace mrHelper.App.Controls
       {
          type = new RevisionType?();
          IEnumerable<RevisionBrowserItem> leaves = getSelectedLeafNodes(out type);
-         return leaves.OrderBy(x => x.OriginalTimestamp).Select(x => x.FullSHA).ToArray();
+         return leaves.OrderBy(x => x.InvertedDisplayIndex).Select(x => x.FullSHA).ToArray();
       }
 
       internal string[] GetIncludedSha()
       {
          IEnumerable<RevisionBrowserItem> leaves = getSelectedLeafNodes(out RevisionType? type);
-         RevisionBrowserItem latestSelected = leaves.OrderByDescending(x => x.OriginalTimestamp).FirstOrDefault();
+         RevisionBrowserItem latestSelected = leaves.OrderByDescending(x => x.InvertedDisplayIndex).FirstOrDefault();
          return getEarlierLeafNodes(latestSelected).Select(x => x.FullSHA).ToArray();
       }
 
@@ -135,8 +135,8 @@ namespace mrHelper.App.Controls
             .Where(x => x.Tag is RevisionBrowserItem)
             .Select(x => x.Tag)
             .Cast<RevisionBrowserItem>()
-            .OrderByDescending(x => x.OriginalTimestamp)
-            .Where(x => x.OriginalTimestamp <= item.OriginalTimestamp);
+            .OrderByDescending(x => x.InvertedDisplayIndex)
+            .Where(x => x.InvertedDisplayIndex <= item.InvertedDisplayIndex);
       }
 
       private void autoSelectRevision(TreeNodeAdv revisionTypeNode)
@@ -146,7 +146,7 @@ namespace mrHelper.App.Controls
 
          IEnumerable<TreeNodeAdv> sortedChildren = revisionTypeNode?.Children
             .Where(x => x.Tag is RevisionBrowserItem)
-            .OrderByDescending(x => (x.Tag as RevisionBrowserItem).OriginalTimestamp);
+            .OrderByDescending(x => (x.Tag as RevisionBrowserItem).InvertedDisplayIndex);
          if (sortedChildren == null || !sortedChildren.Any())
          {
             return;
