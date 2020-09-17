@@ -28,7 +28,7 @@ namespace mrHelper.GitLabClient
          _modificationListener = modificationListener;
       }
 
-      async public Task<MergeRequest> SearchMergeRequestAsync(int mergeRequestIId)
+      async public Task<MergeRequest> SearchMergeRequestAsync(int mergeRequestIId, bool onlyOpen)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
             _projectKey.HostName, _settings))
@@ -38,7 +38,7 @@ namespace mrHelper.GitLabClient
                SearchCriteria searchCriteria = new SearchCriteria(
                   new object[] { new SearchByIId(_projectKey.ProjectName, mergeRequestIId) });
                IEnumerable<MergeRequest> mergeRequests =
-                  await mergeRequestOperator.SearchMergeRequestsAsync(searchCriteria, null, true);
+                  await mergeRequestOperator.SearchMergeRequestsAsync(searchCriteria, null, onlyOpen);
                return mergeRequests.Any() ? mergeRequests.First() : null;
             }
             catch (OperatorException)

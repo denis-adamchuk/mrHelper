@@ -270,7 +270,7 @@ namespace mrHelper.App.Forms
          GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
          MergeRequest mergeRequest = await Shortcuts
             .GetMergeRequestAccessor(gitLabInstance, _modificationNotifier, mrk.ProjectKey)
-            .SearchMergeRequestAsync(mrk.IId);
+            .SearchMergeRequestAsync(mrk.IId, false);
          if (mergeRequest == null)
          {
             throw new UrlConnectionException("Merge request does not exist. ", null);
