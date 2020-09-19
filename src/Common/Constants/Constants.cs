@@ -54,6 +54,9 @@ namespace mrHelper.Common.Constants
       public static string[] ThemeNames = { "Default", "New Year 2020" };
       public static string DefaultThemeName = "Default";
 
+      public static string WarningOnUnescapedMarkdown =
+         "Warning: Some markdown characters may require surrounding them with apostrophes, e.g. `<vector>` or `f<int>()`";
+
       public static Dictionary<string, double> FontSizeChoices = new Dictionary<string, double>
       {
          { "Design",  8.25 }, // Design-time font size

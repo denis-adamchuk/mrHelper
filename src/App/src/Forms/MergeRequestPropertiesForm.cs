@@ -126,17 +126,17 @@ namespace mrHelper.App.Forms
 
       private void textBoxAssigneeUsername_KeyDown(object sender, KeyEventArgs e)
       {
-         submitOnKeyDown(e.KeyCode);
+         submitOnKeyDown(e.KeyCode, e.Modifiers);
       }
 
       private void textBoxSpecialNote_KeyDown(object sender, KeyEventArgs e)
       {
-         submitOnKeyDown(e.KeyCode);
+         submitOnKeyDown(e.KeyCode, e.Modifiers);
       }
 
-      private void submitOnKeyDown(Keys keyCode)
+      private void submitOnKeyDown(Keys keyCode, Keys modifiers)
       {
-         if (buttonSubmit.Enabled && keyCode == Keys.Enter)
+         if (buttonSubmit.Enabled && keyCode == Keys.Enter && modifiers.HasFlag(Keys.Control))
          {
             buttonSubmit.PerformClick();
          }

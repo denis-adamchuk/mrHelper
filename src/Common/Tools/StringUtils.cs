@@ -121,12 +121,138 @@ namespace mrHelper.Common.Tools
          }
 
          int start = position;
-         while (start > 0 && text[start - 1] != ' ') { --start; }
+         while (start > 0 && !Char.IsWhiteSpace(text[start - 1])) { --start; }
 
          int end = position;
-         while (end < text.Length && text[end] != ' ') { ++end; }
+         while (end < text.Length && !Char.IsWhiteSpace(text[end])) { ++end; }
 
          return new WordInfo(start, text.Substring(start, end - start));
+      }
+
+      public static string ReplaceWord(string text, WordInfo word, string replacement)
+      {
+         string prefix = text.Substring(0, word.Start);
+         string suffix = text.Substring(word.Start + word.Word.Length);
+         return String.Format("{0}{1}{2}", prefix, replacement, suffix);
+      }
+
+      private static readonly char[] SpecialCharacters = new char[] { '<', '>', '\\' };
+
+      private enum CodeBlockType
+      {
+         Span,
+         Block,
+         None
+      }
+
+      /// <summary>
+      /// Detects whether characters from SpecialCharacters array appear in text not surrounded by apostrophes or tilde.
+      /// See https://docs.gitlab.com/ee/user/markdown.html#code-spans-and-blocks
+      /// Note that 4-spaces code indentation is not supported yet.
+      /// This function should have been extracted into a separate parser of course.
+      /// </summary>
+      public static bool DoesContainUnescapedSpecialCharacters(string text)
+      {
+         bool isApostrophe(char ch) => ch == '`';
+         bool isTilde(char ch) => ch == '~';
+
+         int? startCount = null;
+         bool isTildeBlock = false;
+         bool areSpecialCharacterSinceLastApostrophe = false;
+
+         void onOpenSpanOrBlock(int startCharacterCount, bool isTildeBlockOpens)
+         {
+            startCount = startCharacterCount;
+            isTildeBlock = isTildeBlockOpens;
+            areSpecialCharacterSinceLastApostrophe = false;
+         };
+
+         void onCloseSpanOrBlock()
+         {
+            startCount = null;
+            isTildeBlock = false;
+            areSpecialCharacterSinceLastApostrophe = false;
+         }
+
+         void onSpecialCharacterFound()
+         {
+            areSpecialCharacterSinceLastApostrophe = true;
+         }
+
+         CodeBlockType detectCodeBlockType() =>
+            startCount.HasValue ? (startCount < 3 ? CodeBlockType.Span : CodeBlockType.Block) : CodeBlockType.None;
+
+         for (int iCurrentChar = 0; iCurrentChar < text.Length; ++iCurrentChar)
+         {
+            char currentChar = text[iCurrentChar];
+
+            bool isEmptyLineFound = iCurrentChar + 3 < text.Length
+                  && text[iCurrentChar + 0] == '\r' && text[iCurrentChar + 1] == '\n'
+                  && text[iCurrentChar + 2] == '\r' && text[iCurrentChar + 3] == '\n';
+            bool isSpecialCharacterFound = SpecialCharacters.Contains(currentChar);
+            bool isFenceCharacterFound = isApostrophe(currentChar) || isTilde(currentChar);
+
+            int fenceCharacterCount = 0;
+            if (isFenceCharacterFound)
+            {
+               while (iCurrentChar < text.Length && currentChar == text[iCurrentChar])
+               {
+                  ++iCurrentChar;
+                  ++fenceCharacterCount;
+               }
+            }
+
+            bool isBlockFenceFound = fenceCharacterCount >= 3;
+            bool isSpanOrBlockFenceFound = isApostrophe(currentChar) || (isTilde(currentChar) && isBlockFenceFound);
+            bool isFoundClosingFence = fenceCharacterCount > 0
+               && startCount == fenceCharacterCount
+               && (isTildeBlock ? isTilde(currentChar) : isApostrophe(currentChar));
+
+            switch (detectCodeBlockType())
+            {
+               case CodeBlockType.None:
+                  if (isSpanOrBlockFenceFound)
+                  {
+                     onOpenSpanOrBlock(fenceCharacterCount, isTilde(currentChar));
+                  }
+                  else if (isSpecialCharacterFound)
+                  {
+                     return true;
+                  }
+                  break;
+
+               case CodeBlockType.Span:
+                  if ((isBlockFenceFound || isEmptyLineFound) && areSpecialCharacterSinceLastApostrophe)
+                  {
+                     return true;
+                  }
+                  else if (isBlockFenceFound)
+                  {
+                     onOpenSpanOrBlock(fenceCharacterCount, isTilde(currentChar));
+                  }
+                  else if (isEmptyLineFound || isFoundClosingFence)
+                  {
+                     onCloseSpanOrBlock();
+                  }
+                  else if (isSpecialCharacterFound)
+                  {
+                     onSpecialCharacterFound();
+                  }
+                  break;
+
+               case CodeBlockType.Block:
+                  if (isFoundClosingFence)
+                  {
+                     onCloseSpanOrBlock();
+                  }
+                  else if (isSpecialCharacterFound)
+                  {
+                     onSpecialCharacterFound();
+                  }
+                  break;
+            }
+         }
+         return areSpecialCharacterSinceLastApostrophe;
       }
 
       public static bool IsWorkInProgressTitle(string title)

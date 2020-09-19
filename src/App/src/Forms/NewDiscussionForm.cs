@@ -9,6 +9,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
 using System.Threading.Tasks;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -20,15 +21,11 @@ namespace mrHelper.App.Forms
          InitializeComponent();
          this.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
 
-         htmlPanel.AutoScroll = false;
-         htmlPanel.BorderStyle = BorderStyle.None;
-         htmlPanel.Dock = DockStyle.Fill;
-         htmlContextCanvas.Controls.Add(htmlPanel);
-
          applyFont(Program.Settings.MainWindowFontSizeName);
          createWPFTextBox();
 
          this.Text = Constants.StartNewThreadCaption;
+         labelNoteAboutInvisibleCharacters.Text = Constants.WarningOnUnescapedMarkdown;
          showDiscussionContext(leftSideFileName, rightSideFileName, position, git);
 
          buttonCancel.ConfirmationCondition =
@@ -36,18 +33,30 @@ namespace mrHelper.App.Forms
          _onSubmitDiscussion = onSubmitDiscussion;
       }
 
-      public bool IncludeContext { get { return checkBoxIncludeContext.Checked; } }
-      public string Body { get { return textBoxDiscussionBody.Text; } }
-
       async private void buttonOK_Click(object sender, EventArgs e)
       {
-         await _onSubmitDiscussion?.Invoke(Body, IncludeContext);
+         string body = textBoxDiscussionBody.Text;
+         bool needIncludeContext = checkBoxIncludeContext.Checked;
+         await _onSubmitDiscussion?.Invoke(body, needIncludeContext);
          Close();
       }
 
       private void buttonCancel_Click(object sender, EventArgs e)
       {
          Close();
+      }
+
+      private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         if (tabControlMode.SelectedTab == tabPagePreview)
+         {
+            htmlPanelPreview.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
+               Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(htmlPanelPreview));
+
+            var pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
+            string body = MarkDownUtils.ConvertToHtml(textBoxDiscussionBody.Text, String.Empty, pipeline);
+            htmlPanelPreview.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
+         }
       }
 
       private void textBoxDiscussionBody_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -58,13 +67,19 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void textBoxDiscussionBody_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+      {
+         bool areUnescapedCharacters = StringUtils.DoesContainUnescapedSpecialCharacters(textBoxDiscussionBody.Text);
+         labelNoteAboutInvisibleCharacters.Visible = areUnescapedCharacters;
+      }
+
       private void buttonInsertCode_Click(object sender, EventArgs e)
       {
          Helpers.WPFHelpers.InsertCodePlaceholderIntoTextBox(textBoxDiscussionBody);
          textBoxDiscussionBody.Focus();
       }
 
-      private void NewDiscussionForm_Shown(object sender, EventArgs e)
+      private void newDiscussionForm_Shown(object sender, EventArgs e)
       {
          Win32Tools.ForceWindowIntoForeground(this.Handle);
          textBoxDiscussionBody.Focus();
@@ -74,8 +89,8 @@ namespace mrHelper.App.Forms
          DiffPosition position, IGitCommandService git)
       {
          string html = getContextHtmlText(position, git, out string stylesheet);
-         htmlPanel.BaseStylesheet = stylesheet;
-         htmlPanel.Text = html;
+         htmlPanelContext.BaseStylesheet = stylesheet;
+         htmlPanelContext.Text = html;
 
          textBoxFileName.Text = "Left: " + (leftSideFileName == String.Empty ? "N/A" : leftSideFileName)
                            + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);
@@ -105,7 +120,7 @@ namespace mrHelper.App.Forms
 
          Debug.Assert(context.HasValue);
          DiffContextFormatter formatter =
-            new DiffContextFormatter(WinFormsHelpers.GetFontSizeInPixels(htmlPanel), 2);
+            new DiffContextFormatter(WinFormsHelpers.GetFontSizeInPixels(htmlPanelContext), 2);
          stylesheet = formatter.GetStylesheet();
          return formatter.GetBody(context.Value);
       }
@@ -115,6 +130,7 @@ namespace mrHelper.App.Forms
          textBoxDiscussionBody = Helpers.WPFHelpers.CreateWPFTextBox(textBoxDiscussionBodyHost,
             false, String.Empty, true, !Program.Settings.DisableSpellChecker);
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
+         textBoxDiscussionBody.TextChanged += textBoxDiscussionBody_TextChanged;
       }
 
       private static int MaximumTextLengthTocancelWithoutConfirmation = 5;

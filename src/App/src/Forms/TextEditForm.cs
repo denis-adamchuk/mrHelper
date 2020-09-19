@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Windows.Forms;
+using mrHelper.Common.Constants;
+using mrHelper.Common.Tools;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -13,6 +16,7 @@ namespace mrHelper.App.Forms
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
          Text = caption;
+         labelNoteAboutInvisibleCharacters.Text = Constants.WarningOnUnescapedMarkdown;
 
          createWPFTextBox(initialText, editable, multiline);
 
@@ -40,6 +44,7 @@ namespace mrHelper.App.Forms
          textBox = Helpers.WPFHelpers.CreateWPFTextBox(textBoxHost, !editable, initialText, multiline,
             !Program.Settings.DisableSpellChecker);
          textBox.KeyDown += textBox_KeyDown;
+         textBox.TextChanged += textBox_TextChanged;
       }
 
       private void adjustFormHeight()
@@ -53,6 +58,19 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         if (tabControlMode.SelectedTab == tabPagePreview)
+         {
+            htmlPanelPreview.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
+               Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(htmlPanelPreview));
+
+            Markdig.MarkdownPipeline pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
+            string body = MarkDownUtils.ConvertToHtml(textBox.Text, String.Empty, pipeline);
+            htmlPanelPreview.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
+         }
+      }
+
       private void textBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
       {
          if (e.Key == System.Windows.Input.Key.Enter && Control.ModifierKeys == Keys.Control)
@@ -61,9 +79,21 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void ViewDiscussionItemForm_Shown(object sender, System.EventArgs e)
+      private void textBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+      {
+         toggleWarningVisibility();
+      }
+
+      private void textEditForm_Shown(object sender, System.EventArgs e)
       {
          textBox.Focus();
+         toggleWarningVisibility();
+      }
+
+      private void toggleWarningVisibility()
+      {
+         bool areUnescapedCharacters = StringUtils.DoesContainUnescapedSpecialCharacters(textBox.Text);
+         labelNoteAboutInvisibleCharacters.Visible = areUnescapedCharacters;
       }
 
       private static int MaximumTextLengthTocancelWithoutConfirmation = 5;

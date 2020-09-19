@@ -279,10 +279,8 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         string prefix = textBoxAutoComplete.Text.Substring(0, currentWordInfo.Start);
          string substitutionWord = Constants.GitLabLabelPrefix + ((User)(_listBoxAutoComplete.SelectedItem)).Username;
-         string suffix = textBoxAutoComplete.Text.Substring(currentWordInfo.Start + currentWordInfo.Word.Length);
-         textBoxAutoComplete.Text = String.Format("{0}{1}{2}", prefix, substitutionWord, suffix);
+         textBoxAutoComplete.Text = StringUtils.ReplaceWord(textBoxAutoComplete.Text, currentWordInfo, substitutionWord);
          textBoxAutoComplete.SelectionStart = currentWordInfo.Start + substitutionWord.Length;
       }
 
