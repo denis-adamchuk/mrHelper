@@ -12,6 +12,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.StorageSupport;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.GitLabClient;
+using mrHelper.App.Forms.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -67,7 +68,23 @@ namespace mrHelper.App.Forms
                updateSearch();
             });
 
-         ActionsPanel = new DiscussionActionsPanel(() => BeginInvoke(new Action(async () => await onRefresh())));
+         Action onRefreshAction = new Action(() => BeginInvoke(new Action(async () => await onRefresh())));
+         Action onAddCommentAction = new Action(() =>
+            BeginInvoke(new Action(async () =>
+            {
+               await DiscussionHelper.AddCommentAsync(_mergeRequestKey, _mergeRequestTitle, _modificationListener,
+               _currentUser);
+               onRefreshAction();
+            })));
+         Action onAddThreadAction = new Action(() =>
+            BeginInvoke(new Action(async () =>
+            {
+               await DiscussionHelper.AddThreadAsync(_mergeRequestKey, _mergeRequestTitle, _modificationListener,
+               _currentUser, _dataCache);
+               onRefreshAction();
+            })));
+         ActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction,
+            _mergeRequestKey, Program.Settings);
 
          SearchPanel = new DiscussionSearchPanel(
             (query, forward) =>
@@ -384,8 +401,7 @@ namespace mrHelper.App.Forms
          actionsPanelLocation.Offset(fontSelectionPanelLocation.X + FontSelectionPanel.Size.Width, 0);
          searchPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width,
                                     Math.Max(sortPanelLocation.Y + SortPanel.Size.Height,
-                                    Math.Max(fontSelectionPanelLocation.Y + FontSelectionPanel.Size.Height,
-                                             actionsPanelLocation.Y + ActionsPanel.Size.Height)));
+                                             fontSelectionPanelLocation.Y + FontSelectionPanel.Size.Height));
 
          // Stack panels horizontally
          FilterPanel.Location = filterPanelLocation + (Size)AutoScrollPosition;
@@ -393,6 +409,12 @@ namespace mrHelper.App.Forms
          FontSelectionPanel.Location = fontSelectionPanelLocation + (Size)AutoScrollPosition;
          ActionsPanel.Location = actionsPanelLocation + (Size)AutoScrollPosition;
          SearchPanel.Location = searchPanelLocation + (Size)AutoScrollPosition;
+
+         // A hack to show right border of FontSelectionPanel at the same X coordinate as the right border of SearchPanel
+         FontSelectionPanel.Width = SearchPanel.Location.X + SearchPanel.Width - FontSelectionPanel.Location.X;
+
+         // A hack to show bottom border of SearchPanel at the same Y coordinate as the bottom border of FilterPanel
+         SearchPanel.Height = FilterPanel.Location.Y + FilterPanel.Height - SearchPanel.Location.Y;
 
          // Prepare to stack boxes vertically
          int topOffset = Math.Max(filterPanelLocation.Y + FilterPanel.Size.Height,

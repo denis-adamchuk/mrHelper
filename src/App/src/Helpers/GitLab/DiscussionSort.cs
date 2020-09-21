@@ -12,6 +12,7 @@ namespace mrHelper.App.Helpers
    public enum DiscussionSortState
    {
       Default,
+      Reverse,
       ByReviewer
    };
 
@@ -33,6 +34,9 @@ namespace mrHelper.App.Helpers
          {
             case DiscussionSortState.Default:
                return discussions;
+
+            case DiscussionSortState.Reverse:
+               return discussions.Reverse();
 
             case DiscussionSortState.ByReviewer:
                return discussions

@@ -251,83 +251,15 @@ namespace mrHelper.App.Forms
 
       async private Task onAddCommentAsync(MergeRequestKey mrk, string title)
       {
-         string caption = String.Format("Add comment to merge request \"{0}\"", title);
-         DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
-         using (TextEditForm form = new TextEditForm(caption, "", true, true, actions))
-         {
-            actions.SetTextbox(form.TextBox);
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-               if (form.Body.Length == 0)
-               {
-                  MessageBox.Show("Comment body cannot be empty", "Warning",
-                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                  return;
-               }
-
-               labelWorkflowStatus.Text = "Adding a comment...";
-               try
-               {
-                  GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-                     gitLabInstance, _modificationNotifier, mrk, getCurrentUser());
-                  await creator.CreateNoteAsync(new CreateNewNoteParameters(form.Body));
-               }
-               catch (DiscussionCreatorException)
-               {
-                  MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
-                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  labelWorkflowStatus.Text = "Cannot create a discussion";
-                  return;
-               }
-               labelWorkflowStatus.Text = "Comment added";
-            }
-         }
+         bool res = await DiscussionHelper.AddCommentAsync(mrk, title, _modificationNotifier, getCurrentUser());
+         labelWorkflowStatus.Text = res ? "Added a comment" : "Comment is not added";
       }
 
       async private Task onNewDiscussionAsync(MergeRequestKey mrk, string title)
       {
-         string caption = String.Format("Create a new thread in merge request \"{0}\"", title);
-         DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
-         using (TextEditForm form = new TextEditForm(caption, "", true, true, actions))
-         {
-            actions.SetTextbox(form.TextBox);
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-               if (form.Body.Length == 0)
-               {
-                  MessageBox.Show("Discussion body cannot be empty", "Warning",
-                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                  return;
-               }
-
-               DataCache dataCache = getDataCache(!isSearchMode());
-               if (dataCache == null)
-               {
-                  Debug.Assert(false);
-                  return;
-               }
-
-               labelWorkflowStatus.Text = "Creating a discussion...";
-               try
-               {
-                  GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-                     gitLabInstance, _modificationNotifier, mrk, getCurrentUser());
-                  await creator.CreateDiscussionAsync(new NewDiscussionParameters(form.Body, null), false);
-               }
-               catch (DiscussionCreatorException)
-               {
-                  MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
-                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  labelWorkflowStatus.Text = "Cannot create a discussion";
-                  return;
-               }
-               labelWorkflowStatus.Text = "Thread started";
-
-               dataCache.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null);
-            }
-         }
+         bool res = await DiscussionHelper.AddThreadAsync(mrk, title, _modificationNotifier,
+            getCurrentUser(), getDataCache(!isSearchMode()));
+         labelWorkflowStatus.Text = res ? "Added a discussion thread" : "Discussion thread is not added";
       }
 
       private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA, MergeRequestKey mrk,

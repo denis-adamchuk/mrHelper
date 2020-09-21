@@ -39,18 +39,20 @@
          this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBox1.Location = new System.Drawing.Point(0, 0);
          this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(150, 50);
+         this.groupBox1.Size = new System.Drawing.Size(120, 50);
          this.groupBox1.TabIndex = 0;
          this.groupBox1.TabStop = false;
          this.groupBox1.Text = "Font Size";
          // 
          // comboBoxFonts
          // 
+         this.comboBoxFonts.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
          this.comboBoxFonts.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxFonts.FormattingEnabled = true;
          this.comboBoxFonts.Location = new System.Drawing.Point(6, 19);
          this.comboBoxFonts.Name = "comboBoxFonts";
-         this.comboBoxFonts.Size = new System.Drawing.Size(138, 21);
+         this.comboBoxFonts.Size = new System.Drawing.Size(108, 21);
          this.comboBoxFonts.TabIndex = 0;
          this.comboBoxFonts.SelectionChangeCommitted += new System.EventHandler(this.comboBoxFonts_SelectionChangeCommitted);
          // 
@@ -59,7 +61,7 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
          this.Controls.Add(this.groupBox1);
          this.Name = "DiscussionFontSelectionPanel";
-         this.Size = new System.Drawing.Size(150, 50);
+         this.Size = new System.Drawing.Size(120, 50);
          this.groupBox1.ResumeLayout(false);
          this.ResumeLayout(false);
 

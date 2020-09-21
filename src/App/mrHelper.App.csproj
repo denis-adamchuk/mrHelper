@@ -137,6 +137,7 @@
     <Compile Include="src\Controls\DiscussionNoteEditPanel.Designer.cs">
       <DependentUpon>DiscussionNoteEditPanel.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Forms\Helpers\DiscussionHelper.cs" />
     <Compile Include="src\Forms\NewMergeRequestForm.cs">
       <SubType>Form</SubType>
     </Compile>
