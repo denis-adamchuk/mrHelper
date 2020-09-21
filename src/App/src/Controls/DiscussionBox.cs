@@ -535,8 +535,7 @@ namespace mrHelper.App.Controls
          {
             Tag = noteControl,
             Enabled = true,
-            Text = "Reply",
-            Shortcut = Shortcut.F3
+            Text = "Reply"
          };
          menuItemReply.Click += MenuItemReply_Click;
          contextMenu.MenuItems.Add(menuItemReply);
@@ -546,7 +545,7 @@ namespace mrHelper.App.Controls
             Tag = noteControl,
             Enabled = true,
             Text = "Reply and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread",
-            Shortcut = Shortcut.ShiftF3
+            Shortcut = Shortcut.F4
          };
          menuItemReplyAndResolve.Click += MenuItemReplyAndResolve_Click;
          contextMenu.MenuItems.Add(menuItemReplyAndResolve);
@@ -595,8 +594,7 @@ namespace mrHelper.App.Controls
          {
             Tag = textBox,
             Enabled = true,
-            Text = "Reply",
-            Shortcut = Shortcut.F3
+            Text = "Reply"
          };
          menuItemReply.Click += MenuItemReply_Click;
          contextMenu.MenuItems.Add(menuItemReply);
@@ -606,7 +604,7 @@ namespace mrHelper.App.Controls
             Tag = textBox,
             Enabled = true,
             Text = "Reply and Resolve/Unresolve Thread",
-            Shortcut = Shortcut.ShiftF3
+            Shortcut = Shortcut.F4
          };
          menuItemReplyAndResolve.Click += MenuItemReplyAndResolve_Click;
          contextMenu.MenuItems.Add(menuItemReplyAndResolve);
