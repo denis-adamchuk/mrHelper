@@ -82,7 +82,7 @@ namespace mrHelper.App.Forms
       private void showDiscussionForm(GitLabInstance gitLabInstance, DataCache dataCache, ILocalCommitStorage storage,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author)
       {
-         if (currentUser == null || discussions == null || author == null)
+         if (currentUser == null || discussions == null || author == null || currentUser.Id == 0)
          {
             return;
          }
@@ -101,10 +101,8 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            IAsyncGitCommandService git = storage?.Git;
-
             DiscussionsForm discussionsForm = new DiscussionsForm(dataCache, gitLabInstance, _modificationNotifier,
-               git, currentUser, mrk, discussions, title, author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
+               storage?.Git, currentUser, mrk, discussions, title, author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
                async (key, discussionsUpdated) =>
             {
                if (storage != null && storage.Updater != null)
@@ -136,14 +134,6 @@ namespace mrHelper.App.Forms
          {
             MessageBox.Show("No discussions to show.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             labelWorkflowStatus.Text = "No discussions to show";
-            return;
-         }
-         catch (ArgumentException ex)
-         {
-            string errorMessage = "Cannot show Discussions form";
-            ExceptionHandlers.Handle(errorMessage, ex);
-            MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            labelWorkflowStatus.Text = "Cannot show Discussions";
             return;
          }
 

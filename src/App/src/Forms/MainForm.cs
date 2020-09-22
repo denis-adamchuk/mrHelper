@@ -27,6 +27,11 @@ namespace mrHelper.App.Forms
       private static readonly string openFromClipboardEnabledText = "Open from Clipboard";
       private static readonly string openFromClipboardDisabledText = "Open from Clipboard (Copy GitLab MR URL to activate)";
 
+      protected override void OnHandleCreated(EventArgs e)
+      {
+         base.OnHandleCreated(e);
+      }
+
       internal MainForm(bool startMinimized, bool runningAsUwp, string startUrl)
       {
          _startMinimized = startMinimized;

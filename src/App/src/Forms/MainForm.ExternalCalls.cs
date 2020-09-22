@@ -202,7 +202,7 @@ namespace mrHelper.App.Forms
             }
             else if (parsed is ParsedNewMergeRequestUrl parsedNewMergeRequestUrl)
             {
-               if (getHostName() != parsedNewMergeRequestUrl.ProjectKey.HostName)
+               if (getHostName() != parsedNewMergeRequestUrl.ProjectKey.HostName || getCurrentUser() == null)
                {
                   throwOnUnknownHost(parsedNewMergeRequestUrl.ProjectKey.HostName);
                   await restartWorkflowByUrlAsync(parsedNewMergeRequestUrl.ProjectKey.HostName);

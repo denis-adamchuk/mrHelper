@@ -50,7 +50,7 @@
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.AutoScroll = true;
-         this.AutoScrollMargin = new System.Drawing.Size(0, 250);
+         this.AutoScrollMargin = new System.Drawing.Size(0, 50);
          this.ClientSize = new System.Drawing.Size(1353, 456);
          this.Controls.Add(this.pictureBox1);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
@@ -58,8 +58,9 @@
          this.Name = "DiscussionsForm";
          this.Text = "Discussions";
          this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+         this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DiscussionsForm_FormClosing);
+         this.Shown += new System.EventHandler(this.DiscussionsForm_Shown);
          this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DiscussionsForm_KeyDown);
-         this.Layout += new System.Windows.Forms.LayoutEventHandler(this.DiscussionsForm_Layout);
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
          this.ResumeLayout(false);
 

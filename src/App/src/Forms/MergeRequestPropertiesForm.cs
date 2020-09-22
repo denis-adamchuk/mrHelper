@@ -94,7 +94,7 @@ namespace mrHelper.App.Forms
       {
          string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
          string formCaption = "Edit Merge Request title";
-         TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, null);
+         TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, null, String.Empty);
          if (editTitleForm.ShowDialog() == DialogResult.OK)
          {
             setTitle(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editTitleForm.Body));
@@ -103,9 +103,10 @@ namespace mrHelper.App.Forms
 
       private void buttonEditDescription_Click(object sender, EventArgs e)
       {
+         // TODO WTF Add possibility to show pictures in TextEditForm
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
-         TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null);
+         TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null, String.Empty);
          if (editDescriptionForm.ShowDialog() == DialogResult.OK)
          {
             setDescription(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editDescriptionForm.Body));

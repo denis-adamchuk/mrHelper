@@ -13,6 +13,7 @@ using mrHelper.StorageSupport;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
+using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace mrHelper.App.Forms
 {
@@ -20,7 +21,6 @@ namespace mrHelper.App.Forms
    {
       /// <summary>
       /// Throws:
-      /// ArgumentException
       /// </summary>
       internal DiscussionsForm(
          DataCache dataCache, GitLabInstance gitLabInstance, IModificationListener modificationListener,
@@ -32,6 +32,7 @@ namespace mrHelper.App.Forms
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
          _mergeRequestAuthor = mergeRequestAuthor;
+         _currentUser = currentUser;
 
          _git = git;
          _diffContextDepth = diffContextDepth;
@@ -44,91 +45,137 @@ namespace mrHelper.App.Forms
          _updateGit = updateGit;
          _onDiscussionModified = onDiscussionModified;
 
-         _currentUser = currentUser;
-         if (_currentUser.Id == 0)
-         {
-            throw new ArgumentException("Bad user Id");
-         }
-
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
-         DisplayFilter = new DiscussionFilter(_currentUser, _mergeRequestAuthor,
-            DiscussionFilterState.Default);
-         SystemFilter = new DiscussionFilter(_currentUser, _mergeRequestAuthor,
-            DiscussionFilterState.AllExceptSystem);
-
-         FilterPanel = new DiscussionFilterPanel(DisplayFilter.Filter,
-            () =>
-            {
-               DisplayFilter.Filter = FilterPanel.Filter;
-               updateLayout(null, true, true);
-               updateSearch();
-            });
-
-         Action onRefreshAction = new Action(() => BeginInvoke(new Action(async () => await onRefresh())));
-         Action onAddCommentAction = new Action(() =>
-            BeginInvoke(new Action(async () =>
-            {
-               await DiscussionHelper.AddCommentAsync(_mergeRequestKey, _mergeRequestTitle, _modificationListener,
-               _currentUser);
-               onRefreshAction();
-            })));
-         Action onAddThreadAction = new Action(() =>
-            BeginInvoke(new Action(async () =>
-            {
-               await DiscussionHelper.AddThreadAsync(_mergeRequestKey, _mergeRequestTitle, _modificationListener,
-               _currentUser, _dataCache);
-               onRefreshAction();
-            })));
-         ActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction,
-            _mergeRequestKey, Program.Settings);
-
-         SearchPanel = new DiscussionSearchPanel(
-            (query, forward) =>
-            {
-               if (query.Text == String.Empty)
-               {
-                  resetSearch();
-               }
-               else if (TextSearch == null || !query.Equals(TextSearch.Query))
-               {
-                  startSearch(query, true);
-               }
-               else
-               {
-                  MostRecentFocusedDiscussionControl?.Focus();
-                  continueSearch(forward);
-               }
-            });
-
-         DiscussionSortState sortState = DiscussionSortState.Default;
-         DisplaySort = new DiscussionSort(sortState);
-         SortPanel = new DiscussionSortPanel(DisplaySort.SortState,
-            () =>
-            {
-               DisplaySort.SortState = SortPanel.SortState;
-               updateLayout(null, true, true);
-               updateSearch();
-            });
-
-         FontSelectionPanel = new DiscussionFontSelectionPanel(font => applyFont(font));
-
-         Controls.Add(FilterPanel);
-         Controls.Add(ActionsPanel);
-         Controls.Add(SearchPanel);
-         Controls.Add(SortPanel);
-         Controls.Add(FontSelectionPanel);
+         createPanels();
 
          applyFont(Program.Settings.MainWindowFontSizeName);
          applyTheme(Program.Settings.VisualThemeName);
 
-         if (!renderDiscussions(discussions, false))
+         if (!renderDiscussions(Array.Empty<Discussion>(), discussions))
          {
             throw new NoDiscussionsToShow();
          }
+         _discussions = discussions;
+
+         // Make some boxes visible. This does not paint them because their parent (Form) is hidden so far.
+         updateVisibilityOfBoxes();
+      }
+
+      protected override void OnVisibleChanged(EventArgs e)
+      {
+         // Form is visible now and controls will be drawn inside base.OnVisibleChanged() call.
+         // Before drawing anything, let's put controls at their places.
+         // Note that we have to postpone onLayoutUpdate() till this moment because before this moment ClientSize
+         // Width obtains some intermediate values.
+         onLayoutUpdate();
+
+         base.OnVisibleChanged(e);
+      }
+
+      private void DiscussionsForm_Shown(object sender, EventArgs e)
+      {
+         // Subscribe to layout changes during Form lifetime
+         this.Layout += this.DiscussionsForm_Layout;
+      }
+
+      private void DiscussionsForm_Layout(object sender, LayoutEventArgs e)
+      {
+         onLayoutUpdate();
+      }
+
+      private void DiscussionsForm_FormClosing(object sender, FormClosingEventArgs e)
+      {
+         // No longer need to process Layout changes
+         this.Layout -= this.DiscussionsForm_Layout;
+      }
+
+      private void createPanels()
+      {
+         SystemFilter = new DiscussionFilter(_currentUser, _mergeRequestAuthor, DiscussionFilterState.AllExceptSystem);
+         DisplayFilter = new DiscussionFilter(_currentUser, _mergeRequestAuthor,
+            DiscussionFilterState.Default);
+         FilterPanel = new DiscussionFilterPanel(DisplayFilter.Filter, onFilterChanged);
+
+         DisplaySort = new DiscussionSort(DiscussionSortState.Default);
+         SortPanel = new DiscussionSortPanel(DisplaySort.SortState, onSortChanged);
+
+         ActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction,
+            _mergeRequestKey, Program.Settings);
+         BottomActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction,
+            _mergeRequestKey, Program.Settings);
+         SearchPanel = new DiscussionSearchPanel(onFind);
+         FontSelectionPanel = new DiscussionFontSelectionPanel(font => applyFont(font));
+
+         Controls.Add(FilterPanel);
+         Controls.Add(ActionsPanel);
+         Controls.Add(BottomActionsPanel);
+         Controls.Add(SortPanel);
+         Controls.Add(SearchPanel);
+         Controls.Add(FontSelectionPanel);
+      }
+
+      private void onSortChanged()
+      {
+         // TODO WTF Fix search in non-Default sort modes
+
+         DisplaySort.SortState = SortPanel.SortState;
+         PerformLayout(); // Recalculate locations of child controls
+         updateSearch();
+      }
+
+      private void onFind(SearchQuery query, bool forward)
+      {
+         if (query.Text == String.Empty)
+         {
+            resetSearch();
+         }
+         else if (TextSearch == null || !query.Equals(TextSearch.Query))
+         {
+            startSearch(query, true);
+         }
+         else
+         {
+            MostRecentFocusedDiscussionControl?.Focus();
+            continueSearch(forward);
+         }
+      }
+
+      private void onRefreshAction()
+      {
+         BeginInvoke(new Action(async () => await onRefresh()));
+      }
+
+      private void onAddThreadAction()
+      {
+         BeginInvoke(new Action(async () =>
+         {
+            await DiscussionHelper.AddThreadAsync(
+               _mergeRequestKey, _mergeRequestTitle, _modificationListener, _currentUser, _dataCache);
+            onRefreshAction();
+         }));
+      }
+
+      private void onAddCommentAction()
+      {
+         BeginInvoke(new Action(async () =>
+         {
+            await DiscussionHelper.AddCommentAsync(
+               _mergeRequestKey, _mergeRequestTitle, _modificationListener, _currentUser);
+            onRefreshAction();
+         }));
+      }
+
+      private void onFilterChanged()
+      {
+         DisplayFilter.Filter = FilterPanel.Filter;
+         SuspendLayout(); // Avoid repositioning child controls on each box visibility change
+         updateVisibilityOfBoxes();
+         ResumeLayout(true); // Place controls at their places
+         updateSearch();
       }
 
       private void applyTheme(string theme)
@@ -198,19 +245,53 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[DiscussionsForm] Refreshing by user request");
 
-         if (!renderDiscussions(await loadDiscussionsAsync(), true))
+         // Avoid repositioning child controls on box removing, creation and visibility change
+         SuspendLayout(); 
+
+         IEnumerable<Discussion> discussions = await loadDiscussionsAsync();
+
+         IEnumerable<Discussion> updatedDiscussions = discussions
+            .Where(discussion =>
+            {
+               Discussion cachedDiscussion = _discussions.SingleOrDefault(d => d.Id == discussion.Id);
+               if (cachedDiscussion == null)
+               {
+                  return true;
+               }
+
+               bool isResolved(Discussion d) => d.Notes.Any(note => note.Resolvable && !note.Resolved);
+               DateTime getTimestamp(Discussion d) => discussion.Notes.Select(note => note.Updated_At).Max();
+
+               return isResolved(cachedDiscussion) != isResolved(discussion)
+                   || getTimestamp(cachedDiscussion) < getTimestamp(discussion);
+            })
+            .ToArray(); // force immediate execution
+
+         IEnumerable<Discussion> deletedDiscussions = _discussions
+            .Where(cachedDiscussion =>
+            {
+               var discussion = discussions.SingleOrDefault(d => d.Id == cachedDiscussion.Id);
+               return discussion == null;
+            })
+            .ToArray(); // force immediate execution
+
+         // Some controls are deleted here and some new are created. New controls are invisible.
+         if (!renderDiscussions(deletedDiscussions, updatedDiscussions))
          {
             MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
                MessageBoxButtons.OK, MessageBoxIcon.Information);
             Close();
          }
 
-         updateSearch();
-      }
+         _discussions = discussions;
 
-      private void DiscussionsForm_Layout(object sender, LayoutEventArgs e)
-      {
-         repositionControls();
+         // Make boxes that match user filter visible
+         updateVisibilityOfBoxes();
+
+         // Put all child controls at their places
+         ResumeLayout(true);
+
+         updateSearch();
       }
 
       protected override System.Drawing.Point ScrollToControl(System.Windows.Forms.Control activeControl)
@@ -232,20 +313,22 @@ namespace mrHelper.App.Forms
             "[DiscussionsForm] Loading discussions. Hostname: {0}, Project: {1}, MR IId: {2}",
                _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId));
 
-         this.Text = DefaultCaption + "   (Loading discussions)";
-
          IEnumerable<Discussion> discussions;
          try
          {
+            this.Text = DefaultCaption + "   (Loading discussions)";
             discussions = await _dataCache.DiscussionCache.LoadDiscussions(_mergeRequestKey);
          }
          catch (DiscussionCacheException ex)
          {
-            this.Text = DefaultCaption;
             string message = "Cannot load discussions from GitLab";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return null;
+         }
+         finally
+         {
+            this.Text = DefaultCaption;
          }
 
          if (discussions == null)
@@ -260,50 +343,49 @@ namespace mrHelper.App.Forms
          return discussions;
       }
 
-      private bool renderDiscussions(IEnumerable<Discussion> discussions, bool needReposition)
+      private bool renderDiscussions(
+         IEnumerable<Discussion> deletedDiscussions,
+         IEnumerable<Discussion> updatedDiscussions)
       {
-         updateLayout(discussions, needReposition, true);
+         IEnumerable<Control> affectedControls =
+            getControlsAffectedByDiscussionChanges(deletedDiscussions, updatedDiscussions);
+         foreach (Control control in affectedControls)
+         {
+            Controls.Remove(control);
+         }
+
+         this.Text = DefaultCaption + "   (Rendering)";
+         createDiscussionBoxes(updatedDiscussions);
+         this.Text = DefaultCaption;
+
          Focus(); // Set focus to the Form
-         return discussions != null && Controls.Cast<Control>().Any((x) => x is DiscussionBox);
+         return Controls.Cast<Control>().Any((x) => x is DiscussionBox);
       }
 
-      private void updateLayout(IEnumerable<Discussion> discussions, bool needReposition, bool suspendLayout)
+      private IEnumerable<Control> getControlsAffectedByDiscussionChanges(
+         IEnumerable<Discussion> deletedDiscussions,
+         IEnumerable<Discussion> updatedDiscussions)
       {
-         this.Text = DefaultCaption + "   (Rendering)";
-
-         if (suspendLayout)
-         {
-            SuspendLayout();
-         }
-
-         if (discussions != null)
-         {
-            for (int iBox = Controls.Count - 1; iBox >= 0; --iBox)
+         return Controls
+            .Cast<Control>()
+            .Where(control => control is DiscussionBox)
+            .Where(control =>
             {
-               if (Controls[iBox] is DiscussionBox)
-               {
-                  Controls.RemoveAt(iBox);
-               }
-            }
+               bool doesControlHoldAnyOfDiscussions(IEnumerable<Discussion> discussions) =>
+                  discussions.Any(discussion => (control as DiscussionBox).Discussion.Id == discussion.Id);
+               return doesControlHoldAnyOfDiscussions(deletedDiscussions)
+                   || doesControlHoldAnyOfDiscussions(updatedDiscussions);
+            })
+            .ToArray(); // force immediate execution
+      }
 
-            createDiscussionBoxes(discussions);
-         }
-
-         if (needReposition)
-         {
-            // Reposition controls before updating their visibility to avoid flickering
-            repositionControls();
-         }
-
-         // Un-hide controls that should be visible now
-         updateVisibilityOfBoxes();
+      private void onLayoutUpdate()
+      {
+         // Reposition child controls
+         repositionControls();
 
          // Updates Scroll Bars and also updates Location property of controls in accordance with new AutoScrollPosition
          AdjustFormScrollbars(true);
-
-         ResumeLayout(false /* don't need immediate re-layout */);
-
-         this.Text = DefaultCaption;
       }
 
       private void updateVisibilityOfBoxes()
@@ -311,11 +393,14 @@ namespace mrHelper.App.Forms
          IEnumerable<DiscussionBox> boxes = Controls
             .Cast<Control>()
             .Where(x => x is DiscussionBox)
-            .Cast<DiscussionBox>();
+            .Cast<DiscussionBox>()
+            .ToArray(); // force immediate execution
 
          foreach (DiscussionBox box in boxes)
          {
-            box.Visible = DisplayFilter.DoesMatchFilter(box.Discussion);
+            bool isAllowedToDisplay = DisplayFilter.DoesMatchFilter(box.Discussion);
+            // Note that the following does not change Visible property value until Form gets Visible itself
+            box.Visible = isAllowedToDisplay;
          }
       }
 
@@ -358,21 +443,9 @@ namespace mrHelper.App.Forms
                _gitLabInstance, _modificationListener, _mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
-               _diffContextDepth, _colorScheme,
-               // pre-content-change
-               (sender) =>
-               {
-                  SuspendLayout();
-                  sender.Visible = false; // to avoid flickering on repositioning
-               },
-               // post-content-change
-               (sender, lite) =>
-               {
-                  // 'lite' means that there were no a preceding PreContentChange event, so we did not suspend layout
-                  updateLayout(null, true, lite);
-                  updateSearch();
-                  _onDiscussionModified?.Invoke();
-               }, sender => MostRecentFocusedDiscussionControl = sender)
+               _diffContextDepth, _colorScheme, onDiscussionBoxContentChanged, onDiscussionBoxContentChanging,
+               sender => MostRecentFocusedDiscussionControl = sender,
+               _htmlTooltip)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -381,13 +454,27 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void onDiscussionBoxContentChanging(DiscussionBox sender)
+      {
+         SuspendLayout(); // Avoid repositioning child controls on changing sender visibility
+         sender.Visible = true;
+         ResumeLayout(true); // Put child controls at their places
+         updateSearch();
+         _onDiscussionModified?.Invoke();
+      }
+
+      private void onDiscussionBoxContentChanged(DiscussionBox sender)
+      {
+         SuspendLayout(); // Avoid repositioning child controls on changing sender visibility
+         sender.Visible = false; // hide sender to avoid flickering on repositioning
+         ResumeLayout(false); // Don't perform layout immediately, will be done in next callback
+      }
+
       private void repositionControls()
       {
          int groupBoxMarginLeft = 5;
          int groupBoxMarginTop = 5;
-
-         // If Vertical Scroll is visible, its width is already excluded from ClientSize.Width
-         int vscrollDelta = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
+         int bottomActionsPanelMarginTop = 200;
 
          // Temporary variables to avoid changing control Location more than once
          Point filterPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
@@ -396,9 +483,9 @@ namespace mrHelper.App.Forms
          Point actionsPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point searchPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
 
+         filterPanelLocation.Offset(actionsPanelLocation.X + ActionsPanel.Size.Width, 0);
          sortPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width, 0);
          fontSelectionPanelLocation.Offset(sortPanelLocation.X + SortPanel.Size.Width, 0);
-         actionsPanelLocation.Offset(fontSelectionPanelLocation.X + FontSelectionPanel.Size.Width, 0);
          searchPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width,
                                     Math.Max(sortPanelLocation.Y + SortPanel.Size.Height,
                                              fontSelectionPanelLocation.Y + FontSelectionPanel.Size.Height));
@@ -427,7 +514,8 @@ namespace mrHelper.App.Forms
          IEnumerable<DiscussionBox> boxes = Controls
             .Cast<Control>()
             .Where(x => x is DiscussionBox)
-            .Cast<DiscussionBox>();
+            .Cast<DiscussionBox>()
+            .ToArray(); // force immediate execution
 
          // Sort boxes
          IEnumerable<DiscussionBox> sortedBoxes = DisplaySort.Sort(boxes, x => x.Discussion.Notes);
@@ -446,6 +534,9 @@ namespace mrHelper.App.Forms
             Point location = new Point(groupBoxMarginLeft, groupBoxMarginTop);
             location.Offset(0, previousBoxLocation.Y + previousBoxSize.Height);
 
+            // If Vertical Scroll is visible, its width is already excluded from ClientSize.Width
+            int vscrollDelta = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
+
             // Discussion box can take all the width except scroll bars and the left margin
             box.AdjustToWidth(ClientSize.Width - vscrollDelta - groupBoxMarginLeft);
 
@@ -453,6 +544,10 @@ namespace mrHelper.App.Forms
             previousBoxLocation = location;
             previousBoxSize = box.Size;
          }
+
+         Point bottomActionsPanelLocation = new Point(groupBoxMarginLeft, bottomActionsPanelMarginTop);
+         bottomActionsPanelLocation.Offset(0, previousBoxLocation.Y + previousBoxSize.Height);
+         BottomActionsPanel.Location = bottomActionsPanelLocation + (Size)AutoScrollPosition;
       }
 
       private void startSearch(SearchQuery query, bool highlight)
@@ -541,25 +636,35 @@ namespace mrHelper.App.Forms
       private readonly Func<MergeRequestKey, IEnumerable<Discussion>, Task> _updateGit;
       private readonly Action _onDiscussionModified;
 
-      private readonly DiscussionFilterPanel FilterPanel;
-      private readonly DiscussionFilter DisplayFilter; // filters out discussions by user preferences
-      private readonly DiscussionFilter SystemFilter; // filters out discussions with System notes
+      private DiscussionFilterPanel FilterPanel;
+      private DiscussionFilter DisplayFilter; // filters out discussions by user preferences
+      private DiscussionFilter SystemFilter; // filters out discussions with System notes
 
-      private readonly DiscussionActionsPanel ActionsPanel;
+      private DiscussionActionsPanel ActionsPanel;
+      private DiscussionActionsPanel BottomActionsPanel;
 
-      private readonly DiscussionSearchPanel SearchPanel;
+      private DiscussionSearchPanel SearchPanel;
       private TextSearch TextSearch;
       private TextSearchResult? TextSearchResult;
 
-      private readonly DiscussionSortPanel SortPanel;
-      private readonly DiscussionSort DisplaySort;
+      private DiscussionSortPanel SortPanel;
+      private DiscussionSort DisplaySort;
 
-      private readonly DiscussionFontSelectionPanel FontSelectionPanel;
+      private DiscussionFontSelectionPanel FontSelectionPanel;
 
       /// <summary>
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search
       /// </summary>
       private Control MostRecentFocusedDiscussionControl;
+      private IEnumerable<Discussion> _discussions;
+
+      private readonly HtmlToolTip _htmlTooltip = new HtmlToolTip
+      {
+         AutoPopDelay = 20000, // 20s
+         InitialDelay = 300,
+         // BaseStylesheet = Don't specify anything here because users' HTML <style> override it
+      };
+
    }
 
    internal class NoDiscussionsToShow : Exception { };

@@ -74,7 +74,7 @@ namespace mrHelper.App.Controls
       public void ClearHighlight()
       {
          DiscussionNote note = getOriginalNote();
-         if (note == null)
+         if (note == null || HighlightState == null /* TODO WTF IS IT OK?*/)
          {
             return;
          }
