@@ -35,9 +35,12 @@ namespace mrHelper.App.Forms
 
       async private void buttonOK_Click(object sender, EventArgs e)
       {
+         Hide();
+
          string body = textBoxDiscussionBody.Text;
          bool needIncludeContext = checkBoxIncludeContext.Checked;
          await _onSubmitDiscussion?.Invoke(body, needIncludeContext);
+
          Close();
       }
 
