@@ -30,7 +30,6 @@ namespace mrHelper.App.Helpers
          int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "Help");
          if (index == -1)
          {
-            Trace.TraceWarning(String.Format("[ServiceManager] Help entry is missing"));
             return String.Empty;
          }
 
@@ -56,7 +55,6 @@ namespace mrHelper.App.Helpers
          int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "Jira");
          if (index == -1)
          {
-            Trace.TraceWarning(String.Format("[ServiceManager] Jira entry is missing"));
             return String.Empty;
          }
 
@@ -69,7 +67,6 @@ namespace mrHelper.App.Helpers
          int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "ServiceMessages");
          if (index == -1)
          {
-            Trace.TraceWarning(String.Format("[ServiceManager] ServiceMessages entry is missing"));
             return String.Empty;
          }
 
