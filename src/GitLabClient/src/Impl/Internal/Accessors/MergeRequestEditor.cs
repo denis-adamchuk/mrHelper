@@ -48,8 +48,8 @@ namespace mrHelper.GitLabClient.Accessors
             using (TimeTrackingOperator timeTrackingOperator = new TimeTrackingOperator(
                _mrk.ProjectKey.HostName, _hostProperties))
             {
-               await timeTrackingOperator.AddSpanAsync(true, span, _mrk);
-               _modificationListener.OnTrackedTimeModified(_mrk, span, true);
+               await timeTrackingOperator.AddSpanAsync(add, span, _mrk);
+               _modificationListener.OnTrackedTimeModified(_mrk, span, add);
             }
          }
          catch (OperatorException ex)
