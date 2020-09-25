@@ -84,6 +84,7 @@ namespace mrHelper.App.Forms
 
       private void DiscussionsForm_Layout(object sender, LayoutEventArgs e)
       {
+         // TODO WTF Calculate number of this calls
          onLayoutUpdate();
       }
 
@@ -120,8 +121,6 @@ namespace mrHelper.App.Forms
 
       private void onSortChanged()
       {
-         // TODO WTF Fix search in non-Default sort modes
-
          DisplaySort.SortState = SortPanel.SortState;
          PerformLayout(); // Recalculate locations of child controls
          updateSearch();
@@ -390,18 +389,44 @@ namespace mrHelper.App.Forms
 
       private void updateVisibilityOfBoxes()
       {
-         IEnumerable<DiscussionBox> boxes = Controls
-            .Cast<Control>()
-            .Where(x => x is DiscussionBox)
-            .Cast<DiscussionBox>()
-            .ToArray(); // force immediate execution
-
-         foreach (DiscussionBox box in boxes)
+         foreach (DiscussionBox box in getAllBoxes())
          {
             bool isAllowedToDisplay = DisplayFilter.DoesMatchFilter(box.Discussion);
             // Note that the following does not change Visible property value until Form gets Visible itself
             box.Visible = isAllowedToDisplay;
          }
+      }
+
+      private IEnumerable<DiscussionBox> getAllBoxes()
+      {
+         return Controls
+            .Cast<Control>()
+            .Where(x => x is DiscussionBox)
+            .Cast<DiscussionBox>()
+            .ToArray(); // force immediate execution
+      }
+
+      private IEnumerable<DiscussionBox> getVisibleBoxes()
+      {
+         // Check if this box will be visible or not. The same condition as in updateVisibilityOfBoxes().
+         // Cannot check Visible property because it is not set so far, we're trying to avoid flickering.
+         return getAllBoxes()
+            .Where(box => DisplayFilter.DoesMatchFilter(box.Discussion))
+            .ToArray(); // force immediate execution
+      }
+
+      private IEnumerable<DiscussionBox> getVisibleAndSortedBoxes()
+      {
+         return DisplaySort.Sort(getVisibleBoxes(), x => x.Discussion.Notes);
+      }
+
+      private IEnumerable<ITextControl> getAllVisibleAndSortedTextControls()
+      {
+         return getVisibleAndSortedBoxes()
+            .SelectMany(box => box.Controls.Cast<Control>())
+            .Where(control => control is ITextControl)
+            .Cast<ITextControl>()
+            .ToArray(); // force immediate execution
       }
 
       private void highlightSearchResult(TextSearchResult? result)
@@ -510,26 +535,9 @@ namespace mrHelper.App.Forms
          Point previousBoxLocation = new Point();
          previousBoxLocation.Offset(0, topOffset);
 
-         // Filter out boxes
-         IEnumerable<DiscussionBox> boxes = Controls
-            .Cast<Control>()
-            .Where(x => x is DiscussionBox)
-            .Cast<DiscussionBox>()
-            .ToArray(); // force immediate execution
-
-         // Sort boxes
-         IEnumerable<DiscussionBox> sortedBoxes = DisplaySort.Sort(boxes, x => x.Discussion.Notes);
-
          // Stack boxes vertically
-         foreach (DiscussionBox box in sortedBoxes)
+         foreach (DiscussionBox box in getVisibleAndSortedBoxes())
          {
-            // Check if this box will be visible or not. The same condition as in updateVisibilityOfBoxes().
-            // Cannot check Visible property because it is not set so far, we're trying to avoid flickering.
-            if (!DisplayFilter.DoesMatchFilter(box.Discussion))
-            {
-               continue;
-            }
-
             // Temporary variable to void changing box Location more than once
             Point location = new Point(groupBoxMarginLeft, groupBoxMarginTop);
             location.Offset(0, previousBoxLocation.Y + previousBoxSize.Height);
@@ -554,8 +562,7 @@ namespace mrHelper.App.Forms
       {
          resetSearch();
 
-         TextSearch = new TextSearch(this, query, control => isSearchableControl(control));
-
+         TextSearch = new TextSearch(getAllVisibleAndSortedTextControls(), query);
          TextSearchResult? result = TextSearch.FindFirst(out int count);
          SearchPanel.DisplayFoundCount(count);
 
@@ -615,11 +622,6 @@ namespace mrHelper.App.Forms
          {
             return String.Format("Discussions for merge request \"{0}\"", _mergeRequestTitle);
          }
-      }
-
-      private bool isSearchableControl(Control control)
-      {
-         return control.Parent is DiscussionBox box && DisplayFilter.DoesMatchFilter(box.Discussion);
       }
 
       private readonly MergeRequestKey _mergeRequestKey;
