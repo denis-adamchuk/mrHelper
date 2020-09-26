@@ -242,7 +242,7 @@ namespace mrHelper.App.Controls
             htmlPanel.Height = 0;
          }
 
-         string html = getContext(_panelContextMaker, position, _diffContextDepth, fontSizePx, 2);
+         string html = getContext(_panelContextMaker, position, _diffContextDepth, fontSizePx, 2, true);
          htmlPanel.Text = html;
 
          if (htmlPanel.Visible)
@@ -250,12 +250,12 @@ namespace mrHelper.App.Controls
             resizeLimitedWidthHtmlPanel(htmlPanel, prevWidth);
          }
 
-         string tooltipHtml = getContext(_tooltipContextMaker, position, _tooltipContextDepth, fontSizePx, 2);
+         string tooltipHtml = getContext(_tooltipContextMaker, position, _tooltipContextDepth, fontSizePx, 2, false);
          _htmlTooltip.SetToolTip(htmlPanel, tooltipHtml);
       }
 
       private string getContext(IContextMaker contextMaker, DiffPosition position, ContextDepth depth,
-         double fontSizePx, int rowsVPaddingPx)
+         double fontSizePx, int rowsVPaddingPx, bool fullWidth)
       {
          if (contextMaker == null)
          {
@@ -265,7 +265,7 @@ namespace mrHelper.App.Controls
          try
          {
             DiffContext context = contextMaker.GetContext(position, depth);
-            return DiffContextFormatter.GetHtml(context, fontSizePx, rowsVPaddingPx);
+            return DiffContextFormatter.GetHtml(context, fontSizePx, rowsVPaddingPx, fullWidth);
          }
          catch (Exception ex)
          {

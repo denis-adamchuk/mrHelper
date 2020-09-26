@@ -12,7 +12,7 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException if DiffContext is invalid
       /// </summary>
-      public static string GetHtml(DiffContext context, double fontSizePx, int rowsVPaddingPx)
+      public static string GetHtml(DiffContext context, double fontSizePx, int rowsVPaddingPx, bool fullWidth)
       {
          return String.Format(
             @"<html>
@@ -25,12 +25,12 @@ namespace mrHelper.Core.Context
                   {1}
                <body>
              </html>",
-            getStylesheet(fontSizePx, rowsVPaddingPx), getTable(context));
+            getStylesheet(fontSizePx, rowsVPaddingPx, fullWidth), getTable(context));
       }
 
-      public static string getStylesheet(double fontSizePx, int rowsVPaddingPx)
+      public static string getStylesheet(double fontSizePx, int rowsVPaddingPx, bool fullWidth)
       {
-         return loadStylesFromCSS() + getCustomStyle(fontSizePx, rowsVPaddingPx);
+         return loadStylesFromCSS() + getCustomStyle(fontSizePx, rowsVPaddingPx, fullWidth);
       }
 
       private static string getTable(DiffContext ctx)
@@ -51,7 +51,7 @@ namespace mrHelper.Core.Context
          return mrHelper.Core.Properties.Resources.DiffContextCSS;
       }
 
-      private static string getCustomStyle(double fontSizePx, int rowsVPaddingPx)
+      private static string getCustomStyle(double fontSizePx, int rowsVPaddingPx, bool fullWidth)
       {
          return string.Format(@"
             table {{
@@ -60,7 +60,11 @@ namespace mrHelper.Core.Context
             td {{
                padding-top: {1}px;
                padding-bottom: {1}px;
-            }}", fontSizePx, rowsVPaddingPx);
+            }}
+            table {{
+               width: {2};
+            }}",
+            fontSizePx, rowsVPaddingPx, fullWidth ? "100%" : "unset");
       }
 
       private static string getTableBody(DiffContext ctx)

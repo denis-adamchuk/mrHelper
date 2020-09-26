@@ -120,7 +120,7 @@ namespace mrHelper.App.Forms
 
          Debug.Assert(context.HasValue);
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanelContext);
-         return DiffContextFormatter.GetHtml(context.Value, fontSizePx, 2);
+         return DiffContextFormatter.GetHtml(context.Value, fontSizePx, 2, true);
       }
 
       private void createWPFTextBox()

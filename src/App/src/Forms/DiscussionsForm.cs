@@ -84,8 +84,8 @@ namespace mrHelper.App.Forms
 
       private void DiscussionsForm_Layout(object sender, LayoutEventArgs e)
       {
-         // TODO WTF Calculate number of this calls
          onLayoutUpdate();
+         Trace.TraceInformation("DiscussionsForm_Layout with e = {0}", e.ToString());
       }
 
       private void DiscussionsForm_FormClosing(object sender, FormClosingEventArgs e)
