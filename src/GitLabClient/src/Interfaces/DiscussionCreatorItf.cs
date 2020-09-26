@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using GitLabSharp.Accessors;
+using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
 
 namespace mrHelper.GitLabClient
@@ -20,7 +21,7 @@ namespace mrHelper.GitLabClient
    {
       Task CreateNoteAsync(CreateNewNoteParameters parameters);
 
-      Task CreateDiscussionAsync(NewDiscussionParameters parameters, bool revertOnError);
+      Task<Discussion> CreateDiscussionAsync(NewDiscussionParameters parameters, bool revertOnError);
    }
 }
 

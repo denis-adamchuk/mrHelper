@@ -119,7 +119,7 @@ namespace mrHelper.App
                   case LaunchOptions.LaunchMode.Normal:
                      if (context.IsRunningSingleInstance)
                      {
-                        onLaunchMainInstace(options);
+                        onLaunchMainInstance(options);
                      }
                      else
                      {
@@ -139,7 +139,7 @@ namespace mrHelper.App
          }
       }
 
-      private static void onLaunchMainInstace(LaunchOptions options)
+      private static void onLaunchMainInstance(LaunchOptions options)
       {
          Application.EnableVisualStyles();
          Application.SetCompatibleTextRenderingDefault(false);

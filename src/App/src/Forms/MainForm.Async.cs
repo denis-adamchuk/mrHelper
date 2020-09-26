@@ -247,8 +247,8 @@ namespace mrHelper.App.Forms
 
       async private Task onNewDiscussionAsync(MergeRequestKey mrk, string title)
       {
-         bool res = await DiscussionHelper.AddThreadAsync(mrk, title, _modificationNotifier,
-            getCurrentUser(), getDataCache(!isSearchMode()));
+         bool res = (await DiscussionHelper.AddThreadAsync(mrk, title, _modificationNotifier,
+            getCurrentUser(), getDataCache(!isSearchMode()))) != null;
          labelWorkflowStatus.Text = res ? "Added a discussion thread" : "Discussion thread is not added";
       }
 
@@ -299,7 +299,7 @@ namespace mrHelper.App.Forms
             return null;
          }
 
-         bool anyDiscussions = discussions == null || !discussions.Any();
+         bool anyDiscussions = discussions != null && discussions.Any();
          labelWorkflowStatus.Text = anyDiscussions
             ? "Discussions loaded"
             : "There are no discussions in this Merge Request";

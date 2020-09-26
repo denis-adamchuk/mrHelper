@@ -54,7 +54,7 @@ namespace mrHelper.App.Forms.Helpers
          }
       }
 
-      async internal static Task<bool> AddThreadAsync(GitLabClient.MergeRequestKey mrk, string title,
+      async internal static Task<Discussion> AddThreadAsync(GitLabClient.MergeRequestKey mrk, string title,
          IModificationListener modificationListener, User currentUser, DataCache dataCache)
       {
          string uploadsPrefix = String.Format("{0}/{1}",
@@ -71,34 +71,35 @@ namespace mrHelper.App.Forms.Helpers
                {
                   MessageBox.Show("Discussion body cannot be empty", "Warning",
                      MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                  return false;
+                  return null;
                }
 
                if (dataCache == null)
                {
                   Debug.Assert(false);
-                  return false;
+                  return null;
                }
 
+               Discussion discussion = null;
                try
                {
                   GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
                   IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
                      gitLabInstance, modificationListener, mrk, currentUser);
-                  await creator.CreateDiscussionAsync(new NewDiscussionParameters(form.Body, null), false);
+                  discussion = await creator.CreateDiscussionAsync(new NewDiscussionParameters(form.Body, null), false);
                }
                catch (DiscussionCreatorException)
                {
                   MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  return false;
+                  return null;
                }
 
                dataCache.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null);
-               return true;
+               return discussion;
             }
 
-            return false;
+            return null;
          }
       }
    }

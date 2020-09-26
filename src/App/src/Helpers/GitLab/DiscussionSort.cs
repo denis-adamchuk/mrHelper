@@ -33,10 +33,14 @@ namespace mrHelper.App.Helpers
          switch (SortState)
          {
             case DiscussionSortState.Default:
-               return discussions;
+               return discussions
+                  .Where(x => fnGetNotes((dynamic)x).Count > 0)
+                  .OrderBy(x => fnGetNotes((dynamic)x)[0].Created_At);
 
             case DiscussionSortState.Reverse:
-               return discussions.Reverse();
+               return discussions
+                  .Where(x => fnGetNotes((dynamic)x).Count > 0)
+                  .OrderByDescending(x => fnGetNotes((dynamic)x)[0].Created_At);
 
             case DiscussionSortState.ByReviewer:
                return discussions

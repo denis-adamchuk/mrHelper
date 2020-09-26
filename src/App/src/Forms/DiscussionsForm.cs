@@ -55,11 +55,12 @@ namespace mrHelper.App.Forms
          applyFont(Program.Settings.MainWindowFontSizeName);
          applyTheme(Program.Settings.VisualThemeName);
 
-         if (!renderDiscussions(Array.Empty<Discussion>(), discussions))
+         IEnumerable<Discussion> nonSystemDiscussions = discussions
+            .Where(discussion => SystemFilter.DoesMatchFilter(discussion));
+         if (!renderDiscussions(Array.Empty<Discussion>(), nonSystemDiscussions))
          {
             throw new NoDiscussionsToShow();
          }
-         _discussions = discussions;
 
          // Make some boxes visible. This does not paint them because their parent (Form) is hidden so far.
          updateVisibilityOfBoxes();
@@ -85,7 +86,6 @@ namespace mrHelper.App.Forms
       private void DiscussionsForm_Layout(object sender, LayoutEventArgs e)
       {
          onLayoutUpdate();
-         Trace.TraceInformation("DiscussionsForm_Layout with e = {0}", e.ToString());
       }
 
       private void DiscussionsForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -152,9 +152,12 @@ namespace mrHelper.App.Forms
       {
          BeginInvoke(new Action(async () =>
          {
-            await DiscussionHelper.AddThreadAsync(
+            Discussion discussion = await DiscussionHelper.AddThreadAsync(
                _mergeRequestKey, _mergeRequestTitle, _modificationListener, _currentUser, _dataCache);
-            onRefreshAction();
+            if (discussion != null)
+            {
+               renderDiscussionsWithSuspendedLayout(Array.Empty<Discussion>(), new Discussion[] { discussion });
+            }
          }));
       }
 
@@ -244,53 +247,35 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[DiscussionsForm] Refreshing by user request");
 
-         // Avoid repositioning child controls on box removing, creation and visibility change
-         SuspendLayout(); 
+         bool isResolved(Discussion d) => d.Notes.Any(note => note.Resolvable && !note.Resolved);
+         DateTime getTimestamp(Discussion d) => d.Notes.Select(note => note.Updated_At).Max();
+         int getNoteCount(Discussion d) => d.Notes.Count();
 
          IEnumerable<Discussion> discussions = await loadDiscussionsAsync();
+         IEnumerable<Discussion> nonSystemDiscussions = discussions
+            .Where(discussion => SystemFilter.DoesMatchFilter(discussion));
+         IEnumerable<Discussion> cachedDiscussions = getAllBoxes().Select(box => box.Discussion);
 
-         IEnumerable<Discussion> updatedDiscussions = discussions
+         IEnumerable<Discussion> updatedDiscussions = nonSystemDiscussions
             .Where(discussion =>
             {
-               Discussion cachedDiscussion = _discussions.SingleOrDefault(d => d.Id == discussion.Id);
-               if (cachedDiscussion == null)
-               {
-                  return true;
-               }
-
-               bool isResolved(Discussion d) => d.Notes.Any(note => note.Resolvable && !note.Resolved);
-               DateTime getTimestamp(Discussion d) => discussion.Notes.Select(note => note.Updated_At).Max();
-
-               return isResolved(cachedDiscussion) != isResolved(discussion)
-                   || getTimestamp(cachedDiscussion) < getTimestamp(discussion);
+               Discussion cachedDiscussion = cachedDiscussions.SingleOrDefault(d => d.Id == discussion.Id);
+               return cachedDiscussion == null ||
+                     (isResolved(cachedDiscussion) != isResolved(discussion)
+                   || getTimestamp(cachedDiscussion) != getTimestamp(discussion)
+                   || getNoteCount(cachedDiscussion) != getNoteCount(discussion));
             })
             .ToArray(); // force immediate execution
 
-         IEnumerable<Discussion> deletedDiscussions = _discussions
-            .Where(cachedDiscussion =>
-            {
-               var discussion = discussions.SingleOrDefault(d => d.Id == cachedDiscussion.Id);
-               return discussion == null;
-            })
+         IEnumerable<Discussion> deletedDiscussions = cachedDiscussions
+            .Where(cachedDiscussion => nonSystemDiscussions.SingleOrDefault(d => d.Id == cachedDiscussion.Id) == null)
             .ToArray(); // force immediate execution
 
-         // Some controls are deleted here and some new are created. New controls are invisible.
-         if (!renderDiscussions(deletedDiscussions, updatedDiscussions))
+         if (deletedDiscussions.Any() || updatedDiscussions.Any())
          {
-            MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
-               MessageBoxButtons.OK, MessageBoxIcon.Information);
-            Close();
+            renderDiscussionsWithSuspendedLayout(deletedDiscussions, updatedDiscussions);
+            updateSearch();
          }
-
-         _discussions = discussions;
-
-         // Make boxes that match user filter visible
-         updateVisibilityOfBoxes();
-
-         // Put all child controls at their places
-         ResumeLayout(true);
-
-         updateSearch();
       }
 
       protected override System.Drawing.Point ScrollToControl(System.Windows.Forms.Control activeControl)
@@ -340,6 +325,29 @@ namespace mrHelper.App.Forms
          this.Text = DefaultCaption;
 
          return discussions;
+      }
+
+      private void renderDiscussionsWithSuspendedLayout(
+         IEnumerable<Discussion> deletedDiscussions,
+         IEnumerable<Discussion> updatedDiscussions)
+      {
+         // Avoid repositioning child controls on box removing, creation and visibility change
+         SuspendLayout();
+
+         // Some controls are deleted here and some new are created. New controls are invisible.
+         if (!renderDiscussions(deletedDiscussions, updatedDiscussions))
+         {
+            MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
+               MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Close();
+            return;
+         }
+
+         // Make boxes that match user filter visible
+         updateVisibilityOfBoxes();
+
+         // Put all child controls at their places
+         ResumeLayout(true);
       }
 
       private bool renderDiscussions(
@@ -409,7 +417,7 @@ namespace mrHelper.App.Forms
       private IEnumerable<DiscussionBox> getVisibleBoxes()
       {
          // Check if this box will be visible or not. The same condition as in updateVisibilityOfBoxes().
-         // Cannot check Visible property because it is not set so far, we're trying to avoid flickering.
+         // Cannot check Visible property because it might be temporarily unset to avoid flickering.
          return getAllBoxes()
             .Where(box => DisplayFilter.DoesMatchFilter(box.Discussion))
             .ToArray(); // force immediate execution
@@ -459,16 +467,11 @@ namespace mrHelper.App.Forms
       {
          foreach (Discussion discussion in discussions)
          {
-            if (!SystemFilter.DoesMatchFilter(discussion))
-            {
-               continue;
-            }
-
             SingleDiscussionAccessor accessor = Shortcuts.GetSingleDiscussionAccessor(
                _gitLabInstance, _modificationListener, _mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
-               _diffContextDepth, _colorScheme, onDiscussionBoxContentChanged, onDiscussionBoxContentChanging,
+               _diffContextDepth, _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
                sender => MostRecentFocusedDiscussionControl = sender,
                _htmlTooltip)
             {
@@ -482,17 +485,17 @@ namespace mrHelper.App.Forms
       private void onDiscussionBoxContentChanging(DiscussionBox sender)
       {
          SuspendLayout(); // Avoid repositioning child controls on changing sender visibility
-         sender.Visible = true;
-         ResumeLayout(true); // Put child controls at their places
-         updateSearch();
-         _onDiscussionModified?.Invoke();
+         sender.Visible = false; // hide sender to avoid flickering on repositioning
+         ResumeLayout(false); // Don't perform layout immediately, will be done in next callback
       }
 
       private void onDiscussionBoxContentChanged(DiscussionBox sender)
       {
          SuspendLayout(); // Avoid repositioning child controls on changing sender visibility
-         sender.Visible = false; // hide sender to avoid flickering on repositioning
-         ResumeLayout(false); // Don't perform layout immediately, will be done in next callback
+         sender.Visible = true;
+         ResumeLayout(true); // Put child controls at their places
+         updateSearch();
+         _onDiscussionModified?.Invoke();
       }
 
       private void repositionControls()
@@ -658,7 +661,6 @@ namespace mrHelper.App.Forms
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search
       /// </summary>
       private Control MostRecentFocusedDiscussionControl;
-      private IEnumerable<Discussion> _discussions;
 
       private readonly HtmlToolTip _htmlTooltip = new HtmlToolTip
       {

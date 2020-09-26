@@ -941,30 +941,22 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         Color oldColor = noteControl.BackColor;
-         ContextMenu oldMenu = noteControl.ContextMenu;
-         disableNoteControl(noteControl); // let's make a visual effect similar to other modifications
+         disableAllNoteControls();
 
-         DiscussionNote newNote;
+         Discussion discussion = null;
          try
          {
-            newNote = await _editor.ModifyNoteBodyAsync(oldNote.Id, newText);
+            await _editor.ModifyNoteBodyAsync(oldNote.Id, newText);
          }
          catch (DiscussionEditorException ex)
          {
             string message = "Cannot update discussion text";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            newNote = oldNote;
+            discussion = Discussion;
          }
 
-         if (!noteControl.IsDisposed && newNote != null)
-         {
-            enableNoteControl(noteControl, oldColor, oldMenu, newNote);
-            setDiscussionNoteText(noteControl, newNote);
-         }
-
-         _onContentChanged();
+         await refreshDiscussion(discussion);
       }
 
       async private Task onDeleteNoteAsync(DiscussionNote note)
@@ -1050,18 +1042,18 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void disableNoteControl(Control noteControl)
-      {
-         if (noteControl != null)
-         {
-            noteControl.BackColor = Color.LightGray;
-            noteControl.ContextMenu = new ContextMenu();
-            noteControl.Tag = null;
-         }
-      }
-
       private void disableAllNoteControls()
       {
+         void disableNoteControl(Control noteControl)
+         {
+            if (noteControl != null)
+            {
+               noteControl.BackColor = Color.LightGray;
+               noteControl.ContextMenu = new ContextMenu();
+               noteControl.Tag = null;
+            }
+         }
+
          foreach (Control textBox in _textboxesNotes)
          {
             disableNoteControl(textBox);
