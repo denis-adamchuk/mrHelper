@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
@@ -66,6 +65,10 @@ namespace mrHelper.App.Forms
          {
             showMergeInProgress();
             await fixupSquashFlagAsync();
+            if (!IsHandleCreated)
+            {
+               return; // if a window is closed by now
+            }
             MergeRequest mergeRequest = await mergeAsync(getSquashCommitMessage(), _isRemoteBranchDeletionNeeded.Value);
             postProcessMerge(mergeRequest);
          }
@@ -80,16 +83,6 @@ namespace mrHelper.App.Forms
             }
             reportErrorToUser(ex);
          }
-      }
-
-      private async Task fixupSquashFlagAsync()
-      {
-         // Modify MR manually here because for some reason "squash" query parameter
-         // sometimes does not affect the merge. For instance, this occurs when
-         // Merge_Error is already set to "Failed to squash", in this case simply
-         // set "squash=false" has no effect.
-         MergeRequest mergeRequest = await setSquashAsync(_isSquashNeeded.Value);
-         Debug.Assert(mergeRequest.Squash == _isSquashNeeded.Value);
       }
 
       private void linkLabelOpenGitExtensions_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
