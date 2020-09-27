@@ -202,7 +202,7 @@ namespace mrHelper.App.Forms
             }
             else if (parsed is ParsedNewMergeRequestUrl parsedNewMergeRequestUrl)
             {
-               if (getHostName() != parsedNewMergeRequestUrl.ProjectKey.HostName)
+               if (getHostName() != parsedNewMergeRequestUrl.ProjectKey.HostName || getCurrentUser() == null)
                {
                   throwOnUnknownHost(parsedNewMergeRequestUrl.ProjectKey.HostName);
                   await restartWorkflowByUrlAsync(parsedNewMergeRequestUrl.ProjectKey.HostName);
@@ -252,8 +252,13 @@ namespace mrHelper.App.Forms
             parsedNewMergeRequestUrl.TargetBranchCandidates, defaultProperties.AssigneeUsername,
             defaultProperties.IsSquashNeeded, defaultProperties.IsBranchDeletionNeeded);
          var fullProjectList = _liveDataCache?.ProjectCache?.GetProjects() ?? Array.Empty<Project>();
+         var fullUserList = _liveDataCache?.UserCache?.GetUsers() ?? Array.Empty<User>();
+         if (!fullUserList.Any())
+         {
+            Trace.TraceInformation("[MainForm] User list is not ready at the moment of creating a MR from URL");
+         }
 
-         createNewMergeRequest(getHostName(), getCurrentUser(), initialProperties, fullProjectList);
+         createNewMergeRequest(getHostName(), getCurrentUser(), initialProperties, fullProjectList, fullUserList);
       }
 
       private class UrlConnectionException : ExceptionEx

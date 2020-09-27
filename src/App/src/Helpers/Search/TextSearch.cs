@@ -87,11 +87,10 @@ namespace mrHelper.App.Helpers
 
    internal class TextSearch
    {
-      internal TextSearch(Control container, SearchQuery query, Func<Control, bool> isSearchableControl)
+      internal TextSearch(IEnumerable<ITextControl> allControls, SearchQuery query)
       {
          Query = query;
-         _allControls = CommonControls.Tools.WinFormsHelpers.GetAllSubControls(container).ToArray();
-         _isSearchableControl = isSearchableControl;
+         _allControls = allControls.ToArray();
       }
 
       internal SearchQuery Query { get; private set; }
@@ -101,20 +100,17 @@ namespace mrHelper.App.Helpers
          count = 0;
          TextSearchResult? result = new TextSearchResult?();
 
-         foreach (Control control in _allControls)
+         foreach (ITextControl textControl in _allControls)
          {
-            if (_isSearchableControl(control) && control is ITextControl textControl)
+            int startPosition = 0;
+            while (doesMatchText(textControl, Query, true, startPosition, out int insideControlPosition))
             {
-               int startPosition = 0;
-               while (doesMatchText(textControl, Query, true, startPosition, out int insideControlPosition))
+               if (!result.HasValue)
                {
-                  if (!result.HasValue)
-                  {
-                     result = new TextSearchResult(textControl, insideControlPosition);
-                  }
-                  startPosition = insideControlPosition + 1;
-                  ++count;
+                  result = new TextSearchResult(textControl, insideControlPosition);
                }
+               startPosition = insideControlPosition + 1;
+               ++count;
             }
          }
 
@@ -140,10 +136,8 @@ namespace mrHelper.App.Helpers
       internal TextSearchResult? find(int iStart, int iEnd, int iCurrent, int iCurrentInsideControlPosition,
          bool forward)
       {
-         Control currentControl = _allControls[iCurrent];
-         if (_isSearchableControl(currentControl)
-            && currentControl is ITextControl currentTextControl
-            && doesMatchText(currentTextControl, Query, forward, iCurrentInsideControlPosition,
+         ITextControl currentTextControl = _allControls[iCurrent];
+         if (doesMatchText(currentTextControl, Query, forward, iCurrentInsideControlPosition,
                out int insideControlPosition))
          {
             return new TextSearchResult(currentTextControl, insideControlPosition);
@@ -151,10 +145,8 @@ namespace mrHelper.App.Helpers
 
          for (int iControl = iCurrent + (forward ? 1 : -1); iControl != iEnd; iControl += (forward ? 1 : -1))
          {
-            Control control = _allControls[iControl];
-            if (_isSearchableControl(control)
-               && control is ITextControl textControl
-               && doesMatchText(textControl, Query, forward, forward ? 0 : textControl.Text.Length,
+            ITextControl textControl = _allControls[iControl];
+            if (doesMatchText(textControl, Query, forward, forward ? 0 : textControl.Text.Length,
                   out insideControlPosition))
             {
                return new TextSearchResult(textControl, insideControlPosition);
@@ -163,10 +155,8 @@ namespace mrHelper.App.Helpers
 
          for (int iControl = iStart; iControl != iCurrent + (forward ? 1 : -1); iControl += (forward ? 1 : -1))
          {
-            Control control = _allControls[iControl];
-            if (_isSearchableControl(control)
-               && control is ITextControl textControl
-               && doesMatchText(textControl, Query, forward, forward ? 0 : textControl.Text.Length,
+            ITextControl textControl = _allControls[iControl];
+            if (doesMatchText(textControl, Query, forward, forward ? 0 : textControl.Text.Length,
                   out insideControlPosition))
             {
                return new TextSearchResult(textControl, insideControlPosition);
@@ -190,8 +180,7 @@ namespace mrHelper.App.Helpers
             : SearchHelper.SearchBackward(control, query, startPosition, out insideControlPosition);
       }
 
-      private readonly Control[] _allControls;
-      private readonly Func<Control, bool> _isSearchableControl;
+      private readonly ITextControl[] _allControls;
    }
 }
 

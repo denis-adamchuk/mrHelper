@@ -9,7 +9,7 @@ namespace mrHelper.App.Forms
    internal partial class TextEditForm : CustomFontForm
    {
       internal TextEditForm(string caption, string initialText, bool editable, bool multiline,
-         Control extraActionsControl)
+         Control extraActionsControl, string uploadsPrefix)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
@@ -17,6 +17,7 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
          Text = caption;
          labelNoteAboutInvisibleCharacters.Text = Constants.WarningOnUnescapedMarkdown;
+         _uploadsPrefix = uploadsPrefix;
 
          createWPFTextBox(initialText, editable, multiline);
 
@@ -66,7 +67,7 @@ namespace mrHelper.App.Forms
                Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(htmlPanelPreview));
 
             Markdig.MarkdownPipeline pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
-            string body = MarkDownUtils.ConvertToHtml(textBox.Text, String.Empty, pipeline);
+            string body = MarkDownUtils.ConvertToHtml(textBox.Text, _uploadsPrefix, pipeline);
             htmlPanelPreview.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
          }
       }
@@ -97,5 +98,6 @@ namespace mrHelper.App.Forms
       }
 
       private static int MaximumTextLengthTocancelWithoutConfirmation = 5;
+      private readonly string _uploadsPrefix;
    }
 }

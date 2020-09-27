@@ -38,8 +38,8 @@ namespace mrHelper.App.Forms
          _clipboardCheckingTimer?.Stop();
          _clipboardCheckingTimer?.Dispose();
 
-         _projectCacheCheckTimer?.Stop();
-         _projectCacheCheckTimer?.Dispose();
+         _projectAndUserCacheCheckTimer?.Stop();
+         _projectAndUserCacheCheckTimer?.Dispose();
 
          // This allows to handle all pending invocations that other threads are
          // already ready to make before we dispose ourselves

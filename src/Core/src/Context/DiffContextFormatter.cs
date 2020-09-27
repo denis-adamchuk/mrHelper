@@ -7,48 +7,51 @@ namespace mrHelper.Core.Context
    /// <summary>
    /// Renders DiffContext objects into HTML web page using CSS from resources
    /// </summary>
-   public class DiffContextFormatter
+   public static class DiffContextFormatter
    {
-      public DiffContextFormatter(double fontSizePx, int rowsVPaddingPx)
-      {
-         _fontSizePx = fontSizePx;
-         _rowsVPaddingPx = rowsVPaddingPx;
-      }
-
-      public string GetStylesheet()
-      {
-         return loadStylesFromCSS() + getCustomStyle(_fontSizePx, _rowsVPaddingPx);
-      }
-
       /// <summary>
       /// Throws ArgumentException if DiffContext is invalid
       /// </summary>
-      public string GetBody(DiffContext context)
+      public static string GetHtml(DiffContext context, double fontSizePx, int rowsVPaddingPx, bool fullWidth)
       {
-         return getContextHTML(context);
+         return String.Format(
+            @"<html>
+               <head>
+                  <style>
+                     {0}
+                  </style>
+               </head>
+               <body>
+                  {1}
+               <body>
+             </html>",
+            getStylesheet(fontSizePx, rowsVPaddingPx, fullWidth), getTable(context));
       }
 
-      private string getContextHTML(DiffContext ctx)
+      public static string getStylesheet(double fontSizePx, int rowsVPaddingPx, bool fullWidth)
+      {
+         return loadStylesFromCSS() + getCustomStyle(fontSizePx, rowsVPaddingPx, fullWidth);
+      }
+
+      private static string getTable(DiffContext ctx)
       {
          string commonBegin = @"
-               <body>
                   <table cellspacing=""0"" cellpadding=""0"">
                       <tbody>";
 
          string commonEnd = @"
                       </tbody>
-                   </table>
-                </body>";
+                   </table>";
 
          return String.Format("{0} {1} {2}", commonBegin, getTableBody(ctx), commonEnd);
       }
 
-      private string loadStylesFromCSS()
+      private static string loadStylesFromCSS()
       {
          return mrHelper.Core.Properties.Resources.DiffContextCSS;
       }
 
-      private string getCustomStyle(double fontSizePx, int rowsVPaddingPx)
+      private static string getCustomStyle(double fontSizePx, int rowsVPaddingPx, bool fullWidth)
       {
          return string.Format(@"
             table {{
@@ -57,10 +60,14 @@ namespace mrHelper.Core.Context
             td {{
                padding-top: {1}px;
                padding-bottom: {1}px;
-            }}", fontSizePx, rowsVPaddingPx);
+            }}
+            table {{
+               width: {2};
+            }}",
+            fontSizePx, rowsVPaddingPx, fullWidth ? "100%" : "unset");
       }
 
-      private string getTableBody(DiffContext ctx)
+      private static string getTableBody(DiffContext ctx)
       {
          bool highlightSelected = ctx.Lines.Count() > 1;
          StringBuilder body = new StringBuilder();
@@ -89,17 +96,17 @@ namespace mrHelper.Core.Context
          return body.ToString();
       }
 
-      private string getLeftLineNumber(DiffContext.Line line)
+      private static string getLeftLineNumber(DiffContext.Line line)
       {
          return line.Left?.Number.ToString() ?? "";
       }
 
-      private string getRightLineNumber(DiffContext.Line line)
+      private static string getRightLineNumber(DiffContext.Line line)
       {
          return line.Right?.Number.ToString() ?? "";
       }
 
-      private string getDiffCellClass(DiffContext.Line line)
+      private static string getDiffCellClass(DiffContext.Line line)
       {
          if (line.Left.HasValue && line.Right.HasValue)
          {
@@ -117,7 +124,7 @@ namespace mrHelper.Core.Context
          throw new ArgumentException(String.Format("Bad context line: {0}", line.ToString()));
       }
 
-      private string getCode(DiffContext.Line line)
+      private static string getCode(DiffContext.Line line)
       {
          if (line.Text.Length == 0)
          {
@@ -136,9 +143,6 @@ namespace mrHelper.Core.Context
          result.Append(System.Net.WebUtility.HtmlEncode(trimmed));
          return result.ToString();
       }
-
-      private readonly double _fontSizePx;
-      private readonly int _rowsVPaddingPx;
    }
 }
 

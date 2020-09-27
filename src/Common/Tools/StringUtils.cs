@@ -115,7 +115,7 @@ namespace mrHelper.Common.Tools
 
       public static WordInfo GetCurrentWord(string text, int position)
       {
-         if (position < 0 || position >= text.Length || text.Length == 0 || text[position] == ' ')
+         if (position < 0 || position >= text.Length || text.Length == 0 || Char.IsWhiteSpace(text[position]))
          {
             return WordInfo.Invalid;
          }

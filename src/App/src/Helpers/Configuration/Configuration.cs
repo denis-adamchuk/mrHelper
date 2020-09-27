@@ -113,7 +113,7 @@ namespace mrHelper.App.Helpers
       private static readonly int    LogFilesToKeepDefaultValue = 10;
 
       private static readonly string RevisionsToKeepKeyName = "FileStorageRevisionsToKeep";
-      private static readonly int    RevisionsToKeepDefaultValue = 50;
+      private static readonly int    RevisionsToKeepDefaultValue = 100;
 
       private static readonly string ComparisonsToKeepKeyName = "FileStorageComparisonsToKeep";
       private static readonly int    ComparisonsToKeepDefaultValue = 200;

@@ -82,7 +82,7 @@ namespace mrHelper.App.Forms
       private void showDiscussionForm(GitLabInstance gitLabInstance, DataCache dataCache, ILocalCommitStorage storage,
          User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author)
       {
-         if (currentUser == null || discussions == null || author == null)
+         if (currentUser == null || discussions == null || author == null || currentUser.Id == 0)
          {
             return;
          }
@@ -101,10 +101,8 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
-            IAsyncGitCommandService git = storage?.Git;
-
             DiscussionsForm discussionsForm = new DiscussionsForm(dataCache, gitLabInstance, _modificationNotifier,
-               git, currentUser, mrk, discussions, title, author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
+               storage?.Git, currentUser, mrk, discussions, title, author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
                async (key, discussionsUpdated) =>
             {
                if (storage != null && storage.Updater != null)
@@ -136,14 +134,6 @@ namespace mrHelper.App.Forms
          {
             MessageBox.Show("No discussions to show.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             labelWorkflowStatus.Text = "No discussions to show";
-            return;
-         }
-         catch (ArgumentException ex)
-         {
-            string errorMessage = "Cannot show Discussions form";
-            ExceptionHandlers.Handle(errorMessage, ex);
-            MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            labelWorkflowStatus.Text = "Cannot show Discussions";
             return;
          }
 
@@ -251,83 +241,15 @@ namespace mrHelper.App.Forms
 
       async private Task onAddCommentAsync(MergeRequestKey mrk, string title)
       {
-         string caption = String.Format("Add comment to merge request \"{0}\"", title);
-         DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
-         using (TextEditForm form = new TextEditForm(caption, "", true, true, actions))
-         {
-            actions.SetTextbox(form.TextBox);
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-               if (form.Body.Length == 0)
-               {
-                  MessageBox.Show("Comment body cannot be empty", "Warning",
-                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                  return;
-               }
-
-               labelWorkflowStatus.Text = "Adding a comment...";
-               try
-               {
-                  GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-                     gitLabInstance, _modificationNotifier, mrk, getCurrentUser());
-                  await creator.CreateNoteAsync(new CreateNewNoteParameters(form.Body));
-               }
-               catch (DiscussionCreatorException)
-               {
-                  MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
-                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  labelWorkflowStatus.Text = "Cannot create a discussion";
-                  return;
-               }
-               labelWorkflowStatus.Text = "Comment added";
-            }
-         }
+         bool res = await DiscussionHelper.AddCommentAsync(mrk, title, _modificationNotifier, getCurrentUser());
+         labelWorkflowStatus.Text = res ? "Added a comment" : "Comment is not added";
       }
 
       async private Task onNewDiscussionAsync(MergeRequestKey mrk, string title)
       {
-         string caption = String.Format("Create a new thread in merge request \"{0}\"", title);
-         DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
-         using (TextEditForm form = new TextEditForm(caption, "", true, true, actions))
-         {
-            actions.SetTextbox(form.TextBox);
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-               if (form.Body.Length == 0)
-               {
-                  MessageBox.Show("Discussion body cannot be empty", "Warning",
-                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                  return;
-               }
-
-               DataCache dataCache = getDataCache(!isSearchMode());
-               if (dataCache == null)
-               {
-                  Debug.Assert(false);
-                  return;
-               }
-
-               labelWorkflowStatus.Text = "Creating a discussion...";
-               try
-               {
-                  GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-                     gitLabInstance, _modificationNotifier, mrk, getCurrentUser());
-                  await creator.CreateDiscussionAsync(new NewDiscussionParameters(form.Body, null), false);
-               }
-               catch (DiscussionCreatorException)
-               {
-                  MessageBox.Show("Cannot create a discussion at GitLab. Check your connection and try again",
-                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  labelWorkflowStatus.Text = "Cannot create a discussion";
-                  return;
-               }
-               labelWorkflowStatus.Text = "Thread started";
-
-               dataCache.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null);
-            }
-         }
+         bool res = (await DiscussionHelper.AddThreadAsync(mrk, title, _modificationNotifier,
+            getCurrentUser(), getDataCache(!isSearchMode()))) != null;
+         labelWorkflowStatus.Text = res ? "Added a discussion thread" : "Discussion thread is not added";
       }
 
       private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA, MergeRequestKey mrk,
@@ -377,7 +299,7 @@ namespace mrHelper.App.Forms
             return null;
          }
 
-         bool anyDiscussions = discussions == null || !discussions.Any();
+         bool anyDiscussions = discussions != null && discussions.Any();
          labelWorkflowStatus.Text = anyDiscussions
             ? "Discussions loaded"
             : "There are no discussions in this Merge Request";
@@ -462,9 +384,12 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            _mergeRequestsUpdatingByUserRequest.Remove(mrk);
-            updateStorageDependentControlState(mrk);
-            labelWorkflowStatus.Text = getStorageSummaryUpdateInformation();
+            if (!_exiting)
+            {
+               _mergeRequestsUpdatingByUserRequest.Remove(mrk);
+               updateStorageDependentControlState(mrk);
+               labelWorkflowStatus.Text = getStorageSummaryUpdateInformation();
+            }
          }
       }
 
@@ -503,12 +428,13 @@ namespace mrHelper.App.Forms
             parameters.AssigneeUserName, firstNote);
       }
 
-      async private Task applyChangesToMergeRequestAsync(string hostname, User currentUser, FullMergeRequestKey item)
+      async private Task applyChangesToMergeRequestAsync(string hostname, User currentUser, FullMergeRequestKey item,
+         IEnumerable<User> fullUserList)
       {
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(_liveDataCache.DiscussionCache, mrk);
          MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
-            getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText);
+            getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList);
          if (form.ShowDialog() != DialogResult.OK)
          {
             Trace.TraceInformation("[MainForm] User declined to modify a merge request");

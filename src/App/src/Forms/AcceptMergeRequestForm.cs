@@ -355,7 +355,7 @@ namespace mrHelper.App.Forms
 
       private void startProcessingTimer()
       {
-         if (_synchronizationTimer != null)
+         if (_synchronizationTimer != null && IsHandleCreated)
          {
             _synchronizationTimer.Tick += onSynchronizationTimer;
          }
@@ -376,7 +376,10 @@ namespace mrHelper.App.Forms
 
       private void invokeFetchAndApply(bool isSynchronousFetch)
       {
-         BeginInvoke(new Action(async () => applyMergeRequest(await fetchUpdatedMergeRequest(isSynchronousFetch))), null);
+         if (IsHandleCreated)
+         {
+            BeginInvoke(new Action(async () => applyMergeRequest(await fetchUpdatedMergeRequest(isSynchronousFetch))), null);
+         }
       }
 
       private IMergeRequestEditor getEditor()
@@ -453,6 +456,16 @@ namespace mrHelper.App.Forms
          {
             startProcessingTimer();
          }
+      }
+
+      async private Task fixupSquashFlagAsync()
+      {
+         // Modify MR manually here because for some reason "squash" query parameter
+         // sometimes does not affect the merge. For instance, this occurs when
+         // Merge_Error is already set to "Failed to squash", in this case simply
+         // set "squash=false" has no effect.
+         MergeRequest mergeRequest = await setSquashAsync(_isSquashNeeded.Value);
+         Debug.Assert(mergeRequest.Squash == _isSquashNeeded.Value);
       }
 
       async private Task<MergeRequest> toggleWipAsync()

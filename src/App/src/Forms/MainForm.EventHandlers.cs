@@ -84,6 +84,7 @@ namespace mrHelper.App.Forms
          }
 
          Program.Settings.WasMaximizedBeforeClose = WindowState == FormWindowState.Maximized;
+         setExitingFlag();
          Hide();
 
          closeAllFormsExceptMain();
@@ -887,9 +888,14 @@ namespace mrHelper.App.Forms
 
       private void doClose()
       {
+         setExitingFlag();
+         Close();
+      }
+
+      private void setExitingFlag()
+      {
          Trace.TraceInformation(String.Format("[MainForm] Set _exiting flag"));
          _exiting = true;
-         Close();
       }
 
       private void linkLabelHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -1477,10 +1483,19 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         IEnumerable<User> fullUserList = _liveDataCache?.UserCache?.GetUsers();
+         bool isUserListReady = fullUserList?.Any() ?? false;
+         if (!isUserListReady)
+         {
+            Debug.Assert(false);
+            Trace.TraceError("[MainForm] User List is not ready at the moment of Create New click");
+            return;
+         }
+
          ProjectKey? currentProject = getMergeRequestKey(null)?.ProjectKey;
          NewMergeRequestProperties initialFormState = getDefaultNewMergeRequestProperties(
             getHostName(), getCurrentUser(), currentProject);
-         createNewMergeRequest(getHostName(), getCurrentUser(), initialFormState, fullProjectList);
+         createNewMergeRequest(getHostName(), getCurrentUser(), initialFormState, fullProjectList, fullUserList);
       }
 
       private void ListViewMergeRequests_Edit(object sender, EventArgs e)
@@ -1491,8 +1506,18 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         IEnumerable<User> fullUserList = _liveDataCache?.UserCache?.GetUsers();
+         bool isUserListReady = fullUserList?.Any() ?? false;
+         if (!isUserListReady)
+         {
+            Debug.Assert(false);
+            Trace.TraceError("[MainForm] User List is not ready at the moment of Edit click");
+            return;
+         }
+
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
-         BeginInvoke(new Action(async () => await applyChangesToMergeRequestAsync(getHostName(), getCurrentUser(), item)));
+         BeginInvoke(new Action(async () => await applyChangesToMergeRequestAsync(
+            getHostName(), getCurrentUser(), item, fullUserList)));
       }
 
       private void ListViewMergeRequests_Accept(object sender, EventArgs e)

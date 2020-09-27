@@ -17,9 +17,9 @@ namespace mrHelper.App.Forms
    internal class NewMergeRequestForm : MergeRequestPropertiesForm
    {
       internal NewMergeRequestForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
-         NewMergeRequestProperties initialState, IEnumerable<Project> projects,
+         NewMergeRequestProperties initialState, IEnumerable<Project> projects, IEnumerable<User> users,
          IEnumerable<ProjectBranchKey> sourceBranchesInUse, string sourceBranchTemplate)
-         : base(hostname, projectAccessor, currentUser, isAllowedToChangeSource(initialState))
+         : base(hostname, projectAccessor, currentUser, isAllowedToChangeSource(initialState), users)
       {
          _initialState = initialState;
          _projects = projects ?? throw new ArgumentException("projects argument cannot be null");
@@ -98,6 +98,9 @@ namespace mrHelper.App.Forms
          comboBoxSourceBranch.Items.Clear();
          comboBoxTargetBranch.Items.Clear();
 
+         setTitle(String.Empty);
+         setDescription(String.Empty);
+
          updateControls();
          groupBoxSource.Text = "Source Branch (Loading...)";
       }
@@ -130,6 +133,8 @@ namespace mrHelper.App.Forms
 
       private void onCommitLoading()
       {
+         groupBoxTitle.Text = "Title (Loading...)";
+         groupBoxDescription.Text = "Description (Loading...)";
          setTitle(String.Empty);
          setDescription(String.Empty);
 
@@ -139,6 +144,8 @@ namespace mrHelper.App.Forms
 
       private void onCommitLoaded(Commit commit)
       {
+         groupBoxTitle.Text = "Title";
+         groupBoxDescription.Text = "Description";
          if (commit != null)
          {
             setTitle(commit.Title);

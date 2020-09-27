@@ -146,13 +146,13 @@ namespace mrHelper.GitLabClient.Operators
                                  new ResolveThreadParameters(resolve)))));
       }
 
-      internal Task CreateDiscussionAsync(MergeRequestKey mrk, NewDiscussionParameters parameters)
+      internal Task<Discussion> CreateDiscussionAsync(MergeRequestKey mrk, NewDiscussionParameters parameters)
       {
          return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
-                     await client.RunAsync(
+                     (Discussion)await client.RunAsync(
                         async (gl) =>
                            await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                               Discussions.CreateNewTaskAsync(parameters))));

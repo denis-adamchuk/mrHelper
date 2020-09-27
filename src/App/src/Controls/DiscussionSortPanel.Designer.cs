@@ -31,17 +31,19 @@
          this.groupBox1 = new System.Windows.Forms.GroupBox();
          this.radioButtonSortByReviewer = new System.Windows.Forms.RadioButton();
          this.radioButtonSortDefault = new System.Windows.Forms.RadioButton();
+         this.radioButtonSortReverse = new System.Windows.Forms.RadioButton();
          this.groupBox1.SuspendLayout();
          this.SuspendLayout();
          // 
          // groupBox1
          // 
+         this.groupBox1.Controls.Add(this.radioButtonSortReverse);
          this.groupBox1.Controls.Add(this.radioButtonSortByReviewer);
          this.groupBox1.Controls.Add(this.radioButtonSortDefault);
          this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBox1.Location = new System.Drawing.Point(0, 0);
          this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(169, 50);
+         this.groupBox1.Size = new System.Drawing.Size(219, 50);
          this.groupBox1.TabIndex = 0;
          this.groupBox1.TabStop = false;
          this.groupBox1.Text = "Sort";
@@ -49,7 +51,7 @@
          // radioButtonSortByReviewer
          // 
          this.radioButtonSortByReviewer.AutoSize = true;
-         this.radioButtonSortByReviewer.Location = new System.Drawing.Point(84, 19);
+         this.radioButtonSortByReviewer.Location = new System.Drawing.Point(136, 19);
          this.radioButtonSortByReviewer.Name = "radioButtonSortByReviewer";
          this.radioButtonSortByReviewer.Size = new System.Drawing.Size(80, 17);
          this.radioButtonSortByReviewer.TabIndex = 1;
@@ -68,12 +70,23 @@
          this.radioButtonSortDefault.Text = "Default";
          this.radioButtonSortDefault.UseVisualStyleBackColor = true;
          // 
+         // radioButtonSortReverse
+         // 
+         this.radioButtonSortReverse.AutoSize = true;
+         this.radioButtonSortReverse.Location = new System.Drawing.Point(71, 19);
+         this.radioButtonSortReverse.Name = "radioButtonSortReverse";
+         this.radioButtonSortReverse.Size = new System.Drawing.Size(65, 17);
+         this.radioButtonSortReverse.TabIndex = 2;
+         this.radioButtonSortReverse.TabStop = true;
+         this.radioButtonSortReverse.Text = "Reverse";
+         this.radioButtonSortReverse.UseVisualStyleBackColor = true;
+         // 
          // DiscussionSortPanel
          // 
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
          this.Controls.Add(this.groupBox1);
          this.Name = "DiscussionSortPanel";
-         this.Size = new System.Drawing.Size(169, 50);
+         this.Size = new System.Drawing.Size(219, 50);
          this.groupBox1.ResumeLayout(false);
          this.groupBox1.PerformLayout();
          this.ResumeLayout(false);
@@ -85,5 +98,6 @@
       private System.Windows.Forms.GroupBox groupBox1;
       private System.Windows.Forms.RadioButton radioButtonSortByReviewer;
       private System.Windows.Forms.RadioButton radioButtonSortDefault;
+      private System.Windows.Forms.RadioButton radioButtonSortReverse;
    }
 }

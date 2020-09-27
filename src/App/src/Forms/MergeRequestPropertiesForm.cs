@@ -16,7 +16,7 @@ namespace mrHelper.App.Forms
    internal abstract partial class MergeRequestPropertiesForm : CustomFontForm
    {
       internal MergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
-         bool isAllowedToChangeSource)
+         bool isAllowedToChangeSource, IEnumerable<User> users)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
@@ -39,8 +39,16 @@ namespace mrHelper.App.Forms
 
          buttonCancel.ConfirmationCondition = () => true;
 
-         comboBoxProject.SelectedIndexChanged +=
-            new System.EventHandler(this.comboBoxProject_SelectedIndexChanged_Base);
+         if (users == null || !users.Any())
+         {
+            // This may happen when new MR creation is requested by URL and mrHelper is not launched.
+            // In this case User Cache is still not filled. Let's load project users.
+            comboBoxProject.SelectedIndexChanged += new System.EventHandler(loadProjectUsersForAutoCompletion);
+         }
+         else
+         {
+            textBoxSpecialNote.SetUsers(users);
+         }
       }
 
       private void MergeRequestPropertiesForm_Deactivate(object sender, EventArgs e)
@@ -58,7 +66,7 @@ namespace mrHelper.App.Forms
          textBoxSpecialNote.HideAutoCompleteBox(TextBoxWithUserAutoComplete.HidingReason.FormMovedOrResized);
       }
 
-      private void comboBoxProject_SelectedIndexChanged_Base(object sender, EventArgs e)
+      private void loadProjectUsersForAutoCompletion(object sender, EventArgs e)
       {
          BeginInvoke(new Action(async () =>
          {
@@ -94,7 +102,7 @@ namespace mrHelper.App.Forms
       {
          string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
          string formCaption = "Edit Merge Request title";
-         TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, null);
+         TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, null, String.Empty);
          if (editTitleForm.ShowDialog() == DialogResult.OK)
          {
             setTitle(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editTitleForm.Body));
@@ -103,9 +111,10 @@ namespace mrHelper.App.Forms
 
       private void buttonEditDescription_Click(object sender, EventArgs e)
       {
+         // TODO WTF Add possibility to show pictures in TextEditForm
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
-         TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null);
+         TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null, String.Empty);
          if (editDescriptionForm.ShowDialog() == DialogResult.OK)
          {
             setDescription(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editDescriptionForm.Body));

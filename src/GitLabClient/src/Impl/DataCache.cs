@@ -85,6 +85,8 @@ namespace mrHelper.GitLabClient
 
       public IProjectCache ProjectCache => _internal?.ProjectCache;
 
+      public IUserCache UserCache => _internal?.UserCache;
+
       private DataCacheInternal createCacheInternal(
          InternalCacheUpdater cacheUpdater,
          string hostname,
@@ -102,7 +104,9 @@ namespace mrHelper.GitLabClient
          IProjectListLoader loader = ProjectListLoaderFactory.CreateProjectListLoader(
             hostname, _operator, context, cacheUpdater);
          ProjectCache projectCache = new ProjectCache(cacheUpdater, loader, _dataCacheContext);
-         return new DataCacheInternal(mergeRequestManager, discussionManager, timeTrackingManager, projectCache);
+         IUserListLoader userListLoader = new UserListLoader(_operator, cacheUpdater);
+         UserCache userCache = new UserCache(cacheUpdater, userListLoader, _dataCacheContext);
+         return new DataCacheInternal(mergeRequestManager, discussionManager, timeTrackingManager, projectCache, userCache);
       }
 
       private DataCacheOperator _operator;

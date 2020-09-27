@@ -40,11 +40,11 @@ namespace mrHelper.GitLabClient.Accessors
          }
       }
 
-      async public Task CreateDiscussionAsync(NewDiscussionParameters parameters, bool revertOnError)
+      async public Task<Discussion> CreateDiscussionAsync(NewDiscussionParameters parameters, bool revertOnError)
       {
          try
          {
-            await _discussionOperator.CreateDiscussionAsync(_mergeRequestKey, parameters);
+            return await _discussionOperator.CreateDiscussionAsync(_mergeRequestKey, parameters);
          }
          catch (OperatorException ex)
          {

@@ -223,8 +223,12 @@ namespace mrHelper.StorageSupport
       {
          bool doesDiffMatchFileInfo(DiffStruct diff, FileInfo fileInfo)
          {
-            return diff.New_Path == fileInfo.NewPath
-                && diff.Old_Path == fileInfo.OldPath;
+            bool doesNewPathMatch = diff.New_Path == fileInfo.NewPath;
+            bool doesOldPathMatch = diff.Old_Path == fileInfo.OldPath;
+
+            // When file is renamed, Comparison has different old_path and new_path values but
+            // Discussion Position has the same old_path and new_path values.
+            return diff.Renamed_File ? doesNewPathMatch : doesNewPathMatch && doesOldPathMatch;
          }
          return diffs.Where(diff => filter?.Any(fileInfo => doesDiffMatchFileInfo(diff, fileInfo)) ?? true);
       }

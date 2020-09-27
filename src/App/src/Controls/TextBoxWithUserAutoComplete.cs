@@ -136,33 +136,89 @@ namespace mrHelper.App.Controls
 
       private string formatUser(User user)
       {
-         return String.Format("{0} ({1}{2})", user.Name, Constants.GitLabLabelPrefix, user.Username);
+         return String.Format("{0} ({1}{2})", user.Name, Constants.GitLabLabelPrefixChar, user.Username);
       }
 
       private StringUtils.WordInfo getCurrentWord(RichTextBox txt)
       {
-         return StringUtils.GetCurrentWord(txt.Text, txt.SelectionStart - 1);
+         int selectionStartPosition = txt.SelectionStart - 1;
+         StringUtils.WordInfo word = StringUtils.GetCurrentWord(txt.Text, selectionStartPosition);
+         if (!word.IsValid)
+         {
+            return word;
+         }
+
+         int? firstLabelPrefixPosition = null;
+         int? firstLetterPosition = null;
+         int? firstNonLetterAfterLabelPrefixPosition = null;
+         for (int iPosition = 0; iPosition < word.Word.Length; ++iPosition)
+         {
+            char currentChar = word.Word[iPosition];
+            if (Char.IsLetter(currentChar))
+            {
+               if (!firstLetterPosition.HasValue)
+               {
+                  firstLetterPosition = iPosition;
+               }
+            }
+            else if (currentChar == Constants.GitLabLabelPrefixChar)
+            {
+               if (!firstLabelPrefixPosition.HasValue)
+               {
+                  firstLabelPrefixPosition = iPosition;
+               }
+            }
+            else if (!firstNonLetterAfterLabelPrefixPosition.HasValue && firstLabelPrefixPosition.HasValue)
+            {
+               firstNonLetterAfterLabelPrefixPosition = iPosition;
+            }
+         }
+
+         if (!firstLetterPosition.HasValue
+          || !firstLabelPrefixPosition.HasValue
+          ||  firstLetterPosition.Value < firstLabelPrefixPosition.Value)
+         {
+            return StringUtils.WordInfo.Invalid;
+         }
+
+         int firstCharAfterLabelPrefixPosition = firstLabelPrefixPosition.Value + 1;
+         int textLength = firstNonLetterAfterLabelPrefixPosition.HasValue
+            ? firstNonLetterAfterLabelPrefixPosition.Value - firstCharAfterLabelPrefixPosition
+            : word.Word.Length - firstCharAfterLabelPrefixPosition;
+         if (textLength == 0)
+         {
+            return StringUtils.WordInfo.Invalid;
+         }
+
+         int startPosition = word.Start + firstCharAfterLabelPrefixPosition;
+         string trimmedWord = word.Word.Substring(firstCharAfterLabelPrefixPosition, textLength);
+         if (selectionStartPosition < startPosition || selectionStartPosition >= startPosition + trimmedWord.Length)
+         {
+            return StringUtils.WordInfo.Invalid;
+         }
+
+         return new StringUtils.WordInfo(startPosition, trimmedWord);
       }
 
       private void showAutoCompleteList()
       {
+         hideAutoCompleteList();
+
          StringUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
-         if (!currentWordInfo.IsValid)
+         if (!currentWordInfo.IsValid || currentWordInfo.Word.Length < 2)
          {
             return;
          }
 
-         string currentWord = currentWordInfo.Word.ToLower();
-         string pureCurrentWord = currentWord.StartsWith(Constants.GitLabLabelPrefix)
-            ? currentWord.Substring(Constants.GitLabLabelPrefix.Length) : currentWord;
+         bool doesWordContainWord(string container, string containee) =>
+               container.ToLower().Contains(containee.ToLower());
+
          object[] objects = _users?
-            .Where(user => user.Name.ToLower().Contains(pureCurrentWord)
-                        || user.Username.ToLower().Contains(pureCurrentWord))
+            .Where(user => doesWordContainWord(user.Name, currentWordInfo.Word)
+                        || doesWordContainWord(user.Username, currentWordInfo.Word))
             .Cast<object>()
             .ToArray() ?? Array.Empty<object>();
-
-         hideAutoCompleteList();
-         if (currentWord == String.Empty || objects.Length == 0)
+         if (objects.Length == 0)
          {
             return;
          }
@@ -279,7 +335,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         string substitutionWord = Constants.GitLabLabelPrefix + ((User)(_listBoxAutoComplete.SelectedItem)).Username;
+         string substitutionWord = ((User)(_listBoxAutoComplete.SelectedItem)).Username;
          textBoxAutoComplete.Text = StringUtils.ReplaceWord(textBoxAutoComplete.Text, currentWordInfo, substitutionWord);
          textBoxAutoComplete.SelectionStart = currentWordInfo.Start + substitutionWord.Length;
       }

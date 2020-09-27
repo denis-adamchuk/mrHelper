@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
@@ -8,8 +9,8 @@ namespace mrHelper.App.Forms
    internal class EditMergeRequestPropertiesForm : MergeRequestPropertiesForm
    {
       internal EditMergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
-         ProjectKey projectKey, MergeRequest mergeRequest, string specialNote)
-         : base(hostname, projectAccessor, currentUser, false)
+         ProjectKey projectKey, MergeRequest mergeRequest, string specialNote, IEnumerable<User> users)
+         : base(hostname, projectAccessor, currentUser, false, users)
       {
          _projectKey = projectKey;
          _initialMergeRequest = mergeRequest ?? throw new ArgumentException("mergeRequest argument cannot be null");
