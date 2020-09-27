@@ -84,6 +84,7 @@ namespace mrHelper.App.Forms
          }
 
          Program.Settings.WasMaximizedBeforeClose = WindowState == FormWindowState.Maximized;
+         setExitingFlag();
          Hide();
 
          closeAllFormsExceptMain();
@@ -887,9 +888,14 @@ namespace mrHelper.App.Forms
 
       private void doClose()
       {
+         setExitingFlag();
+         Close();
+      }
+
+      private void setExitingFlag()
+      {
          Trace.TraceInformation(String.Format("[MainForm] Set _exiting flag"));
          _exiting = true;
-         Close();
       }
 
       private void linkLabelHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

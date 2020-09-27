@@ -384,9 +384,12 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            _mergeRequestsUpdatingByUserRequest.Remove(mrk);
-            updateStorageDependentControlState(mrk);
-            labelWorkflowStatus.Text = getStorageSummaryUpdateInformation();
+            if (!_exiting)
+            {
+               _mergeRequestsUpdatingByUserRequest.Remove(mrk);
+               updateStorageDependentControlState(mrk);
+               labelWorkflowStatus.Text = getStorageSummaryUpdateInformation();
+            }
          }
       }
 
