@@ -3,23 +3,24 @@ using mrHelper.Common.Interfaces;
 using mrHelper.CustomActions;
 using mrHelper.GitLabClient;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 
 namespace mrHelper.App.Controls
 {
-   public partial class DiscussionActionsPanel : UserControl, ICommandCallback
+   public partial class DiscussionActionsPanel : UserControl
    {
       public DiscussionActionsPanel(Action onRefresh, Action onAddComment, Action onAddThread,
-         MergeRequestKey mrk, IHostProperties hostProperties)
+         IEnumerable<ICommand> commands, Action<ICommand> onCommand)
       {
          InitializeComponent();
          _onRefresh = onRefresh;
          _onAddComment = onAddComment;
          _onAddThread = onAddThread;
-         _mergeRequestKey = mrk;
-         _hostProperties = hostProperties;
-         addCustomActions();
+         _onCommand = onCommand;
+         addCustomActions(commands);
       }
 
       private void ButtonDiscussionsRefresh_Click(object sender, EventArgs e)
@@ -37,22 +38,8 @@ namespace mrHelper.App.Controls
          _onAddThread();
       }
 
-      private void addCustomActions()
+      private void addCustomActions(IEnumerable<ICommand> commands)
       {
-         CustomCommandLoader loader = new CustomCommandLoader(this);
-         System.Collections.Generic.IEnumerable<ICommand> commands = null;
-         try
-         {
-            string CustomActionsFileName = "CustomActions.xml";
-            commands = loader.LoadCommands(CustomActionsFileName);
-         }
-         catch (CustomCommandLoaderException ex)
-         {
-            // If file doesn't exist the loader throws, leaving the app in an undesirable state.
-            // Do not try to load custom actions if they don't exist.
-            ExceptionHandlers.Handle("Cannot load custom actions", ex);
-         }
-
          if (commands == null)
          {
             return;
@@ -83,21 +70,7 @@ namespace mrHelper.App.Controls
                Dock = DockStyle.Fill
             };
             toolTipActionsPanel.SetToolTip(button, command.GetHint());
-            button.Click += async (x, y) =>
-            {
-               try
-               {
-                  await command.Run();
-                  _onRefresh();
-               }
-               catch (Exception ex) // Whatever happened in Run()
-               {
-                  string errorMessage = "Custom action failed";
-                  ExceptionHandlers.Handle(errorMessage, ex);
-                  MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  return;
-               }
-            };
+            button.Click += (x, y) => _onCommand(command);
             tableLayoutPanel1.Controls.Add(button);
             tableLayoutPanel1.SetRow(button, id % tableLayoutPanel1.RowCount);
             tableLayoutPanel1.SetColumn(button, id / tableLayoutPanel1.ColumnCount + 1);
@@ -105,30 +78,9 @@ namespace mrHelper.App.Controls
          }
       }
 
-      public string GetCurrentHostName()
-      {
-         return _mergeRequestKey.ProjectKey.HostName;
-      }
-
-      public string GetCurrentAccessToken()
-      {
-         return _hostProperties.GetAccessToken(_mergeRequestKey.ProjectKey.HostName);
-      }
-
-      public string GetCurrentProjectName()
-      {
-         return _mergeRequestKey.ProjectKey.ProjectName;
-      }
-
-      public int GetCurrentMergeRequestIId()
-      {
-         return _mergeRequestKey.IId;
-      }
-
       private readonly Action _onRefresh;
       private readonly Action _onAddComment;
       private readonly Action _onAddThread;
-      private readonly MergeRequestKey _mergeRequestKey;
-      private readonly IHostProperties _hostProperties;
+      private readonly Action<ICommand> _onCommand;
    }
 }

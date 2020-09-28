@@ -309,8 +309,8 @@ namespace mrHelper.App.Forms
          this.buttonAddComment.Name = "buttonAddComment";
          this.buttonAddComment.Size = new System.Drawing.Size(96, 32);
          this.buttonAddComment.TabIndex = 8;
-         this.buttonAddComment.Text = "Add comment";
-         this.toolTip.SetToolTip(this.buttonAddComment, "Leave a comment (cannot be resolved and replied)");
+         this.buttonAddComment.Text = "Add a comment";
+         this.toolTip.SetToolTip(this.buttonAddComment, "Add a comment (cannot be resolved and replied)");
          this.buttonAddComment.UseVisualStyleBackColor = true;
          this.buttonAddComment.Click += new System.EventHandler(this.ButtonAddComment_Click);
          // 
@@ -335,7 +335,7 @@ namespace mrHelper.App.Forms
          this.buttonNewDiscussion.Name = "buttonNewDiscussion";
          this.buttonNewDiscussion.Size = new System.Drawing.Size(96, 32);
          this.buttonNewDiscussion.TabIndex = 9;
-         this.buttonNewDiscussion.Text = "New thread";
+         this.buttonNewDiscussion.Text = "Start a thread";
          this.toolTip.SetToolTip(this.buttonNewDiscussion, "Create a new resolvable thread");
          this.buttonNewDiscussion.UseVisualStyleBackColor = true;
          this.buttonNewDiscussion.Click += new System.EventHandler(this.ButtonNewDiscussion_Click);

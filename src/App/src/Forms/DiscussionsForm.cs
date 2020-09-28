@@ -14,10 +14,12 @@ using mrHelper.App.Helpers.GitLab;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
 using TheArtOfDev.HtmlRenderer.WinForms;
+using mrHelper.Common.Constants;
+using mrHelper.CustomActions;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class DiscussionsForm : CustomFontForm
+   internal partial class DiscussionsForm : CustomFontForm, ICommandCallback
    {
       /// <summary>
       /// Throws:
@@ -44,6 +46,16 @@ namespace mrHelper.App.Forms
          _modificationListener = modificationListener;
          _updateGit = updateGit;
          _onDiscussionModified = onDiscussionModified;
+
+         CustomCommandLoader loader = new CustomCommandLoader(this);
+         try
+         {
+            _commands = loader.LoadCommands(Constants.CustomActionsFileName);
+         }
+         catch (CustomCommandLoaderException ex)
+         {
+            ExceptionHandlers.Handle("Cannot load custom actions", ex);
+         }
 
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
@@ -104,16 +116,13 @@ namespace mrHelper.App.Forms
          DisplaySort = new DiscussionSort(DiscussionSortState.Default);
          SortPanel = new DiscussionSortPanel(DisplaySort.SortState, onSortChanged);
 
-         ActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction,
-            _mergeRequestKey, Program.Settings);
-         BottomActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction,
-            _mergeRequestKey, Program.Settings);
+         ActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction, _commands,
+            onCommandAction);
          SearchPanel = new DiscussionSearchPanel(onFind);
          FontSelectionPanel = new DiscussionFontSelectionPanel(font => applyFont(font));
 
          Controls.Add(FilterPanel);
          Controls.Add(ActionsPanel);
-         Controls.Add(BottomActionsPanel);
          Controls.Add(SortPanel);
          Controls.Add(SearchPanel);
          Controls.Add(FontSelectionPanel);
@@ -167,6 +176,25 @@ namespace mrHelper.App.Forms
          {
             await DiscussionHelper.AddCommentAsync(
                _mergeRequestKey, _mergeRequestTitle, _modificationListener, _currentUser);
+            onRefreshAction();
+         }));
+      }
+
+      private void onCommandAction(ICommand command)
+      {
+         BeginInvoke(new Action(async () =>
+         {
+            try
+            {
+               await command.Run();
+            }
+            catch (Exception ex) // Whatever happened in Run()
+            {
+               string errorMessage = "Custom action failed";
+               ExceptionHandlers.Handle(errorMessage, ex);
+               MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               return;
+            }
             onRefreshAction();
          }));
       }
@@ -473,7 +501,7 @@ namespace mrHelper.App.Forms
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _diffContextDepth, _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
                sender => MostRecentFocusedDiscussionControl = sender,
-               _htmlTooltip)
+               _htmlTooltip, onAddCommentAction, onAddThreadAction, _commands, onCommandAction)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -502,7 +530,6 @@ namespace mrHelper.App.Forms
       {
          int groupBoxMarginLeft = 5;
          int groupBoxMarginTop = 5;
-         int bottomActionsPanelMarginTop = 200;
 
          // Temporary variables to avoid changing control Location more than once
          Point filterPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
@@ -555,10 +582,6 @@ namespace mrHelper.App.Forms
             previousBoxLocation = location;
             previousBoxSize = box.Size;
          }
-
-         Point bottomActionsPanelLocation = new Point(groupBoxMarginLeft, bottomActionsPanelMarginTop);
-         bottomActionsPanelLocation.Offset(0, previousBoxLocation.Y + previousBoxSize.Height);
-         BottomActionsPanel.Location = bottomActionsPanelLocation + (Size)AutoScrollPosition;
       }
 
       private void startSearch(SearchQuery query, bool highlight)
@@ -627,6 +650,26 @@ namespace mrHelper.App.Forms
          }
       }
 
+      public string GetCurrentHostName()
+      {
+         return _mergeRequestKey.ProjectKey.HostName;
+      }
+
+      public string GetCurrentAccessToken()
+      {
+         return Program.Settings.GetAccessToken(_mergeRequestKey.ProjectKey.HostName);
+      }
+
+      public string GetCurrentProjectName()
+      {
+         return _mergeRequestKey.ProjectKey.ProjectName;
+      }
+
+      public int GetCurrentMergeRequestIId()
+      {
+         return _mergeRequestKey.IId;
+      }
+
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _mergeRequestTitle;
       private readonly User _mergeRequestAuthor;
@@ -646,8 +689,6 @@ namespace mrHelper.App.Forms
       private DiscussionFilter SystemFilter; // filters out discussions with System notes
 
       private DiscussionActionsPanel ActionsPanel;
-      private DiscussionActionsPanel BottomActionsPanel;
-
       private DiscussionSearchPanel SearchPanel;
       private TextSearch TextSearch;
       private TextSearchResult? TextSearchResult;
@@ -661,7 +702,7 @@ namespace mrHelper.App.Forms
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search
       /// </summary>
       private Control MostRecentFocusedDiscussionControl;
-
+      private IEnumerable<ICommand> _commands;
       private readonly HtmlToolTip _htmlTooltip = new HtmlToolTip
       {
          AutoPopDelay = 20000, // 20s

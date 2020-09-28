@@ -76,8 +76,8 @@
          this.buttonNewThread.Name = "buttonNewThread";
          this.buttonNewThread.Size = new System.Drawing.Size(308, 34);
          this.buttonNewThread.TabIndex = 3;
-         this.buttonNewThread.Text = "New thread";
-         this.toolTipActionsPanel.SetToolTip(this.buttonNewThread, "Reload discussions from Server");
+         this.buttonNewThread.Text = "Start a thread";
+         this.toolTipActionsPanel.SetToolTip(this.buttonNewThread, "Create a new resolvable thread");
          this.buttonNewThread.UseVisualStyleBackColor = true;
          this.buttonNewThread.Click += new System.EventHandler(this.buttonNewThread_Click);
          // 
@@ -100,8 +100,8 @@
          this.buttonAddComment.Name = "buttonAddComment";
          this.buttonAddComment.Size = new System.Drawing.Size(308, 34);
          this.buttonAddComment.TabIndex = 2;
-         this.buttonAddComment.Text = "Add comment";
-         this.toolTipActionsPanel.SetToolTip(this.buttonAddComment, "Reload discussions from Server");
+         this.buttonAddComment.Text = "Add a comment";
+         this.toolTipActionsPanel.SetToolTip(this.buttonAddComment, "Add a comment (cannot be resolved and replied)");
          this.buttonAddComment.UseVisualStyleBackColor = true;
          this.buttonAddComment.Click += new System.EventHandler(this.buttonAddComment_Click);
          // 

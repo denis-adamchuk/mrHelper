@@ -19,6 +19,7 @@ using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
+using mrHelper.CustomActions;
 
 namespace mrHelper.App.Controls
 {
@@ -33,7 +34,11 @@ namespace mrHelper.App.Controls
          Action<DiscussionBox> onContentChanging,
          Action<DiscussionBox> onContentChanged,
          Action<Control> onControlGotFocus,
-         HtmlToolTip htmlTooltip)
+         HtmlToolTip htmlTooltip,
+         Action onAddComment,
+         Action onAddThread,
+         IEnumerable<ICommand> commands,
+         Action<ICommand> onCommand)
       {
          Parent = parent;
 
@@ -65,6 +70,11 @@ namespace mrHelper.App.Controls
          };
          _onControlGotFocus = onControlGotFocus;
 
+         _onAddComment = onAddComment;
+         _onAddThread = onAddThread;
+         _commands = commands;
+         _onCommand = onCommand;
+
          _htmlTooltip = htmlTooltip;
 
          _specialDiscussionNoteMarkdownPipeline =
@@ -75,7 +85,7 @@ namespace mrHelper.App.Controls
 
       internal Discussion Discussion { get; private set; }
 
-      async private void MenuItemReply_Click(object sender, EventArgs e)
+      async private void onMenuItemReply(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          Control control = (Control)(menuItem.Tag);
@@ -85,7 +95,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      async private void MenuItemReplyAndResolve_Click(object sender, EventArgs e)
+      async private void onMenuItemReplyAndResolve(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          Control control = (Control)(menuItem.Tag);
@@ -95,7 +105,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      async private void MenuItemReplyDone_Click(object sender, EventArgs e)
+      async private void onMenuItemReplyDone(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          Control control = (Control)(menuItem.Tag);
@@ -105,7 +115,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      async private void MenuItemEditNote_Click(object sender, EventArgs e)
+      async private void onMenuItemEditNote(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          Control control = (Control)(menuItem.Tag);
@@ -117,7 +127,7 @@ namespace mrHelper.App.Controls
          await onEditDiscussionNoteAsync(control);
       }
 
-      private void MenuItemViewNote_Click(object sender, EventArgs e)
+      private void onMenuItemViewNote(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          Control control = (Control)(menuItem.Tag);
@@ -129,7 +139,7 @@ namespace mrHelper.App.Controls
          onViewDiscussionNote(control);
       }
 
-      async private void MenuItemDeleteNote_Click(object sender, EventArgs e)
+      async private void onMenuItemDeleteNote(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          Control control = (Control)(menuItem.Tag);
@@ -147,7 +157,7 @@ namespace mrHelper.App.Controls
          await onDeleteNoteAsync(getNoteFromControl(control));
       }
 
-      async private void MenuItemToggleResolveNote_Click(object sender, EventArgs e)
+      async private void onMenuItemToggleResolveNote(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          HtmlPanel htmlPanel = (HtmlPanel)(menuItem.Tag);
@@ -162,7 +172,7 @@ namespace mrHelper.App.Controls
          await onToggleResolveNoteAsync(note);
       }
 
-      async private void MenuItemToggleResolveDiscussion_Click(object sender, EventArgs e)
+      async private void onMenuItemToggleResolveDiscussion(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          Control control = (Control)(menuItem.Tag);
@@ -508,90 +518,50 @@ namespace mrHelper.App.Controls
          return note.Author.Username == Program.ServiceManager.GetServiceMessageUsername();
       }
 
+      private MenuItem createMenuItem(ContextMenu contextMenu, object tag, string text, bool isEnabled,
+         EventHandler onClick, Shortcut shortcut = Shortcut.None)
+      {
+         MenuItem menuItem = new MenuItem
+         {
+            Tag = tag,
+            Text = text,
+            Enabled = isEnabled,
+            Shortcut = shortcut
+         };
+         menuItem.Click += onClick;
+         return menuItem;
+      }
+
+      MenuItem[] getCommandItems(ContextMenu contextMenu)
+      {
+         return _commands
+            .Select(command => createMenuItem(contextMenu, null, command.GetName(), true,
+               (s, e) => _onCommand?.Invoke(command)))
+            .ToArray();
+      }
+
       private ContextMenu createContextMenuForDiscussionNote(DiscussionNote note, Control noteControl,
          bool discussionResolved)
       {
          ContextMenu contextMenu = new ContextMenu();
 
-         MenuItem menuItemToggleDiscussionResolve = new MenuItem
-         {
-            Tag = noteControl,
-            Text = (discussionResolved ? "Unresolve" : "Resolve") + " Thread",
-            Enabled = isDiscussionResolvable()
-         };
-         menuItemToggleDiscussionResolve.Click += MenuItemToggleResolveDiscussion_Click;
-         contextMenu.MenuItems.Add(menuItemToggleDiscussionResolve);
+         void addMenuItem(string text, bool isEnabled, EventHandler onClick, Shortcut shortcut = Shortcut.None) =>
+            contextMenu.MenuItems.Add(createMenuItem(contextMenu, noteControl, text, isEnabled, onClick, shortcut));
 
-         MenuItem menuItemToggleResolve = new MenuItem
-         {
-            Tag = noteControl,
-            Text = (note.Resolvable && note.Resolved ? "Unresolve" : "Resolve") + " Note",
-            Enabled = note.Resolvable
-         };
-         menuItemToggleResolve.Click += MenuItemToggleResolveNote_Click;
-         contextMenu.MenuItems.Add(menuItemToggleResolve);
-
-         contextMenu.MenuItems.Add("-");
-
-         MenuItem menuItemDeleteNote = new MenuItem
-         {
-            Tag = noteControl,
-            Enabled = canBeModified(note),
-            Text = "Delete Note"
-         };
-         menuItemDeleteNote.Click += MenuItemDeleteNote_Click;
-         contextMenu.MenuItems.Add(menuItemDeleteNote);
-
-         MenuItem menuItemEditNote = new MenuItem
-         {
-            Tag = noteControl,
-            Enabled = canBeModified(note),
-            Text = "Edit Note",
-            Shortcut = Shortcut.F2
-         };
-         menuItemEditNote.Click += MenuItemEditNote_Click;
-         contextMenu.MenuItems.Add(menuItemEditNote);
-
-         MenuItem menuItemReply = new MenuItem
-         {
-            Tag = noteControl,
-            Enabled = true,
-            Text = "Reply"
-         };
-         menuItemReply.Click += MenuItemReply_Click;
-         contextMenu.MenuItems.Add(menuItemReply);
-
-         MenuItem menuItemReplyAndResolve = new MenuItem
-         {
-            Tag = noteControl,
-            Enabled = true,
-            Text = "Reply and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread",
-            Shortcut = Shortcut.F4
-         };
-         menuItemReplyAndResolve.Click += MenuItemReplyAndResolve_Click;
-         contextMenu.MenuItems.Add(menuItemReplyAndResolve);
-
-         MenuItem menuItemReplyDone = new MenuItem
-         {
-            Tag = noteControl,
-            Enabled = isDiscussionResolvable(),
-            Text = "Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread",
-            Shortcut = Shortcut.ShiftF4
-         };
-         menuItemReplyDone.Click += MenuItemReplyDone_Click;
-         contextMenu.MenuItems.Add(menuItemReplyDone);
-
-         contextMenu.MenuItems.Add("-");
-
-         MenuItem menuItemViewNote = new MenuItem
-         {
-            Tag = noteControl,
-            Enabled = true,
-            Text = "View Note as plain text",
-            Shortcut = Shortcut.F6
-         };
-         menuItemViewNote.Click += MenuItemViewNote_Click;
-         contextMenu.MenuItems.Add(menuItemViewNote);
+         addMenuItem((discussionResolved ? "Unresolve" : "Resolve") + " Thread", isDiscussionResolvable(), onMenuItemToggleResolveDiscussion);
+         addMenuItem((note.Resolvable && note.Resolved ? "Unresolve" : "Resolve") + " Note", note.Resolvable, onMenuItemToggleResolveNote);
+         addMenuItem("-", true, null);
+         addMenuItem("Delete note", canBeModified(note), onMenuItemDeleteNote);
+         addMenuItem("Edit note", canBeModified(note), onMenuItemEditNote, Shortcut.F2);
+         addMenuItem("Reply", true, onMenuItemReply);
+         addMenuItem("Reply and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread", true, onMenuItemReplyAndResolve, Shortcut.F4);
+         addMenuItem("Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread", isDiscussionResolvable(), onMenuItemReplyDone, Shortcut.ShiftF4);
+         addMenuItem("-", true, null);
+         addMenuItem("View Note as plain text", true, onMenuItemViewNote, Shortcut.F6);
+         addMenuItem("-", true, null);
+         addMenuItem("Add a comment", true, (s, e) => _onAddComment?.Invoke());
+         addMenuItem("Start a thread", true, (s, e) => _onAddThread?.Invoke());
+         contextMenu.MenuItems.Add(new MenuItem("Commands", getCommandItems(contextMenu)));
 
          return contextMenu;
       }
@@ -600,45 +570,18 @@ namespace mrHelper.App.Controls
       {
          ContextMenu contextMenu = new ContextMenu();
 
-         MenuItem menuItemToggleDiscussionResolve = new MenuItem
-         {
-            Tag = textBox,
-            Text = "Resolve/Unresolve Thread",
-            Enabled = isDiscussionResolvable()
-         };
-         menuItemToggleDiscussionResolve.Click += MenuItemToggleResolveDiscussion_Click;
-         contextMenu.MenuItems.Add(menuItemToggleDiscussionResolve);
+         void addMenuItem(string text, bool isEnabled, EventHandler onClick, Shortcut shortcut = Shortcut.None) =>
+            contextMenu.MenuItems.Add(createMenuItem(contextMenu, textBox, text, isEnabled, onClick, shortcut));
 
-         contextMenu.MenuItems.Add("-");
-
-         MenuItem menuItemReply = new MenuItem
-         {
-            Tag = textBox,
-            Enabled = true,
-            Text = "Reply"
-         };
-         menuItemReply.Click += MenuItemReply_Click;
-         contextMenu.MenuItems.Add(menuItemReply);
-
-         MenuItem menuItemReplyAndResolve = new MenuItem
-         {
-            Tag = textBox,
-            Enabled = true,
-            Text = "Reply and Resolve/Unresolve Thread",
-            Shortcut = Shortcut.F4
-         };
-         menuItemReplyAndResolve.Click += MenuItemReplyAndResolve_Click;
-         contextMenu.MenuItems.Add(menuItemReplyAndResolve);
-
-         MenuItem menuItemReplyDone = new MenuItem
-         {
-            Tag = textBox,
-            Enabled = isDiscussionResolvable(),
-            Text = "Reply \"Done\" and Resolve/Unresolve Thread",
-            Shortcut = Shortcut.ShiftF4
-         };
-         menuItemReplyDone.Click += MenuItemReplyDone_Click;
-         contextMenu.MenuItems.Add(menuItemReplyDone);
+         addMenuItem("Resolve/Unresolve Thread", isDiscussionResolvable(), onMenuItemToggleResolveDiscussion);
+         addMenuItem("-", true, null);
+         addMenuItem("Reply", true, onMenuItemReply);
+         addMenuItem("Reply and Resolve/Unresolve Thread", true, onMenuItemReplyAndResolve, Shortcut.F4);
+         addMenuItem("Reply \"Done\" and Resolve/Unresolve Thread", isDiscussionResolvable(), onMenuItemReplyDone, Shortcut.ShiftF4);
+         addMenuItem("-", true, null);
+         addMenuItem("Add a comment", true, (s, e) => _onAddComment?.Invoke());
+         addMenuItem("Start a thread", true, (s, e) => _onAddThread?.Invoke());
+         contextMenu.MenuItems.Add(new MenuItem("Commands", getCommandItems(contextMenu)));
 
          return contextMenu;
       }
@@ -1179,7 +1122,10 @@ namespace mrHelper.App.Controls
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;
       private readonly Action<Control> _onControlGotFocus;
-
+      private readonly Action _onAddComment;
+      private readonly Action _onAddThread;
+      private readonly IEnumerable<ICommand> _commands;
+      private readonly Action<ICommand> _onCommand;
       private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlTooltip;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }

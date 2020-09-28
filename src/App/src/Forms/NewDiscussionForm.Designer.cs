@@ -222,7 +222,7 @@
          this.MaximizeBox = false;
          this.MinimumSize = new System.Drawing.Size(770, 301);
          this.Name = "NewDiscussionForm";
-         this.Text = "Start New Thread";
+         this.Text = "Start a thread";
          this.Shown += new System.EventHandler(this.newDiscussionForm_Shown);
          this.htmlContextCanvas.ResumeLayout(false);
          this.tabControlMode.ResumeLayout(false);

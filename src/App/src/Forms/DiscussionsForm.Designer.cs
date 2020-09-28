@@ -51,7 +51,7 @@
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.AutoScroll = true;
-         this.AutoScrollMargin = new System.Drawing.Size(0, 50);
+         this.AutoScrollMargin = new System.Drawing.Size(0, 250);
          this.ClientSize = new System.Drawing.Size(1353, 456);
          this.Controls.Add(this.pictureBox1);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;

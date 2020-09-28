@@ -1615,7 +1615,7 @@ namespace mrHelper.App.Forms
          int groupBoxActionsMinWidth =
             calcMinWidthOfControlGroup(groupBoxActions.Controls.Cast<Control>(), buttonMinDistance)
             + calcHorzDistance(null, groupBoxActions)
-            + calcHorzDistance(null, hasActions ? buttonAddComment : null) // First button is aligned with "Add Comment"
+            + calcHorzDistance(null, hasActions ? buttonAddComment : null) // First button is aligned with "Add a comment"
             + calcHorzDistance(hasActions ? buttonDiffTool : null, null)   // Last button is aligned with "Diff Tool"
             + calcHorzDistance(groupBoxActions, null);
 

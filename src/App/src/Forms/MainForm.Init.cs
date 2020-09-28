@@ -22,11 +22,9 @@ namespace mrHelper.App.Forms
       private void addCustomActions()
       {
          CustomCommandLoader loader = new CustomCommandLoader(this);
-         _customCommands = null;
          try
          {
-            string CustomActionsFileName = "CustomActions.xml";
-            _customCommands = loader.LoadCommands(CustomActionsFileName);
+            _customCommands = loader.LoadCommands(Constants.CustomActionsFileName);
          }
          catch (CustomCommandLoaderException ex)
          {

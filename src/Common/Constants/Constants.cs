@@ -12,7 +12,7 @@ namespace mrHelper.Common.Constants
       public static string CustomProtocolName = "mrhelper";
       public static string UWP_Launcher_Name = "mrHelper.Launcher.exe";
       public static string MainWindowCaption = "Merge Request Helper";
-      public static string StartNewThreadCaption = "Start New Thread";
+      public static string StartNewThreadCaption = "Start a thread";
 
       public static string CreateMergeRequestCustomActionName = "Create Merge Request";
       public static string CreateMergeRequestBashScriptName = "create-new-merge-request.sh";
@@ -24,6 +24,7 @@ namespace mrHelper.Common.Constants
       public static string NotStartedTimeTrackingText = "Not Started";
       public static string NotAllowedTimeTrackingText = "<mine>";
 
+      public static string CustomActionsFileName = "CustomActions.xml";
       public static string IconSchemeFileName = "icons.json";
       public static string BadgeSchemeFileName = "badges.json";
       public static string ProjectListFileName = "projects.json";
