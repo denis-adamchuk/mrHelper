@@ -1,3 +1,4 @@
+using mrHelper.Common.Interfaces;
 using System;
 using System.Linq;
 
@@ -41,6 +42,15 @@ namespace mrHelper.Common.Tools
          }
 
          return supportedProtocolPrefix + host;
+      }
+
+      public static string GetUploadsPrefix(ProjectKey projectKey)
+      {
+         if (String.IsNullOrEmpty(projectKey.HostName) || string.IsNullOrEmpty(projectKey.ProjectName))
+         {
+            return String.Empty;
+         }
+         return String.Format("{0}/{1}", StringUtils.GetHostWithPrefix(projectKey.HostName), projectKey.ProjectName);
       }
 
       public static string GetDefaultInstallLocation(string manufacturer)
@@ -271,7 +281,7 @@ namespace mrHelper.Common.Tools
             ? title.Substring(WorkInProgressPrefix.Length) : WorkInProgressPrefix + title;
       }
 
-      private static string WorkInProgressPrefix = "WIP: ";
+      private static readonly string WorkInProgressPrefix = "WIP: ";
    }
 }
 

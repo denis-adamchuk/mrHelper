@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows.Forms;
 using mrHelper.CommonNative;
 
@@ -42,9 +43,8 @@ namespace mrHelper.CommonControls.Controls
       {
          get
          {
-            int numberOfLines = NativeMethods.SendMessage(Handle, NativeMethods.EM_GETLINECOUNT,
-               IntPtr.Zero, IntPtr.Zero).ToInt32();
-            return calcPreferredHeight(numberOfLines);
+            int numberOfNewLines = Text.Count(ch => ch == '\r');
+            return calcPreferredHeight(numberOfNewLines + 1);
          }
       }
 

@@ -524,11 +524,6 @@ namespace mrHelper.App.Forms
          textBoxDisplayFilter.Enabled = enabled;
       }
 
-      private void enableMergeRequestSearchControls(bool enabled)
-      {
-         textBoxSearch.Enabled = enabled;
-      }
-
       private void updateVisibleMergeRequestsEnablements()
       {
          if (listViewMergeRequests.Items.Count > 0 || Program.Settings.DisplayFilterEnabled)
@@ -549,14 +544,12 @@ namespace mrHelper.App.Forms
          {
             FullMergeRequestKey fmk = fmkOpt.Value;
 
-            string uploadsPrefix = String.Format("{0}/{1}",
-               StringUtils.GetHostWithPrefix(fmk.ProjectKey.HostName), fmk.ProjectKey.ProjectName);
-
             string rawTitle = !String.IsNullOrEmpty(fmk.MergeRequest.Title) ? fmk.MergeRequest.Title : "Title is empty";
-            string title = MarkDownUtils.ConvertToHtml(rawTitle, uploadsPrefix, _mdPipeline);
+            string title = MarkDownUtils.ConvertToHtml(rawTitle, String.Empty, _mdPipeline);
 
             string rawDescription = !String.IsNullOrEmpty(fmk.MergeRequest.Description)
                ? fmk.MergeRequest.Description : "Description is empty";
+            string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey);
             string description = MarkDownUtils.ConvertToHtml(rawDescription, uploadsPrefix, _mdPipeline);
 
             string body = String.Format("<b>Title</b><br>{0}<br><b>Description</b><br>{1}", title, description);
@@ -2110,7 +2103,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void acceptMergeRequest(string hostname, FullMergeRequestKey item)
+      private void acceptMergeRequest(FullMergeRequestKey item)
       {
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);

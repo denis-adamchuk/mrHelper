@@ -97,7 +97,7 @@ namespace mrHelper.App.Forms
          labelNoteAboutInvisibleCharacters.Visible = areUnescapedCharacters;
       }
 
-      private static int MaximumTextLengthTocancelWithoutConfirmation = 5;
+      private static readonly int MaximumTextLengthTocancelWithoutConfirmation = 5;
       private readonly string _uploadsPrefix;
    }
 }

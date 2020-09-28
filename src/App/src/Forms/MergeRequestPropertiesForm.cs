@@ -10,6 +10,7 @@ using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
 using Markdig;
 using mrHelper.App.Controls;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -111,10 +112,10 @@ namespace mrHelper.App.Forms
 
       private void buttonEditDescription_Click(object sender, EventArgs e)
       {
-         // TODO WTF Add possibility to show pictures in TextEditForm
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
-         TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null, String.Empty);
+         string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName()));
+         TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null, uploadsPrefix);
          if (editDescriptionForm.ShowDialog() == DialogResult.OK)
          {
             setDescription(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editDescriptionForm.Body));

@@ -20,6 +20,7 @@
          this.FilterPanel.Dispose();
          this.ActionsPanel.Dispose();
          this.SearchPanel.Dispose();
+         this._htmlTooltip.Dispose();
          base.Dispose(disposing);
       }
 

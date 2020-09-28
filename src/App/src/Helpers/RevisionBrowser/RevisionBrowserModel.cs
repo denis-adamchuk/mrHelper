@@ -20,9 +20,11 @@ namespace mrHelper.App.Helpers
          IEnumerable<Commit> commits, IEnumerable<Version> versions, IEnumerable<string> reviewedRevisions)
       {
          BaseSha = baseSha;
-         Revisions = new Dictionary<RevisionType, IEnumerable<object>>();
-         Revisions.Add(RevisionType.Version, versions);
-         Revisions.Add(RevisionType.Commit, commits);
+         Revisions = new Dictionary<RevisionType, IEnumerable<object>>
+         {
+            { RevisionType.Version, versions },
+            { RevisionType.Commit, commits }
+         };
          ReviewedRevisions = reviewedRevisions;
       }
 

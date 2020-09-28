@@ -101,8 +101,9 @@ namespace mrHelper.App.Forms
          DiscussionsForm form;
          try
          {
+            IAsyncGitCommandService git = storage?.Git;
             DiscussionsForm discussionsForm = new DiscussionsForm(dataCache, gitLabInstance, _modificationNotifier,
-               storage?.Git, currentUser, mrk, discussions, title, author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
+               git, currentUser, mrk, discussions, title, author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
                async (key, discussionsUpdated) =>
             {
                if (storage != null && storage.Updater != null)

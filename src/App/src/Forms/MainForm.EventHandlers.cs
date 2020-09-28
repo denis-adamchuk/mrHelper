@@ -169,7 +169,7 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            onStartTimer(dataCache);
+            onStartTimer();
          }
       }
 
@@ -990,7 +990,7 @@ namespace mrHelper.App.Forms
          checkForApplicationUpdates();
       }
 
-      private void onStartTimer(DataCache dataCache)
+      private void onStartTimer()
       {
          Debug.Assert(!isTrackingTime());
 
@@ -1538,7 +1538,7 @@ namespace mrHelper.App.Forms
          }
 
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
-         acceptMergeRequest(getHostName(), item);
+         acceptMergeRequest(item);
       }
 
       private void ListViewMergeRequests_Close(object sender, EventArgs e)

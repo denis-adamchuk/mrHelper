@@ -60,7 +60,7 @@ namespace mrHelper.GitLabClient
 
          public override bool Equals(object obj)
          {
-            return obj is ProjectBranchKey && Equals((ProjectBranchKey)obj);
+            return obj is ProjectBranchKey key && Equals(key);
          }
 
          public bool Equals(ProjectBranchKey other)

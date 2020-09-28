@@ -16,11 +16,9 @@ namespace mrHelper.App.Forms.Helpers
       async internal static Task<bool> AddCommentAsync(GitLabClient.MergeRequestKey mrk, string title,
          IModificationListener modificationListener, User currentUser)
       {
-         string uploadsPrefix = String.Format("{0}/{1}",
-            StringUtils.GetHostWithPrefix(mrk.ProjectKey.HostName), mrk.ProjectKey.ProjectName);
-
          string caption = String.Format("Add comment to merge request \"{0}\"", title);
          DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
+         string uploadsPrefix = StringUtils.GetUploadsPrefix(mrk.ProjectKey);
          using (TextEditForm form = new TextEditForm(caption, "", true, true, actions, uploadsPrefix))
          {
             actions.SetTextbox(form.TextBox);
@@ -57,11 +55,9 @@ namespace mrHelper.App.Forms.Helpers
       async internal static Task<Discussion> AddThreadAsync(GitLabClient.MergeRequestKey mrk, string title,
          IModificationListener modificationListener, User currentUser, DataCache dataCache)
       {
-         string uploadsPrefix = String.Format("{0}/{1}",
-            StringUtils.GetHostWithPrefix(mrk.ProjectKey.HostName), mrk.ProjectKey.ProjectName);
-
          string caption = String.Format("Create a new thread in merge request \"{0}\"", title);
          DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
+         string uploadsPrefix = StringUtils.GetUploadsPrefix(mrk.ProjectKey);
          using (TextEditForm form = new TextEditForm(caption, "", true, true, actions, uploadsPrefix))
          {
             actions.SetTextbox(form.TextBox);

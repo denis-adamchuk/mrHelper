@@ -43,7 +43,7 @@ namespace mrHelper.App.Controls
          _editor = accessor.GetDiscussionEditor();
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
-         _imagePath = StringUtils.GetHostWithPrefix(projectKey.HostName) + "/" + projectKey.ProjectName;
+         _imagePath = StringUtils.GetUploadsPrefix(projectKey);
 
          _diffContextDepth = new ContextDepth(0, diffContextDepth);
          _tooltipContextDepth = new ContextDepth(5, 5);
@@ -311,10 +311,11 @@ namespace mrHelper.App.Controls
          {
             ReadOnly = true,
             Text = result,
-            Multiline = true
+            Multiline = true,
+            WordWrap = false
          };
          textBox.GotFocus += Control_GotFocus;
-         textBox.ContextMenu = createContextMenuForFilename(firstNote, textBox);
+         textBox.ContextMenu = createContextMenuForFilename(textBox);
          return textBox;
       }
 
@@ -595,7 +596,7 @@ namespace mrHelper.App.Controls
          return contextMenu;
       }
 
-      private ContextMenu createContextMenuForFilename(DiscussionNote firstNote, TextBox textBox)
+      private ContextMenu createContextMenuForFilename(TextBox textBox)
       {
          ContextMenu contextMenu = new ContextMenu();
 
@@ -756,8 +757,7 @@ namespace mrHelper.App.Controls
          if (_textboxFilename != null)
          {
             _textboxFilename.Width = width * LabelFilenameWidth / 100;
-            // TODO WTF We had FullPreferredHeight before
-            _textboxFilename.Height = (_textboxFilename as TextBoxEx).PreferredHeight;
+            _textboxFilename.Height = (_textboxFilename as TextBoxEx).FullPreferredHeight;
          }
 
          int remainingPercents = 100
@@ -1029,17 +1029,6 @@ namespace mrHelper.App.Controls
          }
 
          await refreshDiscussion(discussion);
-      }
-
-      private void enableNoteControl(Control noteControl,
-         Color backColor, ContextMenu contextMenu, DiscussionNote note)
-      {
-         if (noteControl != null)
-         {
-            noteControl.BackColor = backColor;
-            noteControl.ContextMenu = contextMenu;
-            noteControl.Tag = note;
-         }
       }
 
       private void disableAllNoteControls()

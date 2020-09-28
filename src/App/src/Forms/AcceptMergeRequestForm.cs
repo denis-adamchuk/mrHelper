@@ -128,7 +128,7 @@ namespace mrHelper.App.Forms
       {
          string prevTitle = _title;
 
-         _title = mergeRequest.Title == null ? String.Empty : mergeRequest.Title;
+         _title = mergeRequest.Title ?? String.Empty;
 
          if (prevTitle != _title)
          {
