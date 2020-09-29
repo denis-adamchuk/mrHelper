@@ -67,7 +67,7 @@ namespace mrHelper.App.Forms
          applyFont(Program.Settings.MainWindowFontSizeName);
          applyTheme(Program.Settings.VisualThemeName);
 
-         Trace.TraceInformation(String.Format("[MainForm] Rendering discussion contexts for MR IId {0}...", mrk.IId));
+         Trace.TraceInformation(String.Format("[DiscussionsForm] Rendering discussion contexts for MR IId {0}...", mrk.IId));
 
          IEnumerable<Discussion> nonSystemDiscussions = discussions
             .Where(discussion => SystemFilter.DoesMatchFilter(discussion));
@@ -76,37 +76,40 @@ namespace mrHelper.App.Forms
             throw new NoDiscussionsToShow();
          }
 
-         Trace.TraceInformation("[MainForm] Updating visibility of boxes...");
+         Trace.TraceInformation("[DiscussionsForm] Updating visibility of boxes...");
 
          // Make some boxes visible. This does not paint them because their parent (Form) is hidden so far.
          updateVisibilityOfBoxes();
+
+         // Temporary benchmark
+         Trace.TraceInformation("[DiscussionsForm] Visibility updated");
       }
 
       // Temporary benchmark
       protected override void OnHandleCreated(EventArgs e)
       {
-         Trace.TraceInformation("[MainForm] Processing OnHandleCreated()...");
+         Trace.TraceInformation("[DiscussionsForm] Processing OnHandleCreated()...");
          base.OnHandleCreated(e);
       }
 
       // Temporary benchmark
       protected override void OnBindingContextChanged(EventArgs e)
       {
-         Trace.TraceInformation("[MainForm] Processing OnBindingContextChanged()...");
+         Trace.TraceInformation("[DiscussionsForm] Processing OnBindingContextChanged()...");
          base.OnBindingContextChanged(e);
       }
 
       // Temporary benchmark
       protected override void OnLoad(EventArgs e)
       {
-         Trace.TraceInformation("[MainForm] Processing OnLoad()...");
+         Trace.TraceInformation("[DiscussionsForm] Processing OnLoad()...");
          base.OnLoad(e);
       }
 
       protected override void OnVisibleChanged(EventArgs e)
       {
          // Temporary benchmark
-         Trace.TraceInformation(String.Format("[MainForm] Processing OnVisibleChanged({0})...", Visible.ToString()));
+         Trace.TraceInformation(String.Format("[DiscussionsForm] Processing OnVisibleChanged({0})...", Visible.ToString()));
 
          if (Visible)
          {
@@ -123,14 +126,14 @@ namespace mrHelper.App.Forms
       // Temporary benchmark
       protected override void OnActivated(EventArgs e)
       {
-         Trace.TraceInformation("[MainForm] Processing OnActivated()...");
+         Trace.TraceInformation("[DiscussionsForm] Processing OnActivated()...");
          base.OnActivated(e);
       }
 
       // Temporary benchmark
       protected override void OnShown(EventArgs e)
       {
-         Trace.TraceInformation("[MainForm] Processing OnShown()...");
+         Trace.TraceInformation("[DiscussionsForm] Processing OnShown()...");
          base.OnShown(e);
       }
 
@@ -367,7 +370,7 @@ namespace mrHelper.App.Forms
          }
 
          Trace.TraceInformation(String.Format(
-            "[DiscussionsForm] Loading discussions. Hostname: {0}, Project: {1}, MR IId: {2}",
+            "[DiscussionsForm] Loading discussions. Hostname: {0}, Project: {1}, MR IId: {2}...",
                _mergeRequestKey.ProjectKey.HostName, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestKey.IId));
 
          IEnumerable<Discussion> discussions;
@@ -393,6 +396,8 @@ namespace mrHelper.App.Forms
             return null;
          }
 
+         Trace.TraceInformation("[DiscussionsForm] Checking for new commits...");
+
          this.Text = DefaultCaption + "   (Checking for new commits)";
          await _updateGit(_mergeRequestKey, discussions);
          this.Text = DefaultCaption;
@@ -407,17 +412,27 @@ namespace mrHelper.App.Forms
          // Avoid repositioning child controls on box removing, creation and visibility change
          SuspendLayout();
 
+         Trace.TraceInformation(String.Format(
+            "[DiscussionsForm] Rendering discussion contexts for MR IId {0} (updated {1}, deleted {2})...",
+            _mergeRequestKey.IId, updatedDiscussions.Count(), deletedDiscussions.Count()));
+
          // Some controls are deleted here and some new are created. New controls are invisible.
          if (!renderDiscussions(deletedDiscussions, updatedDiscussions))
          {
             MessageBox.Show("No discussions to show. Press OK to close form.", "Information",
                MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Trace.TraceInformation("[DiscussionsForm] No discussions to show");
             Close();
             return;
          }
 
+         Trace.TraceInformation("[DiscussionsForm] Updating visibility of boxes...");
+
          // Make boxes that match user filter visible
          updateVisibilityOfBoxes();
+
+         // Temporary benchmark
+         Trace.TraceInformation("[DiscussionsForm] Visibility updated");
 
          // Put all child controls at their places
          ResumeLayout(true);
