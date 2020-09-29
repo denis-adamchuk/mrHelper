@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
-using GitLabSharp.Accessors;
 using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
 using mrHelper.StorageSupport;
@@ -92,6 +91,7 @@ namespace mrHelper.App.Forms
          if (formExisting != null)
          {
             formExisting.Activate();
+            Trace.TraceInformation(String.Format("[MainForm] Activated an existing Discussions view for MR {0}", mrk.IId));
             return;
          }
 
@@ -102,6 +102,7 @@ namespace mrHelper.App.Forms
          try
          {
             IAsyncGitCommandService git = storage?.Git;
+
             DiscussionsForm discussionsForm = new DiscussionsForm(dataCache, gitLabInstance, _modificationNotifier,
                git, currentUser, mrk, discussions, title, author, int.Parse(comboBoxDCDepth.Text), _colorScheme,
                async (key, discussionsUpdated) =>
@@ -134,6 +135,7 @@ namespace mrHelper.App.Forms
          catch (NoDiscussionsToShow)
          {
             MessageBox.Show("No discussions to show.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            Trace.TraceInformation(String.Format("[MainForm] No discussions to show for MR IID {0}", mrk.IId));
             labelWorkflowStatus.Text = "No discussions to show";
             return;
          }
@@ -141,10 +143,10 @@ namespace mrHelper.App.Forms
          labelWorkflowStatus.Text = "Opening Discussions view...";
          labelWorkflowStatus.Refresh();
 
+         form.Show();
+
          Trace.TraceInformation(String.Format("[MainForm] Opened Discussions for MR IId {0} (at {1})",
             mrk.IId, (storage?.Path ?? "null")));
-
-         form.Show();
 
          labelWorkflowStatus.Text = "Discussions opened";
       }
@@ -208,6 +210,7 @@ namespace mrHelper.App.Forms
 
          if (!pid.HasValue)
          {
+            Trace.TraceInformation(String.Format("[MainForm] Cannot launch Diff Tool for MR with IId {0}", mrk.IId));
             return; // e.g. storage.Git got disposed
          }
 
@@ -348,6 +351,10 @@ namespace mrHelper.App.Forms
          MergeRequestKey mrk, ILocalCommitStorage storage, ICommitStorageUpdateContextProvider contextProvider,
          bool isLimitExceptionFatal)
       {
+         Trace.TraceInformation(String.Format(
+            "[MainForm] Preparing commit storage by user request for MR IId {0} (at {1})...",
+            mrk.IId, (storage?.Path ?? "null")));
+
          try
          {
             _mergeRequestsUpdatingByUserRequest.Add(mrk);

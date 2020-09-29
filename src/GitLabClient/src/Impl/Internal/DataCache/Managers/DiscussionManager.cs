@@ -420,7 +420,7 @@ namespace mrHelper.GitLabClient.Managers
             // Need to refresh discussions if we've already cached something for this MR. Seems all notes got deleted.
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Detected that mostRecentNote is null. cached TimeStamp is {0}",
-               cached.TimeStamp.ToLocalTime().ToString()));
+               cached.TimeStamp.ToString()));
             return cached.TimeStamp != default(DateTime);
          }
 
@@ -463,8 +463,8 @@ namespace mrHelper.GitLabClient.Managers
                "[DiscussionManager] Cached {0} discussions for MR: Project={1}, IId={2},"
              + " cached time stamp {3} (was {4} before update), note count = {5}, resolved = {6}, resolvable = {7}",
                discussions.Count(), mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
-               latestNoteTimestamp.ToLocalTime().ToString(),
-               prevUpdateTimestamp?.ToLocalTime().ToString() ?? "N/A",
+               latestNoteTimestamp.ToString(),
+               prevUpdateTimestamp?.ToString() ?? "N/A",
                noteCount, resolvedDiscussionCount, resolvableDiscussionCount));
 
             _cachedDiscussions[mrk] = new CachedDiscussions(

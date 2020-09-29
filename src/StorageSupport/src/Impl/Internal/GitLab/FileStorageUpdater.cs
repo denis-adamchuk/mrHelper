@@ -267,7 +267,7 @@ namespace mrHelper.StorageSupport
 
          FileInternal[] initialMissingFiles = selectMissingFiles(allFiles).ToArray();
          int initialMissingCount = initialMissingFiles.Length;
-         traceInformation(String.Format("Downloading file files. Total: {0}, Missing: {1}, isAwaitedUpdate={2}",
+         traceInformation(String.Format("Downloading files. Total: {0}, Missing: {1}, isAwaitedUpdate={2}",
             allFiles.Count(), initialMissingCount, isAwaitedUpdate.ToString()));
          if (initialMissingCount == 0)
          {

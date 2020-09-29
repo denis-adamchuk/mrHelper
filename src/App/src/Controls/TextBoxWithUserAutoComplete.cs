@@ -139,6 +139,17 @@ namespace mrHelper.App.Controls
          return String.Format("{0} ({1}{2})", user.Name, Constants.GitLabLabelPrefixChar, user.Username);
       }
 
+      /// <summary>
+      /// Extends functionality.
+      /// Trims result of StringUtils.GetCurrentWord():
+      /// - removes all non-letter characters before '@' character.
+      /// - removes all non-letter characters after a series of letter characters (after '@')
+      ///   e.g. "[@abcd]" converted to "abcd"
+      /// The following strings are considered incorrect:
+      /// - strings without '@'
+      /// - strings with letter-characters prior to '@'
+      /// - strings where there is a non-letter character next to '@'
+      /// </summary>
       private StringUtils.WordInfo getCurrentWord(RichTextBox txt)
       {
          int selectionStartPosition = txt.SelectionStart - 1;

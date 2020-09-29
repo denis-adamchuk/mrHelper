@@ -67,6 +67,8 @@ namespace mrHelper.App.Forms
          applyFont(Program.Settings.MainWindowFontSizeName);
          applyTheme(Program.Settings.VisualThemeName);
 
+         Trace.TraceInformation(String.Format("[MainForm] Rendering discussion contexts for MR IId {0}...", mrk.IId));
+
          IEnumerable<Discussion> nonSystemDiscussions = discussions
             .Where(discussion => SystemFilter.DoesMatchFilter(discussion));
          if (!renderDiscussions(Array.Empty<Discussion>(), nonSystemDiscussions))
@@ -74,19 +76,62 @@ namespace mrHelper.App.Forms
             throw new NoDiscussionsToShow();
          }
 
+         Trace.TraceInformation("[MainForm] Updating visibility of boxes...");
+
          // Make some boxes visible. This does not paint them because their parent (Form) is hidden so far.
          updateVisibilityOfBoxes();
       }
 
+      // Temporary benchmark
+      protected override void OnHandleCreated(EventArgs e)
+      {
+         Trace.TraceInformation("[MainForm] Processing OnHandleCreated()...");
+         base.OnHandleCreated(e);
+      }
+
+      // Temporary benchmark
+      protected override void OnBindingContextChanged(EventArgs e)
+      {
+         Trace.TraceInformation("[MainForm] Processing OnBindingContextChanged()...");
+         base.OnBindingContextChanged(e);
+      }
+
+      // Temporary benchmark
+      protected override void OnLoad(EventArgs e)
+      {
+         Trace.TraceInformation("[MainForm] Processing OnLoad()...");
+         base.OnLoad(e);
+      }
+
       protected override void OnVisibleChanged(EventArgs e)
       {
-         // Form is visible now and controls will be drawn inside base.OnVisibleChanged() call.
-         // Before drawing anything, let's put controls at their places.
-         // Note that we have to postpone onLayoutUpdate() till this moment because before this moment ClientSize
-         // Width obtains some intermediate values.
-         onLayoutUpdate();
+         // Temporary benchmark
+         Trace.TraceInformation(String.Format("[MainForm] Processing OnVisibleChanged({0})...", Visible.ToString()));
+
+         if (Visible)
+         {
+            // Form is visible now and controls will be drawn inside base.OnVisibleChanged() call.
+            // Before drawing anything, let's put controls at their places.
+            // Note that we have to postpone onLayoutUpdate() till this moment because before this moment ClientSize
+            // Width obtains some intermediate values.
+            onLayoutUpdate();
+         }
 
          base.OnVisibleChanged(e);
+      }
+
+      // Temporary benchmark
+      protected override void OnActivated(EventArgs e)
+      {
+         Trace.TraceInformation("[MainForm] Processing OnActivated()...");
+         base.OnActivated(e);
+      }
+
+      // Temporary benchmark
+      protected override void OnShown(EventArgs e)
+      {
+         Trace.TraceInformation("[MainForm] Processing OnShown()...");
+         base.OnShown(e);
       }
 
       private void DiscussionsForm_Shown(object sender, EventArgs e)

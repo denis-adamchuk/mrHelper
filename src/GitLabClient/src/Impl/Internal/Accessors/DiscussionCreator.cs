@@ -161,8 +161,8 @@ namespace mrHelper.GitLabClient.Accessors
                {
                   Trace.TraceInformation(
                      "[DicsussionCreator] Deleting discussion note." +
-                     " Id: {0}, Author.Username: {1}, Created_At: {2} (LocalTime), Body:\n{3}",
-                     note.Id.ToString(), note.Author.Username, note.Created_At.ToLocalTime(), note.Body);
+                     " Id: {0}, Author.Username: {1}, Created_At: {2}, Body:\n{3}",
+                     note.Id.ToString(), note.Author.Username, note.Created_At, note.Body);
 
                   try
                   {

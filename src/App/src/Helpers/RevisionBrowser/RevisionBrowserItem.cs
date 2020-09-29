@@ -54,7 +54,7 @@ namespace mrHelper.App.Helpers
       {
          Name = name;
          InvertedDisplayIndex = invertedDisplayIndex;
-         Timestamp = timestamp.ToString(Constants.TimeStampFormat) + " (UTC)";
+         Timestamp = timestamp.ToLocalTime().ToString(Constants.TimeStampFormat);
          FullSHA = sha;
          TooltipText = tooltipText;
          IsReviewed = isReviewed;

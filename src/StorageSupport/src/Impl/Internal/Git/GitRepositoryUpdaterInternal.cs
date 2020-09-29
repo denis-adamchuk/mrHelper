@@ -130,7 +130,7 @@ namespace mrHelper.StorageSupport
          var flatContext = flattenDictionary(context.BaseToHeads);
          int totalShaCount = flatContext.Count();
          traceInformation(String.Format("Context commits: {0}, latest change: {1}",
-            totalShaCount, context.LatestChange?.ToLocalTime().ToString() ?? "N/A"));
+            totalShaCount, context.LatestChange?.ToString() ?? "N/A"));
 
          await cloneAsync(isAwaitedUpdate);
          await fetchAllAsync(isAwaitedUpdate, context.LatestChange);
@@ -419,7 +419,7 @@ namespace mrHelper.StorageSupport
             if (latestChange.Value > _latestFullFetchTimestamp)
             {
                traceInformation(String.Format("Updating LatestChange timestamp to {0}",
-                  latestChange.Value.ToLocalTime().ToString()));
+                  latestChange.Value.ToString()));
                _latestFullFetchTimestamp = latestChange.Value;
             }
             else if (latestChange < _latestFullFetchTimestamp)
