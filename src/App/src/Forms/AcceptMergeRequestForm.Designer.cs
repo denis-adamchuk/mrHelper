@@ -187,6 +187,7 @@
          this.textBoxCommitMessage.Location = new System.Drawing.Point(6, 47);
          this.textBoxCommitMessage.Multiline = true;
          this.textBoxCommitMessage.Name = "textBoxCommitMessage";
+         this.textBoxCommitMessage.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
          this.textBoxCommitMessage.Size = new System.Drawing.Size(658, 108);
          this.textBoxCommitMessage.TabIndex = 0;
          // 

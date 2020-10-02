@@ -825,7 +825,7 @@ namespace mrHelper.App.Forms
          MergeRequest mergeRequest = getMergeRequest(null);
          MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-         await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author);
+         await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.Web_Url);
       }
 
       private void LinkLabelAbortGitClone_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -1532,7 +1532,7 @@ namespace mrHelper.App.Forms
          bool isProjectListReady = fullProjectList?.Any() ?? false;
          if (!isProjectListReady)
          {
-            Debug.Assert(false);
+            Debug.Assert(false); // full project list is needed to check project properties inside the dialog code
             Trace.TraceError("[MainForm] Project List is not ready at the moment of Accept click");
             return;
          }

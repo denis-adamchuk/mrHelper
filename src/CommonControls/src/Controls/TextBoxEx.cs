@@ -60,11 +60,8 @@ namespace mrHelper.CommonControls.Controls
             if (_cachedBorderHeight == 0)
             {
                int singleLineWithBorderHeight = base.PreferredHeight;
-
                int borderHeight = singleLineWithBorderHeight - SingleLineWithoutBorderHeight;
-               Debug.Assert(borderHeight >= 0);
-
-               _cachedBorderHeight = borderHeight;
+               _cachedBorderHeight = Math.Max(0, borderHeight);
             }
             return _cachedBorderHeight;
          }

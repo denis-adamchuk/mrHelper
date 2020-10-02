@@ -20,7 +20,7 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author)
+      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string webUrl)
       {
          Debug.Assert(getHostName() != String.Empty);
          Debug.Assert(getCurrentUser() != null);
@@ -52,7 +52,7 @@ namespace mrHelper.App.Forms
          {
             return;
          }
-         showDiscussionForm(gitLabInstance, dataCache, storage, currentUser, mrk, discussions, title, author);
+         showDiscussionForm(gitLabInstance, dataCache, storage, currentUser, mrk, discussions, title, author, webUrl);
       }
 
       async private Task<bool> prepareStorageForDiscussionsForm(MergeRequestKey mrk,
@@ -79,7 +79,8 @@ namespace mrHelper.App.Forms
       }
 
       private void showDiscussionForm(GitLabInstance gitLabInstance, DataCache dataCache, ILocalCommitStorage storage,
-         User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author)
+         User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author,
+         string webUrl)
       {
          if (currentUser == null || discussions == null || author == null || currentUser.Id == 0)
          {
@@ -126,7 +127,8 @@ namespace mrHelper.App.Forms
                      "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                }
             },
-            () => dataCache?.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null))
+            () => dataCache?.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null),
+            webUrl)
             {
                Tag = mrk
             };

@@ -21,7 +21,7 @@ namespace mrHelper.App.Forms
 
       private void buttonDiscussions_Click(object sender, EventArgs e)
       {
-         BeginInvoke(new Action(async () => await _onOpenDiscussions?.Invoke(_mergeRequestKey, _title, _author)));
+         BeginInvoke(new Action(async () => await _onOpenDiscussions?.Invoke(_mergeRequestKey, _title, _author, _webUrl)));
       }
 
       async private void buttonToggleWIP_Click(object sender, EventArgs e)

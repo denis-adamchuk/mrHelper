@@ -404,7 +404,7 @@ namespace mrHelper.App.Forms
          mergeItem.Enabled = false;
          items.Add("&Close", null, ListViewMergeRequests_Close);
 
-         _projectAndUserCacheCheckActions.Add(isCacheReady => mergeItem.Enabled = isCacheReady);
+         _projectAndUserCacheCheckActions.Add(isCacheReady => mergeItem.Enabled = editItem.Enabled = isCacheReady);
       }
 
       private void startProjectAndUserCachesCheckTimer()

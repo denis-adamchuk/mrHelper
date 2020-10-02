@@ -33,6 +33,7 @@
       private void InitializeComponent()
       {
          this.pictureBox1 = new System.Windows.Forms.PictureBox();
+         this.linkLabelGitLabURL = new System.Windows.Forms.LinkLabel();
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
          this.SuspendLayout();
          // 
@@ -46,6 +47,17 @@
          this.pictureBox1.TabStop = false;
          this.pictureBox1.Visible = false;
          // 
+         // linkLabelGitLabURL
+         // 
+         this.linkLabelGitLabURL.AutoSize = true;
+         this.linkLabelGitLabURL.Location = new System.Drawing.Point(12, 9);
+         this.linkLabelGitLabURL.Name = "linkLabelGitLabURL";
+         this.linkLabelGitLabURL.Size = new System.Drawing.Size(100, 13);
+         this.linkLabelGitLabURL.TabIndex = 1;
+         this.linkLabelGitLabURL.TabStop = true;
+         this.linkLabelGitLabURL.Text = "<merge-request-url>";
+         this.linkLabelGitLabURL.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelGitLabURL_LinkClicked);
+         // 
          // DiscussionsForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -53,6 +65,7 @@
          this.AutoScroll = true;
          this.AutoScrollMargin = new System.Drawing.Size(0, 250);
          this.ClientSize = new System.Drawing.Size(1353, 456);
+         this.Controls.Add(this.linkLabelGitLabURL);
          this.Controls.Add(this.pictureBox1);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.KeyPreview = true;
@@ -64,11 +77,13 @@
          this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DiscussionsForm_KeyDown);
          ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
          this.ResumeLayout(false);
+         this.PerformLayout();
 
       }
 
       #endregion
 
       private System.Windows.Forms.PictureBox pictureBox1;
+      private System.Windows.Forms.LinkLabel linkLabelGitLabURL;
    }
 }

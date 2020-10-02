@@ -29,7 +29,7 @@ namespace mrHelper.App.Forms
          IGitCommandService git, User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          int diffContextDepth, ColorScheme colorScheme,
-         Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit, Action onDiscussionModified)
+         Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit, Action onDiscussionModified, string webUrl)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -61,6 +61,7 @@ namespace mrHelper.App.Forms
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
+         linkLabelGitLabURL.Text = webUrl;
 
          createPanels();
 
@@ -319,6 +320,11 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void linkLabelGitLabURL_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         UrlHelper.OpenBrowser((sender as LinkLabel).Text);
+      }
+
       private async Task onRefresh()
       {
          Trace.TraceInformation("[DiscussionsForm] Refreshing by user request");
@@ -561,7 +567,7 @@ namespace mrHelper.App.Forms
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _diffContextDepth, _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
                sender => MostRecentFocusedDiscussionControl = sender,
-               _htmlTooltip, onAddCommentAction, onAddThreadAction, _commands, onCommandAction)
+               _htmlTooltip, onAddCommentAction, onAddThreadAction, _commands, onCommandAction, true)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -589,23 +595,27 @@ namespace mrHelper.App.Forms
       private void repositionControls()
       {
          int groupBoxMarginLeft = 5;
-         int groupBoxMarginTop = 5;
+         int groupBoxMarginTop =  5;
 
          // Temporary variables to avoid changing control Location more than once
+         Point linkLabelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point filterPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point sortPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point fontSelectionPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point actionsPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point searchPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
 
-         filterPanelLocation.Offset(actionsPanelLocation.X + ActionsPanel.Size.Width, 0);
-         sortPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width, 0);
-         fontSelectionPanelLocation.Offset(sortPanelLocation.X + SortPanel.Size.Width, 0);
+         int topmostPanelOffset = linkLabelLocation.Y + linkLabelGitLabURL.Height;
+         actionsPanelLocation.Offset(0, topmostPanelOffset);
+         filterPanelLocation.Offset(actionsPanelLocation.X + ActionsPanel.Size.Width, topmostPanelOffset);
+         sortPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width, topmostPanelOffset);
+         fontSelectionPanelLocation.Offset(sortPanelLocation.X + SortPanel.Size.Width, topmostPanelOffset);
          searchPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width,
                                     Math.Max(sortPanelLocation.Y + SortPanel.Size.Height,
                                              fontSelectionPanelLocation.Y + FontSelectionPanel.Size.Height));
 
          // Stack panels horizontally
+         linkLabelGitLabURL.Location = linkLabelLocation + (Size)AutoScrollPosition;
          FilterPanel.Location = filterPanelLocation + (Size)AutoScrollPosition;
          SortPanel.Location = sortPanelLocation + (Size)AutoScrollPosition;
          FontSelectionPanel.Location = fontSelectionPanelLocation + (Size)AutoScrollPosition;
@@ -626,17 +636,20 @@ namespace mrHelper.App.Forms
          previousBoxLocation.Offset(0, topOffset);
 
          // Stack boxes vertically
+         int discussionBoxTopMargin = 20;
+         int discussionBoxHorzMargin = 20;
+
          foreach (DiscussionBox box in getVisibleAndSortedBoxes())
          {
             // Temporary variable to void changing box Location more than once
-            Point location = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+            Point location = new Point(discussionBoxHorzMargin, discussionBoxTopMargin);
             location.Offset(0, previousBoxLocation.Y + previousBoxSize.Height);
 
             // If Vertical Scroll is visible, its width is already excluded from ClientSize.Width
             int vscrollDelta = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
 
             // Discussion box can take all the width except scroll bars and the left margin
-            box.AdjustToWidth(ClientSize.Width - vscrollDelta - groupBoxMarginLeft);
+            box.AdjustToWidth(ClientSize.Width - vscrollDelta - discussionBoxHorzMargin * 2);
 
             box.Location = location + (Size)AutoScrollPosition;
             previousBoxLocation = location;
@@ -769,7 +782,6 @@ namespace mrHelper.App.Forms
          InitialDelay = 300,
          // BaseStylesheet = Don't specify anything here because users' HTML <style> override it
       };
-
    }
 
    internal class NoDiscussionsToShow : Exception { };

@@ -18,7 +18,7 @@ namespace mrHelper.App.Forms
          MergeRequestKey mrk,
          string repositoryPath,
          Action onMerged,
-         Func<MergeRequestKey, string, User, Task> onOpenDiscussions,
+         Func<MergeRequestKey, string, User, string, Task> onOpenDiscussions,
          Func<DataCache> getCache,
          Func<Task<DataCache>> fetchCache,
          Func<GitLabClient.MergeRequestAccessor> getMergeRequestAccessor)
@@ -584,7 +584,7 @@ namespace mrHelper.App.Forms
 
       private readonly string _repositoryPath;
       private readonly MergeRequestKey _mergeRequestKey;
-      private readonly Func<MergeRequestKey, string, User, Task> _onOpenDiscussions;
+      private readonly Func<MergeRequestKey, string, User, string, Task> _onOpenDiscussions;
       private readonly Action _onMerged;
       private readonly MarkdownPipeline _mdPipeline;
       private readonly Func<Task<DataCache>> _fetchCache;

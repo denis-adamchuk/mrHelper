@@ -38,7 +38,8 @@ namespace mrHelper.App.Controls
          Action onAddComment,
          Action onAddThread,
          IEnumerable<ICommand> commands,
-         Action<ICommand> onCommand)
+         Action<ICommand> onCommand,
+         bool rightSideContext)
       {
          Parent = parent;
 
@@ -49,6 +50,7 @@ namespace mrHelper.App.Controls
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
+         _rightSideContext = rightSideContext;
 
          _diffContextDepth = new ContextDepth(0, diffContextDepth);
          _tooltipContextDepth = new ContextDepth(5, 5);
@@ -194,19 +196,16 @@ namespace mrHelper.App.Controls
          Debug.Assert(Discussion.Notes.Any());
 
          DiscussionNote firstNote = Discussion.Notes.First();
-         _firstNoteAuthor = firstNote.Author;
-
-         _labelAuthor = createLabelAuthor(firstNote);
          _textboxFilename = createTextboxFilename(firstNote);
          _panelContext = createDiffContext(firstNote);
-         _textboxesNotes = createTextBoxes(Discussion.Notes);
+         _noteContainers = createTextBoxes(Discussion.Notes);
 
-         Controls.Add(_labelAuthor);
          Controls.Add(_textboxFilename);
          Controls.Add(_panelContext);
-         foreach (Control note in _textboxesNotes)
+         foreach (NoteContainer noteContainer in _noteContainers)
          {
-            Controls.Add(note);
+            Controls.Add(noteContainer.NoteInfo);
+            Controls.Add(noteContainer.NoteContent);
          }
       }
 
@@ -299,22 +298,27 @@ namespace mrHelper.App.Controls
          string oldPath = firstNote.Position.Old_Path + " (line " + firstNote.Position.Old_Line + ")";
          string newPath = firstNote.Position.New_Path + " (line " + firstNote.Position.New_Line + ")";
 
+         Color textColor = Color.Black;
          string result;
          if (firstNote.Position.Old_Line == null)
          {
             result = newPath;
+            textColor = Color.Green;
          }
          else if (firstNote.Position.New_Line == null)
          {
             result = oldPath;
+            textColor = Color.Red;
          }
          else if (firstNote.Position.Old_Path == firstNote.Position.New_Path)
          {
             result = newPath;
+            textColor = Color.Black;
          }
          else
          {
             result = newPath + "\r\n(was " + oldPath + ")";
+            textColor = Color.Blue;
          }
 
          TextBox textBox = new SearchableTextBox
@@ -322,29 +326,19 @@ namespace mrHelper.App.Controls
             ReadOnly = true,
             Text = result,
             Multiline = true,
-            WordWrap = false
+            WordWrap = false,
+            BorderStyle = BorderStyle.None,
+            ForeColor = textColor
          };
          textBox.GotFocus += Control_GotFocus;
-         textBox.ContextMenu = createContextMenuForFilename(textBox);
          return textBox;
       }
 
-      // Create a label that shows discussion author
-      private Control createLabelAuthor(DiscussionNote firstNote)
-      {
-         Label labelAuthor = new Label
-         {
-            Text = firstNote.Author.Name,
-            AutoEllipsis = true
-         };
-         return labelAuthor;
-      }
-
-      private IEnumerable<Control> createTextBoxes(IEnumerable<DiscussionNote> notes)
+      private IEnumerable<NoteContainer> createTextBoxes(IEnumerable<DiscussionNote> notes)
       {
          bool discussionResolved = notes.Cast<DiscussionNote>().All(x => (!x.Resolvable || x.Resolved));
 
-         List<Control> boxes = new List<Control>();
+         List<NoteContainer> boxes = new List<NoteContainer>();
          foreach (DiscussionNote note in notes)
          {
             if (note == null || note.System)
@@ -353,7 +347,7 @@ namespace mrHelper.App.Controls
                continue;
             }
 
-            Control textBox = createTextBox(note, discussionResolved);
+            NoteContainer textBox = createNoteContainer(note, discussionResolved);
             boxes.Add(textBox);
          }
          return boxes;
@@ -368,21 +362,21 @@ namespace mrHelper.App.Controls
          return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
       }
 
-      private string addPrefix(string body, DiscussionNote note, User firstNoteAuthor)
+      private NoteContainer createNoteContainer(DiscussionNote note, bool discussionResolved)
       {
-         bool appendNoteAuthor = note.Author.Id != _currentUser.Id && note.Author.Id != firstNoteAuthor.Id;
-         Debug.Assert(!appendNoteAuthor || !canBeModified(note));
+         NoteContainer noteContainer = new NoteContainer();
 
-         string prefix = appendNoteAuthor ? String.Format("({0}) ", note.Author.Name) : String.Empty;
-         return prefix + body;
-      }
+         noteContainer.NoteInfo = new Label
+         {
+            Text = getNoteInformation(note),
+            AutoSize = true
+         };
 
-      private Control createTextBox(DiscussionNote note, bool discussionResolved)
-      {
          if (!isServiceDiscussionNote(note))
          {
             Control noteControl = new SearchableHtmlPanel
             {
+               AutoScroll = false,
                BackColor = getNoteColor(note),
                BorderStyle = BorderStyle.FixedSingle,
                Tag = note,
@@ -402,7 +396,7 @@ namespace mrHelper.App.Controls
             setDiscussionNoteText(noteControl, note);
             updateNoteTooltip(noteControl, note);
 
-            return noteControl;
+            noteContainer.NoteContent = noteControl;
          }
          else
          {
@@ -423,16 +417,17 @@ namespace mrHelper.App.Controls
             updateStylesheet(noteControl as HtmlPanel);
             setServiceDiscussionNoteText(noteControl, note);
 
-            return noteControl;
+            noteContainer.NoteContent = noteControl;
          }
+
+         return noteContainer;
       }
 
       private void updateStylesheet(HtmlPanel htmlPanel)
       {
          htmlPanel.BaseStylesheet = String.Format(
             "{0} body div {{ font-size: {1}px; padding-left: 4px; padding-right: {2}px; }}",
-            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(htmlPanel),
-            SystemInformation.VerticalScrollBarWidth * 2); // this is really weird
+            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(htmlPanel), 20);
       }
 
       private void updateNoteTooltip(Control noteControl, DiscussionNote note)
@@ -459,7 +454,7 @@ namespace mrHelper.App.Controls
          Debug.Assert(noteControl is HtmlPanel);
 
          string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
-         noteControl.Text = String.Format(MarkDownUtils.HtmlPageTemplate, addPrefix(body, note, _firstNoteAuthor));
+         noteControl.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
 
          if (noteControl.Visible)
          {
@@ -502,9 +497,24 @@ namespace mrHelper.App.Controls
 
       private void resizeLimitedWidthHtmlPanel(HtmlPanel htmlPanel, int width)
       {
+         // Turn on AutoScroll to obtain relevant HorizontalScroll visibility property values after width change
+         htmlPanel.AutoScroll = true;
+
+         // Change width to a specific value
          htmlPanel.Width = width;
+
+         // Check if horizontal scroll bar is needed if we have the specified width
          int extraHeight = htmlPanel.HorizontalScroll.Visible ? SystemInformation.HorizontalScrollBarHeight : 0;
+
+         // Turn off AutoScroll to avoid recalculating of AutoScrollMinSize on Height change.
+         // htmlPanel must think that no scroll bars are needed to return full actual size.
+         htmlPanel.AutoScroll = false;
+
+         // Change height to the full actual size, leave a space for a horizontal scroll bar if needed
          htmlPanel.Height = htmlPanel.AutoScrollMinSize.Height + 2 + extraHeight;
+
+         // To enable scroll bars, AutoScroll property must be on
+         htmlPanel.AutoScroll = extraHeight > 0;
       }
 
       private bool isServiceDiscussionNote(DiscussionNote note)
@@ -566,24 +576,15 @@ namespace mrHelper.App.Controls
          return contextMenu;
       }
 
-      private ContextMenu createContextMenuForFilename(TextBox textBox)
+      private string getNoteInformation(DiscussionNote note)
       {
-         ContextMenu contextMenu = new ContextMenu();
+         if (note == null)
+         {
+            return String.Empty;
+         }
 
-         void addMenuItem(string text, bool isEnabled, EventHandler onClick, Shortcut shortcut = Shortcut.None) =>
-            contextMenu.MenuItems.Add(createMenuItem(contextMenu, textBox, text, isEnabled, onClick, shortcut));
-
-         addMenuItem("Resolve/Unresolve Thread", isDiscussionResolvable(), onMenuItemToggleResolveDiscussion);
-         addMenuItem("-", true, null);
-         addMenuItem("Reply", true, onMenuItemReply);
-         addMenuItem("Reply and Resolve/Unresolve Thread", true, onMenuItemReplyAndResolve, Shortcut.F4);
-         addMenuItem("Reply \"Done\" and Resolve/Unresolve Thread", isDiscussionResolvable(), onMenuItemReplyDone, Shortcut.ShiftF4);
-         addMenuItem("-", true, null);
-         addMenuItem("Add a comment", true, (s, e) => _onAddComment?.Invoke());
-         addMenuItem("Start a thread", true, (s, e) => _onAddThread?.Invoke());
-         contextMenu.MenuItems.Add(new MenuItem("Commands", getCommandItems(contextMenu)));
-
-         return contextMenu;
+         return String.Format("{0} at {1}",
+            note.Author.Name, note.Created_At.ToLocalTime().ToString(Constants.TimeStampFormat));
       }
 
       private string getNoteTooltipHtml(Control noteControl, DiscussionNote note)
@@ -667,20 +668,46 @@ namespace mrHelper.App.Controls
 
          resizeBoxContent(width);
          repositionBoxContent(width);
+         resizeBox();
          _previousWidth = width;
+      }
+
+      private int getNotesWidth(int width)
+      {
+         return width * NotesWidth / 100;
+      }
+
+      private int getHorzMargin(int width)
+      {
+         return width * HorzMarginWidth / 100;
+      }
+
+      private int getNoteRepliesHorzMargin(int width)
+      {
+         return width * 2 * HorzMarginWidth / 100;
+      }
+
+      private int getDiffContextWidth(int width)
+      {
+         int remainingPercents = 100 - HorzMarginWidth - NotesWidth;
+         return width * remainingPercents / 100;
       }
 
       private void resizeBoxContent(int width)
       {
-         if (_textboxesNotes != null)
+         if (_noteContainers != null)
          {
-            foreach (Control noteControl in _textboxesNotes)
+            IEnumerable<Control> noteContentControls = _noteContainers.Select(container => container.NoteContent);
+            foreach (Control noteControl in noteContentControls)
             {
+               bool needShrinkNote = noteControl != noteContentControls.First();
+               int noteWidthDelta = needShrinkNote ? getNoteRepliesHorzMargin(width) : 0;
+
                HtmlPanel htmlPanel = noteControl as HtmlPanel;
                DiscussionNote note = getNoteFromControl(noteControl);
                if (note != null && !isServiceDiscussionNote(note))
                {
-                  resizeLimitedWidthHtmlPanel(htmlPanel, width * NotesWidth / 100);
+                  resizeLimitedWidthHtmlPanel(htmlPanel, getNotesWidth(width) - noteWidthDelta);
                }
                else
                {
@@ -689,82 +716,117 @@ namespace mrHelper.App.Controls
             }
          }
 
-         int realLabelAuthorPercents = Convert.ToInt32(
-            LabelAuthorWidth * ((Parent as CustomFontForm).CurrentFontMultiplier * LabelAuthorWidthMultiplier));
-
-         if (_labelAuthor != null)
-         {
-            _labelAuthor.Width = width * realLabelAuthorPercents / 100;
-         }
-
          if (_textboxFilename != null)
          {
-            _textboxFilename.Width = width * LabelFilenameWidth / 100;
+            _textboxFilename.Width = getDiffContextWidth(width);
             _textboxFilename.Height = (_textboxFilename as TextBoxEx).FullPreferredHeight;
          }
 
-         int remainingPercents = 100
-            - HorzMarginWidth - realLabelAuthorPercents
-            - HorzMarginWidth - NotesWidth
-            - HorzMarginWidth
-            - HorzMarginWidth
-            - HorzMarginWidth;
-
          if (_panelContext != null)
          {
-            resizeLimitedWidthHtmlPanel(_panelContext as HtmlPanel, width * remainingPercents / 100);
+            resizeLimitedWidthHtmlPanel(_panelContext as HtmlPanel, getDiffContextWidth(width));
          }
       }
 
       private void repositionBoxContent(int width)
       {
-         int interControlVertMargin = 5;
-         int interControlHorzMargin = width * HorzMarginWidth / 100;
-
-         // the LabelAuthor is placed at the left side
-         Point labelPos = new Point(interControlHorzMargin, interControlVertMargin);
-         if (_labelAuthor != null)
+         // column A
          {
-            _labelAuthor.Location = labelPos;
-         }
+            Point contextPos = new Point(0, 0);
+            bool needOffsetContext = _noteContainers != null && _rightSideContext;
+            int contextPosLeftOffset = needOffsetContext ? getNotesWidth(width) + getHorzMargin(width) : 0;
+            contextPos.Offset(contextPosLeftOffset, 0);
 
-         // the Context is an optional control to the right of the Label
-         int ctxX = (_labelAuthor != null ? _labelAuthor.Location.X + _labelAuthor.Width : 0) + interControlHorzMargin;
-         Point ctxPos = new Point(ctxX, interControlVertMargin);
-         if (_panelContext != null)
-         {
-            _panelContext.Location = ctxPos;
-         }
-
-         // prepare initial position for controls that places to the right of the Context
-         int nextNoteX = ctxPos.X + (_panelContext != null ? _panelContext.Width + interControlHorzMargin : 0);
-         Point nextNotePos = new Point(nextNoteX, ctxPos.Y);
-
-         // the LabelFilename is placed to the right of the Context and vertically aligned with Notes
-         if (_textboxFilename != null)
-         {
-            _textboxFilename.Location = nextNotePos;
-            nextNotePos.Offset(0, _textboxFilename.Height + interControlVertMargin);
-         }
-
-         // a list of Notes is to the right of the Context
-         if (_textboxesNotes != null)
-         {
-            foreach (Control note in _textboxesNotes)
+            if (_textboxFilename != null)
             {
-               note.Location = nextNotePos;
-               nextNotePos.Offset(0, note.Height + interControlVertMargin);
+               _textboxFilename.Location = contextPos;
+               contextPos.Offset(0, _textboxFilename.Height + 2);
+            }
+
+            if (_panelContext != null)
+            {
+               _panelContext.Location = contextPos;
             }
          }
 
-         int lblAuthorHeight = _labelAuthor != null ? _labelAuthor.Location.Y + _labelAuthor.PreferredSize.Height : 0;
-         int lblFNameHeight = _textboxFilename != null ? _textboxFilename.Location.Y + _textboxFilename.Height : 0;
-         int ctxHeight = _panelContext != null ? _panelContext.Location.Y + _panelContext.Height : 0;
-         int notesHeight = _textboxesNotes != null ? _textboxesNotes.Last().Location.Y + _textboxesNotes.Last().Height : 0;
+         // column B
+         {
+            Point notePos = new Point(0, 0);
+            bool needOffsetNotes = _panelContext != null && !_rightSideContext;
+            int notePosLeftOffset = needOffsetNotes ? getDiffContextWidth(width) + getHorzMargin(width) : 0;
+            notePos.Offset(notePosLeftOffset, 0);
 
-         int boxContentWidth = nextNoteX + (_textboxesNotes != null ? _textboxesNotes.First().Width : 0);
-         int boxContentHeight = new[] { lblAuthorHeight, lblFNameHeight, ctxHeight, notesHeight }.Max();
-         Size = new Size(boxContentWidth + interControlHorzMargin, boxContentHeight + interControlVertMargin);
+            if (_noteContainers != null)
+            {
+               foreach (NoteContainer noteContainer in _noteContainers)
+               {
+                  bool needOffsetNote = noteContainer != _noteContainers.First();
+                  int noteHorzOffset = needOffsetNote ? getNoteRepliesHorzMargin(width) : 0;
+
+                  Point noteInfoPos = notePos;
+                  noteInfoPos.Offset(noteHorzOffset, 0);
+                  noteContainer.NoteInfo.Location = noteInfoPos;
+                  notePos.Offset(0, noteContainer.NoteInfo.Height + 2);
+
+                  Point noteContentPos = notePos;
+                  noteContentPos.Offset(noteHorzOffset, 0);
+                  noteContainer.NoteContent.Location = noteContentPos;
+                  notePos.Offset(0, noteContainer.NoteContent.Height + 5);
+               }
+            }
+         }
+      }
+
+      private void resizeBox()
+      {
+         int boxWidth = 0;
+         {
+            if (_textboxFilename != null && _noteContainers != null)
+            {
+               int textBoxFileNameX = _textboxFilename.Location.X;
+               int textBoxFileNameWidth = _textboxFilename.Width;
+               int notesX = _noteContainers.First().NoteContent.Location.X;
+               int notesWidth = _noteContainers.First().NoteContent.Width;
+               boxWidth = _rightSideContext ? textBoxFileNameX + textBoxFileNameWidth - notesX
+                                            : notesX + notesWidth - textBoxFileNameX;
+            }
+            else if (_noteContainers != null)
+            {
+               boxWidth = _noteContainers.First().NoteContent.Width;
+            }
+            else if (_textboxFilename != null)
+            {
+               boxWidth = _textboxFilename.Width;
+            }
+         }
+
+         int boxHeight = 0;
+         {
+            int notesHeight = 0;
+            if (_noteContainers != null)
+            {
+               notesHeight = _noteContainers.Last().NoteContent.Location.Y
+                           + _noteContainers.Last().NoteContent.Height
+                           - _noteContainers.First().NoteInfo.Location.Y;
+            }
+
+            int ctxHeight = 0;
+            if (_panelContext != null && _textboxFilename != null)
+            {
+               ctxHeight = _panelContext.Location.Y + _panelContext.Height - _textboxFilename.Location.Y;
+            }
+            else if (_panelContext != null)
+            {
+               ctxHeight = _panelContext.Height;
+            }
+            else if (_textboxFilename != null)
+            {
+               ctxHeight = _textboxFilename.Height;
+            }
+            boxHeight = Math.Max(notesHeight, ctxHeight);
+         }
+
+         Size = new Size(boxWidth, boxHeight);
       }
 
       async private Task onEditDiscussionNoteAsync(Control noteControl)
@@ -986,11 +1048,10 @@ namespace mrHelper.App.Controls
             }
          }
 
-         foreach (Control textBox in _textboxesNotes)
+         foreach (Control textBox in _noteContainers.Select(container => container.NoteContent))
          {
             disableNoteControl(textBox);
          }
-         disableNoteControl(_textboxFilename);
       }
 
       async private Task refreshDiscussion(Discussion discussion = null)
@@ -1008,17 +1069,16 @@ namespace mrHelper.App.Controls
             // So if we hide text boxes in _onContentChanging() and process WM_MOUSEUP in `await` below we're in a trouble.
             for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
             {
-               if (_textboxesNotes?.Any(x => x == Controls[iControl]) ?? false)
+               foreach (NoteContainer container in (_noteContainers ?? Array.Empty<NoteContainer>()))
                {
-                  Controls.Remove(Controls[iControl]);
+                  if (container.NoteContent == Controls[iControl] || container.NoteInfo == Controls[iControl])
+                  {
+                     Controls.Remove(Controls[iControl]);
+                     break;
+                  }
                }
             }
-            _textboxesNotes = null;
-            if (_textboxFilename != null)
-            {
-               Controls.Remove(_textboxFilename);
-               _textboxFilename = null;
-            }
+            _noteContainers = null;
 
             // To suspend layout and hide me
             _onContentChanging();
@@ -1049,24 +1109,24 @@ namespace mrHelper.App.Controls
          prepareToRefresh();
 
          // Create controls
-         _textboxesNotes = createTextBoxes(Discussion.Notes);
-         foreach (Control note in _textboxesNotes)
+         _noteContainers = createTextBoxes(Discussion.Notes);
+         foreach (NoteContainer noteContainer  in _noteContainers)
          {
-            Controls.Add(note);
+            Controls.Add(noteContainer.NoteInfo);
+            Controls.Add(noteContainer.NoteContent);
          }
-         _textboxFilename = createTextboxFilename(Discussion.Notes.First());
-         Controls.Add(_textboxFilename);
 
          // To reposition new controls and unhide me back
          _onContentChanged();
+         _noteContainers.First().NoteContent.Focus();
       }
 
       private bool isDiscussionResolved()
       {
          bool result = true;
-         if (_textboxesNotes != null)
+         if (_noteContainers != null)
          {
-            foreach (Control noteControl in _textboxesNotes)
+            foreach (Control noteControl in _noteContainers.Select(container => container.NoteContent))
             {
                if (noteControl != null)
                {
@@ -1094,21 +1154,23 @@ namespace mrHelper.App.Controls
 
       // Widths in %
       private readonly int HorzMarginWidth = 1;
-      private readonly int LabelAuthorWidth = 5;
-      private readonly double LabelAuthorWidthMultiplier = 1.15;
-      private readonly int NotesWidth = 40;
-      private readonly int LabelFilenameWidth = 40;
+      private readonly int NotesWidth = 50;
+      private int? _previousWidth;
+      private readonly bool _rightSideContext;
 
-      private Control _labelAuthor;
       private Control _textboxFilename;
       private Control _panelContext;
-      private IEnumerable<Control> _textboxesNotes;
-      private int? _previousWidth;
+
+      private class NoteContainer
+      {
+         public Control NoteInfo;
+         public Control NoteContent;
+      }
+      private IEnumerable<NoteContainer> _noteContainers;
 
       private readonly User _mergeRequestAuthor;
       private readonly User _currentUser;
       private readonly string _imagePath;
-      private User _firstNoteAuthor; // may change on Refresh
 
       private readonly ContextDepth _diffContextDepth;
       private readonly ContextDepth _tooltipContextDepth;
