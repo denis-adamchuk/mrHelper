@@ -571,7 +571,10 @@ namespace mrHelper.App.Controls
          addMenuItem("-", true, null);
          addMenuItem("Add a comment", true, (s, e) => _onAddComment?.Invoke());
          addMenuItem("Start a thread", true, (s, e) => _onAddThread?.Invoke());
-         contextMenu.MenuItems.Add(new MenuItem("Commands", getCommandItems(contextMenu)));
+         if (_commands != null && _commands.Any())
+         {
+            contextMenu.MenuItems.Add(new MenuItem("Commands", getCommandItems(contextMenu)));
+         }
 
          return contextMenu;
       }
