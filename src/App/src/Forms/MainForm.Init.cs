@@ -152,6 +152,7 @@ namespace mrHelper.App.Forms
          applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxNewDiscussionIsTopMostForm.Checked = Program.Settings.NewDiscussionIsTopMostForm;
+         checkBoxDisableSpellChecker.Checked = Program.Settings.DisableSpellChecker;
 
          var showWarningsOnFileMismatchMode = ConfigurationHelper.GetShowWarningsOnFileMismatchMode(Program.Settings);
          switch (showWarningsOnFileMismatchMode)
