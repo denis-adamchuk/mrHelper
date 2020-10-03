@@ -10,6 +10,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient;
 using static mrHelper.StorageSupport.HeadInfo;
+using System.Windows.Forms;
 
 namespace mrHelper.StorageSupport
 {
@@ -195,8 +196,9 @@ namespace mrHelper.StorageSupport
                return;
             }
 
-            IEnumerable<DiffStruct> filteredDiffs = filterDiffs(comparison.Diffs, baseShaToHeadSha.Item3);
-            if (filteredDiffs.Any())
+            IEnumerable<DiffStruct> filteredDiffs = filterDiffs(isAwaitedUpdate, comparison.Diffs,
+               baseShaToHeadSha.Item1, baseShaToHeadSha.Item2, baseShaToHeadSha.Item3);
+            if (filteredDiffs != null && filteredDiffs.Any())
             {
                comparisons.Add(new ComparisonInternal(filteredDiffs, baseShaToHeadSha.Item1, baseShaToHeadSha.Item2));
             }
@@ -224,7 +226,11 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      private static IEnumerable<DiffStruct> filterDiffs(IEnumerable<DiffStruct> diffs, IEnumerable<FileInfo> filter)
+      /// <summary>
+      /// Removes unwanted files from a Diffs collection if needed and suppresses too big comparisons in non-awaited mode
+      /// </summary>
+      private IEnumerable<DiffStruct> filterDiffs(bool isAwaitedUpdate,
+         IEnumerable<DiffStruct> diffs, string baseSha, string headSha, IEnumerable<FileInfo> filter)
       {
          bool doesDiffMatchFileInfo(DiffStruct diff, FileInfo fileInfo)
          {
@@ -235,7 +241,17 @@ namespace mrHelper.StorageSupport
             // Discussion Position has the same old_path and new_path values.
             return diff.Renamed_File ? doesNewPathMatch : doesNewPathMatch && doesOldPathMatch;
          }
-         return diffs.Where(diff => filter?.Any(fileInfo => doesDiffMatchFileInfo(diff, fileInfo)) ?? true);
+
+         IEnumerable<DiffStruct> filteredDiffs = diffs
+            .Where(diff => filter?.Any(fileInfo => doesDiffMatchFileInfo(diff, fileInfo)) ?? true)
+            .ToArray();
+         if (!isAwaitedUpdate && filteredDiffs.Count() > Constants.MaxAllowedDiffsInBackgroundComparison)
+         {
+            traceInformation(String.Format("Comparison between {0} and {1} contains too many files ({2}) and skipped",
+               baseSha, headSha, filteredDiffs.Count()));
+            return null;
+         }
+         return filteredDiffs;
       }
 
       private static async Task suspendProcessingOfNonAwaitedUpdate(bool isAwaitedUpdate)
@@ -275,6 +291,18 @@ namespace mrHelper.StorageSupport
          if (initialMissingCount == 0)
          {
             return;
+         }
+
+         if (isAwaitedUpdate && initialMissingCount >= Constants.MinDiffsInComparisonToNotifyUser)
+         {
+            string message = String.Format(
+               "This operation requires downloading {0} files and may take a few minutes. " +
+               "Do you really want to continue?", initialMissingCount);
+            if (MessageBox.Show(message, "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
+               == DialogResult.No)
+            {
+               throw new LocalCommitStorageUpdaterLimitException("Too many files in diff");
+            }
          }
 
          traceInformation(String.Format("Downloading files. Total: {0}, Missing: {1}, isAwaitedUpdate={2}",
