@@ -56,7 +56,9 @@ namespace mrHelper.App.Helpers
 
       private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
+#if DEBUG
          Trace.TraceInformation("[GitDataUpdater] Scheduling update of all repositories (on timer)");
+#endif
          scheduleAllProjectsUpdate();
       }
 
@@ -99,11 +101,13 @@ namespace mrHelper.App.Helpers
             .OrderByDescending(x => x.Notes.First().Updated_At)
             .First().Notes.First().Updated_At;
 
-         Debug.WriteLine(String.Format(
+#if DEBUG
+         Trace.TraceInformation(String.Format(
             "[GitDataUpdater] Start processing merge request: "
           + "Host={0}, Project={1}, IId={2}. New Discussions: {3}. LatestChange = {4}",
             mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId,
             totalCount, latestChange.ToLocalTime().ToString()));
+#endif
          if (newDiscussions.Count() > totalCount)
          {
             Trace.TraceWarning("[GitDataUpdater] Number of discussions exceeds the limit");
@@ -115,10 +119,12 @@ namespace mrHelper.App.Helpers
          await fetchMissingData(repo, newDiscussions);
          await doCacheAsync(repo, diffArgs, revisionArgs);
 
-         Debug.WriteLine(String.Format(
+#if DEBUG
+         Trace.TraceInformation(String.Format(
             "[GitDataUpdater] Finished processing merge request with IId={0}. "
           + "Cached git results: {1} git diff, {2} git show",
             mrk.IId, diffArgs.Count, revisionArgs.Count));
+#endif
          setLatestChange(mrk, latestChange);
       }
 

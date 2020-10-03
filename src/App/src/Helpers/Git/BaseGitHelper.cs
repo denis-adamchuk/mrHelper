@@ -73,9 +73,11 @@ namespace mrHelper.App.Helpers
       {
          if (repo.Git == null || repo.Updater == null)
          {
-            Debug.WriteLine(String.Format(
+#if DEBUG
+            Trace.TraceInformation(String.Format(
                "[BaseGitHelper] Update failed. Repository is not ready (Host={0}, Project={1})",
                repo.ProjectKey.HostName, repo.ProjectKey.ProjectName));
+#endif
             return;
          }
 

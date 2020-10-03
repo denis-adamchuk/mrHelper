@@ -60,7 +60,6 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
-         CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
          linkLabelGitLabURL.Text = webUrl;
 
          createPanels();

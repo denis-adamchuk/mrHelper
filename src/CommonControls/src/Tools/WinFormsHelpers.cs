@@ -175,6 +175,11 @@ namespace mrHelper.CommonControls.Tools
          // ResumeLayout().
 
          float currentDPI = control.DeviceDpi;
+         if (currentDPI == designTimeDPI)
+         {
+            return;
+         }
+
          float newEmSize = designTimeFontSize * (designTimeDPI / currentDPI);
          float oldEmSize = control.Font.Size;
 

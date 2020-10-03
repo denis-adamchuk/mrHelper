@@ -114,7 +114,7 @@ namespace mrHelper.StorageSupport
                }
                finally
                {
-                  traceInformation("RequestUpdate() finished");
+                  traceDebug("RequestUpdate() finished");
                }
             }), null);
       }
@@ -264,7 +264,7 @@ namespace mrHelper.StorageSupport
       async private Task fetchCommitsAsync(bool isAwaitedUpdate, int totalMissingShaCount, int fetchedShaCount,
          IEnumerable<string> shas, Action<string> onProgressChange, Action onUpdateStateChange)
       {
-         traceInformation(String.Format("Pending per-commit fetch. Already locked = {0}. Is awaited update = {1}",
+         traceDebug(String.Format("Pending per-commit fetch. Already locked = {0}. Is awaited update = {1}",
             _currentUpdateType.HasValue.ToString(), isAwaitedUpdate.ToString()));
 
          // don't report git internal messages to user, report completion progress manually

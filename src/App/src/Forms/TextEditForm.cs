@@ -14,7 +14,6 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
-         CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
          Text = caption;
          labelNoteAboutInvisibleCharacters.Text = Constants.WarningOnUnescapedMarkdown;
          _uploadsPrefix = uploadsPrefix;

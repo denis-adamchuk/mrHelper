@@ -29,13 +29,15 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
          {
             IEnumerable<MergeRequest> previouslyCachedMergeRequests = _cache.GetMergeRequests(kv.Key);
+#if DEBUG
             IEnumerable<MergeRequest> newMergeRequests = kv.Value;
             if (previouslyCachedMergeRequests != null && newMergeRequests.Count() != previouslyCachedMergeRequests.Count())
             {
-               Debug.WriteLine(String.Format(
+               Trace.TraceInformation(String.Format(
                   "[InternalCacheUpdater] Number of cached merge requests for project {0} at {1} is {2} (was {3} before update)",
                   kv.Key.ProjectName, kv.Key.HostName, newMergeRequests.Count(), previouslyCachedMergeRequests.Count()));
             }
+#endif
 
             cleanupOldRecords(kv.Key, previouslyCachedMergeRequests, kv.Value);
          }

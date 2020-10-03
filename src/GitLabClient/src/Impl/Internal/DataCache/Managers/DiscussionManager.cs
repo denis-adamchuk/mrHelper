@@ -184,9 +184,11 @@ namespace mrHelper.GitLabClient.Managers
          {
             if (mrk != null)
             {
+#if DEBUG
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0}",
                mrk.Value.IId));
+#endif
                scheduleUpdate(new MergeRequestKey[] { mrk.Value }, DiscussionUpdateType.PeriodicUpdate);
             }
             else
@@ -205,8 +207,10 @@ namespace mrHelper.GitLabClient.Managers
 
       private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
+#if DEBUG
          Trace.TraceInformation(
             "[DiscussionManager] Scheduling update of discussions for ALL merge requests on a timer update");
+#endif
 
          scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
             DiscussionUpdateType.PeriodicUpdate);
@@ -239,9 +243,11 @@ namespace mrHelper.GitLabClient.Managers
                out IEnumerable<MergeRequestKey> matchingFilter,
                out IEnumerable<MergeRequestKey> nonMatchingFilter);
 
+#if DEBUG
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Processing scheduled update of discussions for {0}+{1} merge requests (ALL)",
                matchingFilter.Count(), nonMatchingFilter.Count()));
+#endif
 
             await TaskUtils.RunConcurrentFunctionsAsync(matchingFilter,
                x => updateDiscussions(x, scheduledUpdate.Type),
@@ -255,9 +261,11 @@ namespace mrHelper.GitLabClient.Managers
          }
          else
          {
+#if DEBUG
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] Processing scheduled update of discussions for {0} merge requests",
                scheduledUpdate.MergeRequests.Count()));
+#endif
 
             await TaskUtils.RunConcurrentFunctionsAsync(scheduledUpdate.MergeRequests,
                x => updateDiscussions(x, scheduledUpdate.Type),
@@ -376,10 +384,12 @@ namespace mrHelper.GitLabClient.Managers
          {
             if (_updating.Contains(mrk.Value))
             {
+#if DEBUG
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Waiting for completion of updating discussions for MR: "
                 + "Host={0}, Project={1}, IId={2}",
                   mrk.Value.ProjectKey.HostName, mrk.Value.ProjectKey.ProjectName, mrk.Value.IId.ToString()));
+#endif
                await TaskUtils.WhileAsync(() => _updating.Contains(mrk.Value));
             }
          }
@@ -387,8 +397,10 @@ namespace mrHelper.GitLabClient.Managers
          {
             if (_updating.Any())
             {
+#if DEBUG
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Waiting for completion of updating discussions"));
+#endif
                await TaskUtils.WhileAsync(() => _updating.Any());
             }
          }

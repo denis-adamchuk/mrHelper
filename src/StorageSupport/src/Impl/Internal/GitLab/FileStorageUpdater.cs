@@ -138,12 +138,17 @@ namespace mrHelper.StorageSupport
             return;
          }
 
-         traceInformation(String.Format("Got {0} comparisons, isAwaitedUpdate={1}",
+         Action<string> traceFunction = traceDebug;
+         if (isAwaitedUpdate)
+         {
+            traceFunction = traceInformation;
+         }
+
+         traceFunction(String.Format("Got {0} comparisons, isAwaitedUpdate={1}",
             comparisons.Count(), isAwaitedUpdate.ToString()));
-         traceInformation("List of comparisons to process:");
          foreach (ComparisonInternal comparison in comparisons)
          {
-            traceInformation(String.Format("{0} vs {1} ({2} files)",
+            traceFunction(String.Format("{0} vs {1} ({2} files)",
                comparison.BaseSha, comparison.HeadSha, comparison.Diffs.Count()));
          }
 
@@ -267,13 +272,13 @@ namespace mrHelper.StorageSupport
 
          FileInternal[] initialMissingFiles = selectMissingFiles(allFiles).ToArray();
          int initialMissingCount = initialMissingFiles.Length;
-         traceInformation(String.Format("Downloading files. Total: {0}, Missing: {1}, isAwaitedUpdate={2}",
-            allFiles.Count(), initialMissingCount, isAwaitedUpdate.ToString()));
          if (initialMissingCount == 0)
          {
             return;
          }
 
+         traceInformation(String.Format("Downloading files. Total: {0}, Missing: {1}, isAwaitedUpdate={2}",
+            allFiles.Count(), initialMissingCount, isAwaitedUpdate.ToString()));
          bool needTraceProgress = onProgressChange != null;
          await fetchFilesAsync(isAwaitedUpdate, initialMissingFiles, onProgressChange,
             () => needTraceProgress ? initialMissingCount - selectMissingFiles(allFiles).Count() : 0);

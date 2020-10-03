@@ -387,7 +387,9 @@ namespace mrHelper.App.Forms
                {
                   return true;
                }
-               MessageBox.Show(mex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               string extraMessage = "If there are multiple revisions try selecting two other ones";
+               MessageBox.Show(mex.OriginalMessage + ". " + extraMessage, "Error",
+                  MessageBoxButtons.OK, MessageBoxIcon.Error);
                labelWorkflowStatus.Text = "Failed to update storage";
             }
             return false;

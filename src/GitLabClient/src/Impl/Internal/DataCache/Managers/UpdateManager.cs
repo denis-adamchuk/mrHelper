@@ -181,15 +181,27 @@ namespace mrHelper.GitLabClient.Managers
 
          IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(oldDetails, _cache);
 
-         Trace.TraceInformation(
-            String.Format(
-               "[UpdateManager] Merge Request Updates: " +
-               "New {0}, Updated commits {1}, Updated labels {2}, Updated details {3}, Closed {4}",
-               updates.Count(x => x.New),
-               updates.Count(x => x.Commits),
-               updates.Count(x => x.Labels),
-               updates.Count(x => x.Details),
-               updates.Count(x => x.Closed)));
+         int newMergeRequestsCount = updates.Count(x => x.New);
+         int mergeRequestsWithUpdatedCommitsCount = updates.Count(x => x.Commits);
+         int mergeRequestsWithUpdatedLabelsCount = updates.Count(x => x.Labels);
+         int mergeRequestsWithUpdatedDetailsCount = updates.Count(x => x.Details);
+         int closedMergeRequestsCount = updates.Count(x => x.Closed);
+         if (newMergeRequestsCount > 0
+          || mergeRequestsWithUpdatedCommitsCount > 0
+          || mergeRequestsWithUpdatedLabelsCount > 0
+          || mergeRequestsWithUpdatedDetailsCount > 0
+          || closedMergeRequestsCount > 0)
+         {
+            Trace.TraceInformation(
+               String.Format(
+                  "[UpdateManager] Merge Request Updates: " +
+                  "New {0}, Updated commits {1}, Updated labels {2}, Updated details {3}, Closed {4}",
+                  newMergeRequestsCount,
+                  mergeRequestsWithUpdatedCommitsCount,
+                  mergeRequestsWithUpdatedLabelsCount,
+                  mergeRequestsWithUpdatedDetailsCount,
+                  closedMergeRequestsCount));
+         }
 
          return updates;
       }
