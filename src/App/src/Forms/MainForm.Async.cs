@@ -38,7 +38,7 @@ namespace mrHelper.App.Forms
          if (isSearchMode())
          {
             // Pre-load discussions for MR in Search mode
-            dataCache.DiscussionCache.RequestUpdate(mrk, Constants.ReloadListPseudoTimerInterval, null);
+            dataCache.DiscussionCache.RequestUpdate(mrk, ReloadListPseudoTimerInterval, null);
          }
 
          IEnumerable<Discussion> discussions = await loadDiscussionsAsync(dataCache, mrk);
@@ -355,7 +355,7 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation(String.Format(
             "[MainForm] Preparing commit storage by user request for MR IId {0} (at {1})...",
-            mrk.IId, (storage?.Path ?? "null")));
+            mrk.IId, storage.Path));
 
          try
          {
@@ -423,7 +423,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval });
+         requestUpdates(null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
 
          labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been created in project {1}",
             mrkOpt.Value.IId, parameters.ProjectKey.ProjectName);
@@ -492,7 +492,7 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = statusMessage;
             Trace.TraceInformation("[MainForm] {0}", statusMessage);
 
-            requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval });
+            requestUpdates(null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
          }
          else
          {

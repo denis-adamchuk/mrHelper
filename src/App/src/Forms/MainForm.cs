@@ -17,15 +17,34 @@ namespace mrHelper.App.Forms
       CustomFontForm,
       ICommandCallback
    {
+      // TODO Combine multiple timers into a single one
+      private static readonly int TimeTrackingTimerInterval = 1000 * 1; // 1 second
+      private static readonly int ClipboardCheckingTimerInterval = 1000 * 1; // 1 second
+      private static readonly int ProjectAndUserCacheCheckTimerInterval = 1000 * 1; // 1 second
+      private static readonly int ListViewRefreshTimerInterval = 1000 * 20; // 20 seconds
+
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
-      private static readonly int timeTrackingTimerInterval = 1000; // ms
 
       private static readonly string DefaultColorSchemeName = "Default";
       private static readonly string ColorSchemeFileNamePrefix = "colors.json";
+      private static readonly string IconSchemeFileName = "icons.json";
+      private static readonly string BadgeSchemeFileName = "badges.json";
+      private static readonly string ProjectListFileName = "projects.json";
 
       private static readonly string openFromClipboardEnabledText = "Open from Clipboard";
       private static readonly string openFromClipboardDisabledText = "Open from Clipboard (Copy GitLab MR URL to activate)";
+
+      private static readonly string RefreshButtonTooltip = "Refresh merge request list in the background";
+
+      private static readonly int MaxLabelRows = 3;
+      private static readonly string MoreLabelsHint = "See more labels in tooltip";
+
+      private static readonly string NotStartedTimeTrackingText = "Not Started";
+      private static readonly string NotAllowedTimeTrackingText = "<mine>";
+
+      private static readonly int NewOrClosedMergeRequestRefreshListTimerInterval = 1000 * 3; // 3 seconds
+      private static readonly int ReloadListPseudoTimerInterval = 100 * 1; // 0.1 second
 
       internal MainForm(bool startMinimized, bool runningAsUwp, string startUrl)
       {
@@ -82,10 +101,6 @@ namespace mrHelper.App.Forms
          return getMergeRequestKey(null)?.IId ?? 0;
       }
 
-      private readonly System.Windows.Forms.Timer _timeTrackingTimer = new System.Windows.Forms.Timer
-      {
-         Interval = timeTrackingTimerInterval
-      };
       readonly bool _startMinimized;
       bool _forceMaximizeOnNextRestore;
       bool _applySplitterDistanceOnNextRestore;
@@ -99,13 +114,21 @@ namespace mrHelper.App.Forms
       private readonly bool _canSwitchTab = true;
       private readonly bool _allowAutoStartApplication = false;
       private readonly string _startUrl;
-      private readonly System.Windows.Forms.Timer _clipboardCheckingTimer = new System.Windows.Forms.Timer
+      private readonly Timer _timeTrackingTimer = new Timer
       {
-         Interval = Constants.ClipboardCheckingTimerInterval
+         Interval = TimeTrackingTimerInterval
       };
-      private readonly System.Windows.Forms.Timer _projectAndUserCacheCheckTimer = new System.Windows.Forms.Timer
+      private readonly Timer _clipboardCheckingTimer = new Timer
       {
-         Interval = 1000 // ms
+         Interval = ClipboardCheckingTimerInterval
+      };
+      private readonly Timer _projectAndUserCacheCheckTimer = new Timer
+      {
+         Interval = ProjectAndUserCacheCheckTimerInterval
+      };
+      private readonly Timer _listViewRefreshTimer = new Timer
+      {
+         Interval = ListViewRefreshTimerInterval
       };
       private readonly List<Action<bool>> _projectAndUserCacheCheckActions = new List<Action<bool>>();
 

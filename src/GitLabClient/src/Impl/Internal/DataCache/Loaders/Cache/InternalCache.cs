@@ -59,7 +59,7 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       /// </summary>
       public IEnumerable<MergeRequest> GetMergeRequests(ProjectKey key)
       {
-         return _mergeRequests.ContainsKey(key) ?  _mergeRequests[key] : Array.Empty<MergeRequest>();
+         return _mergeRequests.ContainsKey(key) ? _mergeRequests[key] : Array.Empty<MergeRequest>();
       }
 
       /// <summary>

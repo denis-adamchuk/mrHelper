@@ -18,16 +18,7 @@ namespace mrHelper.Common.Constants
       public static string CreateMergeRequestBashScriptName = "create-new-merge-request.sh";
       public static string BashFileName = "bash.exe";
 
-      public static int MaxLabelRows = 3;
-      public static string MoreLabelsHint = "See more labels in tooltip";
-
-      public static string NotStartedTimeTrackingText = "Not Started";
-      public static string NotAllowedTimeTrackingText = "<mine>";
-
       public static string CustomActionsFileName = "CustomActions.xml";
-      public static string IconSchemeFileName = "icons.json";
-      public static string BadgeSchemeFileName = "badges.json";
-      public static string ProjectListFileName = "projects.json";
 
       public static string TimeStampLogFilenameFormat = "yyyy_MM_dd_HHmmss";
 
@@ -46,12 +37,6 @@ namespace mrHelper.Common.Constants
 
       public static int DiscussionCheckOnNewThreadInterval = 1000 * 3; // 3 seconds
       public static int DiscussionCheckOnNewThreadFromDiffToolInterval = 1000 * 15; // 15 seconds
-
-      public static int NewOrClosedMergeRequestRefreshListTimerInterval = 1000 * 3; // 3 seconds
-
-      public static int ReloadListPseudoTimerInterval = 100 * 1; // 0.1 second
-
-      public static int ClipboardCheckingTimerInterval = 1000 * 1; // 1 second
 
       public static string[] ThemeNames = { "Default", "New Year 2020" };
       public static string DefaultThemeName = "Default";

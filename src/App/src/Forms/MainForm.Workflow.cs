@@ -276,6 +276,7 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[MainForm.Workflow] Reset GitLabInstance");
 
+         stopListViewRefreshTimer();
          closeAllFormsExceptMain();
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
@@ -292,6 +293,7 @@ namespace mrHelper.App.Forms
             _currentUser.Add(hostname, user);
          }
          Program.FeedbackReporter.SetUserEMail(user.EMail);
+         startListViewRefreshTimer();
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

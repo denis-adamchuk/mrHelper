@@ -41,6 +41,9 @@ namespace mrHelper.App.Forms
          _projectAndUserCacheCheckTimer?.Stop();
          _projectAndUserCacheCheckTimer?.Dispose();
 
+         _listViewRefreshTimer?.Stop();
+         _listViewRefreshTimer?.Dispose();
+
          // This allows to handle all pending invocations that other threads are
          // already ready to make before we dispose ourselves
          Application.DoEvents();
@@ -207,6 +210,7 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
+         this.columnHeaderRefreshTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -416,7 +420,7 @@ namespace mrHelper.App.Forms
          this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
          this.buttonReloadList.TabIndex = 2;
          this.buttonReloadList.Text = "Refresh List";
-         this.toolTip.SetToolTip(this.buttonReloadList, "Refresh merge request list in the background");
+         this.toolTip.SetToolTip(this.buttonReloadList, RefreshButtonTooltip);
          this.buttonReloadList.UseVisualStyleBackColor = true;
          this.buttonReloadList.Click += new System.EventHandler(this.ButtonReloadList_Click);
          // 
@@ -476,7 +480,8 @@ namespace mrHelper.App.Forms
             this.columnHeaderTotalTime,
             this.columnHeaderResolved,
             this.columnHeaderSourceBranch,
-            this.columnHeaderTargetBranch});
+            this.columnHeaderTargetBranch,
+            this.columnHeaderRefreshTime});
          this.listViewMergeRequests.FullRowSelect = true;
          this.listViewMergeRequests.GridLines = true;
          this.listViewMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
@@ -1994,6 +1999,12 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
+         // columnHeaderRefreshTime
+         // 
+         this.columnHeaderRefreshTime.Tag = "RefreshTime";
+         this.columnHeaderRefreshTime.Text = "Refreshed";
+         this.columnHeaderRefreshTime.Width = 90;
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2228,6 +2239,7 @@ namespace mrHelper.App.Forms
       private GroupBox groupBoxSelectWorkflow;
       private LinkLabel linkLabelWorkflowDescription;
       private CheckBox checkBoxDisableSpellChecker;
+      private ColumnHeader columnHeaderRefreshTime;
    }
 }
 

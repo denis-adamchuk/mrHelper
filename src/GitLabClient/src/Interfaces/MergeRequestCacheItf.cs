@@ -51,7 +51,23 @@ namespace mrHelper.GitLabClient
 
       /// <summary>
       /// </summary>
+      DateTime GetListRefreshTime();
+
+      /// <summary>
+      /// </summary>
+      DateTime GetMergeRequestRefreshTime(MergeRequestKey mrk);
+
+      /// <summary>
+      /// </summary>
       event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
+
+      /// <summary>
+      /// </summary>
+      event Action MergeRequestListRefreshed;
+
+      /// <summary>
+      /// </summary>
+      event Action<MergeRequestKey> MergeRequestRefreshed;
    }
 }
 

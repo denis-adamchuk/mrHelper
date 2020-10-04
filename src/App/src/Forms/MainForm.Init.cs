@@ -393,6 +393,17 @@ namespace mrHelper.App.Forms
          _clipboardCheckingTimer.Start();
       }
 
+      private void startListViewRefreshTimer()
+      {
+         _listViewRefreshTimer.Tick += (s, e) => listViewMergeRequests.Invalidate();
+         _listViewRefreshTimer.Start();
+      }
+
+      private void stopListViewRefreshTimer()
+      {
+         _listViewRefreshTimer.Stop();
+      }
+
       private void createListViewContextMenu()
       {
          listViewMergeRequests.ContextMenuStrip = new ContextMenuStrip();
@@ -493,7 +504,9 @@ namespace mrHelper.App.Forms
       {
          if (_liveDataCache?.MergeRequestCache != null)
          {
-            _liveDataCache.MergeRequestCache.MergeRequestEvent += processUpdate;
+            _liveDataCache.MergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
+            _liveDataCache.MergeRequestCache.MergeRequestListRefreshed += onMergeRequestListRefreshed;
+            _liveDataCache.MergeRequestCache.MergeRequestRefreshed += onMergeRequestRefreshed;
          }
 
          if (_liveDataCache?.TotalTimeCache != null)
@@ -522,7 +535,9 @@ namespace mrHelper.App.Forms
       {
          if (_liveDataCache?.MergeRequestCache != null)
          {
-            _liveDataCache.MergeRequestCache.MergeRequestEvent -= processUpdate;
+            _liveDataCache.MergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
+            _liveDataCache.MergeRequestCache.MergeRequestListRefreshed -= onMergeRequestListRefreshed;
+            _liveDataCache.MergeRequestCache.MergeRequestRefreshed -= onMergeRequestRefreshed;
          }
 
          if (_liveDataCache?.TotalTimeCache != null)
@@ -635,7 +650,7 @@ namespace mrHelper.App.Forms
       private void setupDefaultProjectList()
       {
          // Check if file exists. If it does not, it is not an error.
-         if (!System.IO.File.Exists(Constants.ProjectListFileName))
+         if (!System.IO.File.Exists(ProjectListFileName))
          {
             return;
          }
@@ -644,7 +659,7 @@ namespace mrHelper.App.Forms
          {
             ConfigurationHelper.InitializeSelectedProjects(JsonUtils.
                LoadFromFile<IEnumerable<ConfigurationHelper.HostInProjectsFile>>(
-                  Constants.ProjectListFileName), Program.Settings);
+                  ProjectListFileName), Program.Settings);
          }
          catch (Exception ex) // whatever de-serialization exception
          {

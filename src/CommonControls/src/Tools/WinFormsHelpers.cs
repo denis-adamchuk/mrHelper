@@ -175,7 +175,7 @@ namespace mrHelper.CommonControls.Tools
          // ResumeLayout().
 
          float currentDPI = control.DeviceDpi;
-         if (currentDPI == designTimeDPI)
+         if (Convert.ToInt32(currentDPI) == designTimeDPI)
          {
             return;
          }

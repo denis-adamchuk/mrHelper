@@ -359,7 +359,7 @@ namespace mrHelper.App.Forms
 
       private void initializeIconScheme()
       {
-         if (!System.IO.File.Exists(Constants.IconSchemeFileName))
+         if (!System.IO.File.Exists(IconSchemeFileName))
          {
             return;
          }
@@ -367,7 +367,7 @@ namespace mrHelper.App.Forms
          try
          {
             _iconScheme = JsonUtils.LoadFromFile<Dictionary<string, object>>(
-               Constants.IconSchemeFileName).ToDictionary(
+               IconSchemeFileName).ToDictionary(
                   item => item.Key,
                   item => item.Value.ToString());
          }
@@ -379,7 +379,7 @@ namespace mrHelper.App.Forms
 
       private void initializeBadgeScheme()
       {
-         if (!System.IO.File.Exists(Constants.BadgeSchemeFileName))
+         if (!System.IO.File.Exists(BadgeSchemeFileName))
          {
             return;
          }
@@ -387,7 +387,7 @@ namespace mrHelper.App.Forms
          try
          {
             _badgeScheme = JsonUtils.LoadFromFile<Dictionary<string, object>>(
-               Constants.BadgeSchemeFileName).ToDictionary(
+               BadgeSchemeFileName).ToDictionary(
                   item => item.Key,
                   item => item.Value.ToString());
          }
@@ -631,7 +631,7 @@ namespace mrHelper.App.Forms
             return trackedTime.Amount.Value.ToString(@"hh\:mm\:ss");
          }
 
-         return isTimeTrackingAllowed ? Constants.NotStartedTimeTrackingText : Constants.NotAllowedTimeTrackingText;
+         return isTimeTrackingAllowed ? NotStartedTimeTrackingText : NotAllowedTimeTrackingText;
       }
 
       private bool isTimeTrackingAllowed(User mergeRequestAuthor, string hostname)
@@ -1028,6 +1028,7 @@ namespace mrHelper.App.Forms
          updateVisibleMergeRequestsEnablements();
          updateTrayIcon();
          updateTaskbarIcon();
+         onMergeRequestListRefreshed();
       }
 
       private ListViewItem createListViewMergeRequestItem(ListView listView, FullMergeRequestKey fmk)
@@ -1074,6 +1075,21 @@ namespace mrHelper.App.Forms
                isTimeTrackingAllowed(mr.Author, projectKey.HostName));
          }
 
+         string getRefreshed(MergeRequestKey key)
+         {
+            IMergeRequestCache mergeRequestCache = dataCache?.MergeRequestCache;
+            if (mergeRequestCache == null)
+            {
+               return String.Empty;
+            }
+
+            DateTime refreshed = mergeRequestCache.GetMergeRequestRefreshTime(key);
+            TimeSpan span = DateTime.Now - refreshed;
+            int minutesAgo = Convert.ToInt32(Math.Floor(span.TotalMinutes));
+            minutesAgo += span.Seconds >= 55 ? 1 : 0; // round 55+ seconds to a minute
+            return String.Format("{0} minute{1} ago", minutesAgo, minutesAgo == 1 ? String.Empty : "s");
+         }
+
          void setSubItemTag(string columnTag, ListViewSubItemInfo subItemInfo)
          {
             ColumnHeader columnHeader = item.ListView.Columns
@@ -1098,6 +1114,7 @@ namespace mrHelper.App.Forms
          setSubItemTag("TargetBranch", new ListViewSubItemInfo(x => mr.Target_Branch,          () => String.Empty));
          setSubItemTag("State",        new ListViewSubItemInfo(x => mr.State,                  () => String.Empty));
          setSubItemTag("Resolved",     new ListViewSubItemInfo(x => getDiscussionCount(mrk),   () => String.Empty));
+         setSubItemTag("RefreshTime",  new ListViewSubItemInfo(x => getRefreshed(mrk),         () => String.Empty));
       }
 
       private void recalcRowHeightForMergeRequestListView(ListView listView)
@@ -1154,7 +1171,7 @@ namespace mrHelper.App.Forms
          string joinLabels(IEnumerable<string> labels) => String.Format("{0}\n", String.Join(",", labels));
 
          StringBuilder stringBuilder = new StringBuilder();
-         int take = tooltip ? query.Count() : Constants.MaxLabelRows - 1;
+         int take = tooltip ? query.Count() : MaxLabelRows - 1;
 
          foreach (var x in
             query
@@ -1166,11 +1183,11 @@ namespace mrHelper.App.Forms
 
          if (!tooltip)
          {
-            if (query.Count() > Constants.MaxLabelRows)
+            if (query.Count() > MaxLabelRows)
             {
-               stringBuilder.Append(Constants.MoreLabelsHint);
+               stringBuilder.Append(MoreLabelsHint);
             }
-            else if (query.Count() == Constants.MaxLabelRows)
+            else if (query.Count() == MaxLabelRows)
             {
                stringBuilder.Append(joinLabels(query.OrderBy(x => x.Priority).Last().Labels));
             }
@@ -1198,7 +1215,7 @@ namespace mrHelper.App.Forms
          listView.SmallImageList = imgList;
       }
 
-      private void processUpdate(UserEvents.MergeRequestEvent e)
+      private void onMergeRequestEvent(UserEvents.MergeRequestEvent e)
       {
          if (e.New || e.Commits)
          {
@@ -1246,6 +1263,26 @@ namespace mrHelper.App.Forms
                selected.Selected = true;
             }
          }
+      }
+
+      private void onMergeRequestRefreshed(MergeRequestKey _)
+      {
+         // update Refreshed column
+         listViewMergeRequests.Invalidate();
+      }
+
+      private void onMergeRequestListRefreshed()
+      {
+         DateTime? refreshTimestamp = _liveDataCache?.MergeRequestCache?.GetListRefreshTime();
+         string refreshedAt = refreshTimestamp.HasValue
+            ? String.Format("Refreshed at {0}",
+               refreshTimestamp.Value.ToLocalTime().ToString(Constants.TimeStampFormat))
+            : String.Empty;
+         toolTip.SetToolTip(this.buttonReloadList, String.Format("{0}{1}{2}",
+            RefreshButtonTooltip, refreshedAt == String.Empty ? String.Empty : "\r\n", refreshedAt));
+
+         // update Refreshed column
+         listViewMergeRequests.Invalidate();
       }
 
       private void checkForApplicationUpdates()
@@ -2120,7 +2157,7 @@ namespace mrHelper.App.Forms
             () =>
             {
                labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been merged successfully", mrk.IId);
-               requestUpdates(null, new int[] { Constants.NewOrClosedMergeRequestRefreshListTimerInterval });
+               requestUpdates(null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
             },
             showDiscussionsFormAsync,
             () => _liveDataCache,

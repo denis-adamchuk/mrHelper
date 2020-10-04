@@ -5,7 +5,6 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.GitLabClient.Loaders.Cache;
-using mrHelper.GitLabClient.Accessors;
 
 namespace mrHelper.GitLabClient.Managers
 {
@@ -24,6 +23,7 @@ namespace mrHelper.GitLabClient.Managers
          _dataCacheContext = dataCacheContext;
          _cacheUpdater = cacheUpdater;
          _modificationNotifier = modificationNotifier;
+         _listRefreshTimestamp = DateTime.Now;
 
          _modificationNotifier.MergeRequestModified += onMergeRequestModified;
 
@@ -37,6 +37,8 @@ namespace mrHelper.GitLabClient.Managers
             _updateManager = new UpdateManager(_dataCacheContext, hostname, hostProperties,
                updateContext, _cacheUpdater);
             _updateManager.MergeRequestEvent += onUpdate;
+            _updateManager.MergeRequestListRefreshed += onListRefreshed;
+            _updateManager.MergeRequestRefreshed += onMergeRequestRefreshed;
          }
       }
 
@@ -47,11 +49,15 @@ namespace mrHelper.GitLabClient.Managers
          if (_updateManager != null)
          {
             _updateManager.MergeRequestEvent -= onUpdate;
+            _updateManager.MergeRequestListRefreshed -= onListRefreshed;
+            _updateManager.MergeRequestRefreshed -= onMergeRequestRefreshed;
             _updateManager.Dispose();
          }
       }
 
       public event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
+      public event Action MergeRequestListRefreshed;
+      public event Action<MergeRequestKey> MergeRequestRefreshed;
 
       public IEnumerable<ProjectKey> GetProjects()
       {
@@ -124,6 +130,20 @@ namespace mrHelper.GitLabClient.Managers
          _updateManager?.RequestOneShotUpdate(mrk, intervals);
       }
 
+      public DateTime GetListRefreshTime()
+      {
+         return _listRefreshTimestamp;
+      }
+
+      public DateTime GetMergeRequestRefreshTime(MergeRequestKey mrk)
+      {
+         if (_mergeRequestRefreshTimestamps.TryGetValue(mrk, out DateTime value))
+         {
+            return value;
+         }
+         return _listRefreshTimestamp;
+      }
+
       private void onUpdate(UserEvents.MergeRequestEvent e)
       {
          MergeRequestEvent?.Invoke(e);
@@ -134,10 +154,26 @@ namespace mrHelper.GitLabClient.Managers
          throw new NotImplementedException();
       }
 
+      private void onMergeRequestRefreshed(MergeRequestKey mrk)
+      {
+         _mergeRequestRefreshTimestamps[mrk] = DateTime.Now;
+         MergeRequestRefreshed?.Invoke(mrk);
+      }
+
+      private void onListRefreshed()
+      {
+         _listRefreshTimestamp = DateTime.Now;
+         _mergeRequestRefreshTimestamps.Clear();
+         MergeRequestListRefreshed?.Invoke();
+      }
+
       private readonly InternalCacheUpdater _cacheUpdater;
       private readonly UpdateManager _updateManager;
       private readonly DataCacheContext _dataCacheContext;
       private readonly IModificationNotifier _modificationNotifier;
+      private DateTime _listRefreshTimestamp;
+      private readonly Dictionary<MergeRequestKey, DateTime> _mergeRequestRefreshTimestamps =
+         new Dictionary<MergeRequestKey, DateTime>();
    }
 }
 

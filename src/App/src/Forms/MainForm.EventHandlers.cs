@@ -333,7 +333,7 @@ namespace mrHelper.App.Forms
             }
             else if (isTotalTimeColumnItem())
             {
-               Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
+               Brush brush = text == NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
                e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
             }
             else
@@ -805,7 +805,7 @@ namespace mrHelper.App.Forms
 
             string oldButtonText = buttonReloadList.Text;
             onUpdating();
-            requestUpdates(null, Constants.ReloadListPseudoTimerInterval, () => onUpdated(oldButtonText));
+            requestUpdates(null, ReloadListPseudoTimerInterval, () => onUpdated(oldButtonText));
          }
       }
 

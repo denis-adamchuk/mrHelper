@@ -40,7 +40,9 @@ namespace mrHelper.GitLabClient.Managers
          _timer.Start();
       }
 
-      public event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
+      internal event Action<UserEvents.MergeRequestEvent> MergeRequestEvent;
+      internal event Action MergeRequestListRefreshed;
+      internal event Action<MergeRequestKey> MergeRequestRefreshed;
 
       public void Dispose()
       {
@@ -88,33 +90,21 @@ namespace mrHelper.GitLabClient.Managers
          {
             IEnumerable<UserEvents.MergeRequestEvent> updates =
                await (mrk.HasValue ? updateOneOnTimer(mrk.Value) : updateAllOnTimer());
-
-            if (updates != null)
-            {
-               foreach (UserEvents.MergeRequestEvent update in updates) MergeRequestEvent?.Invoke(update);
-            }
+            notify(updates);
 
             onUpdateFinished?.Invoke();
-            _timer?.Start();
             _oneShotTimers.Remove(oneShotTimer);
+            oneShotTimer.Dispose();
          };
-         _timer?.Stop();
          oneShotTimer.Start();
 
          _oneShotTimers.Add(oneShotTimer);
       }
 
-      /// <summary>
-      /// Process a timer event
-      /// </summary>
       async private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
          IEnumerable<UserEvents.MergeRequestEvent> updates = await updateAllOnTimer();
-
-         if (updates != null)
-         {
-            foreach (UserEvents.MergeRequestEvent update in updates) MergeRequestEvent?.Invoke(update);
-         }
+         notify(updates);
       }
 
       async private Task<IEnumerable<UserEvents.MergeRequestEvent>> updateOneOnTimer(MergeRequestKey mrk)
@@ -131,6 +121,7 @@ namespace mrHelper.GitLabClient.Managers
          {
             _updating = true;
             await _mergeRequestLoader.LoadMergeRequest(mrk);
+            MergeRequestRefreshed?.Invoke(mrk);
          }
          catch (BaseLoaderException ex)
          {
@@ -147,10 +138,13 @@ namespace mrHelper.GitLabClient.Managers
          int legalUpdates = updates.Count(x => x.Labels);
          Debug.Assert(legalUpdates == 0 || legalUpdates == 1);
 
-         Trace.TraceInformation(
-            String.Format(
-               "[UpdateManager] Updated Labels: {0}. MRK: HostName={1}, ProjectName={2}, IId={3}",
-               legalUpdates, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
+         if (legalUpdates > 0)
+         {
+            Trace.TraceInformation(
+               String.Format(
+                  "[UpdateManager] Updated Labels: {0}. MRK: HostName={1}, ProjectName={2}, IId={3}",
+                  legalUpdates, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
+         }
 
          return updates;
       }
@@ -169,6 +163,7 @@ namespace mrHelper.GitLabClient.Managers
          {
             _updating = true;
             await _mergeRequestListLoader.Load();
+            MergeRequestListRefreshed?.Invoke();
          }
          catch (BaseLoaderException ex)
          {
@@ -204,6 +199,14 @@ namespace mrHelper.GitLabClient.Managers
          }
 
          return updates;
+      }
+
+      private void notify(IEnumerable<UserEvents.MergeRequestEvent> updates)
+      {
+         if (updates != null)
+         {
+            foreach (UserEvents.MergeRequestEvent update in updates) MergeRequestEvent?.Invoke(update);
+         }
       }
 
       private System.Timers.Timer _timer;
