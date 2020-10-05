@@ -153,6 +153,39 @@ namespace mrHelper.App.Forms
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxNewDiscussionIsTopMostForm.Checked = Program.Settings.NewDiscussionIsTopMostForm;
          checkBoxDisableSpellChecker.Checked = Program.Settings.DisableSpellChecker;
+         checkBoxFlatReplies.Checked = !Program.Settings.NeedShiftReplies;
+
+         var diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
+         switch (diffContextPosition)
+         {
+            case ConfigurationHelper.DiffContextPosition.Top:
+               radioButtonDiffContextPositionTop.Checked = true;
+               break;
+
+            case ConfigurationHelper.DiffContextPosition.Left:
+               radioButtonDiffContextPositionLeft.Checked = true;
+               break;
+
+            case ConfigurationHelper.DiffContextPosition.Right:
+               radioButtonDiffContextPositionRight.Checked = true;
+               break;
+         }
+
+         var discussionColumnWidth = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
+         switch (discussionColumnWidth)
+         {
+            case ConfigurationHelper.DiscussionColumnWidth.Narrow:
+               radioButtonDiscussionColumnWidthNarrow.Checked = true;
+               break;
+
+            case ConfigurationHelper.DiscussionColumnWidth.Medium:
+               radioButtonDiscussionColumnWidthMedium.Checked = true;
+               break;
+
+            case ConfigurationHelper.DiscussionColumnWidth.Wide:
+               radioButtonDiscussionColumnWidthWide.Checked = true;
+               break;
+         }
 
          var showWarningsOnFileMismatchMode = ConfigurationHelper.GetShowWarningsOnFileMismatchMode(Program.Settings);
          switch (showWarningsOnFileMismatchMode)

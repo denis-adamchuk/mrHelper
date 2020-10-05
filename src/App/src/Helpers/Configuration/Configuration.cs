@@ -48,6 +48,15 @@ namespace mrHelper.App.Helpers
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
       private static readonly string DiffContextDepthDefaultValue = "2";
 
+      private static readonly string DiffContextPositionKeyName = "DiffContextPosition";
+      private static readonly string DiffContextPositionDefaultValue = "right";
+
+      private static readonly string DiscussionColumnWidthKeyName = "DiscussionColumnWidth";
+      private static readonly string DiscussionColumnWidthDefaultValue = "medium";
+
+      private static readonly string NeedShiftRepliesKeyName = "NeedShiftReplies";
+      private static readonly bool   NeedShiftRepliesDefaultValue = true;
+
       private static readonly string MinimizeOnCloseKeyName = "MinimizeOnClose";
       private static readonly bool   MinimizeOnCloseDefaultValue = false;
 
@@ -401,6 +410,29 @@ namespace mrHelper.App.Helpers
       {
          get { return getValue(DiffContextDepthKeyName, DiffContextDepthDefaultValue); }
          set { setValue(DiffContextDepthKeyName, value); }
+      }
+
+      public string DiffContextPosition
+      {
+         get { return getValue(DiffContextPositionKeyName, DiffContextPositionDefaultValue); }
+         set { setValue(DiffContextPositionKeyName, value); }
+      }
+
+      public string DiscussionColumnWidth
+      {
+         get { return getValue(DiscussionColumnWidthKeyName, DiscussionColumnWidthDefaultValue); }
+         set { setValue(DiscussionColumnWidthKeyName, value); }
+      }
+
+      public bool NeedShiftReplies
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               NeedShiftRepliesKeyName, boolToString(NeedShiftRepliesDefaultValue)),
+                  out bool result) ? result : NeedShiftRepliesDefaultValue;
+         }
+         set { setValue(NeedShiftRepliesKeyName, boolToString(value)); }
       }
 
       public string ColorSchemeFileName

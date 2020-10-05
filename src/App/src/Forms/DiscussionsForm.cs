@@ -28,8 +28,8 @@ namespace mrHelper.App.Forms
          DataCache dataCache, GitLabInstance gitLabInstance, IModificationListener modificationListener,
          IGitCommandService git, User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
-         int diffContextDepth, ColorScheme colorScheme,
-         Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit, Action onDiscussionModified, string webUrl)
+         ColorScheme colorScheme, Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit,
+         Action onDiscussionModified, string webUrl)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -37,7 +37,6 @@ namespace mrHelper.App.Forms
          _currentUser = currentUser;
 
          _git = git;
-         _diffContextDepth = diffContextDepth;
 
          _colorScheme = colorScheme;
 
@@ -46,6 +45,7 @@ namespace mrHelper.App.Forms
          _modificationListener = modificationListener;
          _updateGit = updateGit;
          _onDiscussionModified = onDiscussionModified;
+         _diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
 
          CustomCommandLoader loader = new CustomCommandLoader(this);
          try
@@ -564,9 +564,9 @@ namespace mrHelper.App.Forms
                _gitLabInstance, _modificationListener, _mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
-               _diffContextDepth, _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
+               _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
                sender => MostRecentFocusedDiscussionControl = sender,
-               _htmlTooltip, onAddCommentAction, onAddThreadAction, _commands, onCommandAction, true)
+               _htmlTooltip, onAddCommentAction, onAddThreadAction, _commands, onCommandAction)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -635,22 +635,25 @@ namespace mrHelper.App.Forms
          previousBoxLocation.Offset(0, topOffset);
 
          // Stack boxes vertically
-         int discussionBoxTopMargin = 20;
-         int discussionBoxHorzMargin = 20;
+         int discussionBoxTopMargin = _diffContextPosition == ConfigurationHelper.DiffContextPosition.Top ? 40 : 20;
+         int firstDiscussionBoxTopMargin = 20;
 
-         foreach (DiscussionBox box in getVisibleAndSortedBoxes())
+         IEnumerable<DiscussionBox> boxes = getVisibleAndSortedBoxes();
+         foreach (DiscussionBox box in boxes)
          {
-            // Temporary variable to void changing box Location more than once
-            Point location = new Point(discussionBoxHorzMargin, discussionBoxTopMargin);
-            location.Offset(0, previousBoxLocation.Y + previousBoxSize.Height);
-
             // If Vertical Scroll is visible, its width is already excluded from ClientSize.Width
-            int vscrollDelta = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
+            int vscrollWidth = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
 
-            // Discussion box can take all the width except scroll bars and the left margin
-            box.AdjustToWidth(ClientSize.Width - vscrollDelta - discussionBoxHorzMargin * 2);
+            // Discussion box can take all the width except scroll bar
+            int clientWidth = ClientSize.Width - vscrollWidth;
+            box.AdjustToWidth(clientWidth);
 
+            int boxLocationX = (clientWidth - box.Width) / 2;
+            int topMargin = box == boxes.First() ? firstDiscussionBoxTopMargin : discussionBoxTopMargin;
+            int boxLocationY = discussionBoxTopMargin + previousBoxLocation.Y + previousBoxSize.Height;
+            Point location = new Point(boxLocationX, boxLocationY);
             box.Location = location + (Size)AutoScrollPosition;
+
             previousBoxLocation = location;
             previousBoxSize = box.Size;
          }
@@ -746,7 +749,6 @@ namespace mrHelper.App.Forms
       private readonly string _mergeRequestTitle;
       private readonly User _mergeRequestAuthor;
       private readonly IGitCommandService _git;
-      private readonly int _diffContextDepth;
       private readonly ColorScheme _colorScheme;
 
       private readonly User _currentUser;
@@ -755,6 +757,7 @@ namespace mrHelper.App.Forms
       private readonly IModificationListener _modificationListener;
       private readonly Func<MergeRequestKey, IEnumerable<Discussion>, Task> _updateGit;
       private readonly Action _onDiscussionModified;
+      private ConfigurationHelper.DiffContextPosition _diffContextPosition;
 
       private DiscussionFilterPanel FilterPanel;
       private DiscussionFilter DisplayFilter; // filters out discussions by user preferences

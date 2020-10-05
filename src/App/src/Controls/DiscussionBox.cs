@@ -30,7 +30,7 @@ namespace mrHelper.App.Controls
          SingleDiscussionAccessor accessor, IGitCommandService git,
          User currentUser, ProjectKey projectKey, Discussion discussion,
          User mergeRequestAuthor,
-         int diffContextDepth, ColorScheme colorScheme,
+         ColorScheme colorScheme,
          Action<DiscussionBox> onContentChanging,
          Action<DiscussionBox> onContentChanged,
          Action<Control> onControlGotFocus,
@@ -38,8 +38,7 @@ namespace mrHelper.App.Controls
          Action onAddComment,
          Action onAddThread,
          IEnumerable<ICommand> commands,
-         Action<ICommand> onCommand,
-         bool rightSideContext)
+         Action<ICommand> onCommand)
       {
          Parent = parent;
 
@@ -50,9 +49,8 @@ namespace mrHelper.App.Controls
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
-         _rightSideContext = rightSideContext;
 
-         _diffContextDepth = new ContextDepth(0, diffContextDepth);
+         _diffContextDepth = new ContextDepth(0, ConfigurationHelper.GetDiffContextDepth(Program.Settings));
          _tooltipContextDepth = new ContextDepth(5, 5);
          if (git != null)
          {
@@ -60,6 +58,8 @@ namespace mrHelper.App.Controls
             _tooltipContextMaker = new CombinedContextMaker(git);
          }
          _colorScheme = colorScheme;
+         _diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
+         _discussionColumnWidth = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
 
          _onContentChanging = () =>
          {
@@ -671,29 +671,31 @@ namespace mrHelper.App.Controls
 
          resizeBoxContent(width);
          repositionBoxContent(width);
-         resizeBox();
+         resizeBox(width);
          _previousWidth = width;
       }
 
-      private int getNotesWidth(int width)
+      private int getColumnInterval(int width)
       {
-         return width * NotesWidth / 100;
+         return width * ColumnInterval / 100;
       }
 
-      private int getHorzMargin(int width)
+      private int getNoteWidth(int width)
       {
-         return width * HorzMarginWidth / 100;
-      }
-
-      private int getNoteRepliesHorzMargin(int width)
-      {
-         return width * 2 * HorzMarginWidth / 100;
+         Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> noteWidth =
+            _diffContextPosition == ConfigurationHelper.DiffContextPosition.Top
+               ? NoteWidthOneColumn : NoteWidthTwoColumns;
+         return width * noteWidth[_discussionColumnWidth] / 100;
       }
 
       private int getDiffContextWidth(int width)
       {
-         int remainingPercents = 100 - HorzMarginWidth - NotesWidth;
-         return width * remainingPercents / 100;
+         return getNoteWidth(width);
+      }
+
+      private int getNoteRepliesPadding(int width)
+      {
+         return Program.Settings.NeedShiftReplies ? width * RepliesPadding / 100 : 0;
       }
 
       private void resizeBoxContent(int width)
@@ -704,13 +706,13 @@ namespace mrHelper.App.Controls
             foreach (Control noteControl in noteContentControls)
             {
                bool needShrinkNote = noteControl != noteContentControls.First();
-               int noteWidthDelta = needShrinkNote ? getNoteRepliesHorzMargin(width) : 0;
+               int noteWidthDelta = needShrinkNote ? getNoteRepliesPadding(width) : 0;
 
                HtmlPanel htmlPanel = noteControl as HtmlPanel;
                DiscussionNote note = getNoteFromControl(noteControl);
                if (note != null && !isServiceDiscussionNote(note))
                {
-                  resizeLimitedWidthHtmlPanel(htmlPanel, getNotesWidth(width) - noteWidthDelta);
+                  resizeLimitedWidthHtmlPanel(htmlPanel, getNoteWidth(width) - noteWidthDelta);
                }
                else
                {
@@ -733,11 +735,26 @@ namespace mrHelper.App.Controls
 
       private void repositionBoxContent(int width)
       {
+         if (_diffContextPosition != ConfigurationHelper.DiffContextPosition.Top)
+         {
+            repositionBoxContentInTwoColumns(width);
+         }
+         else
+         {
+            repositionBoxContentInOneColumn(width);
+         }
+      }
+
+      private void repositionBoxContentInTwoColumns(int width)
+      {
+         Debug.Assert(_diffContextPosition == ConfigurationHelper.DiffContextPosition.Right
+                   || _diffContextPosition == ConfigurationHelper.DiffContextPosition.Left);
+
          // column A
          {
             Point contextPos = new Point(0, 0);
-            bool needOffsetContext = _noteContainers != null && _rightSideContext;
-            int contextPosLeftOffset = needOffsetContext ? getNotesWidth(width) + getHorzMargin(width) : 0;
+            bool needOffsetContext = _diffContextPosition == ConfigurationHelper.DiffContextPosition.Right;
+            int contextPosLeftOffset = needOffsetContext ? getNoteWidth(width) + getColumnInterval(width) : 0;
             contextPos.Offset(contextPosLeftOffset, 0);
 
             if (_textboxFilename != null)
@@ -755,53 +772,74 @@ namespace mrHelper.App.Controls
          // column B
          {
             Point notePos = new Point(0, 0);
-            bool needOffsetNotes = _panelContext != null && !_rightSideContext;
-            int notePosLeftOffset = needOffsetNotes ? getDiffContextWidth(width) + getHorzMargin(width) : 0;
+            bool needOffsetNotes = _diffContextPosition == ConfigurationHelper.DiffContextPosition.Left;
+            int notePosLeftOffset = needOffsetNotes ? getDiffContextWidth(width) + getColumnInterval(width) : 0;
             notePos.Offset(notePosLeftOffset, 0);
 
-            if (_noteContainers != null)
+            repositionNotes(width, notePos);
+         }
+      }
+
+      private void repositionBoxContentInOneColumn(int width)
+      {
+         Debug.Assert(_diffContextPosition == ConfigurationHelper.DiffContextPosition.Top);
+
+         Point controlPos = new Point(0, 0);
+         if (_textboxFilename != null)
+         {
+            _textboxFilename.Location = controlPos;
+            controlPos.Offset(0, _textboxFilename.Height + 2);
+         }
+
+         if (_panelContext != null)
+         {
+            _panelContext.Location = controlPos;
+            controlPos.Offset(0, _panelContext.Height + 5);
+         }
+
+         repositionNotes(width, controlPos);
+      }
+
+      private void repositionNotes(int width, Point controlPos)
+      {
+         if (_noteContainers != null)
+         {
+            foreach (NoteContainer noteContainer in _noteContainers)
             {
-               foreach (NoteContainer noteContainer in _noteContainers)
-               {
-                  bool needOffsetNote = noteContainer != _noteContainers.First();
-                  int noteHorzOffset = needOffsetNote ? getNoteRepliesHorzMargin(width) : 0;
+               bool needOffsetNote = noteContainer != _noteContainers.First();
+               int noteHorzOffset = needOffsetNote ? getNoteRepliesPadding(width) : 0;
 
-                  Point noteInfoPos = notePos;
-                  noteInfoPos.Offset(noteHorzOffset, 0);
-                  noteContainer.NoteInfo.Location = noteInfoPos;
-                  notePos.Offset(0, noteContainer.NoteInfo.Height + 2);
+               Point noteInfoPos = controlPos;
+               noteInfoPos.Offset(noteHorzOffset, 0);
+               noteContainer.NoteInfo.Location = noteInfoPos;
+               controlPos.Offset(0, noteContainer.NoteInfo.Height + 2);
 
-                  Point noteContentPos = notePos;
-                  noteContentPos.Offset(noteHorzOffset, 0);
-                  noteContainer.NoteContent.Location = noteContentPos;
-                  notePos.Offset(0, noteContainer.NoteContent.Height + 5);
-               }
+               Point noteContentPos = controlPos;
+               noteContentPos.Offset(noteHorzOffset, 0);
+               noteContainer.NoteContent.Location = noteContentPos;
+               controlPos.Offset(0, noteContainer.NoteContent.Height + 5);
             }
          }
       }
 
-      private void resizeBox()
+      private void resizeBox(int width)
       {
-         int boxWidth = 0;
+         if (_diffContextPosition != ConfigurationHelper.DiffContextPosition.Top)
          {
-            if (_textboxFilename != null && _noteContainers != null)
-            {
-               int textBoxFileNameX = _textboxFilename.Location.X;
-               int textBoxFileNameWidth = _textboxFilename.Width;
-               int notesX = _noteContainers.First().NoteContent.Location.X;
-               int notesWidth = _noteContainers.First().NoteContent.Width;
-               boxWidth = _rightSideContext ? textBoxFileNameX + textBoxFileNameWidth - notesX
-                                            : notesX + notesWidth - textBoxFileNameX;
-            }
-            else if (_noteContainers != null)
-            {
-               boxWidth = _noteContainers.First().NoteContent.Width;
-            }
-            else if (_textboxFilename != null)
-            {
-               boxWidth = _textboxFilename.Width;
-            }
+            resizeBoxInTwoColumns(width);
          }
+         else
+         {
+            resizeBoxInOneColumn(width);
+         }
+      }
+
+      private void resizeBoxInTwoColumns(int width)
+      {
+         Debug.Assert(_diffContextPosition == ConfigurationHelper.DiffContextPosition.Right
+                   || _diffContextPosition == ConfigurationHelper.DiffContextPosition.Left);
+
+         int boxWidth = getNoteWidth(width) + getColumnInterval(width) + getDiffContextWidth(width);
 
          int boxHeight = 0;
          {
@@ -827,6 +865,29 @@ namespace mrHelper.App.Controls
                ctxHeight = _textboxFilename.Height;
             }
             boxHeight = Math.Max(notesHeight, ctxHeight);
+         }
+
+         Size = new Size(boxWidth, boxHeight);
+      }
+
+      private void resizeBoxInOneColumn(int width)
+      {
+         Debug.Assert(_diffContextPosition == ConfigurationHelper.DiffContextPosition.Top);
+
+         int boxWidth = getNoteWidth(width);
+
+         int boxHeight = 0;
+         if (_noteContainers != null && _textboxFilename != null)
+         {
+            boxHeight = _noteContainers.Last().NoteContent.Location.Y
+                      + _noteContainers.Last().NoteContent.Height
+                      - _textboxFilename.Location.Y;
+         }
+         else if (_noteContainers != null)
+         {
+            boxHeight = _noteContainers.Last().NoteContent.Location.Y
+                      + _noteContainers.Last().NoteContent.Height
+                      - _noteContainers.First().NoteInfo.Location.Y;
          }
 
          Size = new Size(boxWidth, boxHeight);
@@ -1156,10 +1217,23 @@ namespace mrHelper.App.Controls
       }
 
       // Widths in %
-      private readonly int HorzMarginWidth = 1;
-      private readonly int NotesWidth = 50;
+      private readonly int RepliesPadding = 2;
+      private readonly int ColumnInterval = 1;
+      private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidthOneColumn =
+         new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
+      {
+         { ConfigurationHelper.DiscussionColumnWidth.Narrow, 45 },
+         { ConfigurationHelper.DiscussionColumnWidth.Medium, 55 },
+         { ConfigurationHelper.DiscussionColumnWidth.Wide,   65 }
+      };
+      private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidthTwoColumns =
+         new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
+      {
+         { ConfigurationHelper.DiscussionColumnWidth.Narrow, 37 },
+         { ConfigurationHelper.DiscussionColumnWidth.Medium, 42 },
+         { ConfigurationHelper.DiscussionColumnWidth.Wide,   47 }
+      };
       private int? _previousWidth;
-      private readonly bool _rightSideContext;
 
       private Control _textboxFilename;
       private Control _panelContext;
@@ -1183,7 +1257,8 @@ namespace mrHelper.App.Controls
       private readonly IDiscussionEditor _editor;
 
       private readonly ColorScheme _colorScheme;
-
+      private ConfigurationHelper.DiffContextPosition _diffContextPosition;
+      private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;
       private readonly Action<Control> _onControlGotFocus;

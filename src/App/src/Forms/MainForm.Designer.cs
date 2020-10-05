@@ -87,6 +87,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderResolved = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRefreshTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxDisplayFilter = new System.Windows.Forms.CheckBox();
          this.tabPageSearch = new System.Windows.Forms.TabPage();
          this.groupBoxSearch = new System.Windows.Forms.GroupBox();
@@ -117,7 +118,6 @@ namespace mrHelper.App.Forms
          this.checkBoxDisableSplitterRestrictions = new System.Windows.Forms.CheckBox();
          this.checkBoxNewDiscussionIsTopMostForm = new System.Windows.Forms.CheckBox();
          this.comboBoxHost = new System.Windows.Forms.ComboBox();
-         this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
          this.radioButtonSelectByProjects = new System.Windows.Forms.RadioButton();
          this.buttonEditUsers = new System.Windows.Forms.Button();
          this.listViewUsers = new System.Windows.Forms.ListView();
@@ -134,6 +134,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderHost = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAccessToken = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxDisableSpellChecker = new System.Windows.Forms.CheckBox();
+         this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -155,6 +156,15 @@ namespace mrHelper.App.Forms
          this.tabPageSettingsUserInterface = new System.Windows.Forms.TabPage();
          this.groupBoxOtherUI = new System.Windows.Forms.GroupBox();
          this.groupBoxDiscussionsView = new System.Windows.Forms.GroupBox();
+         this.groupBoxColumnWidth = new System.Windows.Forms.GroupBox();
+         this.radioButtonDiscussionColumnWidthWide = new System.Windows.Forms.RadioButton();
+         this.radioButtonDiscussionColumnWidthMedium = new System.Windows.Forms.RadioButton();
+         this.radioButtonDiscussionColumnWidthNarrow = new System.Windows.Forms.RadioButton();
+         this.groupBoxDiffContext = new System.Windows.Forms.GroupBox();
+         this.radioButtonDiffContextPositionRight = new System.Windows.Forms.RadioButton();
+         this.radioButtonDiffContextPositionLeft = new System.Windows.Forms.RadioButton();
+         this.radioButtonDiffContextPositionTop = new System.Windows.Forms.RadioButton();
+         this.checkBoxFlatReplies = new System.Windows.Forms.CheckBox();
          this.labelDepth = new System.Windows.Forms.Label();
          this.groupBoxNewDiscussionViewUI = new System.Windows.Forms.GroupBox();
          this.groupBoxGeneral = new System.Windows.Forms.GroupBox();
@@ -210,7 +220,6 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.columnHeaderRefreshTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -227,6 +236,8 @@ namespace mrHelper.App.Forms
          this.tabPageSettingsUserInterface.SuspendLayout();
          this.groupBoxOtherUI.SuspendLayout();
          this.groupBoxDiscussionsView.SuspendLayout();
+         this.groupBoxColumnWidth.SuspendLayout();
+         this.groupBoxDiffContext.SuspendLayout();
          this.groupBoxNewDiscussionViewUI.SuspendLayout();
          this.groupBoxGeneral.SuspendLayout();
          this.tabPageSettingsBehavior.SuspendLayout();
@@ -420,7 +431,7 @@ namespace mrHelper.App.Forms
          this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
          this.buttonReloadList.TabIndex = 2;
          this.buttonReloadList.Text = "Refresh List";
-         this.toolTip.SetToolTip(this.buttonReloadList, RefreshButtonTooltip);
+         this.toolTip.SetToolTip(this.buttonReloadList, "Refresh merge request list in the background");
          this.buttonReloadList.UseVisualStyleBackColor = true;
          this.buttonReloadList.Click += new System.EventHandler(this.ButtonReloadList_Click);
          // 
@@ -561,6 +572,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderTargetBranch.Tag = "TargetBranch";
          this.columnHeaderTargetBranch.Text = "Target Branch";
          this.columnHeaderTargetBranch.Width = 100;
+         // 
+         // columnHeaderRefreshTime
+         // 
+         this.columnHeaderRefreshTime.Tag = "RefreshTime";
+         this.columnHeaderRefreshTime.Text = "Refreshed";
+         this.columnHeaderRefreshTime.Width = 90;
          // 
          // checkBoxDisplayFilter
          // 
@@ -916,23 +933,6 @@ namespace mrHelper.App.Forms
          this.comboBoxHost.SelectionChangeCommitted += new System.EventHandler(this.ComboBoxHost_SelectionChangeCommited);
          this.comboBoxHost.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.ComboBoxHost_Format);
          // 
-         // comboBoxDCDepth
-         // 
-         this.comboBoxDCDepth.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxDCDepth.FormattingEnabled = true;
-         this.comboBoxDCDepth.Items.AddRange(new object[] {
-            "0",
-            "1",
-            "2",
-            "3",
-            "4"});
-         this.comboBoxDCDepth.Location = new System.Drawing.Point(106, 19);
-         this.comboBoxDCDepth.Name = "comboBoxDCDepth";
-         this.comboBoxDCDepth.Size = new System.Drawing.Size(58, 21);
-         this.comboBoxDCDepth.TabIndex = 27;
-         this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for.");
-         this.comboBoxDCDepth.SelectedIndexChanged += new System.EventHandler(this.comboBoxDCDepth_SelectedIndexChanged);
-         // 
          // radioButtonSelectByProjects
          // 
          this.radioButtonSelectByProjects.AutoSize = true;
@@ -1107,6 +1107,23 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.checkBoxDisableSpellChecker, "Switch-off spell-checking functionality");
          this.checkBoxDisableSpellChecker.UseVisualStyleBackColor = true;
          this.checkBoxDisableSpellChecker.CheckedChanged += new System.EventHandler(this.checkBoxDisableSpellChecker_CheckedChanged);
+         // 
+         // comboBoxDCDepth
+         // 
+         this.comboBoxDCDepth.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxDCDepth.FormattingEnabled = true;
+         this.comboBoxDCDepth.Items.AddRange(new object[] {
+            "0",
+            "1",
+            "2",
+            "3",
+            "4"});
+         this.comboBoxDCDepth.Location = new System.Drawing.Point(114, 19);
+         this.comboBoxDCDepth.Name = "comboBoxDCDepth";
+         this.comboBoxDCDepth.Size = new System.Drawing.Size(81, 21);
+         this.comboBoxDCDepth.TabIndex = 27;
+         this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for");
+         this.comboBoxDCDepth.SelectedIndexChanged += new System.EventHandler(this.comboBoxDCDepth_SelectedIndexChanged);
          // 
          // contextMenuStrip
          // 
@@ -1317,7 +1334,7 @@ namespace mrHelper.App.Forms
          // groupBoxOtherUI
          // 
          this.groupBoxOtherUI.Controls.Add(this.checkBoxDisableSplitterRestrictions);
-         this.groupBoxOtherUI.Location = new System.Drawing.Point(6, 230);
+         this.groupBoxOtherUI.Location = new System.Drawing.Point(6, 320);
          this.groupBoxOtherUI.Name = "groupBoxOtherUI";
          this.groupBoxOtherUI.Size = new System.Drawing.Size(577, 46);
          this.groupBoxOtherUI.TabIndex = 29;
@@ -1326,23 +1343,140 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxDiscussionsView
          // 
+         this.groupBoxDiscussionsView.Controls.Add(this.groupBoxColumnWidth);
+         this.groupBoxDiscussionsView.Controls.Add(this.groupBoxDiffContext);
+         this.groupBoxDiscussionsView.Controls.Add(this.checkBoxFlatReplies);
          this.groupBoxDiscussionsView.Controls.Add(this.labelDepth);
          this.groupBoxDiscussionsView.Controls.Add(this.comboBoxDCDepth);
          this.groupBoxDiscussionsView.Location = new System.Drawing.Point(6, 171);
          this.groupBoxDiscussionsView.Name = "groupBoxDiscussionsView";
-         this.groupBoxDiscussionsView.Size = new System.Drawing.Size(577, 53);
+         this.groupBoxDiscussionsView.Size = new System.Drawing.Size(577, 143);
          this.groupBoxDiscussionsView.TabIndex = 28;
          this.groupBoxDiscussionsView.TabStop = false;
          this.groupBoxDiscussionsView.Text = "Discussions View";
+         // 
+         // groupBoxColumnWidth
+         // 
+         this.groupBoxColumnWidth.Controls.Add(this.radioButtonDiscussionColumnWidthWide);
+         this.groupBoxColumnWidth.Controls.Add(this.radioButtonDiscussionColumnWidthMedium);
+         this.groupBoxColumnWidth.Controls.Add(this.radioButtonDiscussionColumnWidthNarrow);
+         this.groupBoxColumnWidth.Location = new System.Drawing.Point(230, 46);
+         this.groupBoxColumnWidth.Name = "groupBoxColumnWidth";
+         this.groupBoxColumnWidth.Size = new System.Drawing.Size(170, 91);
+         this.groupBoxColumnWidth.TabIndex = 34;
+         this.groupBoxColumnWidth.TabStop = false;
+         this.groupBoxColumnWidth.Text = "Column Width";
+         // 
+         // radioButtonDiscussionColumnWidthWide
+         // 
+         this.radioButtonDiscussionColumnWidthWide.AutoSize = true;
+         this.radioButtonDiscussionColumnWidthWide.Location = new System.Drawing.Point(6, 65);
+         this.radioButtonDiscussionColumnWidthWide.Name = "radioButtonDiscussionColumnWidthWide";
+         this.radioButtonDiscussionColumnWidthWide.Size = new System.Drawing.Size(50, 17);
+         this.radioButtonDiscussionColumnWidthWide.TabIndex = 2;
+         this.radioButtonDiscussionColumnWidthWide.TabStop = true;
+         this.radioButtonDiscussionColumnWidthWide.Text = "Wide";
+         this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthWide, "Wide column(s) for diff context and discussion notes");
+         this.radioButtonDiscussionColumnWidthWide.UseVisualStyleBackColor = true;
+         this.radioButtonDiscussionColumnWidthWide.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
+         // 
+         // radioButtonDiscussionColumnWidthMedium
+         // 
+         this.radioButtonDiscussionColumnWidthMedium.AutoSize = true;
+         this.radioButtonDiscussionColumnWidthMedium.Location = new System.Drawing.Point(6, 42);
+         this.radioButtonDiscussionColumnWidthMedium.Name = "radioButtonDiscussionColumnWidthMedium";
+         this.radioButtonDiscussionColumnWidthMedium.Size = new System.Drawing.Size(62, 17);
+         this.radioButtonDiscussionColumnWidthMedium.TabIndex = 1;
+         this.radioButtonDiscussionColumnWidthMedium.TabStop = true;
+         this.radioButtonDiscussionColumnWidthMedium.Text = "Medium";
+         this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthMedium, "Medium column(s) for diff context and discussion notes");
+         this.radioButtonDiscussionColumnWidthMedium.UseVisualStyleBackColor = true;
+         this.radioButtonDiscussionColumnWidthMedium.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
+         // 
+         // radioButtonDiscussionColumnWidthNarrow
+         // 
+         this.radioButtonDiscussionColumnWidthNarrow.AutoSize = true;
+         this.radioButtonDiscussionColumnWidthNarrow.Location = new System.Drawing.Point(6, 19);
+         this.radioButtonDiscussionColumnWidthNarrow.Name = "radioButtonDiscussionColumnWidthNarrow";
+         this.radioButtonDiscussionColumnWidthNarrow.Size = new System.Drawing.Size(59, 17);
+         this.radioButtonDiscussionColumnWidthNarrow.TabIndex = 0;
+         this.radioButtonDiscussionColumnWidthNarrow.TabStop = true;
+         this.radioButtonDiscussionColumnWidthNarrow.Text = "Narrow";
+         this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthNarrow, "Narrow column(s) for diff context and discussion notes");
+         this.radioButtonDiscussionColumnWidthNarrow.UseVisualStyleBackColor = true;
+         this.radioButtonDiscussionColumnWidthNarrow.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
+         // 
+         // groupBoxDiffContext
+         // 
+         this.groupBoxDiffContext.Controls.Add(this.radioButtonDiffContextPositionRight);
+         this.groupBoxDiffContext.Controls.Add(this.radioButtonDiffContextPositionLeft);
+         this.groupBoxDiffContext.Controls.Add(this.radioButtonDiffContextPositionTop);
+         this.groupBoxDiffContext.Location = new System.Drawing.Point(9, 46);
+         this.groupBoxDiffContext.Name = "groupBoxDiffContext";
+         this.groupBoxDiffContext.Size = new System.Drawing.Size(186, 91);
+         this.groupBoxDiffContext.TabIndex = 33;
+         this.groupBoxDiffContext.TabStop = false;
+         this.groupBoxDiffContext.Text = "Diff Context Position";
+         // 
+         // radioButtonDiffContextPositionRight
+         // 
+         this.radioButtonDiffContextPositionRight.AutoSize = true;
+         this.radioButtonDiffContextPositionRight.Location = new System.Drawing.Point(6, 65);
+         this.radioButtonDiffContextPositionRight.Name = "radioButtonDiffContextPositionRight";
+         this.radioButtonDiffContextPositionRight.Size = new System.Drawing.Size(50, 17);
+         this.radioButtonDiffContextPositionRight.TabIndex = 2;
+         this.radioButtonDiffContextPositionRight.TabStop = true;
+         this.radioButtonDiffContextPositionRight.Text = "Right";
+         this.toolTip.SetToolTip(this.radioButtonDiffContextPositionRight, "Show diff context at the right of discussion notes");
+         this.radioButtonDiffContextPositionRight.UseVisualStyleBackColor = true;
+         this.radioButtonDiffContextPositionRight.CheckedChanged += new System.EventHandler(this.radioButtonDiffContextPosition_CheckedChanged);
+         // 
+         // radioButtonDiffContextPositionLeft
+         // 
+         this.radioButtonDiffContextPositionLeft.AutoSize = true;
+         this.radioButtonDiffContextPositionLeft.Location = new System.Drawing.Point(6, 42);
+         this.radioButtonDiffContextPositionLeft.Name = "radioButtonDiffContextPositionLeft";
+         this.radioButtonDiffContextPositionLeft.Size = new System.Drawing.Size(43, 17);
+         this.radioButtonDiffContextPositionLeft.TabIndex = 1;
+         this.radioButtonDiffContextPositionLeft.TabStop = true;
+         this.radioButtonDiffContextPositionLeft.Text = "Left";
+         this.toolTip.SetToolTip(this.radioButtonDiffContextPositionLeft, "Show diff context at the left of discussion notes");
+         this.radioButtonDiffContextPositionLeft.UseVisualStyleBackColor = true;
+         this.radioButtonDiffContextPositionLeft.CheckedChanged += new System.EventHandler(this.radioButtonDiffContextPosition_CheckedChanged);
+         // 
+         // radioButtonDiffContextPositionTop
+         // 
+         this.radioButtonDiffContextPositionTop.AutoSize = true;
+         this.radioButtonDiffContextPositionTop.Location = new System.Drawing.Point(6, 19);
+         this.radioButtonDiffContextPositionTop.Name = "radioButtonDiffContextPositionTop";
+         this.radioButtonDiffContextPositionTop.Size = new System.Drawing.Size(44, 17);
+         this.radioButtonDiffContextPositionTop.TabIndex = 0;
+         this.radioButtonDiffContextPositionTop.TabStop = true;
+         this.radioButtonDiffContextPositionTop.Text = "Top";
+         this.toolTip.SetToolTip(this.radioButtonDiffContextPositionTop, "Show diff context above discussion notes (like in GitLab Web UI)");
+         this.radioButtonDiffContextPositionTop.UseVisualStyleBackColor = true;
+         this.radioButtonDiffContextPositionTop.CheckedChanged += new System.EventHandler(this.radioButtonDiffContextPosition_CheckedChanged);
+         // 
+         // checkBoxFlatReplies
+         // 
+         this.checkBoxFlatReplies.AutoSize = true;
+         this.checkBoxFlatReplies.Location = new System.Drawing.Point(230, 21);
+         this.checkBoxFlatReplies.Name = "checkBoxFlatReplies";
+         this.checkBoxFlatReplies.Size = new System.Drawing.Size(103, 17);
+         this.checkBoxFlatReplies.TabIndex = 32;
+         this.checkBoxFlatReplies.Text = "Flat list of replies";
+         this.toolTip.SetToolTip(this.checkBoxFlatReplies, "When unchecked, replies to discussions are shifted. Otherwise they are not.");
+         this.checkBoxFlatReplies.UseVisualStyleBackColor = true;
+         this.checkBoxFlatReplies.CheckedChanged += new System.EventHandler(this.checkBoxFlatReplies_CheckedChanged);
          // 
          // labelDepth
          // 
          this.labelDepth.AutoSize = true;
          this.labelDepth.Location = new System.Drawing.Point(6, 22);
          this.labelDepth.Name = "labelDepth";
-         this.labelDepth.Size = new System.Drawing.Size(94, 13);
+         this.labelDepth.Size = new System.Drawing.Size(91, 13);
          this.labelDepth.TabIndex = 26;
-         this.labelDepth.Text = "Diff Context Depth";
+         this.labelDepth.Text = "Diff context depth";
          // 
          // groupBoxNewDiscussionViewUI
          // 
@@ -1999,12 +2133,6 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
-         // columnHeaderRefreshTime
-         // 
-         this.columnHeaderRefreshTime.Tag = "RefreshTime";
-         this.columnHeaderRefreshTime.Text = "Refreshed";
-         this.columnHeaderRefreshTime.Width = 90;
-         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2039,6 +2167,10 @@ namespace mrHelper.App.Forms
          this.groupBoxOtherUI.PerformLayout();
          this.groupBoxDiscussionsView.ResumeLayout(false);
          this.groupBoxDiscussionsView.PerformLayout();
+         this.groupBoxColumnWidth.ResumeLayout(false);
+         this.groupBoxColumnWidth.PerformLayout();
+         this.groupBoxDiffContext.ResumeLayout(false);
+         this.groupBoxDiffContext.PerformLayout();
          this.groupBoxNewDiscussionViewUI.ResumeLayout(false);
          this.groupBoxNewDiscussionViewUI.PerformLayout();
          this.groupBoxGeneral.ResumeLayout(false);
@@ -2224,8 +2356,6 @@ namespace mrHelper.App.Forms
       private ColumnHeader columnHeaderName;
       private GroupBox groupBoxOtherUI;
       private GroupBox groupBoxDiscussionsView;
-      private Label labelDepth;
-      private ComboBox comboBoxDCDepth;
       private GroupBox groupBoxNewDiscussionViewUI;
       private GroupBox groupBoxGeneral;
       private GroupBox groupBoxFileStorageType;
@@ -2240,6 +2370,17 @@ namespace mrHelper.App.Forms
       private LinkLabel linkLabelWorkflowDescription;
       private CheckBox checkBoxDisableSpellChecker;
       private ColumnHeader columnHeaderRefreshTime;
+      private CheckBox checkBoxFlatReplies;
+      private GroupBox groupBoxColumnWidth;
+      private RadioButton radioButtonDiscussionColumnWidthWide;
+      private RadioButton radioButtonDiscussionColumnWidthMedium;
+      private RadioButton radioButtonDiscussionColumnWidthNarrow;
+      private GroupBox groupBoxDiffContext;
+      private RadioButton radioButtonDiffContextPositionRight;
+      private RadioButton radioButtonDiffContextPositionLeft;
+      private RadioButton radioButtonDiffContextPositionTop;
+      private Label labelDepth;
+      private ComboBox comboBoxDCDepth;
    }
 }
 

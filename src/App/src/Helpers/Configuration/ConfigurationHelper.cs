@@ -10,6 +10,93 @@ namespace mrHelper.App.Helpers
 {
    public static class ConfigurationHelper
    {
+      public enum DiscussionColumnWidth
+      {
+         Narrow,
+         Medium,
+         Wide
+      }
+
+      public static DiscussionColumnWidth GetDiscussionColumnWidth(UserDefinedSettings settings)
+      {
+         if (Program.Settings.DiscussionColumnWidth == "narrow")
+         {
+            return DiscussionColumnWidth.Narrow;
+         }
+         else if (Program.Settings.DiscussionColumnWidth == "medium")
+         {
+            return DiscussionColumnWidth.Medium;
+         }
+         else
+         {
+            return DiscussionColumnWidth.Wide;
+         }
+      }
+
+      public static void SetDiscussionColumnWidth(UserDefinedSettings settings, DiscussionColumnWidth width)
+      {
+         switch (width)
+         {
+            case DiscussionColumnWidth.Narrow:
+               Program.Settings.DiscussionColumnWidth = "narrow";
+               break;
+
+            case DiscussionColumnWidth.Medium:
+               Program.Settings.DiscussionColumnWidth = "medium";
+               break;
+
+            case DiscussionColumnWidth.Wide:
+               Program.Settings.DiscussionColumnWidth = "wide";
+               break;
+         }
+      }
+
+      public enum DiffContextPosition
+      {
+         Top,
+         Left,
+         Right
+      }
+
+      public static DiffContextPosition GetDiffContextPosition(UserDefinedSettings settings)
+      {
+         if (Program.Settings.DiffContextPosition == "top")
+         {
+            return DiffContextPosition.Top;
+         }
+         else if (Program.Settings.DiffContextPosition == "left")
+         {
+            return DiffContextPosition.Left;
+         }
+         else
+         {
+            return DiffContextPosition.Right;
+         }
+      }
+
+      public static void SetDiffContextPosition(UserDefinedSettings settings, DiffContextPosition position)
+      {
+         switch (position)
+         {
+            case DiffContextPosition.Top:
+               Program.Settings.DiffContextPosition = "top";
+               break;
+
+            case DiffContextPosition.Left:
+               Program.Settings.DiffContextPosition = "left";
+               break;
+
+            case DiffContextPosition.Right:
+               Program.Settings.DiffContextPosition = "right";
+               break;
+         }
+      }
+
+      public static int GetDiffContextDepth(UserDefinedSettings settings)
+      {
+         return int.TryParse(settings.DiffContextDepth, out int result) ? result : 2;
+      }
+
       public enum ShowWarningsOnFileMismatchMode
       {
          Always,

@@ -814,6 +814,63 @@ namespace mrHelper.App.Forms
          Program.Settings.DiffContextDepth = (sender as ComboBox).Text;
       }
 
+      private void radioButtonDiffContextPosition_CheckedChanged(object sender, EventArgs e)
+      {
+         if (!(sender as RadioButton).Checked)
+         {
+            return;
+         }
+
+         if (!_loadingConfiguration)
+         {
+            ConfigurationHelper.DiffContextPosition mode = ConfigurationHelper.DiffContextPosition.Top;
+            if (radioButtonDiffContextPositionTop.Checked)
+            {
+               mode = ConfigurationHelper.DiffContextPosition.Top;
+            }
+            else if (radioButtonDiffContextPositionLeft.Checked)
+            {
+               mode = ConfigurationHelper.DiffContextPosition.Left;
+            }
+            else if (radioButtonDiffContextPositionRight.Checked)
+            {
+               mode = ConfigurationHelper.DiffContextPosition.Right;
+            }
+            ConfigurationHelper.SetDiffContextPosition(Program.Settings, mode);
+         }
+      }
+
+      private void radioButtonDiscussionColumnWidth_CheckedChanged(object sender, EventArgs e)
+      {
+         if (!(sender as RadioButton).Checked)
+         {
+            return;
+         }
+
+         if (!_loadingConfiguration)
+         {
+            ConfigurationHelper.DiscussionColumnWidth mode = ConfigurationHelper.DiscussionColumnWidth.Narrow;
+            if (radioButtonDiscussionColumnWidthNarrow.Checked)
+            {
+               mode = ConfigurationHelper.DiscussionColumnWidth.Narrow;
+            }
+            else if (radioButtonDiscussionColumnWidthMedium.Checked)
+            {
+               mode = ConfigurationHelper.DiscussionColumnWidth.Medium;
+            }
+            else if (radioButtonDiscussionColumnWidthWide.Checked)
+            {
+               mode = ConfigurationHelper.DiscussionColumnWidth.Wide;
+            }
+            ConfigurationHelper.SetDiscussionColumnWidth(Program.Settings, mode);
+         }
+      }
+
+      private void checkBoxFlatReplies_CheckedChanged(object sender, EventArgs e)
+      {
+         Program.Settings.NeedShiftReplies = !(sender as CheckBox).Checked;
+      }
+
       async private void ButtonDiscussions_Click(object sender, EventArgs e)
       {
          if (getMergeRequest(null) == null || !getMergeRequestKey(null).HasValue)
