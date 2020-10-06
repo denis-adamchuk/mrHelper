@@ -54,6 +54,9 @@ namespace mrHelper.App.Helpers
       private static readonly string DiscussionColumnWidthKeyName = "DiscussionColumnWidth";
       private static readonly string DiscussionColumnWidthDefaultValue = "medium";
 
+      private static readonly string IsDiscussionColumnWidthFixedKeyName = "IsDiscussionColumnWidthFixed";
+      private static readonly bool   IsDiscussionColumnWidthFixedDefaultValue = false;
+
       private static readonly string NeedShiftRepliesKeyName = "NeedShiftReplies";
       private static readonly bool   NeedShiftRepliesDefaultValue = true;
 
@@ -433,6 +436,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : NeedShiftRepliesDefaultValue;
          }
          set { setValue(NeedShiftRepliesKeyName, boolToString(value)); }
+      }
+
+      public bool IsDiscussionColumnWidthFixed
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               IsDiscussionColumnWidthFixedKeyName, boolToString(IsDiscussionColumnWidthFixedDefaultValue)),
+                  out bool result) ? result : IsDiscussionColumnWidthFixedDefaultValue;
+         }
+         set { setValue(IsDiscussionColumnWidthFixedKeyName, boolToString(value)); }
       }
 
       public string ColorSchemeFileName

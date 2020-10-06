@@ -682,10 +682,33 @@ namespace mrHelper.App.Controls
 
       private int getNoteWidth(int width)
       {
-         Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> noteWidth =
-            _diffContextPosition == ConfigurationHelper.DiffContextPosition.Top
-               ? NoteWidthOneColumn : NoteWidthTwoColumns;
-         return width * noteWidth[_discussionColumnWidth] / 100;
+         int getNoteWidthInUnits()
+         {
+            if (_diffContextPosition == ConfigurationHelper.DiffContextPosition.Top)
+            {
+               return Program.Settings.IsDiscussionColumnWidthFixed ?
+                  NoteWidth_Symbols_OneColumn[_discussionColumnWidth] : NoteWidth_Percents_OneColumn[_discussionColumnWidth];
+            }
+            else
+            {
+               return Program.Settings.IsDiscussionColumnWidthFixed ?
+                  NoteWidth_Symbols_TwoColumns[_discussionColumnWidth] : NoteWidth_Percents_TwoColumns[_discussionColumnWidth];
+            }
+         }
+
+         int getMaxFixedWidth()
+         {
+            if (_diffContextPosition == ConfigurationHelper.DiffContextPosition.Top)
+            {
+               return width * NoteWidth_Percents_OneColumn[ConfigurationHelper.DiscussionColumnWidth.Wide] / 100;
+            }
+            return width * NoteWidth_Percents_TwoColumns[ConfigurationHelper.DiscussionColumnWidth.Wide] / 100;
+         }
+
+         int noteWidthInUnits = getNoteWidthInUnits();
+         return Program.Settings.IsDiscussionColumnWidthFixed
+            ? Math.Min(noteWidthInUnits * Convert.ToInt32(Font.Size), getMaxFixedWidth())
+            : width * noteWidthInUnits / 100;
       }
 
       private int getDiffContextWidth(int width)
@@ -1219,19 +1242,33 @@ namespace mrHelper.App.Controls
       // Widths in %
       private readonly int RepliesPadding = 2;
       private readonly int ColumnInterval = 1;
-      private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidthOneColumn =
+      private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidth_Percents_OneColumn =
          new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
       {
          { ConfigurationHelper.DiscussionColumnWidth.Narrow, 45 },
          { ConfigurationHelper.DiscussionColumnWidth.Medium, 55 },
          { ConfigurationHelper.DiscussionColumnWidth.Wide,   65 }
       };
-      private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidthTwoColumns =
+      private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidth_Percents_TwoColumns =
          new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
       {
          { ConfigurationHelper.DiscussionColumnWidth.Narrow, 37 },
          { ConfigurationHelper.DiscussionColumnWidth.Medium, 42 },
          { ConfigurationHelper.DiscussionColumnWidth.Wide,   47 }
+      };
+      private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidth_Symbols_OneColumn =
+         new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
+      {
+         { ConfigurationHelper.DiscussionColumnWidth.Narrow, 80 },
+         { ConfigurationHelper.DiscussionColumnWidth.Medium, 90 },
+         { ConfigurationHelper.DiscussionColumnWidth.Wide,   100 }
+      };
+      private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidth_Symbols_TwoColumns =
+         new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
+      {
+         { ConfigurationHelper.DiscussionColumnWidth.Narrow, 80 },
+         { ConfigurationHelper.DiscussionColumnWidth.Medium, 90 },
+         { ConfigurationHelper.DiscussionColumnWidth.Wide,   100 }
       };
       private int? _previousWidth;
 

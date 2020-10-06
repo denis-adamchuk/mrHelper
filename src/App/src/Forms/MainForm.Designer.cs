@@ -135,6 +135,14 @@ namespace mrHelper.App.Forms
          this.columnHeaderAccessToken = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxDisableSpellChecker = new System.Windows.Forms.CheckBox();
          this.comboBoxDCDepth = new System.Windows.Forms.ComboBox();
+         this.radioButtonDiscussionColumnWidthWide = new System.Windows.Forms.RadioButton();
+         this.radioButtonDiscussionColumnWidthMedium = new System.Windows.Forms.RadioButton();
+         this.radioButtonDiscussionColumnWidthNarrow = new System.Windows.Forms.RadioButton();
+         this.radioButtonDiffContextPositionRight = new System.Windows.Forms.RadioButton();
+         this.radioButtonDiffContextPositionLeft = new System.Windows.Forms.RadioButton();
+         this.radioButtonDiffContextPositionTop = new System.Windows.Forms.RadioButton();
+         this.checkBoxFlatReplies = new System.Windows.Forms.CheckBox();
+         this.checkBoxDiscussionColumnFixedWidth = new System.Windows.Forms.CheckBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -157,14 +165,7 @@ namespace mrHelper.App.Forms
          this.groupBoxOtherUI = new System.Windows.Forms.GroupBox();
          this.groupBoxDiscussionsView = new System.Windows.Forms.GroupBox();
          this.groupBoxColumnWidth = new System.Windows.Forms.GroupBox();
-         this.radioButtonDiscussionColumnWidthWide = new System.Windows.Forms.RadioButton();
-         this.radioButtonDiscussionColumnWidthMedium = new System.Windows.Forms.RadioButton();
-         this.radioButtonDiscussionColumnWidthNarrow = new System.Windows.Forms.RadioButton();
          this.groupBoxDiffContext = new System.Windows.Forms.GroupBox();
-         this.radioButtonDiffContextPositionRight = new System.Windows.Forms.RadioButton();
-         this.radioButtonDiffContextPositionLeft = new System.Windows.Forms.RadioButton();
-         this.radioButtonDiffContextPositionTop = new System.Windows.Forms.RadioButton();
-         this.checkBoxFlatReplies = new System.Windows.Forms.CheckBox();
          this.labelDepth = new System.Windows.Forms.Label();
          this.groupBoxNewDiscussionViewUI = new System.Windows.Forms.GroupBox();
          this.groupBoxGeneral = new System.Windows.Forms.GroupBox();
@@ -1125,6 +1126,109 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.comboBoxDCDepth, "Number of lines under the line the discussion was created for");
          this.comboBoxDCDepth.SelectedIndexChanged += new System.EventHandler(this.comboBoxDCDepth_SelectedIndexChanged);
          // 
+         // radioButtonDiscussionColumnWidthWide
+         // 
+         this.radioButtonDiscussionColumnWidthWide.AutoSize = true;
+         this.radioButtonDiscussionColumnWidthWide.Location = new System.Drawing.Point(6, 65);
+         this.radioButtonDiscussionColumnWidthWide.Name = "radioButtonDiscussionColumnWidthWide";
+         this.radioButtonDiscussionColumnWidthWide.Size = new System.Drawing.Size(50, 17);
+         this.radioButtonDiscussionColumnWidthWide.TabIndex = 2;
+         this.radioButtonDiscussionColumnWidthWide.TabStop = true;
+         this.radioButtonDiscussionColumnWidthWide.Text = "Wide";
+         this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthWide, "Wide column(s) for diff context and discussion notes");
+         this.radioButtonDiscussionColumnWidthWide.UseVisualStyleBackColor = true;
+         this.radioButtonDiscussionColumnWidthWide.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
+         // 
+         // radioButtonDiscussionColumnWidthMedium
+         // 
+         this.radioButtonDiscussionColumnWidthMedium.AutoSize = true;
+         this.radioButtonDiscussionColumnWidthMedium.Location = new System.Drawing.Point(6, 42);
+         this.radioButtonDiscussionColumnWidthMedium.Name = "radioButtonDiscussionColumnWidthMedium";
+         this.radioButtonDiscussionColumnWidthMedium.Size = new System.Drawing.Size(62, 17);
+         this.radioButtonDiscussionColumnWidthMedium.TabIndex = 1;
+         this.radioButtonDiscussionColumnWidthMedium.TabStop = true;
+         this.radioButtonDiscussionColumnWidthMedium.Text = "Medium";
+         this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthMedium, "Medium column(s) for diff context and discussion notes");
+         this.radioButtonDiscussionColumnWidthMedium.UseVisualStyleBackColor = true;
+         this.radioButtonDiscussionColumnWidthMedium.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
+         // 
+         // radioButtonDiscussionColumnWidthNarrow
+         // 
+         this.radioButtonDiscussionColumnWidthNarrow.AutoSize = true;
+         this.radioButtonDiscussionColumnWidthNarrow.Location = new System.Drawing.Point(6, 19);
+         this.radioButtonDiscussionColumnWidthNarrow.Name = "radioButtonDiscussionColumnWidthNarrow";
+         this.radioButtonDiscussionColumnWidthNarrow.Size = new System.Drawing.Size(59, 17);
+         this.radioButtonDiscussionColumnWidthNarrow.TabIndex = 0;
+         this.radioButtonDiscussionColumnWidthNarrow.TabStop = true;
+         this.radioButtonDiscussionColumnWidthNarrow.Text = "Narrow";
+         this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthNarrow, "Narrow column(s) for diff context and discussion notes");
+         this.radioButtonDiscussionColumnWidthNarrow.UseVisualStyleBackColor = true;
+         this.radioButtonDiscussionColumnWidthNarrow.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
+         // 
+         // radioButtonDiffContextPositionRight
+         // 
+         this.radioButtonDiffContextPositionRight.AutoSize = true;
+         this.radioButtonDiffContextPositionRight.Location = new System.Drawing.Point(6, 65);
+         this.radioButtonDiffContextPositionRight.Name = "radioButtonDiffContextPositionRight";
+         this.radioButtonDiffContextPositionRight.Size = new System.Drawing.Size(50, 17);
+         this.radioButtonDiffContextPositionRight.TabIndex = 2;
+         this.radioButtonDiffContextPositionRight.TabStop = true;
+         this.radioButtonDiffContextPositionRight.Text = "Right";
+         this.toolTip.SetToolTip(this.radioButtonDiffContextPositionRight, "Show diff context at the right of discussion notes");
+         this.radioButtonDiffContextPositionRight.UseVisualStyleBackColor = true;
+         this.radioButtonDiffContextPositionRight.CheckedChanged += new System.EventHandler(this.radioButtonDiffContextPosition_CheckedChanged);
+         // 
+         // radioButtonDiffContextPositionLeft
+         // 
+         this.radioButtonDiffContextPositionLeft.AutoSize = true;
+         this.radioButtonDiffContextPositionLeft.Location = new System.Drawing.Point(6, 42);
+         this.radioButtonDiffContextPositionLeft.Name = "radioButtonDiffContextPositionLeft";
+         this.radioButtonDiffContextPositionLeft.Size = new System.Drawing.Size(43, 17);
+         this.radioButtonDiffContextPositionLeft.TabIndex = 1;
+         this.radioButtonDiffContextPositionLeft.TabStop = true;
+         this.radioButtonDiffContextPositionLeft.Text = "Left";
+         this.toolTip.SetToolTip(this.radioButtonDiffContextPositionLeft, "Show diff context at the left of discussion notes");
+         this.radioButtonDiffContextPositionLeft.UseVisualStyleBackColor = true;
+         this.radioButtonDiffContextPositionLeft.CheckedChanged += new System.EventHandler(this.radioButtonDiffContextPosition_CheckedChanged);
+         // 
+         // radioButtonDiffContextPositionTop
+         // 
+         this.radioButtonDiffContextPositionTop.AutoSize = true;
+         this.radioButtonDiffContextPositionTop.Location = new System.Drawing.Point(6, 19);
+         this.radioButtonDiffContextPositionTop.Name = "radioButtonDiffContextPositionTop";
+         this.radioButtonDiffContextPositionTop.Size = new System.Drawing.Size(44, 17);
+         this.radioButtonDiffContextPositionTop.TabIndex = 0;
+         this.radioButtonDiffContextPositionTop.TabStop = true;
+         this.radioButtonDiffContextPositionTop.Text = "Top";
+         this.toolTip.SetToolTip(this.radioButtonDiffContextPositionTop, "Show diff context above discussion notes (like in GitLab Web UI)");
+         this.radioButtonDiffContextPositionTop.UseVisualStyleBackColor = true;
+         this.radioButtonDiffContextPositionTop.CheckedChanged += new System.EventHandler(this.radioButtonDiffContextPosition_CheckedChanged);
+         // 
+         // checkBoxFlatReplies
+         // 
+         this.checkBoxFlatReplies.AutoSize = true;
+         this.checkBoxFlatReplies.Location = new System.Drawing.Point(230, 21);
+         this.checkBoxFlatReplies.Name = "checkBoxFlatReplies";
+         this.checkBoxFlatReplies.Size = new System.Drawing.Size(103, 17);
+         this.checkBoxFlatReplies.TabIndex = 32;
+         this.checkBoxFlatReplies.Text = "Flat list of replies";
+         this.toolTip.SetToolTip(this.checkBoxFlatReplies, "When unchecked, replies to discussions are shifted. Otherwise, they are not.");
+         this.checkBoxFlatReplies.UseVisualStyleBackColor = true;
+         this.checkBoxFlatReplies.CheckedChanged += new System.EventHandler(this.checkBoxFlatReplies_CheckedChanged);
+         // 
+         // checkBoxDiscussionColumnFixedWidth
+         // 
+         this.checkBoxDiscussionColumnFixedWidth.AutoSize = true;
+         this.checkBoxDiscussionColumnFixedWidth.Location = new System.Drawing.Point(118, 20);
+         this.checkBoxDiscussionColumnFixedWidth.Name = "checkBoxDiscussionColumnFixedWidth";
+         this.checkBoxDiscussionColumnFixedWidth.Size = new System.Drawing.Size(79, 17);
+         this.checkBoxDiscussionColumnFixedWidth.TabIndex = 3;
+         this.checkBoxDiscussionColumnFixedWidth.Text = "Fixed width";
+         this.toolTip.SetToolTip(this.checkBoxDiscussionColumnFixedWidth, "When checked, column width remains the same across window sizes and resolutions. " +
+        "Otherwise, it is floating.");
+         this.checkBoxDiscussionColumnFixedWidth.UseVisualStyleBackColor = true;
+         this.checkBoxDiscussionColumnFixedWidth.CheckedChanged += new System.EventHandler(this.checkBoxDiscussionColumnFixedWidth_CheckedChanged);
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1357,54 +1461,16 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxColumnWidth
          // 
+         this.groupBoxColumnWidth.Controls.Add(this.checkBoxDiscussionColumnFixedWidth);
          this.groupBoxColumnWidth.Controls.Add(this.radioButtonDiscussionColumnWidthWide);
          this.groupBoxColumnWidth.Controls.Add(this.radioButtonDiscussionColumnWidthMedium);
          this.groupBoxColumnWidth.Controls.Add(this.radioButtonDiscussionColumnWidthNarrow);
          this.groupBoxColumnWidth.Location = new System.Drawing.Point(230, 46);
          this.groupBoxColumnWidth.Name = "groupBoxColumnWidth";
-         this.groupBoxColumnWidth.Size = new System.Drawing.Size(170, 91);
+         this.groupBoxColumnWidth.Size = new System.Drawing.Size(203, 91);
          this.groupBoxColumnWidth.TabIndex = 34;
          this.groupBoxColumnWidth.TabStop = false;
          this.groupBoxColumnWidth.Text = "Column Width";
-         // 
-         // radioButtonDiscussionColumnWidthWide
-         // 
-         this.radioButtonDiscussionColumnWidthWide.AutoSize = true;
-         this.radioButtonDiscussionColumnWidthWide.Location = new System.Drawing.Point(6, 65);
-         this.radioButtonDiscussionColumnWidthWide.Name = "radioButtonDiscussionColumnWidthWide";
-         this.radioButtonDiscussionColumnWidthWide.Size = new System.Drawing.Size(50, 17);
-         this.radioButtonDiscussionColumnWidthWide.TabIndex = 2;
-         this.radioButtonDiscussionColumnWidthWide.TabStop = true;
-         this.radioButtonDiscussionColumnWidthWide.Text = "Wide";
-         this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthWide, "Wide column(s) for diff context and discussion notes");
-         this.radioButtonDiscussionColumnWidthWide.UseVisualStyleBackColor = true;
-         this.radioButtonDiscussionColumnWidthWide.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
-         // 
-         // radioButtonDiscussionColumnWidthMedium
-         // 
-         this.radioButtonDiscussionColumnWidthMedium.AutoSize = true;
-         this.radioButtonDiscussionColumnWidthMedium.Location = new System.Drawing.Point(6, 42);
-         this.radioButtonDiscussionColumnWidthMedium.Name = "radioButtonDiscussionColumnWidthMedium";
-         this.radioButtonDiscussionColumnWidthMedium.Size = new System.Drawing.Size(62, 17);
-         this.radioButtonDiscussionColumnWidthMedium.TabIndex = 1;
-         this.radioButtonDiscussionColumnWidthMedium.TabStop = true;
-         this.radioButtonDiscussionColumnWidthMedium.Text = "Medium";
-         this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthMedium, "Medium column(s) for diff context and discussion notes");
-         this.radioButtonDiscussionColumnWidthMedium.UseVisualStyleBackColor = true;
-         this.radioButtonDiscussionColumnWidthMedium.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
-         // 
-         // radioButtonDiscussionColumnWidthNarrow
-         // 
-         this.radioButtonDiscussionColumnWidthNarrow.AutoSize = true;
-         this.radioButtonDiscussionColumnWidthNarrow.Location = new System.Drawing.Point(6, 19);
-         this.radioButtonDiscussionColumnWidthNarrow.Name = "radioButtonDiscussionColumnWidthNarrow";
-         this.radioButtonDiscussionColumnWidthNarrow.Size = new System.Drawing.Size(59, 17);
-         this.radioButtonDiscussionColumnWidthNarrow.TabIndex = 0;
-         this.radioButtonDiscussionColumnWidthNarrow.TabStop = true;
-         this.radioButtonDiscussionColumnWidthNarrow.Text = "Narrow";
-         this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthNarrow, "Narrow column(s) for diff context and discussion notes");
-         this.radioButtonDiscussionColumnWidthNarrow.UseVisualStyleBackColor = true;
-         this.radioButtonDiscussionColumnWidthNarrow.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
          // 
          // groupBoxDiffContext
          // 
@@ -1417,57 +1483,6 @@ namespace mrHelper.App.Forms
          this.groupBoxDiffContext.TabIndex = 33;
          this.groupBoxDiffContext.TabStop = false;
          this.groupBoxDiffContext.Text = "Diff Context Position";
-         // 
-         // radioButtonDiffContextPositionRight
-         // 
-         this.radioButtonDiffContextPositionRight.AutoSize = true;
-         this.radioButtonDiffContextPositionRight.Location = new System.Drawing.Point(6, 65);
-         this.radioButtonDiffContextPositionRight.Name = "radioButtonDiffContextPositionRight";
-         this.radioButtonDiffContextPositionRight.Size = new System.Drawing.Size(50, 17);
-         this.radioButtonDiffContextPositionRight.TabIndex = 2;
-         this.radioButtonDiffContextPositionRight.TabStop = true;
-         this.radioButtonDiffContextPositionRight.Text = "Right";
-         this.toolTip.SetToolTip(this.radioButtonDiffContextPositionRight, "Show diff context at the right of discussion notes");
-         this.radioButtonDiffContextPositionRight.UseVisualStyleBackColor = true;
-         this.radioButtonDiffContextPositionRight.CheckedChanged += new System.EventHandler(this.radioButtonDiffContextPosition_CheckedChanged);
-         // 
-         // radioButtonDiffContextPositionLeft
-         // 
-         this.radioButtonDiffContextPositionLeft.AutoSize = true;
-         this.radioButtonDiffContextPositionLeft.Location = new System.Drawing.Point(6, 42);
-         this.radioButtonDiffContextPositionLeft.Name = "radioButtonDiffContextPositionLeft";
-         this.radioButtonDiffContextPositionLeft.Size = new System.Drawing.Size(43, 17);
-         this.radioButtonDiffContextPositionLeft.TabIndex = 1;
-         this.radioButtonDiffContextPositionLeft.TabStop = true;
-         this.radioButtonDiffContextPositionLeft.Text = "Left";
-         this.toolTip.SetToolTip(this.radioButtonDiffContextPositionLeft, "Show diff context at the left of discussion notes");
-         this.radioButtonDiffContextPositionLeft.UseVisualStyleBackColor = true;
-         this.radioButtonDiffContextPositionLeft.CheckedChanged += new System.EventHandler(this.radioButtonDiffContextPosition_CheckedChanged);
-         // 
-         // radioButtonDiffContextPositionTop
-         // 
-         this.radioButtonDiffContextPositionTop.AutoSize = true;
-         this.radioButtonDiffContextPositionTop.Location = new System.Drawing.Point(6, 19);
-         this.radioButtonDiffContextPositionTop.Name = "radioButtonDiffContextPositionTop";
-         this.radioButtonDiffContextPositionTop.Size = new System.Drawing.Size(44, 17);
-         this.radioButtonDiffContextPositionTop.TabIndex = 0;
-         this.radioButtonDiffContextPositionTop.TabStop = true;
-         this.radioButtonDiffContextPositionTop.Text = "Top";
-         this.toolTip.SetToolTip(this.radioButtonDiffContextPositionTop, "Show diff context above discussion notes (like in GitLab Web UI)");
-         this.radioButtonDiffContextPositionTop.UseVisualStyleBackColor = true;
-         this.radioButtonDiffContextPositionTop.CheckedChanged += new System.EventHandler(this.radioButtonDiffContextPosition_CheckedChanged);
-         // 
-         // checkBoxFlatReplies
-         // 
-         this.checkBoxFlatReplies.AutoSize = true;
-         this.checkBoxFlatReplies.Location = new System.Drawing.Point(230, 21);
-         this.checkBoxFlatReplies.Name = "checkBoxFlatReplies";
-         this.checkBoxFlatReplies.Size = new System.Drawing.Size(103, 17);
-         this.checkBoxFlatReplies.TabIndex = 32;
-         this.checkBoxFlatReplies.Text = "Flat list of replies";
-         this.toolTip.SetToolTip(this.checkBoxFlatReplies, "When unchecked, replies to discussions are shifted. Otherwise they are not.");
-         this.checkBoxFlatReplies.UseVisualStyleBackColor = true;
-         this.checkBoxFlatReplies.CheckedChanged += new System.EventHandler(this.checkBoxFlatReplies_CheckedChanged);
          // 
          // labelDepth
          // 
@@ -2381,6 +2396,7 @@ namespace mrHelper.App.Forms
       private RadioButton radioButtonDiffContextPositionTop;
       private Label labelDepth;
       private ComboBox comboBoxDCDepth;
+      private CheckBox checkBoxDiscussionColumnFixedWidth;
    }
 }
 

@@ -871,6 +871,11 @@ namespace mrHelper.App.Forms
          Program.Settings.NeedShiftReplies = !(sender as CheckBox).Checked;
       }
 
+      private void checkBoxDiscussionColumnFixedWidth_CheckedChanged(object sender, EventArgs e)
+      {
+         Program.Settings.IsDiscussionColumnWidthFixed = (sender as CheckBox).Checked;
+      }
+
       async private void ButtonDiscussions_Click(object sender, EventArgs e)
       {
          if (getMergeRequest(null) == null || !getMergeRequestKey(null).HasValue)

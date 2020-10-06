@@ -154,6 +154,7 @@ namespace mrHelper.App.Forms
          checkBoxNewDiscussionIsTopMostForm.Checked = Program.Settings.NewDiscussionIsTopMostForm;
          checkBoxDisableSpellChecker.Checked = Program.Settings.DisableSpellChecker;
          checkBoxFlatReplies.Checked = !Program.Settings.NeedShiftReplies;
+         checkBoxDiscussionColumnFixedWidth.Checked = Program.Settings.IsDiscussionColumnWidthFixed;
 
          var diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
          switch (diffContextPosition)
