@@ -1086,7 +1086,8 @@ namespace mrHelper.App.Forms
             DateTime refreshed = mergeRequestCache.GetMergeRequestRefreshTime(key);
             TimeSpan span = DateTime.Now - refreshed;
             int minutesAgo = Convert.ToInt32(Math.Floor(span.TotalMinutes));
-            minutesAgo += span.Seconds >= 55 ? 1 : 0; // round 55+ seconds to a minute
+            // round 55+ seconds to a minute
+            minutesAgo += span.Seconds >= 55 ? 1 : 0; //-V3118
             return String.Format("{0} minute{1} ago", minutesAgo, minutesAgo == 1 ? String.Empty : "s");
          }
 
