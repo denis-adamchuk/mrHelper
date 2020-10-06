@@ -650,7 +650,7 @@ namespace mrHelper.App.Forms
 
             int boxLocationX = (clientWidth - box.Width) / 2;
             int topMargin = box == boxes.First() ? firstDiscussionBoxTopMargin : discussionBoxTopMargin;
-            int boxLocationY = discussionBoxTopMargin + previousBoxLocation.Y + previousBoxSize.Height;
+            int boxLocationY = topMargin + previousBoxLocation.Y + previousBoxSize.Height;
             Point location = new Point(boxLocationX, boxLocationY);
             box.Location = location + (Size)AutoScrollPosition;
 
