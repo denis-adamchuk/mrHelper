@@ -179,8 +179,16 @@ namespace mrHelper.App.Forms
                radioButtonDiscussionColumnWidthNarrow.Checked = true;
                break;
 
+            case ConfigurationHelper.DiscussionColumnWidth.NarrowPlus:
+               radioButtonDiscussionColumnWidthNarrowPlus.Checked = true;
+               break;
+
             case ConfigurationHelper.DiscussionColumnWidth.Medium:
                radioButtonDiscussionColumnWidthMedium.Checked = true;
+               break;
+
+            case ConfigurationHelper.DiscussionColumnWidth.MediumPlus:
+               radioButtonDiscussionColumnWidthMediumPlus.Checked = true;
                break;
 
             case ConfigurationHelper.DiscussionColumnWidth.Wide:

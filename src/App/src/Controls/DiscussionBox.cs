@@ -60,6 +60,8 @@ namespace mrHelper.App.Controls
          _colorScheme = colorScheme;
          _diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
          _discussionColumnWidth = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
+         _isColumnWidthFixed = Program.Settings.IsDiscussionColumnWidthFixed;
+         _needShiftReplies = Program.Settings.NeedShiftReplies;
 
          _onContentChanging = () =>
          {
@@ -675,6 +677,30 @@ namespace mrHelper.App.Controls
          _previousWidth = width;
       }
 
+      internal void SetDiffContextPosition(ConfigurationHelper.DiffContextPosition position)
+      {
+         _diffContextPosition = position;
+         _previousWidth = null;
+      }
+
+      internal void SetDiscussionColumnWidth(ConfigurationHelper.DiscussionColumnWidth width)
+      {
+         _discussionColumnWidth = width;
+         _previousWidth = null;
+      }
+
+      internal void SetNeedShiftReplies(bool value)
+      {
+         _needShiftReplies = value;
+         _previousWidth = null;
+      }
+
+      internal void SetIsColumnWidthFixed(bool value)
+      {
+         _isColumnWidthFixed = value;
+         _previousWidth = null;
+      }
+
       private int getColumnInterval(int width)
       {
          return width * ColumnInterval / 100;
@@ -686,13 +712,15 @@ namespace mrHelper.App.Controls
          {
             if (_diffContextPosition == ConfigurationHelper.DiffContextPosition.Top)
             {
-               return Program.Settings.IsDiscussionColumnWidthFixed ?
-                  NoteWidth_Symbols_OneColumn[_discussionColumnWidth] : NoteWidth_Percents_OneColumn[_discussionColumnWidth];
+               return _isColumnWidthFixed
+                  ? NoteWidth_Symbols_OneColumn[_discussionColumnWidth]
+                  : NoteWidth_Percents_OneColumn[_discussionColumnWidth];
             }
             else
             {
-               return Program.Settings.IsDiscussionColumnWidthFixed ?
-                  NoteWidth_Symbols_TwoColumns[_discussionColumnWidth] : NoteWidth_Percents_TwoColumns[_discussionColumnWidth];
+               return _isColumnWidthFixed
+                  ? NoteWidth_Symbols_TwoColumns[_discussionColumnWidth]
+                  : NoteWidth_Percents_TwoColumns[_discussionColumnWidth];
             }
          }
 
@@ -706,7 +734,7 @@ namespace mrHelper.App.Controls
          }
 
          int noteWidthInUnits = getNoteWidthInUnits();
-         return Program.Settings.IsDiscussionColumnWidthFixed
+         return _isColumnWidthFixed
             ? Math.Min(noteWidthInUnits * Convert.ToInt32(Font.Size), getMaxFixedWidth())
             : width * noteWidthInUnits / 100;
       }
@@ -718,7 +746,7 @@ namespace mrHelper.App.Controls
 
       private int getNoteRepliesPadding(int width)
       {
-         return Program.Settings.NeedShiftReplies ? width * RepliesPadding / 100 : 0;
+         return _needShiftReplies ? width * RepliesPadding / 100 : 0;
       }
 
       private void resizeBoxContent(int width)
@@ -1246,28 +1274,36 @@ namespace mrHelper.App.Controls
          new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
       {
          { ConfigurationHelper.DiscussionColumnWidth.Narrow, 45 },
+         { ConfigurationHelper.DiscussionColumnWidth.NarrowPlus, 50 },
          { ConfigurationHelper.DiscussionColumnWidth.Medium, 55 },
+         { ConfigurationHelper.DiscussionColumnWidth.MediumPlus, 60 },
          { ConfigurationHelper.DiscussionColumnWidth.Wide,   65 }
       };
       private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidth_Percents_TwoColumns =
          new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
       {
-         { ConfigurationHelper.DiscussionColumnWidth.Narrow, 37 },
+         { ConfigurationHelper.DiscussionColumnWidth.Narrow, 36 },
+         { ConfigurationHelper.DiscussionColumnWidth.NarrowPlus, 39 },
          { ConfigurationHelper.DiscussionColumnWidth.Medium, 42 },
-         { ConfigurationHelper.DiscussionColumnWidth.Wide,   47 }
+         { ConfigurationHelper.DiscussionColumnWidth.MediumPlus, 45 },
+         { ConfigurationHelper.DiscussionColumnWidth.Wide,   48 }
       };
       private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidth_Symbols_OneColumn =
          new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
       {
          { ConfigurationHelper.DiscussionColumnWidth.Narrow, 80 },
+         { ConfigurationHelper.DiscussionColumnWidth.NarrowPlus, 85 },
          { ConfigurationHelper.DiscussionColumnWidth.Medium, 90 },
+         { ConfigurationHelper.DiscussionColumnWidth.MediumPlus, 95 },
          { ConfigurationHelper.DiscussionColumnWidth.Wide,   100 }
       };
       private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidth_Symbols_TwoColumns =
          new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
       {
          { ConfigurationHelper.DiscussionColumnWidth.Narrow, 80 },
+         { ConfigurationHelper.DiscussionColumnWidth.NarrowPlus, 85 },
          { ConfigurationHelper.DiscussionColumnWidth.Medium, 90 },
+         { ConfigurationHelper.DiscussionColumnWidth.MediumPlus, 95 },
          { ConfigurationHelper.DiscussionColumnWidth.Wide,   100 }
       };
       private int? _previousWidth;
@@ -1293,9 +1329,12 @@ namespace mrHelper.App.Controls
       private readonly SingleDiscussionAccessor _accessor;
       private readonly IDiscussionEditor _editor;
 
-      private readonly ColorScheme _colorScheme;
       private ConfigurationHelper.DiffContextPosition _diffContextPosition;
       private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
+      private bool _needShiftReplies;
+      private bool _isColumnWidthFixed;
+
+      private readonly ColorScheme _colorScheme;
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;
       private readonly Action<Control> _onControlGotFocus;

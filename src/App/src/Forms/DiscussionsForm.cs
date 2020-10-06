@@ -46,6 +46,9 @@ namespace mrHelper.App.Forms
          _updateGit = updateGit;
          _onDiscussionModified = onDiscussionModified;
          _diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
+         _discussionColumnWidth = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
+         _isColumnWidthFixed = Program.Settings.IsDiscussionColumnWidthFixed;
+         _needShiftReplies = Program.Settings.NeedShiftReplies;
 
          CustomCommandLoader loader = new CustomCommandLoader(this);
          try
@@ -61,6 +64,7 @@ namespace mrHelper.App.Forms
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();
          linkLabelGitLabURL.Text = webUrl;
+         toolTip.SetToolTip(linkLabelGitLabURL, webUrl);
 
          createPanels();
 
@@ -135,6 +139,9 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[DiscussionsForm] Processing OnShown()...");
          base.OnShown(e);
+
+         // By default, leave focus on a font selection control
+         FontSelectionPanel.Focus();
       }
 
       private void DiscussionsForm_Shown(object sender, EventArgs e)
@@ -315,6 +322,38 @@ namespace mrHelper.App.Forms
             AutoScrollPosition = new Point(AutoScrollPosition.X,
                Math.Min(VerticalScroll.Maximum, VerticalScroll.Value + VerticalScroll.LargeChange));
             PerformLayout();
+            e.Handled = true;
+         }
+         else if (e.KeyCode == Keys.Oemplus || e.KeyCode == Keys.Add)
+         {
+            _isColumnWidthFixed = e.Modifiers.HasFlag(Keys.Shift);
+            setColumnWidth(ConfigurationHelper.GetNextColumnWidth(_discussionColumnWidth));
+            e.Handled = true;
+         }
+         else if (e.KeyCode == Keys.OemMinus || e.KeyCode == Keys.Subtract)
+         {
+            _isColumnWidthFixed = e.Modifiers.HasFlag(Keys.Shift);
+            setColumnWidth(ConfigurationHelper.GetPrevColumnWidth(_discussionColumnWidth));
+            e.Handled = true;
+         }
+         else if (e.KeyCode == Keys.Up && e.Modifiers.HasFlag(Keys.Control))
+         {
+            setDiffContextPosition(ConfigurationHelper.DiffContextPosition.Top);
+            e.Handled = true;
+         }
+         else if (e.KeyCode == Keys.Left && e.Modifiers.HasFlag(Keys.Control))
+         {
+            setDiffContextPosition(ConfigurationHelper.DiffContextPosition.Left);
+            e.Handled = true;
+         }
+         else if (e.KeyCode == Keys.Right && e.Modifiers.HasFlag(Keys.Control))
+         {
+            setDiffContextPosition(ConfigurationHelper.DiffContextPosition.Right);
+            e.Handled = true;
+         }
+         else if (e.KeyCode == Keys.Down && e.Modifiers.HasFlag(Keys.Control))
+         {
+            setNeedShiftReplies(!_needShiftReplies);
             e.Handled = true;
          }
       }
@@ -596,8 +635,15 @@ namespace mrHelper.App.Forms
          int groupBoxMarginLeft = 5;
          int groupBoxMarginTop =  5;
 
+         // If Vertical Scroll is visible, its width is already excluded from ClientSize.Width
+         int vscrollWidth = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
+
+         // Discussion box can take all the width except scroll bar
+         int clientWidth = ClientSize.Width - vscrollWidth;
+
          // Temporary variables to avoid changing control Location more than once
          Point linkLabelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
+         Point labelHintLocation = new Point(clientWidth - labelHotKeyHint.Width - groupBoxMarginLeft, groupBoxMarginTop);
          Point filterPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point sortPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point fontSelectionPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
@@ -615,6 +661,7 @@ namespace mrHelper.App.Forms
 
          // Stack panels horizontally
          linkLabelGitLabURL.Location = linkLabelLocation + (Size)AutoScrollPosition;
+         labelHotKeyHint.Location = labelHintLocation + (Size)AutoScrollPosition;
          FilterPanel.Location = filterPanelLocation + (Size)AutoScrollPosition;
          SortPanel.Location = sortPanelLocation + (Size)AutoScrollPosition;
          FontSelectionPanel.Location = fontSelectionPanelLocation + (Size)AutoScrollPosition;
@@ -641,11 +688,6 @@ namespace mrHelper.App.Forms
          IEnumerable<DiscussionBox> boxes = getVisibleAndSortedBoxes();
          foreach (DiscussionBox box in boxes)
          {
-            // If Vertical Scroll is visible, its width is already excluded from ClientSize.Width
-            int vscrollWidth = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
-
-            // Discussion box can take all the width except scroll bar
-            int clientWidth = ClientSize.Width - vscrollWidth;
             box.AdjustToWidth(clientWidth);
 
             int boxLocationX = (clientWidth - box.Width) / 2;
@@ -717,6 +759,36 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void setDiffContextPosition(ConfigurationHelper.DiffContextPosition position)
+      {
+         _diffContextPosition = position;
+         foreach (var box in getAllBoxes())
+         {
+            box.SetDiffContextPosition(_diffContextPosition);
+         }
+         PerformLayout();
+      }
+
+      private void setColumnWidth(ConfigurationHelper.DiscussionColumnWidth width)
+      {
+         _discussionColumnWidth = width;
+         foreach (var box in getAllBoxes())
+         {
+            box.SetDiscussionColumnWidth(_discussionColumnWidth);
+         }
+         PerformLayout();
+      }
+
+      private void setNeedShiftReplies(bool value)
+      {
+         _needShiftReplies = value;
+         foreach (var box in getAllBoxes())
+         {
+            box.SetNeedShiftReplies(_needShiftReplies);
+         }
+         PerformLayout();
+      }
+
       private string DefaultCaption
       {
          get
@@ -757,7 +829,11 @@ namespace mrHelper.App.Forms
       private readonly IModificationListener _modificationListener;
       private readonly Func<MergeRequestKey, IEnumerable<Discussion>, Task> _updateGit;
       private readonly Action _onDiscussionModified;
+
       private ConfigurationHelper.DiffContextPosition _diffContextPosition;
+      private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
+      private bool _needShiftReplies;
+      private bool _isColumnWidthFixed;
 
       private DiscussionFilterPanel FilterPanel;
       private DiscussionFilter DisplayFilter; // filters out discussions by user preferences

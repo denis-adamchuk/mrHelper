@@ -13,8 +13,36 @@ namespace mrHelper.App.Helpers
       public enum DiscussionColumnWidth
       {
          Narrow,
+         NarrowPlus,
          Medium,
+         MediumPlus,
          Wide
+      }
+
+      public static DiscussionColumnWidth GetNextColumnWidth(DiscussionColumnWidth value)
+      {
+         switch (value)
+         {
+            case DiscussionColumnWidth.Narrow:     return DiscussionColumnWidth.NarrowPlus;
+            case DiscussionColumnWidth.NarrowPlus: return DiscussionColumnWidth.Medium;
+            case DiscussionColumnWidth.Medium:     return DiscussionColumnWidth.MediumPlus;
+            case DiscussionColumnWidth.MediumPlus: return DiscussionColumnWidth.Wide;
+            case DiscussionColumnWidth.Wide:       return DiscussionColumnWidth.Wide;
+            default: Debug.Assert(false);          return DiscussionColumnWidth.Wide;
+         }
+      }
+
+      public static DiscussionColumnWidth GetPrevColumnWidth(DiscussionColumnWidth value)
+      {
+         switch (value)
+         {
+            case DiscussionColumnWidth.Narrow:     return DiscussionColumnWidth.Narrow;
+            case DiscussionColumnWidth.NarrowPlus: return DiscussionColumnWidth.Narrow;
+            case DiscussionColumnWidth.Medium:     return DiscussionColumnWidth.NarrowPlus;
+            case DiscussionColumnWidth.MediumPlus: return DiscussionColumnWidth.Medium;
+            case DiscussionColumnWidth.Wide:       return DiscussionColumnWidth.MediumPlus;
+            default: Debug.Assert(false);          return DiscussionColumnWidth.Narrow;
+         }
       }
 
       public static DiscussionColumnWidth GetDiscussionColumnWidth(UserDefinedSettings settings)
@@ -23,9 +51,17 @@ namespace mrHelper.App.Helpers
          {
             return DiscussionColumnWidth.Narrow;
          }
+         if (Program.Settings.DiscussionColumnWidth == "narrowplus")
+         {
+            return DiscussionColumnWidth.NarrowPlus;
+         }
          else if (Program.Settings.DiscussionColumnWidth == "medium")
          {
             return DiscussionColumnWidth.Medium;
+         }
+         else if (Program.Settings.DiscussionColumnWidth == "mediumplus")
+         {
+            return DiscussionColumnWidth.MediumPlus;
          }
          else
          {
@@ -41,8 +77,16 @@ namespace mrHelper.App.Helpers
                Program.Settings.DiscussionColumnWidth = "narrow";
                break;
 
+            case DiscussionColumnWidth.NarrowPlus:
+               Program.Settings.DiscussionColumnWidth = "narrowplus";
+               break;
+
             case DiscussionColumnWidth.Medium:
                Program.Settings.DiscussionColumnWidth = "medium";
+               break;
+
+            case DiscussionColumnWidth.MediumPlus:
+               Program.Settings.DiscussionColumnWidth = "mediumplus";
                break;
 
             case DiscussionColumnWidth.Wide:

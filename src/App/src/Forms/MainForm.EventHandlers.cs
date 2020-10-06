@@ -854,9 +854,17 @@ namespace mrHelper.App.Forms
             {
                mode = ConfigurationHelper.DiscussionColumnWidth.Narrow;
             }
+            else if (radioButtonDiscussionColumnWidthNarrowPlus.Checked)
+            {
+               mode = ConfigurationHelper.DiscussionColumnWidth.NarrowPlus;
+            }
             else if (radioButtonDiscussionColumnWidthMedium.Checked)
             {
                mode = ConfigurationHelper.DiscussionColumnWidth.Medium;
+            }
+            else if (radioButtonDiscussionColumnWidthMediumPlus.Checked)
+            {
+               mode = ConfigurationHelper.DiscussionColumnWidth.MediumPlus;
             }
             else if (radioButtonDiscussionColumnWidthWide.Checked)
             {

@@ -143,6 +143,8 @@ namespace mrHelper.App.Forms
          this.radioButtonDiffContextPositionTop = new System.Windows.Forms.RadioButton();
          this.checkBoxFlatReplies = new System.Windows.Forms.CheckBox();
          this.checkBoxDiscussionColumnFixedWidth = new System.Windows.Forms.CheckBox();
+         this.radioButtonDiscussionColumnWidthNarrowPlus = new System.Windows.Forms.RadioButton();
+         this.radioButtonDiscussionColumnWidthMediumPlus = new System.Windows.Forms.RadioButton();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1219,7 +1221,7 @@ namespace mrHelper.App.Forms
          // checkBoxDiscussionColumnFixedWidth
          // 
          this.checkBoxDiscussionColumnFixedWidth.AutoSize = true;
-         this.checkBoxDiscussionColumnFixedWidth.Location = new System.Drawing.Point(118, 20);
+         this.checkBoxDiscussionColumnFixedWidth.Location = new System.Drawing.Point(118, 66);
          this.checkBoxDiscussionColumnFixedWidth.Name = "checkBoxDiscussionColumnFixedWidth";
          this.checkBoxDiscussionColumnFixedWidth.Size = new System.Drawing.Size(79, 17);
          this.checkBoxDiscussionColumnFixedWidth.TabIndex = 3;
@@ -1228,6 +1230,32 @@ namespace mrHelper.App.Forms
         "Otherwise, it is floating.");
          this.checkBoxDiscussionColumnFixedWidth.UseVisualStyleBackColor = true;
          this.checkBoxDiscussionColumnFixedWidth.CheckedChanged += new System.EventHandler(this.checkBoxDiscussionColumnFixedWidth_CheckedChanged);
+         // 
+         // radioButtonDiscussionColumnWidthNarrowPlus
+         // 
+         this.radioButtonDiscussionColumnWidthNarrowPlus.AutoSize = true;
+         this.radioButtonDiscussionColumnWidthNarrowPlus.Location = new System.Drawing.Point(118, 19);
+         this.radioButtonDiscussionColumnWidthNarrowPlus.Name = "radioButtonDiscussionColumnWidthNarrowPlus";
+         this.radioButtonDiscussionColumnWidthNarrowPlus.Size = new System.Drawing.Size(65, 17);
+         this.radioButtonDiscussionColumnWidthNarrowPlus.TabIndex = 4;
+         this.radioButtonDiscussionColumnWidthNarrowPlus.TabStop = true;
+         this.radioButtonDiscussionColumnWidthNarrowPlus.Text = "Narrow+";
+         this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthNarrowPlus, "Increased \"Narrow\" column(s) for diff context and discussion notes");
+         this.radioButtonDiscussionColumnWidthNarrowPlus.UseVisualStyleBackColor = true;
+         this.radioButtonDiscussionColumnWidthNarrowPlus.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
+         // 
+         // radioButtonDiscussionColumnWidthMediumPlus
+         // 
+         this.radioButtonDiscussionColumnWidthMediumPlus.AutoSize = true;
+         this.radioButtonDiscussionColumnWidthMediumPlus.Location = new System.Drawing.Point(118, 42);
+         this.radioButtonDiscussionColumnWidthMediumPlus.Name = "radioButtonDiscussionColumnWidthMediumPlus";
+         this.radioButtonDiscussionColumnWidthMediumPlus.Size = new System.Drawing.Size(68, 17);
+         this.radioButtonDiscussionColumnWidthMediumPlus.TabIndex = 5;
+         this.radioButtonDiscussionColumnWidthMediumPlus.TabStop = true;
+         this.radioButtonDiscussionColumnWidthMediumPlus.Text = "Medium+";
+         this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthMediumPlus, "Increased \"Medium\" column(s) for diff context and discussion notes");
+         this.radioButtonDiscussionColumnWidthMediumPlus.UseVisualStyleBackColor = true;
+         this.radioButtonDiscussionColumnWidthMediumPlus.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
          // 
          // contextMenuStrip
          // 
@@ -1461,6 +1489,8 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxColumnWidth
          // 
+         this.groupBoxColumnWidth.Controls.Add(this.radioButtonDiscussionColumnWidthMediumPlus);
+         this.groupBoxColumnWidth.Controls.Add(this.radioButtonDiscussionColumnWidthNarrowPlus);
          this.groupBoxColumnWidth.Controls.Add(this.checkBoxDiscussionColumnFixedWidth);
          this.groupBoxColumnWidth.Controls.Add(this.radioButtonDiscussionColumnWidthWide);
          this.groupBoxColumnWidth.Controls.Add(this.radioButtonDiscussionColumnWidthMedium);
@@ -2397,6 +2427,8 @@ namespace mrHelper.App.Forms
       private Label labelDepth;
       private ComboBox comboBoxDCDepth;
       private CheckBox checkBoxDiscussionColumnFixedWidth;
+      private RadioButton radioButtonDiscussionColumnWidthMediumPlus;
+      private RadioButton radioButtonDiscussionColumnWidthNarrowPlus;
    }
 }
 
