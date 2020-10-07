@@ -277,11 +277,11 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private void DiscussionsForm_KeyDown(object sender, KeyEventArgs e)
+      private void DiscussionsForm_KeyDown(object sender, KeyEventArgs e)
       {
          if (e.KeyCode == Keys.F5)
          {
-            await onRefresh();
+            onRefreshAction();
          }
          else if (e.KeyCode == Keys.F3)
          {
@@ -602,7 +602,8 @@ namespace mrHelper.App.Forms
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
                sender => MostRecentFocusedDiscussionControl = sender,
-               _htmlTooltip, onAddCommentAction, onAddThreadAction, _commands, onCommandAction)
+               _htmlTooltip, onAddCommentAction, onAddThreadAction, _commands, onCommandAction,
+               _diffContextPosition, _discussionColumnWidth, _needShiftReplies)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false

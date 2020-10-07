@@ -88,7 +88,7 @@
          this.buttonDiscussionsRefresh.Name = "buttonDiscussionsRefresh";
          this.buttonDiscussionsRefresh.Size = new System.Drawing.Size(308, 34);
          this.buttonDiscussionsRefresh.TabIndex = 1;
-         this.buttonDiscussionsRefresh.Text = "Refresh (F5)";
+         this.buttonDiscussionsRefresh.Text = "Refresh";
          this.toolTipActionsPanel.SetToolTip(this.buttonDiscussionsRefresh, "Reload discussions from Server");
          this.buttonDiscussionsRefresh.UseVisualStyleBackColor = true;
          this.buttonDiscussionsRefresh.Click += new System.EventHandler(this.ButtonDiscussionsRefresh_Click);

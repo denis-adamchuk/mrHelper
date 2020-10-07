@@ -72,7 +72,7 @@
          this.labelHotKeyHint.Size = new System.Drawing.Size(156, 13);
          this.labelHotKeyHint.TabIndex = 2;
          this.labelHotKeyHint.Text = "Hover to see available hot-keys";
-         this.toolTip.SetToolTip(this.labelHotKeyHint, "Ctrl-Arrow - Toggle layout\r\nPlus/Minus - Toggle column width");
+         this.toolTip.SetToolTip(this.labelHotKeyHint, "Ctrl-Arrow - Toggle layout\r\nPlus/Minus - Toggle column width\r\nF5 - Reload from server");
          // 
          // DiscussionsForm
          // 

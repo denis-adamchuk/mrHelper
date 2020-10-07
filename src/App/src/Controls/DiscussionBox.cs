@@ -38,7 +38,10 @@ namespace mrHelper.App.Controls
          Action onAddComment,
          Action onAddThread,
          IEnumerable<ICommand> commands,
-         Action<ICommand> onCommand)
+         Action<ICommand> onCommand,
+         ConfigurationHelper.DiffContextPosition diffContextPosition,
+         ConfigurationHelper.DiscussionColumnWidth discussionColumnWidth,
+         bool needShiftReplies)
       {
          Parent = parent;
 
@@ -58,10 +61,9 @@ namespace mrHelper.App.Controls
             _tooltipContextMaker = new CombinedContextMaker(git);
          }
          _colorScheme = colorScheme;
-         _diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
-         _discussionColumnWidth = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
-         _isColumnWidthFixed = Program.Settings.IsDiscussionColumnWidthFixed;
-         _needShiftReplies = Program.Settings.NeedShiftReplies;
+         _diffContextPosition = diffContextPosition;
+         _discussionColumnWidth = discussionColumnWidth;
+         _needShiftReplies = needShiftReplies;
 
          _onContentChanging = () =>
          {
@@ -695,12 +697,6 @@ namespace mrHelper.App.Controls
          _previousWidth = null;
       }
 
-      internal void SetIsColumnWidthFixed(bool value)
-      {
-         _isColumnWidthFixed = value;
-         _previousWidth = null;
-      }
-
       private int getColumnInterval(int width)
       {
          return width * ColumnInterval / 100;
@@ -708,17 +704,19 @@ namespace mrHelper.App.Controls
 
       private int getNoteWidth(int width)
       {
+         bool isColumnWidthFixed = Program.Settings.IsDiscussionColumnWidthFixed;
+
          int getNoteWidthInUnits()
          {
             if (_diffContextPosition == ConfigurationHelper.DiffContextPosition.Top)
             {
-               return _isColumnWidthFixed
+               return isColumnWidthFixed
                   ? NoteWidth_Symbols_OneColumn[_discussionColumnWidth]
                   : NoteWidth_Percents_OneColumn[_discussionColumnWidth];
             }
             else
             {
-               return _isColumnWidthFixed
+               return isColumnWidthFixed
                   ? NoteWidth_Symbols_TwoColumns[_discussionColumnWidth]
                   : NoteWidth_Percents_TwoColumns[_discussionColumnWidth];
             }
@@ -734,7 +732,7 @@ namespace mrHelper.App.Controls
          }
 
          int noteWidthInUnits = getNoteWidthInUnits();
-         return _isColumnWidthFixed
+         return isColumnWidthFixed
             ? Math.Min(noteWidthInUnits * Convert.ToInt32(Font.Size), getMaxFixedWidth())
             : width * noteWidthInUnits / 100;
       }
@@ -1332,7 +1330,6 @@ namespace mrHelper.App.Controls
       private ConfigurationHelper.DiffContextPosition _diffContextPosition;
       private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
       private bool _needShiftReplies;
-      private bool _isColumnWidthFixed;
 
       private readonly ColorScheme _colorScheme;
       private readonly Action _onContentChanging;
