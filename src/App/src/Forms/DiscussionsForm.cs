@@ -47,7 +47,6 @@ namespace mrHelper.App.Forms
          _onDiscussionModified = onDiscussionModified;
          _diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
          _discussionColumnWidth = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
-         _isColumnWidthFixed = Program.Settings.IsDiscussionColumnWidthFixed;
          _needShiftReplies = Program.Settings.NeedShiftReplies;
 
          CustomCommandLoader loader = new CustomCommandLoader(this);
@@ -326,13 +325,11 @@ namespace mrHelper.App.Forms
          }
          else if (e.KeyCode == Keys.Oemplus || e.KeyCode == Keys.Add)
          {
-            _isColumnWidthFixed = e.Modifiers.HasFlag(Keys.Shift);
             setColumnWidth(ConfigurationHelper.GetNextColumnWidth(_discussionColumnWidth));
             e.Handled = true;
          }
          else if (e.KeyCode == Keys.OemMinus || e.KeyCode == Keys.Subtract)
          {
-            _isColumnWidthFixed = e.Modifiers.HasFlag(Keys.Shift);
             setColumnWidth(ConfigurationHelper.GetPrevColumnWidth(_discussionColumnWidth));
             e.Handled = true;
          }
@@ -833,7 +830,6 @@ namespace mrHelper.App.Forms
       private ConfigurationHelper.DiffContextPosition _diffContextPosition;
       private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
       private bool _needShiftReplies;
-      private bool _isColumnWidthFixed;
 
       private DiscussionFilterPanel FilterPanel;
       private DiscussionFilter DisplayFilter; // filters out discussions by user preferences
