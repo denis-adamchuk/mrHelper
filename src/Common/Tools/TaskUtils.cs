@@ -40,7 +40,6 @@ namespace mrHelper.Common.Tools
          Func<BatchLimits> getBatchLimits, Func<bool> onBatchFinished)
       {
          Debug.Assert(getBatchLimits != null);
-         Debug.Assert(onBatchFinished != null);
          Debug.Assert(args != null);
          Debug.Assert(func != null);
 

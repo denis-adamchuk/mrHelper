@@ -137,7 +137,6 @@ namespace mrHelper.GitLabClient.Managers
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
          }
 
-         Debug.Assert(!_reconnect || !_cachedDiscussions.ContainsKey(mrk));
          return _cachedDiscussions.ContainsKey(mrk) ? _cachedDiscussions[mrk].Discussions : null;
       }
 
@@ -216,13 +215,8 @@ namespace mrHelper.GitLabClient.Managers
             DiscussionUpdateType.PeriodicUpdate);
       }
 
-      async Task updateDiscussions(MergeRequestKey mrk, DiscussionUpdateType type)
+      async Task updateDiscussionsSafeAsync(MergeRequestKey mrk, DiscussionUpdateType type)
       {
-         if (_reconnect)
-         {
-            return;
-         }
-
          try
          {
             await updateDiscussionsAsync(mrk, type);
@@ -250,14 +244,14 @@ namespace mrHelper.GitLabClient.Managers
 #endif
 
             await TaskUtils.RunConcurrentFunctionsAsync(matchingFilter,
-               x => updateDiscussions(x, scheduledUpdate.Type),
+               x => updateDiscussionsSafeAsync(x, scheduledUpdate.Type),
                () => Constants.DiscussionLoaderMergeRequestBatchLimits,
-               () => _reconnect);
+               null);
 
             await TaskUtils.RunConcurrentFunctionsAsync(nonMatchingFilter,
-               x => updateDiscussions(x, scheduledUpdate.Type),
+               x => updateDiscussionsSafeAsync(x, scheduledUpdate.Type),
                () => Constants.DiscussionLoaderMergeRequestBatchLimits,
-               () => _reconnect);
+               null);
          }
          else
          {
@@ -268,50 +262,26 @@ namespace mrHelper.GitLabClient.Managers
 #endif
 
             await TaskUtils.RunConcurrentFunctionsAsync(scheduledUpdate.MergeRequests,
-               x => updateDiscussions(x, scheduledUpdate.Type),
+               x => updateDiscussionsSafeAsync(x, scheduledUpdate.Type),
                () => Constants.DiscussionLoaderMergeRequestBatchLimits,
-               () => _reconnect);
-         }
-
-         if (_reconnect)
-         {
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] update loop is cancelled due to _reconnect state"));
+               null);
          }
       }
 
       private void scheduleUpdate(IEnumerable<MergeRequestKey> keys, DiscussionUpdateType type)
       {
-         if (type == DiscussionUpdateType.InitialSnapshot)
-         {
-            _reconnect = true;
-         }
-
          // make a copy of `keys` just in case
          _scheduledUpdates.Enqueue(new ScheduledUpdate(keys, type));
 
          _timer?.SynchronizingObject.BeginInvoke(new Action(async () =>
          {
-            // 1. To avoid re-entrance in updateDiscussionsAsync()
-            // 2. Make it before resetting _reconnect flag to allow an ongoing update loop to break
+            // To avoid re-entrance in updateDiscussionsAsync()
             await waitForUpdateCompetion(null);
             Debug.Assert(!_updating.Any());
 
             if (_scheduledUpdates.Any())
             {
                ScheduledUpdate scheduledUpdate = _scheduledUpdates.Dequeue();
-
-               if (_reconnect)
-               {
-                  if (scheduledUpdate.Type != DiscussionUpdateType.InitialSnapshot)
-                  {
-                     Trace.TraceInformation("[DiscussionManager] update is skipped due to _reconnect state");
-                     return;
-                  }
-                  Debug.Assert(!_cachedDiscussions.Any() && !_closed.Any());
-                  _reconnect = false;
-               }
-
                await processScheduledUpdate(scheduledUpdate);
             }
          }), null);
@@ -321,16 +291,11 @@ namespace mrHelper.GitLabClient.Managers
       {
          if (_updating.Contains(mrk))
          {
-            // Such update can be caused by GetDiscussionsAsync() called while we are looping in processScheduledUpdate()
+            // Such update can be caused by LoadDiscussions() called while we are looping in processScheduledUpdate()
             Trace.TraceInformation(String.Format(
                "[DiscussionManager] update is skipped due to concurrent update request for MR: " +
                "Host={0}, Project={1}, IId={2}",
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
-            return;
-         }
-
-         if (_reconnect)
-         {
             return;
          }
 
@@ -339,11 +304,6 @@ namespace mrHelper.GitLabClient.Managers
             _updating.Add(mrk);
 
             Tuple<Note, int> mostRecentNoteAndNoteCount = await _operator.GetMostRecentUpdatedNoteAndCountAsync(mrk);
-            if (_reconnect)
-            {
-               return;
-            }
-
             if (!isCacheUpdateNeeded(mostRecentNoteAndNoteCount.Item1, mostRecentNoteAndNoteCount.Item2, mrk))
             {
                return;
@@ -365,10 +325,7 @@ namespace mrHelper.GitLabClient.Managers
                _loading.Remove(mrk);
             }
 
-            if (!_reconnect)
-            {
-               cacheDiscussions(mrk, discussions);
-            }
+            cacheDiscussions(mrk, discussions);
             DiscussionsLoaded?.Invoke(mrk, discussions);
             DiscussionsLoadedInternal?.Invoke(mrk, discussions, type);
          }
@@ -384,24 +341,26 @@ namespace mrHelper.GitLabClient.Managers
          {
             if (_updating.Contains(mrk.Value))
             {
-#if DEBUG
-               Trace.TraceInformation(String.Format(
-                  "[DiscussionManager] Waiting for completion of updating discussions for MR: "
-                + "Host={0}, Project={1}, IId={2}",
-                  mrk.Value.ProjectKey.HostName, mrk.Value.ProjectKey.ProjectName, mrk.Value.IId.ToString()));
-#endif
+               string getMessage(string prefix) => String.Format(
+                  "[DiscussionManager] {0} Waiting for completion of updating discussions for MR: "
+                + "Host={1}, Project={2}, IId={3}",
+                  prefix, mrk.Value.ProjectKey.HostName, mrk.Value.ProjectKey.ProjectName, mrk.Value.IId.ToString());
+
+               Trace.TraceInformation(getMessage("Begin -- "));
                await TaskUtils.WhileAsync(() => _updating.Contains(mrk.Value));
+               Trace.TraceInformation(getMessage("End -- "));
             }
          }
          else
          {
             if (_updating.Any())
             {
-#if DEBUG
-               Trace.TraceInformation(String.Format(
-                  "[DiscussionManager] Waiting for completion of updating discussions"));
-#endif
+               string getMessage(string prefix) => String.Format(
+                  "[DiscussionManager] {0} Waiting for completion of updating discussions", prefix);
+
+               Trace.TraceInformation(getMessage("Begin -- "));
                await TaskUtils.WhileAsync(() => _updating.Any());
+               Trace.TraceInformation(getMessage("End -- "));
             }
          }
       }
@@ -648,7 +607,7 @@ namespace mrHelper.GitLabClient.Managers
 
       /// <summary>
       /// _updating collection allows to avoid re-entrance in updateDiscussionsAsync()
-      /// It cannot be a single value because GetDiscussionsAsync() may interleave with processScheduledUpdate()
+      /// It cannot be a single value because LoadDiscussions() may interleave with processScheduledUpdate()
       /// and because we load multiple MR at once
       /// </summary>
       private readonly HashSet<MergeRequestKey> _updating = new HashSet<MergeRequestKey>();
@@ -663,11 +622,6 @@ namespace mrHelper.GitLabClient.Managers
       /// temporary _closed collection serves to not cache what is not needed to cache
       /// </summary>
       private readonly HashSet<MergeRequestKey> _closed = new HashSet<MergeRequestKey>();
-
-      /// <summary>
-      /// Shows that reconnect is in progress, and all updates are ignored within this period
-      /// </summary>
-      private bool _reconnect;
 
       private struct ScheduledUpdate
       {

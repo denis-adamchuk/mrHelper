@@ -805,7 +805,13 @@ namespace mrHelper.App.Forms
 
             string oldButtonText = buttonReloadList.Text;
             onUpdating();
-            requestUpdates(null, ReloadListPseudoTimerInterval, () => onUpdated(oldButtonText));
+
+            requestUpdates(null, ReloadListPseudoTimerInterval,
+               () =>
+               {
+                  onUpdated(oldButtonText);
+                  Trace.TraceInformation(String.Format("[MainForm] Finished updating by user request"));
+               });
          }
       }
 
