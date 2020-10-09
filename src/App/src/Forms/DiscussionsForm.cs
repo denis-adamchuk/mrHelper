@@ -528,10 +528,20 @@ namespace mrHelper.App.Forms
       {
          foreach (DiscussionBox box in getAllBoxes())
          {
-            bool isAllowedToDisplay = DisplayFilter.DoesMatchFilter(box.Discussion);
-            // Note that the following does not change Visible property value until Form gets Visible itself
-            box.Visible = isAllowedToDisplay;
+            updateVisibilityOfBox(box);
          }
+      }
+
+      private void updateVisibilityOfBox(DiscussionBox box)
+      {
+         if (box?.Discussion == null)
+         {
+            return;
+         }
+
+         bool isAllowedToDisplay = DisplayFilter.DoesMatchFilter(box.Discussion);
+         // Note that the following does not change Visible property value until Form gets Visible itself
+         box.Visible = isAllowedToDisplay;
       }
 
       private IEnumerable<DiscussionBox> getAllBoxes()
@@ -622,7 +632,7 @@ namespace mrHelper.App.Forms
       private void onDiscussionBoxContentChanged(DiscussionBox sender)
       {
          SuspendLayout(); // Avoid repositioning child controls on changing sender visibility
-         sender.Visible = true;
+         updateVisibilityOfBox(sender);
          ResumeLayout(true); // Put child controls at their places
          updateSearch();
          _onDiscussionModified?.Invoke();
