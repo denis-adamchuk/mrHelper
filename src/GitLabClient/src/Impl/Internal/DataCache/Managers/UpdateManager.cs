@@ -28,6 +28,7 @@ namespace mrHelper.GitLabClient.Managers
          _mergeRequestListLoader = MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
             hostname, updateOperator, context, cacheUpdater);
          _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater);
+         _extLogging = dataCacheContext.UpdateManagerExtendedLogging;
 
          _cache = cacheUpdater.Cache;
 
@@ -73,6 +74,13 @@ namespace mrHelper.GitLabClient.Managers
 
       private void enqueueOneShotTimer(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
       {
+         string mrkString = mrk.HasValue
+            ? String.Format("!{0} in {1}", mrk.Value.IId, mrk.Value.ProjectKey.ProjectName)
+            : "null";
+         traceDetailed(String.Format(
+            "enqueueOneShotTimer() called for mrk {0}, interval={1}, onUpdateFinished={2}, _oneShotTimers.Count={3}",
+            mrkString, interval, onUpdateFinished == null ? "null" : "non-null", _oneShotTimers.Count));
+
          if (interval < 1)
          {
             return;
@@ -88,16 +96,16 @@ namespace mrHelper.GitLabClient.Managers
          oneShotTimer.Elapsed +=
             async (s, e) =>
          {
-            IEnumerable<UserEvents.MergeRequestEvent> updates =
-               await (mrk.HasValue ? updateOneOnTimer(mrk.Value) : updateAllOnTimer());
+            var updateTask = mrk.HasValue ? updateOneOnTimer(mrk.Value) : updateAllOnTimer();
+            IEnumerable<UserEvents.MergeRequestEvent> updates = await updateTask;
             notify(updates);
 
             onUpdateFinished?.Invoke();
             _oneShotTimers.Remove(oneShotTimer);
             oneShotTimer.Dispose();
          };
-         oneShotTimer.Start();
 
+         oneShotTimer.Start();
          _oneShotTimers.Add(oneShotTimer);
       }
 
@@ -111,12 +119,15 @@ namespace mrHelper.GitLabClient.Managers
       {
          if (_updating)
          {
+            traceDetailed(String.Format("Cannot update !{0} in {1}", mrk.IId, mrk.ProjectKey.ProjectName));
             await TaskUtils.WhileAsync(() => _updating);
+            traceDetailed(String.Format("Skipped update for !{0} in {1}", mrk.IId, mrk.ProjectKey.ProjectName));
             return null;
          }
 
          IInternalCache oldDetails = _cache.Clone();
 
+         traceDetailed(String.Format("Ready to update !{0} in {1}", mrk.IId, mrk.ProjectKey.ProjectName));
          try
          {
             _updating = true;
@@ -131,6 +142,7 @@ namespace mrHelper.GitLabClient.Managers
          finally
          {
             _updating = false;
+            traceDetailed(String.Format("Updated !{0} in {1}", mrk.IId, mrk.ProjectKey.ProjectName));
          }
 
          IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(oldDetails, _cache);
@@ -153,12 +165,15 @@ namespace mrHelper.GitLabClient.Managers
       {
          if (_updating)
          {
+            traceDetailed("Cannot update the list");
             await TaskUtils.WhileAsync(() => _updating);
+            traceDetailed("List update has been skipped");
             return null;
          }
 
          IInternalCache oldDetails = _cache.Clone();
 
+         traceDetailed("Ready to update the list");
          try
          {
             _updating = true;
@@ -168,10 +183,12 @@ namespace mrHelper.GitLabClient.Managers
          catch (BaseLoaderException ex)
          {
             ExceptionHandlers.Handle("Cannot update merge requests on timer", ex);
+            return null;
          }
          finally
          {
             _updating = false;
+            traceDetailed("Updated the list");
          }
 
          IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(oldDetails, _cache);
@@ -209,6 +226,14 @@ namespace mrHelper.GitLabClient.Managers
          }
       }
 
+      private void traceDetailed(string message)
+      {
+         if (_extLogging)
+         {
+            Trace.TraceInformation("[UpdateManager] " + message);
+         }
+      }
+
       private System.Timers.Timer _timer;
       private readonly List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 
@@ -217,6 +242,7 @@ namespace mrHelper.GitLabClient.Managers
       private readonly IInternalCache _cache;
       private readonly InternalMergeRequestCacheComparator _checker =
          new InternalMergeRequestCacheComparator();
+      private readonly bool _extLogging;
 
       private bool _updating; /// prevents re-entrance in timer updates
    }

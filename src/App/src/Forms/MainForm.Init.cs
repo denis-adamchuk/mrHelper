@@ -513,7 +513,8 @@ namespace mrHelper.App.Forms
 
       private void createLiveDataCacheAndDependencies()
       {
-         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords);
+         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
+            Program.Settings.UpdateManagerExtendedLogging);
          _liveDataCache = new DataCache(dataCacheContext, _modificationNotifier);
          _expressionResolver = new ExpressionResolver(_liveDataCache);
          _eventFilter = new EventFilter(Program.Settings, _liveDataCache, _mergeRequestFilter);
@@ -522,7 +523,8 @@ namespace mrHelper.App.Forms
 
       private void createSearchDataCache()
       {
-         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords);
+         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
+            Program.Settings.UpdateManagerExtendedLogging);
          _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier);
       }
 

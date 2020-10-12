@@ -45,6 +45,11 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowPublicOnlyKeyName = "ShowPublicOnly";
       private static readonly bool   ShowPublicOnlyDefaultValue = true;
 
+      private static readonly string UpdateManagerExtendedLoggingKeyName = "UpdateManagerExtendedLogging";
+#if !DEBUG
+      private static readonly bool   UpdateManagerExtendedLoggingDefaultValue = false;
+#endif
+
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
       private static readonly string DiffContextDepthDefaultValue = "2";
 
@@ -302,6 +307,21 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : ShowPublicOnlyDefaultValue;
          }
          set { setValue(ShowPublicOnlyKeyName, boolToString(value)); }
+      }
+
+      public bool UpdateManagerExtendedLogging
+      {
+         get
+         {
+#if DEBUG
+            return true;
+#else
+            return bool.TryParse(getValue(
+               UpdateManagerExtendedLoggingKeyName, boolToString(UpdateManagerExtendedLoggingDefaultValue)),
+                  out bool result) ? result : UpdateManagerExtendedLoggingDefaultValue;
+#endif
+         }
+         set { setValue(UpdateManagerExtendedLoggingKeyName, boolToString(value)); }
       }
 
       public bool MinimizeOnClose

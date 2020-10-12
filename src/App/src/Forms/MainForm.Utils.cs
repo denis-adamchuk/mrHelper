@@ -1266,10 +1266,18 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onMergeRequestRefreshed(MergeRequestKey _)
+      private void onMergeRequestRefreshed(MergeRequestKey mrk)
       {
          // update Refreshed column
          listViewMergeRequests.Invalidate();
+
+         if (Program.Settings.UpdateManagerExtendedLogging)
+         {
+            DateTime? refreshTimestamp = _liveDataCache?.MergeRequestCache?.GetMergeRequestRefreshTime(mrk);
+            Trace.TraceInformation(String.Format(
+               "[MainForm] Merge Request {0} refreshed at {1}",
+               mrk.IId, refreshTimestamp.HasValue ? refreshTimestamp.Value.ToString() : "N/A"));
+         }
       }
 
       private void onMergeRequestListRefreshed()
@@ -1284,6 +1292,13 @@ namespace mrHelper.App.Forms
 
          // update Refreshed column
          listViewMergeRequests.Invalidate();
+
+         if (Program.Settings.UpdateManagerExtendedLogging)
+         {
+            Trace.TraceInformation(String.Format(
+               "[MainForm] Merge Request List refreshed at {0}",
+               refreshTimestamp.HasValue ? refreshTimestamp.Value.ToString() : "N/A"));
+         }
       }
 
       private void checkForApplicationUpdates()

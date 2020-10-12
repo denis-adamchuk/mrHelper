@@ -8,16 +8,19 @@ namespace mrHelper.GitLabClient
       public DataCacheContext(
          ISynchronizeInvoke synchronizeInvoke,
          IMergeRequestFilterChecker mergeRequestFilterChecker,
-         IEnumerable<string> discussionKeywords)
+         IEnumerable<string> discussionKeywords,
+         bool updateManagerExtendedLogging)
       {
          SynchronizeInvoke = synchronizeInvoke;
          MergeRequestFilterChecker = mergeRequestFilterChecker;
          DiscussionKeywords = discussionKeywords;
+         UpdateManagerExtendedLogging = updateManagerExtendedLogging;
       }
 
       public ISynchronizeInvoke SynchronizeInvoke { get; }
       public IMergeRequestFilterChecker MergeRequestFilterChecker { get; }
       public IEnumerable<string> DiscussionKeywords { get; }
+      public bool UpdateManagerExtendedLogging { get; }
    }
 }
 
