@@ -12,7 +12,7 @@ namespace mrHelper.RevertMSI
    {
       private static readonly string logfilename = "mrHelper.revertMSI.log";
 
-      static void Main(string[] args)
+      static void Main()
       {
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
          try

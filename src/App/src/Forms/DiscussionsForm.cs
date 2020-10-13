@@ -860,7 +860,7 @@ namespace mrHelper.App.Forms
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search
       /// </summary>
       private Control MostRecentFocusedDiscussionControl;
-      private IEnumerable<ICommand> _commands;
+      private readonly IEnumerable<ICommand> _commands;
       private readonly HtmlToolTip _htmlTooltip = new HtmlToolTip
       {
          AutoPopDelay = 20000, // 20s
