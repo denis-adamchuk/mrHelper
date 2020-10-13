@@ -642,6 +642,11 @@ namespace mrHelper.App.Forms
 
       private void checkBoxNotifications_CheckedChanged(object sender, EventArgs e)
       {
+         if (_loadingConfiguration)
+         {
+            return;
+         }
+
          bool state = (sender as CheckBox).Checked;
          if (sender == checkBoxShowNewMergeRequests)
          {
@@ -801,7 +806,7 @@ namespace mrHelper.App.Forms
 
          if (getHostName() != String.Empty)
          {
-            Trace.TraceInformation(String.Format("[MainForm] User decided to Reload List"));
+            Trace.TraceInformation("[MainForm] User decided to Reload List");
 
             string oldButtonText = buttonReloadList.Text;
             onUpdating();
@@ -810,14 +815,17 @@ namespace mrHelper.App.Forms
                () =>
                {
                   onUpdated(oldButtonText);
-                  Trace.TraceInformation(String.Format("[MainForm] Finished updating by user request"));
+                  Trace.TraceInformation("[MainForm] Finished updating by user request");
                });
          }
       }
 
       private void comboBoxDCDepth_SelectedIndexChanged(object sender, EventArgs e)
       {
-         Program.Settings.DiffContextDepth = (sender as ComboBox).Text;
+         if (!_loadingConfiguration)
+         {
+            Program.Settings.DiffContextDepth = (sender as ComboBox).Text;
+         }
       }
 
       private void radioButtonDiffContextPosition_CheckedChanged(object sender, EventArgs e)

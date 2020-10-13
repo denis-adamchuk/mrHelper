@@ -15,6 +15,8 @@ namespace mrHelper.App.Helpers
 
    public class UserDefinedSettings : INotifyPropertyChanged, IHostProperties
    {
+      private static readonly string DefaultValuePrefix = ":";
+
       private static readonly string KnownHostsKeyName = "KnownHosts";
       private static readonly string[] KnownHostsDefaultValue = Array.Empty<string>();
 
@@ -46,9 +48,7 @@ namespace mrHelper.App.Helpers
       private static readonly bool   ShowPublicOnlyDefaultValue = true;
 
       private static readonly string UpdateManagerExtendedLoggingKeyName = "UpdateManagerExtendedLogging";
-#if !DEBUG
-      private static readonly bool   UpdateManagerExtendedLoggingDefaultValue = false;
-#endif
+      private static readonly bool   UpdateManagerExtendedLoggingDefaultValue = true;
 
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
       private static readonly string DiffContextDepthDefaultValue = "2";
@@ -188,7 +188,7 @@ namespace mrHelper.App.Helpers
          Constants.DefaultThemeName;
 
       private static readonly string WorkflowTypeKeyName      = "WorkflowType";
-      private static readonly string WorkflowTypeDefaultValue = "User";
+      private static readonly string WorkflowTypeDefaultValue = "Users";
 
       private static readonly string SelectedUsersKeyName      = "SelectedUsers";
       private static readonly string SelectedUsersDefaultValue = String.Empty;
@@ -313,13 +313,9 @@ namespace mrHelper.App.Helpers
       {
          get
          {
-#if DEBUG
-            return true;
-#else
             return bool.TryParse(getValue(
                UpdateManagerExtendedLoggingKeyName, boolToString(UpdateManagerExtendedLoggingDefaultValue)),
                   out bool result) ? result : UpdateManagerExtendedLoggingDefaultValue;
-#endif
          }
          set { setValue(UpdateManagerExtendedLoggingKeyName, boolToString(value)); }
       }
@@ -870,33 +866,44 @@ namespace mrHelper.App.Helpers
 
       private string getValue(string key, string defaultValue)
       {
-         if (_config.AppSettings.Settings[key] != null)
+         KeyValueConfigurationElement currentValue = _config.AppSettings.Settings[key];
+         if (currentValue != null && !currentValue.Value.StartsWith(DefaultValuePrefix))
          {
-            return _config.AppSettings.Settings[key].Value;
+            return currentValue.Value;
          }
 
-         setValue(key, defaultValue);
+         setValue(key, DefaultValuePrefix + defaultValue);
          return defaultValue;
       }
 
       private void setValue(string key, string value)
       {
-         if (_config.AppSettings.Settings[key] != null)
-         {
-            if (_config.AppSettings.Settings[key].Value != value)
-            {
-               _config.AppSettings.Settings[key].Value = value;
-               OnPropertyChanged(key);
+         bool notify = false;
 
-               Trace.TraceInformation(String.Format("[Configuration] Changed property {0} value to {1}", key, value));
-            }
-            return;
+         if (_config.AppSettings.Settings[key] == null)
+         {
+            _config.AppSettings.Settings.Add(key, value);
+            notify = true;
+            Trace.TraceInformation("[Configuration] Added a new property {0} with value {1}", key, value);
+         }
+         else if (_config.AppSettings.Settings[key].Value != value)
+         {
+            string oldValue = _config.AppSettings.Settings[key].Value;
+            _config.AppSettings.Settings[key].Value = value;
+
+            string oldValueWithoutPrefix = oldValue.StartsWith(DefaultValuePrefix)
+               ? oldValue.Substring(DefaultValuePrefix.Length) : oldValue;
+            string newValueWithoutPrefix = value.StartsWith(DefaultValuePrefix)
+               ? value.Substring(DefaultValuePrefix.Length) : value;
+            notify = oldValueWithoutPrefix != newValueWithoutPrefix;
+            Trace.TraceInformation("[Configuration] Changed value of property {0} from {1} to {2}, notify={3}",
+               key, oldValue, value, notify);
          }
 
-         _config.AppSettings.Settings.Add(key, value);
-         OnPropertyChanged(key);
-
-         Trace.TraceInformation(String.Format("[Configuration] Added a new property {0} with value {1}", key, value));
+         if (notify)
+         {
+            OnPropertyChanged(key);
+         }
       }
 
       private IEnumerable<string> getValues(string key, string[] defaultValues)
