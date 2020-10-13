@@ -4,25 +4,27 @@ using System.Linq;
 using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient.Loaders;
-using mrHelper.GitLabClient.Loaders.Cache;
+using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Managers
 {
    internal class ProjectCache : IProjectCache
    {
-      internal ProjectCache(InternalCacheUpdater cacheUpdater,
-         IProjectListLoader projectListLoader, DataCacheContext context)
+      internal ProjectCache(IProjectListLoader projectListLoader, DataCacheContext context, string hostname)
       {
-         _cacheUpdater = cacheUpdater;
          _projectListLoader = projectListLoader;
          _context = context;
+         _hostname = hostname;
 
          _context.SynchronizeInvoke.BeginInvoke(new Action(
             async () =>
          {
             try
             {
-               await _projectListLoader.Load();
+               if (!GlobalCache.GetProjects(hostname)?.Any() ?? false)
+               {
+                  await _projectListLoader.Load();
+               }
             }
             catch (BaseLoaderException ex)
             {
@@ -37,10 +39,10 @@ namespace mrHelper.GitLabClient.Managers
 
       public IEnumerable<Project> GetProjects()
       {
-         return _cacheUpdater.Cache.GetAllProjects() ?? Array.Empty<Project>();
+         return GlobalCache.GetProjects(_hostname) ?? Array.Empty<Project>();
       }
 
-      private readonly InternalCacheUpdater _cacheUpdater;
+      private readonly string _hostname;
       private readonly IProjectListLoader _projectListLoader;
       private readonly DataCacheContext _context;
    }

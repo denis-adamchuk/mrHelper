@@ -10,7 +10,7 @@ namespace mrHelper.GitLabClient.Operators
    {
       static internal User GetUser(string hostname, string username)
       {
-         if (_users.TryGetValue(hostname, out HashSet<User> users))
+         if (_usersByNames.TryGetValue(hostname, out HashSet<User> users))
          {
             return users.SingleOrDefault(x => x.Username == username);
          }
@@ -19,16 +19,16 @@ namespace mrHelper.GitLabClient.Operators
 
       static internal void AddUser(string hostname, User user)
       {
-         if (!_users.ContainsKey(hostname))
+         if (!_usersByNames.ContainsKey(hostname))
          {
-            _users[hostname] = new HashSet<User>();
+            _usersByNames[hostname] = new HashSet<User>();
          }
-         _users[hostname].Add(user);
+         _usersByNames[hostname].Add(user);
       }
 
       static internal ProjectKey? GetProjectKey(string hostname, int projectId)
       {
-         if (_projects.TryGetValue(hostname, out Dictionary<int, ProjectKey> projects))
+         if (_projectKeys.TryGetValue(hostname, out Dictionary<int, ProjectKey> projects))
          {
             if (projects.TryGetValue(projectId, out ProjectKey projectKey))
             {
@@ -40,17 +40,41 @@ namespace mrHelper.GitLabClient.Operators
 
       static internal void AddProjectKey(string hostname, int projectId, ProjectKey projectKey)
       {
-         if (!_projects.ContainsKey(hostname))
+         if (!_projectKeys.ContainsKey(hostname))
          {
-            _projects[hostname] = new Dictionary<int, ProjectKey>();
+            _projectKeys[hostname] = new Dictionary<int, ProjectKey>();
          }
-         _projects[hostname][projectId] = projectKey;
+         _projectKeys[hostname][projectId] = projectKey;
       }
 
-      static readonly Dictionary<string, HashSet<User>> _users =
+      static internal IEnumerable<Project> GetProjects(string hostname)
+      {
+         return _projects.TryGetValue(hostname, out IEnumerable<Project> projects) ? projects : null;
+      }
+
+      static internal void SetProjects(string hostname, IEnumerable<Project> projects)
+      {
+         _projects[hostname] = projects.ToArray();
+      }
+
+      static internal IEnumerable<User> GetUsers(string hostname)
+      {
+         return _users.TryGetValue(hostname, out IEnumerable<User> users) ? users : null;
+      }
+
+      static internal void SetUsers(string hostname, IEnumerable<User> users)
+      {
+         _users[hostname] = users.ToArray();
+      }
+
+      static readonly Dictionary<string, HashSet<User>> _usersByNames =
          new Dictionary<string, HashSet<User>>();
-      static readonly Dictionary<string, Dictionary<int, ProjectKey>> _projects =
+      static readonly Dictionary<string, Dictionary<int, ProjectKey>> _projectKeys =
          new Dictionary<string, Dictionary<int, ProjectKey>>();
+      static readonly Dictionary<string, IEnumerable<Project>> _projects =
+         new Dictionary<string, IEnumerable<Project>>();
+      static readonly Dictionary<string, IEnumerable<User>> _users =
+         new Dictionary<string, IEnumerable<User>>();
    }
 }
 

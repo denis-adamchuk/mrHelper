@@ -101,11 +101,10 @@ namespace mrHelper.GitLabClient
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
             hostname, hostProperties, user, discussionManager, _modificationNotifier);
 
-         IProjectListLoader loader = ProjectListLoaderFactory.CreateProjectListLoader(
-            hostname, _operator, context, cacheUpdater);
-         ProjectCache projectCache = new ProjectCache(cacheUpdater, loader, _dataCacheContext);
-         IUserListLoader userListLoader = new UserListLoader(_operator, cacheUpdater);
-         UserCache userCache = new UserCache(cacheUpdater, userListLoader, _dataCacheContext);
+         IProjectListLoader loader = new ProjectListLoader(hostname, _operator, context);
+         ProjectCache projectCache = new ProjectCache(loader, _dataCacheContext, hostname);
+         IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
+         UserCache userCache = new UserCache(userListLoader, _dataCacheContext, hostname);
          return new DataCacheInternal(mergeRequestManager, discussionManager, timeTrackingManager, projectCache, userCache);
       }
 
