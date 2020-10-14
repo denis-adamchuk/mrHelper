@@ -269,20 +269,13 @@ namespace mrHelper.App.Forms
 
       async private Task connectToUrlAsyncInternal(string url, UrlParser.ParsedMergeRequestUrl parsedUrl)
       {
-         labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
          MergeRequestKey mrk = parseUrlIntoMergeRequestKey(parsedUrl);
 
-         GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-         MergeRequest mergeRequest = await Shortcuts
-            .GetMergeRequestAccessor(gitLabInstance, _modificationNotifier, mrk.ProjectKey)
-            .SearchMergeRequestAsync(mrk.IId, false);
-         if (mergeRequest == null)
-         {
-            throw new UrlConnectionException("Merge request does not exist. ", null);
-         }
+         labelWorkflowStatus.Text = String.Format("Checking merge request state for {0}...", url);
+         string mergeRequestState = await getMergeRequestStateAsync(mrk);
          labelWorkflowStatus.Text = String.Empty;
 
-         bool canOpenAtLiveTab = mergeRequest.State == "opened" && checkIfCanOpenAtLiveTab(mrk, true);
+         bool canOpenAtLiveTab = mergeRequestState == "opened" && checkIfCanOpenAtLiveTab(mrk, true);
          bool needReload = (canOpenAtLiveTab && getDataCache(canOpenAtLiveTab).MergeRequestCache == null)
                         || mrk.ProjectKey.HostName != getHostName();
          if (needReload)
@@ -295,6 +288,28 @@ namespace mrHelper.App.Forms
          {
             await openUrlAtSearchTabAsync(mrk);
          }
+      }
+
+      async private Task<string> getMergeRequestStateAsync(MergeRequestKey mrk)
+      {
+         // Check both local data caches first
+         MergeRequest mergeRequest = getDataCache(true)?.MergeRequestCache?.GetMergeRequest(mrk)
+                                  ?? getDataCache(false)?.MergeRequestCache?.GetMergeRequest(mrk);
+         if (mergeRequest != null)
+         {
+            return mergeRequest.State;
+         }
+
+         // MR is not found locally, check remote
+         GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
+         mergeRequest = await Shortcuts
+            .GetMergeRequestAccessor(gitLabInstance, _modificationNotifier, mrk.ProjectKey)
+            .SearchMergeRequestAsync(mrk.IId, false);
+         if (mergeRequest == null)
+         {
+            throw new UrlConnectionException("Merge request does not exist. ", null);
+         }
+         return mergeRequest.State;
       }
 
       private void reportErrorOnConnect(string url, string msg, Exception ex)
