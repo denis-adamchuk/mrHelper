@@ -23,7 +23,7 @@ namespace mrHelper.GitLabClient
 
       async public Task Connect(GitLabInstance gitLabInstance, DataCacheConnectionContext context)
       {
-         reset();
+         Disconnect();
 
          string hostname = gitLabInstance.HostName;
          IHostProperties hostProperties = gitLabInstance.HostProperties;
@@ -35,13 +35,16 @@ namespace mrHelper.GitLabClient
             IMergeRequestListLoader mergeRequestListLoader =
                MergeRequestListLoaderFactory.CreateMergeRequestListLoader(hostname, _operator, context, cacheUpdater);
 
-            Trace.TraceInformation(String.Format("[DataCache] Starting new dataCache at {0}", hostname));
+            Trace.TraceInformation("[DataCache] Connecting data cache to {0}...", hostname);
 
-            User currentUser = await new CurrentUserLoader(_operator).Load(hostname);
+            string accessToken = hostProperties.GetAccessToken(hostname);
+            await new CurrentUserLoader(_operator).Load(hostname, accessToken);
+            User currentUser = GlobalCache.GetAuthenticatedUser(hostname, accessToken);
+
             await mergeRequestListLoader.Load();
             _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser, context);
 
-            Trace.TraceInformation(String.Format("[DataCache] Started new dataCache at {0}", hostname));
+            Trace.TraceInformation("[DataCache] Data cache connected to {0}", hostname);
             Connected?.Invoke(hostname, currentUser);
          }
          catch (BaseLoaderException ex)
@@ -56,18 +59,18 @@ namespace mrHelper.GitLabClient
 
       public void Disconnect()
       {
+         Trace.TraceInformation("[DataCache] Disconnecting data cache");
          reset();
       }
 
       public void Dispose()
       {
+         Trace.TraceInformation("[DataCache] Disposing data cache");
          reset();
       }
 
       private void reset()
       {
-         Trace.TraceInformation("[DataCache] Canceling operations");
-
          _operator?.Dispose();
          _operator = null;
 
