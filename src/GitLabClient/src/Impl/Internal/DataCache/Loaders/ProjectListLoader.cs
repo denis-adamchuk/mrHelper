@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.GitLabClient.Operators;
@@ -19,8 +20,11 @@ namespace mrHelper.GitLabClient.Loaders
 
       async public Task Load()
       {
-         IEnumerable<Project> projects = await loadProjectsAsync();
-         GlobalCache.SetProjects(_hostname, projects);
+         if (GlobalCache.GetProjects(_hostname) == null)
+         {
+            IEnumerable<Project> projects = await loadProjectsAsync();
+            GlobalCache.SetProjects(_hostname, projects);
+         }
       }
 
       async private Task<IEnumerable<Project>> loadProjectsAsync()

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient.Loaders;
@@ -21,10 +20,7 @@ namespace mrHelper.GitLabClient.Managers
          {
             try
             {
-               if (!GlobalCache.GetProjects(hostname)?.Any() ?? false)
-               {
-                  await _projectListLoader.Load();
-               }
+               await _projectListLoader.Load();
             }
             catch (BaseLoaderException ex)
             {
