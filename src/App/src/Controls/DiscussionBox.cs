@@ -59,6 +59,7 @@ namespace mrHelper.App.Controls
          {
             _panelContextMaker = new EnhancedContextMaker(git);
             _tooltipContextMaker = new CombinedContextMaker(git);
+            _simpleContextMaker = new SimpleContextMaker(git);
          }
          _colorScheme = colorScheme;
          _diffContextPosition = diffContextPosition;
@@ -255,7 +256,7 @@ namespace mrHelper.App.Controls
             htmlPanel.Height = 0;
          }
 
-         string html = getContext(_panelContextMaker, position, _diffContextDepth, fontSizePx, 2, true);
+         string html = getFormattedHtml(_panelContextMaker, position, _diffContextDepth, fontSizePx, 2, true);
          htmlPanel.Text = html;
 
          if (htmlPanel.Visible)
@@ -263,11 +264,11 @@ namespace mrHelper.App.Controls
             resizeLimitedWidthHtmlPanel(htmlPanel, prevWidth);
          }
 
-         string tooltipHtml = getContext(_tooltipContextMaker, position, _tooltipContextDepth, fontSizePx, 2, false);
+         string tooltipHtml = getFormattedHtml(_tooltipContextMaker, position, _tooltipContextDepth, fontSizePx, 2, false);
          _htmlTooltip.SetToolTip(htmlPanel, tooltipHtml);
       }
 
-      private string getContext(IContextMaker contextMaker, DiffPosition position, ContextDepth depth,
+      private string getFormattedHtml(IContextMaker contextMaker, DiffPosition position, ContextDepth depth,
          double fontSizePx, int rowsVPaddingPx, bool fullWidth)
       {
          if (contextMaker == null)
@@ -277,7 +278,7 @@ namespace mrHelper.App.Controls
 
          try
          {
-            DiffContext context = contextMaker.GetContext(position, depth);
+            DiffContext context = getContext(contextMaker, position, depth);
             return DiffContextFormatter.GetHtml(context, fontSizePx, rowsVPaddingPx, fullWidth);
          }
          catch (Exception ex)
@@ -287,6 +288,22 @@ namespace mrHelper.App.Controls
                string errorMessage = "Cannot render HTML context.";
                ExceptionHandlers.Handle(errorMessage, ex);
                return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
+            }
+            throw;
+         }
+      }
+
+      private DiffContext getContext(IContextMaker contextMaker, DiffPosition position, ContextDepth depth)
+      {
+         try
+         {
+            return contextMaker.GetContext(position, depth);
+         }
+         catch (Exception ex)
+         {
+            if (ex is ContextMakingException)
+            {
+               return _simpleContextMaker.GetContext(position, depth);
             }
             throw;
          }
@@ -1324,6 +1341,7 @@ namespace mrHelper.App.Controls
       private readonly ContextDepth _tooltipContextDepth;
       private readonly IContextMaker _panelContextMaker;
       private readonly IContextMaker _tooltipContextMaker;
+      private readonly IContextMaker _simpleContextMaker;
       private readonly SingleDiscussionAccessor _accessor;
       private readonly IDiscussionEditor _editor;
 

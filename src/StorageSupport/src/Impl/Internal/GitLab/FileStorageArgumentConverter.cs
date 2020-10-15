@@ -117,7 +117,7 @@ namespace mrHelper.StorageSupport
          if (comparison == null)
          {
             throw new ArgumentConversionException(String.Format(
-               "Cannot find Comparison object for {0} bs {1}", baseSha, headSha), null);
+               "Cannot find Comparison object for {0} vs {1}", baseSha, headSha), null);
          }
          return comparison;
       }

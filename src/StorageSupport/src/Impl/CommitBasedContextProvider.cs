@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
+using static mrHelper.StorageSupport.BaseToHeadsCollection;
 
 namespace mrHelper.StorageSupport
 {
@@ -15,8 +16,13 @@ namespace mrHelper.StorageSupport
       public CommitStorageUpdateContext GetContext()
       {
          BaseToHeadsCollection baseToHeads = new BaseToHeadsCollection(
-            new Dictionary<BaseInfo, IEnumerable<HeadInfo>>
-               { { new BaseInfo(_baseSha), _heads.Where(x => x != _baseSha).Select(x => new HeadInfo(x, null)) } });
+            new Dictionary<CommitInfo, IEnumerable<RelativeCommitInfo>>
+            {
+               {
+                  new CommitInfo(_baseSha),
+                  _heads.Where(x => x != _baseSha).Select(x => new RelativeCommitInfo(x, null))
+               }
+            });
          return new PartialUpdateContext(baseToHeads);
       }
 

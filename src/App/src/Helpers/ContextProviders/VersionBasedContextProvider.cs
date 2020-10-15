@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.StorageSupport;
+using static mrHelper.StorageSupport.BaseToHeadsCollection;
 
 namespace mrHelper.App.Helpers
 {
@@ -49,8 +50,8 @@ namespace mrHelper.App.Helpers
          return new FullUpdateContext(latestVersion.Created_At,
             new BaseToHeadsCollection(
                baseToHeads.ToDictionary(
-                  item => new BaseInfo(item.Key),
-                  item => item.Value.Select(x => new HeadInfo(x, null)))));
+                  item => new CommitInfo(item.Key),
+                  item => item.Value.Select(x => new RelativeCommitInfo(x, null)))));
       }
 
       public override string ToString()

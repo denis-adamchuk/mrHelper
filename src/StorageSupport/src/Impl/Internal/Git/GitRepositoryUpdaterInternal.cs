@@ -8,6 +8,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
+using static mrHelper.StorageSupport.BaseToHeadsCollection;
 
 namespace mrHelper.StorageSupport
 {
@@ -174,7 +175,7 @@ namespace mrHelper.StorageSupport
       {
          List<string> result = new List<string>();
          result.AddRange(dict.Data.Keys.Select(x => x.Sha));
-         foreach (IEnumerable<HeadInfo> values in dict.Data.Values)
+         foreach (IEnumerable<RelativeCommitInfo> values in dict.Data.Values)
          {
             result.AddRange(values.Select(x => x.Sha));
          }

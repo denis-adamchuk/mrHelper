@@ -9,7 +9,6 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient;
-using static mrHelper.StorageSupport.HeadInfo;
 using System.Windows.Forms;
 
 namespace mrHelper.StorageSupport
@@ -133,10 +132,81 @@ namespace mrHelper.StorageSupport
          }
 
          reportProgress(onProgressChange, "Downloading meta-information...");
-         IEnumerable<ComparisonInternal> comparisons = await fetchComparisonsAsync(isAwaitedUpdate, context);
-         if (comparisons == null)
+         IEnumerable<FileInternal> allFiles = await fetchComparisonsAsync(isAwaitedUpdate, context);
+         if (allFiles == null)
          {
             return;
+         }
+
+         reportProgress(onProgressChange, "Starting to download files from GitLab...");
+         await processComparisonsAsync(isAwaitedUpdate, onProgressChange, allFiles);
+         reportProgress(onProgressChange, "Files downloaded");
+      }
+
+      async private Task<IEnumerable<FileInternal>> fetchComparisonsAsync(bool isAwaitedUpdate,
+         CommitStorageUpdateContext context)
+      {
+         bool cancelled = _isDisposed;
+         Exception exception = null;
+         List<FileInternal> allFiles = new List<FileInternal>();
+         List<ComparisonInternal> comparisons = new List<ComparisonInternal>();
+         async Task doFetch(BaseToHeadsCollection.FlatBaseToHeadInfo baseToHeadInfo)
+         {
+            if (cancelled)
+            {
+               return;
+            }
+
+            await suspendProcessingOfNonAwaitedUpdate(isAwaitedUpdate);
+            Comparison comparison = await fetchSingleComparisonAsync(baseToHeadInfo.Base.Sha, baseToHeadInfo.Head.Sha);
+            if (comparison == null || _isDisposed)
+            {
+               cancelled = true;
+               return;
+            }
+
+            try
+            {
+               throwOnBadComparison(comparison);
+            }
+            catch (Exception ex)
+            {
+               if (baseToHeadInfo.Files?.Any() ?? false)
+               {
+                  ExceptionHandlers.Handle("Bad Comparison object", ex);
+                  traceInformation(String.Format(
+                     "[FileStorageUpdater] Applying manual file comparison for {0} files", baseToHeadInfo.Files.Count()));
+                  foreach (BaseToHeadsCollection.RelativeFileInfo fileInfo in baseToHeadInfo.Files)
+                  {
+                     allFiles.Add(new FileInternal(fileInfo.OldPath, baseToHeadInfo.Base.Sha));
+                     allFiles.Add(new FileInternal(fileInfo.NewPath, baseToHeadInfo.Head.Sha));
+                  }
+                  return;
+               }
+
+               exception = ex;
+               cancelled = true;
+               return;
+            }
+
+            IEnumerable<DiffStruct> filteredDiffs = filterDiffs(isAwaitedUpdate, comparison.Diffs,
+               baseToHeadInfo.Base.Sha, baseToHeadInfo.Head.Sha, baseToHeadInfo.Files);
+            if (filteredDiffs != null && filteredDiffs.Any())
+            {
+               comparisons.Add(new ComparisonInternal(filteredDiffs, baseToHeadInfo.Base.Sha, baseToHeadInfo.Head.Sha));
+            }
+         }
+
+         await TaskUtils.RunConcurrentFunctionsAsync(context.BaseToHeads.Flatten(), doFetch,
+            () => getComparisonBatchLimits(isAwaitedUpdate), () => cancelled);
+         if (exception != null)
+         {
+            throw exception;
+         }
+
+         if (cancelled)
+         {
+            return null;
          }
 
          Action<string> traceFunction = traceDebug;
@@ -153,64 +223,8 @@ namespace mrHelper.StorageSupport
                comparison.BaseSha, comparison.HeadSha, comparison.Diffs.Count()));
          }
 
-         reportProgress(onProgressChange, "Starting to download files from GitLab...");
-         await processComparisonsAsync(isAwaitedUpdate, onProgressChange, comparisons);
-         reportProgress(onProgressChange, "Files downloaded");
-      }
-
-      async private Task<IEnumerable<ComparisonInternal>> fetchComparisonsAsync(bool isAwaitedUpdate,
-         CommitStorageUpdateContext context)
-      {
-         List<Tuple<string, string, IEnumerable<FileInfo>>> baseToHeads = context.BaseToHeads.Data
-            .SelectMany(
-               (x) => x.Value,
-               (kv, head) => new Tuple<string, string, IEnumerable<FileInfo>>(kv.Key.Sha, head.Sha, head.Files))
-            .ToList();
-
-         bool cancelled = _isDisposed;
-         Exception exception = null;
-         List<ComparisonInternal> comparisons = new List<ComparisonInternal>();
-         async Task doFetch(Tuple<string, string, IEnumerable<FileInfo>> baseShaToHeadSha)
-         {
-            if (cancelled)
-            {
-               return;
-            }
-
-            await suspendProcessingOfNonAwaitedUpdate(isAwaitedUpdate);
-            Comparison comparison = await fetchSingleComparisonAsync(baseShaToHeadSha.Item1, baseShaToHeadSha.Item2);
-            if (comparison == null || _isDisposed)
-            {
-               cancelled = true;
-               return;
-            }
-
-            try
-            {
-               throwOnBadComparison(comparison);
-            }
-            catch (Exception ex)
-            {
-               exception = ex;
-               cancelled = true;
-               return;
-            }
-
-            IEnumerable<DiffStruct> filteredDiffs = filterDiffs(isAwaitedUpdate, comparison.Diffs,
-               baseShaToHeadSha.Item1, baseShaToHeadSha.Item2, baseShaToHeadSha.Item3);
-            if (filteredDiffs != null && filteredDiffs.Any())
-            {
-               comparisons.Add(new ComparisonInternal(filteredDiffs, baseShaToHeadSha.Item1, baseShaToHeadSha.Item2));
-            }
-         }
-
-         await TaskUtils.RunConcurrentFunctionsAsync(baseToHeads, doFetch,
-            () => getComparisonBatchLimits(isAwaitedUpdate), () => cancelled);
-         if (exception != null)
-         {
-            throw exception;
-         }
-         return cancelled ? null : comparisons;
+         allFiles.AddRange(comparisons.SelectMany(x => extractFilesFromComparison(x)));
+         return allFiles;
       }
 
       private static void throwOnBadComparison(Comparison comparison)
@@ -230,9 +244,10 @@ namespace mrHelper.StorageSupport
       /// Removes unwanted files from a Diffs collection if needed and suppresses too big comparisons in non-awaited mode
       /// </summary>
       private IEnumerable<DiffStruct> filterDiffs(bool isAwaitedUpdate,
-         IEnumerable<DiffStruct> diffs, string baseSha, string headSha, IEnumerable<FileInfo> filter)
+         IEnumerable<DiffStruct> diffs, string baseSha, string headSha,
+         IEnumerable<BaseToHeadsCollection.RelativeFileInfo> filter)
       {
-         bool doesDiffMatchFileInfo(DiffStruct diff, FileInfo fileInfo)
+         bool doesDiffMatchFileInfo(DiffStruct diff, BaseToHeadsCollection.RelativeFileInfo fileInfo)
          {
             bool doesNewPathMatch = diff.New_Path == fileInfo.NewPath;
             bool doesOldPathMatch = diff.Old_Path == fileInfo.OldPath;
@@ -281,11 +296,8 @@ namespace mrHelper.StorageSupport
       }
 
       private async Task processComparisonsAsync(bool isAwaitedUpdate,
-         Action<string> onProgressChange, IEnumerable<ComparisonInternal> comparisons)
+         Action<string> onProgressChange, IEnumerable<FileInternal> allFiles)
       {
-         List<FileInternal> allFiles = new List<FileInternal>();
-         allFiles.AddRange(comparisons.SelectMany(x => extractFilesFromComparison(x)));
-
          FileInternal[] initialMissingFiles = selectMissingFiles(allFiles).ToArray();
          int initialMissingCount = initialMissingFiles.Length;
          if (initialMissingCount == 0)

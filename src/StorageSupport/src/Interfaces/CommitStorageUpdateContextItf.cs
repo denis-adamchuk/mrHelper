@@ -1,29 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace mrHelper.StorageSupport
 {
-   public struct BaseInfo
+   public struct BaseToHeadsCollection
    {
-      public BaseInfo(string sha)
+      public struct CommitInfo
       {
-         Sha = sha;
+         public CommitInfo(string sha)
+         {
+            Sha = sha;
+         }
+
+         public string Sha { get; }
       }
 
-      public string Sha { get; }
-   }
-
-   public struct HeadInfo
-   {
-      public HeadInfo(string sha, IEnumerable<FileInfo> files)
+      public struct RelativeFileInfo
       {
-         Sha = sha;
-         Files = files;
-      }
-
-      public struct FileInfo
-      {
-         public FileInfo(string oldPath, string newPath)
+         public RelativeFileInfo(string oldPath, string newPath)
          {
             OldPath = oldPath;
             NewPath = newPath;
@@ -33,18 +28,47 @@ namespace mrHelper.StorageSupport
          public string NewPath { get; }
       }
 
-      public string Sha { get; }
-      public IEnumerable<FileInfo> Files { get; }
-   }
+      public struct RelativeCommitInfo
+      {
+         public RelativeCommitInfo(string sha, IEnumerable<RelativeFileInfo> files)
+         {
+            Sha = sha;
+            Files = files;
+         }
 
-   public struct BaseToHeadsCollection
-   {
-      public BaseToHeadsCollection(Dictionary<BaseInfo, IEnumerable<HeadInfo>> data)
+         public string Sha { get; }
+         public IEnumerable<RelativeFileInfo> Files { get; }
+      }
+
+      public BaseToHeadsCollection(Dictionary<CommitInfo, IEnumerable<RelativeCommitInfo>> data)
       {
          Data = data;
       }
 
-      public Dictionary<BaseInfo, IEnumerable<HeadInfo>> Data { get; }
+      public Dictionary<CommitInfo, IEnumerable<RelativeCommitInfo>> Data { get; }
+
+      public struct FlatBaseToHeadInfo
+      {
+         public FlatBaseToHeadInfo(CommitInfo @base, CommitInfo head, IEnumerable<RelativeFileInfo> files)
+         {
+            Base = @base;
+            Head = head;
+            Files = files;
+         }
+
+         public CommitInfo Base;
+         public CommitInfo Head;
+         public IEnumerable<RelativeFileInfo> Files;
+      }
+
+      public IEnumerable<FlatBaseToHeadInfo> Flatten()
+      {
+         return Data
+            .SelectMany(
+               (x) => x.Value,
+               (kv, head) => new FlatBaseToHeadInfo(kv.Key, new CommitInfo(head.Sha), head.Files))
+            .ToList();
+      }
    }
 
    public abstract class CommitStorageUpdateContext
