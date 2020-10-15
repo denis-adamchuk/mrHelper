@@ -1,4 +1,6 @@
-﻿using mrHelper.GitLabClient.Loaders.Cache;
+﻿using System.Linq;
+using System.Diagnostics;
+using mrHelper.GitLabClient.Loaders.Cache;
 using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Loaders
@@ -11,15 +13,22 @@ namespace mrHelper.GitLabClient.Loaders
          IVersionLoader versionLoader = new VersionLoader(op, cache);
 
          IMergeRequestListLoader listLoader = null;
-         if (context.CustomData is ProjectBasedContext)
+         if (context.CustomData is SearchBasedContext sbc)
          {
-            listLoader = new ProjectBasedMergeRequestLoader(
-               op, versionLoader, cache, context);
+            if (sbc.SearchCriteria.Criteria.All(criteria => criteria is SearchByProject))
+            {
+               listLoader = new ProjectBasedMergeRequestLoader(
+                  op, versionLoader, cache, context);
+            }
+            else
+            {
+               listLoader = new SearchBasedMergeRequestLoader(hostname,
+                  op, versionLoader, cache, context);
+            }
          }
-         else if (context.CustomData is SearchBasedContext)
+         else
          {
-            listLoader = new SearchBasedMergeRequestLoader(hostname,
-               op, versionLoader, cache, context);
+            Debug.Assert(false);
          }
          return listLoader;
       }

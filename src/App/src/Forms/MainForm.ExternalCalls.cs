@@ -269,20 +269,9 @@ namespace mrHelper.App.Forms
 
       async private Task connectToUrlAsyncInternal(string url, UrlParser.ParsedMergeRequestUrl parsedUrl)
       {
-         labelWorkflowStatus.Text = String.Format("Connecting to {0}...", url);
          MergeRequestKey mrk = parseUrlIntoMergeRequestKey(parsedUrl);
 
-         GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-         MergeRequest mergeRequest = await Shortcuts
-            .GetMergeRequestAccessor(gitLabInstance, _modificationNotifier, mrk.ProjectKey)
-            .SearchMergeRequestAsync(mrk.IId, false);
-         if (mergeRequest == null)
-         {
-            throw new UrlConnectionException("Merge request does not exist. ", null);
-         }
-         labelWorkflowStatus.Text = String.Empty;
-
-         bool canOpenAtLiveTab = mergeRequest.State == "opened" && checkIfCanOpenAtLiveTab(mrk, true);
+         bool canOpenAtLiveTab = await checkWorkflowFilters(mrk, url);
          bool needReload = (canOpenAtLiveTab && getDataCache(canOpenAtLiveTab).MergeRequestCache == null)
                         || mrk.ProjectKey.HostName != getHostName();
          if (needReload)
@@ -295,6 +284,24 @@ namespace mrHelper.App.Forms
          {
             await openUrlAtSearchTabAsync(mrk);
          }
+      }
+
+      async private Task<MergeRequest> searchMergeRequestAsync(MergeRequestKey mrk)
+      {
+         // Check both local data caches first
+         MergeRequest mergeRequest = getDataCache(true)?.MergeRequestCache?.GetMergeRequest(mrk)
+                                  ?? getDataCache(false)?.MergeRequestCache?.GetMergeRequest(mrk);
+         if (mergeRequest != null)
+         {
+            return mergeRequest;
+         }
+
+         // MR is not found locally, check remote
+         GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
+         mergeRequest = await Shortcuts
+            .GetMergeRequestAccessor(gitLabInstance, _modificationNotifier, mrk.ProjectKey)
+            .SearchMergeRequestAsync(mrk.IId, false);
+         return mergeRequest;
       }
 
       private void reportErrorOnConnect(string url, string msg, Exception ex)
@@ -345,7 +352,7 @@ namespace mrHelper.App.Forms
                }
             }
 
-            if (!checkIfCanOpenAtLiveTab(mrk, false))
+            if (!checkProjectWorkflowFilters(mrk, false))
             {
                // this may happen if project list changed while we were in 'await'
                return false;
@@ -456,7 +463,7 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private bool checkIfCanOpenAtLiveTab(MergeRequestKey mrk, bool proposeFix)
+      private bool checkProjectWorkflowFilters(MergeRequestKey mrk, bool proposeFix)
       {
          if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {
@@ -474,6 +481,26 @@ namespace mrHelper.App.Forms
          }
 
          return true;
+      }
+
+      async private Task<bool> checkWorkflowFilters(MergeRequestKey mrk, string url)
+      {
+         if (!checkProjectWorkflowFilters(mrk, true))
+         {
+            return false;
+         }
+
+         labelWorkflowStatus.Text = String.Format("Checking merge request at {0}...", url);
+         MergeRequest mergeRequest = await searchMergeRequestAsync(mrk);
+         if (mergeRequest == null)
+         {
+            throw new UrlConnectionException("Merge request does not exist. ", null);
+         }
+         labelWorkflowStatus.Text = String.Empty;
+
+         SearchBasedContext ctx = getDataCache(true)?.ConnectionContext?.CustomData as SearchBasedContext;
+         Debug.Assert(ctx != null);
+         return GitLabClient.Helpers.DoesMatchSearchCriteria(ctx.SearchCriteria, mergeRequest, mrk.ProjectKey);
       }
 
       private MergeRequestKey parseUrlIntoMergeRequestKey(UrlParser.ParsedMergeRequestUrl parsedUrl)

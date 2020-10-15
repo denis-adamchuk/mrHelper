@@ -368,12 +368,13 @@ namespace mrHelper.App.Controls
 
       private NoteContainer createNoteContainer(DiscussionNote note, bool discussionResolved)
       {
-         NoteContainer noteContainer = new NoteContainer();
-
-         noteContainer.NoteInfo = new Label
+         NoteContainer noteContainer = new NoteContainer
          {
-            Text = getNoteInformation(note),
-            AutoSize = true
+            NoteInfo = new Label
+            {
+               Text = getNoteInformation(note),
+               AutoSize = true
+            }
          };
 
          if (!isServiceDiscussionNote(note))
@@ -532,8 +533,8 @@ namespace mrHelper.App.Controls
          return note.Author.Username == Program.ServiceManager.GetServiceMessageUsername();
       }
 
-      private MenuItem createMenuItem(ContextMenu contextMenu, object tag, string text, bool isEnabled,
-         EventHandler onClick, Shortcut shortcut = Shortcut.None)
+      private MenuItem createMenuItem(object tag, string text, bool isEnabled, EventHandler onClick,
+         Shortcut shortcut = Shortcut.None)
       {
          MenuItem menuItem = new MenuItem
          {
@@ -546,11 +547,10 @@ namespace mrHelper.App.Controls
          return menuItem;
       }
 
-      MenuItem[] getCommandItems(ContextMenu contextMenu)
+      MenuItem[] getCommandItems()
       {
          return _commands
-            .Select(command => createMenuItem(contextMenu, null, command.GetName(), true,
-               (s, e) => _onCommand?.Invoke(command)))
+            .Select(command => createMenuItem(null, command.GetName(), true, (s, e) => _onCommand?.Invoke(command)))
             .ToArray();
       }
 
@@ -560,7 +560,7 @@ namespace mrHelper.App.Controls
          ContextMenu contextMenu = new ContextMenu();
 
          void addMenuItem(string text, bool isEnabled, EventHandler onClick, Shortcut shortcut = Shortcut.None) =>
-            contextMenu.MenuItems.Add(createMenuItem(contextMenu, noteControl, text, isEnabled, onClick, shortcut));
+            contextMenu.MenuItems.Add(createMenuItem(noteControl, text, isEnabled, onClick, shortcut));
 
          addMenuItem((discussionResolved ? "Unresolve" : "Resolve") + " Thread", isDiscussionResolvable(), onMenuItemToggleResolveDiscussion);
          addMenuItem((note.Resolvable && note.Resolved ? "Unresolve" : "Resolve") + " Note", note.Resolvable, onMenuItemToggleResolveNote);
@@ -577,7 +577,7 @@ namespace mrHelper.App.Controls
          addMenuItem("Start a thread", true, (s, e) => _onAddThread?.Invoke());
          if (_commands != null && _commands.Any())
          {
-            contextMenu.MenuItems.Add(new MenuItem("Commands", getCommandItems(contextMenu)));
+            contextMenu.MenuItems.Add(new MenuItem("Commands", getCommandItems()));
          }
 
          return contextMenu;
@@ -890,7 +890,7 @@ namespace mrHelper.App.Controls
 
          int boxWidth = getNoteWidth(width) + getColumnInterval(width) + getDiffContextWidth(width);
 
-         int boxHeight = 0;
+         int boxHeight;
          {
             int notesHeight = 0;
             if (_noteContainers != null)

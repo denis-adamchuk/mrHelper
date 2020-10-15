@@ -28,8 +28,12 @@ namespace mrHelper.GitLabClient.Loaders
 
          IEnumerable<MergeRequest> mergeRequests = await call(
             () => _operator.SearchMergeRequestsAsync(
-               new SearchCriteria(new object[] { new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId) }), null,
+               new SearchCriteria(new object[]
+               {
+                  new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId)
+               },
                fetchOnlyOpenMergeRequests),
+            null),
             String.Format("Cancelled loading MR with IId {0}", mrk.IId),
             String.Format("Cannot load merge request with IId {0}", mrk.IId));
 

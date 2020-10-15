@@ -1,8 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
-using mrHelper.CommonNative;
 
 namespace mrHelper.CommonControls.Controls
 {
@@ -35,7 +33,6 @@ namespace mrHelper.CommonControls.Controls
       {
          base.OnBorderStyleChanged(e);
 
-         _cachedHandle = IntPtr.Zero;
          _cachedBorderHeight = 0;
       }
 
@@ -80,7 +77,6 @@ namespace mrHelper.CommonControls.Controls
          }
       }
 
-      private IntPtr _cachedHandle;
       private int _cachedBorderHeight;
       private int _cachedSingleLineWithoutBorderHeight;
       private static readonly string Alphabet =

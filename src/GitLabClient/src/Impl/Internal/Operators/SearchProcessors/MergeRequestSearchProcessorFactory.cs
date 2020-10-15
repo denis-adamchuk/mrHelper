@@ -12,7 +12,7 @@ namespace mrHelper.GitLabClient.Operators.Search
          }
          else if (search is SearchByProject sbp)
          {
-            return new MergeRequestSearchByProjectProcessor(sbp.ProjectName, onlyOpen);
+            return new MergeRequestSearchByProjectProcessor(sbp.ProjectKey.ProjectName, onlyOpen);
          }
          else if (search is SearchByTargetBranch sbtb)
          {

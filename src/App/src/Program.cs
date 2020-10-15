@@ -123,7 +123,7 @@ namespace mrHelper.App
                      }
                      else
                      {
-                        onLaunchAnotherInstance(options, context);
+                        onLaunchAnotherInstance(context);
                      }
                      break;
 
@@ -167,7 +167,7 @@ namespace mrHelper.App
          Application.Run(new MainForm(normalOptions.StartMinimized, runningAsUwp, normalOptions.StartUrl));
       }
 
-      private static void onLaunchAnotherInstance(LaunchOptions options, LaunchContext context)
+      private static void onLaunchAnotherInstance(LaunchContext context)
       {
          IntPtr mainWindow = context.GetWindowByCaption(Constants.MainWindowCaption, true);
          if (mainWindow != IntPtr.Zero)
@@ -254,47 +254,6 @@ namespace mrHelper.App
          }
 
          Win32Tools.SendMessageToWindow(mainWindow, message);
-      }
-
-      private static bool checkArguments(LaunchContext context)
-      {
-         if (context.Arguments.Length == 2)
-         {
-            if (context.Arguments[1] == "-m" || context.Arguments[1] == "-u")
-            {
-               return true;
-            }
-
-            if (!context.Arguments[1].StartsWith(Constants.CustomProtocolName + "://"))
-            {
-               string message = String.Format("Unsupported protocol found in URL {0}", context.Arguments[1]);
-               Trace.TraceError(message);
-               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               return false;
-            }
-         }
-         else if (context.Arguments.Length == 3)
-         {
-            if (context.Arguments[1] == "-r" && Directory.Exists(context.Arguments[2]))
-            {
-               return true;
-            }
-
-            return false;
-         }
-         else if (context.Arguments.Length > 3)
-         {
-            if (context.Arguments[1] == "diff")
-            {
-               return true;
-            }
-
-            string arguments = String.Join(" ", context.Arguments);
-            Trace.TraceError(String.Format("Invalid arguments {0}", arguments));
-            MessageBox.Show("Invalid arguments", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
-         }
-         return true;
       }
 
       private static bool prepareGitEnvironment()

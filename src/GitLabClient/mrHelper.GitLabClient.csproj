@@ -51,12 +51,10 @@
     <Compile Include="src\Interfaces\ModificationListenerItf.cs" />
     <Compile Include="src\Impl\Accessors\SingleDiscussionAccessor.cs" />
     <Compile Include="src\Impl\ModificationNotifier.cs" />
-    <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectBasedProjectListLoader.cs" />
-    <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectListLoaderFactory.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestListLoaderItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectListLoaderItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestLoaderItf.cs" />
-    <Compile Include="src\Impl\Internal\DataCache\Loaders\SearchBasedProjectListLoader.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectListLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\VersionLoaderItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Managers\ProjectCache.cs" />
     <Compile Include="src\Interfaces\DiscussionCreatorItf.cs" />

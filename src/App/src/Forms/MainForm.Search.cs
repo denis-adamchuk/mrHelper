@@ -101,13 +101,13 @@ namespace mrHelper.App.Forms
 
       async private Task loadAllSearchMergeRequests(string hostname, object query, int? maxResults)
       {
-         SearchCriteria searchCriteria = new SearchCriteria(new object[] { query });
+         SearchCriteria searchCriteria = new SearchCriteria(new object[] { query }, false);
          onLoadAllSearchMergeRequests(searchCriteria, hostname);
 
          DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(
             new DataCacheCallbacks(null, null),
             new DataCacheUpdateRules(null, null),
-            new SearchBasedContext(searchCriteria, maxResults, false));
+            new SearchBasedContext(searchCriteria, maxResults));
 
          await _searchDataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
 

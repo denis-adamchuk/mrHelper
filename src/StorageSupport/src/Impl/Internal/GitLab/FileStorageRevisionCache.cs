@@ -98,7 +98,7 @@ namespace mrHelper.StorageSupport
       }
 
       // From https://git.kernel.org/pub/scm/git/git.git/tree/xdiff-interface.c#n187
-      private static int FirstFewBytes = 8000;
+      private static readonly int FirstFewBytes = 8000;
       private static bool isBinaryData(byte[] data)
       {
          return data.Take(FirstFewBytes).Any(x => x == 0);
@@ -150,7 +150,7 @@ namespace mrHelper.StorageSupport
             return;
          }
 
-         IEnumerable<string> allSubdirectories = null;
+         IEnumerable<string> allSubdirectories;
          try
          {
             allSubdirectories = Directory.GetDirectories(Path, "*", SearchOption.TopDirectoryOnly);
@@ -163,7 +163,7 @@ namespace mrHelper.StorageSupport
 
          foreach (string oldPath in allSubdirectories)
          {
-            string oldRevisionDirName = null;
+            string oldRevisionDirName;
             try
             {
                oldRevisionDirName = System.IO.Path.GetFileName(oldPath);

@@ -12,11 +12,15 @@ namespace mrHelper.GitLabClient.Loaders
       {
       }
 
-      public Task<User> Load(string hostName)
+      async public Task Load(string hostName, string accessToken)
       {
-         return call(() => _operator.GetCurrentUserAsync(),
-            String.Format("Cancelled loading current user from host \"{0}\"", hostName),
-            String.Format("Cannot load user from host \"{0}\"", hostName));
+         if (GlobalCache.GetAuthenticatedUser(hostName, accessToken) == null)
+         {
+            User user = await call(() => _operator.GetCurrentUserAsync(),
+               String.Format("Cancelled loading current user from host \"{0}\"", hostName),
+               String.Format("Cannot load user from host \"{0}\"", hostName));
+            GlobalCache.AddAuthenticatedUser(hostName, accessToken, user);
+         }
       }
    }
 }

@@ -3,18 +3,17 @@ using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient.Loaders;
-using mrHelper.GitLabClient.Loaders.Cache;
+using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Managers
 {
    internal class UserCache : IUserCache
    {
-      internal UserCache(InternalCacheUpdater cacheUpdater,
-         IUserListLoader userListLoader, DataCacheContext context)
+      internal UserCache(IUserListLoader userListLoader, DataCacheContext context, string hostname)
       {
-         _cacheUpdater = cacheUpdater;
          _userListLoader = userListLoader;
          _context = context;
+         _hostname = hostname;
 
          _context.SynchronizeInvoke.BeginInvoke(new Action(
             async () =>
@@ -36,10 +35,10 @@ namespace mrHelper.GitLabClient.Managers
 
       public IEnumerable<User> GetUsers()
       {
-         return _cacheUpdater.Cache.GetAllUsers() ?? Array.Empty<User>();
+         return GlobalCache.GetUsers(_hostname) ?? Array.Empty<User>();
       }
 
-      private readonly InternalCacheUpdater _cacheUpdater;
+      private readonly string _hostname;
       private readonly IUserListLoader _userListLoader;
       private readonly DataCacheContext _context;
    }

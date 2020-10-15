@@ -47,19 +47,19 @@ namespace mrHelper.App.Helpers
 
       public static DiscussionColumnWidth GetDiscussionColumnWidth(UserDefinedSettings settings)
       {
-         if (Program.Settings.DiscussionColumnWidth == "narrow")
+         if (settings.DiscussionColumnWidth == "narrow")
          {
             return DiscussionColumnWidth.Narrow;
          }
-         if (Program.Settings.DiscussionColumnWidth == "narrowplus")
+         if (settings.DiscussionColumnWidth == "narrowplus")
          {
             return DiscussionColumnWidth.NarrowPlus;
          }
-         else if (Program.Settings.DiscussionColumnWidth == "medium")
+         else if (settings.DiscussionColumnWidth == "medium")
          {
             return DiscussionColumnWidth.Medium;
          }
-         else if (Program.Settings.DiscussionColumnWidth == "mediumplus")
+         else if (settings.DiscussionColumnWidth == "mediumplus")
          {
             return DiscussionColumnWidth.MediumPlus;
          }
@@ -74,23 +74,23 @@ namespace mrHelper.App.Helpers
          switch (width)
          {
             case DiscussionColumnWidth.Narrow:
-               Program.Settings.DiscussionColumnWidth = "narrow";
+               settings.DiscussionColumnWidth = "narrow";
                break;
 
             case DiscussionColumnWidth.NarrowPlus:
-               Program.Settings.DiscussionColumnWidth = "narrowplus";
+               settings.DiscussionColumnWidth = "narrowplus";
                break;
 
             case DiscussionColumnWidth.Medium:
-               Program.Settings.DiscussionColumnWidth = "medium";
+               settings.DiscussionColumnWidth = "medium";
                break;
 
             case DiscussionColumnWidth.MediumPlus:
-               Program.Settings.DiscussionColumnWidth = "mediumplus";
+               settings.DiscussionColumnWidth = "mediumplus";
                break;
 
             case DiscussionColumnWidth.Wide:
-               Program.Settings.DiscussionColumnWidth = "wide";
+               settings.DiscussionColumnWidth = "wide";
                break;
          }
       }
@@ -104,11 +104,11 @@ namespace mrHelper.App.Helpers
 
       public static DiffContextPosition GetDiffContextPosition(UserDefinedSettings settings)
       {
-         if (Program.Settings.DiffContextPosition == "top")
+         if (settings.DiffContextPosition == "top")
          {
             return DiffContextPosition.Top;
          }
-         else if (Program.Settings.DiffContextPosition == "left")
+         else if (settings.DiffContextPosition == "left")
          {
             return DiffContextPosition.Left;
          }
@@ -123,15 +123,15 @@ namespace mrHelper.App.Helpers
          switch (position)
          {
             case DiffContextPosition.Top:
-               Program.Settings.DiffContextPosition = "top";
+               settings.DiffContextPosition = "top";
                break;
 
             case DiffContextPosition.Left:
-               Program.Settings.DiffContextPosition = "left";
+               settings.DiffContextPosition = "left";
                break;
 
             case DiffContextPosition.Right:
-               Program.Settings.DiffContextPosition = "right";
+               settings.DiffContextPosition = "right";
                break;
          }
       }
@@ -150,17 +150,17 @@ namespace mrHelper.App.Helpers
 
       public static ShowWarningsOnFileMismatchMode GetShowWarningsOnFileMismatchMode(UserDefinedSettings settings)
       {
-         if (Program.Settings.ShowWarningsOnFileMismatchMode == "always")
+         if (settings.ShowWarningsOnFileMismatchMode == "always")
          {
             return ShowWarningsOnFileMismatchMode.Always;
          }
-         else if (Program.Settings.ShowWarningsOnFileMismatchMode == "until_user_ignores_file")
+         else if (settings.ShowWarningsOnFileMismatchMode == "until_user_ignores_file")
          {
             return ShowWarningsOnFileMismatchMode.UntilUserIgnoresFile;
          }
          else
          {
-            Debug.Assert(Program.Settings.ShowWarningsOnFileMismatchMode == "never");
+            Debug.Assert(settings.ShowWarningsOnFileMismatchMode == "never");
             return ShowWarningsOnFileMismatchMode.Never;
          }
       }
@@ -171,15 +171,15 @@ namespace mrHelper.App.Helpers
          switch (mode)
          {
             case ShowWarningsOnFileMismatchMode.Always:
-               Program.Settings.ShowWarningsOnFileMismatchMode = "always";
+               settings.ShowWarningsOnFileMismatchMode = "always";
                break;
 
             case ShowWarningsOnFileMismatchMode.UntilUserIgnoresFile:
-               Program.Settings.ShowWarningsOnFileMismatchMode = "until_user_ignores_file";
+               settings.ShowWarningsOnFileMismatchMode = "until_user_ignores_file";
                break;
 
             case ShowWarningsOnFileMismatchMode.Never:
-               Program.Settings.ShowWarningsOnFileMismatchMode = "never";
+               settings.ShowWarningsOnFileMismatchMode = "never";
                break;
          }
       }
@@ -193,17 +193,17 @@ namespace mrHelper.App.Helpers
 
       public static RevisionAutoSelectionMode GetRevisionAutoSelectionMode(UserDefinedSettings settings)
       {
-         if (Program.Settings.AutoSelectionMode == "LastVsNext")
+         if (settings.AutoSelectionMode == "LastVsNext")
          {
             return RevisionAutoSelectionMode.LastVsNext;
          }
-         else if (Program.Settings.AutoSelectionMode == "LastVsLatest")
+         else if (settings.AutoSelectionMode == "LastVsLatest")
          {
             return RevisionAutoSelectionMode.LastVsLatest;
          }
          else
          {
-            Debug.Assert(Program.Settings.AutoSelectionMode == "BaseVsLatest");
+            Debug.Assert(settings.AutoSelectionMode == "BaseVsLatest");
             return RevisionAutoSelectionMode.BaseVsLatest;
          }
       }
@@ -213,32 +213,32 @@ namespace mrHelper.App.Helpers
          switch (mode)
          {
             case ConfigurationHelper.RevisionAutoSelectionMode.LastVsNext:
-               Program.Settings.AutoSelectionMode = "LastVsNext";
+               settings.AutoSelectionMode = "LastVsNext";
                break;
 
             case ConfigurationHelper.RevisionAutoSelectionMode.LastVsLatest:
-               Program.Settings.AutoSelectionMode = "LastVsLatest";
+               settings.AutoSelectionMode = "LastVsLatest";
                break;
 
             case ConfigurationHelper.RevisionAutoSelectionMode.BaseVsLatest:
-               Program.Settings.AutoSelectionMode = "BaseVsLatest";
+               settings.AutoSelectionMode = "BaseVsLatest";
                break;
          }
       }
 
       public static LocalCommitStorageType GetPreferredStorageType(UserDefinedSettings settings)
       {
-         if (Program.Settings.GitUsageForStorage == "UseGitWithFullClone")
+         if (settings.GitUsageForStorage == "UseGitWithFullClone")
          {
             return LocalCommitStorageType.FullGitRepository;
          }
-         else if (Program.Settings.GitUsageForStorage == "UseGitWithShallowClone")
+         else if (settings.GitUsageForStorage == "UseGitWithShallowClone")
          {
             return LocalCommitStorageType.ShallowGitRepository;
          }
          else
          {
-            Debug.Assert(Program.Settings.GitUsageForStorage == "DontUseGit");
+            Debug.Assert(settings.GitUsageForStorage == "DontUseGit");
             return LocalCommitStorageType.FileStorage;
          }
       }
@@ -248,13 +248,13 @@ namespace mrHelper.App.Helpers
          switch (type)
          {
             case LocalCommitStorageType.FileStorage:
-               Program.Settings.GitUsageForStorage = "DontUseGit";
+               settings.GitUsageForStorage = "DontUseGit";
                break;
             case LocalCommitStorageType.FullGitRepository:
-               Program.Settings.GitUsageForStorage = "UseGitWithFullClone";
+               settings.GitUsageForStorage = "UseGitWithFullClone";
                break;
             case LocalCommitStorageType.ShallowGitRepository:
-               Program.Settings.GitUsageForStorage = "UseGitWithShallowClone";
+               settings.GitUsageForStorage = "UseGitWithShallowClone";
                break;
          }
       }
@@ -362,13 +362,13 @@ namespace mrHelper.App.Helpers
       public static IEnumerable<Tuple<string, bool>> GetUsersForHost(string host, UserDefinedSettings settings)
       {
          return DictionaryStringHelper.GetDictionaryStringValue(host, settings.SelectedUsers)
-            .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) ? result : false));
+            .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) && result));
       }
 
       public static IEnumerable<Tuple<string, bool>> GetProjectsForHost(string host, UserDefinedSettings settings)
       {
          return DictionaryStringHelper.GetDictionaryStringValue(host, settings.SelectedProjects)
-            .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) ? result : false));
+            .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) && result));
       }
 
       public static IEnumerable<string> GetEnabledProjectNames(string hostname, UserDefinedSettings settings)
