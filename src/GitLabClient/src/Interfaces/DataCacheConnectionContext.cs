@@ -45,28 +45,16 @@ namespace mrHelper.GitLabClient
       public object CustomData { get; }
    }
 
-   public class ProjectBasedContext
-   {
-      public ProjectBasedContext(IEnumerable<ProjectKey> projects)
-      {
-         Projects = projects;
-      }
-
-      public IEnumerable<ProjectKey> Projects { get; }
-   }
-
    public class SearchBasedContext
    {
-      public SearchBasedContext(SearchCriteria searchCriteria, int? maxSearchResults, bool onlyOpen)
+      public SearchBasedContext(SearchCriteria searchCriteria, int? maxSearchResults)
       {
          SearchCriteria = searchCriteria;
          MaxSearchResults = maxSearchResults;
-         OnlyOpen = onlyOpen;
       }
 
       public SearchCriteria SearchCriteria { get; }
       public int? MaxSearchResults { get; }
-      public bool OnlyOpen { get; }
    }
 }
 

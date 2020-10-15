@@ -6,6 +6,7 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Operators.Search;
 
 namespace mrHelper.GitLabClient
 {
@@ -95,6 +96,61 @@ namespace mrHelper.GitLabClient
                .Select(mergeRequest => new ProjectBranchKey(projectKey.ProjectName, mergeRequest.Source_Branch)));
          }
          return result;
+      }
+
+      // Checks if ANY of criteria inside searchCriteria is met (i.e. one criteria is enough for success)
+      public static bool DoesMatchSearchCriteria(SearchCriteria searchCriteria, MergeRequest mergeRequest,
+         ProjectKey projectKey)
+      {
+         if (searchCriteria.OnlyOpen && mergeRequest.State != "opened")
+         {
+            return false;
+         }
+
+         foreach (object search in searchCriteria.Criteria)
+         {
+            if (search is SearchByIId sid)
+            {
+               if (sid.IId == mergeRequest.IId)
+               {
+                  return true;
+               }
+            }
+            else if (search is SearchByProject sbp)
+            {
+               if (sbp.ProjectKey.Equals(projectKey))
+               {
+                  return true;
+               }
+            }
+            else if (search is SearchByTargetBranch sbtb)
+            {
+               if (sbtb.TargetBranchName == mergeRequest.Target_Branch)
+               {
+                  return true;
+               }
+            }
+            else if (search is SearchByText sbt)
+            {
+               string lowerCaseText = sbt.Text.ToLower();
+               if (mergeRequest.Title.ToLower().Contains(lowerCaseText)
+                  || mergeRequest.Description.ToLower().Contains(lowerCaseText))
+               {
+                  return true;
+               }
+            }
+            else if (search is SearchByUsername sbu)
+            {
+               string lowercaseLabel = Constants.GitLabLabelPrefix + sbu.Username.ToLower();
+               if (mergeRequest.Author.Username == sbu.Username
+                  || mergeRequest.Labels.Contains(lowercaseLabel))
+               {
+                  return true;
+               }
+            }
+         }
+
+         return false;
       }
    }
 }

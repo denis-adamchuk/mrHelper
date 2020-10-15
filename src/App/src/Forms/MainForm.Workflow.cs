@@ -149,7 +149,7 @@ namespace mrHelper.App.Forms
          DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(
             new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
             new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
-            new ProjectBasedContext(enabledProjects.ToArray()));
+            getCustomDataForProjectBasedWorkflow(enabledProjects));
 
          await _liveDataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
 
@@ -418,7 +418,15 @@ namespace mrHelper.App.Forms
             .Cast<ListViewItem>()
             .Select(x => new SearchByUsername(x.Text))
             .ToArray();
-         return new SearchBasedContext(new SearchCriteria(criteria), null, true);
+         return new SearchBasedContext(new SearchCriteria(criteria, true), null);
+      }
+
+      private object getCustomDataForProjectBasedWorkflow(IEnumerable<ProjectKey> enabledProjects)
+      {
+         object[] criteria = enabledProjects
+            .Select(project => new SearchByProject(project))
+            .ToArray();
+         return new SearchBasedContext(new SearchCriteria(criteria, true), null);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

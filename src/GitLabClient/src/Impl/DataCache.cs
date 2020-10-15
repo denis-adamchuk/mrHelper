@@ -36,6 +36,7 @@ namespace mrHelper.GitLabClient
                MergeRequestListLoaderFactory.CreateMergeRequestListLoader(hostname, _operator, context, cacheUpdater);
 
             Trace.TraceInformation("[DataCache] Connecting data cache to {0}...", hostname);
+            _connectionContext = context;
 
             string accessToken = hostProperties.GetAccessToken(hostname);
             await new CurrentUserLoader(_operator).Load(hostname, accessToken);
@@ -49,6 +50,8 @@ namespace mrHelper.GitLabClient
          }
          catch (BaseLoaderException ex)
          {
+            reset();
+
             if (ex is BaseLoaderCancelledException)
             {
                throw new DataCacheConnectionCancelledException();
@@ -69,17 +72,6 @@ namespace mrHelper.GitLabClient
          reset();
       }
 
-      private void reset()
-      {
-         _operator?.Dispose();
-         _operator = null;
-
-         _internal?.Dispose();
-         _internal = null;
-
-         Disconnected?.Invoke();
-      }
-
       public IMergeRequestCache MergeRequestCache => _internal?.MergeRequestCache;
 
       public IDiscussionCache DiscussionCache => _internal?.DiscussionCache;
@@ -89,6 +81,21 @@ namespace mrHelper.GitLabClient
       public IProjectCache ProjectCache => _internal?.ProjectCache;
 
       public IUserCache UserCache => _internal?.UserCache;
+
+      public DataCacheConnectionContext ConnectionContext => _connectionContext;
+
+      private void reset()
+      {
+         _operator?.Dispose();
+         _operator = null;
+
+         _internal?.Dispose();
+         _internal = null;
+
+         _connectionContext = null;
+
+         Disconnected?.Invoke();
+      }
 
       private DataCacheInternal createCacheInternal(
          InternalCacheUpdater cacheUpdater,
@@ -113,6 +120,8 @@ namespace mrHelper.GitLabClient
 
       private DataCacheOperator _operator;
       private DataCacheInternal _internal;
+      private DataCacheConnectionContext _connectionContext;
+
       private readonly DataCacheContext _dataCacheContext;
       private readonly IModificationNotifier _modificationNotifier;
    }

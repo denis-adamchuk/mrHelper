@@ -1,57 +1,65 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.GitLabClient
 {
    public class SearchCriteria
    {
-      public SearchCriteria(IEnumerable<object> criteria)
+      public SearchCriteria(IEnumerable<object> criteria, bool onlyOpen)
       {
          Criteria = criteria;
+         OnlyOpen = onlyOpen;
       }
 
       public IEnumerable<object> Criteria;
+      public bool OnlyOpen;
 
       public new string ToString()
       {
-         return String.Join(";", Criteria);
+         return String.Join(";", Criteria) + "_OnlyOpen=" + OnlyOpen.ToString();
       }
 
       public override bool Equals(object obj)
       {
-         return obj is SearchCriteria criteria && Enumerable.SequenceEqual(Criteria, criteria.Criteria);
+         return obj is SearchCriteria criteria &&
+                EqualityComparer<IEnumerable<object>>.Default.Equals(Criteria, criteria.Criteria) &&
+                OnlyOpen == criteria.OnlyOpen;
       }
 
       public override int GetHashCode()
       {
-         return 1163963580 + ToString().GetHashCode();
+         int hashCode = -854807273;
+         hashCode = hashCode * -1521134295 + EqualityComparer<IEnumerable<object>>.Default.GetHashCode(Criteria);
+         hashCode = hashCode * -1521134295 + OnlyOpen.GetHashCode();
+         return hashCode;
       }
    }
 
    public class SearchByProject
    {
-      public SearchByProject(string projectName)
+      public SearchByProject(ProjectKey projectKey)
       {
-         ProjectName = projectName;
+         ProjectKey = projectKey;
       }
 
-      public string ProjectName { get; }
+      public ProjectKey ProjectKey { get; }
 
       public override bool Equals(object obj)
       {
-         return obj is SearchByProject project &&
-                ProjectName == project.ProjectName;
+         var project = obj as SearchByProject;
+         return project != null &&
+                ProjectKey.Equals(project.ProjectKey);
       }
 
       public override int GetHashCode()
       {
-         return 156743525 + EqualityComparer<string>.Default.GetHashCode(ProjectName);
+         return -108071763 + EqualityComparer<ProjectKey>.Default.GetHashCode(ProjectKey);
       }
 
       public override string ToString()
       {
-         return String.Format("Project: {0}", ProjectName);
+         return String.Format("Project: {0}, Host: {1}", ProjectKey.ProjectName, ProjectKey.HostName);
       }
    }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
@@ -22,7 +23,6 @@ namespace mrHelper.GitLabClient.Loaders
          _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
          _dataCacheConnectionContext = dataCacheConnectionContext;
-         Debug.Assert(_dataCacheConnectionContext.CustomData is ProjectBasedContext);
       }
 
       async public Task Load()
@@ -34,7 +34,12 @@ namespace mrHelper.GitLabClient.Loaders
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
       {
-         ProjectBasedContext pbc = (ProjectBasedContext)_dataCacheConnectionContext.CustomData;
+         SearchBasedContext sbc = (SearchBasedContext)_dataCacheConnectionContext.CustomData;
+         IEnumerable<ProjectKey> projects = sbc.SearchCriteria
+            .Criteria
+            .Where(criteria => criteria is SearchByProject)
+            .Select(criteria => (criteria as SearchByProject).ProjectKey)
+            .ToArray();
 
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests =
             new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
@@ -69,7 +74,7 @@ namespace mrHelper.GitLabClient.Loaders
             }
          }
 
-         await TaskUtils.RunConcurrentFunctionsAsync(pbc.Projects, x => loadProject(x),
+         await TaskUtils.RunConcurrentFunctionsAsync(projects, x => loadProject(x),
             () => Constants.MergeRequestLoaderProjectBatchLimits, () => exception != null);
          if (exception != null)
          {
@@ -82,7 +87,7 @@ namespace mrHelper.GitLabClient.Loaders
       {
          return call(
             () => _operator.SearchMergeRequestsAsync(
-               new SearchCriteria(new object[] { new SearchByProject(project.ProjectName) }), null, true),
+               new SearchCriteria(new object[] { new SearchByProject(project) }, true), null),
             String.Format("Cancelled loading merge requests for project \"{0}\"", project.ProjectName),
             String.Format("Cannot load project \"{0}\"", project.ProjectName));
       }
