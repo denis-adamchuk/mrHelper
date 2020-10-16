@@ -37,7 +37,7 @@ namespace mrHelper.GitLabClient.Loaders
          SearchBasedContext sbc = (SearchBasedContext)_dataCacheConnectionContext.CustomData;
 
          IEnumerable<MergeRequest> allMergeRequests = await call(
-            () => _operator.SearchMergeRequestsAsync(sbc.SearchCriteria, sbc.MaxSearchResults),
+            () => _operator.SearchMergeRequestsAsync(sbc.SearchCriteria),
             String.Format("Cancelled loading merge requests with search string \"{0}\"", sbc.SearchCriteria.ToString()),
             String.Format("Cannot load merge requests with search string \"{0}\"", sbc.SearchCriteria.ToString()));
 

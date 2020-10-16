@@ -38,14 +38,13 @@ namespace mrHelper.GitLabClient.Operators
                            await gl.Projects.Get(projectName).LoadTaskAsync())));
       }
 
-      internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(
-         SearchCriteria searchCriteria, int? maxResults)
+      internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchCriteria searchCriteria)
       {
          return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   () =>
-                     CommonOperator.SearchMergeRequestsAsync(client, searchCriteria, maxResults)));
+                     CommonOperator.SearchMergeRequestsAsync(client, searchCriteria)));
       }
 
       internal Task<IEnumerable<Commit>> GetCommitsAsync(string projectName, int iid)

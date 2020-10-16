@@ -38,17 +38,18 @@ namespace mrHelper.GitLabClient
 
    public class SearchByProject
    {
-      public SearchByProject(ProjectKey projectKey)
+      public SearchByProject(ProjectKey projectKey, int? maxSearchResults)
       {
          ProjectKey = projectKey;
+         MaxSearchResults = maxSearchResults;
       }
 
       public ProjectKey ProjectKey { get; }
+      public int? MaxSearchResults { get; }
 
       public override bool Equals(object obj)
       {
-         var project = obj as SearchByProject;
-         return project != null &&
+         return obj is SearchByProject project &&
                 ProjectKey.Equals(project.ProjectKey);
       }
 
@@ -97,12 +98,14 @@ namespace mrHelper.GitLabClient
 
    public class SearchByTargetBranch
    {
-      public SearchByTargetBranch(string targetBranchName)
+      public SearchByTargetBranch(string targetBranchName, int? maxSearchResults)
       {
          TargetBranchName = targetBranchName;
+         MaxSearchResults = maxSearchResults;
       }
 
       public string TargetBranchName { get; }
+      public int? MaxSearchResults { get; }
 
       public override bool Equals(object obj)
       {
@@ -123,12 +126,14 @@ namespace mrHelper.GitLabClient
 
    public class SearchByText
    {
-      public SearchByText(string text)
+      public SearchByText(string text, int? maxSearchResults)
       {
          Text = text;
+         MaxSearchResults = maxSearchResults;
       }
 
       public string Text { get; }
+      public int? MaxSearchResults { get; }
 
       public override bool Equals(object obj)
       {
@@ -170,6 +175,38 @@ namespace mrHelper.GitLabClient
       public override string ToString()
       {
          return String.Format("Username: {0}", Username);
+      }
+   }
+
+   public class SearchByAuthor
+   {
+      public SearchByAuthor(int userId, int? maxSearchResults)
+      {
+         UserId = userId;
+         MaxSearchResults = maxSearchResults;
+      }
+
+      public int UserId { get; }
+      public int? MaxSearchResults { get; }
+
+      public override bool Equals(object obj)
+      {
+         return obj is SearchByAuthor author &&
+                UserId == author.UserId &&
+                EqualityComparer<int?>.Default.Equals(MaxSearchResults, author.MaxSearchResults);
+      }
+
+      public override int GetHashCode()
+      {
+         var hashCode = 1304107724;
+         hashCode = hashCode * -1521134295 + UserId.GetHashCode();
+         hashCode = hashCode * -1521134295 + EqualityComparer<int?>.Default.GetHashCode(MaxSearchResults);
+         return hashCode;
+      }
+
+      public override string ToString()
+      {
+         return String.Format("UserID: {0}", UserId);
       }
    }
 }

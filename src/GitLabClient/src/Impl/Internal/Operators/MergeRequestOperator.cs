@@ -14,8 +14,7 @@ namespace mrHelper.GitLabClient.Operators
       {
       }
 
-      async internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(
-         SearchCriteria searchCriteria, int? maxResults)
+      async internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchCriteria searchCriteria)
       {
          List<MergeRequest> mergeRequests = new List<MergeRequest>();
          foreach (object search in searchCriteria.Criteria)
@@ -25,7 +24,7 @@ namespace mrHelper.GitLabClient.Operators
                   async (client) =>
                      await OperatorCallWrapper.Call(
                         async () =>
-                           await CommonOperator.SearchMergeRequestsAsync(client, searchCriteria, maxResults))));
+                           await CommonOperator.SearchMergeRequestsAsync(client, searchCriteria))));
          }
          return mergeRequests;
       }

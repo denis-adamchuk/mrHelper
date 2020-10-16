@@ -396,7 +396,7 @@ namespace mrHelper.App.Forms
       async private Task openUrlAtSearchTabAsync(MergeRequestKey mrk)
       {
          tabControlMode.SelectedTab = tabPageSearch;
-         await searchMergeRequestsAsync(new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId), null,
+         await searchMergeRequestsAsync(new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId),
             new Func<Exception, bool>(x =>
                throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
       }

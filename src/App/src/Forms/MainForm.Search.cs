@@ -32,17 +32,17 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private void searchMergeRequests(object query, int? maxResults, Func<Exception, bool> exceptionHandler = null)
+      private void searchMergeRequests(object query, Func<Exception, bool> exceptionHandler = null)
       {
-         BeginInvoke(new Action(async () => await searchMergeRequestsAsync(query, maxResults, exceptionHandler)), null);
+         BeginInvoke(new Action(async () => await searchMergeRequestsAsync(query, exceptionHandler)), null);
       }
 
-      async private Task searchMergeRequestsAsync(object query, int? maxResults,
+      async private Task searchMergeRequestsAsync(object query,
          Func<Exception, bool> exceptionHandler = null)
       {
          try
          {
-            await startSearchWorkflowAsync(getHostName(), query, maxResults);
+            await startSearchWorkflowAsync(getHostName(), query);
          }
          catch (Exception ex)
          {
@@ -81,7 +81,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Connects Search DataCache to GitLab
       /// </summary>
-      async private Task startSearchWorkflowAsync(string hostname, object query, int? maxResults)
+      async private Task startSearchWorkflowAsync(string hostname, object query)
       {
          labelWorkflowStatus.Text = String.Empty;
          disableAllSearchUIControls(true);
@@ -96,10 +96,10 @@ namespace mrHelper.App.Forms
             throw new UnknownHostException(hostname);
          }
 
-         await loadAllSearchMergeRequests(hostname, query, maxResults);
+         await loadAllSearchMergeRequests(hostname, query);
       }
 
-      async private Task loadAllSearchMergeRequests(string hostname, object query, int? maxResults)
+      async private Task loadAllSearchMergeRequests(string hostname, object query)
       {
          SearchCriteria searchCriteria = new SearchCriteria(new object[] { query }, false);
          onLoadAllSearchMergeRequests(searchCriteria, hostname);
@@ -107,7 +107,7 @@ namespace mrHelper.App.Forms
          DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(
             new DataCacheCallbacks(null, null),
             new DataCacheUpdateRules(null, null),
-            new SearchBasedContext(searchCriteria, maxResults));
+            new SearchBasedContext(searchCriteria));
 
          await _searchDataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
 

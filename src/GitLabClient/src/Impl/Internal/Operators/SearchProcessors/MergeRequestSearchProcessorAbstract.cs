@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
@@ -17,7 +18,18 @@ namespace mrHelper.GitLabClient.Operators.Search
       protected MergeRequestsFilter.WorkInProgressFilter _wipFilter;
       protected MergeRequestsFilter.StateFilter _stateFilter;
 
-      public abstract Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? maxResults);
+      public abstract Task<IEnumerable<MergeRequest>> Process(GitLab gl);
+
+      protected Task<IEnumerable<MergeRequest>> load(dynamic accessor,
+         GitLabSharp.Accessors.MergeRequestsFilter filter, int? maxResults)
+      {
+         // See restrictions at https://docs.gitlab.com/ee/api/README.html#offset-based-pagination
+         Debug.Assert(!maxResults.HasValue || maxResults.Value <= 100);
+
+         return maxResults.HasValue
+            ? accessor.LoadTaskAsync(filter, new PageFilter(maxResults.Value, 1))
+            : accessor.LoadAllTaskAsync(filter);
+      }
    }
 
    internal abstract class CrossProjectMergeRequestSearchProcessor : MergeRequestSearchProcessor
@@ -27,15 +39,12 @@ namespace mrHelper.GitLabClient.Operators.Search
       {
       }
 
-      public override abstract Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? maxResults);
+      public override abstract Task<IEnumerable<MergeRequest>> Process(GitLab gl);
 
-      async protected Task<IEnumerable<MergeRequest>> load(GitLab gl, int? maxResults,
+      protected Task<IEnumerable<MergeRequest>> load(GitLab gl, int? maxResults,
          MergeRequestsFilter filter)
       {
-         Task<IEnumerable<MergeRequest>> t = maxResults.HasValue
-            ? gl.MergeRequests.LoadTaskAsync(filter, new PageFilter(maxResults.Value, 1))
-            : gl.MergeRequests.LoadAllTaskAsync(filter);
-         return await t;
+         return load(gl.MergeRequests, filter, maxResults);
       }
    }
 
@@ -46,15 +55,12 @@ namespace mrHelper.GitLabClient.Operators.Search
       {
       }
 
-      public override abstract Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? maxResults);
+      public override abstract Task<IEnumerable<MergeRequest>> Process(GitLab gl);
 
-      async protected Task<IEnumerable<MergeRequest>> load(GitLab gl, string projectname, int? maxResults,
+      protected Task<IEnumerable<MergeRequest>> load(GitLab gl, string projectname, int? maxResults,
          MergeRequestsFilter filter)
       {
-         Task<IEnumerable<MergeRequest>> t = maxResults.HasValue
-            ? gl.Projects.Get(projectname).MergeRequests.LoadTaskAsync(filter, new PageFilter(maxResults.Value, 1))
-            : gl.Projects.Get(projectname).MergeRequests.LoadAllTaskAsync(filter);
-         return await t;
+         return load(gl.Projects.Get(projectname).MergeRequests, filter, maxResults);
       }
    }
 }

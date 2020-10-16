@@ -122,15 +122,10 @@ namespace mrHelper.App.Forms
       {
          Interval = ClipboardCheckingTimerInterval
       };
-      private readonly Timer _projectAndUserCacheCheckTimer = new Timer
-      {
-         Interval = ProjectAndUserCacheCheckTimerInterval
-      };
       private readonly Timer _listViewRefreshTimer = new Timer
       {
          Interval = ListViewRefreshTimerInterval
       };
-      private readonly List<Action<bool>> _projectAndUserCacheCheckActions = new List<Action<bool>>();
 
       private LocalCommitStorageFactory _storageFactory;
       private GitDataUpdater _gitDataUpdater;

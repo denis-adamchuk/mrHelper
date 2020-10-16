@@ -47,14 +47,12 @@ namespace mrHelper.GitLabClient
 
    public class SearchBasedContext
    {
-      public SearchBasedContext(SearchCriteria searchCriteria, int? maxSearchResults)
+      public SearchBasedContext(SearchCriteria searchCriteria)
       {
          SearchCriteria = searchCriteria;
-         MaxSearchResults = maxSearchResults;
       }
 
       public SearchCriteria SearchCriteria { get; }
-      public int? MaxSearchResults { get; }
    }
 }
 

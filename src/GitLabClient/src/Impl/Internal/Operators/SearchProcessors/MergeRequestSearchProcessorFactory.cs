@@ -12,19 +12,23 @@ namespace mrHelper.GitLabClient.Operators.Search
          }
          else if (search is SearchByProject sbp)
          {
-            return new MergeRequestSearchByProjectProcessor(sbp.ProjectKey.ProjectName, onlyOpen);
+            return new MergeRequestSearchByProjectProcessor(sbp.ProjectKey.ProjectName, onlyOpen, sbp.MaxSearchResults);
          }
          else if (search is SearchByTargetBranch sbtb)
          {
-            return new MergeRequestSearchByTargetBranchProcessor(sbtb.TargetBranchName, onlyOpen);
+            return new MergeRequestSearchByTargetBranchProcessor(sbtb.TargetBranchName, onlyOpen, sbtb.MaxSearchResults);
          }
          else if (search is SearchByText sbt)
          {
-            return new MergeRequestSearchByTextProcessor(sbt.Text, onlyOpen);
+            return new MergeRequestSearchByTextProcessor(sbt.Text, onlyOpen, sbt.MaxSearchResults);
          }
          else if (search is SearchByUsername sbu)
          {
             return new MergeRequestSearchByUsernameProcessor(sbu.Username, onlyOpen);
+         }
+         else if (search is SearchByAuthor sba)
+         {
+            return new MergeRequestSearchByAuthorProcessor(sba.UserId, onlyOpen, sba.MaxSearchResults);
          }
 
          Debug.Assert(false);

@@ -21,6 +21,7 @@ using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.App.Interprocess;
+using mrHelper.App.Controls;
 
 namespace mrHelper.App.Forms
 {
@@ -63,6 +64,22 @@ namespace mrHelper.App.Forms
             return new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
          }
          return null;
+      }
+
+      private string getDefaultProjectName()
+      {
+         MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(listViewMergeRequests);
+         if (currentMergeRequestKey.HasValue)
+         {
+            return currentMergeRequestKey.Value.ProjectKey.ProjectName;
+         }
+
+         if (listViewMergeRequests.Groups.Count > 0)
+         {
+            return listViewMergeRequests.Groups[0].Name;
+         }
+
+         return String.Empty;
       }
 
       private DataCache getDataCache(bool live)
@@ -1620,7 +1637,8 @@ namespace mrHelper.App.Forms
 
       private int getLeftPaneMinWidth()
       {
-         return Math.Max(
+         return
+            Math.Max(
             calcHorzDistance(null, tabControlMode)
           + calcHorzDistance(null, groupBoxSelectMergeRequest)
           + calcHorzDistance(null, checkBoxDisplayFilter)
@@ -1632,15 +1650,38 @@ namespace mrHelper.App.Forms
           + calcHorzDistance(buttonReloadList, buttonCreateNew)
           + buttonCreateNew.Size.Width
           + calcHorzDistance(buttonCreateNew, null)
-          + calcHorzDistance(groupBoxSelectMergeRequest, null),
-            calcHorzDistance(null, groupBoxSelectMergeRequest)
+          + calcHorzDistance(groupBoxSelectMergeRequest, null)
+          + calcHorzDistance(tabControlMode, null),
+
+            Math.Max(
+            calcHorzDistance(null, tabControlMode)
+          + calcHorzDistance(null, groupBoxSelectMergeRequest)
           + calcHorzDistance(null, radioButtonSearchByTitleAndDescription)
           + radioButtonSearchByTitleAndDescription.Width
           + calcHorzDistance(radioButtonSearchByTitleAndDescription, radioButtonSearchByTargetBranch)
           + radioButtonSearchByTargetBranch.Width
-          + 10 /* cannot use calcHorzDistance(radioButtonSearchByTargetBranch, null) because its Anchor is Top+Left */
+          + calcHorzDistance(radioButtonSearchByTargetBranch, radioButtonSearchByProject)
+          + radioButtonSearchByProject.Width
+          + calcHorzDistance(radioButtonSearchByProject, radioButtonSearchByAuthor)
+          + radioButtonSearchByAuthor.Width
+          + calcHorzDistance(radioButtonSearchByAuthor, null)
           + calcHorzDistance(groupBoxSelectMergeRequest, null)
-          + calcHorzDistance(tabControlMode, null));
+          + calcHorzDistance(tabControlMode, null),
+
+            calcHorzDistance(null, tabControlMode)
+          + calcHorzDistance(null, groupBoxSelectMergeRequest)
+          + calcHorzDistance(null, textBoxSearch)
+          + textBoxSearch.Width
+          + calcHorzDistance(textBoxSearch, comboBoxProjectName)
+          + comboBoxProjectName.Width
+          + calcHorzDistance(comboBoxProjectName, comboBoxUser)
+          + comboBoxUser.Width
+          + calcHorzDistance(comboBoxUser, buttonSearch)
+          + buttonSearch.Width
+          + calcHorzDistance(buttonSearch, null)
+          + calcHorzDistance(groupBoxSelectMergeRequest, null)
+          + calcHorzDistance(tabControlMode, null)
+          ));
       }
 
       private int getRightPaneMinWidth()
@@ -2130,11 +2171,11 @@ namespace mrHelper.App.Forms
       }
 
       private NewMergeRequestProperties getDefaultNewMergeRequestProperties(string hostname,
-         User currentUser, ProjectKey? currentProject)
+         User currentUser, string projectName)
       {
          // This state is expected to be used only once, next times 'persistent storage' is used
          NewMergeRequestProperties factoryProperties = new NewMergeRequestProperties(
-            currentProject?.ProjectName, null, null, currentUser.Username, true, true);
+            projectName, null, null, currentUser.Username, true, true);
          return _newMergeRequestDialogStatesByHosts.TryGetValue(hostname, out var value) ? value : factoryProperties;
       }
 
@@ -2187,6 +2228,14 @@ namespace mrHelper.App.Forms
             Tag = mrk
          };
          form.Show();
+      }
+
+      private void setMergeRequestEditEnabled(bool enabled)
+      {
+         buttonCreateNew.Enabled = enabled;
+         var contextMenu = (listViewMergeRequests.ContextMenuStrip as MergeRequestListViewContextMenu);
+         contextMenu.SetEditActionEnabled(enabled);
+         contextMenu.SetMergeActionEnabled(true);
       }
    }
 }

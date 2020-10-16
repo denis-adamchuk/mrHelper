@@ -38,7 +38,7 @@ namespace mrHelper.GitLabClient
                SearchCriteria searchCriteria = new SearchCriteria(
                   new object[] { new SearchByIId(_projectKey.ProjectName, mergeRequestIId) }, onlyOpen);
                IEnumerable<MergeRequest> mergeRequests =
-                  await mergeRequestOperator.SearchMergeRequestsAsync(searchCriteria, null);
+                  await mergeRequestOperator.SearchMergeRequestsAsync(searchCriteria);
                return mergeRequests.Any() ? mergeRequests.First() : null;
             }
             catch (OperatorException)

@@ -12,7 +12,7 @@ namespace mrHelper.GitLabClient.Operators
    internal static class CommonOperator
    {
       async internal static Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(
-         GitLabTaskRunner client, SearchCriteria searchCriteria, int? maxResults)
+         GitLabTaskRunner client, SearchCriteria searchCriteria)
       {
          List<MergeRequest> mergeRequests = new List<MergeRequest>();
          foreach (object search in searchCriteria.Criteria)
@@ -24,7 +24,7 @@ namespace mrHelper.GitLabClient.Operators
                         async (gl) =>
                            await MergeRequestSearchProcessorFactory
                               .Create(search, searchCriteria.OnlyOpen)
-                              .Process(gl, maxResults)))));
+                              .Process(gl)))));
          }
          return mergeRequests;
       }

@@ -35,26 +35,28 @@ namespace mrHelper.GitLabClient.Loaders
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
       {
          SearchBasedContext sbc = (SearchBasedContext)_dataCacheConnectionContext.CustomData;
-         IEnumerable<ProjectKey> projects = sbc.SearchCriteria
+         IEnumerable<SearchByProject> projects = sbc.SearchCriteria
             .Criteria
             .Where(criteria => criteria is SearchByProject)
-            .Select(criteria => (criteria as SearchByProject).ProjectKey)
+            .Cast<SearchByProject>()
             .ToArray();
 
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests =
             new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
 
          Exception exception = null;
-         async Task loadProject(ProjectKey project)
+         async Task loadProject(SearchByProject searchByProject)
          {
             if (exception != null)
             {
                return;
             }
 
+            ProjectKey project = searchByProject.ProjectKey;
             try
             {
-               IEnumerable<MergeRequest> projectMergeRequests = await loadProjectMergeRequestsAsync(project);
+               IEnumerable<MergeRequest> projectMergeRequests = await loadProjectMergeRequestsAsync(
+                  project, sbc.SearchCriteria.OnlyOpen, searchByProject.MaxSearchResults);
                mergeRequests.Add(project, projectMergeRequests);
             }
             catch (BaseLoaderException ex)
@@ -83,11 +85,12 @@ namespace mrHelper.GitLabClient.Loaders
          return mergeRequests;
       }
 
-      private Task<IEnumerable<MergeRequest>> loadProjectMergeRequestsAsync(ProjectKey project)
+      private Task<IEnumerable<MergeRequest>> loadProjectMergeRequestsAsync(ProjectKey project,
+         bool onlyOpen, int? maxResults)
       {
          return call(
             () => _operator.SearchMergeRequestsAsync(
-               new SearchCriteria(new object[] { new SearchByProject(project) }, true), null),
+               new SearchCriteria(new object[] { new SearchByProject(project, maxResults) }, onlyOpen)),
             String.Format("Cancelled loading merge requests for project \"{0}\"", project.ProjectName),
             String.Format("Cannot load project \"{0}\"", project.ProjectName));
       }

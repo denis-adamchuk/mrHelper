@@ -4,38 +4,27 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace mrHelper.CommonControls.Tools
 {
    public static class WinFormsHelpers
    {
-      public static void FillComboBox(ComboBox comboBox, IEnumerable<string> choices, string defaultChoice)
+      public static void FillComboBox<T>(ComboBox comboBox, T[] choices, Func<T, bool> isDefaultChoice)
       {
-         foreach (string choice in choices)
-         {
-            comboBox.Items.Add(choice);
-         }
+         int iSelectedIndex = choices.Any() ? 0 : -1;
 
-         string selectedChoice = null;
-         foreach (string choice in comboBox.Items.Cast<string>())
+         comboBox.Items.Clear();
+         for (int iChoice = 0; iChoice < choices.Length; ++ iChoice)
          {
-            if (choice == defaultChoice)
+            comboBox.Items.Add(choices[iChoice]);
+            if (isDefaultChoice(choices[iChoice]))
             {
-               selectedChoice = choice;
+               iSelectedIndex = iChoice;
             }
          }
 
-         if (selectedChoice != null)
-         {
-            comboBox.SelectedItem = selectedChoice;
-         }
-         else
-         {
-            comboBox.SelectedIndex = 0;
-         }
+         comboBox.SelectedIndex = iSelectedIndex;
       }
 
       public static void SelectComboBoxItem(ComboBox comboBox, Func<object, bool> predicate)

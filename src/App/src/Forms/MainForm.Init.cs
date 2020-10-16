@@ -14,6 +14,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
+using mrHelper.App.Controls;
 
 namespace mrHelper.App.Forms
 {
@@ -277,11 +278,11 @@ namespace mrHelper.App.Forms
             x => Program.Settings.ListViewFoundMergeRequestsDisplayIndices = x);
 
          WinFormsHelpers.FillComboBox(comboBoxFonts,
-            Constants.MainWindowFontSizeChoices, Program.Settings.MainWindowFontSizeName);
+            Constants.MainWindowFontSizeChoices, name => name == Program.Settings.MainWindowFontSizeName);
          applyFont(Program.Settings.MainWindowFontSizeName);
 
          WinFormsHelpers.FillComboBox(comboBoxThemes,
-            Constants.ThemeNames, Program.Settings.VisualThemeName);
+            Constants.ThemeNames, name => name == Program.Settings.VisualThemeName);
          applyTheme(Program.Settings.VisualThemeName);
 
          Trace.TraceInformation("[MainForm] Configuration loaded");
@@ -415,18 +416,28 @@ namespace mrHelper.App.Forms
             toolTip.SetToolTip(linkLabelSendFeedback, Program.ServiceManager.GetBugReportEmail());
          }
 
-         toolTip.SetToolTip(radioButtonSearchByTitleAndDescription,
-            String.Format("{0} (up to {1} results)",
-               toolTip.GetToolTip(radioButtonSearchByTitleAndDescription),
-               Constants.MaxSearchByTitleAndDescriptionResults));
+         setTooltipsForSearchOptions();
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
-         _projectAndUserCacheCheckActions.Add(isCacheReady => buttonCreateNew.Enabled = isCacheReady);
-
          startClipboardCheckTimer();
-         startProjectAndUserCachesCheckTimer();
          createListViewContextMenu();
+      }
+
+      private void setTooltipsForSearchOptions()
+      {
+         void extendControlTooltip(Control control, int searchLimit) =>
+            toolTip.SetToolTip(control, String.Format(
+               "{0} (up to {1} results)", toolTip.GetToolTip(control), searchLimit));
+
+         extendControlTooltip(radioButtonSearchByTitleAndDescription,
+            Constants.MaxSearchByTitleAndDescriptionResults);
+         extendControlTooltip(radioButtonSearchByTargetBranch,
+            Constants.MaxSearchByTargetBranchResults);
+         extendControlTooltip(radioButtonSearchByProject,
+            Constants.MaxSearchByProjectResults);
+         extendControlTooltip(radioButtonSearchByAuthor,
+            Constants.MaxSearchByAuthorResults);
       }
 
       private void startClipboardCheckTimer()
@@ -448,30 +459,39 @@ namespace mrHelper.App.Forms
 
       private void createListViewContextMenu()
       {
-         listViewMergeRequests.ContextMenuStrip = new ContextMenuStrip();
-         ToolStripItemCollection items = listViewMergeRequests.ContextMenuStrip.Items;
-         items.Add("&Refresh selected", null, ListViewMergeRequests_Refresh);
-         items.Add("-", null, null);
-         ToolStripItem editItem = items.Add("&Edit...", null, ListViewMergeRequests_Edit);
-         editItem.Enabled = false;
-         ToolStripItem mergeItem = items.Add("&Merge...", null, ListViewMergeRequests_Accept);
-         mergeItem.Enabled = false;
-         items.Add("&Close", null, ListViewMergeRequests_Close);
-
-         _projectAndUserCacheCheckActions.Add(isCacheReady => mergeItem.Enabled = editItem.Enabled = isCacheReady);
+         listViewMergeRequests.ContextMenuStrip = new MergeRequestListViewContextMenu(
+            onRefreshSelectedMergeRequest,
+            onEditSelectedMergeRequest,
+            onAcceptSelectedMergeRequest,
+            onCloseSelectedMergeRequest);
       }
 
-      private void startProjectAndUserCachesCheckTimer()
+      private void startEventPendingTimer(Func<bool> onCheck, int checkInterval, Action onEvent)
       {
-         _projectAndUserCacheCheckTimer.Tick +=
+         Timer cacheCheckTimer = new Timer
+         {
+            Interval = checkInterval
+         };
+         cacheCheckTimer.Tick +=
             (s, e) =>
             {
-               bool isProjectCacheReady = _liveDataCache?.ProjectCache?.GetProjects().Any() ?? false;
-               bool isUserCacheReady = _liveDataCache?.UserCache?.GetUsers().Any() ?? false;
-               _projectAndUserCacheCheckActions.ForEach(
-                  action => action?.Invoke(isProjectCacheReady && isUserCacheReady));
+               void stopTimer()
+               {
+                  cacheCheckTimer.Stop();
+                  cacheCheckTimer.Dispose();
+               }
+
+               if (IsDisposed)
+               {
+                  stopTimer();
+               }
+               else if (onCheck())
+               {
+                  stopTimer();
+                  onEvent?.Invoke();
+               }
             };
-         _projectAndUserCacheCheckTimer.Start();
+         cacheCheckTimer.Start();
       }
 
       private void prepareSizeToStart()
@@ -528,13 +548,6 @@ namespace mrHelper.App.Forms
          _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier);
       }
 
-      private void disposeLiveDataCacheDependencies()
-      {
-         _userNotifier?.Dispose();
-         _eventFilter?.Dispose();
-         _expressionResolver?.Dispose();
-      }
-
       private void subscribeToLiveDataCache()
       {
          if (_liveDataCache != null)
@@ -542,6 +555,13 @@ namespace mrHelper.App.Forms
             _liveDataCache.Disconnected += liveDataCacheDisconnected;
             _liveDataCache.Connected += liveDataCacheConnected;
          }
+      }
+
+      private void disposeLiveDataCacheDependencies()
+      {
+         _userNotifier?.Dispose();
+         _eventFilter?.Dispose();
+         _expressionResolver?.Dispose();
       }
 
       private void subscribeToLiveDataCacheInternalEvents()

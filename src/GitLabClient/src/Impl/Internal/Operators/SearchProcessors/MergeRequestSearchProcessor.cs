@@ -17,7 +17,7 @@ namespace mrHelper.GitLabClient.Operators.Search
          _projectname = projectName;
       }
 
-      public async override Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? _)
+      public async override Task<IEnumerable<MergeRequest>> Process(GitLab gl)
       {
          MergeRequest mergeRequest = await gl.Projects.Get(_projectname).MergeRequests.Get(_iid).LoadTaskAsync();
          if (mergeRequest == null)
@@ -41,53 +41,59 @@ namespace mrHelper.GitLabClient.Operators.Search
 
    internal class MergeRequestSearchByProjectProcessor : SingleProjectMergeRequestSearchProcessor
    {
-      internal MergeRequestSearchByProjectProcessor(string projectName, bool onlyOpen)
+      internal MergeRequestSearchByProjectProcessor(string projectName, bool onlyOpen, int? maxResults)
          : base(onlyOpen)
       {
          _projectname = projectName;
+         _maxResults = maxResults;
       }
 
-      public override Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? maxResults)
+      public override Task<IEnumerable<MergeRequest>> Process(GitLab gl)
       {
-         return load(gl, _projectname, maxResults, new MergeRequestsFilter(
+         return load(gl, _projectname, _maxResults, new MergeRequestsFilter(
             null, _wipFilter, _stateFilter, false, null, null, null, null));
       }
 
       private readonly string _projectname;
+      private readonly int? _maxResults;
    }
 
    internal class MergeRequestSearchByTargetBranchProcessor : CrossProjectMergeRequestSearchProcessor
    {
-      internal MergeRequestSearchByTargetBranchProcessor(string branchname, bool onlyOpen)
+      internal MergeRequestSearchByTargetBranchProcessor(string branchname, bool onlyOpen, int? maxResults)
          : base(onlyOpen)
       {
          _branchname = branchname;
+         _maxResults = maxResults;
       }
 
-      public override Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? maxResults)
+      public override Task<IEnumerable<MergeRequest>> Process(GitLab gl)
       {
-         return load(gl, maxResults, new MergeRequestsFilter(
+         return load(gl, _maxResults, new MergeRequestsFilter(
             null, _wipFilter, _stateFilter, false, null, _branchname, null, null));
       }
 
       private readonly string _branchname;
+      private readonly int? _maxResults;
    }
 
    internal class MergeRequestSearchByTextProcessor : CrossProjectMergeRequestSearchProcessor
    {
-      internal MergeRequestSearchByTextProcessor(string text, bool onlyOpen)
+      internal MergeRequestSearchByTextProcessor(string text, bool onlyOpen, int? maxResults)
          : base(onlyOpen)
       {
          _text = text;
+         _maxResults = maxResults;
       }
 
-      public override Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? maxResults)
+      public override Task<IEnumerable<MergeRequest>> Process(GitLab gl)
       {
-         return load(gl, maxResults, new MergeRequestsFilter(
+         return load(gl, _maxResults, new MergeRequestsFilter(
             null, _wipFilter, _stateFilter, false, _text, null, null, null));
       }
 
       private readonly string _text;
+      private readonly int? _maxResults;
    }
 
    internal class MergeRequestSearchByUsernameProcessor : CrossProjectMergeRequestSearchProcessor
@@ -98,7 +104,7 @@ namespace mrHelper.GitLabClient.Operators.Search
          _username = username;
       }
 
-      public async override Task<IEnumerable<MergeRequest>> Process(GitLab gl, int? _)
+      public async override Task<IEnumerable<MergeRequest>> Process(GitLab gl)
       {
          string lowercaseLabel = Constants.GitLabLabelPrefix + _username.ToLower();
          IEnumerable<MergeRequest> byLabel = await loadByLabel(gl, lowercaseLabel);
@@ -109,9 +115,9 @@ namespace mrHelper.GitLabClient.Operators.Search
             .Select(group => group.First());
       }
 
-      private Task<IEnumerable<MergeRequest>> loadByLabel(GitLab gl, string label)
+      async private Task<IEnumerable<MergeRequest>> loadByLabel(GitLab gl, string label)
       {
-         return load(gl, null, new MergeRequestsFilter(
+         return await load(gl, null, new MergeRequestsFilter(
             label, _wipFilter, _stateFilter, false, null, null, null, null));
       }
 
@@ -134,6 +140,25 @@ namespace mrHelper.GitLabClient.Operators.Search
       }
 
       private readonly string _username;
+   }
+
+   internal class MergeRequestSearchByAuthorProcessor : CrossProjectMergeRequestSearchProcessor
+   {
+      internal MergeRequestSearchByAuthorProcessor(int userId, bool onlyOpen, int? maxResults)
+         : base(onlyOpen)
+      {
+         _userId = userId;
+         _maxResults = maxResults;
+      }
+
+      public async override Task<IEnumerable<MergeRequest>> Process(GitLab gl)
+      {
+         return await load(gl, _maxResults, new MergeRequestsFilter(
+            null, _wipFilter, _stateFilter, false, null, null, null, _userId));
+      }
+
+      private readonly int _userId;
+      private readonly int? _maxResults;
    }
 }
 

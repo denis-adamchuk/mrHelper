@@ -413,22 +413,33 @@ namespace mrHelper.App.Forms
       {
          if (e.KeyCode == Keys.Enter)
          {
-            if (radioButtonSearchByTargetBranch.Checked)
-            {
-               searchMergeRequests(new SearchByTargetBranch(textBoxSearch.Text), null);
-            }
-            else if (radioButtonSearchByTitleAndDescription.Checked)
-            {
-               // See restrictions at https://docs.gitlab.com/ee/api/README.html#offset-based-pagination
-               Debug.Assert(Constants.MaxSearchByTitleAndDescriptionResults <= 100);
+            onStartSearch(sender, e);
+         }
+      }
 
-               searchMergeRequests(new SearchByText(textBoxSearch.Text),
-                  Constants.MaxSearchByTitleAndDescriptionResults);
-            }
-            else
-            {
-               Debug.Assert(false);
-            }
+      private void onStartSearch(object sender, EventArgs e)
+      {
+         if (radioButtonSearchByTargetBranch.Checked)
+         {
+            searchMergeRequests(new SearchByTargetBranch(textBoxSearch.Text, Constants.MaxSearchByTargetBranchResults));
+         }
+         else if (radioButtonSearchByTitleAndDescription.Checked)
+         {
+            searchMergeRequests(new SearchByText(textBoxSearch.Text, Constants.MaxSearchByTitleAndDescriptionResults));
+         }
+         else if (radioButtonSearchByProject.Checked)
+         {
+            ProjectKey projectKey = new ProjectKey(getHostName(), comboBoxProjectName.Text);
+            searchMergeRequests(new SearchByProject(projectKey, Constants.MaxSearchByProjectResults));
+         }
+         else if (radioButtonSearchByAuthor.Checked)
+         {
+            User user = comboBoxUser.SelectedItem as User;
+            searchMergeRequests(new SearchByAuthor(user.Id, Constants.MaxSearchByAuthorResults));
+         }
+         else
+         {
+            Debug.Assert(false);
          }
       }
 
@@ -456,6 +467,26 @@ namespace mrHelper.App.Forms
       private void ComboBoxHost_Format(object sender, ListControlConvertEventArgs e)
       {
          formatHostListItem(e);
+      }
+
+      private void comboBoxProjectName_Format(object sender, ListControlConvertEventArgs e)
+      {
+         if (e.ListItem == null)
+         {
+            return;
+         }
+
+         e.Value = e.ListItem.ToString();
+      }
+
+      private void comboBoxUser_Format(object sender, ListControlConvertEventArgs e)
+      {
+         if (e.ListItem == null)
+         {
+            return;
+         }
+
+         e.Value = (e.ListItem as User).Name;
       }
 
       private void LinkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
@@ -1586,13 +1617,14 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         ProjectKey? currentProject = getMergeRequestKey(null)?.ProjectKey;
+         // TODO TEST
+         string projectName = getDefaultProjectName();
          NewMergeRequestProperties initialFormState = getDefaultNewMergeRequestProperties(
-            getHostName(), getCurrentUser(), currentProject);
+            getHostName(), getCurrentUser(), projectName);
          createNewMergeRequest(getHostName(), getCurrentUser(), initialFormState, fullProjectList, fullUserList);
       }
 
-      private void ListViewMergeRequests_Edit(object sender, EventArgs e)
+      private void onEditSelectedMergeRequest(object sender, EventArgs e)
       {
          Debug.Assert(!isSearchMode());
          if (listViewMergeRequests.SelectedItems.Count < 1 || !checkIfMergeRequestCanBeEdited())
@@ -1614,7 +1646,7 @@ namespace mrHelper.App.Forms
             getHostName(), getCurrentUser(), item, fullUserList)));
       }
 
-      private void ListViewMergeRequests_Accept(object sender, EventArgs e)
+      private void onAcceptSelectedMergeRequest(object sender, EventArgs e)
       {
          Debug.Assert(!isSearchMode());
          if (listViewMergeRequests.SelectedItems.Count < 1 || !checkIfMergeRequestCanBeEdited())
@@ -1635,7 +1667,7 @@ namespace mrHelper.App.Forms
          acceptMergeRequest(item);
       }
 
-      private void ListViewMergeRequests_Close(object sender, EventArgs e)
+      private void onCloseSelectedMergeRequest(object sender, EventArgs e)
       {
          Debug.Assert(!isSearchMode());
          if (listViewMergeRequests.SelectedItems.Count < 1 || !checkIfMergeRequestCanBeEdited())
@@ -1647,7 +1679,7 @@ namespace mrHelper.App.Forms
          BeginInvoke(new Action(async () => await closeMergeRequestAsync(getHostName(), item)));
       }
 
-      private void ListViewMergeRequests_Refresh(object sender, EventArgs e)
+      private void onRefreshSelectedMergeRequest(object sender, EventArgs e)
       {
          Debug.Assert(!isSearchMode());
          if (listViewMergeRequests.SelectedItems.Count < 1)
@@ -1694,6 +1726,18 @@ namespace mrHelper.App.Forms
 
          string tooltip = isValidUrl ? getClipboardText() : "N/A";
          toolTip.SetToolTip(linkLabelFromClipboard, tooltip);
+      }
+
+      private void linkLabelFindMe_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         foreach (object item in comboBoxUser.Items)
+         {
+            if ((item as User).Name == getCurrentUser().Name)
+            {
+               comboBoxUser.SelectedItem = item;
+               break;
+            }
+         }
       }
    }
 }

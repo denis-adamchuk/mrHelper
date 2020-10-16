@@ -4,16 +4,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using System.Collections;
 using mrHelper.Common.Constants;
 using mrHelper.GitLabClient;
 using mrHelper.App.Helpers.GitLab;
-using mrHelper.Common.Tools;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -154,7 +152,6 @@ namespace mrHelper.App.Forms
          await _liveDataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
 
          onAllMergeRequestsLoaded(hostname, enabledProjects);
-         cleanupReviewedRevisions(hostname);
       }
 
       private async Task startUserBasedWorkflowAsync(string hostname)
@@ -169,7 +166,6 @@ namespace mrHelper.App.Forms
          await _liveDataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
 
          onAllMergeRequestsLoaded(hostname, _liveDataCache.MergeRequestCache.GetProjects());
-         cleanupReviewedRevisions(hostname);
       }
 
       private void onForbiddenProject(ProjectKey projectKey)
@@ -274,8 +270,9 @@ namespace mrHelper.App.Forms
 
       private void liveDataCacheDisconnected()
       {
-         Trace.TraceInformation("[MainForm.Workflow] Reset GitLabInstance");
-
+         setMergeRequestEditEnabled(false);
+         setSearchByProjectEnabled(false);
+         setSearchByAuthorEnabled(false);
          stopListViewRefreshTimer();
          closeAllFormsExceptMain();
          disposeGitHelpers();
@@ -285,6 +282,7 @@ namespace mrHelper.App.Forms
 
       private void liveDataCacheConnected(string hostname, User user)
       {
+         cleanupReviewedRevisions(hostname);
          subscribeToLiveDataCacheInternalEvents();
          createGitHelpers(_liveDataCache, getCommitStorageFactory(false));
 
@@ -294,7 +292,61 @@ namespace mrHelper.App.Forms
          }
          Program.FeedbackReporter.SetUserEMail(user.EMail);
          startListViewRefreshTimer();
+         startEventPendingTimer(() => (_liveDataCache?.ProjectCache?.GetProjects()?.Any() ?? false)
+                                   && (_liveDataCache?.UserCache?.GetUsers()?.Any() ?? false),
+                                ProjectAndUserCacheCheckTimerInterval,
+                                () => setMergeRequestEditEnabled(true));
+         startEventPendingTimer(() => (_liveDataCache?.ProjectCache?.GetProjects()?.Any() ?? false),
+                                ProjectAndUserCacheCheckTimerInterval,
+                                () => setSearchByProjectEnabled(true));
+         startEventPendingTimer(() => (_liveDataCache?.UserCache?.GetUsers()?.Any() ?? false),
+                                ProjectAndUserCacheCheckTimerInterval,
+                                () => setSearchByAuthorEnabled(true));
       }
+
+      private void setSearchByProjectEnabled(bool isEnabled)
+      {
+         radioButtonSearchByProject.Enabled = isEnabled;
+
+         bool wasEnabled = comboBoxProjectName.Enabled;
+         comboBoxProjectName.Enabled = isEnabled;
+
+         if (!isEnabled && wasEnabled)
+         {
+            comboBoxProjectName.Items.Clear();
+         }
+         else if (!wasEnabled && isEnabled)
+         {
+            string[] projectNames = _liveDataCache?.ProjectCache?.GetProjects()
+               .OrderBy(project => project.Path_With_Namespace)
+               .Select(project => project.Path_With_Namespace)
+               .ToArray() ?? Array.Empty<string>();
+            string defaultProjectName = getDefaultProjectName();
+            WinFormsHelpers.FillComboBox(comboBoxProjectName, projectNames, projectName => projectName == defaultProjectName);
+         }
+      }
+
+      private void setSearchByAuthorEnabled(bool isEnabled)
+      {
+         radioButtonSearchByAuthor.Enabled = isEnabled;
+         linkLabelFindMe.Enabled = isEnabled;
+
+         bool wasEnabled = comboBoxUser.Enabled;
+         comboBoxUser.Enabled = isEnabled;
+
+         if (!isEnabled && wasEnabled)
+         {
+            comboBoxUser.Items.Clear();
+         }
+         else if (!wasEnabled && isEnabled)
+         {
+            User[] users = _liveDataCache?.UserCache?.GetUsers()
+               .OrderBy(user => user.Name).ToArray() ?? Array.Empty<User>();
+            string defaultUserFullName = getCurrentUser().Name;
+            WinFormsHelpers.FillComboBox(comboBoxUser, users, user => user.Name == defaultUserFullName);
+         }
+      }
+
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -418,15 +470,15 @@ namespace mrHelper.App.Forms
             .Cast<ListViewItem>()
             .Select(x => new SearchByUsername(x.Text))
             .ToArray();
-         return new SearchBasedContext(new SearchCriteria(criteria, true), null);
+         return new SearchBasedContext(new SearchCriteria(criteria, true));
       }
 
       private object getCustomDataForProjectBasedWorkflow(IEnumerable<ProjectKey> enabledProjects)
       {
          object[] criteria = enabledProjects
-            .Select(project => new SearchByProject(project))
+            .Select(project => new SearchByProject(project, null))
             .ToArray();
-         return new SearchBasedContext(new SearchCriteria(criteria, true), null);
+         return new SearchBasedContext(new SearchCriteria(criteria, true));
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

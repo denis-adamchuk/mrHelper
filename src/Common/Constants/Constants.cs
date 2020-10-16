@@ -56,15 +56,19 @@ namespace mrHelper.Common.Constants
          { "Meeting Mode",  15.75 }
       };
 
-      public static IEnumerable<string> MainWindowFontSizeChoices = new string[]
+      public static string[] MainWindowFontSizeChoices = new string[]
          { "Tiny", "Small", "Medium", "Large" };
 
       public static string DefaultMainWindowFontSizeChoice = "Small";
 
-      public static IEnumerable<string> DiscussionsWindowFontSizeChoices = new string[]
+      public static string[] DiscussionsWindowFontSizeChoices = new string[]
          { "Tiny", "Small", "Medium", "Large", "Meeting Mode" };
 
       public static int MaxSearchByTitleAndDescriptionResults = 20;
+      public static int MaxSearchByProjectResults = 20;
+      public static int MaxSearchByAuthorResults = 20;
+      public static int MaxSearchByTargetBranchResults = 50;
+
       public static int MaxCommitsToLoad = 50;
       public static int MaxAllowedDiffsInComparison = 1000;
       public static int MaxAllowedDiffsInBackgroundComparison = 100;
