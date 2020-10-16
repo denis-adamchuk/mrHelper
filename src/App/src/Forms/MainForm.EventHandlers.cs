@@ -1131,9 +1131,19 @@ namespace mrHelper.App.Forms
                {
                   await timeTracker.Stop();
                }
+               catch (ForbiddenTimeTrackerException)
+               {
+                  status = String.Format(
+                     "Cannot report tracked time ({0}).\r\n"
+                   + "You don't have permissions to track time in {1} project.\r\n"
+                   + "Please contact {2} administrator or SCM team.",
+                     duration, timeTracker.MergeRequest.ProjectKey.ProjectName, timeTracker.MergeRequest.ProjectKey.HostName);
+                  MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  status = String.Format("Tracked time is not set. Set up permissions and report {0} manually", duration);
+               }
                catch (TimeTrackerException ex)
                {
-                  status = "Error occurred. Tracked time is not sent!";
+                  status = String.Format("Error occurred. Tracked time {0} is not sent", duration);
                   ExceptionHandlers.Handle(status, ex);
                   MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                }

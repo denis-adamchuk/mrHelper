@@ -42,6 +42,20 @@ namespace mrHelper.GitLabClient.Accessors
          }
          catch (TimeTrackingException ex)
          {
+            if (ex.InnerException is OperatorException opex)
+            {
+               if (opex.InnerException is GitLabSharp.Accessors.GitLabRequestException glex)
+               {
+                  if (glex.InnerException is System.Net.WebException wex)
+                  {
+                     System.Net.HttpWebResponse response = wex.Response as System.Net.HttpWebResponse;
+                     if (response != null && response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                     {
+                        throw new ForbiddenTimeTrackerException(ex);
+                     }
+                  }
+               }
+            }
             throw new TimeTrackerException("Cannot stop timer", ex);
          }
 

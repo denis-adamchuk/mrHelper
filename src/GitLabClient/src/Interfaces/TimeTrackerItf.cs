@@ -12,6 +12,14 @@ namespace mrHelper.GitLabClient
       }
    }
 
+   public class ForbiddenTimeTrackerException : TimeTrackerException
+   {
+      internal ForbiddenTimeTrackerException(Exception innerException)
+         : base(String.Empty, innerException)
+      {
+      }
+   }
+
    public interface ITimeTracker
    {
       void Start();
