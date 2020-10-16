@@ -380,7 +380,7 @@ namespace mrHelper.App.Controls
          {
             return false;
          }
-         return note.Author.Id == _currentUser.Id && (!note.Resolvable || !note.Resolved);
+         return note.Author.Id == _currentUser.Id;
       }
 
       private NoteContainer createNoteContainer(DiscussionNote note, bool discussionResolved)
