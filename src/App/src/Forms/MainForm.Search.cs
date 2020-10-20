@@ -32,12 +32,12 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private void searchMergeRequests(object query, Func<Exception, bool> exceptionHandler = null)
+      private void searchMergeRequests(SearchQuery query, Func<Exception, bool> exceptionHandler = null)
       {
          BeginInvoke(new Action(async () => await searchMergeRequestsAsync(query, exceptionHandler)), null);
       }
 
-      async private Task searchMergeRequestsAsync(object query,
+      async private Task searchMergeRequestsAsync(SearchQuery query,
          Func<Exception, bool> exceptionHandler = null)
       {
          try
@@ -81,7 +81,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Connects Search DataCache to GitLab
       /// </summary>
-      async private Task startSearchWorkflowAsync(string hostname, object query)
+      async private Task startSearchWorkflowAsync(string hostname, SearchQuery query)
       {
          labelWorkflowStatus.Text = String.Empty;
          disableAllSearchUIControls(true);
@@ -99,15 +99,14 @@ namespace mrHelper.App.Forms
          await loadAllSearchMergeRequests(hostname, query);
       }
 
-      async private Task loadAllSearchMergeRequests(string hostname, object query)
+      async private Task loadAllSearchMergeRequests(string hostname, SearchQuery query)
       {
-         SearchCriteria searchCriteria = new SearchCriteria(new object[] { query }, false);
-         onLoadAllSearchMergeRequests(searchCriteria, hostname);
+         onLoadAllSearchMergeRequests(query, hostname);
 
          DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(
             new DataCacheCallbacks(null, null),
             new DataCacheUpdateRules(null, null),
-            new SearchBasedContext(searchCriteria));
+            new SearchQueryCollection(query));
 
          await _searchDataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
 
@@ -122,7 +121,7 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadAllSearchMergeRequests(SearchCriteria criteria, string hostname)
+      private void onLoadAllSearchMergeRequests(SearchQuery criteria, string hostname)
       {
          listViewFoundMergeRequests.Items.Clear();
          labelWorkflowStatus.Text = String.Format("Searching by criteria: {0} at {1}...",

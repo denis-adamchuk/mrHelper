@@ -15,6 +15,7 @@ using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.App.Forms.Helpers;
+using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 
 namespace mrHelper.App.Forms
 {
@@ -396,7 +397,13 @@ namespace mrHelper.App.Forms
       async private Task openUrlAtSearchTabAsync(MergeRequestKey mrk)
       {
          tabControlMode.SelectedTab = tabPageSearch;
-         await searchMergeRequestsAsync(new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId),
+         await searchMergeRequestsAsync(
+            new SearchQuery
+            {
+               IId = mrk.IId,
+               ProjectName = mrk.ProjectKey.ProjectName,
+               MaxResults = 1
+            },
             new Func<Exception, bool>(x =>
                throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
       }
@@ -498,9 +505,9 @@ namespace mrHelper.App.Forms
          }
          labelWorkflowStatus.Text = String.Empty;
 
-         SearchBasedContext ctx = getDataCache(true)?.ConnectionContext?.CustomData as SearchBasedContext;
-         Debug.Assert(ctx != null);
-         return GitLabClient.Helpers.DoesMatchSearchCriteria(ctx.SearchCriteria, mergeRequest, mrk.ProjectKey);
+         SearchQueryCollection queries = getDataCache(true)?.ConnectionContext?.CustomData as SearchQueryCollection;
+         Debug.Assert(queries != null);
+         return GitLabClient.Helpers.DoesMatchSearchQuery(queries, mergeRequest, mrk.ProjectKey);
       }
 
       private MergeRequestKey parseUrlIntoMergeRequestKey(UrlParser.ParsedMergeRequestUrl parsedUrl)

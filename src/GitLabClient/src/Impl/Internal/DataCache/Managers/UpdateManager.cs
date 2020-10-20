@@ -25,8 +25,8 @@ namespace mrHelper.GitLabClient.Managers
          InternalCacheUpdater cacheUpdater)
       {
          DataCacheOperator updateOperator = new DataCacheOperator(hostname, hostProperties);
-         _mergeRequestListLoader = MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
-            hostname, updateOperator, context, cacheUpdater);
+         _mergeRequestListLoader = new MergeRequestListLoader(
+            hostname, updateOperator, new VersionLoader(updateOperator, cacheUpdater), cacheUpdater, context);
          _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater);
          _extLogging = dataCacheContext.UpdateManagerExtendedLogging;
 

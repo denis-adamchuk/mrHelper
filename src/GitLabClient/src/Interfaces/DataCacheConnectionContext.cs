@@ -44,15 +44,5 @@ namespace mrHelper.GitLabClient
 
       public object CustomData { get; }
    }
-
-   public class SearchBasedContext
-   {
-      public SearchBasedContext(SearchCriteria searchCriteria)
-      {
-         SearchCriteria = searchCriteria;
-      }
-
-      public SearchCriteria SearchCriteria { get; }
-   }
 }
 

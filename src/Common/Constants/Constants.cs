@@ -64,24 +64,20 @@ namespace mrHelper.Common.Constants
       public static string[] DiscussionsWindowFontSizeChoices = new string[]
          { "Tiny", "Small", "Medium", "Large", "Meeting Mode" };
 
-      public static int MaxSearchByTitleAndDescriptionResults = 20;
-      public static int MaxSearchByProjectResults = 20;
-      public static int MaxSearchByAuthorResults = 20;
-      public static int MaxSearchByTargetBranchResults = 50;
-
+      public static int MaxSearchResults = 20;
       public static int MaxCommitsToLoad = 50;
       public static int MaxAllowedDiffsInComparison = 1000;
       public static int MaxAllowedDiffsInBackgroundComparison = 100;
       public static int MinDiffsInComparisonToNotifyUser = 200;
       public static int MaxCommitDepth = 10;
 
-      public static TaskUtils.BatchLimits MergeRequestLoaderProjectBatchLimits = new TaskUtils.BatchLimits
+      public static TaskUtils.BatchLimits MergeRequestLoaderSearchQueryBatchLimits = new TaskUtils.BatchLimits
       {
          Size = 20,
          Delay = 0
       };
 
-      public static TaskUtils.BatchLimits ProjectListLoaderBatchLimits = new TaskUtils.BatchLimits
+      public static TaskUtils.BatchLimits ProjectResolverBatchLimits = new TaskUtils.BatchLimits
       {
          Size = 5,
          Delay = 0

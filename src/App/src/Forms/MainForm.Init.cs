@@ -417,6 +417,7 @@ namespace mrHelper.App.Forms
          }
 
          setTooltipsForSearchOptions();
+         updateSearchButtonState();
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
 
@@ -430,14 +431,14 @@ namespace mrHelper.App.Forms
             toolTip.SetToolTip(control, String.Format(
                "{0} (up to {1} results)", toolTip.GetToolTip(control), searchLimit));
 
-         extendControlTooltip(radioButtonSearchByTitleAndDescription,
-            Constants.MaxSearchByTitleAndDescriptionResults);
-         extendControlTooltip(radioButtonSearchByTargetBranch,
-            Constants.MaxSearchByTargetBranchResults);
-         extendControlTooltip(radioButtonSearchByProject,
-            Constants.MaxSearchByProjectResults);
-         extendControlTooltip(radioButtonSearchByAuthor,
-            Constants.MaxSearchByAuthorResults);
+         extendControlTooltip(checkBoxSearchByTitleAndDescription,
+            Constants.MaxSearchResults);
+         extendControlTooltip(checkBoxSearchByTargetBranch,
+            Constants.MaxSearchResults);
+         extendControlTooltip(checkBoxSearchByProject,
+            Constants.MaxSearchResults);
+         extendControlTooltip(checkBoxSearchByAuthor,
+            Constants.MaxSearchResults);
       }
 
       private void startClipboardCheckTimer()

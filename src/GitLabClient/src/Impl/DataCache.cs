@@ -32,8 +32,8 @@ namespace mrHelper.GitLabClient
          try
          {
             InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
-            IMergeRequestListLoader mergeRequestListLoader =
-               MergeRequestListLoaderFactory.CreateMergeRequestListLoader(hostname, _operator, context, cacheUpdater);
+            IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
+               hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater, context);
 
             Trace.TraceInformation("[DataCache] Connecting data cache to {0}...", hostname);
             _connectionContext = context;
@@ -111,7 +111,7 @@ namespace mrHelper.GitLabClient
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
             hostname, hostProperties, user, discussionManager, _modificationNotifier);
 
-         IProjectListLoader loader = new ProjectListLoader(hostname, _operator, context);
+         IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
          ProjectCache projectCache = new ProjectCache(loader, _dataCacheContext, hostname);
          IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
          UserCache userCache = new UserCache(userListLoader, _dataCacheContext, hostname);

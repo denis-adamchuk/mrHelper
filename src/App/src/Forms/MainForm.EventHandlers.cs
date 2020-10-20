@@ -19,6 +19,7 @@ using static mrHelper.App.Controls.MergeRequestListView;
 using Newtonsoft.Json.Linq;
 using mrHelper.GitLabClient;
 using mrHelper.App.Helpers.GitLab;
+using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 
 namespace mrHelper.App.Forms
 {
@@ -419,28 +420,30 @@ namespace mrHelper.App.Forms
 
       private void onStartSearch(object sender, EventArgs e)
       {
-         if (radioButtonSearchByTargetBranch.Checked)
+         SearchQuery query = new SearchQuery
          {
-            searchMergeRequests(new SearchByTargetBranch(textBoxSearch.Text, Constants.MaxSearchByTargetBranchResults));
-         }
-         else if (radioButtonSearchByTitleAndDescription.Checked)
+            MaxResults = Constants.MaxSearchResults
+         };
+
+         if (checkBoxSearchByTargetBranch.Checked)
          {
-            searchMergeRequests(new SearchByText(textBoxSearch.Text, Constants.MaxSearchByTitleAndDescriptionResults));
+            query.TargetBranchName = textBoxSearchTargetBranch.Text;
          }
-         else if (radioButtonSearchByProject.Checked)
+         if (checkBoxSearchByTitleAndDescription.Checked)
          {
-            ProjectKey projectKey = new ProjectKey(getHostName(), comboBoxProjectName.Text);
-            searchMergeRequests(new SearchByProject(projectKey, Constants.MaxSearchByProjectResults));
+            query.Text = textBoxSearchText.Text;
          }
-         else if (radioButtonSearchByAuthor.Checked)
+         if (checkBoxSearchByProject.Checked)
          {
-            User user = comboBoxUser.SelectedItem as User;
-            searchMergeRequests(new SearchByAuthor(user.Id, Constants.MaxSearchByAuthorResults));
+            query.ProjectName = comboBoxProjectName.Text;
          }
-         else
+         if (checkBoxSearchByAuthor.Checked)
          {
-            Debug.Assert(false);
+            query.AuthorUserName = (comboBoxUser.SelectedItem as User).Username;
          }
+
+         Debug.Assert(query != null);
+         searchMergeRequests(query);
       }
 
       private void radioButtonRevisionType_CheckedChanged(object sender, EventArgs e)
@@ -1735,9 +1738,15 @@ namespace mrHelper.App.Forms
             if ((item as User).Name == getCurrentUser().Name)
             {
                comboBoxUser.SelectedItem = item;
+               checkBoxSearchByAuthor.Checked = true;
                break;
             }
          }
+      }
+
+      private void onSearchCheckBoxChanged(object sender, EventArgs e)
+      {
+         updateSearchButtonState();
       }
    }
 }

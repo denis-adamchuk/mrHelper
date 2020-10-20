@@ -965,7 +965,6 @@ namespace mrHelper.App.Forms
          _reviewedRevisions.Remove(toRemove.First());
       }
 
-
       private void updateVisibleMergeRequests()
       {
          DataCache dataCache = getDataCache(true /* supported in Live only */);
@@ -1637,8 +1636,7 @@ namespace mrHelper.App.Forms
 
       private int getLeftPaneMinWidth()
       {
-         return
-            Math.Max(
+         int liveTabTopRowWidth =
             calcHorzDistance(null, tabControlMode)
           + calcHorzDistance(null, groupBoxSelectMergeRequest)
           + calcHorzDistance(null, checkBoxDisplayFilter)
@@ -1649,39 +1647,45 @@ namespace mrHelper.App.Forms
           + buttonReloadList.Size.Width
           + calcHorzDistance(buttonReloadList, buttonCreateNew)
           + buttonCreateNew.Size.Width
-          + calcHorzDistance(buttonCreateNew, null)
+          + calcHorzDistance(buttonCreateNew, null) // button has Right anchor
           + calcHorzDistance(groupBoxSelectMergeRequest, null)
-          + calcHorzDistance(tabControlMode, null),
+          + calcHorzDistance(tabControlMode, null);
 
-            Math.Max(
+         int searchTabTopRowWidth =
             calcHorzDistance(null, tabControlMode)
-          + calcHorzDistance(null, groupBoxSelectMergeRequest)
-          + calcHorzDistance(null, radioButtonSearchByTitleAndDescription)
-          + radioButtonSearchByTitleAndDescription.Width
-          + calcHorzDistance(radioButtonSearchByTitleAndDescription, radioButtonSearchByTargetBranch)
-          + radioButtonSearchByTargetBranch.Width
-          + calcHorzDistance(radioButtonSearchByTargetBranch, radioButtonSearchByProject)
-          + radioButtonSearchByProject.Width
-          + calcHorzDistance(radioButtonSearchByProject, radioButtonSearchByAuthor)
-          + radioButtonSearchByAuthor.Width
-          + calcHorzDistance(radioButtonSearchByAuthor, null)
-          + calcHorzDistance(groupBoxSelectMergeRequest, null)
-          + calcHorzDistance(tabControlMode, null),
+          + calcHorzDistance(null, groupBoxSearchMergeRequest)
+          + calcHorzDistance(null, checkBoxSearchByTitleAndDescription)
+          + checkBoxSearchByTitleAndDescription.Width
+          + calcHorzDistance(checkBoxSearchByTitleAndDescription, checkBoxSearchByTargetBranch)
+          + checkBoxSearchByTargetBranch.Width
+          + calcHorzDistance(checkBoxSearchByTargetBranch, checkBoxSearchByProject)
+          + checkBoxSearchByProject.Width
+          + calcHorzDistance(checkBoxSearchByProject, checkBoxSearchByAuthor)
+          + checkBoxSearchByAuthor.Width
+          + calcHorzDistance(checkBoxSearchByAuthor, linkLabelFindMe)
+          + linkLabelFindMe.Width
+          + 50 /* a minimum gap between Find Me link label and right border */
+          + calcHorzDistance(groupBoxSearchMergeRequest, null)
+          + calcHorzDistance(tabControlMode, null);
 
+         int searchTabBottomRowWidth =
             calcHorzDistance(null, tabControlMode)
-          + calcHorzDistance(null, groupBoxSelectMergeRequest)
-          + calcHorzDistance(null, textBoxSearch)
-          + textBoxSearch.Width
-          + calcHorzDistance(textBoxSearch, comboBoxProjectName)
+          + calcHorzDistance(null, groupBoxSearchMergeRequest)
+          + calcHorzDistance(null, textBoxSearchText)
+          + textBoxSearchText.Width
+          + calcHorzDistance(textBoxSearchText, textBoxSearchTargetBranch)
+          + textBoxSearchTargetBranch.Width
+          + calcHorzDistance(textBoxSearchTargetBranch, comboBoxProjectName)
           + comboBoxProjectName.Width
           + calcHorzDistance(comboBoxProjectName, comboBoxUser)
           + comboBoxUser.Width
           + calcHorzDistance(comboBoxUser, buttonSearch)
           + buttonSearch.Width
-          + calcHorzDistance(buttonSearch, null)
-          + calcHorzDistance(groupBoxSelectMergeRequest, null)
-          + calcHorzDistance(tabControlMode, null)
-          ));
+          + 50 /* a minimum gap between Search button and right border */
+          + calcHorzDistance(groupBoxSearchMergeRequest, null)
+          + calcHorzDistance(tabControlMode, null);
+
+         return Math.Max(liveTabTopRowWidth, Math.Max(searchTabBottomRowWidth, searchTabTopRowWidth));
       }
 
       private int getRightPaneMinWidth()
@@ -2236,6 +2240,15 @@ namespace mrHelper.App.Forms
          var contextMenu = (listViewMergeRequests.ContextMenuStrip as MergeRequestListViewContextMenu);
          contextMenu.SetEditActionEnabled(enabled);
          contextMenu.SetMergeActionEnabled(true);
+      }
+
+      private void updateSearchButtonState()
+      {
+         buttonSearch.Enabled =
+            checkBoxSearchByAuthor.Checked
+         || checkBoxSearchByProject.Checked
+         || checkBoxSearchByTargetBranch.Checked
+         || checkBoxSearchByTitleAndDescription.Checked;
       }
    }
 }

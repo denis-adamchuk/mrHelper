@@ -12,6 +12,7 @@ using mrHelper.Common.Constants;
 using mrHelper.GitLabClient;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.CommonControls.Tools;
+using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 
 namespace mrHelper.App.Forms
 {
@@ -106,7 +107,7 @@ namespace mrHelper.App.Forms
          disableAllSearchUIControls(true);
          _liveDataCache.Disconnect();
          _searchDataCache.Disconnect();
-         textBoxSearch.Enabled = false;
+         textBoxSearchText.Enabled = false;
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", hostname);
 
          if (String.IsNullOrWhiteSpace(hostname))
@@ -161,7 +162,7 @@ namespace mrHelper.App.Forms
          DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(
             new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
             new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
-            getCustomDataForUserBasedWorkflow());
+            getCustomDataForUserBasedWorkflow(listViewUsers.Items.Cast<ListViewItem>().Select(item => item.Text)));
 
          await _liveDataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
 
@@ -221,7 +222,7 @@ namespace mrHelper.App.Forms
 
          updateVisibleMergeRequests();
 
-         textBoxSearch.Enabled = true;
+         textBoxSearchText.Enabled = true;
          buttonReloadList.Enabled = true;
 
          foreach (ProjectKey projectKey in projects)
@@ -306,7 +307,7 @@ namespace mrHelper.App.Forms
 
       private void setSearchByProjectEnabled(bool isEnabled)
       {
-         radioButtonSearchByProject.Enabled = isEnabled;
+         checkBoxSearchByProject.Enabled = isEnabled;
 
          bool wasEnabled = comboBoxProjectName.Enabled;
          comboBoxProjectName.Enabled = isEnabled;
@@ -328,7 +329,7 @@ namespace mrHelper.App.Forms
 
       private void setSearchByAuthorEnabled(bool isEnabled)
       {
-         radioButtonSearchByAuthor.Enabled = isEnabled;
+         checkBoxSearchByAuthor.Enabled = isEnabled;
          linkLabelFindMe.Enabled = isEnabled;
 
          bool wasEnabled = comboBoxUser.Enabled;
@@ -463,22 +464,37 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private object getCustomDataForUserBasedWorkflow()
+      private SearchQueryCollection getCustomDataForUserBasedWorkflow(IEnumerable<string> usernames)
       {
-         object[] criteria = listViewUsers
-            .Items
-            .Cast<ListViewItem>()
-            .Select(x => new SearchByUsername(x.Text))
+         SearchQuery[] queries = usernames
+            .SelectMany(username => new SearchQuery[]
+               {
+                  new SearchQuery
+                  {
+                     Labels = new string[]{ Constants.GitLabLabelPrefix + username.ToLower() },
+                     State = "opened"
+                  },
+                  // OR
+                  new SearchQuery
+                  {
+                     AuthorUserName = username,
+                     State = "opened"
+                  }
+               })
             .ToArray();
-         return new SearchBasedContext(new SearchCriteria(criteria, true));
+         return new SearchQueryCollection(queries);
       }
 
-      private object getCustomDataForProjectBasedWorkflow(IEnumerable<ProjectKey> enabledProjects)
+      private SearchQueryCollection getCustomDataForProjectBasedWorkflow(IEnumerable<ProjectKey> enabledProjects)
       {
-         object[] criteria = enabledProjects
-            .Select(project => new SearchByProject(project, null))
+         SearchQuery[] queries = enabledProjects
+            .Select(project => new SearchQuery
+               {
+                  ProjectName = project.ProjectName,
+                  State = "opened"
+               })
             .ToArray();
-         return new SearchBasedContext(new SearchCriteria(criteria, true));
+         return new SearchQueryCollection(queries);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
