@@ -27,7 +27,7 @@ namespace mrHelper.App.Forms
 
          // Store data before async/await
          User currentUser = getCurrentUser();
-         DataCache dataCache = getDataCache(!isSearchMode());
+         DataCache dataCache = getDataCache(getMode());
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
          if (dataCache == null)
          {
@@ -35,7 +35,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (isSearchMode())
+         if (getMode() == ECurrentMode.Search)
          {
             // Pre-load discussions for MR in Search mode
             dataCache.DiscussionCache.RequestUpdate(mrk, ReloadListPseudoTimerInterval, null);
@@ -156,7 +156,7 @@ namespace mrHelper.App.Forms
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
       {
          // Keep data before async/await
-         DataCache dataCache = getDataCache(!isSearchMode());
+         DataCache dataCache = getDataCache(getMode());
          getShaForDiffTool(out string leftSHA, out string rightSHA,
             out IEnumerable<string> includedSHA, out RevisionType? type);
          string accessToken = Program.Settings.GetAccessToken(mrk.ProjectKey.HostName);
@@ -254,7 +254,7 @@ namespace mrHelper.App.Forms
       async private Task onNewDiscussionAsync(MergeRequestKey mrk, string title)
       {
          bool res = (await DiscussionHelper.AddThreadAsync(mrk, title, _modificationNotifier,
-            getCurrentUser(), getDataCache(!isSearchMode()))) != null;
+            getCurrentUser(), getDataCache(getMode()))) != null;
          labelWorkflowStatus.Text = res ? "Added a discussion thread" : "Discussion thread is not added";
       }
 
@@ -314,7 +314,7 @@ namespace mrHelper.App.Forms
 
       private void requestCommitStorageUpdate(ProjectKey projectKey)
       {
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
 
          IEnumerable<GitLabSharp.Entities.Version> versions = dataCache?.MergeRequestCache?.GetVersions(projectKey);
          if (versions != null)
@@ -440,11 +440,11 @@ namespace mrHelper.App.Forms
             parameters.AssigneeUserName, firstNote);
       }
 
-      async private Task applyChangesToMergeRequestAsync(string hostname, User currentUser, FullMergeRequestKey item,
-         IEnumerable<User> fullUserList)
+      async private Task applyChangesToMergeRequestAsync(DataCache dataCache, string hostname, User currentUser,
+         FullMergeRequestKey item, IEnumerable<User> fullUserList)
       {
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
-         string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(_liveDataCache.DiscussionCache, mrk);
+         string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(dataCache.DiscussionCache, mrk);
          MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
             getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList);
          if (form.ShowDialog() != DialogResult.OK)

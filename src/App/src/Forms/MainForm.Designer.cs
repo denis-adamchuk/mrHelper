@@ -22,8 +22,8 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
-         _liveDataCache?.Dispose();
-         _searchDataCache?.Dispose();
+         getDataCache(ECurrentMode.Live)?.Dispose();
+         getDataCache(ECurrentMode.Search)?.Dispose();
 
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();

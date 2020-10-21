@@ -80,7 +80,8 @@ namespace mrHelper.App.Forms
 
          onSingleMergeRequestLoaded(fmk);
 
-         IMergeRequestCache cache = _liveDataCache.MergeRequestCache;
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         IMergeRequestCache cache = dataCache.MergeRequestCache;
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
          GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
          onComparableEntitiesLoaded(latestVersion, fmk.MergeRequest, cache.GetCommits(mrk), cache.GetVersions(mrk));
@@ -105,8 +106,8 @@ namespace mrHelper.App.Forms
 
          disableAllUIControls(true);
          disableAllSearchUIControls(true);
-         _liveDataCache.Disconnect();
-         _searchDataCache.Disconnect();
+         getDataCache(ECurrentMode.Live).Disconnect();
+         getDataCache(ECurrentMode.Search).Disconnect();
          textBoxSearchText.Enabled = false;
          labelWorkflowStatus.Text = String.Format("Connecting to {0}...", hostname);
 
@@ -150,7 +151,8 @@ namespace mrHelper.App.Forms
             new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
             getCustomDataForProjectBasedWorkflow(enabledProjects));
 
-         await _liveDataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
 
          onAllMergeRequestsLoaded(hostname, enabledProjects);
       }
@@ -164,9 +166,10 @@ namespace mrHelper.App.Forms
             new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
             getCustomDataForUserBasedWorkflow(listViewUsers.Items.Cast<ListViewItem>().Select(item => item.Text)));
 
-         await _liveDataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
 
-         onAllMergeRequestsLoaded(hostname, _liveDataCache.MergeRequestCache.GetProjects());
+         onAllMergeRequestsLoaded(hostname, dataCache.MergeRequestCache.GetProjects());
       }
 
       private void onForbiddenProject(ProjectKey projectKey)
@@ -230,7 +233,7 @@ namespace mrHelper.App.Forms
             requestCommitStorageUpdate(projectKey);
          }
 
-         if (!isSearchMode())
+         if (getMode() == ECurrentMode.Live)
          {
             bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostName);
             string projectname = shouldUseLastSelection ?
@@ -246,19 +249,20 @@ namespace mrHelper.App.Forms
 
       private void onSingleMergeRequestLoaded(FullMergeRequestKey fmk)
       {
-         if (isSearchMode())
+         if (getMode() != ECurrentMode.Live)
          {
             // because this callback updates controls shared between Live and Search tabs
             return;
          }
 
-         onSingleMergeRequestLoadedCommon(fmk, _liveDataCache);
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         onSingleMergeRequestLoadedCommon(fmk, dataCache);
       }
 
       private void onComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,
          MergeRequest mergeRequest, IEnumerable<Commit> commits, IEnumerable<GitLabSharp.Entities.Version> versions)
       {
-         if (isSearchMode())
+         if (getMode() != ECurrentMode.Live)
          {
             // because this callback updates controls shared between Live and Search tabs
             return;
@@ -283,9 +287,10 @@ namespace mrHelper.App.Forms
 
       private void liveDataCacheConnected(string hostname, User user)
       {
-         cleanupReviewedRevisions(hostname);
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         cleanupReviewedRevisions(dataCache, hostname);
          subscribeToLiveDataCacheInternalEvents();
-         createGitHelpers(_liveDataCache, getCommitStorageFactory(false));
+         createGitHelpers(dataCache, getCommitStorageFactory(false));
 
          if (!_currentUser.ContainsKey(hostname))
          {
@@ -293,14 +298,14 @@ namespace mrHelper.App.Forms
          }
          Program.FeedbackReporter.SetUserEMail(user.EMail);
          startListViewRefreshTimer();
-         startEventPendingTimer(() => (_liveDataCache?.ProjectCache?.GetProjects()?.Any() ?? false)
-                                   && (_liveDataCache?.UserCache?.GetUsers()?.Any() ?? false),
+         startEventPendingTimer(() => (dataCache?.ProjectCache?.GetProjects()?.Any() ?? false)
+                                   && (dataCache?.UserCache?.GetUsers()?.Any() ?? false),
                                 ProjectAndUserCacheCheckTimerInterval,
                                 () => setMergeRequestEditEnabled(true));
-         startEventPendingTimer(() => (_liveDataCache?.ProjectCache?.GetProjects()?.Any() ?? false),
+         startEventPendingTimer(() => (dataCache?.ProjectCache?.GetProjects()?.Any() ?? false),
                                 ProjectAndUserCacheCheckTimerInterval,
                                 () => setSearchByProjectEnabled(true));
-         startEventPendingTimer(() => (_liveDataCache?.UserCache?.GetUsers()?.Any() ?? false),
+         startEventPendingTimer(() => (dataCache?.UserCache?.GetUsers()?.Any() ?? false),
                                 ProjectAndUserCacheCheckTimerInterval,
                                 () => setSearchByAuthorEnabled(true));
       }
@@ -318,7 +323,8 @@ namespace mrHelper.App.Forms
          }
          else if (!wasEnabled && isEnabled)
          {
-            string[] projectNames = _liveDataCache?.ProjectCache?.GetProjects()
+            DataCache dataCache = getDataCache(ECurrentMode.Live);
+            string[] projectNames = dataCache?.ProjectCache?.GetProjects()
                .OrderBy(project => project.Path_With_Namespace)
                .Select(project => project.Path_With_Namespace)
                .ToArray() ?? Array.Empty<string>();
@@ -341,13 +347,13 @@ namespace mrHelper.App.Forms
          }
          else if (!wasEnabled && isEnabled)
          {
-            User[] users = _liveDataCache?.UserCache?.GetUsers()
+            DataCache dataCache = getDataCache(ECurrentMode.Live);
+            User[] users = dataCache?.UserCache?.GetUsers()
                .OrderBy(user => user.Name).ToArray() ?? Array.Empty<User>();
             string defaultUserFullName = getCurrentUser().Name;
             WinFormsHelpers.FillComboBox(comboBoxUser, users, user => user.Name == defaultUserFullName);
          }
       }
-
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -506,13 +512,11 @@ namespace mrHelper.App.Forms
          disableListView(listViewMergeRequests, clearListView);
          enableMergeRequestFilterControls(false);
 
-         if (isSearchMode())
+         if (getMode() == ECurrentMode.Live)
          {
             // to avoid touching controls shared between Live and Search tabs
-            return;
+            disableCommonUIControls();
          }
-
-         disableCommonUIControls();
       }
    }
 }

@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
@@ -68,7 +66,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               ITotalTimeCache totalTimeCache = getDataCache(!isSearchMode())?.TotalTimeCache;
+               ITotalTimeCache totalTimeCache = getDataCache(getMode())?.TotalTimeCache;
 
                labelWorkflowStatus.Text = "Command " + name + " is in progress";
                try
@@ -537,9 +535,11 @@ namespace mrHelper.App.Forms
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging);
          _liveDataCache = new DataCache(dataCacheContext, _modificationNotifier);
-         _expressionResolver = new ExpressionResolver(_liveDataCache);
-         _eventFilter = new EventFilter(Program.Settings, _liveDataCache, _mergeRequestFilter);
-         _userNotifier = new UserNotifier(_liveDataCache, _eventFilter, _trayIcon);
+
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         _expressionResolver = new ExpressionResolver(dataCache);
+         _eventFilter = new EventFilter(Program.Settings, dataCache, _mergeRequestFilter);
+         _userNotifier = new UserNotifier(dataCache, _eventFilter, _trayIcon);
       }
 
       private void createSearchDataCache()
@@ -551,11 +551,9 @@ namespace mrHelper.App.Forms
 
       private void subscribeToLiveDataCache()
       {
-         if (_liveDataCache != null)
-         {
-            _liveDataCache.Disconnected += liveDataCacheDisconnected;
-            _liveDataCache.Connected += liveDataCacheConnected;
-         }
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         dataCache.Disconnected += liveDataCacheDisconnected;
+         dataCache.Connected += liveDataCacheConnected;
       }
 
       private void disposeLiveDataCacheDependencies()
@@ -567,54 +565,54 @@ namespace mrHelper.App.Forms
 
       private void subscribeToLiveDataCacheInternalEvents()
       {
-         if (_liveDataCache?.MergeRequestCache != null)
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         if (dataCache?.MergeRequestCache != null)
          {
-            _liveDataCache.MergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
-            _liveDataCache.MergeRequestCache.MergeRequestListRefreshed += onMergeRequestListRefreshed;
-            _liveDataCache.MergeRequestCache.MergeRequestRefreshed += onMergeRequestRefreshed;
+            dataCache.MergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
+            dataCache.MergeRequestCache.MergeRequestListRefreshed += onMergeRequestListRefreshed;
+            dataCache.MergeRequestCache.MergeRequestRefreshed += onMergeRequestRefreshed;
          }
 
-         if (_liveDataCache?.TotalTimeCache != null)
+         if (dataCache?.TotalTimeCache != null)
          {
-            _liveDataCache.TotalTimeCache.TotalTimeLoading += onPreLoadTrackedTime;
-            _liveDataCache.TotalTimeCache.TotalTimeLoaded += onPostLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoading += onPreLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoaded += onPostLoadTrackedTime;
          }
 
-         if (_liveDataCache?.DiscussionCache != null)
+         if (dataCache?.DiscussionCache != null)
          {
-            _liveDataCache.DiscussionCache.DiscussionsLoading += onPreLoadDiscussions;
-            _liveDataCache.DiscussionCache.DiscussionsLoaded += onPostLoadDiscussions;
+            dataCache.DiscussionCache.DiscussionsLoading += onPreLoadDiscussions;
+            dataCache.DiscussionCache.DiscussionsLoaded += onPostLoadDiscussions;
          }
       }
 
       private void unsubscribeFromLiveDataCache()
       {
-         if (_liveDataCache != null)
-         {
-            _liveDataCache.Disconnected -= liveDataCacheDisconnected;
-            _liveDataCache.Connected -= liveDataCacheConnected;
-         }
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         dataCache.Disconnected -= liveDataCacheDisconnected;
+         dataCache.Connected -= liveDataCacheConnected;
       }
 
       private void unsubscribeFromLiveDataCacheInternalEvents()
       {
-         if (_liveDataCache?.MergeRequestCache != null)
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         if (dataCache?.MergeRequestCache != null)
          {
-            _liveDataCache.MergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
-            _liveDataCache.MergeRequestCache.MergeRequestListRefreshed -= onMergeRequestListRefreshed;
-            _liveDataCache.MergeRequestCache.MergeRequestRefreshed -= onMergeRequestRefreshed;
+            dataCache.MergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
+            dataCache.MergeRequestCache.MergeRequestListRefreshed -= onMergeRequestListRefreshed;
+            dataCache.MergeRequestCache.MergeRequestRefreshed -= onMergeRequestRefreshed;
          }
 
-         if (_liveDataCache?.TotalTimeCache != null)
+         if (dataCache?.TotalTimeCache != null)
          {
-            _liveDataCache.TotalTimeCache.TotalTimeLoading -= onPreLoadTrackedTime;
-            _liveDataCache.TotalTimeCache.TotalTimeLoaded -= onPostLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoading -= onPreLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoaded -= onPostLoadTrackedTime;
          }
 
-         if (_liveDataCache?.DiscussionCache != null)
+         if (dataCache?.DiscussionCache != null)
          {
-            _liveDataCache.DiscussionCache.DiscussionsLoading -= onPreLoadDiscussions;
-            _liveDataCache.DiscussionCache.DiscussionsLoaded -= onPostLoadDiscussions;
+            dataCache.DiscussionCache.DiscussionsLoading -= onPreLoadDiscussions;
+            dataCache.DiscussionCache.DiscussionsLoaded -= onPostLoadDiscussions;
          }
       }
 

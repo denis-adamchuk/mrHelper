@@ -66,7 +66,7 @@ namespace mrHelper.App.Forms
 
          onSingleSearchMergeRequestLoaded(fmk);
 
-         IMergeRequestCache cache = _searchDataCache.MergeRequestCache;
+         IMergeRequestCache cache = getDataCache(ECurrentMode.Search).MergeRequestCache;
          if (cache != null)
          {
             MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
@@ -108,12 +108,12 @@ namespace mrHelper.App.Forms
             new DataCacheUpdateRules(null, null),
             new SearchQueryCollection(query));
 
-         await _searchDataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
+         DataCache dataCache = getDataCache(ECurrentMode.Search);
+         await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
 
-         foreach (ProjectKey projectKey in _searchDataCache.MergeRequestCache.GetProjects())
+         foreach (ProjectKey projectKey in dataCache.MergeRequestCache.GetProjects())
          {
-            onProjectSearchMergeRequestsLoaded(projectKey,
-               _searchDataCache.MergeRequestCache.GetMergeRequests(projectKey));
+            onProjectSearchMergeRequestsLoaded(projectKey, dataCache.MergeRequestCache.GetMergeRequests(projectKey));
          }
 
          onAllSearchMergeRequestsLoaded();
@@ -147,7 +147,7 @@ namespace mrHelper.App.Forms
             labelWorkflowStatus.Text = "Nothing found. Try more specific search query.";
          }
 
-         if (isSearchMode())
+         if (getMode() == ECurrentMode.Search)
          {
             selectMergeRequest(listViewFoundMergeRequests, new MergeRequestKey?(), false);
          }
@@ -157,19 +157,20 @@ namespace mrHelper.App.Forms
 
       private void onSingleSearchMergeRequestLoaded(FullMergeRequestKey fmk)
       {
-         if (!isSearchMode())
+         if (getMode() != ECurrentMode.Search)
          {
             // because this callback updates controls shared between Live and Search tabs
             return;
          }
 
-         onSingleMergeRequestLoadedCommon(fmk, _searchDataCache);
+         DataCache dataCache = getDataCache(ECurrentMode.Search);
+         onSingleMergeRequestLoadedCommon(fmk, dataCache);
       }
 
       private void onSearchComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,
          MergeRequest mergeRequest, IEnumerable<Commit> commits, IEnumerable<GitLabSharp.Entities.Version> versions)
       {
-         if (!isSearchMode())
+         if (getMode() != ECurrentMode.Search)
          {
             // because this callback updates controls shared between Live and Search tabs
             return;
@@ -184,13 +185,11 @@ namespace mrHelper.App.Forms
       {
          disableListView(listViewFoundMergeRequests, clearListView);
 
-         if (!isSearchMode())
+         if (getMode() == ECurrentMode.Search)
          {
             // to avoid touching controls shared between Live and Search tabs
-            return;
+            disableCommonUIControls();
          }
-
-         disableCommonUIControls();
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

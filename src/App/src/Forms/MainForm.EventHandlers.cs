@@ -161,7 +161,7 @@ namespace mrHelper.App.Forms
 
       async private void ButtonTimeTrackingStart_Click(object sender, EventArgs e)
       {
-         DataCache dataCache = getDataCache(!isSearchMode());
+         DataCache dataCache = getDataCache(getMode());
 
          if (isTrackingTime())
          {
@@ -178,7 +178,7 @@ namespace mrHelper.App.Forms
       {
          Debug.Assert(isTrackingTime());
          await onStopTimer(false);
-         onTimerStopped(getDataCache(!isSearchMode())?.TotalTimeCache);
+         onTimerStopped(getDataCache(getMode())?.TotalTimeCache);
       }
 
       async private void ButtonTimeEdit_Click(object sender, EventArgs s)
@@ -190,10 +190,10 @@ namespace mrHelper.App.Forms
          Debug.Assert(getMergeRequest(null) != null);
          MergeRequest mr = getMergeRequest(null);
 
-         Debug.Assert(!isSearchMode());
+         Debug.Assert(getMode() == ECurrentMode.Live);
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
          IMergeRequestEditor editor = Shortcuts.GetMergeRequestEditor(gitLabInstance, _modificationNotifier, mrk);
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(getMode());
          TimeSpan? oldSpanOpt = dataCache?.TotalTimeCache?.GetTotalTime(mrk).Amount;
          if (!oldSpanOpt.HasValue)
          {
@@ -375,8 +375,8 @@ namespace mrHelper.App.Forms
          ListView listView = (sender as ListView);
          Debug.Assert(listView.SelectedItems.Count < 1);
 
-         Trace.TraceInformation(String.Format("[MainForm] User deselected merge request. IsSearchMode={0}",
-            isSearchMode() ? "Yes" : "No"));
+         Trace.TraceInformation(String.Format(
+            "[MainForm] User deselected merge request. Mode={0}", getMode().ToString()));
 
          disableCommonUIControls();
          updateAbortGitCloneButtonState();
@@ -396,17 +396,19 @@ namespace mrHelper.App.Forms
 
       private void onMergeRequestSelectionChangedByUser(FullMergeRequestKey fmk)
       {
-         if (isSearchMode())
+         switch (getMode())
          {
-            onSearchMergeRequestSelectionChanged(fmk);
-         }
-         else
-         {
-            onLiveMergeRequestSelectionChanged(fmk);
-            if (getMergeRequestKey(listViewMergeRequests) != null)
-            {
-               _lastMergeRequestsByHosts[fmk.ProjectKey.HostName] = getMergeRequestKey(listViewMergeRequests).Value;
-            }
+            case ECurrentMode.Live:
+               onLiveMergeRequestSelectionChanged(fmk);
+               if (getMergeRequestKey(listViewMergeRequests) != null)
+               {
+                  _lastMergeRequestsByHosts[fmk.ProjectKey.HostName] = getMergeRequestKey(listViewMergeRequests).Value;
+               }
+               break;
+
+            case ECurrentMode.Search:
+               onSearchMergeRequestSelectionChanged(fmk);
+               break;
          }
       }
 
@@ -1236,8 +1238,7 @@ namespace mrHelper.App.Forms
             tabControlMode.SelectedTab = _timeTrackingTabPage;
          }
 
-         ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
-         selectMergeRequest(currentListView, _timeTracker.MergeRequest, true);
+         selectMergeRequest(getCurrentListView(), _timeTracker.MergeRequest, true);
       }
 
       private void onPersistentStorageSerialize(IPersistentStateSetter writer)
@@ -1596,13 +1597,14 @@ namespace mrHelper.App.Forms
 
       private void buttonCreateNew_Click(object sender, EventArgs e)
       {
-         Debug.Assert(!isSearchMode());
+         Debug.Assert(getMode() == ECurrentMode.Live);
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
          if (!checkIfMergeRequestCanBeCreated())
          {
             return;
          }
 
-         IEnumerable<Project> fullProjectList = _liveDataCache?.ProjectCache?.GetProjects();
+         IEnumerable<Project> fullProjectList = dataCache?.ProjectCache?.GetProjects();
          bool isProjectListReady = fullProjectList?.Any() ?? false;
          if (!isProjectListReady)
          {
@@ -1611,7 +1613,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         IEnumerable<User> fullUserList = _liveDataCache?.UserCache?.GetUsers();
+         IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
          bool isUserListReady = fullUserList?.Any() ?? false;
          if (!isUserListReady)
          {
@@ -1629,13 +1631,14 @@ namespace mrHelper.App.Forms
 
       private void onEditSelectedMergeRequest(object sender, EventArgs e)
       {
-         Debug.Assert(!isSearchMode());
+         Debug.Assert(getMode() == ECurrentMode.Live);
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
          if (listViewMergeRequests.SelectedItems.Count < 1 || !checkIfMergeRequestCanBeEdited())
          {
             return;
          }
 
-         IEnumerable<User> fullUserList = _liveDataCache?.UserCache?.GetUsers();
+         IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
          bool isUserListReady = fullUserList?.Any() ?? false;
          if (!isUserListReady)
          {
@@ -1646,18 +1649,18 @@ namespace mrHelper.App.Forms
 
          FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
          BeginInvoke(new Action(async () => await applyChangesToMergeRequestAsync(
-            getHostName(), getCurrentUser(), item, fullUserList)));
+            dataCache, getHostName(), getCurrentUser(), item, fullUserList)));
       }
 
       private void onAcceptSelectedMergeRequest(object sender, EventArgs e)
       {
-         Debug.Assert(!isSearchMode());
+         Debug.Assert(getMode() == ECurrentMode.Live);
          if (listViewMergeRequests.SelectedItems.Count < 1 || !checkIfMergeRequestCanBeEdited())
          {
             return;
          }
 
-         IEnumerable<Project> fullProjectList = _liveDataCache?.ProjectCache?.GetProjects();
+         IEnumerable<Project> fullProjectList = getDataCache(ECurrentMode.Live)?.ProjectCache?.GetProjects();
          bool isProjectListReady = fullProjectList?.Any() ?? false;
          if (!isProjectListReady)
          {
@@ -1672,7 +1675,7 @@ namespace mrHelper.App.Forms
 
       private void onCloseSelectedMergeRequest(object sender, EventArgs e)
       {
-         Debug.Assert(!isSearchMode());
+         Debug.Assert(getMode() == ECurrentMode.Live);
          if (listViewMergeRequests.SelectedItems.Count < 1 || !checkIfMergeRequestCanBeEdited())
          {
             return;
@@ -1684,7 +1687,7 @@ namespace mrHelper.App.Forms
 
       private void onRefreshSelectedMergeRequest(object sender, EventArgs e)
       {
-         Debug.Assert(!isSearchMode());
+         Debug.Assert(getMode() == ECurrentMode.Live);
          if (listViewMergeRequests.SelectedItems.Count < 1)
          {
             return;

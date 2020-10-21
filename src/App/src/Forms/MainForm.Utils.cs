@@ -37,15 +37,35 @@ namespace mrHelper.App.Forms
          return comboBoxHost.SelectedItem != null ? ((HostComboBoxItem)comboBoxHost.SelectedItem).Host : String.Empty;
       }
 
-      private bool isSearchMode()
+      private enum ECurrentMode
       {
-         return tabControlMode.SelectedTab == tabPageSearch;
+         Live,
+         Search
+      }
+
+      private ECurrentMode getMode()
+      {
+         return tabControlMode.SelectedTab == tabPageSearch ? ECurrentMode.Search : ECurrentMode.Live;
+      }
+
+      private ListView getCurrentListView()
+      {
+         switch (getMode())
+         {
+            case ECurrentMode.Live:
+               return listViewMergeRequests;
+
+            case ECurrentMode.Search:
+               return listViewFoundMergeRequests;
+         }
+
+         Debug.Assert(false);
+         return null;
       }
 
       private MergeRequest getMergeRequest(ListView proposedListView)
       {
-         ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
-         ListView listView = proposedListView ?? currentListView;
+         ListView listView = proposedListView ?? getCurrentListView();
          if (listView.SelectedItems.Count > 0)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
@@ -56,8 +76,7 @@ namespace mrHelper.App.Forms
 
       private MergeRequestKey? getMergeRequestKey(ListView proposedListView)
       {
-         ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
-         ListView listView = proposedListView ?? currentListView;
+         ListView listView = proposedListView ?? getCurrentListView();
          if (listView.SelectedItems.Count > 0)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
@@ -82,9 +101,35 @@ namespace mrHelper.App.Forms
          return String.Empty;
       }
 
-      private DataCache getDataCache(bool live)
+      private DataCache getDataCache(ECurrentMode mode)
       {
-         return live ? _liveDataCache : _searchDataCache;
+         return mode == ECurrentMode.Live ? _liveDataCache : _searchDataCache;
+      }
+
+      private DataCache getDataCacheByName(string name)
+      {
+         foreach (ECurrentMode mode in Enum.GetValues(typeof(ECurrentMode)))
+         {
+            if (name == mode.ToString())
+            {
+               return getDataCache(mode);
+            }
+         }
+         Debug.Assert(false);
+         return null;
+      }
+
+      private string getDataCacheName(DataCache dataCache)
+      {
+         foreach (ECurrentMode mode in Enum.GetValues(typeof(ECurrentMode)))
+         {
+            if (getDataCache(mode) == dataCache)
+            {
+               return mode.ToString();
+            }
+         }
+         Debug.Assert(false);
+         return String.Empty;
       }
 
       /// <summary>
@@ -665,7 +710,8 @@ namespace mrHelper.App.Forms
 
       private string getDiscussionCount(MergeRequestKey mrk)
       {
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
+         Debug.Assert(getMode() == ECurrentMode.Live);
+         DataCache dataCache = getDataCache(getMode());
          if (dataCache?.DiscussionCache == null)
          {
             return "N/A";
@@ -899,7 +945,8 @@ namespace mrHelper.App.Forms
 
       private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
       {
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
+         Debug.Assert(getMode() == ECurrentMode.Live);
+         DataCache dataCache = getDataCache(getMode());
          DiscussionCount dc = dataCache?.DiscussionCache?.GetDiscussionCount(
             new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId)) ?? default(DiscussionCount);
 
@@ -918,16 +965,16 @@ namespace mrHelper.App.Forms
       }
 
       /// <summary>
-      /// Clean up records that correspond to merge requests that have been closed
+      /// Clean up records that correspond to merge requests that are missing in the cache
       /// </summary>
-      private void cleanupReviewedRevisions(string hostname)
+      private void cleanupReviewedRevisions(DataCache dataCache, string hostname)
       {
-         if (_liveDataCache?.MergeRequestCache == null)
+         if (dataCache?.MergeRequestCache == null)
          {
             return;
          }
 
-         IEnumerable<ProjectKey> projectKeys = _liveDataCache.MergeRequestCache.GetProjects();
+         IEnumerable<ProjectKey> projectKeys = dataCache.MergeRequestCache.GetProjects();
 
          // gather all MR from projects that no longer in use
          IEnumerable<MergeRequestKey> toRemove1 = _reviewedRevisions.Keys
@@ -936,7 +983,7 @@ namespace mrHelper.App.Forms
          // gather all closed MR from existing projects
          IEnumerable<MergeRequestKey> toRemove2 = _reviewedRevisions.Keys
             .Where(x => projectKeys.Any(y => y.Equals(x.ProjectKey))
-               && !_liveDataCache.MergeRequestCache.GetMergeRequests(x.ProjectKey).Any(y => y.IId == x.IId));
+               && !dataCache.MergeRequestCache.GetMergeRequests(x.ProjectKey).Any(y => y.IId == x.IId));
 
          // leave only MR from the passed project
          IEnumerable<MergeRequestKey> toRemove =
@@ -952,7 +999,7 @@ namespace mrHelper.App.Forms
       }
 
       /// <summary>
-      /// Clean up records that correspond to merge requests that have been closed
+      /// Clean up records that correspond to the passed merge request
       /// </summary>
       private void cleanupReviewedRevisions(MergeRequestKey mrk)
       {
@@ -967,7 +1014,7 @@ namespace mrHelper.App.Forms
 
       private void updateVisibleMergeRequests()
       {
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
          IMergeRequestCache mergeRequestCache = dataCache?.MergeRequestCache;
          if (mergeRequestCache == null)
          {
@@ -1078,7 +1125,8 @@ namespace mrHelper.App.Forms
          string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
             String.Format("{0}/browse/{1}", jiraServiceUrl, jiraTask) : String.Empty;
 
-         DataCache dataCache = item.ListView == listViewMergeRequests ? _liveDataCache : _searchDataCache;
+         ECurrentMode mode = item.ListView == listViewMergeRequests ? ECurrentMode.Live : ECurrentMode.Search;
+         DataCache dataCache = getDataCache(mode);
          string getTotalTimeText(MergeRequestKey key)
          {
             ITotalTimeCache totalTimeCache = dataCache?.TotalTimeCache;
@@ -1256,7 +1304,7 @@ namespace mrHelper.App.Forms
                Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
          }
 
-         if (listViewMergeRequests.SelectedItems.Count == 0 || isSearchMode())
+         if (listViewMergeRequests.SelectedItems.Count == 0 || getMode() != ECurrentMode.Live)
          {
             return;
          }
@@ -1289,7 +1337,8 @@ namespace mrHelper.App.Forms
 
          if (Program.Settings.UpdateManagerExtendedLogging)
          {
-            DateTime? refreshTimestamp = _liveDataCache?.MergeRequestCache?.GetMergeRequestRefreshTime(mrk);
+            DataCache dataCache = getDataCache(ECurrentMode.Live);
+            DateTime? refreshTimestamp = dataCache?.MergeRequestCache?.GetMergeRequestRefreshTime(mrk);
             Trace.TraceInformation(String.Format(
                "[MainForm] Merge Request {0} refreshed at {1}",
                mrk.IId, refreshTimestamp.HasValue ? refreshTimestamp.Value.ToString() : "N/A"));
@@ -1298,7 +1347,8 @@ namespace mrHelper.App.Forms
 
       private void onMergeRequestListRefreshed()
       {
-         DateTime? refreshTimestamp = _liveDataCache?.MergeRequestCache?.GetListRefreshTime();
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DateTime? refreshTimestamp = dataCache?.MergeRequestCache?.GetListRefreshTime();
          string refreshedAt = refreshTimestamp.HasValue
             ? String.Format("Refreshed at {0}",
                refreshTimestamp.Value.ToLocalTime().ToString(Constants.TimeStampFormat))
@@ -1937,7 +1987,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
          if (needUpdateMergeRequest)
          {
             dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
@@ -1961,7 +2011,7 @@ namespace mrHelper.App.Forms
 
       private void requestUpdates(MergeRequestKey? mrk, int[] intervals)
       {
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
          dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals);
          dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
       }
@@ -2152,7 +2202,8 @@ namespace mrHelper.App.Forms
       private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties,
          IEnumerable<Project> fullProjectList, IEnumerable<User> fullUserList)
       {
-         var sourceBranchesInUse = GitLabClient.Helpers.GetSourceBranchesByUser(getCurrentUser(), _liveDataCache);
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         var sourceBranchesInUse = GitLabClient.Helpers.GetSourceBranchesByUser(getCurrentUser(), dataCache);
 
          MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
             getProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList, sourceBranchesInUse,
@@ -2203,6 +2254,7 @@ namespace mrHelper.App.Forms
 
       private void acceptMergeRequest(FullMergeRequestKey item)
       {
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
          Form formExisting = findFormByTag("AcceptMergeRequestForm", doesMatchTag);
@@ -2221,11 +2273,11 @@ namespace mrHelper.App.Forms
                requestUpdates(null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
             },
             showDiscussionsFormAsync,
-            () => _liveDataCache,
+            () => dataCache,
             async () =>
             {
                await checkForUpdatesAsync(mrk, DataCacheUpdateKind.MergeRequest);
-               return _liveDataCache;
+               return dataCache;
             },
             () => Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName))
          {

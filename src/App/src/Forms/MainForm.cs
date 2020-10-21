@@ -146,12 +146,10 @@ namespace mrHelper.App.Forms
 
       private readonly GitLabClient.Accessors.ModificationNotifier _modificationNotifier
          = new GitLabClient.Accessors.ModificationNotifier();
+
+      // TODO Data caches should be hidden into a holder and accessed via getDataCache() only
       private DataCache _liveDataCache;
       private DataCache _searchDataCache;
-      private DataCache getDataCacheByName(string name) =>
-         name == "Live" ? _liveDataCache : _searchDataCache;
-      private string getDataCacheName(DataCache dataCache) =>
-         dataCache == _liveDataCache ? "Live" : "Search";
 
       private TabPage _timeTrackingTabPage;
       private ITimeTracker _timeTracker;
