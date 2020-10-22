@@ -445,7 +445,7 @@ namespace mrHelper.App.Forms
          }
 
          Debug.Assert(query != null);
-         searchMergeRequests(query);
+         searchMergeRequests(new SearchQueryCollection(query));
       }
 
       private void radioButtonRevisionType_CheckedChanged(object sender, EventArgs e)
@@ -1252,6 +1252,12 @@ namespace mrHelper.App.Forms
                item => item.Value);
          writer.Set("ReviewedCommits", reviewedRevisions);
 
+         IEnumerable<string> recentMergeRequests = _recentMergeRequests.Select(
+               item => item.ProjectKey.HostName + "|"
+                     + item.ProjectKey.ProjectName + "|"
+                     + item.IId.ToString());
+         writer.Set("RecentMergeRequests", recentMergeRequests);
+
          Dictionary<string, string> mergeRequestsByHosts = _lastMergeRequestsByHosts.ToDictionary(
                item => item.Value.ProjectKey.HostName + "|" + item.Value.ProjectKey.ProjectName,
                item => item.Value.IId.ToString());
@@ -1301,6 +1307,25 @@ namespace mrHelper.App.Forms
                   }
                   return commits;
                });
+         }
+
+         JArray recentMergeRequests = (JArray)reader.Get("RecentMergeRequests");
+         if (recentMergeRequests != null)
+         {
+            foreach (JToken token in recentMergeRequests)
+            {
+               if (token.Type == JTokenType.String)
+               {
+                  string item = token.Value<string>();
+                  string[] splitted = item.Split('|');
+                  Debug.Assert(splitted.Length == 3);
+
+                  string hostname2 = StringUtils.GetHostWithPrefix(splitted[0]);
+                  string projectname = splitted[1];
+                  int iid = int.TryParse(splitted[2], out int parsedIId) ? parsedIId : 0;
+                  _recentMergeRequests.Add(new MergeRequestKey(new ProjectKey(hostname2, projectname), iid));
+               }
+            }
          }
 
          JObject lastMergeRequestsByHostsObj = (JObject)reader.Get("MergeRequestsByHosts");

@@ -22,6 +22,7 @@ using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.App.Interprocess;
 using mrHelper.App.Controls;
+using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 
 namespace mrHelper.App.Forms
 {
@@ -299,15 +300,6 @@ namespace mrHelper.App.Forms
          }
 
          return false;
-      }
-
-      private HashSet<string> getReviewedRevisions(MergeRequestKey mrk)
-      {
-         if (!_reviewedRevisions.ContainsKey(mrk))
-         {
-            _reviewedRevisions[mrk] = new HashSet<string>();
-         }
-         return _reviewedRevisions[mrk];
       }
 
       private bool addKnownHost(string host, string accessToken)
@@ -967,11 +959,11 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Clean up records that correspond to merge requests that are missing in the cache
       /// </summary>
-      private void cleanupReviewedRevisions(DataCache dataCache, string hostname)
+      private IEnumerable<MergeRequestKey> gatherClosedReviewedMergeRequests(DataCache dataCache, string hostname)
       {
          if (dataCache?.MergeRequestCache == null)
          {
-            return;
+            return Array.Empty<MergeRequestKey>();
          }
 
          IEnumerable<ProjectKey> projectKeys = dataCache.MergeRequestCache.GetProjects();
@@ -985,31 +977,97 @@ namespace mrHelper.App.Forms
             .Where(x => projectKeys.Any(y => y.Equals(x.ProjectKey))
                && !dataCache.MergeRequestCache.GetMergeRequests(x.ProjectKey).Any(y => y.IId == x.IId));
 
-         // leave only MR from the passed project
-         IEnumerable<MergeRequestKey> toRemove =
-            toRemove1
-               .Concat(toRemove2)
-               .Where(x => x.ProjectKey.HostName == hostname)
-               .ToArray();
+         return toRemove1
+            .Concat(toRemove2)
+            .Where(key => key.ProjectKey.HostName == hostname)
+            .ToArray();
+      }
 
-         foreach (MergeRequestKey key in toRemove)
+      /// <summary>
+      /// Clean up records that correspond to the passed merge requests
+      /// </summary>
+      private void cleanupReviewedMergeRequests(IEnumerable<MergeRequestKey> keys)
+      {
+         foreach (MergeRequestKey key in keys)
          {
             _reviewedRevisions.Remove(key);
          }
       }
 
-      /// <summary>
-      /// Clean up records that correspond to the passed merge request
-      /// </summary>
-      private void cleanupReviewedRevisions(MergeRequestKey mrk)
+      private HashSet<string> getReviewedRevisions(MergeRequestKey mrk)
       {
-         IEnumerable<MergeRequestKey> toRemove = _reviewedRevisions.Keys.Where(x => x.Equals(mrk));
-         if (!toRemove.Any())
+         if (isReviewedMergeRequest(mrk))
          {
-            return;
+            return _reviewedRevisions[mrk].ToHashSet(); // copy
          }
+         return new HashSet<string>();
+      }
 
-         _reviewedRevisions.Remove(toRemove.First());
+      private void setReviewedRevisions(MergeRequestKey mrk, HashSet<string> revisions)
+      {
+         _reviewedRevisions[mrk] = revisions;
+         saveState();
+      }
+
+      private void ensureMergeRequestIsReviewed(MergeRequestKey mrk)
+      {
+         if (!isReviewedMergeRequest(mrk))
+         {
+            setReviewedRevisions(mrk, new HashSet<string>());
+         }
+      }
+
+      private bool isReviewedMergeRequest(MergeRequestKey mrk)
+      {
+         return _reviewedRevisions.ContainsKey(mrk);
+      }
+
+      private void addRecentMergeRequestKeys(IEnumerable<MergeRequestKey> keys)
+      {
+         foreach (MergeRequestKey key in keys)
+         {
+            _recentMergeRequests.Add(key);
+         }
+         saveState();
+      }
+
+      private void cleanupOldRecentMergeRequests(string hostname)
+      {
+         IEnumerable<IGrouping<ProjectKey, MergeRequestKey>> groups =
+            _recentMergeRequests
+            .Where(key => key.ProjectKey.HostName == hostname)
+            .GroupBy(key => key.ProjectKey);
+         foreach (IGrouping<ProjectKey, MergeRequestKey> group in groups)
+         {
+            IEnumerable<MergeRequestKey> groupedKeys = group.AsEnumerable();
+            if (groupedKeys.Any())
+            {
+               IEnumerable<MergeRequestKey> oldMergeRequests = groupedKeys
+                  .OrderByDescending(mergeRequestKey => mergeRequestKey.IId)
+                  .Skip(Constants.RecentMergeRequestPerProjectCount)
+                  .ToArray(); // copy
+               foreach (MergeRequestKey mergeRequestKey in oldMergeRequests)
+               {
+                  _recentMergeRequests.Remove(mergeRequestKey);
+               }
+            }
+         }
+      }
+
+      private void reloadRecentMergeRequests(string hostname)
+      {
+         SearchQueryCollection queryCollection = new SearchQueryCollection(
+            _recentMergeRequests
+            .Where(key => key.ProjectKey.HostName == hostname)
+            .Select(key => new SearchQuery
+               {
+                  IId = key.IId,
+                  ProjectName = key.ProjectKey.ProjectName
+               })
+            .ToArray());
+
+         // TODO Not Search
+         searchMergeRequests(queryCollection);
       }
 
       private void updateVisibleMergeRequests()
@@ -1290,9 +1348,12 @@ namespace mrHelper.App.Forms
          MergeRequestKey mrk = new MergeRequestKey(
             e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
 
-         if (e.Closed)
+         if (e.Closed && isReviewedMergeRequest(mrk))
          {
-            cleanupReviewedRevisions(mrk);
+            MergeRequestKey[] closedMergeRequests = new MergeRequestKey[] { mrk };
+            cleanupReviewedMergeRequests(closedMergeRequests);
+            addRecentMergeRequestKeys(closedMergeRequests);
+            reloadRecentMergeRequests(getHostName());
          }
 
          updateVisibleMergeRequests();

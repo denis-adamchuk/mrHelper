@@ -425,12 +425,12 @@ namespace mrHelper.App.Forms
       {
          tabControlMode.SelectedTab = tabPageSearch;
          await searchMergeRequestsAsync(
-            new SearchQuery
+            new SearchQueryCollection(new SearchQuery
             {
                IId = mrk.IId,
                ProjectName = mrk.ProjectKey.ProjectName,
                MaxResults = 1
-            },
+            }),
             new Func<Exception, bool>(x =>
                throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
       }

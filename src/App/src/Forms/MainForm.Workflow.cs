@@ -288,7 +288,6 @@ namespace mrHelper.App.Forms
       private void liveDataCacheConnected(string hostname, User user)
       {
          DataCache dataCache = getDataCache(ECurrentMode.Live);
-         cleanupReviewedRevisions(dataCache, hostname);
          subscribeToLiveDataCacheInternalEvents();
          createGitHelpers(dataCache, getCommitStorageFactory(false));
 
@@ -308,6 +307,12 @@ namespace mrHelper.App.Forms
          startEventPendingTimer(() => (dataCache?.UserCache?.GetUsers()?.Any() ?? false),
                                 ProjectAndUserCacheCheckTimerInterval,
                                 () => setSearchByAuthorEnabled(true));
+
+         IEnumerable<MergeRequestKey> closedReviewed = gatherClosedReviewedMergeRequests(dataCache, hostname);
+         cleanupReviewedMergeRequests(closedReviewed);
+         addRecentMergeRequestKeys(closedReviewed);
+         cleanupOldRecentMergeRequests(hostname);
+         reloadRecentMergeRequests(hostname);
       }
 
       private void setSearchByProjectEnabled(bool isEnabled)

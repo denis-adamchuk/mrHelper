@@ -185,6 +185,7 @@ namespace mrHelper.App.Forms
          {
             reviewedRevisions.Add(sha);
          }
+         setReviewedRevisions(mrk, reviewedRevisions);
 
          MergeRequestKey? currentMrk = getMergeRequestKey(null);
          if (currentMrk.HasValue && currentMrk.Value.Equals(mrk))

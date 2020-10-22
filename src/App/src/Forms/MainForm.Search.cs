@@ -32,17 +32,18 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private void searchMergeRequests(SearchQuery query, Func<Exception, bool> exceptionHandler = null)
+      private void searchMergeRequests(SearchQueryCollection queryCollection,
+         Func<Exception, bool> exceptionHandler = null)
       {
-         BeginInvoke(new Action(async () => await searchMergeRequestsAsync(query, exceptionHandler)), null);
+         BeginInvoke(new Action(async () => await searchMergeRequestsAsync(queryCollection, exceptionHandler)), null);
       }
 
-      async private Task searchMergeRequestsAsync(SearchQuery query,
+      async private Task searchMergeRequestsAsync(SearchQueryCollection queryCollection,
          Func<Exception, bool> exceptionHandler = null)
       {
          try
          {
-            await startSearchWorkflowAsync(getHostName(), query);
+            await startSearchWorkflowAsync(getHostName(), queryCollection);
          }
          catch (Exception ex)
          {
@@ -81,7 +82,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Connects Search DataCache to GitLab
       /// </summary>
-      async private Task startSearchWorkflowAsync(string hostname, SearchQuery query)
+      async private Task startSearchWorkflowAsync(string hostname, SearchQueryCollection queryCollection)
       {
          labelWorkflowStatus.Text = String.Empty;
          disableAllSearchUIControls(true);
@@ -96,17 +97,18 @@ namespace mrHelper.App.Forms
             throw new UnknownHostException(hostname);
          }
 
-         await loadAllSearchMergeRequests(hostname, query);
+         await loadAllSearchMergeRequests(hostname, queryCollection);
       }
 
-      async private Task loadAllSearchMergeRequests(string hostname, SearchQuery query)
+      async private Task loadAllSearchMergeRequests(string hostname, SearchQueryCollection queryCollection)
       {
-         onLoadAllSearchMergeRequests(query, hostname);
+         // TODO Not First
+         onLoadAllSearchMergeRequests(queryCollection, hostname);
 
          DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(
             new DataCacheCallbacks(null, null),
             new DataCacheUpdateRules(null, null),
-            new SearchQueryCollection(query));
+            queryCollection);
 
          DataCache dataCache = getDataCache(ECurrentMode.Search);
          await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
@@ -121,11 +123,11 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadAllSearchMergeRequests(SearchQuery criteria, string hostname)
+      private void onLoadAllSearchMergeRequests(SearchQueryCollection queryCollection, string hostname)
       {
          listViewFoundMergeRequests.Items.Clear();
          labelWorkflowStatus.Text = String.Format("Searching by criteria: {0} at {1}...",
-            criteria.ToString(), hostname);
+            queryCollection.ToString(), hostname);
       }
 
       private void onProjectSearchMergeRequestsLoaded(ProjectKey projectKey,

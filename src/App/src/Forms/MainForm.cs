@@ -136,6 +136,7 @@ namespace mrHelper.App.Forms
 
       private string _initialHostName;
 
+      private HashSet<MergeRequestKey> _recentMergeRequests = new HashSet<MergeRequestKey>();
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedRevisions =
          new Dictionary<MergeRequestKey, HashSet<string>>();
       private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =

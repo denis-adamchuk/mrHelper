@@ -70,6 +70,7 @@ namespace mrHelper.Common.Constants
       public static int MaxAllowedDiffsInBackgroundComparison = 100;
       public static int MinDiffsInComparisonToNotifyUser = 200;
       public static int MaxCommitDepth = 10;
+      public static int RecentMergeRequestPerProjectCount = 5;
 
       public static TaskUtils.BatchLimits MergeRequestLoaderSearchQueryBatchLimits = new TaskUtils.BatchLimits
       {
