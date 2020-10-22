@@ -50,7 +50,7 @@ namespace mrHelper.Integration.GitUI
          string gitbash = Path.Combine(GitTools.GetBinaryFolder(), Constants.BashFileName);
          if (!File.Exists(gitbash))
          {
-            throw new GitExtensionsIntegrationHelperException("Cannot find git bash");
+            throw new SourceTreeIntegrationHelperException("Cannot find git bash");
          }
 
          string roamingPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -58,7 +58,7 @@ namespace mrHelper.Integration.GitUI
          string configFolder = Path.GetDirectoryName(configFilePath);
          if (!Directory.Exists(configFolder))
          {
-            throw new GitExtensionsIntegrationHelperException("Cannot find a folder for Source Tree settings");
+            throw new SourceTreeIntegrationHelperException("Cannot find a folder for Source Tree settings");
          }
 
          // load XML from disk

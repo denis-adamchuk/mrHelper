@@ -494,14 +494,19 @@ namespace mrHelper.App
       static private void integrateInGitUI()
       {
          string scriptPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+
          try
          {
             GitExtensionsIntegrationHelper.AddCustomActions(scriptPath);
-            SourceTreeIntegrationHelper.AddCustomActions(scriptPath);
          }
          catch (GitExtensionsIntegrationHelperException ex)
          {
             ExceptionHandlers.Handle("Cannot integrate mrHelper in Git Extensions", ex);
+         }
+
+         try
+         {
+            SourceTreeIntegrationHelper.AddCustomActions(scriptPath);
          }
          catch (SourceTreeIntegrationHelperException ex)
          {
