@@ -303,7 +303,7 @@ namespace mrHelper.App.Forms
          if (dataCache?.MergeRequestCache?.GetMergeRequest(mrk) != null)
          {
             tabControlMode.SelectedTab = tabPageLive;
-            if (selectMergeRequest(listViewMergeRequests, mrk, true))
+            if (listViewLiveMergeRequests.SelectMergeRequest(mrk, true))
             {
                return true;
             }
@@ -314,7 +314,7 @@ namespace mrHelper.App.Forms
          if (dataCache?.MergeRequestCache?.GetMergeRequest(mrk) != null)
          {
             tabControlMode.SelectedTab = tabPageSearch;
-            if (selectMergeRequest(listViewFoundMergeRequests, mrk, true))
+            if (listViewFoundMergeRequests.SelectMergeRequest(mrk, true))
             {
                return true;
             }
@@ -347,7 +347,7 @@ namespace mrHelper.App.Forms
 
          string errorMessage = String.Format("Cannot open URL {0}", url);
          ExceptionHandlers.Handle(errorMessage, ex);
-         labelWorkflowStatus.Text = errorMessage;
+         labelOperationStatus.Text = errorMessage;
       }
 
       async private Task restartWorkflowByUrlAsync(string hostname)
@@ -371,7 +371,7 @@ namespace mrHelper.App.Forms
             // We need to update the MR list here because cached one is possible outdated
             if (updateIfNeeded)
             {
-               labelWorkflowStatus.Text = String.Format(
+               labelOperationStatus.Text = String.Format(
                   "Merge Request with IId {0} is not found in the cache, updating the list...", mrk.IId);
                await checkForUpdatesAsync(null);
                if (getHostName() != mrk.ProjectKey.HostName || dataCache.MergeRequestCache == null)
@@ -388,7 +388,7 @@ namespace mrHelper.App.Forms
          }
 
          tabControlMode.SelectedTab = tabPageLive;
-         if (!selectMergeRequest(listViewMergeRequests, mrk, true) && listViewMergeRequests.Enabled)
+         if (!listViewLiveMergeRequests.SelectMergeRequest(mrk, true) && listViewLiveMergeRequests.Enabled)
          {
             // We could not select MR, but let's check if it is cached or not.
             if (dataCache.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
@@ -399,7 +399,7 @@ namespace mrHelper.App.Forms
                   return false; // user decided to not un-hide merge request
                }
 
-               if (!selectMergeRequest(listViewMergeRequests, mrk, true))
+               if (!listViewLiveMergeRequests.SelectMergeRequest(mrk, true))
                {
                   Debug.Assert(false);
                   Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
@@ -424,13 +424,14 @@ namespace mrHelper.App.Forms
       async private Task openUrlAtSearchTabAsync(MergeRequestKey mrk)
       {
          tabControlMode.SelectedTab = tabPageSearch;
-         await searchMergeRequestsAsync(
+         await searchMergeRequestsSafeAsync(
             new SearchQueryCollection(new SearchQuery
             {
                IId = mrk.IId,
                ProjectName = mrk.ProjectKey.ProjectName,
                MaxResults = 1
             }),
+            ECurrentMode.Search,
             new Func<Exception, bool>(x =>
                throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
       }
@@ -524,13 +525,13 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         labelWorkflowStatus.Text = String.Format("Checking merge request at {0}...", url);
+         labelOperationStatus.Text = String.Format("Checking merge request at {0}...", url);
          MergeRequest mergeRequest = await searchMergeRequestAsync(mrk);
          if (mergeRequest == null)
          {
             throw new UrlConnectionException("Merge request does not exist. ", null);
          }
-         labelWorkflowStatus.Text = String.Empty;
+         labelOperationStatus.Text = String.Empty;
 
          DataCache dataCache = getDataCache(ECurrentMode.Live);
          Debug.Assert(dataCache.MergeRequestCache != null);

@@ -64,7 +64,6 @@ namespace mrHelper.GitLabClient.Loaders
                bool isProjectSpecified = !String.IsNullOrEmpty(query.ProjectName);
                if (isProjectSpecified)
                {
-                  // TODO TEST
                   ProjectKey projectKey = new ProjectKey(_hostname, query.ProjectName);
                   if (isForbiddenProjectException(ex))
                   {

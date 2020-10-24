@@ -10,6 +10,31 @@ namespace mrHelper.CommonControls.Tools
 {
    public static class WinFormsHelpers
    {
+      public static void CloseAllFormsExceptOne(Form exceptionalForm)
+      {
+         for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
+         {
+            Form form = Application.OpenForms[iForm];
+            if (form != exceptionalForm)
+            {
+               form.Close();
+            }
+         }
+      }
+
+      public static Form FindFormByTag(string name, Func<object, bool> doesMatchTag)
+      {
+         for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
+         {
+            Form form = Application.OpenForms[iForm];
+            if (form.Name == name && doesMatchTag(form.Tag))
+            {
+               return form;
+            }
+         }
+         return null;
+      }
+
       public static void FillComboBox<T>(ComboBox comboBox, T[] choices, Func<T, bool> isDefaultChoice)
       {
          int iSelectedIndex = choices.Any() ? 0 : -1;

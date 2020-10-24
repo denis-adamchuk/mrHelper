@@ -5,17 +5,17 @@ namespace mrHelper.App.Controls
 {
    public partial class MergeRequestListViewContextMenu : ContextMenuStrip
    {
-      public MergeRequestListViewContextMenu(EventHandler onRefresh, EventHandler onEdit,
-         EventHandler onMerge, EventHandler onClose)
+      public MergeRequestListViewContextMenu(Action onRefresh, Action onEdit,
+         Action onMerge, Action onClose)
       {
          InitializeComponent();
 
          ToolStripItemCollection items = Items;
-         items.Add("&Refresh selected", null, onRefresh);
+         items.Add("&Refresh selected", null, (s, e) => onRefresh());
          items.Add("-", null, null);
-         _editItem = items.Add("&Edit...", null, onEdit);
-         _mergeItem = items.Add("&Merge...", null, onMerge);
-         items.Add("&Close", null, onClose);
+         _editItem = items.Add("&Edit...", null, (s, e) => onEdit());
+         _mergeItem = items.Add("&Merge...", null, (s, e) => onMerge());
+         items.Add("&Close", null, (s, e) => onClose());
       }
 
       public void SetEditActionEnabled(bool enabled)

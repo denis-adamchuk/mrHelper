@@ -66,6 +66,7 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -145,6 +146,7 @@
       <DependentUpon>DiscussionNoteEditPanel.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\Helpers\DiscussionHelper.cs" />
+    <Compile Include="src\Forms\Helpers\TimeTrackingHelpers.cs" />
     <Compile Include="src\Forms\NewMergeRequestForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -209,7 +211,7 @@
     <Compile Include="src\Forms\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\MainForm.Async.cs">
+    <Compile Include="src\Forms\MainForm.DataCacheEventHandlers.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
@@ -217,7 +219,7 @@
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\MainForm.Search.cs">
+    <Compile Include="src\Forms\MainForm.ExternalCalls.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
@@ -225,16 +227,36 @@
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="src\Forms\MainForm.Operations.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\MainForm.Review.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\MainForm.Settings.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\MainForm.Storage.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\MainForm.Search.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="src\Forms\MainForm.Utils.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\MainForm.View.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\MainForm.Workflow.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Forms\MainForm.ExternalCalls.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\NewDiscussionForm.cs">
       <SubType>Form</SubType>

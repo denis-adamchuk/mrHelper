@@ -1,15 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
-using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
-using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using mrHelper.App.Controls;
@@ -18,6 +15,41 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
+      internal MainForm(bool startMinimized, bool runningAsUwp, string startUrl)
+      {
+         _startMinimized = startMinimized;
+         _startUrl = startUrl;
+
+         CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
+         InitializeComponent();
+         CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
+
+         _allowAutoStartApplication = runningAsUwp;
+         checkBoxRunWhenWindowsStarts.Enabled = !_allowAutoStartApplication;
+
+         _trayIcon = new TrayIcon(notifyIcon);
+         _mdPipeline =
+            MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
+
+         this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
+         this.linkLabelConnectedTo.Text = String.Empty;
+
+         foreach (Control control in CommonControls.Tools.WinFormsHelpers.GetAllSubControls(this))
+         {
+            if (control.Anchor.HasFlag(AnchorStyles.Right)
+               && (control.MinimumSize.Width != 0 || control.MinimumSize.Height != 0))
+            {
+               Debug.Assert(false);
+            }
+         }
+
+         buttonTimeTrackingCancel.ConfirmationCondition = () => true;
+         buttonTimeTrackingCancel.ConfirmationText = "Tracked time will be lost, are you sure?";
+
+         listViewLiveMergeRequests.Deselected += listViewMergeRequests_Deselected;
+         listViewFoundMergeRequests.Deselected += listViewMergeRequests_Deselected;
+      }
+
       private void addCustomActions()
       {
          CustomCommandLoader loader = new CustomCommandLoader(this);
@@ -68,7 +100,7 @@ namespace mrHelper.App.Forms
 
                ITotalTimeCache totalTimeCache = getDataCache(getMode())?.TotalTimeCache;
 
-               labelWorkflowStatus.Text = "Command " + name + " is in progress";
+               labelOperationStatus.Text = "Command " + name + " is in progress";
                try
                {
                   await command.Run();
@@ -78,18 +110,18 @@ namespace mrHelper.App.Forms
                   string errorMessage = "Custom action failed";
                   ExceptionHandlers.Handle(errorMessage, ex);
                   MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  labelWorkflowStatus.Text = "Command " + name + " failed";
+                  labelOperationStatus.Text = "Command " + name + " failed";
                   return;
                }
 
                string statusMessage = String.Format("Command {0} completed for merge request !{1} in project {2}",
                   name, mergeRequestKey.Value.IId, mergeRequestKey.Value.ProjectKey.ProjectName);
-               labelWorkflowStatus.Text = statusMessage;
+               labelOperationStatus.Text = statusMessage;
                Trace.TraceInformation(String.Format("[MainForm] {0}", statusMessage));
 
                if (command.GetStopTimer())
                {
-                  await onStopTimer(true);
+                  await stopTimeTrackingTimerAsync();
                   onTimerStopped(totalTimeCache);
                }
 
@@ -107,214 +139,6 @@ namespace mrHelper.App.Forms
             id++;
          }
       }
-
-      private void loadConfiguration()
-      {
-         _loadingConfiguration = true;
-         Trace.TraceInformation("[MainForm] Loading configuration");
-         Program.Settings.PropertyChanged += onSettingsPropertyChanged;
-
-         Debug.Assert(Program.Settings.KnownHosts.Count() == Program.Settings.KnownAccessTokens.Count());
-         // Remove all items except header
-         for (int iListViewItem = 1; iListViewItem < listViewKnownHosts.Items.Count; ++iListViewItem)
-         {
-            listViewKnownHosts.Items.RemoveAt(iListViewItem);
-         }
-
-         List<string> newKnownHosts = new List<string>();
-         List<string> newAccessTokens = new List<string>();
-         for (int iKnownHost = 0; iKnownHost < Program.Settings.KnownHosts.Count(); ++iKnownHost)
-         {
-            // Upgrade from old versions which did not have prefix
-            string host = StringUtils.GetHostWithPrefix(Program.Settings.KnownHosts[iKnownHost]);
-            string accessToken = Program.Settings.KnownAccessTokens.Length > iKnownHost
-               ? Program.Settings.KnownAccessTokens[iKnownHost]
-               : String.Empty;
-            if (addKnownHost(host, accessToken))
-            {
-               newKnownHosts.Add(host);
-               newAccessTokens.Add(accessToken);
-            }
-         }
-         Program.Settings.KnownHosts = newKnownHosts.ToArray();
-         Program.Settings.KnownAccessTokens = newAccessTokens.ToArray();
-
-         if (Program.Settings.ColorSchemeFileName == String.Empty)
-         {
-            // Upgrade from old versions which did not have a separate file for Default color scheme
-            Program.Settings.ColorSchemeFileName = getDefaultColorSchemeFileName();
-         }
-
-         textBoxStorageFolder.Text = Program.Settings.LocalGitFolder;
-         checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
-         textBoxDisplayFilter.Text = Program.Settings.DisplayFilter;
-         checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
-         checkBoxRunWhenWindowsStarts.Checked = Program.Settings.RunWhenWindowsStarts;
-         applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
-         checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
-         checkBoxNewDiscussionIsTopMostForm.Checked = Program.Settings.NewDiscussionIsTopMostForm;
-         checkBoxDisableSpellChecker.Checked = Program.Settings.DisableSpellChecker;
-         checkBoxFlatReplies.Checked = !Program.Settings.NeedShiftReplies;
-         checkBoxDiscussionColumnFixedWidth.Checked = Program.Settings.IsDiscussionColumnWidthFixed;
-
-         var diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
-         switch (diffContextPosition)
-         {
-            case ConfigurationHelper.DiffContextPosition.Top:
-               radioButtonDiffContextPositionTop.Checked = true;
-               break;
-
-            case ConfigurationHelper.DiffContextPosition.Left:
-               radioButtonDiffContextPositionLeft.Checked = true;
-               break;
-
-            case ConfigurationHelper.DiffContextPosition.Right:
-               radioButtonDiffContextPositionRight.Checked = true;
-               break;
-         }
-
-         var discussionColumnWidth = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
-         switch (discussionColumnWidth)
-         {
-            case ConfigurationHelper.DiscussionColumnWidth.Narrow:
-               radioButtonDiscussionColumnWidthNarrow.Checked = true;
-               break;
-
-            case ConfigurationHelper.DiscussionColumnWidth.NarrowPlus:
-               radioButtonDiscussionColumnWidthNarrowPlus.Checked = true;
-               break;
-
-            case ConfigurationHelper.DiscussionColumnWidth.Medium:
-               radioButtonDiscussionColumnWidthMedium.Checked = true;
-               break;
-
-            case ConfigurationHelper.DiscussionColumnWidth.MediumPlus:
-               radioButtonDiscussionColumnWidthMediumPlus.Checked = true;
-               break;
-
-            case ConfigurationHelper.DiscussionColumnWidth.Wide:
-               radioButtonDiscussionColumnWidthWide.Checked = true;
-               break;
-         }
-
-         var showWarningsOnFileMismatchMode = ConfigurationHelper.GetShowWarningsOnFileMismatchMode(Program.Settings);
-         switch (showWarningsOnFileMismatchMode)
-         {
-            case ConfigurationHelper.ShowWarningsOnFileMismatchMode.Always:
-               radioButtonShowWarningsAlways.Checked = true;
-               break;
-
-            case ConfigurationHelper.ShowWarningsOnFileMismatchMode.Never:
-               radioButtonShowWarningsNever.Checked = true;
-               break;
-
-            case ConfigurationHelper.ShowWarningsOnFileMismatchMode.UntilUserIgnoresFile:
-               radioButtonShowWarningsOnce.Checked = true;
-               break;
-         }
-
-         RevisionType defaultRevisionType = ConfigurationHelper.GetDefaultRevisionType(Program.Settings);
-         switch (defaultRevisionType)
-         {
-            case RevisionType.Commit:
-               radioButtonCommits.Checked = true;
-               break;
-
-            case RevisionType.Version:
-               radioButtonVersions.Checked = true;
-               break;
-         }
-
-         _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());
-         _mergeRequestFilter.FilterChanged += updateVisibleMergeRequests;
-
-         checkBoxShowNewMergeRequests.Checked = Program.Settings.Notifications_NewMergeRequests;
-         checkBoxShowMergedMergeRequests.Checked = Program.Settings.Notifications_MergedMergeRequests;
-         checkBoxShowUpdatedMergeRequests.Checked = Program.Settings.Notifications_UpdatedMergeRequests;
-         checkBoxShowResolvedAll.Checked = Program.Settings.Notifications_AllThreadsResolved;
-         checkBoxShowOnMention.Checked = Program.Settings.Notifications_OnMention;
-         checkBoxShowKeywords.Checked = Program.Settings.Notifications_Keywords;
-         checkBoxShowMyActivity.Checked = Program.Settings.Notifications_MyActivity;
-         checkBoxShowServiceNotifications.Checked = Program.Settings.Notifications_Service;
-
-         if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
-         {
-            radioButtonSelectByProjects.Checked = true;
-         }
-         else
-         {
-            radioButtonSelectByUsernames.Checked = true;
-         }
-
-         LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
-         switch (type)
-         {
-            case LocalCommitStorageType.FileStorage:
-               radioButtonDontUseGit.Checked = true;
-               break;
-            case LocalCommitStorageType.FullGitRepository:
-               radioButtonUseGitFullClone.Checked = true;
-               break;
-            case LocalCommitStorageType.ShallowGitRepository:
-               radioButtonUseGitShallowClone.Checked = true;
-               break;
-         }
-
-         if (comboBoxDCDepth.Items.Contains(Program.Settings.DiffContextDepth))
-         {
-            comboBoxDCDepth.Text = Program.Settings.DiffContextDepth;
-         }
-         else
-         {
-            comboBoxDCDepth.SelectedIndex = 0;
-         }
-
-         loadColumnWidths(listViewMergeRequests, Program.Settings.ListViewMergeRequestsColumnWidths);
-         loadColumnWidths(listViewFoundMergeRequests, Program.Settings.ListViewFoundMergeRequestsColumnWidths);
-
-         loadColumnIndices(listViewMergeRequests, Program.Settings.ListViewMergeRequestsDisplayIndices,
-            x => Program.Settings.ListViewMergeRequestsDisplayIndices = x);
-         loadColumnIndices(listViewFoundMergeRequests, Program.Settings.ListViewFoundMergeRequestsDisplayIndices,
-            x => Program.Settings.ListViewFoundMergeRequestsDisplayIndices = x);
-
-         WinFormsHelpers.FillComboBox(comboBoxFonts,
-            Constants.MainWindowFontSizeChoices, name => name == Program.Settings.MainWindowFontSizeName);
-         applyFont(Program.Settings.MainWindowFontSizeName);
-
-         WinFormsHelpers.FillComboBox(comboBoxThemes,
-            Constants.ThemeNames, name => name == Program.Settings.VisualThemeName);
-         applyTheme(Program.Settings.VisualThemeName);
-
-         Trace.TraceInformation("[MainForm] Configuration loaded");
-         _loadingConfiguration = false;
-      }
-
-      private void loadColumnWidths(ListView listView, Dictionary<string, int> storedWidths)
-      {
-         foreach (ColumnHeader column in listView.Columns)
-         {
-            string columnName = (string)column.Tag;
-            if (storedWidths.ContainsKey(columnName))
-            {
-               column.Width = storedWidths[columnName];
-            }
-         }
-      }
-
-      private void loadColumnIndices(ListView listView, Dictionary<string, int> storedIndices,
-         Action<Dictionary<string, int>> storeDefaults)
-      {
-         try
-         {
-            WinFormsHelpers.ReorderListViewColumns(listView, storedIndices);
-         }
-         catch (ArgumentException ex)
-         {
-            ExceptionHandlers.Handle("[MainForm] Cannot restore list view column display indices", ex);
-            storeDefaults(WinFormsHelpers.GetListViewDisplayIndices(listView));
-         }
-      }
-
 
       private void initializeWork()
       {
@@ -375,7 +199,8 @@ namespace mrHelper.App.Forms
       private void prepareFormToStart()
       {
          addCustomActions();
-         loadConfiguration();
+         setControlStateFromConfiguration();
+         applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
          resetMergeRequestTabMinimumSizes();
          disableSSLVerification();
          updateCaption();
@@ -385,44 +210,6 @@ namespace mrHelper.App.Forms
          prepareControlsToStart();
          prepareSizeToStart();
          selectHost(PreferredSelection.Initial);
-      }
-
-      private void prepareControlsToStart()
-      {
-         buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
-         labelWorkflowStatus.Text = String.Empty;
-         labelStorageStatus.Text = String.Empty;
-
-         if (_keywords == null)
-         {
-            checkBoxShowKeywords.Enabled = false;
-         }
-         else
-         {
-            checkBoxShowKeywords.Text = "Keywords: " + String.Join(", ", _keywords);
-         }
-
-         if (Program.ServiceManager.GetHelpUrl() != String.Empty)
-         {
-            linkLabelHelp.Visible = true;
-            toolTip.SetToolTip(linkLabelHelp, Program.ServiceManager.GetHelpUrl());
-            toolTip.SetToolTip(linkLabelCommitStorageDescription, Program.ServiceManager.GetHelpUrl());
-            toolTip.SetToolTip(linkLabelWorkflowDescription, Program.ServiceManager.GetHelpUrl());
-         }
-
-         if (Program.ServiceManager.GetBugReportEmail() != String.Empty)
-         {
-            linkLabelSendFeedback.Visible = true;
-            toolTip.SetToolTip(linkLabelSendFeedback, Program.ServiceManager.GetBugReportEmail());
-         }
-
-         setTooltipsForSearchOptions();
-         updateSearchButtonState();
-
-         _timeTrackingTimer.Tick += new System.EventHandler(onTimer);
-
-         startClipboardCheckTimer();
-         createListViewContextMenu();
       }
 
       private void setTooltipsForSearchOptions()
@@ -449,7 +236,7 @@ namespace mrHelper.App.Forms
 
       private void startListViewRefreshTimer()
       {
-         _listViewRefreshTimer.Tick += (s, e) => listViewMergeRequests.Invalidate();
+         _listViewRefreshTimer.Tick += (s, e) => listViewLiveMergeRequests.Invalidate();
          _listViewRefreshTimer.Start();
       }
 
@@ -460,11 +247,11 @@ namespace mrHelper.App.Forms
 
       private void createListViewContextMenu()
       {
-         listViewMergeRequests.ContextMenuStrip = new MergeRequestListViewContextMenu(
-            onRefreshSelectedMergeRequest,
-            onEditSelectedMergeRequest,
-            onAcceptSelectedMergeRequest,
-            onCloseSelectedMergeRequest);
+         listViewLiveMergeRequests.AssignContextMenu(new MergeRequestListViewContextMenu(
+            refreshSelectedMergeRequest,
+            editSelectedMergeRequest,
+            acceptSelectedMergeRequest,
+            closeSelectedMergeRequest));
       }
 
       private void startEventPendingTimer(Func<bool> onCheck, int checkInterval, Action onEvent)
@@ -495,48 +282,12 @@ namespace mrHelper.App.Forms
          cacheCheckTimer.Start();
       }
 
-      private void prepareSizeToStart()
-      {
-         if (_startMinimized)
-         {
-            _forceMaximizeOnNextRestore = Program.Settings.WasMaximizedBeforeClose;
-            _applySplitterDistanceOnNextRestore = true;
-            WindowState = FormWindowState.Minimized;
-         }
-         else
-         {
-            WindowState = Program.Settings.WasMaximizedBeforeClose ? FormWindowState.Maximized : FormWindowState.Normal;
-            applySavedSplitterDistance();
-         }
-      }
-
-      private void applySavedSplitterDistance()
-      {
-         if (Program.Settings.MainWindowSplitterDistance != 0
-            && splitContainer1.Panel1MinSize < Program.Settings.MainWindowSplitterDistance
-            && splitContainer1.Width - splitContainer1.Panel2MinSize > Program.Settings.MainWindowSplitterDistance)
-         {
-            splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
-         }
-
-         if (Program.Settings.RightPaneSplitterDistance != 0
-            && splitContainer2.Panel1MinSize < Program.Settings.RightPaneSplitterDistance
-            && splitContainer2.Width - splitContainer2.Panel2MinSize > Program.Settings.RightPaneSplitterDistance)
-         {
-            splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
-         }
-      }
-
-      private void reconnect(string url = null)
-      {
-         enqueueUrl(url);
-      }
-
       private void createLiveDataCacheAndDependencies()
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging);
          _liveDataCache = new DataCache(dataCacheContext, _modificationNotifier);
+         listViewLiveMergeRequests.AssignDataCache(_liveDataCache);
 
          DataCache dataCache = getDataCache(ECurrentMode.Live);
          _expressionResolver = new ExpressionResolver(dataCache);
@@ -549,6 +300,7 @@ namespace mrHelper.App.Forms
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging);
          _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier);
+         listViewFoundMergeRequests.AssignDataCache(_searchDataCache);
       }
 
       private void subscribeToLiveDataCache()
@@ -571,7 +323,7 @@ namespace mrHelper.App.Forms
          if (dataCache?.MergeRequestCache != null)
          {
             dataCache.MergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
-            dataCache.MergeRequestCache.MergeRequestListRefreshed += onMergeRequestListRefreshed;
+            dataCache.MergeRequestCache.MergeRequestListRefreshed += onLiveMergeRequestListRefreshed;
             dataCache.MergeRequestCache.MergeRequestRefreshed += onMergeRequestRefreshed;
          }
 
@@ -601,7 +353,7 @@ namespace mrHelper.App.Forms
          if (dataCache?.MergeRequestCache != null)
          {
             dataCache.MergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
-            dataCache.MergeRequestCache.MergeRequestListRefreshed -= onMergeRequestListRefreshed;
+            dataCache.MergeRequestCache.MergeRequestListRefreshed -= onLiveMergeRequestListRefreshed;
             dataCache.MergeRequestCache.MergeRequestRefreshed -= onMergeRequestRefreshed;
          }
 
@@ -645,6 +397,7 @@ namespace mrHelper.App.Forms
             _diffStatProvider = new DiscussionBasedDiffStatProvider(dataCache.DiscussionCache);
          }
          _diffStatProvider.Update += onGitStatisticManagerUpdate;
+         listViewLiveMergeRequests.SetDiffStatisticProvider(_diffStatProvider);
       }
 
       private void disposeGitHelpers()
@@ -665,71 +418,7 @@ namespace mrHelper.App.Forms
 
       private void onGitStatisticManagerUpdate()
       {
-         listViewMergeRequests.Invalidate();
-      }
-
-      private void onPreLoadTrackedTime(ITotalTimeCache totalTimeCache, MergeRequestKey mrk)
-      {
-         onTrackedTimeManagerEvent(totalTimeCache, mrk);
-      }
-
-      private void onPostLoadTrackedTime(ITotalTimeCache totalTimeCache, MergeRequestKey mrk)
-      {
-         onTrackedTimeManagerEvent(totalTimeCache, mrk);
-      }
-
-      private void onTrackedTimeManagerEvent(ITotalTimeCache totalTimeCache, MergeRequestKey mrk)
-      {
-         MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(null);
-         if (currentMergeRequestKey.HasValue && currentMergeRequestKey.Value.Equals(mrk))
-         {
-            MergeRequest currentMergeRequest = getMergeRequest(null);
-            if (currentMergeRequest != null)
-            {
-               // change control enabled state
-               updateTotalTime(currentMergeRequestKey,
-                  currentMergeRequest.Author, currentMergeRequestKey.Value.ProjectKey.HostName, totalTimeCache);
-            }
-         }
-
-         // Update total time column in the table
-         listViewMergeRequests.Invalidate();
-      }
-
-      private void onPreLoadDiscussions(MergeRequestKey mrk)
-      {
-         onDiscussionManagerEvent();
-      }
-
-      private void onPostLoadDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
-      {
-         onDiscussionManagerEvent();
-      }
-
-      private void onDiscussionManagerEvent()
-      {
-         // Update Discussions column in the table
-         listViewMergeRequests.Invalidate();
-      }
-
-      private void setupDefaultProjectList()
-      {
-         // Check if file exists. If it does not, it is not an error.
-         if (!System.IO.File.Exists(ProjectListFileName))
-         {
-            return;
-         }
-
-         try
-         {
-            ConfigurationHelper.InitializeSelectedProjects(JsonUtils.
-               LoadFromFile<IEnumerable<ConfigurationHelper.HostInProjectsFile>>(
-                  ProjectListFileName), Program.Settings);
-         }
-         catch (Exception ex) // whatever de-serialization exception
-         {
-            ExceptionHandlers.Handle("Cannot load projects from file", ex);
-         }
+         listViewLiveMergeRequests.Invalidate();
       }
    }
 }

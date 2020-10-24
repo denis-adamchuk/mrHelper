@@ -13,6 +13,7 @@ using mrHelper.GitLabClient;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.CommonControls.Tools;
 using SearchQuery = mrHelper.GitLabClient.SearchQuery;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -30,13 +31,13 @@ namespace mrHelper.App.Forms
 
    internal partial class MainForm
    {
-      private bool startWorkflowDefaultExceptionHandler(Exception ex)
+      private bool startWorkflowDefaultExceptionHandler(Exception ex, ECurrentMode mode)
       {
          if (ex is DataCacheException || ex is UnknownHostException || ex is NoProjectsException)
          {
             if (!(ex is DataCacheConnectionCancelledException))
             {
-               disableAllUIControls(true);
+               disableAllUIControls(true, mode);
                ExceptionHandlers.Handle("Cannot switch host", ex);
                string message = ex.Message;
                if (ex is DataCacheException wx)
@@ -61,7 +62,7 @@ namespace mrHelper.App.Forms
          {
             if (exceptionHandler == null)
             {
-               exceptionHandler = new Func<Exception, bool>((e) => startWorkflowDefaultExceptionHandler(e));
+               exceptionHandler = new Func<Exception, bool>((e) => startWorkflowDefaultExceptionHandler(e, ECurrentMode.Live));
             }
             if (!exceptionHandler(ex))
             {
@@ -70,28 +71,8 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onLiveMergeRequestSelectionChanged(FullMergeRequestKey fmk)
-      {
-         Debug.Assert(fmk.MergeRequest != null && fmk.MergeRequest.IId != 0);
-
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] User requested to change merge request to IId {0}",
-            fmk.MergeRequest.IId.ToString()));
-
-         onSingleMergeRequestLoaded(fmk);
-
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
-         IMergeRequestCache cache = dataCache.MergeRequestCache;
-         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
-         GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
-         onComparableEntitiesLoaded(latestVersion, fmk.MergeRequest, cache.GetCommits(mrk), cache.GetVersions(mrk));
-      }
-
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      /// <summary>
-      /// Connects Live DataCache to GitLab
-      /// </summary>
       async private Task startWorkflowAsync(string hostname)
       {
          // When this thing happens, everything reconnects. If there are some things at gitlab that user
@@ -104,12 +85,13 @@ namespace mrHelper.App.Forms
             "[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
             hostname, Program.Settings.WorkflowType));
 
-         disableAllUIControls(true);
-         disableAllSearchUIControls(true);
+         disableAllUIControls(true, ECurrentMode.Live);
          getDataCache(ECurrentMode.Live).Disconnect();
+
+         disableAllUIControls(true, ECurrentMode.Search);
          getDataCache(ECurrentMode.Search).Disconnect();
-         textBoxSearchText.Enabled = false;
-         labelWorkflowStatus.Text = String.Format("Connecting to {0}...", hostname);
+
+         labelOperationStatus.Text = String.Format("Connecting to {0}...", hostname);
 
          if (String.IsNullOrWhiteSpace(hostname))
          {
@@ -144,32 +126,34 @@ namespace mrHelper.App.Forms
             throw new NoProjectsException(hostname);
          }
 
-         onLoadAllMergeRequests(enabledProjects, hostname);
+         onLiveDataCacheConnecting(enabledProjects, hostname);
 
-         DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(
-            new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
-            new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
-            getCustomDataForProjectBasedWorkflow(enabledProjects));
+         SearchQueryCollection queryCollection = getCustomDataForProjectBasedWorkflow(enabledProjects);
+         await connectLiveDataCacheAsync(hostname, queryCollection);
 
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
-         await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
-
-         onAllMergeRequestsLoaded(hostname, enabledProjects);
+         onLiveDataCacheConnected(hostname);
       }
 
       private async Task startUserBasedWorkflowAsync(string hostname)
       {
-         onLoadAllMergeRequests(hostname);
+         onLiveDataCacheConnecting(hostname);
 
+         IEnumerable<string> usernames = listViewUsers.Items.Cast<ListViewItem>().Select(item => item.Text);
+         SearchQueryCollection queryCollection = getCustomDataForUserBasedWorkflow(usernames);
+         await connectLiveDataCacheAsync(hostname, queryCollection);
+
+         onLiveDataCacheConnected(hostname);
+      }
+
+      async private Task connectLiveDataCacheAsync(string hostname, SearchQueryCollection queryCollection)
+      {
          DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(
             new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
             new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
-            getCustomDataForUserBasedWorkflow(listViewUsers.Items.Cast<ListViewItem>().Select(item => item.Text)));
+            queryCollection);
 
          DataCache dataCache = getDataCache(ECurrentMode.Live);
          await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
-
-         onAllMergeRequestsLoaded(hostname, dataCache.MergeRequestCache.GetProjects());
       }
 
       private void onForbiddenProject(ProjectKey projectKey)
@@ -198,41 +182,43 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadAllMergeRequests(IEnumerable<ProjectKey> projects, string hostname)
+      private void onLiveDataCacheConnecting(IEnumerable<ProjectKey> projects, string hostname)
       {
          // in Project-based workflow we want to create all groups at once in a user-defined order
-         listViewMergeRequests.Items.Clear();
-         listViewMergeRequests.Groups.Clear();
+         listViewLiveMergeRequests.Items.Clear();
+         listViewLiveMergeRequests.Groups.Clear();
          foreach (ProjectKey projectKey in projects)
          {
-            createListViewGroupForProject(listViewMergeRequests, projectKey, false);
+            listViewLiveMergeRequests.CreateGroupForProject(projectKey, false);
          }
 
-         disableAllUIControls(false);
-         labelWorkflowStatus.Text = String.Format("Loading merge requests of {0} project{1} from {2}...",
+         disableAllUIControls(false, ECurrentMode.Live);
+         labelOperationStatus.Text = String.Format("Loading merge requests of {0} project{1} from {2}...",
             projects.Count(), projects.Count() > 1 ? "s" : "", hostname);
       }
 
-      private void onLoadAllMergeRequests(string hostname)
+      private void onLiveDataCacheConnecting(string hostname)
       {
-         disableAllUIControls(false);
-         labelWorkflowStatus.Text = String.Format("Loading merge requests from {0}...", hostname);
+         disableAllUIControls(false, ECurrentMode.Live);
+         labelOperationStatus.Text = String.Format("Loading merge requests from {0}...", hostname);
       }
 
-      private void onAllMergeRequestsLoaded(string hostName, IEnumerable<ProjectKey> projects)
+      private void onLiveDataCacheConnected(string hostName)
       {
-         labelWorkflowStatus.Text = "Merge requests loaded";
+         labelOperationStatus.Text = "Merge requests loaded";
 
-         updateVisibleMergeRequests();
+         updateMergeRequestList(ECurrentMode.Live);
 
-         textBoxSearchText.Enabled = true;
+         buttonSearch.Enabled = true;
          buttonReloadList.Enabled = true;
 
+         IEnumerable<ProjectKey> projects = getDataCache(ECurrentMode.Live).MergeRequestCache.GetProjects();
          foreach (ProjectKey projectKey in projects)
          {
             requestCommitStorageUpdate(projectKey);
          }
 
+         // current mode may have changed during 'await'
          if (getMode() == ECurrentMode.Live)
          {
             bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostName);
@@ -241,34 +227,8 @@ namespace mrHelper.App.Forms
             int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostName].IId : 0;
 
             MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostName, projectname), iid);
-            selectMergeRequest(listViewMergeRequests, mrk, false);
+            listViewLiveMergeRequests.SelectMergeRequest(mrk, false);
          }
-      }
-
-      ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-      private void onSingleMergeRequestLoaded(FullMergeRequestKey fmk)
-      {
-         if (getMode() != ECurrentMode.Live)
-         {
-            // because this callback updates controls shared between Live and Search tabs
-            return;
-         }
-
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
-         onSingleMergeRequestLoadedCommon(fmk, dataCache);
-      }
-
-      private void onComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,
-         MergeRequest mergeRequest, IEnumerable<Commit> commits, IEnumerable<GitLabSharp.Entities.Version> versions)
-      {
-         if (getMode() != ECurrentMode.Live)
-         {
-            // because this callback updates controls shared between Live and Search tabs
-            return;
-         }
-
-         onComparableEntitiesLoadedCommon(latestVersion, mergeRequest, commits, versions, listViewMergeRequests);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -279,7 +239,7 @@ namespace mrHelper.App.Forms
          setSearchByProjectEnabled(false);
          setSearchByAuthorEnabled(false);
          stopListViewRefreshTimer();
-         closeAllFormsExceptMain();
+         WinFormsHelpers.CloseAllFormsExceptOne(this);
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
          unsubscribeFromLiveDataCacheInternalEvents();
@@ -381,7 +341,7 @@ namespace mrHelper.App.Forms
          GitLabClient.ProjectAccessor projectAccessor = Shortcuts.GetProjectAccessor(
             new GitLabInstance(hostname, Program.Settings), _modificationNotifier);
 
-         labelWorkflowStatus.Text = "Preparing workflow to the first launch...";
+         labelOperationStatus.Text = "Preparing workflow to the first launch...";
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
             hostname, Program.Settings);
          List<Tuple<string, bool>> upgraded = new List<Tuple<string, bool>>();
@@ -399,7 +359,7 @@ namespace mrHelper.App.Forms
          ConfigurationHelper.SetProjectsForHost(hostname, upgraded, Program.Settings);
          updateProjectsListView();
          Program.Settings.SelectedProjectsUpgraded = true;
-         labelWorkflowStatus.Text = "Workflow prepared.";
+         labelOperationStatus.Text = "Workflow prepared.";
       }
 
       async private Task initializeLabelListIfEmpty(string hostname)
@@ -413,7 +373,7 @@ namespace mrHelper.App.Forms
             new GitLabInstance(hostname, Program.Settings));
 
          bool migratedLabels = false;
-         labelWorkflowStatus.Text = "Preparing workflow to the first launch...";
+         labelOperationStatus.Text = "Preparing workflow to the first launch...";
          List<Tuple<string, bool>> labels = new List<Tuple<string, bool>>();
          MergeRequestFilterState filter = _mergeRequestFilter.Filter;
          if (filter.Enabled)
@@ -447,7 +407,7 @@ namespace mrHelper.App.Forms
          }
          ConfigurationHelper.SetUsersForHost(hostname, labels, Program.Settings);
          updateUsersListView();
-         labelWorkflowStatus.Text = "Workflow prepared.";
+         labelOperationStatus.Text = "Workflow prepared.";
 
          if (Program.Settings.ShowWarningOnFilterMigration)
          {
@@ -510,17 +470,118 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void disableAllUIControls(bool clearListView)
+      [Flags]
+      private enum DataCacheUpdateKind
       {
-         buttonReloadList.Enabled = false;
-         buttonCreateNew.Enabled = false;
-         disableListView(listViewMergeRequests, clearListView);
-         enableMergeRequestFilterControls(false);
+         MergeRequest = 1,
+         Discussions = 2,
+         MergeRequestAndDiscussions = MergeRequest | Discussions
+      }
 
-         if (getMode() == ECurrentMode.Live)
+      private void requestUpdates(MergeRequestKey? mrk, int interval, Action onUpdateFinished,
+         DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
+      {
+         bool needUpdateMergeRequest = kind.HasFlag(DataCacheUpdateKind.MergeRequest);
+         bool needUpdateDiscussions = kind.HasFlag(DataCacheUpdateKind.Discussions);
+
+         bool mergeRequestUpdateFinished = !needUpdateMergeRequest;
+         bool discussionUpdateFinished = !needUpdateDiscussions;
+
+         void onSingleUpdateFinished()
          {
-            // to avoid touching controls shared between Live and Search tabs
-            disableCommonUIControls();
+            if (mergeRequestUpdateFinished && discussionUpdateFinished)
+            {
+               onUpdateFinished?.Invoke();
+            }
+         }
+
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         if (needUpdateMergeRequest)
+         {
+            dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
+               () =>
+               {
+                  mergeRequestUpdateFinished = true;
+                  onSingleUpdateFinished();
+               });
+         }
+
+         if (needUpdateDiscussions)
+         {
+            dataCache?.DiscussionCache?.RequestUpdate(mrk, interval,
+               () =>
+               {
+                  discussionUpdateFinished = true;
+                  onSingleUpdateFinished();
+               });
+         }
+      }
+
+      private void requestUpdates(MergeRequestKey? mrk, int[] intervals)
+      {
+         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals);
+         dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
+      }
+
+      async private Task checkForUpdatesAsync(MergeRequestKey? mrk,
+         DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
+      {
+         bool updateReceived = false;
+         bool updatingWholeList = !mrk.HasValue;
+
+         string oldButtonText = buttonReloadList.Text;
+         if (updatingWholeList)
+         {
+            onUpdating();
+         }
+         requestUpdates(mrk, 100,
+            () =>
+            {
+               updateReceived = true;
+               if (updatingWholeList)
+               {
+                  onUpdated(oldButtonText);
+               }
+            },
+            kind);
+         await TaskUtils.WhileAsync(() => !updateReceived);
+      }
+
+      private void reloadMergeRequestsByUserRequest()
+      {
+         if (Program.Settings.ShowWarningOnReloadList)
+         {
+            int autoUpdateMs = Program.Settings.AutoUpdatePeriodMs;
+            double oneMinuteMs = 60000;
+            double autoUpdateMinutes = autoUpdateMs / oneMinuteMs;
+
+            string periodicity = autoUpdateMs > oneMinuteMs
+               ? (autoUpdateMs % Convert.ToInt32(oneMinuteMs) == 0
+                  ? String.Format("{0} minutes", autoUpdateMinutes)
+                  : String.Format("{0:F1} minutes", autoUpdateMinutes))
+               : String.Format("{0} seconds", autoUpdateMs / 1000);
+
+            string message = String.Format(
+               "Merge Request list updates each {0} and you don't usually need to update it manually", periodicity);
+            MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            Program.Settings.ShowWarningOnReloadList = false;
+         }
+
+         if (getHostName() != String.Empty)
+         {
+            Trace.TraceInformation("[MainForm] User decided to Reload List");
+
+            string oldButtonText = buttonReloadList.Text;
+            onUpdating();
+
+            requestUpdates(null, ReloadListPseudoTimerInterval,
+               () =>
+               {
+                  onUpdated(oldButtonText);
+                  Trace.TraceInformation("[MainForm] Finished updating by user request");
+               });
          }
       }
    }
