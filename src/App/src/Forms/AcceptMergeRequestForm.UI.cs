@@ -163,7 +163,7 @@ namespace mrHelper.App.Forms
 
       private void buttonClose_Click(object sender, EventArgs e)
       {
-         Trace.TraceInformation("[MainForm] User cancelled merge");
+         traceInformation("[AcceptMergeRequestForm] User cancelled merge");
          Close();
       }
 

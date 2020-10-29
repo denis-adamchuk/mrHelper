@@ -338,12 +338,16 @@ namespace mrHelper.App.Forms
             _synchronizationTimer.Start();
          }
          ++_synchronizationTimerUsers;
-         startProcessingTimer();
+
+         _synchronizationTimer.Tick += onSynchronizationTimer;
+         enableProcessingTimer();
       }
 
       private void unsubscribeFromTimer()
       {
-         stopProcessingTimer();
+         disableProcessingTimer();
+         _synchronizationTimer.Tick -= onSynchronizationTimer;
+
          --_synchronizationTimerUsers;
          if (_synchronizationTimerUsers == 0)
          {
@@ -353,25 +357,28 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void startProcessingTimer()
+      private void enableProcessingTimer()
       {
-         if (_synchronizationTimer != null && IsHandleCreated)
+         if (!_needProcessSynchronizationTimer)
          {
-            _synchronizationTimer.Tick += onSynchronizationTimer;
+            _needProcessSynchronizationTimer = true;
          }
       }
 
-      private void stopProcessingTimer()
+      private void disableProcessingTimer()
       {
-         if (_synchronizationTimer != null)
+         if (_needProcessSynchronizationTimer)
          {
-            _synchronizationTimer.Tick -= onSynchronizationTimer;
+            _needProcessSynchronizationTimer = false;
          }
       }
 
       private void onSynchronizationTimer(object sender, EventArgs e)
       {
-         invokeFetchAndApply(false);
+         if (_needProcessSynchronizationTimer)
+         {
+            invokeFetchAndApply(false);
+         }
       }
 
       private void invokeFetchAndApply(bool isSynchronousFetch)
@@ -397,7 +404,7 @@ namespace mrHelper.App.Forms
 
       async private Task<MergeRequest> fetchUpdatedMergeRequest(bool isSynchronousFetch)
       {
-         stopProcessingTimer();
+         disableProcessingTimer();
          try
          {
             DataCache dataCache = isSynchronousFetch ? _getCache() : await _fetchCache();
@@ -413,13 +420,14 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            startProcessingTimer();
+            enableProcessingTimer();
          }
       }
 
       async private Task<MergeRequestRebaseResponse> rebaseAsync()
       {
-         stopProcessingTimer();
+         traceInformation("[AcceptMergeRequestForm] Starting Rebase operation...");
+         disableProcessingTimer();
          try
          {
             IMergeRequestEditor editor = getEditor();
@@ -432,7 +440,8 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            startProcessingTimer();
+            enableProcessingTimer();
+            traceInformation("[AcceptMergeRequestForm] Rebase operation finished");
          }
       }
 
@@ -441,7 +450,8 @@ namespace mrHelper.App.Forms
          AcceptMergeRequestParameters parameters = new AcceptMergeRequestParameters(
             null, squashCommitMessage, null, shouldRemoveSourceBranch, null, null);
 
-         stopProcessingTimer();
+         traceInformation("[AcceptMergeRequestForm] Starting Merge operation...");
+         disableProcessingTimer();
          try
          {
             IMergeRequestEditor editor = getEditor();
@@ -454,7 +464,8 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            startProcessingTimer();
+            enableProcessingTimer();
+            traceInformation("[AcceptMergeRequestForm] Merge operation finished");
          }
       }
 
@@ -473,6 +484,7 @@ namespace mrHelper.App.Forms
          string newTitle = StringUtils.ToggleWorkInProgressTitle(_title);
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
             null, newTitle, null, null, null, null, null);
+         traceInformation("[AcceptMergeRequestForm] Toggling WIP status...");
          return await applyModification(updateMergeRequestParameters);
       }
 
@@ -480,12 +492,13 @@ namespace mrHelper.App.Forms
       {
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
             null, null, null, null, null, null, squash);
+         traceInformation(String.Format("[AcceptMergeRequestForm] Applying Squash={0}...", squash.ToString()));
          return await applyModification(updateMergeRequestParameters);
       }
 
       async private Task<MergeRequest> applyModification(UpdateMergeRequestParameters parameters)
       {
-         stopProcessingTimer();
+         disableProcessingTimer();
          try
          {
             IMergeRequestEditor editor = getEditor();
@@ -498,7 +511,8 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            startProcessingTimer();
+            enableProcessingTimer();
+            traceInformation("[AcceptMergeRequestForm] Modification applied");
          }
       }
 
@@ -581,6 +595,7 @@ namespace mrHelper.App.Forms
       private static readonly int rebaseStatusUpdateInterval = 1000; // ms
       private static Timer _synchronizationTimer;
       private static int _synchronizationTimerUsers = 0;
+      private bool _needProcessSynchronizationTimer;
 
       private readonly string _repositoryPath;
       private readonly MergeRequestKey _mergeRequestKey;
