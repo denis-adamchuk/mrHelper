@@ -34,7 +34,7 @@ namespace mrHelper.App.Forms
          }
 
          // Update total time column in the table
-         listViewLiveMergeRequests.Invalidate();
+         getListView(EDataCacheType.Live).Invalidate();
       }
 
       private void onPreLoadDiscussions(MergeRequestKey mrk)
@@ -50,7 +50,7 @@ namespace mrHelper.App.Forms
       private void onDiscussionManagerEvent()
       {
          // Update Discussions column in the table
-         listViewLiveMergeRequests.Invalidate();
+         getListView(EDataCacheType.Live).Invalidate();
       }
 
       private void onMergeRequestEvent(UserEvents.MergeRequestEvent e)
@@ -71,7 +71,7 @@ namespace mrHelper.App.Forms
             reloadRecentMergeRequests(getHostName());
          }
 
-         updateMergeRequestList(ECurrentMode.Live);
+         updateMergeRequestList(EDataCacheType.Live);
 
          if (e.New)
          {
@@ -80,8 +80,8 @@ namespace mrHelper.App.Forms
                Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
          }
 
-         FullMergeRequestKey? fmk = listViewLiveMergeRequests.GetSelectedMergeRequest();
-         if (!fmk.HasValue || !fmk.Value.Equals(e.FullMergeRequestKey) || getMode() != ECurrentMode.Live)
+         FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
+         if (!fmk.HasValue || !fmk.Value.Equals(e.FullMergeRequestKey) || getCurrentTabDataCacheType() != EDataCacheType.Live)
          {
             return;
          }
@@ -96,18 +96,18 @@ namespace mrHelper.App.Forms
 
          if (e.Commits)
          {
-            onMergeRequestSelectionChanged(ECurrentMode.Live);
+            onMergeRequestSelectionChanged(EDataCacheType.Live);
          }
       }
 
       private void onMergeRequestRefreshed(MergeRequestKey mrk)
       {
          // update Refreshed column
-         listViewLiveMergeRequests.Invalidate();
+         getListView(EDataCacheType.Live).Invalidate();
 
          if (Program.Settings.UpdateManagerExtendedLogging)
          {
-            DataCache dataCache = getDataCache(ECurrentMode.Live);
+            DataCache dataCache = getDataCache(EDataCacheType.Live);
             DateTime? refreshTimestamp = dataCache?.MergeRequestCache?.GetMergeRequestRefreshTime(mrk);
             Trace.TraceInformation(String.Format(
                "[MainForm] Merge Request {0} refreshed at {1}",
@@ -117,7 +117,7 @@ namespace mrHelper.App.Forms
 
       private void onLiveMergeRequestListRefreshed()
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          DateTime? refreshTimestamp = dataCache?.MergeRequestCache?.GetListRefreshTime();
          string refreshedAt = refreshTimestamp.HasValue
             ? String.Format("Refreshed at {0}",
@@ -127,7 +127,7 @@ namespace mrHelper.App.Forms
             RefreshButtonTooltip, refreshedAt == String.Empty ? String.Empty : "\r\n", refreshedAt));
 
          // update Refreshed column
-         listViewLiveMergeRequests.Invalidate();
+         getListView(EDataCacheType.Live).Invalidate();
 
          if (Program.Settings.UpdateManagerExtendedLogging)
          {

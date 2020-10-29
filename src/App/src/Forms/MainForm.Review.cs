@@ -25,7 +25,7 @@ namespace mrHelper.App.Forms
 
          // Store data before async/await
          User currentUser = getCurrentUser();
-         DataCache dataCache = getDataCache(getMode());
+         DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
          if (dataCache == null)
          {
@@ -33,7 +33,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (getMode() == ECurrentMode.Search)
+         if (getCurrentTabDataCacheType() == EDataCacheType.Search)
          {
             // Pre-load discussions for MR in Search mode
             dataCache.DiscussionCache.RequestUpdate(mrk, ReloadListPseudoTimerInterval, null);
@@ -154,7 +154,7 @@ namespace mrHelper.App.Forms
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
       {
          // Keep data before async/await
-         DataCache dataCache = getDataCache(getMode());
+         DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
          getShaForDiffTool(out string leftSHA, out string rightSHA,
             out IEnumerable<string> includedSHA, out RevisionType? type);
          string accessToken = Program.Settings.GetAccessToken(mrk.ProjectKey.HostName);
@@ -344,6 +344,11 @@ namespace mrHelper.App.Forms
          {
             _reviewedRevisions.Remove(key);
          }
+
+         if (keys.Any())
+         {
+            saveState();
+         }
       }
 
       private HashSet<string> getReviewedRevisions(MergeRequestKey mrk)
@@ -380,11 +385,16 @@ namespace mrHelper.App.Forms
          {
             _recentMergeRequests.Add(key);
          }
-         saveState();
+
+         if (keys.Any())
+         {
+            saveState();
+         }
       }
 
       private void cleanupOldRecentMergeRequests(string hostname)
       {
+         bool changed = false;
          IEnumerable<IGrouping<ProjectKey, MergeRequestKey>> groups =
             _recentMergeRequests
             .Where(key => key.ProjectKey.HostName == hostname)
@@ -401,8 +411,14 @@ namespace mrHelper.App.Forms
                foreach (MergeRequestKey mergeRequestKey in oldMergeRequests)
                {
                   _recentMergeRequests.Remove(mergeRequestKey);
+                  changed = true;
                }
             }
+         }
+
+         if (changed)
+         {
+            saveState();
          }
       }
 
@@ -418,8 +434,7 @@ namespace mrHelper.App.Forms
             })
             .ToArray());
 
-         // TODO Not Search
-         //searchMergeRequests(queryCollection, ECurrentMode.Search);
+         searchMergeRequests(queryCollection, EDataCacheType.Recent);
       }
    }
 }

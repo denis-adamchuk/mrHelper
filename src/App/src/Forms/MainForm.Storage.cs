@@ -113,7 +113,7 @@ namespace mrHelper.App.Forms
          return repo;
       }
 
-      private void updateMergeRequestList(ECurrentMode mode)
+      private void updateMergeRequestList(EDataCacheType mode)
       {
          DataCache dataCache = getDataCache(mode);
          IMergeRequestCache mergeRequestCache = dataCache?.MergeRequestCache;
@@ -124,14 +124,14 @@ namespace mrHelper.App.Forms
 
          MergeRequestListView listView = getListView(mode);
          listView.UpdateItems(!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings),
-            mode == ECurrentMode.Live ? _mergeRequestFilter : null);
+            mode == EDataCacheType.Live ? _mergeRequestFilter : null);
 
          if (listView.Items.Count > 0)
          {
             listView.EnableListView();
          }
 
-         if (mode == ECurrentMode.Live)
+         if (mode == EDataCacheType.Live)
          {
             if (Program.Settings.DisplayFilterEnabled)
             {
@@ -222,7 +222,7 @@ namespace mrHelper.App.Forms
 
       private void requestCommitStorageUpdate(ProjectKey projectKey)
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
 
          IEnumerable<GitLabSharp.Entities.Version> versions = dataCache?.MergeRequestCache?.GetVersions(projectKey);
          if (versions != null)

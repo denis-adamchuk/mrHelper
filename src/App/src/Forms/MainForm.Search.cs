@@ -1,19 +1,20 @@
 using System;
 using System.Threading.Tasks;
+using GitLabSharp.Entities;
 using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      private void searchMergeRequests(SearchQueryCollection queryCollection, ECurrentMode mode,
+      private void searchMergeRequests(SearchQueryCollection queryCollection, EDataCacheType mode,
          Func<Exception, bool> exceptionHandler = null)
       {
          BeginInvoke(new Action(async () =>
             await searchMergeRequestsSafeAsync(queryCollection, mode, exceptionHandler)), null);
       }
 
-      async private Task searchMergeRequestsSafeAsync(SearchQueryCollection queryCollection, ECurrentMode mode,
+      async private Task searchMergeRequestsSafeAsync(SearchQueryCollection queryCollection, EDataCacheType mode,
          Func<Exception, bool> exceptionHandler = null)
       {
          try
@@ -36,7 +37,7 @@ namespace mrHelper.App.Forms
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
       async private Task searchMergeRequestsAsync(string hostname, SearchQueryCollection queryCollection,
-         ECurrentMode mode)
+         EDataCacheType mode)
       {
          labelOperationStatus.Text = String.Empty;
          disableAllUIControls(true, mode);
@@ -55,10 +56,8 @@ namespace mrHelper.App.Forms
       }
 
       async private Task connectSearchDataCacheAsync(string hostname, SearchQueryCollection queryCollection,
-         ECurrentMode mode)
+         EDataCacheType mode)
       {
-         onSearchDataCacheConnecting(queryCollection, hostname, mode);
-
          DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(
             new DataCacheCallbacks(null, null),
             new DataCacheUpdateRules(null, null),
@@ -66,29 +65,44 @@ namespace mrHelper.App.Forms
 
          DataCache dataCache = getDataCache(mode);
          await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
-
-         onSearchDataCacheConnected(mode);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onSearchDataCacheConnecting(SearchQueryCollection queryCollection, string hostname, ECurrentMode mode)
+      private void onSearchDataCacheConnecting(string hostname)
       {
-         getListView(mode).Items.Clear();
+         getListView(EDataCacheType.Search).Items.Clear();
          labelOperationStatus.Text = String.Format("Search in progress at {0}...", hostname);
       }
 
-      private void onSearchDataCacheConnected(ECurrentMode mode)
+      private void onSearchDataCacheConnected(string hostname, User user)
       {
-         bool areResults = getListView(mode).Items.Count > 0;
+         updateMergeRequestList(EDataCacheType.Search);
+
+         bool areResults = getListView(EDataCacheType.Search).Items.Count > 0;
          labelOperationStatus.Text = areResults ? String.Empty : "Nothing found. Try more specific search query.";
 
-         updateMergeRequestList(mode);
+         // current mode may have changed during 'await'
+         if (getCurrentTabDataCacheType() == EDataCacheType.Search)
+         {
+            getListView(EDataCacheType.Search).SelectMergeRequest(new MergeRequestKey?(), false);
+         }
+      }
+
+      private void onRecentDataCacheConnecting(string hostname)
+      {
+         getListView(EDataCacheType.Recent).Items.Clear();
+         labelOperationStatus.Text = "Loading a list of recently reviewed merge requests...";
+      }
+
+      private void onRecentDataCacheConnected(string hostname, User user)
+      {
+         updateMergeRequestList(EDataCacheType.Recent);
 
          // current mode may have changed during 'await'
-         if (getMode() == ECurrentMode.Search)
+         if (getCurrentTabDataCacheType() == EDataCacheType.Recent)
          {
-            getListView(mode).SelectMergeRequest(new MergeRequestKey?(), false);
+            getListView(EDataCacheType.Recent).SelectMergeRequest(new MergeRequestKey?(), false);
          }
       }
    }

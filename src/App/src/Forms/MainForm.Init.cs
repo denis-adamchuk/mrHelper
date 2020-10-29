@@ -46,8 +46,7 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingCancel.ConfirmationCondition = () => true;
          buttonTimeTrackingCancel.ConfirmationText = "Tracked time will be lost, are you sure?";
 
-         listViewLiveMergeRequests.Deselected += listViewMergeRequests_Deselected;
-         listViewFoundMergeRequests.Deselected += listViewMergeRequests_Deselected;
+         forEachListView(listView => listView.Deselected += listViewMergeRequests_Deselected);
       }
 
       private void addCustomActions()
@@ -98,7 +97,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               ITotalTimeCache totalTimeCache = getDataCache(getMode())?.TotalTimeCache;
+               ITotalTimeCache totalTimeCache = getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache;
 
                labelOperationStatus.Text = "Command " + name + " is in progress";
                try
@@ -147,7 +146,12 @@ namespace mrHelper.App.Forms
 
          createLiveDataCacheAndDependencies();
          subscribeToLiveDataCache();
+
          createSearchDataCache();
+         subscribeToSearchDataCache();
+
+         createRecentDataCache();
+         subscribeToRecentDataCache();
 
          initializeColorScheme();
          initializeIconScheme();
@@ -161,6 +165,8 @@ namespace mrHelper.App.Forms
 
          Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
 
+         unsubscribeFromRecentDataCache();
+         unsubscribeFromSearchDataCache();
          unsubscribeFromLiveDataCache();
 
          saveState();
@@ -236,7 +242,7 @@ namespace mrHelper.App.Forms
 
       private void startListViewRefreshTimer()
       {
-         _listViewRefreshTimer.Tick += (s, e) => listViewLiveMergeRequests.Invalidate();
+         _listViewRefreshTimer.Tick += (s, e) => getListView(EDataCacheType.Live).Invalidate();
          _listViewRefreshTimer.Start();
       }
 
@@ -247,7 +253,7 @@ namespace mrHelper.App.Forms
 
       private void createListViewContextMenu()
       {
-         listViewLiveMergeRequests.AssignContextMenu(new MergeRequestListViewContextMenu(
+         getListView(EDataCacheType.Live).AssignContextMenu(new MergeRequestListViewContextMenu(
             refreshSelectedMergeRequest,
             editSelectedMergeRequest,
             acceptSelectedMergeRequest,
@@ -287,27 +293,20 @@ namespace mrHelper.App.Forms
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging);
          _liveDataCache = new DataCache(dataCacheContext, _modificationNotifier);
-         listViewLiveMergeRequests.AssignDataCache(_liveDataCache);
+         getListView(EDataCacheType.Live).AssignDataCache(_liveDataCache);
 
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          _expressionResolver = new ExpressionResolver(dataCache);
          _eventFilter = new EventFilter(Program.Settings, dataCache, _mergeRequestFilter);
          _userNotifier = new UserNotifier(dataCache, _eventFilter, _trayIcon);
       }
 
-      private void createSearchDataCache()
-      {
-         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
-            Program.Settings.UpdateManagerExtendedLogging);
-         _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier);
-         listViewFoundMergeRequests.AssignDataCache(_searchDataCache);
-      }
-
       private void subscribeToLiveDataCache()
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
-         dataCache.Disconnected += liveDataCacheDisconnected;
-         dataCache.Connected += liveDataCacheConnected;
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
+         dataCache.Disconnected += onLiveDataCacheDisconnected;
+         dataCache.Connecting += onLiveDataCacheConnecting;
+         dataCache.Connected += onLiveDataCacheConnected;
       }
 
       private void disposeLiveDataCacheDependencies()
@@ -319,7 +318,7 @@ namespace mrHelper.App.Forms
 
       private void subscribeToLiveDataCacheInternalEvents()
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (dataCache?.MergeRequestCache != null)
          {
             dataCache.MergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
@@ -342,14 +341,15 @@ namespace mrHelper.App.Forms
 
       private void unsubscribeFromLiveDataCache()
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
-         dataCache.Disconnected -= liveDataCacheDisconnected;
-         dataCache.Connected -= liveDataCacheConnected;
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
+         dataCache.Disconnected -= onLiveDataCacheDisconnected;
+         dataCache.Connecting -= onLiveDataCacheConnecting;
+         dataCache.Connected -= onLiveDataCacheConnected;
       }
 
       private void unsubscribeFromLiveDataCacheInternalEvents()
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (dataCache?.MergeRequestCache != null)
          {
             dataCache.MergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
@@ -368,6 +368,50 @@ namespace mrHelper.App.Forms
             dataCache.DiscussionCache.DiscussionsLoading -= onPreLoadDiscussions;
             dataCache.DiscussionCache.DiscussionsLoaded -= onPostLoadDiscussions;
          }
+      }
+
+      private void createSearchDataCache()
+      {
+         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
+            Program.Settings.UpdateManagerExtendedLogging);
+         _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier);
+         getListView(EDataCacheType.Search).AssignDataCache(_searchDataCache);
+      }
+
+      private void subscribeToSearchDataCache()
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Search);
+         dataCache.Connecting += onSearchDataCacheConnecting;
+         dataCache.Connected += onSearchDataCacheConnected;
+      }
+
+      private void unsubscribeFromSearchDataCache()
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Search);
+         dataCache.Connecting -= onSearchDataCacheConnecting;
+         dataCache.Connected -= onSearchDataCacheConnected;
+      }
+
+      private void createRecentDataCache()
+      {
+         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
+            Program.Settings.UpdateManagerExtendedLogging);
+         _recentDataCache = new DataCache(dataCacheContext, _modificationNotifier);
+         getListView(EDataCacheType.Recent).AssignDataCache(_recentDataCache);
+      }
+
+      private void subscribeToRecentDataCache()
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Recent);
+         dataCache.Connecting += onRecentDataCacheConnecting;
+         dataCache.Connected += onRecentDataCacheConnected;
+      }
+
+      private void unsubscribeFromRecentDataCache()
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Recent);
+         dataCache.Connecting -= onRecentDataCacheConnecting;
+         dataCache.Connected -= onRecentDataCacheConnected;
       }
 
       private void createGitHelpers(DataCache dataCache, ILocalCommitStorageFactory factory)
@@ -397,7 +441,7 @@ namespace mrHelper.App.Forms
             _diffStatProvider = new DiscussionBasedDiffStatProvider(dataCache.DiscussionCache);
          }
          _diffStatProvider.Update += onGitStatisticManagerUpdate;
-         listViewLiveMergeRequests.SetDiffStatisticProvider(_diffStatProvider);
+         getListView(EDataCacheType.Live).SetDiffStatisticProvider(_diffStatProvider);
       }
 
       private void disposeGitHelpers()
@@ -418,7 +462,7 @@ namespace mrHelper.App.Forms
 
       private void onGitStatisticManagerUpdate()
       {
-         listViewLiveMergeRequests.Invalidate();
+         getListView(EDataCacheType.Live).Invalidate();
       }
    }
 }

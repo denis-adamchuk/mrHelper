@@ -31,7 +31,7 @@ namespace mrHelper.App.Forms
 
    internal partial class MainForm
    {
-      private bool startWorkflowDefaultExceptionHandler(Exception ex, ECurrentMode mode)
+      private bool startWorkflowDefaultExceptionHandler(Exception ex, EDataCacheType mode)
       {
          if (ex is DataCacheException || ex is UnknownHostException || ex is NoProjectsException)
          {
@@ -44,6 +44,7 @@ namespace mrHelper.App.Forms
                {
                   message = wx.UserMessage;
                }
+               labelOperationStatus.Text = message;
                MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return true;
@@ -62,7 +63,8 @@ namespace mrHelper.App.Forms
          {
             if (exceptionHandler == null)
             {
-               exceptionHandler = new Func<Exception, bool>((e) => startWorkflowDefaultExceptionHandler(e, ECurrentMode.Live));
+               exceptionHandler = new Func<Exception, bool>(
+                  e => startWorkflowDefaultExceptionHandler(e, EDataCacheType.Live));
             }
             if (!exceptionHandler(ex))
             {
@@ -85,11 +87,11 @@ namespace mrHelper.App.Forms
             "[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
             hostname, Program.Settings.WorkflowType));
 
-         disableAllUIControls(true, ECurrentMode.Live);
-         getDataCache(ECurrentMode.Live).Disconnect();
-
-         disableAllUIControls(true, ECurrentMode.Search);
-         getDataCache(ECurrentMode.Search).Disconnect();
+         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
+         {
+            disableAllUIControls(true, mode);
+            getDataCache(mode).Disconnect();
+         }
 
          labelOperationStatus.Text = String.Format("Connecting to {0}...", hostname);
 
@@ -118,6 +120,13 @@ namespace mrHelper.App.Forms
 
       private async Task startProjectBasedWorkflowAsync(string hostname)
       {
+         IEnumerable<ProjectKey> projects = getEnabledProjects(hostname);
+         SearchQueryCollection queryCollection = getCustomDataForProjectBasedWorkflow(projects);
+         await connectLiveDataCacheAsync(hostname, queryCollection);
+      }
+
+      private IEnumerable<ProjectKey> getEnabledProjects(string hostname)
+      {
          IEnumerable<ProjectKey> enabledProjects =
             ConfigurationHelper.GetEnabledProjectNames(hostname, Program.Settings)
             .Select(x => new ProjectKey(hostname, x));
@@ -125,24 +134,14 @@ namespace mrHelper.App.Forms
          {
             throw new NoProjectsException(hostname);
          }
-
-         onLiveDataCacheConnecting(enabledProjects, hostname);
-
-         SearchQueryCollection queryCollection = getCustomDataForProjectBasedWorkflow(enabledProjects);
-         await connectLiveDataCacheAsync(hostname, queryCollection);
-
-         onLiveDataCacheConnected(hostname);
+         return enabledProjects;
       }
 
       private async Task startUserBasedWorkflowAsync(string hostname)
       {
-         onLiveDataCacheConnecting(hostname);
-
          IEnumerable<string> usernames = listViewUsers.Items.Cast<ListViewItem>().Select(item => item.Text);
          SearchQueryCollection queryCollection = getCustomDataForUserBasedWorkflow(usernames);
          await connectLiveDataCacheAsync(hostname, queryCollection);
-
-         onLiveDataCacheConnected(hostname);
       }
 
       async private Task connectLiveDataCacheAsync(string hostname, SearchQueryCollection queryCollection)
@@ -152,7 +151,7 @@ namespace mrHelper.App.Forms
             new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
             queryCollection);
 
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
       }
 
@@ -182,58 +181,7 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLiveDataCacheConnecting(IEnumerable<ProjectKey> projects, string hostname)
-      {
-         // in Project-based workflow we want to create all groups at once in a user-defined order
-         listViewLiveMergeRequests.Items.Clear();
-         listViewLiveMergeRequests.Groups.Clear();
-         foreach (ProjectKey projectKey in projects)
-         {
-            listViewLiveMergeRequests.CreateGroupForProject(projectKey, false);
-         }
-
-         disableAllUIControls(false, ECurrentMode.Live);
-         labelOperationStatus.Text = String.Format("Loading merge requests of {0} project{1} from {2}...",
-            projects.Count(), projects.Count() > 1 ? "s" : "", hostname);
-      }
-
-      private void onLiveDataCacheConnecting(string hostname)
-      {
-         disableAllUIControls(false, ECurrentMode.Live);
-         labelOperationStatus.Text = String.Format("Loading merge requests from {0}...", hostname);
-      }
-
-      private void onLiveDataCacheConnected(string hostName)
-      {
-         labelOperationStatus.Text = "Merge requests loaded";
-
-         updateMergeRequestList(ECurrentMode.Live);
-
-         buttonSearch.Enabled = true;
-         buttonReloadList.Enabled = true;
-
-         IEnumerable<ProjectKey> projects = getDataCache(ECurrentMode.Live).MergeRequestCache.GetProjects();
-         foreach (ProjectKey projectKey in projects)
-         {
-            requestCommitStorageUpdate(projectKey);
-         }
-
-         // current mode may have changed during 'await'
-         if (getMode() == ECurrentMode.Live)
-         {
-            bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostName);
-            string projectname = shouldUseLastSelection ?
-               _lastMergeRequestsByHosts[hostName].ProjectKey.ProjectName : String.Empty;
-            int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostName].IId : 0;
-
-            MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostName, projectname), iid);
-            listViewLiveMergeRequests.SelectMergeRequest(mrk, false);
-         }
-      }
-
-      ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-      private void liveDataCacheDisconnected()
+      private void onLiveDataCacheDisconnected()
       {
          setMergeRequestEditEnabled(false);
          setSearchByProjectEnabled(false);
@@ -245,9 +193,35 @@ namespace mrHelper.App.Forms
          unsubscribeFromLiveDataCacheInternalEvents();
       }
 
-      private void liveDataCacheConnected(string hostname, User user)
+      private void onLiveDataCacheConnecting(string hostname)
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         disableAllUIControls(false, EDataCacheType.Live);
+
+         if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
+         {
+            // in Project-based workflow we want to create all groups at once in a user-defined order
+            Controls.MergeRequestListView listView = getListView(EDataCacheType.Live);
+            listView.Items.Clear();
+            listView.Groups.Clear();
+
+            IEnumerable<ProjectKey> projects = getEnabledProjects(hostname);
+            foreach (ProjectKey projectKey in projects)
+            {
+               listView.CreateGroupForProject(projectKey, false);
+            }
+
+            labelOperationStatus.Text = String.Format("Loading merge requests of {0} project{1} from {2}...",
+               projects.Count(), projects.Count() > 1 ? "s" : "", hostname);
+         }
+         else
+         {
+            labelOperationStatus.Text = String.Format("Loading merge requests from {0}...", hostname);
+         }
+      }
+
+      private void onLiveDataCacheConnected(string hostname, User user)
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          subscribeToLiveDataCacheInternalEvents();
          createGitHelpers(dataCache, getCommitStorageFactory(false));
 
@@ -273,6 +247,30 @@ namespace mrHelper.App.Forms
          addRecentMergeRequestKeys(closedReviewed);
          cleanupOldRecentMergeRequests(hostname);
          reloadRecentMergeRequests(hostname);
+
+         updateMergeRequestList(EDataCacheType.Live);
+
+         buttonSearch.Enabled = true;
+         buttonReloadList.Enabled = true;
+         labelOperationStatus.Text = "Merge requests loaded";
+
+         IEnumerable<ProjectKey> projects = getDataCache(EDataCacheType.Live).MergeRequestCache.GetProjects();
+         foreach (ProjectKey projectKey in projects)
+         {
+            requestCommitStorageUpdate(projectKey);
+         }
+
+         // current mode may have changed during 'await'
+         if (getCurrentTabDataCacheType() == EDataCacheType.Live)
+         {
+            bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostname);
+            string projectname = shouldUseLastSelection ?
+               _lastMergeRequestsByHosts[hostname].ProjectKey.ProjectName : String.Empty;
+            int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostname].IId : 0;
+
+            MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostname, projectname), iid);
+            getListView(EDataCacheType.Live).SelectMergeRequest(mrk, false);
+         }
       }
 
       private void setSearchByProjectEnabled(bool isEnabled)
@@ -288,13 +286,14 @@ namespace mrHelper.App.Forms
          }
          else if (!wasEnabled && isEnabled)
          {
-            DataCache dataCache = getDataCache(ECurrentMode.Live);
+            DataCache dataCache = getDataCache(EDataCacheType.Live);
             string[] projectNames = dataCache?.ProjectCache?.GetProjects()
                .OrderBy(project => project.Path_With_Namespace)
                .Select(project => project.Path_With_Namespace)
                .ToArray() ?? Array.Empty<string>();
             string defaultProjectName = getDefaultProjectName();
-            WinFormsHelpers.FillComboBox(comboBoxProjectName, projectNames, projectName => projectName == defaultProjectName);
+            WinFormsHelpers.FillComboBox(comboBoxProjectName, projectNames,
+               projectName => projectName == defaultProjectName);
          }
       }
 
@@ -312,7 +311,7 @@ namespace mrHelper.App.Forms
          }
          else if (!wasEnabled && isEnabled)
          {
-            DataCache dataCache = getDataCache(ECurrentMode.Live);
+            DataCache dataCache = getDataCache(EDataCacheType.Live);
             User[] users = dataCache?.UserCache?.GetUsers()
                .OrderBy(user => user.Name).ToArray() ?? Array.Empty<User>();
             string defaultUserFullName = getCurrentUser().Name;
@@ -495,7 +494,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (needUpdateMergeRequest)
          {
             dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
@@ -519,7 +518,7 @@ namespace mrHelper.App.Forms
 
       private void requestUpdates(MergeRequestKey? mrk, int[] intervals)
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals);
          dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
       }

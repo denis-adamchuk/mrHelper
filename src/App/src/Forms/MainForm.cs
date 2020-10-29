@@ -93,6 +93,7 @@ namespace mrHelper.App.Forms
       // TODO Data caches should be hidden into a holder and accessed via getDataCache() only
       private DataCache _liveDataCache;
       private DataCache _searchDataCache;
+      private DataCache _recentDataCache;
 
       private TabPage _timeTrackingTabPage;
       private ITimeTracker _timeTracker;

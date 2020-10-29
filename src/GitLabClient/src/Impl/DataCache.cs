@@ -19,6 +19,7 @@ namespace mrHelper.GitLabClient
       }
 
       public event Action<string, User> Connected;
+      public event Action<string> Connecting;
       public event Action Disconnected;
 
       async public Task Connect(GitLabInstance gitLabInstance, DataCacheConnectionContext context)
@@ -31,6 +32,8 @@ namespace mrHelper.GitLabClient
 
          try
          {
+            Connecting?.Invoke(hostname);
+
             InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
             IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
                hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater, context);

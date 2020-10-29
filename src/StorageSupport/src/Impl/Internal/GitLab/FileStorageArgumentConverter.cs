@@ -186,7 +186,7 @@ namespace mrHelper.StorageSupport
       }
 
       private readonly IFileStorage _fileStorage;
-      private static string DummyRevisionSuffix = "__mrhelper_dummy_file_revision";
+      private static readonly string DummyRevisionSuffix = "__mrhelper_dummy_file_revision";
    }
 }
 

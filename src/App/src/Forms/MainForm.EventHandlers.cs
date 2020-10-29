@@ -339,12 +339,12 @@ namespace mrHelper.App.Forms
 
       private void listViewMergeRequests_Deselected(object sender)
       {
-         onMergeRequestSelectionChanged(getMode());
+         onMergeRequestSelectionChanged(getCurrentTabDataCacheType());
       }
 
       private void listViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
       {
-         onMergeRequestSelectionChanged(getMode());
+         onMergeRequestSelectionChanged(getCurrentTabDataCacheType());
       }
 
       private void textBoxSearch_KeyDown(object sender, KeyEventArgs e)

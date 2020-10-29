@@ -57,18 +57,29 @@ namespace mrHelper.App.Forms
          startClipboardCheckTimer();
          createListViewContextMenu();
 
-         listViewLiveMergeRequests.SetCurrentUserGetter(hostname => getCurrentUser(hostname));
-         listViewFoundMergeRequests.SetCurrentUserGetter(hostname => getCurrentUser(hostname));
+         forEachListView(listView => listView.SetCurrentUserGetter(hostname => getCurrentUser(hostname)));
 
-         listViewLiveMergeRequests.SetColumnWidthSaver(new Action<Dictionary<string, int>>(
+         getListView(EDataCacheType.Live).SetColumnWidthSaver(new Action<Dictionary<string, int>>(
             widths => Program.Settings.ListViewMergeRequestsColumnWidths = widths));
-         listViewFoundMergeRequests.SetColumnWidthSaver(new Action<Dictionary<string, int>>(
+         getListView(EDataCacheType.Search).SetColumnWidthSaver(new Action<Dictionary<string, int>>(
             widths => Program.Settings.ListViewFoundMergeRequestsColumnWidths = widths));
+         getListView(EDataCacheType.Recent).SetColumnWidthSaver(new Action<Dictionary<string, int>>(
+            widths => Program.Settings.ListViewRecentMergeRequestsColumnWidths = widths));
 
-         listViewLiveMergeRequests.SetColumnIndicesSaver(new Action<Dictionary<string, int>>(
+         getListView(EDataCacheType.Live).SetColumnIndicesSaver(new Action<Dictionary<string, int>>(
             Indices => Program.Settings.ListViewMergeRequestsDisplayIndices = Indices));
-         listViewFoundMergeRequests.SetColumnIndicesSaver(new Action<Dictionary<string, int>>(
+         getListView(EDataCacheType.Search).SetColumnIndicesSaver(new Action<Dictionary<string, int>>(
             Indices => Program.Settings.ListViewFoundMergeRequestsDisplayIndices = Indices));
+         getListView(EDataCacheType.Recent).SetColumnIndicesSaver(new Action<Dictionary<string, int>>(
+            Indices => Program.Settings.ListViewRecentMergeRequestsDisplayIndices = Indices));
+      }
+
+      private void forEachListView(Action<MergeRequestListView> action)
+      {
+         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
+         {
+            action(getListView(mode));
+         }
       }
 
       private void prepareSizeToStart()
@@ -282,7 +293,7 @@ namespace mrHelper.App.Forms
          }
 
          // Update total time column in the table
-         listViewLiveMergeRequests.Invalidate();
+         getListView(EDataCacheType.Live).Invalidate();
          labelTimeTrackingTrackedLabel.Refresh();
       }
 
@@ -373,23 +384,20 @@ namespace mrHelper.App.Forms
 
       private void onDataCacheSelectionChanged(bool isLiveDataCacheSelected)
       {
-         listViewLiveMergeRequests.DeselectAllListViewItems();
-         listViewFoundMergeRequests.DeselectAllListViewItems();
-
+         forEachListView(listView => listView.DeselectAllListViewItems());
          labelTimeTrackingTrackedLabel.Visible = isLiveDataCacheSelected;
          buttonEditTime.Visible = isLiveDataCacheSelected;
-         labelOperationStatus.Text = String.Empty;
          disableCommonUIControls();
       }
 
-      private void onMergeRequestSelectionChanged(ECurrentMode mode)
+      private void onMergeRequestSelectionChanged(EDataCacheType mode)
       {
          MergeRequestListView listView = getListView(mode);
          FullMergeRequestKey? fmkOpt = listView.GetSelectedMergeRequest();
          if (!fmkOpt.HasValue)
          {
             Trace.TraceInformation(String.Format(
-               "[MainForm] User deselected merge request. Mode={0}", getMode().ToString()));
+               "[MainForm] User deselected merge request. Mode={0}", getCurrentTabDataCacheType().ToString()));
             disableCommonUIControls();
             updateAbortGitCloneButtonState();
             updateStorageStatusText(null, null);
@@ -401,7 +409,7 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation(String.Format(
             "[MainForm] User requested to change merge request to IId {0}, mode = {1}",
-            fmk.MergeRequest.IId.ToString(), getMode().ToString()));
+            fmk.MergeRequest.IId.ToString(), getCurrentTabDataCacheType().ToString()));
 
          Debug.Assert(fmk.MergeRequest != null);
 
@@ -422,7 +430,7 @@ namespace mrHelper.App.Forms
          updateStorageDependentControlState(mrk);
          updateRevisionBrowserTree(dataCache, mrk);
 
-         if (mode == ECurrentMode.Live)
+         if (mode == EDataCacheType.Live)
          {
             _lastMergeRequestsByHosts[fmk.ProjectKey.HostName] = mrk;
          }
@@ -468,7 +476,7 @@ namespace mrHelper.App.Forms
          foreach (KeyValuePair<string, string> nameToFilename in _iconScheme)
          {
             string resolved = _expressionResolver.Resolve(nameToFilename.Key);
-            if (listViewLiveMergeRequests.GetAllMergeRequests()
+            if (getListView(EDataCacheType.Live).GetAllMergeRequests()
                .Select(x => x.MergeRequest)
                .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Icon_{{Label:{0}}}", y))))
             {
@@ -499,7 +507,7 @@ namespace mrHelper.App.Forms
          foreach (KeyValuePair<string, string> nameToFilename in _badgeScheme)
          {
             string resolved = _expressionResolver.Resolve(nameToFilename.Key);
-            if (listViewLiveMergeRequests.GetAllMergeRequests()
+            if (getListView(EDataCacheType.Live).GetAllMergeRequests()
                .Select(x => x.MergeRequest)
                .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Badge_{{Label:{0}}}", y))))
             {
@@ -523,10 +531,8 @@ namespace mrHelper.App.Forms
             pictureBox2.BackgroundImage = mrHelper.App.Properties.Resources.Tree;
             pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
             pictureBox2.Visible = true;
-            listViewLiveMergeRequests.BackgroundImage = mrHelper.App.Properties.Resources.SnowflakeBg;
-            listViewLiveMergeRequests.BackgroundImageTiled = true;
-            listViewFoundMergeRequests.BackgroundImage = mrHelper.App.Properties.Resources.SnowflakeBg;
-            listViewFoundMergeRequests.BackgroundImageTiled = true;
+            forEachListView(listView => listView.BackgroundImage = mrHelper.App.Properties.Resources.SnowflakeBg);
+            forEachListView(listView => listView.BackgroundImageTiled = true);
             richTextBoxMergeRequestDescription.BaseStylesheet =
                String.Format("{0}{1}{2}", mrHelper.App.Properties.Resources.NewYear2020_CSS,
                   mrHelper.App.Properties.Resources.Common_CSS, cssEx);
@@ -537,8 +543,7 @@ namespace mrHelper.App.Forms
             pictureBox1.Visible = false;
             pictureBox2.BackgroundImage = null;
             pictureBox2.Visible = false;
-            listViewLiveMergeRequests.BackgroundImage = null;
-            listViewFoundMergeRequests.BackgroundImage = null;
+            forEachListView(listView => listView.BackgroundImage = null);
             richTextBoxMergeRequestDescription.BaseStylesheet =
                String.Format("{0}{1}", mrHelper.App.Properties.Resources.Common_CSS, cssEx);
          }
@@ -708,7 +713,17 @@ namespace mrHelper.App.Forms
           + calcHorzDistance(groupBoxSearchMergeRequest, null)
           + calcHorzDistance(tabControlMode, null);
 
-         return Math.Max(liveTabTopRowWidth, Math.Max(searchTabBottomRowWidth, searchTabTopRowWidth));
+         int recentTabTopRowWidth =
+            calcHorzDistance(null, tabControlMode)
+          + calcHorzDistance(null, groupBoxRecentMergeRequest)
+          + calcHorzDistance(null, textBoxRecentMergeRequestsHint)
+          + textBoxRecentMergeRequestsHint.Width
+          + calcHorzDistance(groupBoxRecentMergeRequest, null)
+          + calcHorzDistance(tabControlMode, null);
+
+         return Math.Max(liveTabTopRowWidth,
+                  Math.Max(recentTabTopRowWidth,
+                     Math.Max(searchTabBottomRowWidth, searchTabTopRowWidth)));
       }
 
       private int getRightPaneMinWidth()
@@ -908,22 +923,22 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void disableAllUIControls(bool clearListView, ECurrentMode mode)
+      private void disableAllUIControls(bool clearListView, EDataCacheType mode)
       {
          getListView(mode).DisableListView(clearListView);
 
-         if (getMode() == ECurrentMode.Live)
+         if (getCurrentTabDataCacheType() == EDataCacheType.Live)
          {
             buttonReloadList.Enabled = false;
             buttonCreateNew.Enabled = false;
             enableMergeRequestFilterControls(false);
          }
-         else if (getMode() == ECurrentMode.Search)
+         else if (getCurrentTabDataCacheType() == EDataCacheType.Search)
          {
             buttonSearch.Enabled = false;
          }
 
-         if (getMode() == mode)
+         if (getCurrentTabDataCacheType() == mode)
          {
             // to avoid touching controls shared between tabs
             disableCommonUIControls();
@@ -944,7 +959,7 @@ namespace mrHelper.App.Forms
       private void setMergeRequestEditEnabled(bool enabled)
       {
          buttonCreateNew.Enabled = enabled;
-         MergeRequestListViewContextMenu contextMenu = listViewLiveMergeRequests.GetContextMenu();
+         MergeRequestListViewContextMenu contextMenu = getListView(EDataCacheType.Live).GetContextMenu();
          contextMenu.SetEditActionEnabled(enabled);
          contextMenu.SetMergeActionEnabled(true);
       }
@@ -1057,8 +1072,8 @@ namespace mrHelper.App.Forms
             Debug.Assert(false);
          }
 
-         updateMergeRequestList(ECurrentMode.Live); // update row height of List View
-         updateMergeRequestList(ECurrentMode.Search); // update row height of List View
+         updateMergeRequestList(EDataCacheType.Live); // update row height of List View
+         updateMergeRequestList(EDataCacheType.Search); // update row height of List View
          applyTheme(Program.Settings.VisualThemeName); // update CSS in MR Description
          resetMergeRequestTabMinimumSizes();
       }
@@ -1087,7 +1102,7 @@ namespace mrHelper.App.Forms
             tabControlMode.SelectedTab = _timeTrackingTabPage;
          }
 
-         getListView(getMode()).SelectMergeRequest(_timeTracker.MergeRequest, true);
+         getListView(getCurrentTabDataCacheType()).SelectMergeRequest(_timeTracker.MergeRequest, true);
       }
 
       private void formatHostListItem(ListControlConvertEventArgs e)

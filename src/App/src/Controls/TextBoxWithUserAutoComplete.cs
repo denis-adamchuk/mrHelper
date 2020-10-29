@@ -280,9 +280,11 @@ namespace mrHelper.App.Controls
 
       private ListBox createListBox()
       {
-         ListBoxEx listBox = new ListBoxEx();
-         listBox.BorderStyle = BorderStyle.None;
-         listBox.FormattingEnabled = true;
+         ListBoxEx listBox = new ListBoxEx
+         {
+            BorderStyle = BorderStyle.None,
+            FormattingEnabled = true
+         };
          listBox.Click += new System.EventHandler(listBox_Click);
          listBox.Font = this.Font;
          listBox.Format += new System.Windows.Forms.ListControlConvertEventHandler(listBox_Format);

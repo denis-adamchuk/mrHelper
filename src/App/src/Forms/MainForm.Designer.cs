@@ -22,8 +22,9 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
-         getDataCache(ECurrentMode.Live)?.Dispose();
-         getDataCache(ECurrentMode.Search)?.Dispose();
+         getDataCache(EDataCacheType.Live)?.Dispose();
+         getDataCache(EDataCacheType.Search)?.Dispose();
+         getDataCache(EDataCacheType.Recent)?.Dispose();
 
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
@@ -125,7 +126,7 @@ namespace mrHelper.App.Forms
          this.radioButtonSelectByProjects = new System.Windows.Forms.RadioButton();
          this.buttonEditUsers = new System.Windows.Forms.Button();
          this.listViewUsers = new System.Windows.Forms.ListView();
-         this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderUserName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.radioButtonSelectByUsernames = new System.Windows.Forms.RadioButton();
          this.buttonEditProjects = new System.Windows.Forms.Button();
          this.listViewProjects = new System.Windows.Forms.ListView();
@@ -149,6 +150,18 @@ namespace mrHelper.App.Forms
          this.checkBoxDiscussionColumnFixedWidth = new System.Windows.Forms.CheckBox();
          this.radioButtonDiscussionColumnWidthNarrowPlus = new System.Windows.Forms.RadioButton();
          this.radioButtonDiscussionColumnWidthMediumPlus = new System.Windows.Forms.RadioButton();
+         this.tabPageRecent = new System.Windows.Forms.TabPage();
+         this.groupBoxRecentMergeRequest = new System.Windows.Forms.GroupBox();
+         this.textBoxRecentMergeRequestsHint = new System.Windows.Forms.TextBox();
+         this.listViewRecentMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
+         this.columnHeaderRecentIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRecentState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRecentAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRecentTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRecentLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRecentJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRecentSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRecentTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -231,6 +244,8 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
          this.groupBoxSearchMergeRequest.SuspendLayout();
+         this.tabPageRecent.SuspendLayout();
+         this.groupBoxRecentMergeRequest.SuspendLayout();
          this.contextMenuStrip.SuspendLayout();
          this.tabControl.SuspendLayout();
          this.tabPageSettings.SuspendLayout();
@@ -1039,7 +1054,7 @@ namespace mrHelper.App.Forms
          // listViewUsers
          // 
          this.listViewUsers.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1});
+            this.columnHeaderUserName});
          this.listViewUsers.FullRowSelect = true;
          this.listViewUsers.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
          this.listViewUsers.HideSelection = false;
@@ -1053,10 +1068,10 @@ namespace mrHelper.App.Forms
          this.listViewUsers.UseCompatibleStateImageBehavior = false;
          this.listViewUsers.View = System.Windows.Forms.View.Details;
          // 
-         // columnHeader1
+         // columnHeaderUserName
          // 
-         this.columnHeader1.Text = "Name";
-         this.columnHeader1.Width = 160;
+         this.columnHeaderUserName.Text = "Name";
+         this.columnHeaderUserName.Width = 160;
          // 
          // radioButtonSelectByUsernames
          // 
@@ -1332,6 +1347,119 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.radioButtonDiscussionColumnWidthMediumPlus, "Increased \"Medium\" column(s) for diff context and discussion notes");
          this.radioButtonDiscussionColumnWidthMediumPlus.UseVisualStyleBackColor = true;
          this.radioButtonDiscussionColumnWidthMediumPlus.CheckedChanged += new System.EventHandler(this.radioButtonDiscussionColumnWidth_CheckedChanged);
+         // 
+         // tabPageRecent
+         // 
+         this.tabPageRecent.Controls.Add(this.groupBoxRecentMergeRequest);
+         this.tabPageRecent.Location = new System.Drawing.Point(4, 22);
+         this.tabPageRecent.Name = "tabPageRecent";
+         this.tabPageRecent.Padding = new System.Windows.Forms.Padding(3);
+         this.tabPageRecent.Size = new System.Drawing.Size(782, 832);
+         this.tabPageRecent.TabIndex = 2;
+         this.tabPageRecent.Text = "Recent";
+         this.toolTip.SetToolTip(this.tabPageRecent, "Recently reviewed merge requests");
+         this.tabPageRecent.UseVisualStyleBackColor = true;
+         // 
+         // groupBoxRecentMergeRequest
+         // 
+         this.groupBoxRecentMergeRequest.Controls.Add(this.textBoxRecentMergeRequestsHint);
+         this.groupBoxRecentMergeRequest.Controls.Add(this.listViewRecentMergeRequests);
+         this.groupBoxRecentMergeRequest.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.groupBoxRecentMergeRequest.Location = new System.Drawing.Point(3, 3);
+         this.groupBoxRecentMergeRequest.Name = "groupBoxRecentMergeRequest";
+         this.groupBoxRecentMergeRequest.Size = new System.Drawing.Size(776, 826);
+         this.groupBoxRecentMergeRequest.TabIndex = 5;
+         this.groupBoxRecentMergeRequest.TabStop = false;
+         this.groupBoxRecentMergeRequest.Text = "Recent Merge Requests";
+         // 
+         // textBoxRecentMergeRequestsHint
+         // 
+         this.textBoxRecentMergeRequestsHint.BorderStyle = System.Windows.Forms.BorderStyle.None;
+         this.textBoxRecentMergeRequestsHint.Location = new System.Drawing.Point(3, 19);
+         this.textBoxRecentMergeRequestsHint.Multiline = true;
+         this.textBoxRecentMergeRequestsHint.Name = "textBoxRecentMergeRequestsHint";
+         this.textBoxRecentMergeRequestsHint.Size = new System.Drawing.Size(463, 28);
+         this.textBoxRecentMergeRequestsHint.TabIndex = 5;
+         this.textBoxRecentMergeRequestsHint.Text = "This list contains a few merge requests which have been recently reviewed by you " +
+    "in mrHelper.\r\nNew elements will appear in the list once merge requests are close" +
+    "d or merged.";
+         // 
+         // listViewRecentMergeRequests
+         // 
+         this.listViewRecentMergeRequests.AllowColumnReorder = true;
+         this.listViewRecentMergeRequests.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.listViewRecentMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeaderRecentIId,
+            this.columnHeaderRecentState,
+            this.columnHeaderRecentAuthor,
+            this.columnHeaderRecentTitle,
+            this.columnHeaderRecentLabels,
+            this.columnHeaderRecentJira,
+            this.columnHeaderRecentSourceBranch,
+            this.columnHeaderRecentTargetBranch});
+         this.listViewRecentMergeRequests.FullRowSelect = true;
+         this.listViewRecentMergeRequests.GridLines = true;
+         this.listViewRecentMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+         this.listViewRecentMergeRequests.HideSelection = false;
+         this.listViewRecentMergeRequests.Location = new System.Drawing.Point(3, 53);
+         this.listViewRecentMergeRequests.MultiSelect = false;
+         this.listViewRecentMergeRequests.Name = "listViewRecentMergeRequests";
+         this.listViewRecentMergeRequests.OwnerDraw = true;
+         this.listViewRecentMergeRequests.Size = new System.Drawing.Size(770, 770);
+         this.listViewRecentMergeRequests.TabIndex = 4;
+         this.listViewRecentMergeRequests.UseCompatibleStateImageBehavior = false;
+         this.listViewRecentMergeRequests.View = System.Windows.Forms.View.Details;
+         this.listViewRecentMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewMergeRequests_ItemSelectionChanged);
+         // 
+         // columnHeaderRecentIId
+         // 
+         this.columnHeaderRecentIId.Tag = "IId";
+         this.columnHeaderRecentIId.Text = "IId";
+         this.columnHeaderRecentIId.Width = 40;
+         // 
+         // columnHeaderRecentState
+         // 
+         this.columnHeaderRecentState.Tag = "State";
+         this.columnHeaderRecentState.Text = "State";
+         this.columnHeaderRecentState.Width = 80;
+         // 
+         // columnHeaderRecentAuthor
+         // 
+         this.columnHeaderRecentAuthor.Tag = "Author";
+         this.columnHeaderRecentAuthor.Text = "Author";
+         this.columnHeaderRecentAuthor.Width = 110;
+         // 
+         // columnHeaderRecentTitle
+         // 
+         this.columnHeaderRecentTitle.Tag = "Title";
+         this.columnHeaderRecentTitle.Text = "Title";
+         this.columnHeaderRecentTitle.Width = 400;
+         // 
+         // columnHeaderRecentLabels
+         // 
+         this.columnHeaderRecentLabels.Tag = "Labels";
+         this.columnHeaderRecentLabels.Text = "Labels";
+         this.columnHeaderRecentLabels.Width = 180;
+         // 
+         // columnHeaderRecentJira
+         // 
+         this.columnHeaderRecentJira.Tag = "Jira";
+         this.columnHeaderRecentJira.Text = "Jira";
+         this.columnHeaderRecentJira.Width = 80;
+         // 
+         // columnHeaderRecentSourceBranch
+         // 
+         this.columnHeaderRecentSourceBranch.Tag = "SourceBranch";
+         this.columnHeaderRecentSourceBranch.Text = "Source Branch";
+         this.columnHeaderRecentSourceBranch.Width = 100;
+         // 
+         // columnHeaderRecentTargetBranch
+         // 
+         this.columnHeaderRecentTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderRecentTargetBranch.Text = "Target Branch";
+         this.columnHeaderRecentTargetBranch.Width = 100;
          // 
          // contextMenuStrip
          // 
@@ -1998,6 +2126,7 @@ namespace mrHelper.App.Forms
          // 
          this.tabControlMode.Controls.Add(this.tabPageLive);
          this.tabControlMode.Controls.Add(this.tabPageSearch);
+         this.tabControlMode.Controls.Add(this.tabPageRecent);
          this.tabControlMode.Dock = System.Windows.Forms.DockStyle.Fill;
          this.tabControlMode.Location = new System.Drawing.Point(0, 0);
          this.tabControlMode.Name = "tabControlMode";
@@ -2272,6 +2401,9 @@ namespace mrHelper.App.Forms
          this.tabPageSearch.ResumeLayout(false);
          this.groupBoxSearchMergeRequest.ResumeLayout(false);
          this.groupBoxSearchMergeRequest.PerformLayout();
+         this.tabPageRecent.ResumeLayout(false);
+         this.groupBoxRecentMergeRequest.ResumeLayout(false);
+         this.groupBoxRecentMergeRequest.PerformLayout();
          this.contextMenuStrip.ResumeLayout(false);
          this.tabControl.ResumeLayout(false);
          this.tabPageSettings.ResumeLayout(false);
@@ -2470,7 +2602,7 @@ namespace mrHelper.App.Forms
       private RadioButton radioButtonSelectByProjects;
       private Button buttonEditUsers;
       private ListView listViewUsers;
-      private ColumnHeader columnHeader1;
+      private ColumnHeader columnHeaderUserName;
       private RadioButton radioButtonSelectByUsernames;
       private Button buttonEditProjects;
       private ListView listViewProjects;
@@ -2512,6 +2644,18 @@ namespace mrHelper.App.Forms
       private Button buttonSearch;
       private LinkLabel linkLabelFindMe;
       private TextBox textBoxSearchTargetBranch;
+      private TabPage tabPageRecent;
+      private Controls.MergeRequestListView listViewRecentMergeRequests;
+      private ColumnHeader columnHeaderRecentIId;
+      private ColumnHeader columnHeaderRecentState;
+      private ColumnHeader columnHeaderRecentAuthor;
+      private ColumnHeader columnHeaderRecentTitle;
+      private ColumnHeader columnHeaderRecentLabels;
+      private ColumnHeader columnHeaderRecentJira;
+      private ColumnHeader columnHeaderRecentSourceBranch;
+      private ColumnHeader columnHeaderRecentTargetBranch;
+      private GroupBox groupBoxRecentMergeRequest;
+      private TextBox textBoxRecentMergeRequestsHint;
    }
 }
 

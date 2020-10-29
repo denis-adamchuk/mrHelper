@@ -50,29 +50,44 @@ namespace mrHelper.App.Forms
 
       private User getCurrentUser(string hostname)
       {
-         return !String.IsNullOrWhiteSpace(hostname) && _currentUser.TryGetValue(hostname, out User value) ? value : null;
+         bool isValidHostname = !String.IsNullOrWhiteSpace(hostname);
+         return isValidHostname && _currentUser.TryGetValue(hostname, out User value) ? value : null;
       }
 
-      private enum ECurrentMode
+      private enum EDataCacheType
       {
          Live,
-         Search
+         Search,
+         Recent
       }
 
-      private ECurrentMode getMode()
+      private EDataCacheType getCurrentTabDataCacheType()
       {
-         return tabControlMode.SelectedTab == tabPageSearch ? ECurrentMode.Search : ECurrentMode.Live;
+         if (tabControlMode.SelectedTab == tabPageSearch)
+         {
+            return EDataCacheType.Search;
+         }
+         else if (tabControlMode.SelectedTab == tabPageRecent)
+         {
+            return EDataCacheType.Recent;
+         }
+
+         Debug.Assert(tabControlMode.SelectedTab == tabPageLive);
+         return EDataCacheType.Live;
       }
 
-      private MergeRequestListView getListView(ECurrentMode mode)
+      private MergeRequestListView getListView(EDataCacheType mode)
       {
          switch (mode)
          {
-            case ECurrentMode.Live:
+            case EDataCacheType.Live:
                return listViewLiveMergeRequests;
 
-            case ECurrentMode.Search:
+            case EDataCacheType.Search:
                return listViewFoundMergeRequests;
+
+            case EDataCacheType.Recent:
+               return listViewRecentMergeRequests;
          }
 
          Debug.Assert(false);
@@ -81,14 +96,14 @@ namespace mrHelper.App.Forms
 
       private MergeRequest getMergeRequest(MergeRequestListView proposedListView)
       {
-         MergeRequestListView listView = proposedListView ?? getListView(getMode());
+         MergeRequestListView listView = proposedListView ?? getListView(getCurrentTabDataCacheType());
          FullMergeRequestKey? fmk = listView.GetSelectedMergeRequest();
          return fmk.HasValue ? fmk.Value.MergeRequest : null;
       }
 
       private MergeRequestKey? getMergeRequestKey(MergeRequestListView proposedListView)
       {
-         MergeRequestListView listView = proposedListView ?? getListView(getMode());
+         MergeRequestListView listView = proposedListView ?? getListView(getCurrentTabDataCacheType());
          FullMergeRequestKey? fmk = listView.GetSelectedMergeRequest();
          return fmk.HasValue ? new MergeRequestKey(fmk.Value.ProjectKey, fmk.Value.MergeRequest.IId)
                              : new Nullable<MergeRequestKey>();
@@ -96,18 +111,19 @@ namespace mrHelper.App.Forms
 
       private string getDefaultProjectName()
       {
-         MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(listViewLiveMergeRequests);
+         MergeRequestListView listView = getListView(EDataCacheType.Live);
+         MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(listView);
          if (currentMergeRequestKey.HasValue)
          {
             return currentMergeRequestKey.Value.ProjectKey.ProjectName;
          }
 
-         if (listViewLiveMergeRequests.Groups.Count > 0)
+         if (listView.Groups.Count > 0)
          {
-            return listViewLiveMergeRequests.Groups[0].Name;
+            return listView.Groups[0].Name;
          }
 
-         ProjectKey? project = getDataCache(ECurrentMode.Live)?.MergeRequestCache?.GetProjects()?.FirstOrDefault();
+         ProjectKey? project = getDataCache(EDataCacheType.Live)?.MergeRequestCache?.GetProjects()?.FirstOrDefault();
          if (project.HasValue)
          {
             return project.Value.ProjectName;
@@ -116,14 +132,27 @@ namespace mrHelper.App.Forms
          return String.Empty;
       }
 
-      private DataCache getDataCache(ECurrentMode mode)
+      private DataCache getDataCache(EDataCacheType mode)
       {
-         return mode == ECurrentMode.Live ? _liveDataCache : _searchDataCache;
+         switch (mode)
+         {
+            case EDataCacheType.Live:
+               return _liveDataCache;
+
+            case EDataCacheType.Search:
+               return _searchDataCache;
+
+            case EDataCacheType.Recent:
+               return _recentDataCache;
+         }
+
+         Debug.Assert(false);
+         return null;
       }
 
       private DataCache getDataCacheByName(string name)
       {
-         foreach (ECurrentMode mode in Enum.GetValues(typeof(ECurrentMode)))
+         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
          {
             if (name == mode.ToString())
             {
@@ -136,7 +165,7 @@ namespace mrHelper.App.Forms
 
       private string getDataCacheName(DataCache dataCache)
       {
-         foreach (ECurrentMode mode in Enum.GetValues(typeof(ECurrentMode)))
+         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
          {
             if (getDataCache(mode) == dataCache)
             {
@@ -372,7 +401,7 @@ namespace mrHelper.App.Forms
       {
          string hostname = getHostName();
          User currentUser = getCurrentUser();
-         FullMergeRequestKey item = listViewLiveMergeRequests.GetSelectedMergeRequest().Value;
+         FullMergeRequestKey item = getListView(EDataCacheType.Live).GetSelectedMergeRequest().Value;
          if (hostname == String.Empty || currentUser == null || item.MergeRequest == null)
          {
             Debug.Assert(false);
@@ -455,7 +484,7 @@ namespace mrHelper.App.Forms
          }
 
          Debug.Assert(query != null);
-         searchMergeRequests(new SearchQueryCollection(query), ECurrentMode.Search);
+         searchMergeRequests(new SearchQueryCollection(query), EDataCacheType.Search);
       }
 
       private void doClose()

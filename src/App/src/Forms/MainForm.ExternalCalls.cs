@@ -252,7 +252,7 @@ namespace mrHelper.App.Forms
             parsedNewMergeRequestUrl.ProjectKey.ProjectName, parsedNewMergeRequestUrl.SourceBranch,
             parsedNewMergeRequestUrl.TargetBranchCandidates, defaultProperties.AssigneeUsername,
             defaultProperties.IsSquashNeeded, defaultProperties.IsBranchDeletionNeeded);
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          var fullProjectList = dataCache?.ProjectCache?.GetProjects() ?? Array.Empty<Project>();
          var fullUserList = dataCache?.UserCache?.GetUsers() ?? Array.Empty<User>();
          if (!fullUserList.Any())
@@ -299,22 +299,22 @@ namespace mrHelper.App.Forms
 
       private bool trySelectMergeRequest(MergeRequestKey mrk)
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (dataCache?.MergeRequestCache?.GetMergeRequest(mrk) != null)
          {
             tabControlMode.SelectedTab = tabPageLive;
-            if (listViewLiveMergeRequests.SelectMergeRequest(mrk, true))
+            if (getListView(EDataCacheType.Live).SelectMergeRequest(mrk, true))
             {
                return true;
             }
             // e.g. MR is hidden at Live tab due to filters...
          }
 
-         dataCache = getDataCache(ECurrentMode.Search);
+         dataCache = getDataCache(EDataCacheType.Search);
          if (dataCache?.MergeRequestCache?.GetMergeRequest(mrk) != null)
          {
             tabControlMode.SelectedTab = tabPageSearch;
-            if (listViewFoundMergeRequests.SelectMergeRequest(mrk, true))
+            if (getListView(EDataCacheType.Search).SelectMergeRequest(mrk, true))
             {
                return true;
             }
@@ -360,7 +360,7 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> openUrlAtLiveTabAsync(MergeRequestKey mrk, string url, bool updateIfNeeded)
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (dataCache?.MergeRequestCache == null)
          {
             throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
@@ -388,7 +388,7 @@ namespace mrHelper.App.Forms
          }
 
          tabControlMode.SelectedTab = tabPageLive;
-         if (!listViewLiveMergeRequests.SelectMergeRequest(mrk, true) && listViewLiveMergeRequests.Enabled)
+         if (!getListView(EDataCacheType.Live).SelectMergeRequest(mrk, true) && getListView(EDataCacheType.Live).Enabled)
          {
             // We could not select MR, but let's check if it is cached or not.
             if (dataCache.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
@@ -399,7 +399,7 @@ namespace mrHelper.App.Forms
                   return false; // user decided to not un-hide merge request
                }
 
-               if (!listViewLiveMergeRequests.SelectMergeRequest(mrk, true))
+               if (!getListView(EDataCacheType.Live).SelectMergeRequest(mrk, true))
                {
                   Debug.Assert(false);
                   Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
@@ -431,7 +431,7 @@ namespace mrHelper.App.Forms
                ProjectName = mrk.ProjectKey.ProjectName,
                MaxResults = 1
             }),
-            ECurrentMode.Search,
+            EDataCacheType.Search,
             new Func<Exception, bool>(x =>
                throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
       }
@@ -533,7 +533,7 @@ namespace mrHelper.App.Forms
          }
          labelOperationStatus.Text = String.Empty;
 
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          Debug.Assert(dataCache.MergeRequestCache != null);
          Debug.Assert(dataCache.ConnectionContext != null);
          Debug.Assert(dataCache.ConnectionContext.CustomData is SearchQueryCollection);

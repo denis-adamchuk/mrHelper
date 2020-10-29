@@ -173,6 +173,13 @@ namespace mrHelper.App.Helpers
       private static readonly string ListViewFoundMergeRequestsDisplayIndicesKeyName      = "LVFMR_DisplayIndices";
       private static readonly string ListViewFoundMergeRequestsDisplayIndicesDefaultValue = String.Empty;
 
+      private static readonly string ListViewRecentMergeRequestsColumnWidthsKeyName           = "LVRMR_ColWidths";
+      private static readonly string ListViewRecentMergeRequestsColumnWidthsDefaultValue      = String.Empty;
+      private static readonly int    ListViewRecentMergeRequestsSingleColumnWidthDefaultValue = 100;
+
+      private static readonly string ListViewRecentMergeRequestsDisplayIndicesKeyName      = "LVRMR_DisplayIndices";
+      private static readonly string ListViewRecentMergeRequestsDisplayIndicesDefaultValue = String.Empty;
+
       private static readonly string RevisionBrowserColumnWidthsKeyName           = "RB_ColWidths";
       private static readonly string RevisionBrowserColumnWidthsDefaultValue      = String.Empty;
       private static readonly int    RevisionBrowserSingleColumnWidthDefaultValue = 100;
@@ -655,6 +662,33 @@ namespace mrHelper.App.Helpers
          set
          {
             setStringToIntDictionary(ListViewFoundMergeRequestsDisplayIndicesKeyName, value);
+         }
+      }
+
+      public Dictionary<string, int> ListViewRecentMergeRequestsColumnWidths
+      {
+         get
+         {
+            return getStringToIntDictionary(ListViewRecentMergeRequestsColumnWidthsKeyName,
+                                            ListViewRecentMergeRequestsColumnWidthsDefaultValue,
+                                            ListViewRecentMergeRequestsSingleColumnWidthDefaultValue, -1);
+         }
+         set
+         {
+            setStringToIntDictionary(ListViewRecentMergeRequestsColumnWidthsKeyName, value);
+         }
+      }
+
+      public Dictionary<string, int> ListViewRecentMergeRequestsDisplayIndices
+      {
+         get
+         {
+            return getStringToIntDictionary(ListViewRecentMergeRequestsDisplayIndicesKeyName,
+                                            ListViewRecentMergeRequestsDisplayIndicesDefaultValue, -1, -1);
+         }
+         set
+         {
+            setStringToIntDictionary(ListViewRecentMergeRequestsDisplayIndicesKeyName, value);
          }
       }
 

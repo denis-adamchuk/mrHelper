@@ -65,21 +65,24 @@ namespace mrHelper.App.Forms
       private void createMessageFilterFromSettings()
       {
          _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());
-         _mergeRequestFilter.FilterChanged += () => updateMergeRequestList(ECurrentMode.Live);
+         _mergeRequestFilter.FilterChanged += () => updateMergeRequestList(EDataCacheType.Live);
       }
 
       private void setColumnWidthsFromSettings()
       {
-         listViewLiveMergeRequests.SetColumnWidths(Program.Settings.ListViewMergeRequestsColumnWidths);
-         listViewFoundMergeRequests.SetColumnWidths(Program.Settings.ListViewFoundMergeRequestsColumnWidths);
+         getListView(EDataCacheType.Live).SetColumnWidths(Program.Settings.ListViewMergeRequestsColumnWidths);
+         getListView(EDataCacheType.Search).SetColumnWidths(Program.Settings.ListViewFoundMergeRequestsColumnWidths);
+         getListView(EDataCacheType.Recent).SetColumnWidths(Program.Settings.ListViewRecentMergeRequestsColumnWidths);
       }
 
       private void setColumnIndicesFromSettings()
       {
-         listViewLiveMergeRequests.SetColumnIndices(Program.Settings.ListViewMergeRequestsDisplayIndices,
+         getListView(EDataCacheType.Live).SetColumnIndices(Program.Settings.ListViewMergeRequestsDisplayIndices,
             x => Program.Settings.ListViewMergeRequestsDisplayIndices = x);
-         listViewFoundMergeRequests.SetColumnIndices(Program.Settings.ListViewFoundMergeRequestsDisplayIndices,
+         getListView(EDataCacheType.Search).SetColumnIndices(Program.Settings.ListViewFoundMergeRequestsDisplayIndices,
             x => Program.Settings.ListViewFoundMergeRequestsDisplayIndices = x);
+         getListView(EDataCacheType.Recent).SetColumnIndices(Program.Settings.ListViewRecentMergeRequestsDisplayIndices,
+            x => Program.Settings.ListViewRecentMergeRequestsDisplayIndices = x);
       }
 
       private void setThemeFromSettings()
@@ -422,8 +425,7 @@ namespace mrHelper.App.Forms
             MessageBox.Show("Cannot initialize color scheme", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
 
-         listViewLiveMergeRequests.SetColorScheme(_colorScheme);
-         listViewFoundMergeRequests.SetColorScheme(_colorScheme);
+         forEachListView(listView => listView.SetColorScheme(_colorScheme));
       }
 
       private void initializeIconScheme()

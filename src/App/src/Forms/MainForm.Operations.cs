@@ -18,8 +18,8 @@ namespace mrHelper.App.Forms
    {
       private void createNewMergeRequestByUserRequest()
       {
-         Debug.Assert(getMode() == ECurrentMode.Live);
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (!checkIfMergeRequestCanBeCreated())
          {
             return;
@@ -51,9 +51,9 @@ namespace mrHelper.App.Forms
 
       private void editSelectedMergeRequest()
       {
-         Debug.Assert(getMode() == ECurrentMode.Live);
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
-         FullMergeRequestKey? fmk = listViewLiveMergeRequests.GetSelectedMergeRequest();
+         Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
+         FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
          if (!fmk.HasValue || !checkIfMergeRequestCanBeEdited())
          {
             return;
@@ -74,14 +74,14 @@ namespace mrHelper.App.Forms
 
       private void acceptSelectedMergeRequest()
       {
-         Debug.Assert(getMode() == ECurrentMode.Live);
-         FullMergeRequestKey? fmk = listViewLiveMergeRequests.GetSelectedMergeRequest();
+         Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
+         FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
          if (!fmk.HasValue || !checkIfMergeRequestCanBeEdited())
          {
             return;
          }
 
-         IEnumerable<Project> fullProjectList = getDataCache(ECurrentMode.Live)?.ProjectCache?.GetProjects();
+         IEnumerable<Project> fullProjectList = getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects();
          bool isProjectListReady = fullProjectList?.Any() ?? false;
          if (!isProjectListReady)
          {
@@ -95,8 +95,8 @@ namespace mrHelper.App.Forms
 
       private void closeSelectedMergeRequest()
       {
-         Debug.Assert(getMode() == ECurrentMode.Live);
-         FullMergeRequestKey? fmk = listViewLiveMergeRequests.GetSelectedMergeRequest();
+         Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
+         FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
          if (!fmk.HasValue || !checkIfMergeRequestCanBeEdited())
          {
             return;
@@ -107,8 +107,8 @@ namespace mrHelper.App.Forms
 
       private void refreshSelectedMergeRequest()
       {
-         Debug.Assert(getMode() == ECurrentMode.Live);
-         FullMergeRequestKey? fmk = listViewLiveMergeRequests.GetSelectedMergeRequest();
+         Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
+         FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
          if (!fmk.HasValue)
          {
             return;
@@ -121,7 +121,7 @@ namespace mrHelper.App.Forms
       private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties,
          IEnumerable<Project> fullProjectList, IEnumerable<User> fullUserList)
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          var sourceBranchesInUse = GitLabClient.Helpers.GetSourceBranchesByUser(getCurrentUser(), dataCache);
 
          MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
@@ -146,7 +146,7 @@ namespace mrHelper.App.Forms
 
       private void acceptMergeRequest(FullMergeRequestKey item)
       {
-         DataCache dataCache = getDataCache(ECurrentMode.Live);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
          Form formExisting = WinFormsHelpers.FindFormByTag("AcceptMergeRequestForm", doesMatchTag);
@@ -195,10 +195,10 @@ namespace mrHelper.App.Forms
 
       private async Task editTrackedTimeAsync(MergeRequestKey mrk, MergeRequest mr)
       {
-         Debug.Assert(getMode() == ECurrentMode.Live);
+         Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
          IMergeRequestEditor editor = Shortcuts.GetMergeRequestEditor(gitLabInstance, _modificationNotifier, mrk);
-         DataCache dataCache = getDataCache(getMode());
+         DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
          TimeSpan? oldSpanOpt = dataCache?.TotalTimeCache?.GetTotalTime(mrk).Amount;
          if (!oldSpanOpt.HasValue)
          {
@@ -276,7 +276,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         DataCache dataCache = getDataCache(getMode());
+         DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
 
          // Stop timer
          _timeTrackingTimer.Stop();
@@ -339,7 +339,7 @@ namespace mrHelper.App.Forms
          _timeTrackingTabPage = null;
          labelOperationStatus.Text = "Time tracking cancelled";
 
-         onTimerStopped(getDataCache(getMode())?.TotalTimeCache);
+         onTimerStopped(getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache);
       }
 
       private void addCommentForSelectedMergeRequest()
@@ -363,7 +363,7 @@ namespace mrHelper.App.Forms
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
             bool res = (await DiscussionHelper.AddThreadAsync(mrk, mergeRequest.Title, _modificationNotifier,
-               getCurrentUser(), getDataCache(getMode()))) != null;
+               getCurrentUser(), getDataCache(getCurrentTabDataCacheType()))) != null;
             labelOperationStatus.Text = res ? "Added a discussion thread" : "Discussion thread is not added";
          }));
       }
