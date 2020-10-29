@@ -60,6 +60,12 @@ namespace mrHelper.App.Forms
             requestCommitStorageUpdate(e.FullMergeRequestKey.ProjectKey);
          }
 
+         if (e.New && cleanupReopenedRecentMergeRequests())
+         {
+            updateRecentDataCacheQueryColletion(e.FullMergeRequestKey.ProjectKey.HostName);
+            requestUpdates(EDataCacheType.Recent, null, new[] { PseudoTimerInterval });
+         }
+
          MergeRequestKey mrk = new MergeRequestKey(
             e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
 
@@ -68,14 +74,16 @@ namespace mrHelper.App.Forms
             MergeRequestKey[] closedMergeRequests = new MergeRequestKey[] { mrk };
             cleanupReviewedMergeRequests(closedMergeRequests);
             addRecentMergeRequestKeys(closedMergeRequests);
-            reloadRecentMergeRequests(getHostName());
+            updateRecentDataCacheQueryColletion(e.FullMergeRequestKey.ProjectKey.HostName);
+            requestUpdates(EDataCacheType.Recent, mrk, new[] { PseudoTimerInterval });
          }
 
          updateMergeRequestList(EDataCacheType.Live);
 
          if (e.New)
          {
-            requestUpdates(mrk, new[] {
+            // some labels may appear within a small delay after new MR is detected
+            requestUpdates(EDataCacheType.Live, mrk, new[] {
                Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
                Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
          }
@@ -97,6 +105,40 @@ namespace mrHelper.App.Forms
          if (e.Commits)
          {
             onMergeRequestSelectionChanged(EDataCacheType.Live);
+         }
+      }
+
+      private void onRecentMergeRequestEvent(UserEvents.MergeRequestEvent e)
+      {
+         if (e.Commits)
+         {
+            requestCommitStorageUpdate(e.FullMergeRequestKey.ProjectKey);
+         }
+
+         MergeRequestKey mrk = new MergeRequestKey(
+            e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
+
+         updateMergeRequestList(EDataCacheType.Recent);
+
+         FullMergeRequestKey? fmk = getListView(EDataCacheType.Recent).GetSelectedMergeRequest();
+         if (!fmk.HasValue
+          || !fmk.Value.Equals(e.FullMergeRequestKey)
+          || getCurrentTabDataCacheType() != EDataCacheType.Recent)
+         {
+            return;
+         }
+
+         Trace.TraceInformation("[MainForm] Updating selected Recent Merge Request");
+
+         if (e.Details)
+         {
+            // Non-grid Details are updated here and Grid ones are updated in updateMergeRequestList() above
+            updateMergeRequestDetails(fmk.Value);
+         }
+
+         if (e.Commits)
+         {
+            onMergeRequestSelectionChanged(EDataCacheType.Recent);
          }
       }
 

@@ -19,14 +19,18 @@ namespace mrHelper.GitLabClient
    public class DataCacheUpdateRules
    {
       public DataCacheUpdateRules(
-         int? updateDiscussionsPeriod, int? updateMergeRequestsPeriod)
+         int? updateDiscussionsPeriod,
+         int? updateMergeRequestsPeriod,
+         bool updateOnlyOpenedMergeRequests)
       {
          UpdateDiscussionsPeriod = updateDiscussionsPeriod;
          UpdateMergeRequestsPeriod = updateMergeRequestsPeriod;
+         UpdateOnlyOpenedMergeRequests = updateOnlyOpenedMergeRequests;
       }
 
       public int? UpdateDiscussionsPeriod { get; }
       public int? UpdateMergeRequestsPeriod { get; }
+      public bool UpdateOnlyOpenedMergeRequests { get; }
    }
 
    public class DataCacheConnectionContext

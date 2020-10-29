@@ -927,13 +927,13 @@ namespace mrHelper.App.Forms
       {
          getListView(mode).DisableListView(clearListView);
 
-         if (getCurrentTabDataCacheType() == EDataCacheType.Live)
+         if (mode == EDataCacheType.Live)
          {
             buttonReloadList.Enabled = false;
             buttonCreateNew.Enabled = false;
             enableMergeRequestFilterControls(false);
          }
-         else if (getCurrentTabDataCacheType() == EDataCacheType.Search)
+         else if (mode == EDataCacheType.Search)
          {
             buttonSearch.Enabled = false;
          }

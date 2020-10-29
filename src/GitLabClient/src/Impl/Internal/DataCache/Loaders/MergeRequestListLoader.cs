@@ -30,6 +30,7 @@ namespace mrHelper.GitLabClient.Loaders
       {
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests = await loadMergeRequestsAsync();
          _cacheUpdater.UpdateMergeRequests(mergeRequests);
+         // TODO Optimization - Don't load versions and commits if nothing changed
          await _versionLoader.LoadVersionsAndCommits(mergeRequests);
       }
 

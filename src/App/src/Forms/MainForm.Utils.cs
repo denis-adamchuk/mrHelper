@@ -484,7 +484,7 @@ namespace mrHelper.App.Forms
          }
 
          Debug.Assert(query != null);
-         searchMergeRequests(new SearchQueryCollection(query), EDataCacheType.Search);
+         searchMergeRequests(new SearchQueryCollection(query));
       }
 
       private void doClose()
@@ -723,6 +723,14 @@ namespace mrHelper.App.Forms
       {
          enqueueUrl(url);
       }
+
+      private void requestUpdates(EDataCacheType mode, MergeRequestKey? mrk, int[] intervals)
+      {
+         DataCache dataCache = getDataCache(mode);
+         dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals);
+         dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
+      }
+
    }
 }
 

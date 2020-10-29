@@ -11,20 +11,17 @@ namespace mrHelper.GitLabClient.Loaders
 {
    internal class MergeRequestLoader : BaseDataCacheLoader, IMergeRequestLoader
    {
-      internal MergeRequestLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater)
+      internal MergeRequestLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater, bool updateOnlyOpened)
          : base(op)
       {
          _cacheUpdater = cacheUpdater;
          _versionLoader = new VersionLoader(op, cacheUpdater);
+         _updateOnlyOpened = updateOnlyOpened;
       }
 
       async public Task LoadMergeRequest(MergeRequestKey mrk)
       {
-         // The idea is that:
-         // 1. Already cached MR that became closed remotely will not be removed from the cache
-         // 2. Open MR that are missing in the cache, will be added to the cache
-         // 3. Open MR that exist in the cache, will be updated
-         bool fetchOnlyOpenMergeRequests = true;
+         bool fetchOnlyOpenMergeRequests = _updateOnlyOpened;
 
          IEnumerable<MergeRequest> mergeRequests = await call(
             () => _operator.SearchMergeRequestsAsync(
@@ -41,11 +38,14 @@ namespace mrHelper.GitLabClient.Loaders
          if (mergeRequests.Any())
          {
             _cacheUpdater.UpdateMergeRequest(mrk, mergeRequests.First());
+
+            // TODO Optimization - Don't load versions and commits if nothing changed
             await _versionLoader.LoadVersionsAndCommits(
                new Dictionary<ProjectKey, IEnumerable<MergeRequest>>{ { mrk.ProjectKey,  mergeRequests.Take(1) } });
          }
       }
 
+      private readonly bool _updateOnlyOpened;
       private readonly IVersionLoader _versionLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
    }

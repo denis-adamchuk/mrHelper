@@ -42,7 +42,12 @@ namespace mrHelper.GitLabClient
          Queries = new SearchQuery[] { query };
       }
 
-      public IEnumerable<SearchQuery> Queries;
+      public void Assign(IEnumerable<SearchQuery> queries)
+      {
+         Queries = queries;
+      }
+
+      public IEnumerable<SearchQuery> Queries { get; private set; }
    }
 }
 

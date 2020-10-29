@@ -162,7 +162,7 @@ namespace mrHelper.App.Forms
             () =>
             {
                labelOperationStatus.Text = String.Format("Merge Request !{0} has been merged successfully", mrk.IId);
-               requestUpdates(null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
+               requestUpdates(EDataCacheType.Live, null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
             },
             showDiscussionsFormAsync,
             () => dataCache,
@@ -386,7 +386,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         requestUpdates(null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
+         requestUpdates(EDataCacheType.Live, null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
 
          labelOperationStatus.Text = String.Format("Merge Request !{0} has been created in project {1}",
             mrkOpt.Value.IId, parameters.ProjectKey.ProjectName);
@@ -432,7 +432,7 @@ namespace mrHelper.App.Forms
 
          if (modified)
          {
-            requestUpdates(mrk,
+            requestUpdates(EDataCacheType.Live, mrk,
                new int[] {
                         100,
                         Program.Settings.OneShotUpdateFirstChanceDelayMs,
@@ -455,7 +455,7 @@ namespace mrHelper.App.Forms
             labelOperationStatus.Text = statusMessage;
             Trace.TraceInformation("[MainForm] {0}", statusMessage);
 
-            requestUpdates(null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
+            requestUpdates(EDataCacheType.Live, null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
          }
          else
          {

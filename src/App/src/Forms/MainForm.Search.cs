@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.GitLabClient;
@@ -7,11 +10,20 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      private void searchMergeRequests(SearchQueryCollection queryCollection, EDataCacheType mode,
-         Func<Exception, bool> exceptionHandler = null)
+      private SearchQueryCollection _recentDataCacheQueryCollection;
+
+      private void searchMergeRequests(SearchQueryCollection queryCollection)
       {
          BeginInvoke(new Action(async () =>
-            await searchMergeRequestsSafeAsync(queryCollection, mode, exceptionHandler)), null);
+            await searchMergeRequestsSafeAsync(queryCollection, EDataCacheType.Search, null)), null);
+      }
+
+      private void loadRecentMergeRequests()
+      {
+         IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(getHostName());
+         _recentDataCacheQueryCollection = new SearchQueryCollection(queries);
+         BeginInvoke(new Action(async () =>
+            await searchMergeRequestsSafeAsync(_recentDataCacheQueryCollection, EDataCacheType.Recent, null)), null);
       }
 
       async private Task searchMergeRequestsSafeAsync(SearchQueryCollection queryCollection, EDataCacheType mode,
@@ -60,7 +72,7 @@ namespace mrHelper.App.Forms
       {
          DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(
             new DataCacheCallbacks(null, null),
-            new DataCacheUpdateRules(null, null),
+            getDataCacheUpdateRules(mode),
             queryCollection);
 
          DataCache dataCache = getDataCache(mode);
@@ -68,6 +80,21 @@ namespace mrHelper.App.Forms
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+      private DataCacheUpdateRules getDataCacheUpdateRules(EDataCacheType mode)
+      {
+         switch (mode)
+         {
+            case EDataCacheType.Recent:
+               return new DataCacheUpdateRules(null, Program.Settings.AutoUpdatePeriodMs, false);
+
+            case EDataCacheType.Search:
+               return new DataCacheUpdateRules(null, null, false);
+         }
+
+         Debug.Assert(false);
+         return null;
+      }
 
       private void onSearchDataCacheConnecting(string hostname)
       {
@@ -89,6 +116,11 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void onRecentDataCacheDisconnected()
+      {
+         unsubscribeFromRecentDataCacheInternalEvents();
+      }
+
       private void onRecentDataCacheConnecting(string hostname)
       {
          getListView(EDataCacheType.Recent).Items.Clear();
@@ -97,13 +129,36 @@ namespace mrHelper.App.Forms
 
       private void onRecentDataCacheConnected(string hostname, User user)
       {
+         subscribeToRecentDataCacheInternalEvents();
          updateMergeRequestList(EDataCacheType.Recent);
+
+         labelOperationStatus.Text = String.Empty;
 
          // current mode may have changed during 'await'
          if (getCurrentTabDataCacheType() == EDataCacheType.Recent)
          {
             getListView(EDataCacheType.Recent).SelectMergeRequest(new MergeRequestKey?(), false);
          }
+      }
+
+      ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+      private void updateRecentDataCacheQueryColletion(string hostname)
+      {
+         IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(hostname);
+         _recentDataCacheQueryCollection.Assign(queries);
+      }
+
+      private IEnumerable<SearchQuery> convertRecentMergeRequestsToSearchQueries(string hostname)
+      {
+         return _recentMergeRequests
+            .Where(key => key.ProjectKey.HostName == hostname)
+            .Select(key => new GitLabClient.SearchQuery
+            {
+               IId = key.IId,
+               ProjectName = key.ProjectKey.ProjectName
+            })
+            .ToArray();
       }
    }
 }

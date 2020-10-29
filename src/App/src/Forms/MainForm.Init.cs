@@ -127,7 +127,7 @@ namespace mrHelper.App.Forms
                bool reload = command.GetReload();
                if (reload)
                {
-                  requestUpdates(mergeRequestKey, new int[] {
+                  requestUpdates(EDataCacheType.Live, mergeRequestKey, new int[] {
                      Program.Settings.OneShotUpdateFirstChanceDelayMs,
                      Program.Settings.OneShotUpdateSecondChanceDelayMs });
                }
@@ -400,9 +400,19 @@ namespace mrHelper.App.Forms
          getListView(EDataCacheType.Recent).AssignDataCache(_recentDataCache);
       }
 
+      private void subscribeToRecentDataCacheInternalEvents()
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Recent);
+         if (dataCache?.MergeRequestCache != null)
+         {
+            dataCache.MergeRequestCache.MergeRequestEvent += onRecentMergeRequestEvent;
+         }
+      }
+
       private void subscribeToRecentDataCache()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Recent);
+         dataCache.Disconnected += onRecentDataCacheDisconnected;
          dataCache.Connecting += onRecentDataCacheConnecting;
          dataCache.Connected += onRecentDataCacheConnected;
       }
@@ -410,8 +420,18 @@ namespace mrHelper.App.Forms
       private void unsubscribeFromRecentDataCache()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Recent);
+         dataCache.Disconnected -= onRecentDataCacheDisconnected;
          dataCache.Connecting -= onRecentDataCacheConnecting;
          dataCache.Connected -= onRecentDataCacheConnected;
+      }
+
+      private void unsubscribeFromRecentDataCacheInternalEvents()
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Recent);
+         if (dataCache?.MergeRequestCache != null)
+         {
+            dataCache.MergeRequestCache.MergeRequestEvent -= onRecentMergeRequestEvent;
+         }
       }
 
       private void createGitHelpers(DataCache dataCache, ILocalCommitStorageFactory factory)

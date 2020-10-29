@@ -146,9 +146,17 @@ namespace mrHelper.App.Forms
 
       async private Task connectLiveDataCacheAsync(string hostname, SearchQueryCollection queryCollection)
       {
+         // The idea is that:
+         // 1. Already cached MR that became closed remotely will not be removed from the cache
+         // 2. Open MR that are missing in the cache, will be added to the cache
+         // 3. Open MR that exist in the cache, will be updated
+         // 4. Non-cached MR that are closed remotely, will not be added to the cache even if directly requested by IId
+         bool updateOnlyOpened = true;
+
          DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(
             new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
-            new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs),
+            new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs,
+               updateOnlyOpened),
             queryCollection);
 
          DataCache dataCache = getDataCache(EDataCacheType.Live);
@@ -246,7 +254,8 @@ namespace mrHelper.App.Forms
          cleanupReviewedMergeRequests(closedReviewed);
          addRecentMergeRequestKeys(closedReviewed);
          cleanupOldRecentMergeRequests(hostname);
-         reloadRecentMergeRequests(hostname);
+         cleanupReopenedRecentMergeRequests();
+         loadRecentMergeRequests();
 
          updateMergeRequestList(EDataCacheType.Live);
 
@@ -516,13 +525,6 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void requestUpdates(MergeRequestKey? mrk, int[] intervals)
-      {
-         DataCache dataCache = getDataCache(EDataCacheType.Live);
-         dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals);
-         dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
-      }
-
       async private Task checkForUpdatesAsync(MergeRequestKey? mrk,
          DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
       {
@@ -575,7 +577,7 @@ namespace mrHelper.App.Forms
             string oldButtonText = buttonReloadList.Text;
             onUpdating();
 
-            requestUpdates(null, ReloadListPseudoTimerInterval,
+            requestUpdates(null, PseudoTimerInterval,
                () =>
                {
                   onUpdated(oldButtonText);

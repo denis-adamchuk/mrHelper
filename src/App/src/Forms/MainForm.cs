@@ -38,7 +38,7 @@ namespace mrHelper.App.Forms
       private static readonly string RefreshButtonTooltip = "Refresh merge request list in the background";
 
       private static readonly int NewOrClosedMergeRequestRefreshListTimerInterval = 1000 * 3; // 3 seconds
-      private static readonly int ReloadListPseudoTimerInterval = 100 * 1; // 0.1 second
+      private static readonly int PseudoTimerInterval = 100 * 1; // 0.1 second
 
       private bool _forceMaximizeOnNextRestore;
       private bool _applySplitterDistanceOnNextRestore;

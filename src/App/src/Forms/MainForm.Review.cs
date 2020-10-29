@@ -36,7 +36,7 @@ namespace mrHelper.App.Forms
          if (getCurrentTabDataCacheType() == EDataCacheType.Search)
          {
             // Pre-load discussions for MR in Search mode
-            dataCache.DiscussionCache.RequestUpdate(mrk, ReloadListPseudoTimerInterval, null);
+            dataCache.DiscussionCache.RequestUpdate(mrk, PseudoTimerInterval, null);
          }
 
          IEnumerable<Discussion> discussions = await loadDiscussionsAsync(dataCache, mrk);
@@ -422,19 +422,31 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void reloadRecentMergeRequests(string hostname)
+      private bool cleanupReopenedRecentMergeRequests()
       {
-         SearchQueryCollection queryCollection = new SearchQueryCollection(
-            _recentMergeRequests
-            .Where(key => key.ProjectKey.HostName == hostname)
-            .Select(key => new GitLabClient.SearchQuery
+         bool changed = false;
+         List<MergeRequestKey> reopened = new List<MergeRequestKey>();
+         foreach (MergeRequestKey key in _recentMergeRequests)
+         {
+            MergeRequest mergeRequest = getDataCache(EDataCacheType.Live)?.MergeRequestCache?.GetMergeRequest(key);
+            if (mergeRequest != null && mergeRequest.State == "opened")
             {
-               IId = key.IId,
-               ProjectName = key.ProjectKey.ProjectName
-            })
-            .ToArray());
+               reopened.Add(key);
+            }
+         }
 
-         searchMergeRequests(queryCollection, EDataCacheType.Recent);
+         foreach (MergeRequestKey key in reopened)
+         {
+            _recentMergeRequests.Remove(key);
+            changed = true;
+         }
+
+         if (changed)
+         {
+            saveState();
+         }
+
+         return changed;
       }
    }
 }
