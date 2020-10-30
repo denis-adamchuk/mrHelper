@@ -63,6 +63,19 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       }
 
       /// <summary>
+      /// Return single merge request by its key
+      /// </summary>
+      public MergeRequest GetMergeRequest(MergeRequestKey mrk)
+      {
+         if (!_mergeRequests.TryGetValue(mrk.ProjectKey, out var mergeRequests))
+         {
+            return null;
+         }
+
+         return mergeRequests.SingleOrDefault(mergeRequest => mergeRequest.IId == mrk.IId);
+      }
+
+      /// <summary>
       /// Sets a list of merge requests for the given projects
       /// </summary>
       internal void SetMergeRequests(Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)

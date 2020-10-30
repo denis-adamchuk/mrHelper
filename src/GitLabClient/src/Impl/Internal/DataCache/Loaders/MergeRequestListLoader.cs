@@ -29,9 +29,30 @@ namespace mrHelper.GitLabClient.Loaders
       async public Task Load()
       {
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests = await loadMergeRequestsAsync();
+         List<MergeRequestKey> updatedMergeRequests = getUpdatedMergeRequests(mergeRequests);
          _cacheUpdater.UpdateMergeRequests(mergeRequests);
-         // TODO Optimization - Don't load versions and commits if nothing changed
-         await _versionLoader.LoadVersionsAndCommits(mergeRequests);
+         await _versionLoader.LoadVersionsAndCommits(updatedMergeRequests);
+      }
+
+      private List<MergeRequestKey> getUpdatedMergeRequests(
+         Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
+      {
+         List<MergeRequestKey> updatedMergeRequests = new List<MergeRequestKey>();
+         foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
+         {
+            ProjectKey projectKey = kv.Key;
+            foreach (MergeRequest mergeRequest in kv.Value)
+            {
+               MergeRequestKey mrk = new MergeRequestKey(kv.Key, mergeRequest.IId);
+               DateTime? oldUpdatedAt = _cacheUpdater.Cache.GetMergeRequest(mrk)?.Updated_At;
+               DateTime newUpdatedAt = mergeRequest.Updated_At;
+               if (!oldUpdatedAt.HasValue || oldUpdatedAt < newUpdatedAt)
+               {
+                  updatedMergeRequests.Add(mrk);
+               }
+            }
+         }
+         return updatedMergeRequests;
       }
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()

@@ -37,11 +37,14 @@ namespace mrHelper.GitLabClient.Loaders
 
          if (mergeRequests.Any())
          {
+            DateTime? oldUpdatedAt = _cacheUpdater.Cache.GetMergeRequest(mrk)?.Updated_At;
+            DateTime newUpdatedAt = mergeRequests.First().Updated_At;
             _cacheUpdater.UpdateMergeRequest(mrk, mergeRequests.First());
 
-            // TODO Optimization - Don't load versions and commits if nothing changed
-            await _versionLoader.LoadVersionsAndCommits(
-               new Dictionary<ProjectKey, IEnumerable<MergeRequest>>{ { mrk.ProjectKey,  mergeRequests.Take(1) } });
+            if (!oldUpdatedAt.HasValue || oldUpdatedAt < newUpdatedAt)
+            {
+               await _versionLoader.LoadVersionsAndCommits(new MergeRequestKey[] { mrk });
+            }
          }
       }
 
