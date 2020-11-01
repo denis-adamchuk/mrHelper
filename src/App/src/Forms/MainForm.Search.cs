@@ -83,7 +83,9 @@ namespace mrHelper.App.Forms
          switch (mode)
          {
             case EDataCacheType.Recent:
-               return new DataCacheUpdateRules(null, Program.Settings.AutoUpdatePeriodMs, false);
+               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
+                                               Program.Settings.AutoUpdatePeriodMs,
+                                               false);
 
             case EDataCacheType.Search:
                return new DataCacheUpdateRules(null, null, false);
