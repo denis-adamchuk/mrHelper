@@ -49,7 +49,7 @@ namespace mrHelper.App.Helpers
 
       private void onMergeRequestEvent(UserEvents.MergeRequestEvent e)
       {
-         if (e.New || e.Commits)
+         if (e.AddedToCache || e.Commits)
          {
             onProjectUpdate(e.FullMergeRequestKey.ProjectKey);
          }

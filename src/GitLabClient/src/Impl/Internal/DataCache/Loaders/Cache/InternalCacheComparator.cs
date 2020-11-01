@@ -142,7 +142,7 @@ namespace mrHelper.GitLabClient.Loaders.Cache
             FullMergeRequestKey fmk = new FullMergeRequestKey(mergeRequest.Project, mergeRequest.MergeRequest);
 
             updates.Add(new UserEvents.MergeRequestEvent(
-               fmk, UserEvents.MergeRequestEvent.Type.NewMergeRequest, null));
+               fmk, UserEvents.MergeRequestEvent.Type.AddedMergeRequest, null));
          }
 
          foreach (MergeRequestWithProject mergeRequest in diff.FirstOnly)
@@ -150,7 +150,7 @@ namespace mrHelper.GitLabClient.Loaders.Cache
             FullMergeRequestKey fmk = new FullMergeRequestKey(mergeRequest.Project, mergeRequest.MergeRequest);
 
             updates.Add(new UserEvents.MergeRequestEvent(
-               fmk, UserEvents.MergeRequestEvent.Type.ClosedMergeRequest, null));
+               fmk, UserEvents.MergeRequestEvent.Type.RemovedMergeRequest, null));
          }
 
          foreach (Tuple<MergeRequestWithProject, MergeRequestWithProject> mrPair in diff.Common)

@@ -16,9 +16,9 @@ namespace mrHelper.GitLabClient
 
          public enum Type
          {
-            NewMergeRequest,
+            AddedMergeRequest,
             UpdatedMergeRequest,
-            ClosedMergeRequest
+            RemovedMergeRequest
          }
 
          public struct UpdateScope
@@ -56,11 +56,11 @@ namespace mrHelper.GitLabClient
          public Type EventType { get; }
          public object Scope { get; }
 
-         public bool New => EventType == Type.NewMergeRequest;
+         public bool AddedToCache => EventType == Type.AddedMergeRequest;
          public bool Commits => EventType == Type.UpdatedMergeRequest && ((UpdateScope)(Scope)).Commits;
          public bool Labels => EventType == Type.UpdatedMergeRequest && ((UpdateScope)(Scope)).Labels;
          public bool Details => EventType == Type.UpdatedMergeRequest && ((UpdateScope)(Scope)).Details;
-         public bool Closed => EventType == Type.ClosedMergeRequest;
+         public bool RemovedFromCache => EventType == Type.RemovedMergeRequest;
       }
 
       public class DiscussionEvent

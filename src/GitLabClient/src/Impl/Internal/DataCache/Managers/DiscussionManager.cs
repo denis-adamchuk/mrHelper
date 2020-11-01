@@ -509,7 +509,7 @@ namespace mrHelper.GitLabClient.Managers
       {
          switch (e.EventType)
          {
-            case UserEvents.MergeRequestEvent.Type.NewMergeRequest:
+            case UserEvents.MergeRequestEvent.Type.AddedMergeRequest:
                Trace.TraceInformation(String.Format(
                   "[DiscussionManager] Scheduling update of discussions for a new merge request with IId {0}",
                   e.FullMergeRequestKey.MergeRequest.IId));
@@ -527,7 +527,7 @@ namespace mrHelper.GitLabClient.Managers
                scheduleUpdate(new MergeRequestKey[] { mrk }, DiscussionUpdateType.NewMergeRequest);
                break;
 
-            case UserEvents.MergeRequestEvent.Type.ClosedMergeRequest:
+            case UserEvents.MergeRequestEvent.Type.RemovedMergeRequest:
                {
                MergeRequestKey closedMRK = new MergeRequestKey(
                   e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);

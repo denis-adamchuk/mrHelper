@@ -140,6 +140,16 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+      private void addMergeRequestToRecentDataCache(MergeRequestKey mrk)
+      {
+         MergeRequestKey[] closedMergeRequests = new MergeRequestKey[] { mrk };
+         addRecentMergeRequestKeys(closedMergeRequests);
+         bool needUpdateFullList = cleanupOldRecentMergeRequests(mrk.ProjectKey.HostName);
+         updateRecentDataCacheQueryColletion(mrk.ProjectKey.HostName);
+         MergeRequestKey? keyForUpdate = needUpdateFullList ? new Nullable<MergeRequestKey>() : mrk;
+         requestUpdates(EDataCacheType.Recent, keyForUpdate, new[] { PseudoTimerInterval });
+      }
+
       private void updateRecentDataCacheQueryColletion(string hostname)
       {
          IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(hostname);

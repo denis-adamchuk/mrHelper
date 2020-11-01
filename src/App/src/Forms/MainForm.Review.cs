@@ -392,7 +392,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void cleanupOldRecentMergeRequests(string hostname)
+      private bool cleanupOldRecentMergeRequests(string hostname)
       {
          bool changed = false;
          IEnumerable<IGrouping<ProjectKey, MergeRequestKey>> groups =
@@ -421,6 +421,8 @@ namespace mrHelper.App.Forms
          {
             saveState();
          }
+
+         return changed;
       }
 
       private bool cleanupReopenedRecentMergeRequests()

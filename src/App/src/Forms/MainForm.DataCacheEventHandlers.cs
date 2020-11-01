@@ -55,31 +55,28 @@ namespace mrHelper.App.Forms
 
       private void onMergeRequestEvent(UserEvents.MergeRequestEvent e)
       {
-         if (e.New || e.Commits)
+         if (e.AddedToCache || e.Commits)
          {
             requestCommitStorageUpdate(e.FullMergeRequestKey.ProjectKey);
-         }
-
-         if (e.New && cleanupReopenedRecentMergeRequests())
-         {
-            updateRecentDataCacheQueryColletion(e.FullMergeRequestKey.ProjectKey.HostName);
-            requestUpdates(EDataCacheType.Recent, null, new[] { PseudoTimerInterval });
          }
 
          MergeRequestKey mrk = new MergeRequestKey(
             e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
 
-         if (e.Closed && isReviewedMergeRequest(mrk))
+         if (e.AddedToCache && cleanupReopenedRecentMergeRequests())
          {
-            MergeRequestKey[] closedMergeRequests = new MergeRequestKey[] { mrk };
-            addRecentMergeRequestKeys(closedMergeRequests);
-            updateRecentDataCacheQueryColletion(e.FullMergeRequestKey.ProjectKey.HostName);
-            requestUpdates(EDataCacheType.Recent, mrk, new[] { PseudoTimerInterval });
+            updateRecentDataCacheQueryColletion(mrk.ProjectKey.HostName);
+            requestUpdates(EDataCacheType.Recent, null, new[] { PseudoTimerInterval });
+         }
+
+         if (e.RemovedFromCache && isReviewedMergeRequest(mrk))
+         {
+            addMergeRequestToRecentDataCache(mrk);
          }
 
          updateMergeRequestList(EDataCacheType.Live);
 
-         if (e.New)
+         if (e.AddedToCache)
          {
             // some labels may appear within a small delay after new MR is detected
             requestUpdates(EDataCacheType.Live, mrk, new[] {

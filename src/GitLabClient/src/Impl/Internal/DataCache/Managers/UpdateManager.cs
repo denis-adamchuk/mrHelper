@@ -194,11 +194,11 @@ namespace mrHelper.GitLabClient.Managers
 
          IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(oldDetails, _cache);
 
-         int newMergeRequestsCount = updates.Count(x => x.New);
+         int newMergeRequestsCount = updates.Count(x => x.AddedToCache);
          int mergeRequestsWithUpdatedCommitsCount = updates.Count(x => x.Commits);
          int mergeRequestsWithUpdatedLabelsCount = updates.Count(x => x.Labels);
          int mergeRequestsWithUpdatedDetailsCount = updates.Count(x => x.Details);
-         int closedMergeRequestsCount = updates.Count(x => x.Closed);
+         int closedMergeRequestsCount = updates.Count(x => x.RemovedFromCache);
          if (newMergeRequestsCount > 0
           || mergeRequestsWithUpdatedCommitsCount > 0
           || mergeRequestsWithUpdatedLabelsCount > 0
