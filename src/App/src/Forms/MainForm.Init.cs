@@ -15,10 +15,13 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      internal MainForm(bool startMinimized, bool runningAsUwp, string startUrl)
+      internal MainForm(bool startMinimized, bool runningAsUwp, string startUrl, bool integratedInGitExtensions,
+         bool integratedInSourceTree)
       {
          _startMinimized = startMinimized;
          _startUrl = startUrl;
+         _integratedInGitExtensions = integratedInGitExtensions;
+         _integratedInSourceTree = integratedInSourceTree;
 
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
          InitializeComponent();

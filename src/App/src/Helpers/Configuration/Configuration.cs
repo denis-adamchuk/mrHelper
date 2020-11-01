@@ -89,6 +89,9 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowWarningOnReloadListKeyName      = "ShowWarningOnReloadList";
       private static readonly bool   ShowWarningOnReloadListDefaultValue = true;
 
+      private static readonly string ShowWarningOnCreateMergeRequestKeyName      = "ShowWarningOnCreateMergeRequest";
+      private static readonly bool   ShowWarningOnCreateMergeRequestDefaultValue = true;
+
       private static readonly string ShowWarningOnFilterMigrationKeyName      = "ShowWarningOnFilterMigration";
       private static readonly bool   ShowWarningOnFilterMigrationDefaultValue = true;
 
@@ -408,6 +411,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : ShowWarningOnReloadListDefaultValue;
          }
          set { setValue(ShowWarningOnReloadListKeyName, boolToString(value)); }
+      }
+
+      public bool ShowWarningOnCreateMergeRequest
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               ShowWarningOnCreateMergeRequestKeyName, boolToString(ShowWarningOnCreateMergeRequestDefaultValue)),
+                  out bool result) ? result : ShowWarningOnCreateMergeRequestDefaultValue;
+         }
+         set { setValue(ShowWarningOnCreateMergeRequestKeyName, boolToString(value)); }
       }
 
       public bool ShowWarningOnFilterMigration

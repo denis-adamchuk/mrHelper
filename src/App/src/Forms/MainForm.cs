@@ -54,6 +54,8 @@ namespace mrHelper.App.Forms
       private readonly bool _canSwitchTab = true;
       private readonly bool _allowAutoStartApplication = false;
       private readonly string _startUrl;
+      private readonly bool _integratedInGitExtensions;
+      private readonly bool _integratedInSourceTree;
       private readonly Timer _timeTrackingTimer = new Timer
       {
          Interval = TimeTrackingTimerInterval

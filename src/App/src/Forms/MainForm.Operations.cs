@@ -43,6 +43,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         showWarningAboutIntegrationWithGitUI();
+
          string projectName = getDefaultProjectName();
          NewMergeRequestProperties initialFormState = getDefaultNewMergeRequestProperties(
             getHostName(), getCurrentUser(), projectName);

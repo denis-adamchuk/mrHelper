@@ -732,6 +732,50 @@ namespace mrHelper.App.Forms
          dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
       }
 
+      private static void showWarningOnReloadList()
+      {
+         if (Program.Settings.ShowWarningOnReloadList)
+         {
+            int autoUpdateMs = Program.Settings.AutoUpdatePeriodMs;
+            double oneMinuteMs = 60000;
+            double autoUpdateMinutes = autoUpdateMs / oneMinuteMs;
+
+            string periodicity = autoUpdateMs > oneMinuteMs
+               ? (autoUpdateMs % Convert.ToInt32(oneMinuteMs) == 0
+                  ? String.Format("{0} minutes", autoUpdateMinutes)
+                  : String.Format("{0:F1} minutes", autoUpdateMinutes))
+               : String.Format("{0} seconds", autoUpdateMs / 1000);
+
+            string message = String.Format(
+               "Merge Request list updates each {0} and you don't usually need to update it manually", periodicity);
+            MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            Program.Settings.ShowWarningOnReloadList = false;
+         }
+      }
+
+      private void showWarningAboutIntegrationWithGitUI()
+      {
+         if (Program.Settings.ShowWarningOnCreateMergeRequest && (_integratedInGitExtensions || _integratedInSourceTree))
+         {
+            string tools = "Git Extensions or Source Tree";
+            if (_integratedInSourceTree && !_integratedInGitExtensions)
+            {
+               tools = "Source Tree";
+            }
+            else if (_integratedInGitExtensions && !_integratedInSourceTree)
+            {
+               tools = "Git Extensions";
+            }
+
+            string message = String.Format(
+               "Note: It is much easier to create a new merge request using integration of mrHelper with {0}. " +
+               "Just select a commit of a remote branch in {0} and press Create Merge Request in menu.", tools);
+            MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            Program.Settings.ShowWarningOnCreateMergeRequest = false;
+         }
+      }
    }
 }
 

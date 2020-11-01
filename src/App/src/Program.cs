@@ -108,7 +108,8 @@ namespace mrHelper.App
                   case LaunchOptions.LaunchMode.Register:
                      if (registerCustomProtocol())
                      {
-                        integrateInGitUI();
+                        integrateInGitExtensions();
+                        integrateInSourceTree();
                      }
                      break;
 
@@ -159,12 +160,14 @@ namespace mrHelper.App
             return;
          }
 
-         integrateInGitUI();
+         bool integratedInGitExtensions = integrateInGitExtensions();
+         bool integratedInSourceTree = integrateInSourceTree();
          Version currentVersion = Environment.OSVersion.Version;
          Trace.TraceInformation(String.Format("OS Version is {0}", currentVersion.ToString()));
 
          LaunchOptions.NormalModeOptions normalOptions = options.SpecialOptions as LaunchOptions.NormalModeOptions;
-         Application.Run(new MainForm(normalOptions.StartMinimized, runningAsUwp, normalOptions.StartUrl));
+         Application.Run(new MainForm(normalOptions.StartMinimized, runningAsUwp, normalOptions.StartUrl,
+            integratedInGitExtensions, integratedInSourceTree));
       }
 
       private static void onLaunchAnotherInstance(LaunchContext context)
@@ -491,7 +494,7 @@ namespace mrHelper.App
          return true;
       }
 
-      static private void integrateInGitUI()
+      static private bool integrateInGitExtensions()
       {
          string scriptPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
@@ -502,7 +505,14 @@ namespace mrHelper.App
          catch (GitExtensionsIntegrationHelperException ex)
          {
             ExceptionHandlers.Handle("Cannot integrate mrHelper in Git Extensions", ex);
+            return false;
          }
+         return true;
+      }
+
+      static private bool integrateInSourceTree()
+      {
+         string scriptPath = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
          try
          {
@@ -511,7 +521,9 @@ namespace mrHelper.App
          catch (SourceTreeIntegrationHelperException ex)
          {
             ExceptionHandlers.Handle("Cannot integrate mrHelper in Source Tree", ex);
+            return false;
          }
+         return true;
       }
 
       static private IIntegratedDiffTool createDiffTool()
