@@ -9,18 +9,21 @@ namespace mrHelper.GitLabClient
          ISynchronizeInvoke synchronizeInvoke,
          IMergeRequestFilterChecker mergeRequestFilterChecker,
          IEnumerable<string> discussionKeywords,
-         bool updateManagerExtendedLogging)
+         bool updateManagerExtendedLogging,
+         string tagForLogging)
       {
          SynchronizeInvoke = synchronizeInvoke;
          MergeRequestFilterChecker = mergeRequestFilterChecker;
          DiscussionKeywords = discussionKeywords;
          UpdateManagerExtendedLogging = updateManagerExtendedLogging;
+         TagForLogging = tagForLogging;
       }
 
       public ISynchronizeInvoke SynchronizeInvoke { get; }
       public IMergeRequestFilterChecker MergeRequestFilterChecker { get; }
       public IEnumerable<string> DiscussionKeywords { get; }
       public bool UpdateManagerExtendedLogging { get; }
+      public string TagForLogging { get; }
    }
 }
 

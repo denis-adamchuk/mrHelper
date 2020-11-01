@@ -16,6 +16,7 @@ using mrHelper.App.Forms.Helpers;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using mrHelper.Common.Constants;
 using mrHelper.CustomActions;
+using SearchQuery = mrHelper.App.Helpers.SearchQuery;
 
 namespace mrHelper.App.Forms
 {

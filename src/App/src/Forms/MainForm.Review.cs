@@ -8,13 +8,11 @@ using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.App.Interprocess;
 using mrHelper.StorageSupport;
-using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.App.Helpers.GitLab;
 using mrHelper.GitLabClient;
-using mrHelper.App.Forms.Helpers;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -27,7 +25,7 @@ namespace mrHelper.App.Forms
 
          // Store data before async/await
          User currentUser = getCurrentUser();
-         DataCache dataCache = getDataCache(!isSearchMode());
+         DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
          if (dataCache == null)
          {
@@ -35,10 +33,10 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (isSearchMode())
+         if (getCurrentTabDataCacheType() == EDataCacheType.Search)
          {
             // Pre-load discussions for MR in Search mode
-            dataCache.DiscussionCache.RequestUpdate(mrk, ReloadListPseudoTimerInterval, null);
+            dataCache.DiscussionCache.RequestUpdate(mrk, PseudoTimerInterval, null);
          }
 
          IEnumerable<Discussion> discussions = await loadDiscussionsAsync(dataCache, mrk);
@@ -88,7 +86,7 @@ namespace mrHelper.App.Forms
          }
 
          bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
-         Form formExisting = findFormByTag("DiscussionsForm", doesMatchTag);
+         Form formExisting = WinFormsHelpers.FindFormByTag("DiscussionsForm", doesMatchTag);
          if (formExisting != null)
          {
             formExisting.Activate();
@@ -96,8 +94,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         labelWorkflowStatus.Text = "Rendering discussion contexts...";
-         labelWorkflowStatus.Refresh();
+         labelOperationStatus.Text = "Rendering discussion contexts...";
+         labelOperationStatus.Refresh();
 
          DiscussionsForm form;
          try
@@ -138,25 +136,25 @@ namespace mrHelper.App.Forms
          {
             MessageBox.Show("No discussions to show.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             Trace.TraceInformation(String.Format("[MainForm] No discussions to show for MR IID {0}", mrk.IId));
-            labelWorkflowStatus.Text = "No discussions to show";
+            labelOperationStatus.Text = "No discussions to show";
             return;
          }
 
-         labelWorkflowStatus.Text = "Opening Discussions view...";
-         labelWorkflowStatus.Refresh();
+         labelOperationStatus.Text = "Opening Discussions view...";
+         labelOperationStatus.Refresh();
 
          form.Show();
 
          Trace.TraceInformation(String.Format("[MainForm] Opened Discussions for MR IId {0} (at {1})",
             mrk.IId, (storage?.Path ?? "null")));
 
-         labelWorkflowStatus.Text = "Discussions opened";
+         labelOperationStatus.Text = "Discussions opened";
       }
 
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
       {
          // Keep data before async/await
-         DataCache dataCache = getDataCache(!isSearchMode());
+         DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
          getShaForDiffTool(out string leftSHA, out string rightSHA,
             out IEnumerable<string> includedSHA, out RevisionType? type);
          string accessToken = Program.Settings.GetAccessToken(mrk.ProjectKey.HostName);
@@ -185,6 +183,7 @@ namespace mrHelper.App.Forms
          {
             reviewedRevisions.Add(sha);
          }
+         setReviewedRevisions(mrk, reviewedRevisions);
 
          MergeRequestKey? currentMrk = getMergeRequestKey(null);
          if (currentMrk.HasValue && currentMrk.Value.Equals(mrk))
@@ -196,7 +195,7 @@ namespace mrHelper.App.Forms
       private void launchDiffTool(string leftSHA, string rightSHA, ILocalCommitStorage storage,
          MergeRequestKey mrk, string accessToken, string sessionName)
       {
-         labelWorkflowStatus.Text = "Launching diff tool...";
+         labelOperationStatus.Text = "Launching diff tool...";
 
          int? pid = null;
          try
@@ -207,7 +206,7 @@ namespace mrHelper.App.Forms
          catch (DiffToolLaunchException)
          {
             MessageBox.Show("Cannot launch diff tool", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            labelWorkflowStatus.Text = String.Empty;
+            labelOperationStatus.Text = String.Empty;
          }
 
          if (!pid.HasValue)
@@ -221,11 +220,11 @@ namespace mrHelper.App.Forms
 
          if (pid == -1)
          {
-            labelWorkflowStatus.Text = "Diff tool was not launched. Most likely the difference is empty.";
+            labelOperationStatus.Text = "Diff tool was not launched. Most likely the difference is empty.";
          }
          else
          {
-            labelWorkflowStatus.Text = "Diff tool launched";
+            labelOperationStatus.Text = "Diff tool launched";
             saveInterprocessSnapshot(pid.Value, leftSHA, rightSHA, mrk, accessToken, sessionName);
          }
       }
@@ -245,17 +244,14 @@ namespace mrHelper.App.Forms
          return await prepareCommitStorage(mrk, storage, contextProvider, true);
       }
 
-      async private Task onAddCommentAsync(MergeRequestKey mrk, string title)
+      private void launchDiffToolForSelectedMergeRequest()
       {
-         bool res = await DiscussionHelper.AddCommentAsync(mrk, title, _modificationNotifier, getCurrentUser());
-         labelWorkflowStatus.Text = res ? "Added a comment" : "Comment is not added";
-      }
-
-      async private Task onNewDiscussionAsync(MergeRequestKey mrk, string title)
-      {
-         bool res = (await DiscussionHelper.AddThreadAsync(mrk, title, _modificationNotifier,
-            getCurrentUser(), getDataCache(!isSearchMode()))) != null;
-         labelWorkflowStatus.Text = res ? "Added a discussion thread" : "Discussion thread is not added";
+         BeginInvoke(new Action(async () =>
+         {
+            Debug.Assert(getMergeRequestKey(null).HasValue);
+            MergeRequestKey mrk = getMergeRequestKey(null).Value;
+            await onLaunchDiffToolAsync(mrk);
+         }));
       }
 
       private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA, MergeRequestKey mrk,
@@ -290,7 +286,7 @@ namespace mrHelper.App.Forms
             return null;
          }
 
-         labelWorkflowStatus.Text = "Loading discussions...";
+         labelOperationStatus.Text = "Loading discussions...";
          IEnumerable<Discussion> discussions;
          try
          {
@@ -301,203 +297,159 @@ namespace mrHelper.App.Forms
             string message = "Cannot load discussions from GitLab";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            labelWorkflowStatus.Text = message;
+            labelOperationStatus.Text = message;
             return null;
          }
 
          bool anyDiscussions = discussions != null && discussions.Any();
-         labelWorkflowStatus.Text = anyDiscussions
+         labelOperationStatus.Text = anyDiscussions
             ? "Discussions loaded"
             : "There are no discussions in this Merge Request";
          return discussions;
       }
 
-      private void requestCommitStorageUpdate(ProjectKey projectKey)
+      /// <summary>
+      /// Clean up records that correspond to merge requests that are missing in the cache
+      /// </summary>
+      private IEnumerable<MergeRequestKey> gatherClosedReviewedMergeRequests(DataCache dataCache, string hostname)
       {
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
-
-         IEnumerable<GitLabSharp.Entities.Version> versions = dataCache?.MergeRequestCache?.GetVersions(projectKey);
-         if (versions != null)
+         if (dataCache?.MergeRequestCache == null)
          {
-            VersionBasedContextProvider contextProvider = new VersionBasedContextProvider(versions);
-            ILocalCommitStorage storage = getCommitStorage(projectKey, false);
-            storage?.Updater?.RequestUpdate(contextProvider, null);
+            return Array.Empty<MergeRequestKey>();
+         }
+
+         IEnumerable<ProjectKey> projectKeys = dataCache.MergeRequestCache.GetProjects();
+
+         // gather all MR from projects that no longer in use
+         IEnumerable<MergeRequestKey> toRemove1 = _reviewedRevisions.Keys
+            .Where(x => !projectKeys.Any(y => y.Equals(x.ProjectKey)));
+
+         // gather all closed MR from existing projects
+         IEnumerable<MergeRequestKey> toRemove2 = _reviewedRevisions.Keys
+            .Where(x => projectKeys.Any(y => y.Equals(x.ProjectKey))
+               && !dataCache.MergeRequestCache.GetMergeRequests(x.ProjectKey).Any(y => y.IId == x.IId));
+
+         return toRemove1
+            .Concat(toRemove2)
+            .Where(key => key.ProjectKey.HostName == hostname)
+            .ToArray();
+      }
+
+      /// <summary>
+      /// Clean up records that correspond to the passed merge requests
+      /// </summary>
+      private void cleanupReviewedMergeRequests(IEnumerable<MergeRequestKey> keys)
+      {
+         foreach (MergeRequestKey key in keys)
+         {
+            _reviewedRevisions.Remove(key);
+         }
+
+         if (keys.Any())
+         {
+            saveState();
          }
       }
 
-      async private Task checkForUpdatesAsync(MergeRequestKey? mrk,
-         DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
+      private HashSet<string> getReviewedRevisions(MergeRequestKey mrk)
       {
-         bool updateReceived = false;
-         bool updatingWholeList = !mrk.HasValue;
-
-         string oldButtonText = buttonReloadList.Text;
-         if (updatingWholeList)
+         if (isReviewedMergeRequest(mrk))
          {
-            onUpdating();
+            return _reviewedRevisions[mrk].ToHashSet(); // copy
          }
-         requestUpdates(mrk, 100,
-            () =>
+         return new HashSet<string>();
+      }
+
+      private void setReviewedRevisions(MergeRequestKey mrk, HashSet<string> revisions)
+      {
+         _reviewedRevisions[mrk] = revisions;
+         saveState();
+      }
+
+      private void ensureMergeRequestIsReviewed(MergeRequestKey mrk)
+      {
+         if (!isReviewedMergeRequest(mrk))
+         {
+            setReviewedRevisions(mrk, new HashSet<string>());
+         }
+      }
+
+      private bool isReviewedMergeRequest(MergeRequestKey mrk)
+      {
+         return _reviewedRevisions.ContainsKey(mrk);
+      }
+
+      private void addRecentMergeRequestKeys(IEnumerable<MergeRequestKey> keys)
+      {
+         foreach (MergeRequestKey key in keys)
+         {
+            _recentMergeRequests.Add(key);
+         }
+
+         if (keys.Any())
+         {
+            saveState();
+         }
+      }
+
+      private bool cleanupOldRecentMergeRequests(string hostname)
+      {
+         bool changed = false;
+         IEnumerable<IGrouping<ProjectKey, MergeRequestKey>> groups =
+            _recentMergeRequests
+            .Where(key => key.ProjectKey.HostName == hostname)
+            .GroupBy(key => key.ProjectKey);
+         foreach (IGrouping<ProjectKey, MergeRequestKey> group in groups)
+         {
+            IEnumerable<MergeRequestKey> groupedKeys = group.AsEnumerable();
+            if (groupedKeys.Any())
             {
-               updateReceived = true;
-               if (updatingWholeList)
+               IEnumerable<MergeRequestKey> oldMergeRequests = groupedKeys
+                  .OrderByDescending(mergeRequestKey => mergeRequestKey.IId)
+                  .Skip(Constants.RecentMergeRequestPerProjectCount)
+                  .ToArray(); // copy
+               foreach (MergeRequestKey mergeRequestKey in oldMergeRequests)
                {
-                  onUpdated(oldButtonText);
+                  _recentMergeRequests.Remove(mergeRequestKey);
+                  changed = true;
                }
-            },
-            kind);
-         await TaskUtils.WhileAsync(() => !updateReceived);
-      }
-
-      async private Task<bool> prepareCommitStorage(
-         MergeRequestKey mrk, ILocalCommitStorage storage, ICommitStorageUpdateContextProvider contextProvider,
-         bool isLimitExceptionFatal)
-      {
-         Trace.TraceInformation(String.Format(
-            "[MainForm] Preparing commit storage by user request for MR IId {0} (at {1})...",
-            mrk.IId, storage.Path));
-
-         try
-         {
-            _mergeRequestsUpdatingByUserRequest.Add(mrk);
-            updateStorageDependentControlState(mrk);
-            labelWorkflowStatus.Text = getStorageSummaryUpdateInformation();
-            await storage.Updater.StartUpdate(contextProvider, status => onStorageUpdateProgressChange(status, mrk),
-               () => onStorageUpdateStateChange());
-            return true;
-         }
-         catch (Exception ex)
-         {
-            if (ex is LocalCommitStorageUpdaterCancelledException)
-            {
-               MessageBox.Show("Cannot perform requested action without up-to-date storage", "Warning",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               labelWorkflowStatus.Text = "Storage update cancelled by user";
-            }
-            else if (ex is LocalCommitStorageUpdaterFailedException fex)
-            {
-               ExceptionHandlers.Handle(ex.Message, ex);
-               MessageBox.Show(fex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               labelWorkflowStatus.Text = "Failed to update storage";
-            }
-            else if (ex is LocalCommitStorageUpdaterLimitException mex)
-            {
-               ExceptionHandlers.Handle(ex.Message, mex);
-               if (!isLimitExceptionFatal)
-               {
-                  return true;
-               }
-               string extraMessage = "If there are multiple revisions try selecting two other ones";
-               MessageBox.Show(mex.OriginalMessage + ". " + extraMessage, "Error",
-                  MessageBoxButtons.OK, MessageBoxIcon.Error);
-               labelWorkflowStatus.Text = "Failed to update storage";
-            }
-            return false;
-         }
-         finally
-         {
-            if (!_exiting)
-            {
-               _mergeRequestsUpdatingByUserRequest.Remove(mrk);
-               updateStorageDependentControlState(mrk);
-               labelWorkflowStatus.Text = getStorageSummaryUpdateInformation();
+               cleanupReviewedMergeRequests(oldMergeRequests);
             }
          }
+
+         if (changed)
+         {
+            saveState();
+         }
+
+         return changed;
       }
 
-      async private Task createNewMergeRequestAsync(SubmitNewMergeRequestParameters parameters, string firstNote)
+      private bool cleanupReopenedRecentMergeRequests()
       {
-         buttonCreateNew.Enabled = false;
-         labelWorkflowStatus.Text = "Creating a merge request at GitLab...";
-
-         GitLabInstance gitLabInstance = new GitLabInstance(parameters.ProjectKey.HostName, Program.Settings);
-         MergeRequestKey? mrkOpt = await MergeRequestEditHelper.SubmitNewMergeRequestAsync(gitLabInstance,
-            _modificationNotifier, parameters, firstNote, getCurrentUser());
-         if (mrkOpt == null)
+         bool changed = false;
+         List<MergeRequestKey> reopened = new List<MergeRequestKey>();
+         foreach (MergeRequestKey key in _recentMergeRequests)
          {
-            // all error handling is done at the callee side
-            string message = "Merge Request has not been created";
-            labelWorkflowStatus.Text = message;
-            buttonCreateNew.Enabled = true;
-            Trace.TraceInformation("[MainForm] {0}", message);
-            return;
+            MergeRequest mergeRequest = getDataCache(EDataCacheType.Live)?.MergeRequestCache?.GetMergeRequest(key);
+            if (mergeRequest != null && mergeRequest.State == "opened")
+            {
+               reopened.Add(key);
+            }
          }
 
-         requestUpdates(null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
-
-         labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been created in project {1}",
-            mrkOpt.Value.IId, parameters.ProjectKey.ProjectName);
-         buttonCreateNew.Enabled = true;
-
-         _newMergeRequestDialogStatesByHosts[getHostName()] = new NewMergeRequestProperties(
-            parameters.ProjectKey.ProjectName, null, null, parameters.AssigneeUserName, parameters.Squash,
-            parameters.DeleteSourceBranch);
-
-         Trace.TraceInformation(
-            "[MainForm] Created a new merge request. " +
-            "Project: {0}, SourceBranch: {1}, TargetBranch: {2}, Assignee: {3}, firstNote: {4}",
-            parameters.ProjectKey.ProjectName, parameters.SourceBranch, parameters.TargetBranch,
-            parameters.AssigneeUserName, firstNote);
-      }
-
-      async private Task applyChangesToMergeRequestAsync(string hostname, User currentUser, FullMergeRequestKey item,
-         IEnumerable<User> fullUserList)
-      {
-         MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
-         string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(_liveDataCache.DiscussionCache, mrk);
-         MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
-            getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList);
-         if (form.ShowDialog() != DialogResult.OK)
+         foreach (MergeRequestKey key in reopened)
          {
-            Trace.TraceInformation("[MainForm] User declined to modify a merge request");
-            return;
+            _recentMergeRequests.Remove(key);
+            changed = true;
          }
 
-         ApplyMergeRequestChangesParameters parameters =
-            new ApplyMergeRequestChangesParameters(form.Title, form.AssigneeUsername,
-            form.Description, form.TargetBranch, form.DeleteSourceBranch, form.Squash);
-
-         GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings);
-         bool modified = await MergeRequestEditHelper.ApplyChangesToMergeRequest(gitLabInstance, _modificationNotifier,
-            item.ProjectKey, item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser);
-
-         string statusMessage = modified
-            ? String.Format("Merge Request !{0} has been modified", mrk.IId)
-            : String.Format("No changes have been made to Merge Request !{0}", mrk.IId);
-         labelWorkflowStatus.Text = statusMessage;
-         Trace.TraceInformation("[MainForm] {0}", statusMessage);
-
-         if (modified)
+         if (changed)
          {
-            requestUpdates(mrk,
-               new int[] {
-                        100,
-                        Program.Settings.OneShotUpdateFirstChanceDelayMs,
-                        Program.Settings.OneShotUpdateSecondChanceDelayMs
-               });
+            saveState();
          }
-      }
 
-      async private Task closeMergeRequestAsync(string hostname, FullMergeRequestKey item)
-      {
-         MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
-         string message =
-            "Do you really want to close (cancel) merge request? It will not be merged to the target branch.";
-         if (MessageBox.Show(message, "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-         {
-            GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings);
-            await MergeRequestEditHelper.CloseMergeRequest(gitLabInstance, _modificationNotifier, mrk);
-
-            string statusMessage = String.Format("Merge Request !{0} has been closed", mrk.IId);
-            labelWorkflowStatus.Text = statusMessage;
-            Trace.TraceInformation("[MainForm] {0}", statusMessage);
-
-            requestUpdates(null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
-         }
-         else
-         {
-            Trace.TraceInformation("[MainForm] User declined to close a merge request");
-         }
+         return changed;
       }
    }
 }

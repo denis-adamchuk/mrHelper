@@ -48,8 +48,8 @@ namespace mrHelper.GitLabClient.Accessors
                {
                   if (glex.InnerException is System.Net.WebException wex)
                   {
-                     System.Net.HttpWebResponse response = wex.Response as System.Net.HttpWebResponse;
-                     if (response != null && response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                     if (wex.Response is System.Net.HttpWebResponse response
+                      && response.StatusCode == System.Net.HttpStatusCode.Forbidden)
                      {
                         throw new ForbiddenTimeTrackerException(ex);
                      }

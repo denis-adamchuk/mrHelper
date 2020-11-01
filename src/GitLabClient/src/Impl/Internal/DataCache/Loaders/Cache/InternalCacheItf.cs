@@ -23,6 +23,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       IEnumerable<MergeRequest> GetMergeRequests(ProjectKey key);
 
       /// <summary>
+      /// Return single merge request by its key
+      /// </summary>
+      MergeRequest GetMergeRequest(MergeRequestKey mrk);
+
+      /// <summary>
       /// Return a list of versions of a specified merge request
       /// </summary>
       IEnumerable<Version> GetVersions(MergeRequestKey mrk);

@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Drawing;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Drawing;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using static mrHelper.App.Helpers.ServiceManager;
@@ -15,708 +13,173 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.StorageSupport;
-using static mrHelper.App.Controls.MergeRequestListView;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
-using mrHelper.App.Helpers.GitLab;
-using mrHelper.App.Interprocess;
+using mrHelper.App.Controls;
+using SearchQuery = mrHelper.GitLabClient.SearchQuery;
+using Newtonsoft.Json.Linq;
 
 namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
+      public string GetCurrentHostName()
+      {
+         return getHostName();
+      }
+
+      public string GetCurrentAccessToken()
+      {
+         return Program.Settings.GetAccessToken(getHostName());
+      }
+
+      public string GetCurrentProjectName()
+      {
+         return getMergeRequestKey(null)?.ProjectKey.ProjectName ?? String.Empty;
+      }
+
+      public int GetCurrentMergeRequestIId()
+      {
+         return getMergeRequestKey(null)?.IId ?? 0;
+      }
+
       private User getCurrentUser()
       {
-         return _currentUser.TryGetValue(getHostName(), out User value) ? value : null;
+         return getCurrentUser(getHostName());
       }
 
-      private string getHostName()
+      private User getCurrentUser(string hostname)
       {
-         return comboBoxHost.SelectedItem != null ? ((HostComboBoxItem)comboBoxHost.SelectedItem).Host : String.Empty;
+         bool isValidHostname = !String.IsNullOrWhiteSpace(hostname);
+         return isValidHostname && _currentUser.TryGetValue(hostname, out User value) ? value : null;
       }
 
-      private bool isSearchMode()
+      private enum EDataCacheType
       {
-         return tabControlMode.SelectedTab == tabPageSearch;
+         Live,
+         Search,
+         Recent
       }
 
-      private MergeRequest getMergeRequest(ListView proposedListView)
+      private EDataCacheType getCurrentTabDataCacheType()
       {
-         ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
-         ListView listView = proposedListView ?? currentListView;
-         if (listView.SelectedItems.Count > 0)
+         if (tabControlMode.SelectedTab == tabPageSearch)
          {
-            FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
-            return fmk.MergeRequest;
+            return EDataCacheType.Search;
          }
+         else if (tabControlMode.SelectedTab == tabPageRecent)
+         {
+            return EDataCacheType.Recent;
+         }
+
+         Debug.Assert(tabControlMode.SelectedTab == tabPageLive);
+         return EDataCacheType.Live;
+      }
+
+      private MergeRequestListView getListView(EDataCacheType mode)
+      {
+         switch (mode)
+         {
+            case EDataCacheType.Live:
+               return listViewLiveMergeRequests;
+
+            case EDataCacheType.Search:
+               return listViewFoundMergeRequests;
+
+            case EDataCacheType.Recent:
+               return listViewRecentMergeRequests;
+         }
+
+         Debug.Assert(false);
          return null;
       }
 
-      private MergeRequestKey? getMergeRequestKey(ListView proposedListView)
+      private MergeRequest getMergeRequest(MergeRequestListView proposedListView)
       {
-         ListView currentListView = isSearchMode() ? listViewFoundMergeRequests : listViewMergeRequests;
-         ListView listView = proposedListView ?? currentListView;
-         if (listView.SelectedItems.Count > 0)
+         MergeRequestListView listView = proposedListView ?? getListView(getCurrentTabDataCacheType());
+         FullMergeRequestKey? fmk = listView.GetSelectedMergeRequest();
+         return fmk.HasValue ? fmk.Value.MergeRequest : null;
+      }
+
+      private MergeRequestKey? getMergeRequestKey(MergeRequestListView proposedListView)
+      {
+         MergeRequestListView listView = proposedListView ?? getListView(getCurrentTabDataCacheType());
+         FullMergeRequestKey? fmk = listView.GetSelectedMergeRequest();
+         return fmk.HasValue ? new MergeRequestKey(fmk.Value.ProjectKey, fmk.Value.MergeRequest.IId)
+                             : new Nullable<MergeRequestKey>();
+      }
+
+      private string getDefaultProjectName()
+      {
+         MergeRequestListView listView = getListView(EDataCacheType.Live);
+         MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(listView);
+         if (currentMergeRequestKey.HasValue)
          {
-            FullMergeRequestKey fmk = (FullMergeRequestKey)listView.SelectedItems[0].Tag;
-            return new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+            return currentMergeRequestKey.Value.ProjectKey.ProjectName;
          }
+
+         if (listView.Groups.Count > 0)
+         {
+            return listView.Groups[0].Name;
+         }
+
+         ProjectKey? project = getDataCache(EDataCacheType.Live)?.MergeRequestCache?.GetProjects()?.FirstOrDefault();
+         if (project.HasValue)
+         {
+            return project.Value.ProjectName;
+         }
+
+         return String.Empty;
+      }
+
+      private DataCache getDataCache(EDataCacheType mode)
+      {
+         switch (mode)
+         {
+            case EDataCacheType.Live:
+               return _liveDataCache;
+
+            case EDataCacheType.Search:
+               return _searchDataCache;
+
+            case EDataCacheType.Recent:
+               return _recentDataCache;
+         }
+
+         Debug.Assert(false);
          return null;
       }
 
-      private DataCache getDataCache(bool live)
+      private DataCache getDataCacheByName(string name)
       {
-         return live ? _liveDataCache : _searchDataCache;
-      }
-
-      /// <summary>
-      /// Populates host list with list of known hosts from Settings
-      /// </summary>
-      private void updateHostsDropdownList()
-      {
-         updateEnablementsOfWorkflowSelectors();
-
-         if (listViewKnownHosts.Items.Count == 0)
+         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
          {
-            disableComboBox(comboBoxHost, String.Empty);
-            return;
-         }
-
-         enableComboBox(comboBoxHost);
-
-         for (int idx = comboBoxHost.Items.Count - 1; idx >= 0; --idx)
-         {
-            HostComboBoxItem item = (HostComboBoxItem)comboBoxHost.Items[idx];
-            if (!listViewKnownHosts.Items.Cast<ListViewItem>().Any(x => x.Text == item.Host))
+            if (name == mode.ToString())
             {
-               comboBoxHost.Items.RemoveAt(idx);
+               return getDataCache(mode);
             }
          }
-
-         foreach (ListViewItem item in listViewKnownHosts.Items)
-         {
-            if (!comboBoxHost.Items.Cast<HostComboBoxItem>().Any(x => x.Host == item.Text))
-            {
-               HostComboBoxItem hostItem = new HostComboBoxItem(item.Text, item.SubItems[1].Text);
-               comboBoxHost.Items.Add(hostItem);
-            }
-         }
+         Debug.Assert(false);
+         return null;
       }
 
-      private void updateEnablementsOfWorkflowSelectors()
+      private string getDataCacheName(DataCache dataCache)
       {
-         if (listViewKnownHosts.Items.Count > 0)
+         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
          {
-            radioButtonSelectByUsernames.Enabled = true;
-            radioButtonSelectByProjects.Enabled = true;
-            listViewUsers.Enabled = radioButtonSelectByUsernames.Checked;
-            listViewProjects.Enabled = radioButtonSelectByProjects.Checked;
-            buttonEditProjects.Enabled = true;
-            buttonEditUsers.Enabled = true;
+            if (getDataCache(mode) == dataCache)
+            {
+               return mode.ToString();
+            }
          }
-         else
-         {
-            radioButtonSelectByUsernames.Enabled = false;
-            radioButtonSelectByProjects.Enabled = false;
-            listViewUsers.Enabled = false;
-            listViewProjects.Enabled = false;
-            buttonEditProjects.Enabled = false;
-            buttonEditUsers.Enabled = false;
-         }
+         Debug.Assert(false);
+         return String.Empty;
       }
 
       private enum PreferredSelection
       {
          Initial,
          Latest
-      }
-
-      private void selectHost(PreferredSelection preferred)
-      {
-         if (comboBoxHost.Items.Count == 0)
-         {
-            return;
-         }
-
-         comboBoxHost.SelectedIndex = -1;
-
-         HostComboBoxItem defaultSelectedItem = (HostComboBoxItem)comboBoxHost.Items[comboBoxHost.Items.Count - 1];
-         switch (preferred)
-         {
-            case PreferredSelection.Initial:
-               HostComboBoxItem initialSelectedItem = comboBoxHost.Items
-                  .Cast<HostComboBoxItem>()
-                  .SingleOrDefault(x => x.Host == getInitialHostNameIfKnown()); // `null` if not found
-               bool isValidSelection = initialSelectedItem != null && !String.IsNullOrEmpty(initialSelectedItem.Host);
-               comboBoxHost.SelectedItem = isValidSelection ? initialSelectedItem : defaultSelectedItem;
-               break;
-
-            case PreferredSelection.Latest:
-               comboBoxHost.SelectedItem = defaultSelectedItem;
-               break;
-         }
-
-         updateProjectsListView();
-         updateUsersListView();
-      }
-
-      private void createListViewGroupForProject(ListView listView, ProjectKey projectKey, bool sortNeeded)
-      {
-         ListViewGroup group = new ListViewGroup(projectKey.ProjectName, projectKey.ProjectName)
-         {
-            Tag = projectKey
-         };
-         if (!sortNeeded)
-         {
-            // user defines how to sort group here
-            listView.Groups.Add(group);
-            return;
-         }
-
-         // sort groups alphabetically
-         int indexToInsert = listView.Groups.Count;
-         for (int iGroup = 0; iGroup < listView.Groups.Count; ++iGroup)
-         {
-            if (projectKey.ProjectName.CompareTo(listView.Groups[iGroup].Header) < 0)
-            {
-               indexToInsert = iGroup;
-               break;
-            }
-         }
-         listView.Groups.Insert(indexToInsert, group);
-      }
-
-      private bool selectMergeRequest(ListView listView, MergeRequestKey? mrk, bool exact)
-      {
-         if (!mrk.HasValue)
-         {
-            if (listView.Items.Count < 1)
-            {
-               return false;
-            }
-
-            listView.Items[0].Selected = true;
-            return true;
-         }
-
-         foreach (ListViewItem item in listView.Items)
-         {
-            FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
-            if (mrk.Value.ProjectKey.Equals(key.ProjectKey)
-             && mrk.Value.IId == key.MergeRequest.IId)
-            {
-               item.Selected = true;
-               return true;
-            }
-         }
-
-         if (exact)
-         {
-            return false;
-         }
-
-         // selected an item from the proper group
-         foreach (ListViewGroup group in listView.Groups)
-         {
-            if (mrk.Value.ProjectKey.MatchProject(group.Name) && group.Items.Count > 0)
-            {
-               group.Items[0].Selected = true;
-               return true;
-            }
-         }
-
-         // select whatever
-         foreach (ListViewGroup group in listView.Groups)
-         {
-            if (group.Items.Count > 0)
-            {
-               group.Items[0].Selected = true;
-               return true;
-            }
-         }
-
-         return false;
-      }
-
-      private HashSet<string> getReviewedRevisions(MergeRequestKey mrk)
-      {
-         if (!_reviewedRevisions.ContainsKey(mrk))
-         {
-            _reviewedRevisions[mrk] = new HashSet<string>();
-         }
-         return _reviewedRevisions[mrk];
-      }
-
-      private bool addKnownHost(string host, string accessToken)
-      {
-         Trace.TraceInformation(String.Format("[MainForm] Adding host {0} with token {1}",
-            host, accessToken));
-
-         foreach (ListViewItem listItem in listViewKnownHosts.Items)
-         {
-            if (listItem.Text == host)
-            {
-               Trace.TraceInformation(String.Format("[MainForm] Host name already exists"));
-               return false;
-            }
-         }
-
-         ListViewItem item = new ListViewItem(host);
-         item.SubItems.Add(accessToken);
-         listViewKnownHosts.Items.Add(item);
-         return true;
-      }
-
-      private bool removeKnownHost()
-      {
-         if (listViewKnownHosts.SelectedItems.Count > 0)
-         {
-            Trace.TraceInformation(String.Format("[MainForm] Removing host name {0}",
-               listViewKnownHosts.SelectedItems[0].ToString()));
-
-            listViewKnownHosts.Items.Remove(listViewKnownHosts.SelectedItems[0]);
-            return true;
-         }
-         return false;
-      }
-
-      private string getDefaultColorSchemeFileName()
-      {
-         return String.Format("{0}.{1}", DefaultColorSchemeName, ColorSchemeFileNamePrefix);
-      }
-
-      private void fillColorSchemesList()
-      {
-         string defaultFileName = getDefaultColorSchemeFileName();
-         string defaultFilePath = Path.Combine(Directory.GetCurrentDirectory(), defaultFileName);
-
-         comboBoxColorSchemes.Items.Clear();
-
-         string selectedScheme = null;
-         string[] files = Directory.GetFiles(Directory.GetCurrentDirectory());
-         if (files.Contains(defaultFilePath))
-         {
-            // put Default scheme first in the list
-            comboBoxColorSchemes.Items.Add(defaultFileName);
-         }
-
-         foreach (string file in files)
-         {
-            if (file.EndsWith(ColorSchemeFileNamePrefix))
-            {
-               string scheme = Path.GetFileName(file);
-               if (file != defaultFilePath)
-               {
-                  comboBoxColorSchemes.Items.Add(scheme);
-               }
-               if (scheme == Program.Settings.ColorSchemeFileName)
-               {
-                  selectedScheme = scheme;
-               }
-            }
-         }
-
-         if (selectedScheme != null)
-         {
-            comboBoxColorSchemes.SelectedItem = selectedScheme;
-         }
-         else if (comboBoxColorSchemes.Items.Count > 0)
-         {
-            comboBoxColorSchemes.SelectedIndex = 0;
-         }
-      }
-
-      private void initializeColorScheme()
-      {
-         bool createColorScheme(string filename)
-         {
-            try
-            {
-               _colorScheme = new ColorScheme(filename, _expressionResolver);
-               return true;
-            }
-            catch (Exception ex) // whatever de-serialization exception
-            {
-               ExceptionHandlers.Handle("Cannot create a color scheme", ex);
-            }
-            return false;
-         }
-
-         if (comboBoxColorSchemes.SelectedIndex < 0 || comboBoxColorSchemes.Items.Count < 1)
-         {
-            // nothing is selected or list is empty, create an empty scheme
-            _colorScheme = new ColorScheme();
-         }
-
-         // try to create a scheme for the selected item
-         else if (!createColorScheme(comboBoxColorSchemes.Text))
-         {
-            _colorScheme = new ColorScheme();
-            MessageBox.Show("Cannot initialize color scheme", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-      }
-
-      private void initializeIconScheme()
-      {
-         if (!System.IO.File.Exists(IconSchemeFileName))
-         {
-            return;
-         }
-
-         try
-         {
-            _iconScheme = JsonUtils.LoadFromFile<Dictionary<string, object>>(
-               IconSchemeFileName).ToDictionary(
-                  item => item.Key,
-                  item => item.Value.ToString());
-         }
-         catch (Exception ex) // whatever de-serialization exception
-         {
-            ExceptionHandlers.Handle("Cannot load icon scheme", ex);
-         }
-      }
-
-      private void initializeBadgeScheme()
-      {
-         if (!System.IO.File.Exists(BadgeSchemeFileName))
-         {
-            return;
-         }
-
-         try
-         {
-            _badgeScheme = JsonUtils.LoadFromFile<Dictionary<string, object>>(
-               BadgeSchemeFileName).ToDictionary(
-                  item => item.Key,
-                  item => item.Value.ToString());
-         }
-         catch (Exception ex) // whatever de-serialization exception
-         {
-            ExceptionHandlers.Handle("Cannot load badge scheme", ex);
-         }
-      }
-
-      private void disableListView(ListView listView, bool clear)
-      {
-         listView.Enabled = false;
-         deselectAllListViewItems(listView);
-
-         if (clear)
-         {
-            listView.Items.Clear();
-         }
-      }
-
-      private void enableListView(ListView listView)
-      {
-         listView.Enabled = true;
-      }
-
-      private void deselectAllListViewItems(ListView listView)
-      {
-         foreach (ListViewItem item in listView.Items)
-         {
-            item.Selected = false;
-         }
-      }
-
-      private void disableComboBox(ComboBox comboBox, string text)
-      {
-         comboBox.DroppedDown = false;
-         comboBox.SelectedIndex = -1;
-         comboBox.Items.Clear();
-         comboBox.Enabled = false;
-
-         comboBox.DropDownStyle = ComboBoxStyle.DropDown;
-         comboBox.Text = text;
-      }
-
-      private void enableComboBox(ComboBox comboBox)
-      {
-         comboBox.Enabled = true;
-         comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-      }
-
-      private void updateStorageDependentControlState(MergeRequestKey? mrk)
-      {
-         bool isEnabled = mrk.HasValue
-            && !_mergeRequestsUpdatingByUserRequest.Contains(mrk.Value)
-            &&  _mergeRequestsUpdatingByUserRequest.Count() < Constants.MaxMergeRequestStorageUpdatesInParallel;
-         buttonDiscussions.Enabled = isEnabled;
-         updateDiffToolButtonState(isEnabled);
-      }
-
-      private void onStorageUpdateStateChange()
-      {
-         updateAbortGitCloneButtonState();
-      }
-
-      private void updateAbortGitCloneButtonState()
-      {
-         ProjectKey? projectKey = getMergeRequestKey(null)?.ProjectKey ?? null;
-         ILocalCommitStorage repo = projectKey.HasValue ? getCommitStorage(projectKey.Value, false) : null;
-
-         bool enabled = repo?.Updater?.CanBeStopped() ?? false;
-         linkLabelAbortGitClone.Visible = enabled;
-      }
-
-      private void onStorageUpdateProgressChange(string text, MergeRequestKey mrk)
-      {
-         if (labelStorageStatus.InvokeRequired)
-         {
-            Invoke(new Action<string, MergeRequestKey>(onStorageUpdateProgressChange), new object [] { text, mrk });
-         }
-         else
-         {
-            _latestStorageUpdateStatus[mrk] = text;
-
-            MergeRequestKey? currentMRK = getMergeRequestKey(null);
-            if (currentMRK.HasValue && currentMRK.Value.Equals(mrk))
-            {
-               updateStorageStatusText(text, mrk);
-            }
-         }
-      }
-
-      private void updateStorageStatusText(string text, MergeRequestKey? mrk)
-      {
-         string message = String.IsNullOrEmpty(text) || !mrk.HasValue
-            ? String.Empty
-            : String.Format("{0} #{1}: {2}", mrk.Value.ProjectKey.ProjectName, mrk.Value.IId.ToString(), text);
-         labelStorageStatus.Text = message;
-      }
-
-      private string getStorageSummaryUpdateInformation()
-      {
-         if (!_mergeRequestsUpdatingByUserRequest.Any())
-         {
-            return String.Empty;
-         }
-
-         var mergeRequestGroups = _mergeRequestsUpdatingByUserRequest
-            .Distinct()
-            .GroupBy(
-               group => group.ProjectKey,
-               group => group,
-               (group, groupedMergeRequests) => new
-               {
-                  Project = group.ProjectName,
-                  MergeRequests = groupedMergeRequests
-               });
-
-         List<string> storages = new List<string>();
-         foreach (var group in mergeRequestGroups)
-         {
-            IEnumerable<string> mergeRequestIds = group.MergeRequests.Select(x => String.Format("#{0}", x.IId));
-            string mergeRequestIdsString = String.Join(", ", mergeRequestIds);
-            string storage = String.Format("{0} ({1})", group.Project, mergeRequestIdsString);
-            storages.Add(storage);
-         }
-
-         return String.Format("Updating storage{0}: {1}...",
-            storages.Count() > 1 ? "s" : "", String.Join(", ", storages));
-      }
-
-      private void enableMergeRequestFilterControls(bool enabled)
-      {
-         checkBoxDisplayFilter.Enabled = enabled;
-         textBoxDisplayFilter.Enabled = enabled;
-      }
-
-      private void updateVisibleMergeRequestsEnablements()
-      {
-         if (listViewMergeRequests.Items.Count > 0 || Program.Settings.DisplayFilterEnabled)
-         {
-            enableMergeRequestFilterControls(true);
-            enableListView(listViewMergeRequests);
-         }
-      }
-
-      private void updateMergeRequestDetails(FullMergeRequestKey? fmkOpt)
-      {
-         if (!fmkOpt.HasValue)
-         {
-            richTextBoxMergeRequestDescription.Text = String.Empty;
-            linkLabelConnectedTo.Text = String.Empty;
-         }
-         else
-         {
-            FullMergeRequestKey fmk = fmkOpt.Value;
-
-            string rawTitle = !String.IsNullOrEmpty(fmk.MergeRequest.Title) ? fmk.MergeRequest.Title : "Title is empty";
-            string title = MarkDownUtils.ConvertToHtml(rawTitle, String.Empty, _mdPipeline);
-
-            string rawDescription = !String.IsNullOrEmpty(fmk.MergeRequest.Description)
-               ? fmk.MergeRequest.Description : "Description is empty";
-            string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey);
-            string description = MarkDownUtils.ConvertToHtml(rawDescription, uploadsPrefix, _mdPipeline);
-
-            string body = String.Format("<b>Title</b><br>{0}<br><b>Description</b><br>{1}", title, description);
-            richTextBoxMergeRequestDescription.Text =  String.Format(MarkDownUtils.HtmlPageTemplate, body);
-            linkLabelConnectedTo.Text = fmk.MergeRequest.Web_Url;
-         }
-
-         richTextBoxMergeRequestDescription.Update();
-         toolTip.SetToolTip(linkLabelConnectedTo, linkLabelConnectedTo.Text);
-      }
-
-      private void updateTimeTrackingMergeRequestDetails(bool enabled, string title, ProjectKey projectKey, User author)
-      {
-         if (isTrackingTime())
-         {
-            return;
-         }
-
-         if (!isTimeTrackingAllowed(author, projectKey.HostName))
-         {
-            enabled = false;
-         }
-
-         linkLabelTimeTrackingMergeRequest.Visible = enabled;
-         buttonTimeTrackingStart.Enabled = enabled;
-
-         if (enabled)
-         {
-            Debug.Assert(!String.IsNullOrEmpty(title) && !projectKey.Equals(default(ProjectKey)));
-            linkLabelTimeTrackingMergeRequest.Text = String.Format("{0}   [{1}]", title, projectKey.ProjectName);
-         }
-
-         linkLabelTimeTrackingMergeRequest.Refresh();
-      }
-
-      private void updateTotalTime(MergeRequestKey? mrk, User author, string hostname, ITotalTimeCache totalTimeCache)
-      {
-         if (isTrackingTime())
-         {
-            labelTimeTrackingTrackedLabel.Text =
-               String.Format("Tracked Time: {0}", _timeTracker.Elapsed.ToString(@"hh\:mm\:ss"));
-            buttonEditTime.Enabled = false;
-            return;
-         }
-
-         if (!mrk.HasValue || !isTimeTrackingAllowed(author, hostname) || totalTimeCache == null)
-         {
-            labelTimeTrackingTrackedLabel.Text = String.Empty;
-            buttonEditTime.Enabled = false;
-         }
-         else
-         {
-            TrackedTime trackedTime = totalTimeCache.GetTotalTime(mrk.Value);
-            labelTimeTrackingTrackedLabel.Text = String.Format("Total Time: {0}",
-               convertTotalTimeToText(trackedTime, true));
-            buttonEditTime.Enabled = trackedTime.Amount.HasValue;
-         }
-
-         // Update total time column in the table
-         listViewMergeRequests.Invalidate();
-         labelTimeTrackingTrackedLabel.Refresh();
-      }
-
-      private string convertTotalTimeToText(TrackedTime trackedTime, bool isTimeTrackingAllowed)
-      {
-         if (trackedTime.Status == TrackedTime.EStatus.NotAvailable)
-         {
-            return "N/A";
-         }
-
-         if (trackedTime.Status == TrackedTime.EStatus.Loading)
-         {
-            return "Loading...";
-         }
-
-         Debug.Assert(trackedTime.Amount.HasValue);
-         if (trackedTime.Amount.Value != TimeSpan.Zero)
-         {
-            return trackedTime.Amount.Value.ToString(@"hh\:mm\:ss");
-         }
-
-         return isTimeTrackingAllowed ? NotStartedTimeTrackingText : NotAllowedTimeTrackingText;
-      }
-
-      private bool isTimeTrackingAllowed(User mergeRequestAuthor, string hostname)
-      {
-         if (mergeRequestAuthor == null || String.IsNullOrWhiteSpace(hostname))
-         {
-            return true;
-         }
-
-         return !_currentUser.ContainsKey(hostname)
-              || _currentUser[hostname].Id != mergeRequestAuthor.Id
-              || Program.Settings.AllowAuthorToTrackTime;
-      }
-
-      private string getDiscussionCount(MergeRequestKey mrk)
-      {
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
-         if (dataCache?.DiscussionCache == null)
-         {
-            return "N/A";
-         }
-
-         DiscussionCount dc = dataCache.DiscussionCache.GetDiscussionCount(mrk);
-         switch (dc.Status)
-         {
-            case DiscussionCount.EStatus.NotAvailable:
-               return "N/A";
-
-            case DiscussionCount.EStatus.Loading:
-               return "Loading...";
-
-            case DiscussionCount.EStatus.Ready:
-               return String.Format("{0} / {1}", dc.Resolved.Value, dc.Resolvable.Value);
-         }
-
-         Debug.Assert(false);
-         return "N/A";
-      }
-
-      private string getSize(MergeRequestKey mrk)
-      {
-         if (_diffStatProvider == null)
-         {
-            return String.Empty;
-         }
-
-         DiffStatistic? diffStatistic = _diffStatProvider.GetStatistic(mrk, out string errMsg);
-         return diffStatistic?.ToString() ?? errMsg;
-      }
-
-      private void enableMergeRequestActions(bool enabled)
-      {
-         linkLabelConnectedTo.Enabled = enabled;
-         buttonAddComment.Enabled = enabled;
-         buttonNewDiscussion.Enabled = enabled;
-      }
-
-      private void updateDiffToolButtonState(bool isEnabled)
-      {
-         string[] selected = revisionBrowser.GetSelectedSha(out _);
-         switch (selected.Count())
-         {
-            case 1:
-               buttonDiffTool.Enabled = isEnabled;
-               buttonDiffTool.Text = "Diff to Base";
-               string targetBranch = getMergeRequest(null)?.Target_Branch;
-               if (targetBranch != null)
-               {
-                  this.toolTip.SetToolTip(this.buttonDiffTool, String.Format(
-                     "Launch diff tool to compare selected revision to {0}", targetBranch));
-               }
-               break;
-
-            case 2:
-               buttonDiffTool.Enabled = isEnabled;
-               buttonDiffTool.Text = "Diff Tool";
-               this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to compare selected revisions");
-               break;
-
-            case 0:
-            default:
-               buttonDiffTool.Enabled = false;
-               buttonDiffTool.Text = "Diff Tool";
-               break;
-         }
       }
 
       private bool isCustomActionEnabled(IEnumerable<string> labels, User author, string dependency)
@@ -739,29 +202,6 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private void enableCustomActions(bool enabled, IEnumerable<string> labels, User author)
-      {
-         if (!enabled)
-         {
-            foreach (Control control in groupBoxActions.Controls) control.Enabled = false;
-            return;
-         }
-
-         if (author == null)
-         {
-            Debug.Assert(false);
-            return;
-         }
-
-         foreach (Control control in groupBoxActions.Controls)
-         {
-            string dependency = (string)control.Tag;
-            string resolvedDependency =
-               String.IsNullOrEmpty(dependency) ? String.Empty : _expressionResolver.Resolve(dependency);
-            control.Enabled = isCustomActionEnabled(labels, author, resolvedDependency);
-         }
-      }
-
       private ProjectAccessor getProjectAccessor()
       {
          if (getHostName() == String.Empty)
@@ -775,537 +215,17 @@ namespace mrHelper.App.Forms
          return rawDataAccessor.GetProjectAccessor(_modificationNotifier);
       }
 
-      private ILocalCommitStorageFactory getCommitStorageFactory(bool showMessageBoxOnError)
-      {
-         if (_storageFactory == null)
-         {
-            try
-            {
-               _storageFactory = new LocalCommitStorageFactory(this,
-                  getProjectAccessor(),
-                  Program.Settings.LocalGitFolder,
-                  Program.Settings.RevisionsToKeep,
-                  Program.Settings.ComparisonsToKeep);
-               _storageFactory.GitRepositoryCloned += onGitRepositoryCloned;
-            }
-            catch (ArgumentException ex)
-            {
-               ExceptionHandlers.Handle("Cannot create LocalGitCommitStorageFactory", ex);
-            }
-         }
-
-         if (_storageFactory == null && showMessageBoxOnError)
-         {
-            MessageBox.Show(String.Format("Cannot create folder {0}", Program.Settings.LocalGitFolder),
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-         return _storageFactory;
-      }
-
-      private void disposeLocalGitRepositoryFactory()
-      {
-         if (_storageFactory != null)
-         {
-            _storageFactory.GitRepositoryCloned -= onGitRepositoryCloned;
-            _storageFactory.Dispose();
-            _storageFactory = null;
-         }
-      }
-
-      private void onGitRepositoryCloned(ILocalCommitStorage storage)
-      {
-         requestCommitStorageUpdate(storage.ProjectKey);
-      }
-
-      /// <summary>
-      /// Make some checks and create a commit storage
-      /// </summary>
-      /// <returns>null if could not create a repository</returns>
-      private ILocalCommitStorage getCommitStorage(ProjectKey projectKey, bool showMessageBoxOnError)
-      {
-         ILocalCommitStorageFactory factory = getCommitStorageFactory(showMessageBoxOnError);
-         if (factory == null)
-         {
-            return null;
-         }
-
-         LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
-         ILocalCommitStorage repo = factory.GetStorage(projectKey, type);
-         if (repo == null && showMessageBoxOnError)
-         {
-            MessageBox.Show(String.Format(
-               "Cannot obtain disk storage for project {0} in \"{1}\"",
-               projectKey.ProjectName, Program.Settings.LocalGitFolder),
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-         }
-         return repo;
-      }
-
-      private string getInitialHostNameIfKnown()
-      {
-         return Program.Settings.KnownHosts.Any(host => host == _initialHostName) ? _initialHostName : null;
-      }
-
-      private void setInitialHostName(string hostname)
-      {
-         _initialHostName = hostname;
-      }
-
       private bool isTrackingTime()
       {
          return _timeTracker != null;
       }
 
-      private System.Drawing.Color getMergeRequestColor(MergeRequest mergeRequest, Color defaultColor)
-      {
-         foreach (KeyValuePair<string, Color> color in _colorScheme)
-         {
-            // by author
-            {
-               if (StringUtils.DoesMatchPattern(color.Key, "MergeRequests_{{Author:{0}}}", mergeRequest.Author.Username))
-               {
-                  return color.Value;
-               }
-            }
-
-            // by labels
-            foreach (string label in mergeRequest.Labels)
-            {
-               if (StringUtils.DoesMatchPattern(color.Key, "MergeRequests_{{Label:{0}}}", label))
-               {
-                  return color.Value;
-               }
-            }
-         }
-         return defaultColor;
-      }
-
-      private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
-      {
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
-         DiscussionCount dc = dataCache?.DiscussionCache?.GetDiscussionCount(
-            new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId)) ?? default(DiscussionCount);
-
-         if (dc.Status != DiscussionCount.EStatus.Ready || dc.Resolvable == null || dc.Resolved == null)
-         {
-            return Color.Black;
-         }
-
-         if (dc.Resolvable.Value == dc.Resolved.Value)
-         {
-            return isSelected ? Color.SpringGreen : Color.Green;
-         }
-
-         Debug.Assert(dc.Resolvable.Value > dc.Resolved.Value);
-         return isSelected ? Color.Orange : Color.Red;
-      }
-
-      /// <summary>
-      /// Clean up records that correspond to merge requests that have been closed
-      /// </summary>
-      private void cleanupReviewedRevisions(string hostname)
-      {
-         if (_liveDataCache?.MergeRequestCache == null)
-         {
-            return;
-         }
-
-         IEnumerable<ProjectKey> projectKeys = _liveDataCache.MergeRequestCache.GetProjects();
-
-         // gather all MR from projects that no longer in use
-         IEnumerable<MergeRequestKey> toRemove1 = _reviewedRevisions.Keys
-            .Where(x => !projectKeys.Any(y => y.Equals(x.ProjectKey)));
-
-         // gather all closed MR from existing projects
-         IEnumerable<MergeRequestKey> toRemove2 = _reviewedRevisions.Keys
-            .Where(x => projectKeys.Any(y => y.Equals(x.ProjectKey))
-               && !_liveDataCache.MergeRequestCache.GetMergeRequests(x.ProjectKey).Any(y => y.IId == x.IId));
-
-         // leave only MR from the passed project
-         IEnumerable<MergeRequestKey> toRemove =
-            toRemove1
-               .Concat(toRemove2)
-               .Where(x => x.ProjectKey.HostName == hostname)
-               .ToArray();
-
-         foreach (MergeRequestKey key in toRemove)
-         {
-            _reviewedRevisions.Remove(key);
-         }
-      }
-
-      /// <summary>
-      /// Clean up records that correspond to merge requests that have been closed
-      /// </summary>
-      private void cleanupReviewedRevisions(MergeRequestKey mrk)
-      {
-         IEnumerable<MergeRequestKey> toRemove = _reviewedRevisions.Keys.Where(x => x.Equals(mrk));
-         if (!toRemove.Any())
-         {
-            return;
-         }
-
-         _reviewedRevisions.Remove(toRemove.First());
-      }
-
-
-      private void updateVisibleMergeRequests()
-      {
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
-         IMergeRequestCache mergeRequestCache = dataCache?.MergeRequestCache;
-         if (mergeRequestCache == null)
-         {
-            return;
-         }
-
-         listViewMergeRequests.BeginUpdate();
-
-         IEnumerable<ProjectKey> projectKeys;
-         if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
-         {
-            projectKeys = listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
-         }
-         else
-         {
-            // Add missing project groups
-            IEnumerable<ProjectKey> allProjects = mergeRequestCache.GetProjects();
-            foreach (ProjectKey projectKey in allProjects)
-            {
-               if (!listViewMergeRequests.Groups.Cast<ListViewGroup>().Any(x => projectKey.Equals((ProjectKey)(x.Tag))))
-               {
-                  createListViewGroupForProject(listViewMergeRequests, projectKey, true);
-               }
-            }
-
-            // Remove deleted project groups
-            projectKeys = listViewMergeRequests.Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
-            for (int index = listViewMergeRequests.Groups.Count - 1; index >= 0; --index)
-            {
-               ListViewGroup group = listViewMergeRequests.Groups[index];
-               if (!allProjects.Any(x => x.Equals((ProjectKey)group.Tag)))
-               {
-                  listViewMergeRequests.Groups.Remove(group);
-               }
-            }
-         }
-
-         // Add missing merge requests and update existing ones
-         foreach (ProjectKey projectKey in projectKeys)
-         {
-            foreach (MergeRequest mergeRequest in mergeRequestCache.GetMergeRequests(projectKey))
-            {
-               FullMergeRequestKey fmk = new FullMergeRequestKey(projectKey, mergeRequest);
-               ListViewItem item = listViewMergeRequests.Items.Cast<ListViewItem>().FirstOrDefault(
-                  x => ((FullMergeRequestKey)x.Tag).Equals(fmk)); // item=`null` if not found
-               if (item == null)
-               {
-                  item = createListViewMergeRequestItem(listViewMergeRequests, fmk);
-                  listViewMergeRequests.Items.Add(item);
-               }
-               else
-               {
-                  item.Tag = fmk;
-               }
-               setListViewSubItemsTags(item, fmk);
-            }
-         }
-
-         // Remove deleted merge requests and hide filtered ones
-         for (int index = listViewMergeRequests.Items.Count - 1; index >= 0; --index)
-         {
-            FullMergeRequestKey fmk = (FullMergeRequestKey)listViewMergeRequests.Items[index].Tag;
-            if (!mergeRequestCache.GetMergeRequests(fmk.ProjectKey).Any(x => x.IId == fmk.MergeRequest.IId)
-             || !_mergeRequestFilter.DoesMatchFilter(fmk.MergeRequest))
-            {
-               listViewMergeRequests.Items.RemoveAt(index);
-            }
-         }
-
-         recalcRowHeightForMergeRequestListView(listViewMergeRequests);
-
-         listViewMergeRequests.EndUpdate();
-
-         updateVisibleMergeRequestsEnablements();
-         updateTrayIcon();
-         updateTaskbarIcon();
-         onMergeRequestListRefreshed();
-      }
-
-      private ListViewItem createListViewMergeRequestItem(ListView listView, FullMergeRequestKey fmk)
-      {
-         ListViewGroup group = listView.Groups[fmk.ProjectKey.ProjectName];
-         string[] subitems = Enumerable.Repeat(String.Empty, listView.Columns.Count).ToArray();
-         ListViewItem item = new ListViewItem(subitems, group)
-         {
-            Tag = fmk
-         };
-         return item;
-      }
-
-      private void setListViewSubItemsTags(ListViewItem item, FullMergeRequestKey fmk)
-      {
-         ProjectKey projectKey = fmk.ProjectKey;
-         MergeRequest mr = fmk.MergeRequest;
-         MergeRequestKey mrk = new MergeRequestKey(projectKey, mr.IId);
-
-         string author = String.Format("{0}\n({1}{2})", mr.Author.Name,
-            Constants.AuthorLabelPrefix, mr.Author.Username);
-
-         Dictionary<bool, string> labels = new Dictionary<bool, string>
-         {
-            [false] = formatLabels(fmk, false),
-            [true] = formatLabels(fmk, true)
-         };
-
-         string jiraServiceUrl = Program.ServiceManager.GetJiraServiceUrl();
-         string jiraTask = getJiraTask(mr);
-         string jiraTaskUrl = jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
-            String.Format("{0}/browse/{1}", jiraServiceUrl, jiraTask) : String.Empty;
-
-         DataCache dataCache = item.ListView == listViewMergeRequests ? _liveDataCache : _searchDataCache;
-         string getTotalTimeText(MergeRequestKey key)
-         {
-            ITotalTimeCache totalTimeCache = dataCache?.TotalTimeCache;
-            if (totalTimeCache == null)
-            {
-               return String.Empty;
-            }
-
-            return convertTotalTimeToText(totalTimeCache.GetTotalTime(key),
-               isTimeTrackingAllowed(mr.Author, projectKey.HostName));
-         }
-
-         string getRefreshed(MergeRequestKey key)
-         {
-            IMergeRequestCache mergeRequestCache = dataCache?.MergeRequestCache;
-            if (mergeRequestCache == null)
-            {
-               return String.Empty;
-            }
-
-            DateTime refreshed = mergeRequestCache.GetMergeRequestRefreshTime(key);
-            TimeSpan span = DateTime.Now - refreshed;
-            int minutesAgo = Convert.ToInt32(Math.Floor(span.TotalMinutes));
-            // round 55+ seconds to a minute
-            minutesAgo += span.Seconds >= 55 ? 1 : 0; //-V3118
-            return String.Format("{0} minute{1} ago", minutesAgo, minutesAgo == 1 ? String.Empty : "s");
-         }
-
-         void setSubItemTag(string columnTag, ListViewSubItemInfo subItemInfo)
-         {
-            ColumnHeader columnHeader = item.ListView.Columns
-               .Cast<ColumnHeader>()
-               .SingleOrDefault(x => x.Tag.ToString() == columnTag);
-            if (columnHeader == null)
-            {
-               return;
-            }
-
-            item.SubItems[columnHeader.Index].Tag = subItemInfo;
-         }
-
-         setSubItemTag("IId",          new ListViewSubItemInfo(x => mr.IId.ToString(),         () => mr.Web_Url));
-         setSubItemTag("Author",       new ListViewSubItemInfo(x => author,                    () => String.Empty));
-         setSubItemTag("Title",        new ListViewSubItemInfo(x => mr.Title,                  () => String.Empty));
-         setSubItemTag("Labels",       new ListViewSubItemInfo(x => labels[x],                 () => String.Empty));
-         setSubItemTag("Size",         new ListViewSubItemInfo(x => getSize(mrk),              () => String.Empty));
-         setSubItemTag("Jira",         new ListViewSubItemInfo(x => jiraTask,                  () => jiraTaskUrl));
-         setSubItemTag("TotalTime",    new ListViewSubItemInfo(x => getTotalTimeText(mrk),     () => String.Empty));
-         setSubItemTag("SourceBranch", new ListViewSubItemInfo(x => mr.Source_Branch,          () => String.Empty));
-         setSubItemTag("TargetBranch", new ListViewSubItemInfo(x => mr.Target_Branch,          () => String.Empty));
-         setSubItemTag("State",        new ListViewSubItemInfo(x => mr.State,                  () => String.Empty));
-         setSubItemTag("Resolved",     new ListViewSubItemInfo(x => getDiscussionCount(mrk),   () => String.Empty));
-         setSubItemTag("RefreshTime",  new ListViewSubItemInfo(x => getRefreshed(mrk),         () => String.Empty));
-      }
-
-      private void recalcRowHeightForMergeRequestListView(ListView listView)
-      {
-         if (listView.Items.Count == 0)
-         {
-            return;
-         }
-
-         int maxLineCountInLabels = listView.Items.Cast<ListViewItem>()
-            .Select(x =>formatLabels((FullMergeRequestKey)(x.Tag), false)
-               .Count(y => y == '\n'))
-            .Max() + 1;
-         int maxLineCountInAuthor = 2;
-         int maxLineCount = Math.Max(maxLineCountInLabels, maxLineCountInAuthor);
-         setListViewRowHeight(listView, maxLineCount);
-      }
-
-      private string formatLabels(FullMergeRequestKey fmk, bool tooltip)
-      {
-         User currentUser = _currentUser.ContainsKey(fmk.ProjectKey.HostName)
-            ? _currentUser[fmk.ProjectKey.HostName]
-            : null;
-
-         IEnumerable<string> unimportantSuffices = Program.ServiceManager.GetUnimportantSuffices();
-
-         int getPriority(IEnumerable<string> labels)
-         {
-            Debug.Assert(labels.Any());
-            if (GitLabClient.Helpers.IsUserMentioned(labels.First(), currentUser))
-            {
-               return 0;
-            }
-            else if (labels.Any(x => unimportantSuffices.Any(y => x.EndsWith(y))))
-            {
-               return 2;
-            }
-            return 1;
-         };
-
-         var query = fmk.MergeRequest.Labels
-            .GroupBy(
-               label => label
-                  .StartsWith(Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1
-                     ? label.Substring(0, label.IndexOf('-'))
-                     : label,
-               label => label,
-               (baseLabel, labels) => new
-               {
-                  Labels = labels,
-                  Priority = getPriority(labels)
-               });
-
-         string joinLabels(IEnumerable<string> labels) => String.Format("{0}\n", String.Join(",", labels));
-
-         StringBuilder stringBuilder = new StringBuilder();
-         int take = tooltip ? query.Count() : MaxLabelRows - 1;
-
-         foreach (var x in
-            query
-            .OrderBy(x => x.Priority)
-            .Take(take))
-         {
-            stringBuilder.Append(joinLabels(x.Labels));
-         }
-
-         if (!tooltip)
-         {
-            if (query.Count() > MaxLabelRows)
-            {
-               stringBuilder.Append(MoreLabelsHint);
-            }
-            else if (query.Count() == MaxLabelRows)
-            {
-               stringBuilder.Append(joinLabels(query.OrderBy(x => x.Priority).Last().Labels));
-            }
-         }
-
-         return stringBuilder.ToString().TrimEnd('\n');
-      }
-
-      private static readonly Regex jira_re = new Regex(@"(?'name'(?!([A-Z0-9a-z]{1,10})-?$)[A-Z]{1}[A-Z0-9]+-\d+)");
-      private static string getJiraTask(MergeRequest mergeRequest)
-      {
-         Match m = jira_re.Match(mergeRequest.Title);
-         return !m.Success || m.Groups.Count < 1 || !m.Groups["name"].Success ? String.Empty : m.Groups["name"].Value;
-      }
-
-      private static void setListViewRowHeight(ListView listView, int maxLineCount)
-      {
-         // It is expected to use font size in pixels here
-         int height = listView.Font.Height * maxLineCount + 2;
-
-         ImageList imgList = new ImageList
-         {
-            ImageSize = new Size(1, height)
-         };
-         listView.SmallImageList = imgList;
-      }
-
-      private void onMergeRequestEvent(UserEvents.MergeRequestEvent e)
-      {
-         if (e.New || e.Commits)
-         {
-            requestCommitStorageUpdate(e.FullMergeRequestKey.ProjectKey);
-         }
-
-         MergeRequestKey mrk = new MergeRequestKey(
-            e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
-
-         if (e.Closed)
-         {
-            cleanupReviewedRevisions(mrk);
-         }
-
-         updateVisibleMergeRequests();
-
-         if (e.New)
-         {
-            requestUpdates(mrk, new[] {
-               Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
-               Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
-         }
-
-         if (listViewMergeRequests.SelectedItems.Count == 0 || isSearchMode())
-         {
-            return;
-         }
-
-         ListViewItem selected = listViewMergeRequests.SelectedItems[0];
-         FullMergeRequestKey fmk = (FullMergeRequestKey)selected.Tag;
-
-         if (fmk.Equals(e.FullMergeRequestKey))
-         {
-            if (e.Details)
-            {
-               // Details are partially updated here and partially in updateVisibleMergeRequests() above
-               updateMergeRequestDetails(fmk);
-            }
-
-            if (e.Commits)
-            {
-               Trace.TraceInformation("[MainForm] Reloading current Merge Request");
-
-               selected.Selected = false;
-               selected.Selected = true;
-            }
-         }
-      }
-
-      private void onMergeRequestRefreshed(MergeRequestKey mrk)
-      {
-         // update Refreshed column
-         listViewMergeRequests.Invalidate();
-
-         if (Program.Settings.UpdateManagerExtendedLogging)
-         {
-            DateTime? refreshTimestamp = _liveDataCache?.MergeRequestCache?.GetMergeRequestRefreshTime(mrk);
-            Trace.TraceInformation(String.Format(
-               "[MainForm] Merge Request {0} refreshed at {1}",
-               mrk.IId, refreshTimestamp.HasValue ? refreshTimestamp.Value.ToString() : "N/A"));
-         }
-      }
-
-      private void onMergeRequestListRefreshed()
-      {
-         DateTime? refreshTimestamp = _liveDataCache?.MergeRequestCache?.GetListRefreshTime();
-         string refreshedAt = refreshTimestamp.HasValue
-            ? String.Format("Refreshed at {0}",
-               refreshTimestamp.Value.ToLocalTime().ToString(Constants.TimeStampFormat))
-            : String.Empty;
-         toolTip.SetToolTip(this.buttonReloadList, String.Format("{0}{1}{2}",
-            RefreshButtonTooltip, refreshedAt == String.Empty ? String.Empty : "\r\n", refreshedAt));
-
-         // update Refreshed column
-         listViewMergeRequests.Invalidate();
-
-         if (Program.Settings.UpdateManagerExtendedLogging)
-         {
-            Trace.TraceInformation(String.Format(
-               "[MainForm] Merge Request List refreshed at {0}",
-               refreshTimestamp.HasValue ? refreshTimestamp.Value.ToString() : "N/A"));
-         }
-      }
-
+      // TODO Extract all this stuff into ApplicationUpdater entity
       private void checkForApplicationUpdates()
       {
          if (!_checkForUpdatesTimer.Enabled)
          {
-            _checkForUpdatesTimer.Tick += new System.EventHandler(onTimerCheckForUpdates);
+            _checkForUpdatesTimer.Tick += new System.EventHandler(onCheckForUpdatesTimer);
             _checkForUpdatesTimer.Start();
          }
 
@@ -1315,7 +235,6 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         // TODO Extract all this stuff into ApplicationUpdater entity
          try
          {
             System.Version currentVersion = new System.Version(Application.ProductVersion);
@@ -1383,476 +302,37 @@ namespace mrHelper.App.Forms
          });
       }
 
-      private void updateCaption()
+      private void onCheckForUpdatesTimer(object sender, EventArgs e)
       {
-         Text = Constants.MainWindowCaption
-           + " (" + Application.ProductVersion + ")"
-           + (!String.IsNullOrEmpty(_newVersionNumber) ? String.Format(
-              "   New version {0} is available!", _newVersionNumber) : String.Empty);
+         Trace.TraceInformation("[CheckForUpdates] Checking for updates on timer");
+         checkForApplicationUpdates();
       }
 
-      private void updateTrayIcon()
+      private void upgradeApplicationByUserRequest()
       {
-         notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
-         if (_iconScheme == null || !_iconScheme.Any())
+         if (String.IsNullOrEmpty(_newVersionFilePath))
          {
-            return;
-         }
-
-         void loadNotifyIconFromFile(string filename)
-         {
-            try
-            {
-               notifyIcon.Icon = new Icon(filename);
-            }
-            catch (ArgumentException ex)
-            {
-               ExceptionHandlers.Handle(String.Format("Cannot create an icon from file \"{0}\"", filename), ex);
-            }
-         }
-
-         if (isTrackingTime())
-         {
-            if (_iconScheme.ContainsKey("Icon_Tracking"))
-            {
-               loadNotifyIconFromFile(_iconScheme["Icon_Tracking"]);
-            }
-            return;
-         }
-
-         foreach (KeyValuePair<string, string> nameToFilename in _iconScheme)
-         {
-            string resolved = _expressionResolver.Resolve(nameToFilename.Key);
-            if (listViewMergeRequests.Items
-               .Cast<ListViewItem>()
-               .Select(x => x.Tag)
-               .Cast<FullMergeRequestKey>()
-               .Select(x => x.MergeRequest)
-               .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Icon_{{Label:{0}}}", y))))
-            {
-               loadNotifyIconFromFile(nameToFilename.Value);
-               break;
-            }
-         }
-      }
-
-      private void updateTaskbarIcon()
-      {
-         CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(null);
-         if (_badgeScheme == null || !_badgeScheme.Any())
-         {
-            return;
-         }
-
-         if (isTrackingTime())
-         {
-            if (_badgeScheme.ContainsKey("Badge_Tracking"))
-            {
-               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
-                  Color.FromName(_badgeScheme["Badge_Tracking"]));
-            }
-            return;
-         }
-
-         foreach (KeyValuePair<string, string> nameToFilename in _badgeScheme)
-         {
-            string resolved = _expressionResolver.Resolve(nameToFilename.Key);
-            if (listViewMergeRequests.Items
-               .Cast<ListViewItem>()
-               .Select(x => x.Tag)
-               .Cast<FullMergeRequestKey>()
-               .Select(x => x.MergeRequest)
-               .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Badge_{{Label:{0}}}", y))))
-            {
-               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
-                  Color.FromName(nameToFilename.Value));
-               break;
-            }
-         }
-      }
-
-      private void applyTheme(string theme)
-      {
-         string cssEx = String.Format("body div {{ font-size: {0}px; }}",
-            CommonControls.Tools.WinFormsHelpers.GetFontSizeInPixels(richTextBoxMergeRequestDescription));
-
-         if (theme == "New Year 2020")
-         {
-            pictureBox1.BackgroundImage = mrHelper.App.Properties.Resources.PleaseInspect;
-            pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            pictureBox1.Visible = true;
-            pictureBox2.BackgroundImage = mrHelper.App.Properties.Resources.Tree;
-            pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            pictureBox2.Visible = true;
-            listViewMergeRequests.BackgroundImage = mrHelper.App.Properties.Resources.SnowflakeBg;
-            listViewMergeRequests.BackgroundImageTiled = true;
-            listViewFoundMergeRequests.BackgroundImage = mrHelper.App.Properties.Resources.SnowflakeBg;
-            listViewFoundMergeRequests.BackgroundImageTiled = true;
-            richTextBoxMergeRequestDescription.BaseStylesheet =
-               String.Format("{0}{1}{2}", mrHelper.App.Properties.Resources.NewYear2020_CSS,
-                  mrHelper.App.Properties.Resources.Common_CSS, cssEx);
-         }
-         else
-         {
-            pictureBox1.BackgroundImage = null;
-            pictureBox1.Visible = false;
-            pictureBox2.BackgroundImage = null;
-            pictureBox2.Visible = false;
-            listViewMergeRequests.BackgroundImage = null;
-            listViewFoundMergeRequests.BackgroundImage = null;
-            richTextBoxMergeRequestDescription.BaseStylesheet =
-               String.Format("{0}{1}", mrHelper.App.Properties.Resources.Common_CSS, cssEx);
-         }
-
-         Program.Settings.VisualThemeName = theme;
-      }
-
-      private void updateUsersListView()
-      {
-         listViewUsers.Items.Clear();
-
-         foreach (string label in ConfigurationHelper.GetEnabledUsers(getHostName(), Program.Settings))
-         {
-            listViewUsers.Items.Add(label);
-         }
-      }
-
-      private void updateProjectsListView()
-      {
-         listViewProjects.Items.Clear();
-
-         foreach (string projectName in
-            ConfigurationHelper.GetEnabledProjectNames(getHostName(), Program.Settings)
-            .Select(x => x))
-         {
-            listViewProjects.Items.Add(projectName);
-         }
-      }
-
-      private int calcHorzDistance(Control leftControl, Control rightControl, bool preventOverlap = false)
-      {
-         int res = 0;
-         if (leftControl != null && rightControl != null)
-         {
-            res = rightControl.Location.X - (leftControl.Location.X + leftControl.Size.Width);
-         }
-         else if (leftControl == null && rightControl != null)
-         {
-            res = rightControl.Location.X;
-         }
-         else if (leftControl != null && rightControl == null)
-         {
-            res = leftControl.Parent.Size.Width - (leftControl.Location.X + leftControl.Size.Width);
-         }
-
-         if (!preventOverlap && res < 0)
-         {
-            Trace.TraceWarning(
-               "calcHorzDistance() returns negative value ({0}). " +
-               "leftControl: {1} (Location: {{{2}, {3}}}, Size: {{{4}, {5}}}), " +
-               "rightControl: {6} (Location: {{{7}, {8}}}, Size: {{{9}, {10}}}), " +
-               "PreventOverlap: {11}",
-               res,
-               leftControl?.Name ?? "null",
-               leftControl?.Location.X.ToString() ?? "N/A", leftControl?.Location.Y.ToString() ?? "N/A",
-               leftControl?.Size.Width.ToString() ?? "N/A", leftControl?.Size.Height.ToString() ?? "N/A",
-               rightControl?.Name ?? "null",
-               rightControl?.Location.X.ToString() ?? "N/A", rightControl?.Location.Y.ToString() ?? "N/A",
-               rightControl?.Size.Width.ToString() ?? "N/A", rightControl?.Size.Height.ToString() ?? "N/A",
-               preventOverlap);
             Debug.Assert(false);
-         }
-
-         return res < 0 && preventOverlap ? 10 : res;
-      }
-
-      private int calcVertDistance(Control topControl, Control bottomControl, bool preventOverlap = false)
-      {
-         int res = 0;
-         if (topControl != null && bottomControl != null)
-         {
-            res = bottomControl.Location.Y - (topControl.Location.Y + topControl.Size.Height);
-         }
-         else if (topControl == null && bottomControl != null)
-         {
-            res = bottomControl.Location.Y;
-         }
-         else if (topControl != null && bottomControl == null)
-         {
-            res = topControl.Parent.Size.Height - (topControl.Location.Y + topControl.Size.Height);
-         }
-
-         if (!preventOverlap && res < 0)
-         {
-            // This may occur on small resolutions (e.g. 1366x768)
-            Trace.TraceWarning(
-               "calcVertDistance() returns negative value ({0}). " +
-               "topControl: {1} (Location: {{{2}, {3}}}, Size: {{{4}, {5}}}), " +
-               "bottomControl: {6} (Location: {{{7}, {8}}}, Size: {{{9}, {10}}}), " +
-               "PreventOverlap: {11}",
-               res,
-               topControl?.Name ?? "null",
-               topControl?.Location.X.ToString() ?? "N/A", topControl?.Location.Y.ToString() ?? "N/A",
-               topControl?.Size.Width.ToString() ?? "N/A", topControl?.Size.Height.ToString() ?? "N/A",
-               bottomControl?.Name ?? "null",
-               bottomControl?.Location.X.ToString() ?? "N/A", bottomControl?.Location.Y.ToString() ?? "N/A",
-               bottomControl?.Size.Width.ToString() ?? "N/A", bottomControl?.Size.Height.ToString() ?? "N/A",
-               preventOverlap);
-         }
-
-         return res < 0 && preventOverlap ? 10 : res;
-      }
-
-      private void resetMergeRequestTabMinimumSizes()
-      {
-         int defaultSplitContainerPanelMinSize = 25;
-         splitContainer1.Panel1MinSize = defaultSplitContainerPanelMinSize;
-         splitContainer1.Panel2MinSize = defaultSplitContainerPanelMinSize;
-         splitContainer2.Panel1MinSize = defaultSplitContainerPanelMinSize;
-         splitContainer2.Panel2MinSize = defaultSplitContainerPanelMinSize;
-
-         this.MinimumSize = new System.Drawing.Size(0, 0);
-
-         _initializedMinimumSizes = false;
-      }
-
-      private bool _initializedMinimumSizes = true;
-
-      private int getLeftPaneMinWidth()
-      {
-         return Math.Max(
-            calcHorzDistance(null, tabControlMode)
-          + calcHorzDistance(null, groupBoxSelectMergeRequest)
-          + calcHorzDistance(null, checkBoxDisplayFilter)
-          + checkBoxDisplayFilter.MinimumSize.Width
-          + calcHorzDistance(checkBoxDisplayFilter, textBoxDisplayFilter)
-          + 100 /* cannot use textBoxLabels.MinimumSize.Width, see 9b65d7413c */
-          + calcHorzDistance(textBoxDisplayFilter, buttonReloadList, true)
-          + buttonReloadList.Size.Width
-          + calcHorzDistance(buttonReloadList, buttonCreateNew)
-          + buttonCreateNew.Size.Width
-          + calcHorzDistance(buttonCreateNew, null)
-          + calcHorzDistance(groupBoxSelectMergeRequest, null),
-            calcHorzDistance(null, groupBoxSelectMergeRequest)
-          + calcHorzDistance(null, radioButtonSearchByTitleAndDescription)
-          + radioButtonSearchByTitleAndDescription.Width
-          + calcHorzDistance(radioButtonSearchByTitleAndDescription, radioButtonSearchByTargetBranch)
-          + radioButtonSearchByTargetBranch.Width
-          + 10 /* cannot use calcHorzDistance(radioButtonSearchByTargetBranch, null) because its Anchor is Top+Left */
-          + calcHorzDistance(groupBoxSelectMergeRequest, null)
-          + calcHorzDistance(tabControlMode, null));
-      }
-
-      private int getRightPaneMinWidth()
-      {
-         int calcMinWidthOfControlGroup(IEnumerable<Control> controls, int minGap) =>
-            controls.Cast<Control>().Sum(x => x.MinimumSize.Width) + (controls.Count() - 1) * minGap;
-
-         int buttonMinDistance = calcHorzDistance(buttonAddComment, buttonNewDiscussion);
-
-         int groupBoxReviewMinWidth =
-            calcMinWidthOfControlGroup(groupBoxReview.Controls.Cast<Control>(), buttonMinDistance)
-            + calcHorzDistance(null, groupBoxReview)
-            + calcHorzDistance(null, buttonAddComment)
-            + calcHorzDistance(buttonDiffTool, null)
-            + calcHorzDistance(groupBoxReview, null);
-
-         int groupBoxTimeTrackingMinWidth = calcMinWidthOfControlGroup(
-            new Control[] { buttonTimeTrackingStart, buttonTimeTrackingCancel, buttonEditTime }, buttonMinDistance)
-            + calcHorzDistance(null, groupBoxTimeTracking)
-            + calcHorzDistance(null, buttonTimeTrackingStart)
-            + calcHorzDistance(buttonEditTime, null)
-            + calcHorzDistance(groupBoxTimeTracking, null);
-
-         bool hasActions = groupBoxActions.Controls.Count > 0;
-         int groupBoxActionsMinWidth =
-            calcMinWidthOfControlGroup(groupBoxActions.Controls.Cast<Control>(), buttonMinDistance)
-            + calcHorzDistance(null, groupBoxActions)
-            + calcHorzDistance(null, hasActions ? buttonAddComment : null) // First button is aligned with "Add a comment"
-            + calcHorzDistance(hasActions ? buttonDiffTool : null, null)   // Last button is aligned with "Diff Tool"
-            + calcHorzDistance(groupBoxActions, null);
-
-         bool hasPicture1 = pictureBox1.BackgroundImage != null;
-         bool hasPicture2 = pictureBox2.BackgroundImage != null;
-
-         int panelFreeSpaceMinWidth =
-            calcHorzDistance(null, panelFreeSpace)
-          + (hasPicture1 ? calcHorzDistance(null, pictureBox1) + pictureBox1.MinimumSize.Width : panelFreeSpace.MinimumSize.Width)
-          + (hasPicture2 ? pictureBox2.MinimumSize.Width + calcHorzDistance(pictureBox2, null) : panelFreeSpace.MinimumSize.Width)
-          + calcHorzDistance(panelFreeSpace, null);
-
-         return Enumerable.Max(new int[]
-            { groupBoxReviewMinWidth, groupBoxTimeTrackingMinWidth, groupBoxActionsMinWidth, panelFreeSpaceMinWidth });
-      }
-
-      private int getTopRightPaneMinHeight()
-      {
-         return
-            + calcVertDistance(null, groupBoxSelectedMR)
-            + calcVertDistance(null, richTextBoxMergeRequestDescription)
-            + 100 /* cannot use richTextBoxMergeRequestDescription.MinimumSize.Height, see 9b65d7413c */
-            + calcVertDistance(richTextBoxMergeRequestDescription, linkLabelConnectedTo, true)
-            + linkLabelConnectedTo.Height
-            + calcVertDistance(linkLabelConnectedTo, null)
-            + calcVertDistance(groupBoxSelectedMR, null);
-      }
-
-      private int getBottomRightPaneMinHeight()
-      {
-         bool hasPicture1 = pictureBox1.BackgroundImage != null;
-         bool hasPicture2 = pictureBox2.BackgroundImage != null;
-
-         int panelFreeSpaceMinHeight =
-            Math.Max(
-               (hasPicture1 ?
-                  calcVertDistance(null, pictureBox1)
-                + pictureBox1.MinimumSize.Height
-                + calcVertDistance(pictureBox1, null, true) : panelFreeSpace.MinimumSize.Height),
-               (hasPicture2 ?
-                  calcVertDistance(null, pictureBox2)
-                + pictureBox2.MinimumSize.Height
-                + calcVertDistance(pictureBox2, null, true) : panelFreeSpace.MinimumSize.Height));
-
-         return
-              calcVertDistance(null, groupBoxSelectRevisions)
-            + groupBoxSelectRevisions.Height
-            + calcVertDistance(groupBoxSelectRevisions, groupBoxReview)
-            + groupBoxReview.Height
-            + calcVertDistance(groupBoxReview, groupBoxTimeTracking)
-            + groupBoxTimeTracking.Height
-            + calcVertDistance(groupBoxTimeTracking, groupBoxActions)
-            + groupBoxActions.Height
-            + calcVertDistance(groupBoxActions, panelFreeSpace)
-            + panelFreeSpaceMinHeight
-            + calcVertDistance(panelFreeSpace, panelStatusBar, true)
-            + panelStatusBar.Height
-            + calcVertDistance(panelStatusBar, panelBottomMenu)
-            + panelBottomMenu.Height
-            + calcVertDistance(panelBottomMenu, null);
-      }
-
-      private void initializeMergeRequestTabMinimumSizes()
-      {
-         if (_initializedMinimumSizes || tabControl.SelectedTab != tabPageMR)
-         {
             return;
          }
 
-         if (Program.Settings.DisableSplitterRestrictions)
+         if (MessageBox.Show("Do you want to close the application and install a new version?", "Confirmation",
+               MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
          {
-            _initializedMinimumSizes = true;
+            Trace.TraceInformation("[CheckForUpdates] User discarded to install a new version");
             return;
          }
 
-         int leftPaneMinWidth = getLeftPaneMinWidth();
-         int rightPaneMinWidth = getRightPaneMinWidth();
-         int topRightPaneMinHeight = getTopRightPaneMinHeight();
-         int bottomRightPaneMinHeight = getBottomRightPaneMinHeight();
-
-         int clientAreaMinWidth =
-            calcHorzDistance(null, tabPageMR)
-          + calcHorzDistance(null, splitContainer1)
-          + leftPaneMinWidth
-          + splitContainer1.SplitterWidth
-          + rightPaneMinWidth
-          + calcHorzDistance(splitContainer1, null)
-          + calcHorzDistance(tabPageMR, null);
-         int nonClientAreaWidth = this.Size.Width - this.ClientSize.Width;
-
-         int clientAreaMinHeight =
-            calcVertDistance(null, tabPageMR)
-          + calcVertDistance(null, splitContainer1)
-          + calcVertDistance(null, splitContainer2)
-          + topRightPaneMinHeight
-          + splitContainer2.SplitterWidth
-          + bottomRightPaneMinHeight
-          + calcVertDistance(splitContainer2, null)
-          + calcVertDistance(splitContainer1, null)
-          + calcVertDistance(tabPageMR, null);
-         int nonClientAreaHeight = this.Size.Height - this.ClientSize.Height;
-
-         // First, apply new size to the Form because this action resizes it the Format is too small for split containers
-         this.MinimumSize = new Size(clientAreaMinWidth + nonClientAreaWidth, clientAreaMinHeight + nonClientAreaHeight);
-
-         // Validate widths
-         if (leftPaneMinWidth + rightPaneMinWidth > this.splitContainer1.Width ||
-             topRightPaneMinHeight + bottomRightPaneMinHeight > this.splitContainer2.Height)
+         try
          {
-            Trace.TraceError(String.Format(
-               "[MainForm] SplitContainer size conflict. "
-             + "SplitContainer1.Width = {0}, leftPaneMinWidth = {1}, rightPaneMinWidth = {2}. "
-             + "SplitContainer2.Height = {3}, topRightPaneMinHeight = {4}, bottomRightPaneMinHeight = {5}",
-               splitContainer1.Width, leftPaneMinWidth, rightPaneMinWidth,
-               splitContainer2.Height, topRightPaneMinHeight, bottomRightPaneMinHeight));
-            Debug.Assert(false);
-            resetMergeRequestTabMinimumSizes();
-            _initializedMinimumSizes = true;
-            return;
+            Process.Start(_newVersionFilePath);
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle("[CheckForUpdates] Cannot launch installer", ex);
          }
 
-         // Then, apply new sizes to split containers
-         this.splitContainer1.Panel1MinSize = leftPaneMinWidth;
-         this.splitContainer1.Panel2MinSize = rightPaneMinWidth;
-         this.splitContainer2.Panel1MinSize = topRightPaneMinHeight;
-         this.splitContainer2.Panel2MinSize = bottomRightPaneMinHeight;
-
-         // Set default position for splitter
-         this.splitContainer1.SplitterDistance = this.splitContainer1.Width - this.splitContainer1.Panel2MinSize;
-         this.splitContainer2.SplitterDistance = this.splitContainer2.Height - this.splitContainer2.Panel2MinSize;
-
-         _initializedMinimumSizes = true;
-      }
-
-      private void repositionCustomCommands()
-      {
-         int getControlX(Control control, int index) =>
-             control.Width * index +
-                (groupBoxActions.Width - _customCommands.Count() * control.Width) *
-                (index + 1) / (_customCommands.Count() + 1);
-
-         for (int id = 0; id < groupBoxActions.Controls.Count; ++id)
-         {
-            Control c = groupBoxActions.Controls[id];
-            c.Location = new Point { X = getControlX(c, id), Y = c.Location.Y };
-         }
-      }
-
-      private void updateTabControlSelection()
-      {
-         bool areAnyHosts = listViewKnownHosts.Items.Count > 0;
-         bool isStorageValid = textBoxStorageFolder.Text.Length > 0 && Directory.Exists(textBoxStorageFolder.Text);
-         if (areAnyHosts && isStorageValid)
-         {
-            tabControl.SelectedTab = tabPageMR;
-         }
-         else if (!isStorageValid)
-         {
-            tabControl.SelectedTab = tabPageSettings;
-            tabControlSettings.SelectedTab = tabPageSettingsStorage;
-         }
-         else if (!areAnyHosts)
-         {
-            tabControl.SelectedTab = tabPageSettings;
-            tabControlSettings.SelectedTab = tabPageSettingsAccessTokens;
-         }
-      }
-
-      private void changeStorageFolder(string newFolder)
-      {
-         if (_storageFactory == null || _storageFactory.ParentFolder != newFolder)
-         {
-            textBoxStorageFolder.Text = storageFolderBrowser.SelectedPath;
-            Program.Settings.LocalGitFolder = storageFolderBrowser.SelectedPath;
-
-            MessageBox.Show("Storage folder is changed.\n Please restart Diff Tool if you have already launched it.",
-               "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            labelWorkflowStatus.Text = "File storage folder changed";
-            Trace.TraceInformation(String.Format("[MainForm] File storage changed to {0}", newFolder));
-
-            Trace.TraceInformation(String.Format("[MainForm] Reconnecting after file storage path change"));
-            reconnect();
-         }
+         doClose();
       }
 
       private void changeProjectEnabledState(ProjectKey projectKey, bool state)
@@ -1865,166 +345,6 @@ namespace mrHelper.App.Forms
          ConfigurationHelper.SetProjectsForHost(projectKey.HostName,
             Enumerable.Zip(projects.Keys, projects.Values, (x, y) => new Tuple<string, bool>(x, y)), Program.Settings);
          updateProjectsListView();
-      }
-
-      [Flags]
-      private enum DataCacheUpdateKind
-      {
-         MergeRequest = 1,
-         Discussions  = 2,
-         MergeRequestAndDiscussions = MergeRequest | Discussions
-      }
-
-      private void requestUpdates(MergeRequestKey? mrk, int interval, Action onUpdateFinished,
-         DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
-      {
-         bool needUpdateMergeRequest = kind.HasFlag(DataCacheUpdateKind.MergeRequest);
-         bool needUpdateDiscussions = kind.HasFlag(DataCacheUpdateKind.Discussions);
-
-         bool mergeRequestUpdateFinished = !needUpdateMergeRequest;
-         bool discussionUpdateFinished = !needUpdateDiscussions;
-
-         void onSingleUpdateFinished()
-         {
-            if (mergeRequestUpdateFinished && discussionUpdateFinished)
-            {
-               onUpdateFinished?.Invoke();
-            }
-         }
-
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
-         if (needUpdateMergeRequest)
-         {
-            dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
-               () =>
-               {
-                  mergeRequestUpdateFinished = true;
-                  onSingleUpdateFinished();
-               });
-         }
-
-         if (needUpdateDiscussions)
-         {
-            dataCache?.DiscussionCache?.RequestUpdate(mrk, interval,
-               () =>
-               {
-                  discussionUpdateFinished = true;
-                  onSingleUpdateFinished();
-               });
-         }
-      }
-
-      private void requestUpdates(MergeRequestKey? mrk, int[] intervals)
-      {
-         DataCache dataCache = getDataCache(true /* supported in Live only */);
-         dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals);
-         dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
-      }
-
-      private static void disableSSLVerification()
-      {
-         if (Program.Settings.DisableSSLVerification)
-         {
-            try
-            {
-               GitTools.DisableSSLVerification();
-               Program.Settings.DisableSSLVerification = false;
-            }
-            catch (GitTools.SSLVerificationDisableException ex)
-            {
-               ExceptionHandlers.Handle("Cannot disable SSL verification", ex);
-            }
-         }
-      }
-
-      private void saveColumnWidths(ListView listView, Action<Dictionary<string, int>> saveProperty)
-      {
-         Dictionary<string, int> columnWidths = new Dictionary<string, int>();
-         foreach (ColumnHeader column in listView.Columns)
-         {
-            columnWidths[(string)column.Tag] = column.Width;
-         }
-         saveProperty(columnWidths);
-      }
-
-      private void onSingleMergeRequestLoadedCommon(FullMergeRequestKey fmk, DataCache dataCache)
-      {
-         Debug.Assert(fmk.MergeRequest != null);
-
-         enableMergeRequestActions(true);
-         updateMergeRequestDetails(fmk);
-         updateTimeTrackingMergeRequestDetails(
-            true, fmk.MergeRequest.Title, fmk.ProjectKey, fmk.MergeRequest.Author);
-         updateTotalTime(new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId),
-            fmk.MergeRequest.Author, fmk.ProjectKey.HostName, dataCache.TotalTimeCache);
-         updateAbortGitCloneButtonState();
-
-         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
-         string status = _latestStorageUpdateStatus.TryGetValue(mrk, out string value) ? value : String.Empty;
-         updateStorageStatusText(status, mrk);
-      }
-
-      private void onComparableEntitiesLoadedCommon(GitLabSharp.Entities.Version latestVersion,
-         MergeRequest mergeRequest, IEnumerable<Commit> commits, IEnumerable<GitLabSharp.Entities.Version> versions,
-         ListView listView)
-      {
-         MergeRequestKey? mrk = getMergeRequestKey(listView);
-         bool hasObjects = commits.Any() || versions.Any();
-         if (mrk.HasValue && hasObjects)
-         {
-            RevisionBrowserModelData data = new RevisionBrowserModelData(latestVersion?.Base_Commit_SHA,
-               commits, versions, getReviewedRevisions(mrk.Value));
-            revisionBrowser.SetData(data, ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
-            updateStorageDependentControlState(mrk);
-            enableCustomActions(true, mergeRequest.Labels, mergeRequest.Author);
-         }
-         else
-         {
-            revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
-         }
-      }
-
-      private void disableCommonUIControls()
-      {
-         enableMergeRequestActions(false);
-         enableCustomActions(false, null, null);
-         updateStorageDependentControlState(null);
-         updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
-         updateTotalTime(null, null, null, null);
-         revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
-      }
-
-      private MergeRequestFilterState createMergeRequestFilterState()
-      {
-         return new MergeRequestFilterState
-         (
-            ConfigurationHelper.GetDisplayFilterKeywords(Program.Settings),
-            Program.Settings.DisplayFilterEnabled
-         );
-      }
-
-      private void applyAutostartSetting(bool enabled)
-      {
-         if (_allowAutoStartApplication)
-         {
-            return;
-         }
-
-         string command = String.Format("{0} -m", Application.ExecutablePath);
-         AutoStartHelper.ApplyAutostartSetting(enabled, "mrHelper", command);
-      }
-
-      private void onUpdating()
-      {
-         buttonReloadList.Text = "Updating...";
-         buttonReloadList.Enabled = false;
-      }
-
-      private void onUpdated(string oldButtonText)
-      {
-         buttonReloadList.Text = oldButtonText;
-         buttonReloadList.Enabled = true;
       }
 
       private void getShaForDiffTool(out string left, out string right,
@@ -2060,15 +380,6 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private string getDiffTempFolder(Snapshot snapshot)
-      {
-         if (ConfigurationHelper.GetPreferredStorageType(Program.Settings) == LocalCommitStorageType.FileStorage)
-         {
-            return snapshot.TempFolder;
-         }
-         return Environment.GetEnvironmentVariable("TEMP");
-      }
-
       private bool checkIfMergeRequestCanBeCreated()
       {
          string hostname = getHostName();
@@ -2090,7 +401,7 @@ namespace mrHelper.App.Forms
       {
          string hostname = getHostName();
          User currentUser = getCurrentUser();
-         FullMergeRequestKey item = (FullMergeRequestKey)(listViewMergeRequests.SelectedItems[0].Tag);
+         FullMergeRequestKey item = getListView(EDataCacheType.Live).GetSelectedMergeRequest().Value;
          if (hostname == String.Empty || currentUser == null || item.MergeRequest == null)
          {
             Debug.Assert(false);
@@ -2104,37 +415,12 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties,
-         IEnumerable<Project> fullProjectList, IEnumerable<User> fullUserList)
-      {
-         var sourceBranchesInUse = GitLabClient.Helpers.GetSourceBranchesByUser(getCurrentUser(), _liveDataCache);
-
-         MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
-            getProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList, sourceBranchesInUse,
-            _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()));
-         if (form.ShowDialog() != DialogResult.OK)
-         {
-            Trace.TraceInformation("[MainForm] User declined to create a merge request");
-            return;
-         }
-
-         BeginInvoke(new Action(
-            async () =>
-            {
-               ProjectKey projectKey = new ProjectKey(hostname, form.ProjectName);
-               SubmitNewMergeRequestParameters parameters = new SubmitNewMergeRequestParameters(
-                  projectKey, form.SourceBranch, form.TargetBranch, form.Title,
-                  form.AssigneeUsername, form.Description, form.DeleteSourceBranch, form.Squash);
-               await createNewMergeRequestAsync(parameters, form.SpecialNote);
-            }));
-      }
-
       private NewMergeRequestProperties getDefaultNewMergeRequestProperties(string hostname,
-         User currentUser, ProjectKey? currentProject)
+         User currentUser, string projectName)
       {
          // This state is expected to be used only once, next times 'persistent storage' is used
          NewMergeRequestProperties factoryProperties = new NewMergeRequestProperties(
-            currentProject?.ProjectName, null, null, currentUser.Username, true, true);
+            projectName, null, null, currentUser.Username, true, true);
          return _newMergeRequestDialogStatesByHosts.TryGetValue(hostname, out var value) ? value : factoryProperties;
       }
 
@@ -2156,38 +442,296 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void acceptMergeRequest(FullMergeRequestKey item)
+      private void showDiscussionsForSelectedMergeRequest()
       {
-         MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
-         bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
-         Form formExisting = findFormByTag("AcceptMergeRequestForm", doesMatchTag);
-         if (formExisting != null)
+         BeginInvoke(new Action(async () =>
          {
-            formExisting.Activate();
-            return;
+            if (getMergeRequest(null) == null || !getMergeRequestKey(null).HasValue)
+            {
+               Debug.Assert(false);
+               return;
+            }
+
+            MergeRequest mergeRequest = getMergeRequest(null);
+            MergeRequestKey mrk = getMergeRequestKey(null).Value;
+
+            await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.Web_Url);
+         }));
+      }
+
+      private void onStartSearch()
+      {
+         SearchQuery query = new SearchQuery
+         {
+            MaxResults = Constants.MaxSearchResults
+         };
+
+         if (checkBoxSearchByTargetBranch.Checked)
+         {
+            query.TargetBranchName = textBoxSearchTargetBranch.Text;
+         }
+         if (checkBoxSearchByTitleAndDescription.Checked)
+         {
+            query.Text = textBoxSearchText.Text;
+         }
+         if (checkBoxSearchByProject.Checked)
+         {
+            query.ProjectName = comboBoxProjectName.Text;
+         }
+         if (checkBoxSearchByAuthor.Checked)
+         {
+            query.AuthorUserName = (comboBoxUser.SelectedItem as User).Username;
          }
 
-         AcceptMergeRequestForm form = new AcceptMergeRequestForm(
-            mrk,
-            getCommitStorage(mrk.ProjectKey, false)?.Path,
-            () =>
-            {
-               labelWorkflowStatus.Text = String.Format("Merge Request !{0} has been merged successfully", mrk.IId);
-               requestUpdates(null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
-            },
-            showDiscussionsFormAsync,
-            () => _liveDataCache,
-            async () =>
-            {
-               await checkForUpdatesAsync(mrk, DataCacheUpdateKind.MergeRequest);
-               return _liveDataCache;
-            },
-            () => Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName))
-         {
-            Tag = mrk
-         };
-         form.Show();
+         Debug.Assert(query != null);
+         searchMergeRequests(new SearchQueryCollection(query));
       }
+
+      private void doClose()
+      {
+         setExitingFlag();
+         Close();
+      }
+
+      private void setExitingFlag()
+      {
+         Trace.TraceInformation(String.Format("[MainForm] Set _exiting flag"));
+         _exiting = true;
+      }
+
+      private void onHideToTray()
+      {
+         if (Program.Settings.ShowWarningOnHideToTray)
+         {
+            _trayIcon.ShowTooltipBalloon(new TrayIcon.BalloonText("Information", "I will now live in your tray"));
+            Program.Settings.ShowWarningOnHideToTray = false;
+         }
+         Hide();
+      }
+
+      private void onPersistentStorageSerialize(IPersistentStateSetter writer)
+      {
+         writer.Set("SelectedHost", getHostName());
+
+         Dictionary<string, HashSet<string>> reviewedRevisions = _reviewedRevisions.ToDictionary(
+               item => item.Key.ProjectKey.HostName
+               + "|" + item.Key.ProjectKey.ProjectName
+               + "|" + item.Key.IId.ToString(),
+               item => item.Value);
+         writer.Set("ReviewedCommits", reviewedRevisions);
+
+         IEnumerable<string> recentMergeRequests = _recentMergeRequests.Select(
+               item => item.ProjectKey.HostName + "|"
+                     + item.ProjectKey.ProjectName + "|"
+                     + item.IId.ToString());
+         writer.Set("RecentMergeRequests", recentMergeRequests);
+
+         Dictionary<string, string> mergeRequestsByHosts = _lastMergeRequestsByHosts.ToDictionary(
+               item => item.Value.ProjectKey.HostName + "|" + item.Value.ProjectKey.ProjectName,
+               item => item.Value.IId.ToString());
+         writer.Set("MergeRequestsByHosts", mergeRequestsByHosts);
+
+         Dictionary<string, string> newMergeRequestDialogStatesByHosts =
+            _newMergeRequestDialogStatesByHosts.ToDictionary(
+               item => item.Key,
+               item => item.Value.DefaultProject + "|"
+                     + item.Value.AssigneeUsername + "|"
+                     + item.Value.IsBranchDeletionNeeded.ToString() + "|"
+                     + item.Value.IsSquashNeeded.ToString());
+         writer.Set("NewMergeRequestDialogStatesByHosts", newMergeRequestDialogStatesByHosts);
+      }
+
+      private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
+      {
+         string hostname = (string)reader.Get("SelectedHost");
+         if (hostname != null)
+         {
+            setInitialHostName(StringUtils.GetHostWithPrefix(hostname));
+         }
+
+         JObject reviewedRevisionsObj = (JObject)reader.Get("ReviewedCommits");
+         Dictionary<string, object> reviewedRevisions =
+            reviewedRevisionsObj?.ToObject<Dictionary<string, object>>();
+         if (reviewedRevisions != null)
+         {
+            _reviewedRevisions = reviewedRevisions.ToDictionary(
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+
+                  Debug.Assert(splitted.Length == 3);
+
+                  string host = splitted[0];
+                  string projectName = splitted[1];
+                  int iid = int.Parse(splitted[2]);
+                  return new MergeRequestKey(new ProjectKey(host, projectName), iid);
+               },
+               item =>
+               {
+                  HashSet<string> commits = new HashSet<string>();
+                  foreach (string commit in (JArray)item.Value)
+                  {
+                     commits.Add(commit);
+                  }
+                  return commits;
+               });
+         }
+
+         JArray recentMergeRequests = (JArray)reader.Get("RecentMergeRequests");
+         if (recentMergeRequests != null)
+         {
+            foreach (JToken token in recentMergeRequests)
+            {
+               if (token.Type == JTokenType.String)
+               {
+                  string item = token.Value<string>();
+                  string[] splitted = item.Split('|');
+                  Debug.Assert(splitted.Length == 3);
+
+                  string hostname2 = StringUtils.GetHostWithPrefix(splitted[0]);
+                  string projectname = splitted[1];
+                  int iid = int.TryParse(splitted[2], out int parsedIId) ? parsedIId : 0;
+                  _recentMergeRequests.Add(new MergeRequestKey(new ProjectKey(hostname2, projectname), iid));
+               }
+            }
+         }
+
+         JObject lastMergeRequestsByHostsObj = (JObject)reader.Get("MergeRequestsByHosts");
+         Dictionary<string, object> lastMergeRequestsByHosts =
+            lastMergeRequestsByHostsObj?.ToObject<Dictionary<string, object>>();
+         if (lastMergeRequestsByHosts != null)
+         {
+            _lastMergeRequestsByHosts = lastMergeRequestsByHosts.ToDictionary(
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+                  Debug.Assert(splitted.Length == 2);
+                  return splitted[0];
+               },
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+                  Debug.Assert(splitted.Length == 2);
+
+                  string hostname2 = StringUtils.GetHostWithPrefix(splitted[0]);
+                  string projectname = splitted[1];
+                  int iid = int.Parse((string)item.Value);
+                  return new MergeRequestKey(new ProjectKey(hostname2, projectname), iid);
+               });
+         }
+
+         JObject newMergeRequestDialogStatesByHostsObj = (JObject)reader.Get("NewMergeRequestDialogStatesByHosts");
+         Dictionary<string, object> newMergeRequestDialogStatesByHosts =
+            newMergeRequestDialogStatesByHostsObj?.ToObject<Dictionary<string, object>>();
+         if (newMergeRequestDialogStatesByHosts != null)
+         {
+            _newMergeRequestDialogStatesByHosts = newMergeRequestDialogStatesByHosts
+               .Where(x => ((string)x.Value).Split('|').Length == 4).ToDictionary(
+               item => item.Key,
+               item =>
+               {
+                  string[] splitted = ((string)item.Value).Split('|');
+                  return new NewMergeRequestProperties(
+                     splitted[0], null, null, splitted[1],
+                     splitted[2] == bool.TrueString, splitted[3] == bool.TrueString);
+               });
+         }
+      }
+
+      private void onTimeTrackingTimer(object sender, EventArgs e)
+      {
+         if (isTrackingTime())
+         {
+            updateTotalTime(null, null, null, null);
+         }
+      }
+
+      private void connectToUrlFromClipboard()
+      {
+         if (doesClipboardContainValidUrl())
+         {
+            string url = getClipboardText();
+            Trace.TraceInformation(String.Format("[Mainform] Connecting to URL from clipboard: {0}", url.ToString()));
+            reconnect(url);
+         }
+      }
+
+      private void onClipboardCheckingTimer(object sender, EventArgs e)
+      {
+         bool isValidUrl = doesClipboardContainValidUrl();
+         linkLabelFromClipboard.Enabled = isValidUrl;
+         linkLabelFromClipboard.Text = isValidUrl ? openFromClipboardEnabledText : openFromClipboardDisabledText;
+
+         string tooltip = isValidUrl ? getClipboardText() : "N/A";
+         toolTip.SetToolTip(linkLabelFromClipboard, tooltip);
+      }
+
+      private void moveCopyFromClipboardLinkLabel()
+      {
+         int tabCount = tabControlMode.TabPages.Count;
+         Debug.Assert(tabCount > 0);
+
+         Rectangle tabRect = tabControlMode.GetTabRect(tabCount - 1);
+
+         int linkLabelTopRelativeToTabRect = tabRect.Height / 2 - linkLabelFromClipboard.Height / 2;
+         int linkLabelTop = tabRect.Top + linkLabelTopRelativeToTabRect;
+
+         int linkLabelHorizontalOffsetFromRightmostTab = 20;
+         int linkLabelLeft = tabRect.X + tabRect.Width + linkLabelHorizontalOffsetFromRightmostTab;
+
+         linkLabelFromClipboard.Location = new System.Drawing.Point(linkLabelLeft, linkLabelTop);
+      }
+
+      private static void sendFeedback()
+      {
+         try
+         {
+            if (Program.ServiceManager.GetBugReportEmail() != String.Empty)
+            {
+               Program.FeedbackReporter.SendEMail("Merge Request Helper Feedback Report",
+                  "Please provide your feedback here", Program.ServiceManager.GetBugReportEmail(),
+                  Constants.BugReportLogArchiveName);
+            }
+         }
+         catch (FeedbackReporterException ex)
+         {
+            string message = "Cannot send feedback";
+            ExceptionHandlers.Handle(message, ex);
+            MessageBox.Show(ex.InnerException?.Message ?? "Unknown error", message,
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+      }
+
+      private static void showHelp()
+      {
+         string helpUrl = Program.ServiceManager.GetHelpUrl();
+         if (helpUrl != String.Empty)
+         {
+            UrlHelper.OpenBrowser(helpUrl);
+         }
+      }
+
+      private void applyHostChange(string hostname)
+      {
+         Trace.TraceInformation(String.Format("[MainForm] User requested to change host to {0}", hostname));
+         updateProjectsListView();
+         updateUsersListView();
+         reconnect();
+         saveState();
+      }
+
+      private void reconnect(string url = null)
+      {
+         enqueueUrl(url);
+      }
+
+      private void requestUpdates(EDataCacheType mode, MergeRequestKey? mrk, int[] intervals)
+      {
+         DataCache dataCache = getDataCache(mode);
+         dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals);
+         dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
+      }
+
    }
 }
 

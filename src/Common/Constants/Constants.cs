@@ -14,6 +14,9 @@ namespace mrHelper.Common.Constants
       public static string MainWindowCaption = "Merge Request Helper";
       public static string StartNewThreadCaption = "Start a thread";
 
+      public static string NotStartedTimeTrackingText = "Not Started";
+      public static string NotAllowedTimeTrackingText = "<mine>";
+
       public static string CreateMergeRequestCustomActionName = "Create Merge Request";
       public static string CreateMergeRequestBashScriptName = "create-new-merge-request.sh";
       public static string BashFileName = "bash.exe";
@@ -56,28 +59,29 @@ namespace mrHelper.Common.Constants
          { "Meeting Mode",  15.75 }
       };
 
-      public static IEnumerable<string> MainWindowFontSizeChoices = new string[]
+      public static string[] MainWindowFontSizeChoices = new string[]
          { "Tiny", "Small", "Medium", "Large" };
 
       public static string DefaultMainWindowFontSizeChoice = "Small";
 
-      public static IEnumerable<string> DiscussionsWindowFontSizeChoices = new string[]
+      public static string[] DiscussionsWindowFontSizeChoices = new string[]
          { "Tiny", "Small", "Medium", "Large", "Meeting Mode" };
 
-      public static int MaxSearchByTitleAndDescriptionResults = 20;
+      public static int MaxSearchResults = 20;
       public static int MaxCommitsToLoad = 50;
       public static int MaxAllowedDiffsInComparison = 1000;
       public static int MaxAllowedDiffsInBackgroundComparison = 100;
       public static int MinDiffsInComparisonToNotifyUser = 200;
       public static int MaxCommitDepth = 10;
+      public static int RecentMergeRequestPerProjectCount = 5;
 
-      public static TaskUtils.BatchLimits MergeRequestLoaderProjectBatchLimits = new TaskUtils.BatchLimits
+      public static TaskUtils.BatchLimits MergeRequestLoaderSearchQueryBatchLimits = new TaskUtils.BatchLimits
       {
          Size = 20,
          Delay = 0
       };
 
-      public static TaskUtils.BatchLimits ProjectListLoaderBatchLimits = new TaskUtils.BatchLimits
+      public static TaskUtils.BatchLimits ProjectResolverBatchLimits = new TaskUtils.BatchLimits
       {
          Size = 5,
          Delay = 0

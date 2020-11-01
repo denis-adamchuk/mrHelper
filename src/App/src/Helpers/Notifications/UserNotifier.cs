@@ -62,7 +62,7 @@ namespace mrHelper.App.Helpers
 
          switch (e.EventType)
          {
-            case MergeRequestEvent.Type.NewMergeRequest:
+            case MergeRequestEvent.Type.AddedMergeRequest:
                return new BalloonText
                (
                   title,
@@ -70,11 +70,11 @@ namespace mrHelper.App.Helpers
                                 mergeRequest.Title, mergeRequest.Author.Name)
                );
 
-            case MergeRequestEvent.Type.ClosedMergeRequest:
+            case MergeRequestEvent.Type.RemovedMergeRequest:
                return new BalloonText
                (
                   title,
-                  String.Format("Merge request \"{0}\" from {1} was merged/closed",
+                  String.Format("Merge request \"{0}\" from {1} moved to Recent tab",
                                 mergeRequest.Title, mergeRequest.Author.Name)
                );
 

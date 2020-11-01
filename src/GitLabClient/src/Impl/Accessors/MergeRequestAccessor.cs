@@ -7,6 +7,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient.Accessors;
+using GitLabSharp.Accessors;
 
 namespace mrHelper.GitLabClient
 {
@@ -35,10 +36,14 @@ namespace mrHelper.GitLabClient
          {
             try
             {
-               SearchCriteria searchCriteria = new SearchCriteria(
-                  new object[] { new SearchByIId(_projectKey.ProjectName, mergeRequestIId) }, onlyOpen);
-               IEnumerable<MergeRequest> mergeRequests =
-                  await mergeRequestOperator.SearchMergeRequestsAsync(searchCriteria, null);
+               SearchQuery query = new SearchQuery
+               {
+                  IId = mergeRequestIId,
+                  ProjectName = _projectKey.ProjectName,
+                  State = onlyOpen ? "opened" : null,
+                  MaxResults = 1
+               };
+               IEnumerable<MergeRequest> mergeRequests = await mergeRequestOperator.SearchMergeRequestsAsync(query);
                return mergeRequests.Any() ? mergeRequests.First() : null;
             }
             catch (OperatorException)

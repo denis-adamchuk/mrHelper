@@ -19,6 +19,7 @@ namespace mrHelper.GitLabClient
       }
 
       public event Action<string, User> Connected;
+      public event Action<string> Connecting;
       public event Action Disconnected;
 
       async public Task Connect(GitLabInstance gitLabInstance, DataCacheConnectionContext context)
@@ -31,12 +32,14 @@ namespace mrHelper.GitLabClient
 
          try
          {
-            InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
-            IMergeRequestListLoader mergeRequestListLoader =
-               MergeRequestListLoaderFactory.CreateMergeRequestListLoader(hostname, _operator, context, cacheUpdater);
+            Connecting?.Invoke(hostname);
 
-            Trace.TraceInformation("[DataCache] Connecting data cache to {0}...", hostname);
-            _connectionContext = context;
+            InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
+            IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
+               hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater, context);
+
+            traceInformation(String.Format("Connecting data cache to {0}...", hostname));
+            ConnectionContext = context;
 
             string accessToken = hostProperties.GetAccessToken(hostname);
             await new CurrentUserLoader(_operator).Load(hostname, accessToken);
@@ -45,7 +48,7 @@ namespace mrHelper.GitLabClient
             await mergeRequestListLoader.Load();
             _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser, context);
 
-            Trace.TraceInformation("[DataCache] Data cache connected to {0}", hostname);
+            traceInformation(String.Format("Data cache connected to {0}", hostname));
             Connected?.Invoke(hostname, currentUser);
          }
          catch (BaseLoaderException ex)
@@ -62,13 +65,13 @@ namespace mrHelper.GitLabClient
 
       public void Disconnect()
       {
-         Trace.TraceInformation("[DataCache] Disconnecting data cache");
+         traceInformation("Disconnecting data cache");
          reset();
       }
 
       public void Dispose()
       {
-         Trace.TraceInformation("[DataCache] Disposing data cache");
+         traceInformation("Disposing data cache");
          reset();
       }
 
@@ -82,7 +85,7 @@ namespace mrHelper.GitLabClient
 
       public IUserCache UserCache => _internal?.UserCache;
 
-      public DataCacheConnectionContext ConnectionContext => _connectionContext;
+      public DataCacheConnectionContext ConnectionContext { get; private set; }
 
       private void reset()
       {
@@ -92,9 +95,14 @@ namespace mrHelper.GitLabClient
          _internal?.Dispose();
          _internal = null;
 
-         _connectionContext = null;
+         ConnectionContext = null;
 
          Disconnected?.Invoke();
+      }
+
+      private void traceInformation(string message)
+      {
+         Trace.TraceInformation("[DataCache.{0}] {1}", _dataCacheContext.TagForLogging, message);
       }
 
       private DataCacheInternal createCacheInternal(
@@ -111,7 +119,7 @@ namespace mrHelper.GitLabClient
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
             hostname, hostProperties, user, discussionManager, _modificationNotifier);
 
-         IProjectListLoader loader = new ProjectListLoader(hostname, _operator, context);
+         IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
          ProjectCache projectCache = new ProjectCache(loader, _dataCacheContext, hostname);
          IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
          UserCache userCache = new UserCache(userListLoader, _dataCacheContext, hostname);
@@ -120,8 +128,6 @@ namespace mrHelper.GitLabClient
 
       private DataCacheOperator _operator;
       private DataCacheInternal _internal;
-      private DataCacheConnectionContext _connectionContext;
-
       private readonly DataCacheContext _dataCacheContext;
       private readonly IModificationNotifier _modificationNotifier;
    }

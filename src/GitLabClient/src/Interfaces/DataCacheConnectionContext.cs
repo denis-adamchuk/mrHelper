@@ -19,42 +19,33 @@ namespace mrHelper.GitLabClient
    public class DataCacheUpdateRules
    {
       public DataCacheUpdateRules(
-         int? updateDiscussionsPeriod, int? updateMergeRequestsPeriod)
+         int? updateDiscussionsPeriod,
+         int? updateMergeRequestsPeriod,
+         bool updateOnlyOpenedMergeRequests)
       {
          UpdateDiscussionsPeriod = updateDiscussionsPeriod;
          UpdateMergeRequestsPeriod = updateMergeRequestsPeriod;
+         UpdateOnlyOpenedMergeRequests = updateOnlyOpenedMergeRequests;
       }
 
       public int? UpdateDiscussionsPeriod { get; }
       public int? UpdateMergeRequestsPeriod { get; }
+      public bool UpdateOnlyOpenedMergeRequests { get; }
    }
 
    public class DataCacheConnectionContext
    {
       public DataCacheConnectionContext(DataCacheCallbacks callbacks,
-         DataCacheUpdateRules updateRules, object customData)
+         DataCacheUpdateRules updateRules, SearchQueryCollection queryCollection)
       {
          Callbacks = callbacks;
          UpdateRules = updateRules;
-         CustomData = customData;
+         QueryCollection = queryCollection;
       }
 
       public DataCacheCallbacks Callbacks { get; }
       public DataCacheUpdateRules UpdateRules { get; }
-
-      public object CustomData { get; }
-   }
-
-   public class SearchBasedContext
-   {
-      public SearchBasedContext(SearchCriteria searchCriteria, int? maxSearchResults)
-      {
-         SearchCriteria = searchCriteria;
-         MaxSearchResults = maxSearchResults;
-      }
-
-      public SearchCriteria SearchCriteria { get; }
-      public int? MaxSearchResults { get; }
+      public SearchQueryCollection QueryCollection { get; }
    }
 }
 

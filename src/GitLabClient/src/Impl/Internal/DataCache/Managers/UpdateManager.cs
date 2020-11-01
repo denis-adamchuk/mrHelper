@@ -25,10 +25,12 @@ namespace mrHelper.GitLabClient.Managers
          InternalCacheUpdater cacheUpdater)
       {
          DataCacheOperator updateOperator = new DataCacheOperator(hostname, hostProperties);
-         _mergeRequestListLoader = MergeRequestListLoaderFactory.CreateMergeRequestListLoader(
-            hostname, updateOperator, context, cacheUpdater);
-         _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater);
+         _mergeRequestListLoader = new MergeRequestListLoader(
+            hostname, updateOperator, new VersionLoader(updateOperator, cacheUpdater), cacheUpdater, context);
+         _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater,
+            context.UpdateRules.UpdateOnlyOpenedMergeRequests);
          _extLogging = dataCacheContext.UpdateManagerExtendedLogging;
+         _tagForLogging = dataCacheContext.TagForLogging;
 
          _cache = cacheUpdater.Cache;
 
@@ -152,9 +154,9 @@ namespace mrHelper.GitLabClient.Managers
 
          if (legalUpdates > 0)
          {
-            Trace.TraceInformation(
+            traceInformation(
                String.Format(
-                  "[UpdateManager] Updated Labels: {0}. MRK: HostName={1}, ProjectName={2}, IId={3}",
+                  "Updated Labels: {0}. MRK: HostName={1}, ProjectName={2}, IId={3}",
                   legalUpdates, mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId));
          }
 
@@ -193,20 +195,20 @@ namespace mrHelper.GitLabClient.Managers
 
          IEnumerable<UserEvents.MergeRequestEvent> updates = _checker.CheckForUpdates(oldDetails, _cache);
 
-         int newMergeRequestsCount = updates.Count(x => x.New);
+         int newMergeRequestsCount = updates.Count(x => x.AddedToCache);
          int mergeRequestsWithUpdatedCommitsCount = updates.Count(x => x.Commits);
          int mergeRequestsWithUpdatedLabelsCount = updates.Count(x => x.Labels);
          int mergeRequestsWithUpdatedDetailsCount = updates.Count(x => x.Details);
-         int closedMergeRequestsCount = updates.Count(x => x.Closed);
+         int closedMergeRequestsCount = updates.Count(x => x.RemovedFromCache);
          if (newMergeRequestsCount > 0
           || mergeRequestsWithUpdatedCommitsCount > 0
           || mergeRequestsWithUpdatedLabelsCount > 0
           || mergeRequestsWithUpdatedDetailsCount > 0
           || closedMergeRequestsCount > 0)
          {
-            Trace.TraceInformation(
+            traceInformation(
                String.Format(
-                  "[UpdateManager] Merge Request Updates: " +
+                  "Merge Request Updates: " +
                   "New {0}, Updated commits {1}, Updated labels {2}, Updated details {3}, Closed {4}",
                   newMergeRequestsCount,
                   mergeRequestsWithUpdatedCommitsCount,
@@ -230,8 +232,13 @@ namespace mrHelper.GitLabClient.Managers
       {
          if (_extLogging)
          {
-            Trace.TraceInformation("[UpdateManager] " + message);
+            traceInformation(message);
          }
+      }
+
+      private void traceInformation(string message)
+      {
+         Trace.TraceInformation("[UpdateManager.{0}] {1}", _tagForLogging, message);
       }
 
       private System.Timers.Timer _timer;
@@ -243,7 +250,7 @@ namespace mrHelper.GitLabClient.Managers
       private readonly InternalMergeRequestCacheComparator _checker =
          new InternalMergeRequestCacheComparator();
       private readonly bool _extLogging;
-
+      private readonly string _tagForLogging;
       private bool _updating; /// prevents re-entrance in timer updates
    }
 }

@@ -6,7 +6,6 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitLabClient.Operators.Search;
 
 namespace mrHelper.GitLabClient
 {
@@ -98,58 +97,25 @@ namespace mrHelper.GitLabClient
          return result;
       }
 
-      // Checks if ANY of criteria inside searchCriteria is met (i.e. one criteria is enough for success)
-      public static bool DoesMatchSearchCriteria(SearchCriteria searchCriteria, MergeRequest mergeRequest,
+      // Checks if a merge request matches ANY of search queries inside `queries`
+      public static bool DoesMatchSearchQuery(SearchQueryCollection queries, MergeRequest mergeRequest,
          ProjectKey projectKey)
       {
-         if (searchCriteria.OnlyOpen && mergeRequest.State != "opened")
+         // TODO Test each condition
+         foreach (SearchQuery query in queries.Queries)
          {
-            return false;
-         }
-
-         foreach (object search in searchCriteria.Criteria)
-         {
-            if (search is SearchByIId sid)
+            if ((query.State == null || query.State == mergeRequest.State)
+                && (query.IId.HasValue && query.IId.Value == mergeRequest.IId
+                ||  query.ProjectName == projectKey.ProjectName
+                ||  query.TargetBranchName == mergeRequest.Target_Branch
+                || (query.Text != null && mergeRequest.Title.ToLower().Contains(query.Text.ToLower()))
+                || (query.Text != null && mergeRequest.Description.ToLower().Contains(query.Text.ToLower()))
+                || (query.Labels != null && query.Labels.All(label => mergeRequest.Labels.Contains(label)))
+                || (query.AuthorUserName != null && mergeRequest.Author.Username == query.AuthorUserName)))
             {
-               if (sid.IId == mergeRequest.IId)
-               {
-                  return true;
-               }
-            }
-            else if (search is SearchByProject sbp)
-            {
-               if (sbp.ProjectKey.Equals(projectKey))
-               {
-                  return true;
-               }
-            }
-            else if (search is SearchByTargetBranch sbtb)
-            {
-               if (sbtb.TargetBranchName == mergeRequest.Target_Branch)
-               {
-                  return true;
-               }
-            }
-            else if (search is SearchByText sbt)
-            {
-               string lowerCaseText = sbt.Text.ToLower();
-               if (mergeRequest.Title.ToLower().Contains(lowerCaseText)
-                  || mergeRequest.Description.ToLower().Contains(lowerCaseText))
-               {
-                  return true;
-               }
-            }
-            else if (search is SearchByUsername sbu)
-            {
-               string lowercaseLabel = Constants.GitLabLabelPrefix + sbu.Username.ToLower();
-               if (mergeRequest.Author.Username == sbu.Username
-                  || mergeRequest.Labels.Contains(lowercaseLabel))
-               {
-                  return true;
-               }
+               return true;
             }
          }
-
          return false;
       }
    }

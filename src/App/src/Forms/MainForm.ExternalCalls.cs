@@ -15,6 +15,7 @@ using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.App.Forms.Helpers;
+using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 
 namespace mrHelper.App.Forms
 {
@@ -251,8 +252,9 @@ namespace mrHelper.App.Forms
             parsedNewMergeRequestUrl.ProjectKey.ProjectName, parsedNewMergeRequestUrl.SourceBranch,
             parsedNewMergeRequestUrl.TargetBranchCandidates, defaultProperties.AssigneeUsername,
             defaultProperties.IsSquashNeeded, defaultProperties.IsBranchDeletionNeeded);
-         var fullProjectList = _liveDataCache?.ProjectCache?.GetProjects() ?? Array.Empty<Project>();
-         var fullUserList = _liveDataCache?.UserCache?.GetUsers() ?? Array.Empty<User>();
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
+         var fullProjectList = dataCache?.ProjectCache?.GetProjects() ?? Array.Empty<Project>();
+         var fullUserList = dataCache?.UserCache?.GetUsers() ?? Array.Empty<User>();
          if (!fullUserList.Any())
          {
             Trace.TraceInformation("[MainForm] User list is not ready at the moment of creating a MR from URL");
@@ -271,37 +273,63 @@ namespace mrHelper.App.Forms
       {
          MergeRequestKey mrk = parseUrlIntoMergeRequestKey(parsedUrl);
 
-         bool canOpenAtLiveTab = await checkWorkflowFilters(mrk, url);
-         bool needReload = (canOpenAtLiveTab && getDataCache(canOpenAtLiveTab).MergeRequestCache == null)
-                        || mrk.ProjectKey.HostName != getHostName();
+         // First, try to select a MR from a list of visible MRs
+         if (trySelectMergeRequest(mrk))
+         {
+            return;
+         }
+
+         bool needReload = mrk.ProjectKey.HostName != getHostName();
          if (needReload)
          {
             Trace.TraceInformation("[MainForm.ExternalCalls] Restart workflow for url {0}", url);
             await restartWorkflowByUrlAsync(mrk.ProjectKey.HostName);
          }
 
-         if (!canOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url, !needReload))
+         // Check if MR can be shown at the Live tab.
+         // Note that if even it can be shown, it is possibly not shown now:
+         // - Live tab can be outdated => will be updated
+         // - Filter is On and requested MR is hidden => will be proposed to clear Filter
+         bool tryOpenAtLiveTab = await checkLiveDataCacheFilterAsync(mrk, url);
+         if (!tryOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url, !needReload))
          {
             await openUrlAtSearchTabAsync(mrk);
          }
       }
 
-      async private Task<MergeRequest> searchMergeRequestAsync(MergeRequestKey mrk)
+      private bool trySelectMergeRequest(MergeRequestKey mrk)
       {
-         // Check both local data caches first
-         MergeRequest mergeRequest = getDataCache(true)?.MergeRequestCache?.GetMergeRequest(mrk)
-                                  ?? getDataCache(false)?.MergeRequestCache?.GetMergeRequest(mrk);
-         if (mergeRequest != null)
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
+         if (dataCache?.MergeRequestCache?.GetMergeRequest(mrk) != null)
          {
-            return mergeRequest;
+            tabControlMode.SelectedTab = tabPageLive;
+            if (getListView(EDataCacheType.Live).SelectMergeRequest(mrk, true))
+            {
+               return true;
+            }
+            // e.g. MR is hidden at Live tab due to filters...
          }
 
-         // MR is not found locally, check remote
+         dataCache = getDataCache(EDataCacheType.Search);
+         if (dataCache?.MergeRequestCache?.GetMergeRequest(mrk) != null)
+         {
+            tabControlMode.SelectedTab = tabPageSearch;
+            if (getListView(EDataCacheType.Search).SelectMergeRequest(mrk, true))
+            {
+               return true;
+            }
+            Debug.Assert(false); // unexpected because Search tab has no filters...
+         }
+
+         return false;
+      }
+
+      async private Task<MergeRequest> searchMergeRequestAsync(MergeRequestKey mrk)
+      {
          GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-         mergeRequest = await Shortcuts
+         return await Shortcuts
             .GetMergeRequestAccessor(gitLabInstance, _modificationNotifier, mrk.ProjectKey)
             .SearchMergeRequestAsync(mrk.IId, false);
-         return mergeRequest;
       }
 
       private void reportErrorOnConnect(string url, string msg, Exception ex)
@@ -319,7 +347,7 @@ namespace mrHelper.App.Forms
 
          string errorMessage = String.Format("Cannot open URL {0}", url);
          ExceptionHandlers.Handle(errorMessage, ex);
-         labelWorkflowStatus.Text = errorMessage;
+         labelOperationStatus.Text = errorMessage;
       }
 
       async private Task restartWorkflowByUrlAsync(string hostname)
@@ -332,7 +360,7 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> openUrlAtLiveTabAsync(MergeRequestKey mrk, string url, bool updateIfNeeded)
       {
-         DataCache dataCache = getDataCache(true);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (dataCache?.MergeRequestCache == null)
          {
             throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
@@ -343,9 +371,9 @@ namespace mrHelper.App.Forms
             // We need to update the MR list here because cached one is possible outdated
             if (updateIfNeeded)
             {
-               labelWorkflowStatus.Text = String.Format(
+               labelOperationStatus.Text = String.Format(
                   "Merge Request with IId {0} is not found in the cache, updating the list...", mrk.IId);
-               await checkForUpdatesAsync(null);
+               await checkForUpdatesAsync(getDataCache(EDataCacheType.Live), null);
                if (getHostName() != mrk.ProjectKey.HostName || dataCache.MergeRequestCache == null)
                {
                   throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
@@ -360,7 +388,7 @@ namespace mrHelper.App.Forms
          }
 
          tabControlMode.SelectedTab = tabPageLive;
-         if (!selectMergeRequest(listViewMergeRequests, mrk, true) && listViewMergeRequests.Enabled)
+         if (!getListView(EDataCacheType.Live).SelectMergeRequest(mrk, true) && getListView(EDataCacheType.Live).Enabled)
          {
             // We could not select MR, but let's check if it is cached or not.
             if (dataCache.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
@@ -371,7 +399,7 @@ namespace mrHelper.App.Forms
                   return false; // user decided to not un-hide merge request
                }
 
-               if (!selectMergeRequest(listViewMergeRequests, mrk, true))
+               if (!getListView(EDataCacheType.Live).SelectMergeRequest(mrk, true))
                {
                   Debug.Assert(false);
                   Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
@@ -396,7 +424,14 @@ namespace mrHelper.App.Forms
       async private Task openUrlAtSearchTabAsync(MergeRequestKey mrk)
       {
          tabControlMode.SelectedTab = tabPageSearch;
-         await searchMergeRequestsAsync(new SearchByIId(mrk.ProjectKey.ProjectName, mrk.IId), null,
+         await searchMergeRequestsSafeAsync(
+            new SearchQueryCollection(new SearchQuery
+            {
+               IId = mrk.IId,
+               ProjectName = mrk.ProjectKey.ProjectName,
+               MaxResults = 1
+            }),
+            EDataCacheType.Search,
             new Func<Exception, bool>(x =>
                throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
       }
@@ -483,24 +518,26 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      async private Task<bool> checkWorkflowFilters(MergeRequestKey mrk, string url)
+      async private Task<bool> checkLiveDataCacheFilterAsync(MergeRequestKey mrk, string url)
       {
          if (!checkProjectWorkflowFilters(mrk, true))
          {
             return false;
          }
 
-         labelWorkflowStatus.Text = String.Format("Checking merge request at {0}...", url);
+         labelOperationStatus.Text = String.Format("Checking merge request at {0}...", url);
          MergeRequest mergeRequest = await searchMergeRequestAsync(mrk);
          if (mergeRequest == null)
          {
             throw new UrlConnectionException("Merge request does not exist. ", null);
          }
-         labelWorkflowStatus.Text = String.Empty;
+         labelOperationStatus.Text = String.Empty;
 
-         SearchBasedContext ctx = getDataCache(true)?.ConnectionContext?.CustomData as SearchBasedContext;
-         Debug.Assert(ctx != null);
-         return GitLabClient.Helpers.DoesMatchSearchCriteria(ctx.SearchCriteria, mergeRequest, mrk.ProjectKey);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
+         Debug.Assert(dataCache.MergeRequestCache != null);
+         Debug.Assert(dataCache.ConnectionContext != null);
+         SearchQueryCollection queries = dataCache.ConnectionContext.QueryCollection;
+         return GitLabClient.Helpers.DoesMatchSearchQuery(queries, mergeRequest, mrk.ProjectKey);
       }
 
       private MergeRequestKey parseUrlIntoMergeRequestKey(UrlParser.ParsedMergeRequestUrl parsedUrl)

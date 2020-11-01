@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
 using mrHelper.GitLabClient;
@@ -39,10 +38,10 @@ namespace mrHelper.App.Helpers
          return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest)
             || (isServiceEvent(mergeRequest)                                 && !_settings.Notifications_Service)
             || (isCurrentUserActivity(_currentUser, mergeRequest)            && !_settings.Notifications_MyActivity)
-            || (e.EventType == MergeRequestEvent.Type.NewMergeRequest        && !_settings.Notifications_NewMergeRequests)
+            || (e.EventType == MergeRequestEvent.Type.AddedMergeRequest      && !_settings.Notifications_NewMergeRequests)
             || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest    && !_settings.Notifications_UpdatedMergeRequests)
             || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest    && !((MergeRequestEvent.UpdateScope)e.Scope).Commits)
-            || (e.EventType == MergeRequestEvent.Type.ClosedMergeRequest     && !_settings.Notifications_MergedMergeRequests));
+            || (e.EventType == MergeRequestEvent.Type.RemovedMergeRequest    && !_settings.Notifications_MergedMergeRequests));
       }
 
       internal bool NeedSuppressEvent(DiscussionEvent e)

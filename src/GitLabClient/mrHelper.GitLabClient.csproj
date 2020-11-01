@@ -64,9 +64,7 @@
     <Compile Include="src\Impl\GitLabInstance.cs" />
     <Compile Include="src\Impl\Accessors\RawDataAccessor.cs" />
     <Compile Include="src\Impl\Internal\Operators\GlobalCache.cs" />
-    <Compile Include="src\Impl\Internal\Operators\SearchProcessors\MergeRequestSearchProcessorAbstract.cs" />
-    <Compile Include="src\Impl\Internal\Operators\SearchProcessors\MergeRequestSearchProcessor.cs" />
-    <Compile Include="src\Impl\Internal\Operators\SearchProcessors\MergeRequestSearchProcessorFactory.cs" />
+    <Compile Include="src\Impl\Internal\Operators\MergeRequestSearchProcessor.cs" />
     <Compile Include="src\Impl\Accessors\UserAccessor.cs" />
     <Compile Include="src\Impl\Internal\Operators\UserOperator.cs" />
     <Compile Include="src\Interfaces\ModificationNotifierItf.cs" />
@@ -103,7 +101,7 @@
     <Compile Include="src\Impl\Internal\Operators\RepositoryOperator.cs" />
     <Compile Include="src\Types\MergeRequestFilter.cs" />
     <Compile Include="src\Types\MergeRequestFilterCheckerItf.cs" />
-    <Compile Include="src\Types\SearchCriterias.cs" />
+    <Compile Include="src\Types\SearchQuery.cs" />
     <Compile Include="src\Types\UserEvents.cs" />
     <Compile Include="src\Types\FullMergeRequestKey.cs" />
     <Compile Include="src\Types\MergeRequestKey.cs" />
@@ -117,11 +115,9 @@
     <Compile Include="src\Impl\Internal\DataCache\Loaders\Cache\InternalCacheItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\Cache\InternalCacheUpdater.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\Cache\InternalCacheComparator.cs" />
-    <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestListLoaderFactory.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Managers\DataCacheInternal.cs" />
-    <Compile Include="src\Impl\Internal\DataCache\Loaders\SearchBasedMergeRequestLoader.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestListLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestLoader.cs" />
-    <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectBasedMergeRequestLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\VersionLoader.cs" />
     <Compile Include="src\Interfaces\DataCacheConnectionContext.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\BaseDataCacheLoader.cs" />

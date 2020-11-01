@@ -20,7 +20,7 @@ namespace mrHelper.GitLabClient.Loaders
          _cacheUpdater = cacheUpdater;
       }
 
-      async public Task LoadVersionsAndCommits(Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
+      async public Task LoadVersionsAndCommits(IEnumerable<MergeRequestKey> mergeRequestKeys)
       {
          Exception exception = null;
          async Task loadVersionsLocal(Tuple<MergeRequestKey, bool> tuple)
@@ -40,14 +40,12 @@ namespace mrHelper.GitLabClient.Loaders
             }
          }
 
-         List<MergeRequestKey> allKeys = flattenDictionary(mergeRequests);
-
          // to load versions and commits in parallel
          IEnumerable<Tuple<MergeRequestKey, bool>> duplicateKeys =
-               allKeys
+               mergeRequestKeys
                .Select(x => new Tuple<MergeRequestKey, bool>(x, true))
             .Concat(
-               allKeys
+               mergeRequestKeys
                .Select(x => new Tuple<MergeRequestKey, bool>(x, false)));
 
          await TaskUtils.RunConcurrentFunctionsAsync(duplicateKeys, x => loadVersionsLocal(x),
@@ -57,24 +55,9 @@ namespace mrHelper.GitLabClient.Loaders
             throw exception;
          }
 
-         IEnumerable<Tuple<MergeRequestKey, string>> missingCommitIds = gatherMissingCommitIds(allKeys);
+         IEnumerable<Tuple<MergeRequestKey, string>> missingCommitIds = gatherMissingCommitIds(mergeRequestKeys);
          IEnumerable<Commit> missingCommits = await loadMissingCommits(missingCommitIds.Distinct());
-         applyCommitsToVersions(allKeys, missingCommits);
-      }
-
-      private static List<MergeRequestKey> flattenDictionary(
-         Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
-      {
-         List<MergeRequestKey> allKeys = new List<MergeRequestKey>();
-         foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
-         {
-            foreach (MergeRequest mergeRequest in kv.Value)
-            {
-               allKeys.Add(new MergeRequestKey(kv.Key, mergeRequest.IId));
-            }
-         }
-
-         return allKeys;
+         applyCommitsToVersions(mergeRequestKeys, missingCommits);
       }
 
       private IEnumerable<Tuple<MergeRequestKey, string>> gatherMissingCommitIds(IEnumerable<MergeRequestKey> allKeys)
@@ -126,7 +109,7 @@ namespace mrHelper.GitLabClient.Loaders
          return missingCommits;
       }
 
-      private void applyCommitsToVersions(List<MergeRequestKey> allKeys, IEnumerable<Commit> missingCommits)
+      private void applyCommitsToVersions(IEnumerable<MergeRequestKey> allKeys, IEnumerable<Commit> missingCommits)
       {
          foreach (MergeRequestKey mrk in allKeys)
          {

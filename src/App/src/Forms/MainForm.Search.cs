@@ -1,54 +1,40 @@
 using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
 using GitLabSharp.Entities;
-using mrHelper.Common.Exceptions;
-using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      private bool startSearchWorkflowDefaultExceptionHandler(Exception ex)
+      private void searchMergeRequests(SearchQueryCollection queryCollection)
       {
-         if (ex is DataCacheException || ex is UnknownHostException)
-         {
-            if (!(ex is DataCacheConnectionCancelledException))
-            {
-               disableAllSearchUIControls(true);
-               ExceptionHandlers.Handle("Cannot perform merge request search", ex);
-               string message = ex.Message;
-               if (ex is DataCacheException wx)
-               {
-                  message = wx.UserMessage;
-               }
-               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            return true;
-         }
-         return false;
+         BeginInvoke(new Action(async () =>
+            await searchMergeRequestsSafeAsync(queryCollection, EDataCacheType.Search, null)), null);
       }
 
-      private void searchMergeRequests(object query, int? maxResults, Func<Exception, bool> exceptionHandler = null)
+      private void loadRecentMergeRequests()
       {
-         BeginInvoke(new Action(async () => await searchMergeRequestsAsync(query, maxResults, exceptionHandler)), null);
+         IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(getHostName());
+         BeginInvoke(new Action(async () =>
+            await searchMergeRequestsSafeAsync(new SearchQueryCollection(queries), EDataCacheType.Recent, null)), null);
       }
 
-      async private Task searchMergeRequestsAsync(object query, int? maxResults,
+      async private Task searchMergeRequestsSafeAsync(SearchQueryCollection queryCollection, EDataCacheType mode,
          Func<Exception, bool> exceptionHandler = null)
       {
          try
          {
-            await startSearchWorkflowAsync(getHostName(), query, maxResults);
+            await searchMergeRequestsAsync(getHostName(), queryCollection, mode);
          }
          catch (Exception ex)
          {
             if (exceptionHandler == null)
             {
-               exceptionHandler = new Func<Exception, bool>((e) => startSearchWorkflowDefaultExceptionHandler(e));
+               exceptionHandler = new Func<Exception, bool>((e) => startWorkflowDefaultExceptionHandler(e, mode));
             }
             if (!exceptionHandler(ex))
             {
@@ -57,34 +43,13 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onSearchMergeRequestSelectionChanged(FullMergeRequestKey fmk)
-      {
-         Debug.Assert(fmk.MergeRequest != null && fmk.MergeRequest.IId != 0);
-
-         Trace.TraceInformation(String.Format("[MainForm.Search] User requested to change merge request to IId {0}",
-            fmk.MergeRequest.IId.ToString()));
-
-         onSingleSearchMergeRequestLoaded(fmk);
-
-         IMergeRequestCache cache = _searchDataCache.MergeRequestCache;
-         if (cache != null)
-         {
-            MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
-            GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
-            onSearchComparableEntitiesLoaded(latestVersion, fmk.MergeRequest,
-               cache.GetCommits(mrk), cache.GetVersions(mrk));
-         }
-      }
-
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      /// <summary>
-      /// Connects Search DataCache to GitLab
-      /// </summary>
-      async private Task startSearchWorkflowAsync(string hostname, object query, int? maxResults)
+      async private Task searchMergeRequestsAsync(string hostname, SearchQueryCollection queryCollection,
+         EDataCacheType mode)
       {
-         labelWorkflowStatus.Text = String.Empty;
-         disableAllSearchUIControls(true);
+         labelOperationStatus.Text = String.Empty;
+         disableAllUIControls(true, mode);
 
          if (String.IsNullOrWhiteSpace(hostname))
          {
@@ -96,121 +61,113 @@ namespace mrHelper.App.Forms
             throw new UnknownHostException(hostname);
          }
 
-         await loadAllSearchMergeRequests(hostname, query, maxResults);
+         await connectSearchDataCacheAsync(hostname, queryCollection, mode);
       }
 
-      async private Task loadAllSearchMergeRequests(string hostname, object query, int? maxResults)
+      async private Task connectSearchDataCacheAsync(string hostname, SearchQueryCollection queryCollection,
+         EDataCacheType mode)
       {
-         SearchCriteria searchCriteria = new SearchCriteria(new object[] { query }, false);
-         onLoadAllSearchMergeRequests(searchCriteria, hostname);
-
          DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(
             new DataCacheCallbacks(null, null),
-            new DataCacheUpdateRules(null, null),
-            new SearchBasedContext(searchCriteria, maxResults));
+            getDataCacheUpdateRules(mode),
+            queryCollection);
 
-         await _searchDataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
-
-         foreach (ProjectKey projectKey in _searchDataCache.MergeRequestCache.GetProjects())
-         {
-            onProjectSearchMergeRequestsLoaded(projectKey,
-               _searchDataCache.MergeRequestCache.GetMergeRequests(projectKey));
-         }
-
-         onAllSearchMergeRequestsLoaded();
+         DataCache dataCache = getDataCache(mode);
+         await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onLoadAllSearchMergeRequests(SearchCriteria criteria, string hostname)
+      private DataCacheUpdateRules getDataCacheUpdateRules(EDataCacheType mode)
       {
-         listViewFoundMergeRequests.Items.Clear();
-         labelWorkflowStatus.Text = String.Format("Searching by criteria: {0} at {1}...",
-            criteria.ToString(), hostname);
+         switch (mode)
+         {
+            case EDataCacheType.Recent:
+               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
+                                               Program.Settings.AutoUpdatePeriodMs,
+                                               false);
+
+            case EDataCacheType.Search:
+               return new DataCacheUpdateRules(null, null, false);
+         }
+
+         Debug.Assert(false);
+         return null;
       }
 
-      private void onProjectSearchMergeRequestsLoaded(ProjectKey projectKey,
-         IEnumerable<MergeRequest> mergeRequests)
+      private void onSearchDataCacheConnecting(string hostname)
       {
-         createListViewGroupForProject(listViewFoundMergeRequests, projectKey, true);
-         fillListViewSearchMergeRequests(projectKey, mergeRequests);
+         getListView(EDataCacheType.Search).Items.Clear();
+         labelOperationStatus.Text = String.Format("Search in progress at {0}...", hostname);
       }
 
-      private void onAllSearchMergeRequestsLoaded()
+      private void onSearchDataCacheConnected(string hostname, User user)
       {
-         if (listViewFoundMergeRequests.Items.Count > 0)
-         {
-            enableListView(listViewFoundMergeRequests);
-            labelWorkflowStatus.Text = String.Empty;
-         }
-         else
-         {
-            labelWorkflowStatus.Text = "Nothing found. Try more specific search query.";
-         }
+         updateMergeRequestList(EDataCacheType.Search);
 
-         if (isSearchMode())
+         bool areResults = getListView(EDataCacheType.Search).Items.Count > 0;
+         labelOperationStatus.Text = areResults ? String.Empty : "Nothing found. Try more specific search query.";
+
+         // current mode may have changed during 'await'
+         if (getCurrentTabDataCacheType() == EDataCacheType.Search)
          {
-            selectMergeRequest(listViewFoundMergeRequests, new MergeRequestKey?(), false);
+            getListView(EDataCacheType.Search).SelectMergeRequest(new MergeRequestKey?(), false);
          }
       }
 
-      ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-      private void onSingleSearchMergeRequestLoaded(FullMergeRequestKey fmk)
+      private void onRecentDataCacheDisconnected()
       {
-         if (!isSearchMode())
-         {
-            // because this callback updates controls shared between Live and Search tabs
-            return;
-         }
-
-         onSingleMergeRequestLoadedCommon(fmk, _searchDataCache);
+         unsubscribeFromRecentDataCacheInternalEvents();
       }
 
-      private void onSearchComparableEntitiesLoaded(GitLabSharp.Entities.Version latestVersion,
-         MergeRequest mergeRequest, IEnumerable<Commit> commits, IEnumerable<GitLabSharp.Entities.Version> versions)
+      private void onRecentDataCacheConnecting(string hostname)
       {
-         if (!isSearchMode())
-         {
-            // because this callback updates controls shared between Live and Search tabs
-            return;
-         }
-
-         onComparableEntitiesLoadedCommon(latestVersion, mergeRequest, commits, versions, listViewFoundMergeRequests);
+         getListView(EDataCacheType.Recent).Items.Clear();
+         labelOperationStatus.Text = "Loading a list of recently reviewed merge requests...";
       }
 
-      ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-      private void disableAllSearchUIControls(bool clearListView)
+      private void onRecentDataCacheConnected(string hostname, User user)
       {
-         disableListView(listViewFoundMergeRequests, clearListView);
+         subscribeToRecentDataCacheInternalEvents();
+         updateMergeRequestList(EDataCacheType.Recent);
 
-         if (!isSearchMode())
+         labelOperationStatus.Text = String.Empty;
+
+         // current mode may have changed during 'await'
+         if (getCurrentTabDataCacheType() == EDataCacheType.Recent)
          {
-            // to avoid touching controls shared between Live and Search tabs
-            return;
+            getListView(EDataCacheType.Recent).SelectMergeRequest(new MergeRequestKey?(), false);
          }
-
-         disableCommonUIControls();
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void fillListViewSearchMergeRequests(ProjectKey projectKey, IEnumerable<MergeRequest> mergeRequests)
+      private void addMergeRequestToRecentDataCache(MergeRequestKey mrk)
       {
-         listViewFoundMergeRequests.BeginUpdate();
+         MergeRequestKey[] closedMergeRequests = new MergeRequestKey[] { mrk };
+         addRecentMergeRequestKeys(closedMergeRequests);
+         bool needUpdateFullList = cleanupOldRecentMergeRequests(mrk.ProjectKey.HostName);
+         updateRecentDataCacheQueryColletion(mrk.ProjectKey.HostName);
+         MergeRequestKey? keyForUpdate = needUpdateFullList ? new Nullable<MergeRequestKey>() : mrk;
+         requestUpdates(EDataCacheType.Recent, keyForUpdate, new[] { PseudoTimerInterval });
+      }
 
-         foreach (MergeRequest mergeRequest in mergeRequests)
-         {
-            FullMergeRequestKey fmk = new FullMergeRequestKey(projectKey, mergeRequest);
-            ListViewItem item = createListViewMergeRequestItem(listViewFoundMergeRequests, fmk);
-            listViewFoundMergeRequests.Items.Add(item);
-            setListViewSubItemsTags(item, fmk);
-         }
+      private void updateRecentDataCacheQueryColletion(string hostname)
+      {
+         IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(hostname);
+         _recentDataCache?.ConnectionContext?.QueryCollection.Assign(queries);
+      }
 
-         recalcRowHeightForMergeRequestListView(listViewFoundMergeRequests);
-
-         listViewFoundMergeRequests.EndUpdate();
+      private IEnumerable<SearchQuery> convertRecentMergeRequestsToSearchQueries(string hostname)
+      {
+         return _recentMergeRequests
+            .Where(key => key.ProjectKey.HostName == hostname)
+            .Select(key => new GitLabClient.SearchQuery
+            {
+               IId = key.IId,
+               ProjectName = key.ProjectKey.ProjectName
+            })
+            .ToArray();
       }
    }
 }

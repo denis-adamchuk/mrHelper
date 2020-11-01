@@ -37,78 +37,18 @@ namespace mrHelper.App.Forms
 
       private static readonly string RefreshButtonTooltip = "Refresh merge request list in the background";
 
-      private static readonly int MaxLabelRows = 3;
-      private static readonly string MoreLabelsHint = "See more labels in tooltip";
-
-      private static readonly string NotStartedTimeTrackingText = "Not Started";
-      private static readonly string NotAllowedTimeTrackingText = "<mine>";
-
       private static readonly int NewOrClosedMergeRequestRefreshListTimerInterval = 1000 * 3; // 3 seconds
-      private static readonly int ReloadListPseudoTimerInterval = 100 * 1; // 0.1 second
+      private static readonly int PseudoTimerInterval = 100 * 1; // 0.1 second
 
-      internal MainForm(bool startMinimized, bool runningAsUwp, string startUrl)
-      {
-         _startMinimized = startMinimized;
-         _startUrl = startUrl;
-
-         CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
-         InitializeComponent();
-         CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
-
-         _allowAutoStartApplication = runningAsUwp;
-         checkBoxRunWhenWindowsStarts.Enabled = !_allowAutoStartApplication;
-
-         _trayIcon = new TrayIcon(notifyIcon);
-         _mdPipeline =
-            MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
-
-         this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
-         this.linkLabelConnectedTo.Text = String.Empty;
-
-         foreach (Control control in CommonControls.Tools.WinFormsHelpers.GetAllSubControls(this))
-         {
-            if (control.Anchor.HasFlag(AnchorStyles.Right)
-               && (control.MinimumSize.Width != 0 || control.MinimumSize.Height != 0))
-            {
-               Debug.Assert(false);
-            }
-         }
-
-         buttonTimeTrackingCancel.ConfirmationCondition = () => true;
-         buttonTimeTrackingCancel.ConfirmationText = "Tracked time will be lost, are you sure?";
-
-         listViewMergeRequests.Deselected += ListViewMergeRequests_Deselected;
-         listViewFoundMergeRequests.Deselected += ListViewMergeRequests_Deselected;
-      }
-
-      public string GetCurrentHostName()
-      {
-         return getHostName();
-      }
-
-      public string GetCurrentAccessToken()
-      {
-         return Program.Settings.GetAccessToken(getHostName());
-      }
-
-      public string GetCurrentProjectName()
-      {
-         return getMergeRequestKey(null)?.ProjectKey.ProjectName ?? String.Empty;
-      }
-
-      public int GetCurrentMergeRequestIId()
-      {
-         return getMergeRequestKey(null)?.IId ?? 0;
-      }
-
-      readonly bool _startMinimized;
-      bool _forceMaximizeOnNextRestore;
-      bool _applySplitterDistanceOnNextRestore;
-      FormWindowState _prevWindowState;
+      private bool _forceMaximizeOnNextRestore;
+      private bool _applySplitterDistanceOnNextRestore;
+      private FormWindowState _prevWindowState;
       private bool _loadingConfiguration = false;
       private bool _exiting = false;
       private bool _userIsMovingSplitter1 = false;
       private bool _userIsMovingSplitter2 = false;
+
+      private readonly bool _startMinimized;
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mdPipeline;
       private readonly bool _canSwitchTab = true;
@@ -122,15 +62,10 @@ namespace mrHelper.App.Forms
       {
          Interval = ClipboardCheckingTimerInterval
       };
-      private readonly Timer _projectAndUserCacheCheckTimer = new Timer
-      {
-         Interval = ProjectAndUserCacheCheckTimerInterval
-      };
       private readonly Timer _listViewRefreshTimer = new Timer
       {
          Interval = ListViewRefreshTimerInterval
       };
-      private readonly List<Action<bool>> _projectAndUserCacheCheckActions = new List<Action<bool>>();
 
       private LocalCommitStorageFactory _storageFactory;
       private GitDataUpdater _gitDataUpdater;
@@ -138,29 +73,32 @@ namespace mrHelper.App.Forms
       private PersistentStorage _persistentStorage;
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
+      private ExpressionResolver _expressionResolver;
+      private MergeRequestFilter _mergeRequestFilter;
+      private readonly GitLabClient.Accessors.ModificationNotifier _modificationNotifier =
+         new GitLabClient.Accessors.ModificationNotifier();
 
-      private string _initialHostName;
-
+      private HashSet<MergeRequestKey> _recentMergeRequests = new HashSet<MergeRequestKey>();
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedRevisions =
          new Dictionary<MergeRequestKey, HashSet<string>>();
       private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =
          new Dictionary<string, MergeRequestKey>();
       private Dictionary<string, NewMergeRequestProperties> _newMergeRequestDialogStatesByHosts =
          new Dictionary<string, NewMergeRequestProperties>();
-      private ExpressionResolver _expressionResolver;
+      private readonly List<MergeRequestKey> _mergeRequestsUpdatingByUserRequest = new List<MergeRequestKey>();
+      private readonly Dictionary<MergeRequestKey, string> _latestStorageUpdateStatus =
+         new Dictionary<MergeRequestKey, string>();
+      private readonly Dictionary<string, User> _currentUser = new Dictionary<string, User>();
 
-      private readonly GitLabClient.Accessors.ModificationNotifier _modificationNotifier
-         = new GitLabClient.Accessors.ModificationNotifier();
+      // TODO Data caches should be hidden into a holder and accessed via getDataCache() only
       private DataCache _liveDataCache;
       private DataCache _searchDataCache;
-      private DataCache getDataCacheByName(string name) =>
-         name == "Live" ? _liveDataCache : _searchDataCache;
-      private string getDataCacheName(DataCache dataCache) =>
-         dataCache == _liveDataCache ? "Live" : "Search";
+      private DataCache _recentDataCache;
 
       private TabPage _timeTrackingTabPage;
       private ITimeTracker _timeTracker;
 
+      private string _initialHostName;
       private IEnumerable<ICommand> _customCommands;
       private IEnumerable<string> _keywords;
       private ColorScheme _colorScheme;
@@ -185,14 +123,6 @@ namespace mrHelper.App.Forms
          internal string Host { get; }
          internal string AccessToken { get; }
       }
-
-      private readonly List<MergeRequestKey> _mergeRequestsUpdatingByUserRequest = new List<MergeRequestKey>();
-      private readonly Dictionary<MergeRequestKey, string> _latestStorageUpdateStatus =
-         new Dictionary<MergeRequestKey, string>();
-
-      private MergeRequestFilter _mergeRequestFilter;
-
-      private readonly Dictionary<string, User> _currentUser = new Dictionary<string, User>();
    }
 }
 

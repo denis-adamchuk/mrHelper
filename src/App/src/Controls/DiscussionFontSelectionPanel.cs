@@ -13,7 +13,7 @@ namespace mrHelper.App.Controls
 
          InitializeComponent();
          WinFormsHelpers.FillComboBox(comboBoxFonts,
-            Constants.DiscussionsWindowFontSizeChoices, Program.Settings.MainWindowFontSizeName);
+            Constants.DiscussionsWindowFontSizeChoices, name => name == Program.Settings.MainWindowFontSizeName);
       }
 
       private void comboBoxFonts_SelectionChangeCommitted(object sender, EventArgs e)

@@ -4,38 +4,52 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace mrHelper.CommonControls.Tools
 {
    public static class WinFormsHelpers
    {
-      public static void FillComboBox(ComboBox comboBox, IEnumerable<string> choices, string defaultChoice)
+      public static void CloseAllFormsExceptOne(Form exceptionalForm)
       {
-         foreach (string choice in choices)
+         for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
          {
-            comboBox.Items.Add(choice);
-         }
-
-         string selectedChoice = null;
-         foreach (string choice in comboBox.Items.Cast<string>())
-         {
-            if (choice == defaultChoice)
+            Form form = Application.OpenForms[iForm];
+            if (form != exceptionalForm)
             {
-               selectedChoice = choice;
+               form.Close();
+            }
+         }
+      }
+
+      public static Form FindFormByTag(string name, Func<object, bool> doesMatchTag)
+      {
+         for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
+         {
+            Form form = Application.OpenForms[iForm];
+            if (form.Name == name && doesMatchTag(form.Tag))
+            {
+               return form;
+            }
+         }
+         return null;
+      }
+
+      public static void FillComboBox<T>(ComboBox comboBox, T[] choices, Func<T, bool> isDefaultChoice)
+      {
+         int iSelectedIndex = choices.Any() ? 0 : -1;
+
+         comboBox.Items.Clear();
+         for (int iChoice = 0; iChoice < choices.Length; ++ iChoice)
+         {
+            comboBox.Items.Add(choices[iChoice]);
+            if (isDefaultChoice(choices[iChoice]))
+            {
+               iSelectedIndex = iChoice;
             }
          }
 
-         if (selectedChoice != null)
-         {
-            comboBox.SelectedItem = selectedChoice;
-         }
-         else
-         {
-            comboBox.SelectedIndex = 0;
-         }
+         comboBox.SelectedIndex = iSelectedIndex;
       }
 
       public static void SelectComboBoxItem(ComboBox comboBox, Func<object, bool> predicate)

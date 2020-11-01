@@ -14,20 +14,13 @@ namespace mrHelper.GitLabClient.Operators
       {
       }
 
-      async internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(
-         SearchCriteria searchCriteria, int? maxResults)
+      internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchQuery searchQuery)
       {
-         List<MergeRequest> mergeRequests = new List<MergeRequest>();
-         foreach (object search in searchCriteria.Criteria)
-         {
-            mergeRequests.AddRange(
-               await callWithSharedClient(
-                  async (client) =>
-                     await OperatorCallWrapper.Call(
-                        async () =>
-                           await CommonOperator.SearchMergeRequestsAsync(client, searchCriteria, maxResults))));
-         }
-         return mergeRequests;
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     await CommonOperator.SearchMergeRequestsAsync(client, searchQuery)));
       }
 
       internal Task<MergeRequest> CreateMergeRequest(string projectName, CreateNewMergeRequestParameters parameters)
