@@ -41,6 +41,7 @@ namespace mrHelper.GitLabClient.Managers
          _parser.DiscussionEvent += onDiscussionParserEvent;
 
          _mergeRequestFilterChecker = dataCacheContext.MergeRequestFilterChecker;
+         _tagForLogging = dataCacheContext.TagForLogging;
 
          _mergeRequestCache = mergeRequestCache;
          _mergeRequestCache.MergeRequestEvent += OnMergeRequestEvent;
@@ -183,11 +184,9 @@ namespace mrHelper.GitLabClient.Managers
          {
             if (mrk != null)
             {
-#if DEBUG
-               Trace.TraceInformation(String.Format(
-                  "[DiscussionManager] Scheduling update of discussions for a merge request with IId {0}",
-               mrk.Value.IId));
-#endif
+               traceDetailed(String.Format(
+                  "Scheduling update of discussions for a merge request with IId {0}",
+                  mrk.Value.IId));
                scheduleUpdate(new MergeRequestKey[] { mrk.Value }, DiscussionUpdateType.PeriodicUpdate);
             }
             else
@@ -206,11 +205,7 @@ namespace mrHelper.GitLabClient.Managers
 
       private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
-#if DEBUG
-         Trace.TraceInformation(
-            "[DiscussionManager] Scheduling update of discussions for ALL merge requests on a timer update");
-#endif
-
+         traceDetailed("Scheduling update of discussions for ALL merge requests on a timer update");
          scheduleUpdate(null /* update all merge requests cached at the moment of update processing */,
             DiscussionUpdateType.PeriodicUpdate);
       }
@@ -237,11 +232,9 @@ namespace mrHelper.GitLabClient.Managers
                out IEnumerable<MergeRequestKey> matchingFilter,
                out IEnumerable<MergeRequestKey> nonMatchingFilter);
 
-#if DEBUG
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Processing scheduled update of discussions for {0}+{1} merge requests (ALL)",
+            traceDetailed(String.Format(
+               "Processing scheduled update of discussions for {0}+{1} merge requests (ALL)",
                matchingFilter.Count(), nonMatchingFilter.Count()));
-#endif
 
             await TaskUtils.RunConcurrentFunctionsAsync(matchingFilter,
                x => updateDiscussionsSafeAsync(x, scheduledUpdate.Type),
@@ -255,11 +248,9 @@ namespace mrHelper.GitLabClient.Managers
          }
          else
          {
-#if DEBUG
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Processing scheduled update of discussions for {0} merge requests",
+            traceDetailed(String.Format(
+               "Processing scheduled update of discussions for {0} merge requests",
                scheduledUpdate.MergeRequests.Count()));
-#endif
 
             await TaskUtils.RunConcurrentFunctionsAsync(scheduledUpdate.MergeRequests,
                x => updateDiscussionsSafeAsync(x, scheduledUpdate.Type),
@@ -292,8 +283,8 @@ namespace mrHelper.GitLabClient.Managers
          if (_updating.Contains(mrk))
          {
             // Such update can be caused by LoadDiscussions() called while we are looping in processScheduledUpdate()
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] update is skipped due to concurrent update request for MR: " +
+            traceInformation(String.Format(
+               "Update is skipped due to concurrent update request for MR: " +
                "Host={0}, Project={1}, IId={2}",
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
             return;
@@ -346,9 +337,9 @@ namespace mrHelper.GitLabClient.Managers
                 + "Host={1}, Project={2}, IId={3}",
                   prefix, mrk.Value.ProjectKey.HostName, mrk.Value.ProjectKey.ProjectName, mrk.Value.IId.ToString());
 
-               Trace.TraceInformation(getMessage("Begin -- "));
+               traceInformation(getMessage("Begin -- "));
                await TaskUtils.WhileAsync(() => _updating.Contains(mrk.Value));
-               Trace.TraceInformation(getMessage("End -- "));
+               traceInformation(getMessage("End -- "));
             }
          }
          else
@@ -358,9 +349,9 @@ namespace mrHelper.GitLabClient.Managers
                string getMessage(string prefix) => String.Format(
                   "[DiscussionManager] {0} Waiting for completion of updating discussions", prefix);
 
-               Trace.TraceInformation(getMessage("Begin -- "));
+               traceInformation(getMessage("Begin -- "));
                await TaskUtils.WhileAsync(() => _updating.Any());
-               Trace.TraceInformation(getMessage("End -- "));
+               traceInformation(getMessage("End -- "));
             }
          }
       }
@@ -374,8 +365,8 @@ namespace mrHelper.GitLabClient.Managers
       {
          if (_closed.Contains(mrk))
          {
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Will not update MR because it is closed: Project={0}, IId={1}",
+            traceInformation(String.Format(
+               "Will not update MR because it is closed: Project={0}, IId={1}",
                mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
             _closed.Remove(mrk);
             return false;
@@ -389,8 +380,8 @@ namespace mrHelper.GitLabClient.Managers
          if (mostRecentNote == null || noteCount == 0)
          {
             // Need to refresh discussions if we've already cached something for this MR. Seems all notes got deleted.
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Detected that mostRecentNote is null. cached TimeStamp is {0}",
+            traceInformation(String.Format(
+               "Detected that mostRecentNote is null. cached TimeStamp is {0}",
                cached.TimeStamp.ToString()));
             return cached.TimeStamp != default(DateTime);
          }
@@ -402,8 +393,8 @@ namespace mrHelper.GitLabClient.Managers
       {
          if (_closed.Contains(mrk))
          {
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Will not cache MR because it is closed: Project={0}, IId={1}",
+            traceInformation(String.Format(
+               "Will not cache MR because it is closed: Project={0}, IId={1}",
                mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
             _closed.Remove(mrk);
          }
@@ -411,7 +402,7 @@ namespace mrHelper.GitLabClient.Managers
          if (discussions == null || !discussions.Any())
          {
             _cachedDiscussions.Remove(mrk);
-            Trace.TraceInformation(String.Format("[DiscussionManager] MR removed from cache: Project={0}, IId={1}",
+            traceInformation(String.Format("MR removed from cache: Project={0}, IId={1}",
                mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
             return;
          }
@@ -430,8 +421,8 @@ namespace mrHelper.GitLabClient.Managers
             DateTime? prevUpdateTimestamp = _cachedDiscussions.ContainsKey(mrk) ?
                _cachedDiscussions[mrk].TimeStamp : new DateTime?();
 
-            Trace.TraceInformation(String.Format(
-               "[DiscussionManager] Cached {0} discussions for MR: Project={1}, IId={2},"
+            traceInformation(String.Format(
+               "Cached {0} discussions for MR: Project={1}, IId={2},"
              + " cached time stamp {3} (was {4} before update), note count = {5}, resolved = {6}, resolvable = {7}",
                discussions.Count(), mrk.ProjectKey.ProjectName, mrk.IId.ToString(),
                latestNoteTimestamp.ToString(),
@@ -498,9 +489,8 @@ namespace mrHelper.GitLabClient.Managers
             return;
          }
 
-         Trace.TraceInformation(String.Format(
-            "[DiscussionManager] Remove MR from cache after a Thread is (un)resolved: "
-          + "Host={0}, Project={1}, IId={2}",
+         traceInformation(String.Format(
+            "Remove MR from cache after a Thread is (un)resolved: Host={0}, Project={1}, IId={2}",
             mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
          _cachedDiscussions.Remove(mrk);
       }
@@ -510,8 +500,8 @@ namespace mrHelper.GitLabClient.Managers
          switch (e.EventType)
          {
             case UserEvents.MergeRequestEvent.Type.AddedMergeRequest:
-               Trace.TraceInformation(String.Format(
-                  "[DiscussionManager] Scheduling update of discussions for a new merge request with IId {0}",
+               traceInformation(String.Format(
+                  "Scheduling update of discussions for a new merge request with IId {0}",
                   e.FullMergeRequestKey.MergeRequest.IId));
 
                MergeRequestKey mrk = new MergeRequestKey(
@@ -519,8 +509,8 @@ namespace mrHelper.GitLabClient.Managers
 
                if (_closed.Contains(mrk))
                {
-                  Trace.TraceInformation(String.Format(
-                     "[DiscussionManager] Merge Request with IId {0} was reopened",
+                  traceInformation(String.Format(
+                     "Merge Request with IId {0} was reopened",
                      e.FullMergeRequestKey.MergeRequest.IId));
                   _closed.Remove(mrk);
                }
@@ -532,8 +522,8 @@ namespace mrHelper.GitLabClient.Managers
                MergeRequestKey closedMRK = new MergeRequestKey(
                   e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
 
-                  Trace.TraceInformation(String.Format(
-                     "[DiscussionManager] Clean up closed MR: Project={0}, IId={1}",
+                  traceInformation(String.Format(
+                     "Clean up closed MR: Project={0}, IId={1}",
                      closedMRK.ProjectKey.ProjectName, closedMRK.IId.ToString()));
                   _cachedDiscussions.Remove(closedMRK);
                   _closed.Add(closedMRK);
@@ -572,9 +562,21 @@ namespace mrHelper.GitLabClient.Managers
          nonMatchingFilter = nonMatchingFilterList;
       }
 
+      private void traceDetailed(string message)
+      {
+#if DEBUG
+         traceInformation(message);
+#endif
+      }
+
+      private void traceInformation(string message)
+      {
+         Trace.TraceInformation("[DiscussionManager.{0}] {1}", _tagForLogging, message);
+      }
+
       private readonly IMergeRequestCache _mergeRequestCache;
       private readonly IMergeRequestFilterChecker _mergeRequestFilterChecker;
-
+      private readonly string _tagForLogging;
       private readonly DiscussionParser _parser;
       private readonly DiscussionOperator _operator;
 

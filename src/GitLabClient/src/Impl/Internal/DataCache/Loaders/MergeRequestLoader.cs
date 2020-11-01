@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
-using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Loaders.Cache;
 using mrHelper.GitLabClient.Operators;
 

@@ -38,7 +38,7 @@ namespace mrHelper.GitLabClient
             IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
                hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater, context);
 
-            Trace.TraceInformation("[DataCache] Connecting data cache to {0}...", hostname);
+            traceInformation(String.Format("Connecting data cache to {0}...", hostname));
             ConnectionContext = context;
 
             string accessToken = hostProperties.GetAccessToken(hostname);
@@ -48,7 +48,7 @@ namespace mrHelper.GitLabClient
             await mergeRequestListLoader.Load();
             _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser, context);
 
-            Trace.TraceInformation("[DataCache] Data cache connected to {0}", hostname);
+            traceInformation(String.Format("Data cache connected to {0}", hostname));
             Connected?.Invoke(hostname, currentUser);
          }
          catch (BaseLoaderException ex)
@@ -65,13 +65,13 @@ namespace mrHelper.GitLabClient
 
       public void Disconnect()
       {
-         Trace.TraceInformation("[DataCache] Disconnecting data cache");
+         traceInformation("Disconnecting data cache");
          reset();
       }
 
       public void Dispose()
       {
-         Trace.TraceInformation("[DataCache] Disposing data cache");
+         traceInformation("Disposing data cache");
          reset();
       }
 
@@ -98,6 +98,11 @@ namespace mrHelper.GitLabClient
          ConnectionContext = null;
 
          Disconnected?.Invoke();
+      }
+
+      private void traceInformation(string message)
+      {
+         Trace.TraceInformation("[DataCache.{0}] {1}", _dataCacheContext.TagForLogging, message);
       }
 
       private DataCacheInternal createCacheInternal(
