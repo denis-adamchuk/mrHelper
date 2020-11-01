@@ -32,7 +32,7 @@ namespace mrHelper.GitLabClient.Managers
             DataCacheConnectionContext updateContext = new DataCacheConnectionContext(
                new DataCacheCallbacks(null, null), // disable callbacks from updates
                context.UpdateRules,
-               context.CustomData);
+               context.QueryCollection);
 
             _updateManager = new UpdateManager(_dataCacheContext, hostname, hostProperties,
                updateContext, _cacheUpdater);

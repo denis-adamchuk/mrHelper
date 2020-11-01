@@ -433,6 +433,7 @@ namespace mrHelper.App.Forms
          if (mode == EDataCacheType.Live)
          {
             _lastMergeRequestsByHosts[fmk.ProjectKey.HostName] = mrk;
+            saveState();
          }
       }
 

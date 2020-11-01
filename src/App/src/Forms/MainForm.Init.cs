@@ -258,6 +258,12 @@ namespace mrHelper.App.Forms
             editSelectedMergeRequest,
             acceptSelectedMergeRequest,
             closeSelectedMergeRequest));
+
+         getListView(EDataCacheType.Recent).AssignContextMenu(new MergeRequestListViewContextMenu(
+            refreshSelectedMergeRequest,
+            null,
+            null,
+            null));
       }
 
       private void startEventPendingTimer(Func<bool> onCheck, int checkInterval, Action onEvent)

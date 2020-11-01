@@ -10,8 +10,6 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      private SearchQueryCollection _recentDataCacheQueryCollection;
-
       private void searchMergeRequests(SearchQueryCollection queryCollection)
       {
          BeginInvoke(new Action(async () =>
@@ -21,9 +19,8 @@ namespace mrHelper.App.Forms
       private void loadRecentMergeRequests()
       {
          IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(getHostName());
-         _recentDataCacheQueryCollection = new SearchQueryCollection(queries);
          BeginInvoke(new Action(async () =>
-            await searchMergeRequestsSafeAsync(_recentDataCacheQueryCollection, EDataCacheType.Recent, null)), null);
+            await searchMergeRequestsSafeAsync(new SearchQueryCollection(queries), EDataCacheType.Recent, null)), null);
       }
 
       async private Task searchMergeRequestsSafeAsync(SearchQueryCollection queryCollection, EDataCacheType mode,
@@ -146,7 +143,7 @@ namespace mrHelper.App.Forms
       private void updateRecentDataCacheQueryColletion(string hostname)
       {
          IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(hostname);
-         _recentDataCacheQueryCollection.Assign(queries);
+         _recentDataCache?.ConnectionContext?.QueryCollection.Assign(queries);
       }
 
       private IEnumerable<SearchQuery> convertRecentMergeRequestsToSearchQueries(string hostname)

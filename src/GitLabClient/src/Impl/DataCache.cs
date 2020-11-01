@@ -39,7 +39,7 @@ namespace mrHelper.GitLabClient
                hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater, context);
 
             Trace.TraceInformation("[DataCache] Connecting data cache to {0}...", hostname);
-            _connectionContext = context;
+            ConnectionContext = context;
 
             string accessToken = hostProperties.GetAccessToken(hostname);
             await new CurrentUserLoader(_operator).Load(hostname, accessToken);
@@ -85,7 +85,7 @@ namespace mrHelper.GitLabClient
 
       public IUserCache UserCache => _internal?.UserCache;
 
-      public DataCacheConnectionContext ConnectionContext => _connectionContext;
+      public DataCacheConnectionContext ConnectionContext { get; private set; }
 
       private void reset()
       {
@@ -95,7 +95,7 @@ namespace mrHelper.GitLabClient
          _internal?.Dispose();
          _internal = null;
 
-         _connectionContext = null;
+         ConnectionContext = null;
 
          Disconnected?.Invoke();
       }
@@ -123,8 +123,6 @@ namespace mrHelper.GitLabClient
 
       private DataCacheOperator _operator;
       private DataCacheInternal _internal;
-      private DataCacheConnectionContext _connectionContext;
-
       private readonly DataCacheContext _dataCacheContext;
       private readonly IModificationNotifier _modificationNotifier;
    }

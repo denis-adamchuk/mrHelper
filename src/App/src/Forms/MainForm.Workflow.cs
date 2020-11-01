@@ -251,7 +251,6 @@ namespace mrHelper.App.Forms
                                 () => setSearchByAuthorEnabled(true));
 
          IEnumerable<MergeRequestKey> closedReviewed = gatherClosedReviewedMergeRequests(dataCache, hostname);
-         cleanupReviewedMergeRequests(closedReviewed);
          addRecentMergeRequestKeys(closedReviewed);
          cleanupOldRecentMergeRequests(hostname);
          cleanupReopenedRecentMergeRequests();
@@ -486,7 +485,7 @@ namespace mrHelper.App.Forms
          MergeRequestAndDiscussions = MergeRequest | Discussions
       }
 
-      private void requestUpdates(MergeRequestKey? mrk, int interval, Action onUpdateFinished,
+      private void requestUpdates(DataCache dataCache, MergeRequestKey? mrk, int interval, Action onUpdateFinished,
          DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
       {
          bool needUpdateMergeRequest = kind.HasFlag(DataCacheUpdateKind.MergeRequest);
@@ -503,7 +502,6 @@ namespace mrHelper.App.Forms
             }
          }
 
-         DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (needUpdateMergeRequest)
          {
             dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
@@ -525,7 +523,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task checkForUpdatesAsync(MergeRequestKey? mrk,
+      async private Task checkForUpdatesAsync(DataCache dataCache, MergeRequestKey? mrk,
          DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
       {
          bool updateReceived = false;
@@ -536,7 +534,7 @@ namespace mrHelper.App.Forms
          {
             onUpdating();
          }
-         requestUpdates(mrk, 100,
+         requestUpdates(dataCache, mrk, 100,
             () =>
             {
                updateReceived = true;
@@ -549,7 +547,7 @@ namespace mrHelper.App.Forms
          await TaskUtils.WhileAsync(() => !updateReceived);
       }
 
-      private void reloadMergeRequestsByUserRequest()
+      private void reloadMergeRequestsByUserRequest(DataCache dataCache)
       {
          if (Program.Settings.ShowWarningOnReloadList)
          {
@@ -577,7 +575,7 @@ namespace mrHelper.App.Forms
             string oldButtonText = buttonReloadList.Text;
             onUpdating();
 
-            requestUpdates(null, PseudoTimerInterval,
+            requestUpdates(dataCache, null, PseudoTimerInterval,
                () =>
                {
                   onUpdated(oldButtonText);

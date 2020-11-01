@@ -36,17 +36,16 @@ namespace mrHelper.GitLabClient
    public class DataCacheConnectionContext
    {
       public DataCacheConnectionContext(DataCacheCallbacks callbacks,
-         DataCacheUpdateRules updateRules, object customData)
+         DataCacheUpdateRules updateRules, SearchQueryCollection queryCollection)
       {
          Callbacks = callbacks;
          UpdateRules = updateRules;
-         CustomData = customData;
+         QueryCollection = queryCollection;
       }
 
       public DataCacheCallbacks Callbacks { get; }
       public DataCacheUpdateRules UpdateRules { get; }
-
-      public object CustomData { get; }
+      public SearchQueryCollection QueryCollection { get; }
    }
 }
 

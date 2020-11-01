@@ -72,7 +72,6 @@ namespace mrHelper.App.Forms
          if (e.Closed && isReviewedMergeRequest(mrk))
          {
             MergeRequestKey[] closedMergeRequests = new MergeRequestKey[] { mrk };
-            cleanupReviewedMergeRequests(closedMergeRequests);
             addRecentMergeRequestKeys(closedMergeRequests);
             updateRecentDataCacheQueryColletion(e.FullMergeRequestKey.ProjectKey.HostName);
             requestUpdates(EDataCacheType.Recent, mrk, new[] { PseudoTimerInterval });

@@ -413,6 +413,7 @@ namespace mrHelper.App.Forms
                   _recentMergeRequests.Remove(mergeRequestKey);
                   changed = true;
                }
+               cleanupReviewedMergeRequests(oldMergeRequests);
             }
          }
 

@@ -387,7 +387,7 @@ namespace mrHelper.App.Forms
 
       private void buttonReloadList_Click(object sender, EventArgs e)
       {
-         reloadMergeRequestsByUserRequest();
+         reloadMergeRequestsByUserRequest(getDataCache(EDataCacheType.Live));
       }
 
       private void buttonSearch_Click(object sender, EventArgs e)

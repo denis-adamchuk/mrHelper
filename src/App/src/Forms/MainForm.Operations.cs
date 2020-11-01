@@ -107,15 +107,16 @@ namespace mrHelper.App.Forms
 
       private void refreshSelectedMergeRequest()
       {
-         Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
-         FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
+         EDataCacheType type = getCurrentTabDataCacheType();
+         FullMergeRequestKey? fmk = getListView(type).GetSelectedMergeRequest();
          if (!fmk.HasValue)
          {
             return;
          }
 
          MergeRequestKey mrk = new MergeRequestKey(fmk.Value.ProjectKey, fmk.Value.MergeRequest.IId);
-         requestUpdates(mrk, 100, () => labelOperationStatus.Text = String.Format("Merge Request !{0} refreshed", mrk.IId));
+         requestUpdates(getDataCache(type), mrk, 100, () =>
+            labelOperationStatus.Text = String.Format("Merge Request !{0} refreshed", mrk.IId));
       }
 
       private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties,
@@ -168,7 +169,7 @@ namespace mrHelper.App.Forms
             () => dataCache,
             async () =>
             {
-               await checkForUpdatesAsync(mrk, DataCacheUpdateKind.MergeRequest);
+               await checkForUpdatesAsync(dataCache, mrk, DataCacheUpdateKind.MergeRequest);
                return dataCache;
             },
             () => Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName))
@@ -395,6 +396,7 @@ namespace mrHelper.App.Forms
          _newMergeRequestDialogStatesByHosts[getHostName()] = new NewMergeRequestProperties(
             parameters.ProjectKey.ProjectName, null, null, parameters.AssigneeUserName, parameters.Squash,
             parameters.DeleteSourceBranch);
+         saveState();
 
          Trace.TraceInformation(
             "[MainForm] Created a new merge request. " +

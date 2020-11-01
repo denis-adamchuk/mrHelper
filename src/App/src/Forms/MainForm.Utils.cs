@@ -717,6 +717,7 @@ namespace mrHelper.App.Forms
          updateProjectsListView();
          updateUsersListView();
          reconnect();
+         saveState();
       }
 
       private void reconnect(string url = null)

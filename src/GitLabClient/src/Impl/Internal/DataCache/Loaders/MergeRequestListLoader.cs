@@ -23,18 +23,17 @@ namespace mrHelper.GitLabClient.Loaders
          _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
          _dataCacheConnectionContext = dataCacheConnectionContext;
-         Debug.Assert(_dataCacheConnectionContext.CustomData is SearchQueryCollection);
       }
 
       async public Task Load()
       {
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests = await loadMergeRequestsAsync();
-         List<MergeRequestKey> updatedMergeRequests = getUpdatedMergeRequests(mergeRequests);
+         IEnumerable<MergeRequestKey> updatedMergeRequests = getUpdatedMergeRequests(mergeRequests);
          _cacheUpdater.UpdateMergeRequests(mergeRequests);
          await _versionLoader.LoadVersionsAndCommits(updatedMergeRequests);
       }
 
-      private List<MergeRequestKey> getUpdatedMergeRequests(
+      private IEnumerable<MergeRequestKey> getUpdatedMergeRequests(
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
       {
          List<MergeRequestKey> updatedMergeRequests = new List<MergeRequestKey>();
@@ -57,7 +56,7 @@ namespace mrHelper.GitLabClient.Loaders
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
       {
-         SearchQueryCollection queries = (SearchQueryCollection)_dataCacheConnectionContext.CustomData;
+         SearchQueryCollection queries = _dataCacheConnectionContext.QueryCollection;
          IEnumerable<MergeRequest> mergeRequests = await fetchMergeRequestsAsync(queries);
          return await groupMergeRequests(mergeRequests);
       }

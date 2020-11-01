@@ -373,7 +373,7 @@ namespace mrHelper.App.Forms
             {
                labelOperationStatus.Text = String.Format(
                   "Merge Request with IId {0} is not found in the cache, updating the list...", mrk.IId);
-               await checkForUpdatesAsync(null);
+               await checkForUpdatesAsync(getDataCache(EDataCacheType.Live), null);
                if (getHostName() != mrk.ProjectKey.HostName || dataCache.MergeRequestCache == null)
                {
                   throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
@@ -536,8 +536,7 @@ namespace mrHelper.App.Forms
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          Debug.Assert(dataCache.MergeRequestCache != null);
          Debug.Assert(dataCache.ConnectionContext != null);
-         Debug.Assert(dataCache.ConnectionContext.CustomData is SearchQueryCollection);
-         SearchQueryCollection queries = dataCache.ConnectionContext.CustomData as SearchQueryCollection;
+         SearchQueryCollection queries = dataCache.ConnectionContext.QueryCollection;
          return GitLabClient.Helpers.DoesMatchSearchQuery(queries, mergeRequest, mrk.ProjectKey);
       }
 
