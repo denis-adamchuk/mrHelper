@@ -65,6 +65,7 @@ namespace mrHelper.App.Forms
          InitializeComponent();
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);
+         updateSaveDefaultLayoutState();
 
          createPanels();
 
@@ -87,6 +88,8 @@ namespace mrHelper.App.Forms
 
          // Temporary benchmark
          Trace.TraceInformation("[DiscussionsForm] Visibility updated");
+
+         subscribeToSettingsChange();
       }
 
       // Temporary benchmark
@@ -159,6 +162,14 @@ namespace mrHelper.App.Forms
       {
          // No longer need to process Layout changes
          this.Layout -= this.DiscussionsForm_Layout;
+      }
+
+      private void linkLabelSaveAsDefaultLayout_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         ConfigurationHelper.SetDiffContextPosition(Program.Settings, _diffContextPosition);
+         ConfigurationHelper.SetDiscussionColumnWidth(Program.Settings, _discussionColumnWidth);
+         Program.Settings.NeedShiftReplies = _needShiftReplies;
+         updateSaveDefaultLayoutState();
       }
 
       private void createPanels()
@@ -651,8 +662,10 @@ namespace mrHelper.App.Forms
          int clientWidth = ClientSize.Width - vscrollWidth;
 
          // Temporary variables to avoid changing control Location more than once
+         int labelHintX = clientWidth - labelHotKeyHint.Width - groupBoxMarginLeft;
          Point linkLabelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
-         Point labelHintLocation = new Point(clientWidth - labelHotKeyHint.Width - groupBoxMarginLeft, groupBoxMarginTop);
+         Point labelHintLocation = new Point(labelHintX, groupBoxMarginTop);
+         Point linkLabelSaveLayoutLocation = new Point(labelHintX, groupBoxMarginTop);
          Point filterPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point sortPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
          Point fontSelectionPanelLocation = new Point(groupBoxMarginLeft, groupBoxMarginTop);
@@ -667,10 +680,12 @@ namespace mrHelper.App.Forms
          searchPanelLocation.Offset(filterPanelLocation.X + FilterPanel.Size.Width,
                                     Math.Max(sortPanelLocation.Y + SortPanel.Size.Height,
                                              fontSelectionPanelLocation.Y + FontSelectionPanel.Size.Height));
+         linkLabelSaveLayoutLocation.Offset(0, labelHotKeyHint.Height);
 
          // Stack panels horizontally
          linkLabelGitLabURL.Location = linkLabelLocation + (Size)AutoScrollPosition;
          labelHotKeyHint.Location = labelHintLocation + (Size)AutoScrollPosition;
+         linkLabelSaveAsDefaultLayout.Location = linkLabelSaveLayoutLocation + (Size)AutoScrollPosition;
          FilterPanel.Location = filterPanelLocation + (Size)AutoScrollPosition;
          SortPanel.Location = sortPanelLocation + (Size)AutoScrollPosition;
          FontSelectionPanel.Location = fontSelectionPanelLocation + (Size)AutoScrollPosition;
@@ -775,6 +790,7 @@ namespace mrHelper.App.Forms
          {
             box.SetDiffContextPosition(_diffContextPosition);
          }
+         updateSaveDefaultLayoutState();
          PerformLayout();
       }
 
@@ -785,6 +801,7 @@ namespace mrHelper.App.Forms
          {
             box.SetDiscussionColumnWidth(_discussionColumnWidth);
          }
+         updateSaveDefaultLayoutState();
          PerformLayout();
       }
 
@@ -795,7 +812,34 @@ namespace mrHelper.App.Forms
          {
             box.SetNeedShiftReplies(_needShiftReplies);
          }
+         updateSaveDefaultLayoutState();
          PerformLayout();
+      }
+
+      private void updateSaveDefaultLayoutState()
+      {
+         var diffContextPositionDefault = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
+         var discussionColumnWidthDefault = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
+         var needShiftRepliesDefault = Program.Settings.NeedShiftReplies;
+         bool needEnableControl = diffContextPositionDefault   != _diffContextPosition
+                               || discussionColumnWidthDefault != _discussionColumnWidth
+                               || needShiftRepliesDefault      != _needShiftReplies;
+         linkLabelSaveAsDefaultLayout.Visible = needEnableControl;
+      }
+
+      private void subscribeToSettingsChange()
+      {
+         Program.Settings.PropertyChanged += Settings_PropertyChanged;
+      }
+
+      private void unsubscribeFromSettingsChange()
+      {
+         Program.Settings.PropertyChanged -= Settings_PropertyChanged;
+      }
+
+      private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+      {
+         updateSaveDefaultLayoutState();
       }
 
       private string DefaultCaption
