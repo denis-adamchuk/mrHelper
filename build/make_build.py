@@ -95,6 +95,12 @@ class ScriptConfigParser:
    def extras(self):
       return self.config.get('Path', 'Extras')
 
+   def build_bin(self):
+      return self.config.get('Build', 'Bin')
+
+   def pdb_archive_name_template(self):
+      return self.config.get('Build', 'pdb_archive_name_template')
+
    def bin(self):
       return self.config.get('Installer', 'Bin')
 
@@ -131,6 +137,8 @@ class ScriptConfigParser:
    def _initialize(self, filename):
       self._addOption('Path', 'repository', '.')
       self._addOption('Path', 'Extras', 'extras')
+      self._addOption('Build', 'Bin', 'build_bin')
+      self._addOption('Build', 'pdb_archive_name_template', '')
       self._addOption('Installer', 'Bin', 'bin')
       self._addOption('Installer', 'msix_Bin', 'bin')
       self._addOption('Path', 'BuildScript', 'build/build-install.bat')
@@ -155,6 +163,7 @@ class ScriptConfigParser:
    def _validate(self):
       self._validatePathInConfig(self.config, 'Path', 'repository')
       self._validatePathInConfig(self.config, 'Path', 'Extras')
+      self._validatePathInConfig(self.config, 'Build', 'Bin')
       self._validatePathInConfig(self.config, 'Installer', 'Bin')
       self._validatePathInConfig(self.config, 'Installer', 'msix_Bin')
       self._validateFileInConfig(self.config, 'Path', 'BuildScript')
@@ -246,6 +255,22 @@ class Builder:
       if subprocess.call(f'call {self.script_file} {arguments}', shell=True) != 0:
          raise self.Exception(f'Build failed')
 
+   def pack_pdb(self, target_path, archive_name, pdb_path) :
+      if not os.path.exists(pdb_path) or not os.path.isdir(pdb_path):
+         raise self.Exception(f'Bad PDB path')
+      if not os.path.exists(target_path) or not os.path.isdir(target_path):
+         raise self.Exception(f'Bad target path')
+
+      target_filepath = os.path.join(target_path, archive_name)
+      with zipfile.ZipFile(target_filepath, 'a', zipfile.ZIP_DEFLATED) as zip:
+         for base, dirs, files in os.walk(pdb_path):
+            for file in files:
+               filename, file_extension = os.path.splitext(file)
+               if file_extension == '.pdb':
+                  fn = os.path.join(base, file)
+                  zip.write(fn, file)
+
+      return target_filepath
 
 class RepositoryHelper:
    """ RepositoryHelper - updates remote git repository
@@ -312,7 +337,8 @@ class DeployHelper:
       if not os.path.exists(deploy_path) or not os.path.isdir(deploy_path):
          raise self.Exception(f'Bad path for deployment "{deploy_path}"')
 
-   def deploy(self, version, installer_filepath):
+   def deploy(self, version, installer_filepath, pdb_archive_filepath):
+      self._copy_to_remote(version, pdb_archive_filepath)
       return self._copy_to_remote(version, installer_filepath)
 
    def update_version_information(self, version, json):
@@ -385,11 +411,14 @@ try:
    if args.msix():
       builder.build(config.msix_build_script(), msix_filepath + " " + config.msix_manifest())
 
+   pdb_archive_filename = config.pdb_archive_name_template().replace("{Version}", args.version())
+   pdb_archive_filepath = builder.pack_pdb(config.bin(), pdb_archive_filename, config.build_bin())
+
    if args.deploy():
       deployer = DeployHelper(config.beta_path() if args.beta() else config.deploy_path())
-      dest_msi = deployer.deploy(args.version(), msi_filepath).replace("\\", "/")
+      dest_msi = deployer.deploy(args.version(), msi_filepath, pdb_archive_filepath).replace("\\", "/")
       if args.msix():
-         dest_msix = deployer.deploy(args.version(), msix_filepath).replace("\\", "/")
+         dest_msix = deployer.deploy(args.version(), msix_filepath, pdb_archive_filepath).replace("\\", "/")
       if not args.beta():
          if args.msix():
             json = f'{{ "VersionNumber": "{args.version()}", "InstallerFilePath": "{dest_msi}", "XInstallerFilePath": "{dest_msix}" }}'
