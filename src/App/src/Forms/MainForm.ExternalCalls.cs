@@ -310,6 +310,17 @@ namespace mrHelper.App.Forms
             // e.g. MR is hidden at Live tab due to filters...
          }
 
+         dataCache = getDataCache(EDataCacheType.Recent);
+         if (dataCache?.MergeRequestCache?.GetMergeRequest(mrk) != null)
+         {
+            tabControlMode.SelectedTab = tabPageRecent;
+            if (getListView(EDataCacheType.Recent).SelectMergeRequest(mrk, true))
+            {
+               return true;
+            }
+            Debug.Assert(false); // unexpected because Recent tab has no filters...
+         }
+
          dataCache = getDataCache(EDataCacheType.Search);
          if (dataCache?.MergeRequestCache?.GetMergeRequest(mrk) != null)
          {
