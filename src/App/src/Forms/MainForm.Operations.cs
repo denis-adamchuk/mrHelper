@@ -373,7 +373,7 @@ namespace mrHelper.App.Forms
 
       async private Task createNewMergeRequestAsync(SubmitNewMergeRequestParameters parameters, string firstNote)
       {
-         buttonCreateNew.Enabled = false;
+         setMergeRequestEditEnabled(false);
          labelOperationStatus.Text = "Creating a merge request at GitLab...";
 
          GitLabInstance gitLabInstance = new GitLabInstance(parameters.ProjectKey.HostName, Program.Settings);
@@ -384,7 +384,7 @@ namespace mrHelper.App.Forms
             // all error handling is done at the callee side
             string message = "Merge Request has not been created";
             labelOperationStatus.Text = message;
-            buttonCreateNew.Enabled = true;
+            setMergeRequestEditEnabled(true);
             Trace.TraceInformation("[MainForm] {0}", message);
             return;
          }
@@ -393,7 +393,7 @@ namespace mrHelper.App.Forms
 
          labelOperationStatus.Text = String.Format("Merge Request !{0} has been created in project {1}",
             mrkOpt.Value.IId, parameters.ProjectKey.ProjectName);
-         buttonCreateNew.Enabled = true;
+         setMergeRequestEditEnabled(true);
 
          _newMergeRequestDialogStatesByHosts[getHostName()] = new NewMergeRequestProperties(
             parameters.ProjectKey.ProjectName, null, null, parameters.AssigneeUserName, parameters.Squash,

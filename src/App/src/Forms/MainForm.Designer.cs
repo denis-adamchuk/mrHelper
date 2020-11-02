@@ -315,7 +315,6 @@ namespace mrHelper.App.Forms
          // buttonEditTime
          // 
          this.buttonEditTime.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonEditTime.Enabled = false;
          this.buttonEditTime.Location = new System.Drawing.Point(370, 19);
          this.buttonEditTime.Name = "buttonEditTime";
          this.buttonEditTime.Size = new System.Drawing.Size(96, 32);
@@ -328,7 +327,6 @@ namespace mrHelper.App.Forms
          // buttonDiffTool
          // 
          this.buttonDiffTool.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonDiffTool.Enabled = false;
          this.buttonDiffTool.Location = new System.Drawing.Point(370, 19);
          this.buttonDiffTool.Name = "buttonDiffTool";
          this.buttonDiffTool.Size = new System.Drawing.Size(96, 32);
@@ -340,7 +338,6 @@ namespace mrHelper.App.Forms
          // 
          // buttonAddComment
          // 
-         this.buttonAddComment.Enabled = false;
          this.buttonAddComment.Location = new System.Drawing.Point(6, 19);
          this.buttonAddComment.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonAddComment.Name = "buttonAddComment";
@@ -354,7 +351,6 @@ namespace mrHelper.App.Forms
          // buttonDiscussions
          // 
          this.buttonDiscussions.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonDiscussions.Enabled = false;
          this.buttonDiscussions.Location = new System.Drawing.Point(268, 19);
          this.buttonDiscussions.Name = "buttonDiscussions";
          this.buttonDiscussions.Size = new System.Drawing.Size(96, 32);
@@ -366,7 +362,6 @@ namespace mrHelper.App.Forms
          // 
          // buttonNewDiscussion
          // 
-         this.buttonNewDiscussion.Enabled = false;
          this.buttonNewDiscussion.Location = new System.Drawing.Point(108, 19);
          this.buttonNewDiscussion.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonNewDiscussion.Name = "buttonNewDiscussion";
@@ -423,7 +418,6 @@ namespace mrHelper.App.Forms
          // 
          this.textBoxDisplayFilter.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.textBoxDisplayFilter.Enabled = false;
          this.textBoxDisplayFilter.Location = new System.Drawing.Point(60, 17);
          this.textBoxDisplayFilter.Name = "textBoxDisplayFilter";
          this.textBoxDisplayFilter.Size = new System.Drawing.Size(461, 20);
@@ -445,7 +439,6 @@ namespace mrHelper.App.Forms
          // buttonReloadList
          // 
          this.buttonReloadList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonReloadList.Enabled = false;
          this.buttonReloadList.Location = new System.Drawing.Point(527, 10);
          this.buttonReloadList.Name = "buttonReloadList";
          this.buttonReloadList.Size = new System.Drawing.Size(96, 32);
@@ -485,7 +478,6 @@ namespace mrHelper.App.Forms
          // buttonCreateNew
          // 
          this.buttonCreateNew.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonCreateNew.Enabled = false;
          this.buttonCreateNew.Location = new System.Drawing.Point(674, 10);
          this.buttonCreateNew.Name = "buttonCreateNew";
          this.buttonCreateNew.Size = new System.Drawing.Size(96, 32);
@@ -596,7 +588,6 @@ namespace mrHelper.App.Forms
          // checkBoxDisplayFilter
          // 
          this.checkBoxDisplayFilter.AutoSize = true;
-         this.checkBoxDisplayFilter.Enabled = false;
          this.checkBoxDisplayFilter.Location = new System.Drawing.Point(6, 19);
          this.checkBoxDisplayFilter.MinimumSize = new System.Drawing.Size(48, 0);
          this.checkBoxDisplayFilter.Name = "checkBoxDisplayFilter";
@@ -651,7 +642,6 @@ namespace mrHelper.App.Forms
          // linkLabelFindMe
          // 
          this.linkLabelFindMe.AutoSize = true;
-         this.linkLabelFindMe.Enabled = false;
          this.linkLabelFindMe.Location = new System.Drawing.Point(627, 21);
          this.linkLabelFindMe.Name = "linkLabelFindMe";
          this.linkLabelFindMe.Size = new System.Drawing.Size(44, 13);
@@ -673,7 +663,6 @@ namespace mrHelper.App.Forms
          // comboBoxUser
          // 
          this.comboBoxUser.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxUser.Enabled = false;
          this.comboBoxUser.FormattingEnabled = true;
          this.comboBoxUser.Location = new System.Drawing.Point(496, 42);
          this.comboBoxUser.Name = "comboBoxUser";
@@ -684,7 +673,6 @@ namespace mrHelper.App.Forms
          // comboBoxProjectName
          // 
          this.comboBoxProjectName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxProjectName.Enabled = false;
          this.comboBoxProjectName.FormattingEnabled = true;
          this.comboBoxProjectName.Location = new System.Drawing.Point(315, 42);
          this.comboBoxProjectName.Name = "comboBoxProjectName";
@@ -695,7 +683,6 @@ namespace mrHelper.App.Forms
          // checkBoxSearchByAuthor
          // 
          this.checkBoxSearchByAuthor.AutoSize = true;
-         this.checkBoxSearchByAuthor.Enabled = false;
          this.checkBoxSearchByAuthor.Location = new System.Drawing.Point(496, 20);
          this.checkBoxSearchByAuthor.Name = "checkBoxSearchByAuthor";
          this.checkBoxSearchByAuthor.Size = new System.Drawing.Size(57, 17);
@@ -708,7 +695,6 @@ namespace mrHelper.App.Forms
          // checkBoxSearchByProject
          // 
          this.checkBoxSearchByProject.AutoSize = true;
-         this.checkBoxSearchByProject.Enabled = false;
          this.checkBoxSearchByProject.Location = new System.Drawing.Point(315, 20);
          this.checkBoxSearchByProject.Name = "checkBoxSearchByProject";
          this.checkBoxSearchByProject.Size = new System.Drawing.Size(59, 17);
@@ -835,7 +821,6 @@ namespace mrHelper.App.Forms
          // buttonTimeTrackingCancel
          // 
          this.buttonTimeTrackingCancel.ConfirmationText = "All changes will be lost, are you sure?";
-         this.buttonTimeTrackingCancel.Enabled = false;
          this.buttonTimeTrackingCancel.Location = new System.Drawing.Point(108, 19);
          this.buttonTimeTrackingCancel.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonTimeTrackingCancel.Name = "buttonTimeTrackingCancel";
@@ -848,7 +833,6 @@ namespace mrHelper.App.Forms
          // 
          // buttonTimeTrackingStart
          // 
-         this.buttonTimeTrackingStart.Enabled = false;
          this.buttonTimeTrackingStart.Location = new System.Drawing.Point(6, 19);
          this.buttonTimeTrackingStart.MinimumSize = new System.Drawing.Size(96, 0);
          this.buttonTimeTrackingStart.Name = "buttonTimeTrackingStart";

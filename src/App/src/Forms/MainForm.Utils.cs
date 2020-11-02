@@ -466,19 +466,19 @@ namespace mrHelper.App.Forms
             MaxResults = Constants.MaxSearchResults
          };
 
-         if (checkBoxSearchByTargetBranch.Checked)
+         if (checkBoxSearchByTargetBranch.Checked && !String.IsNullOrWhiteSpace(textBoxSearchTargetBranch.Text))
          {
             query.TargetBranchName = textBoxSearchTargetBranch.Text;
          }
-         if (checkBoxSearchByTitleAndDescription.Checked)
+         if (checkBoxSearchByTitleAndDescription.Checked && !String.IsNullOrWhiteSpace(textBoxSearchText.Text))
          {
             query.Text = textBoxSearchText.Text;
          }
-         if (checkBoxSearchByProject.Checked)
+         if (checkBoxSearchByProject.Checked && comboBoxProjectName.SelectedItem != null)
          {
             query.ProjectName = comboBoxProjectName.Text;
          }
-         if (checkBoxSearchByAuthor.Checked)
+         if (checkBoxSearchByAuthor.Checked && comboBoxUser.SelectedItem != null)
          {
             query.AuthorUserName = (comboBoxUser.SelectedItem as User).Username;
          }

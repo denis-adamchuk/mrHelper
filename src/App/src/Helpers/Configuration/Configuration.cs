@@ -48,7 +48,7 @@ namespace mrHelper.App.Helpers
       private static readonly bool   ShowPublicOnlyDefaultValue = true;
 
       private static readonly string UpdateManagerExtendedLoggingKeyName = "UpdateManagerExtendedLogging";
-      private static readonly bool   UpdateManagerExtendedLoggingDefaultValue = true;
+      private static readonly bool   UpdateManagerExtendedLoggingDefaultValue = false;
 
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
       private static readonly string DiffContextDepthDefaultValue = "2";

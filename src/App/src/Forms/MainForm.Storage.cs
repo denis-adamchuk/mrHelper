@@ -113,37 +113,6 @@ namespace mrHelper.App.Forms
          return repo;
       }
 
-      private void updateMergeRequestList(EDataCacheType mode)
-      {
-         DataCache dataCache = getDataCache(mode);
-         IMergeRequestCache mergeRequestCache = dataCache?.MergeRequestCache;
-         if (mergeRequestCache == null)
-         {
-            return;
-         }
-
-         MergeRequestListView listView = getListView(mode);
-         listView.UpdateItems(!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings),
-            mode == EDataCacheType.Live ? _mergeRequestFilter : null);
-
-         if (listView.Items.Count > 0)
-         {
-            listView.EnableListView();
-         }
-
-         if (mode == EDataCacheType.Live)
-         {
-            if (Program.Settings.DisplayFilterEnabled)
-            {
-               enableMergeRequestFilterControls(true);
-               listView.EnableListView();
-            }
-            updateTrayIcon();
-            updateTaskbarIcon();
-            onLiveMergeRequestListRefreshed();
-         }
-      }
-
       private void changeStorageFolder(string newFolder)
       {
          if (_storageFactory == null || _storageFactory.ParentFolder != newFolder)

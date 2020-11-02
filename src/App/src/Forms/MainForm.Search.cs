@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
+using mrHelper.CommonControls.Tools;
 using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms
@@ -34,7 +35,7 @@ namespace mrHelper.App.Forms
          {
             if (exceptionHandler == null)
             {
-               exceptionHandler = new Func<Exception, bool>((e) => startWorkflowDefaultExceptionHandler(e, mode));
+               exceptionHandler = new Func<Exception, bool>((e) => startWorkflowDefaultExceptionHandler(e));
             }
             if (!exceptionHandler(ex))
             {
@@ -49,7 +50,6 @@ namespace mrHelper.App.Forms
          EDataCacheType mode)
       {
          labelOperationStatus.Text = String.Empty;
-         disableAllUIControls(true, mode);
 
          if (String.IsNullOrWhiteSpace(hostname))
          {
@@ -95,6 +95,11 @@ namespace mrHelper.App.Forms
          return null;
       }
 
+      private void onSearchDataCacheDisconnected()
+      {
+         disableSearchTabControls();
+      }
+
       private void onSearchDataCacheConnecting(string hostname)
       {
          getListView(EDataCacheType.Search).Items.Clear();
@@ -104,6 +109,8 @@ namespace mrHelper.App.Forms
       private void onSearchDataCacheConnected(string hostname, User user)
       {
          updateMergeRequestList(EDataCacheType.Search);
+         enableSimpleSearchControls(true);
+         updateSearchButtonState();
 
          bool areResults = getListView(EDataCacheType.Search).Items.Count > 0;
          labelOperationStatus.Text = areResults ? String.Empty : "Nothing found. Try more specific search query.";
@@ -117,6 +124,7 @@ namespace mrHelper.App.Forms
 
       private void onRecentDataCacheDisconnected()
       {
+         disableRecentTabControls();
          unsubscribeFromRecentDataCacheInternalEvents();
       }
 
@@ -168,6 +176,58 @@ namespace mrHelper.App.Forms
                ProjectName = key.ProjectKey.ProjectName
             })
             .ToArray();
+      }
+
+      ///////////////////////////////////////////////////////////////////////////////////////////////////
+
+      private void setSearchByProjectEnabled(bool isEnabled)
+      {
+         checkBoxSearchByProject.Enabled = isEnabled;
+
+         bool wasEnabled = comboBoxProjectName.Enabled;
+         comboBoxProjectName.Enabled = isEnabled;
+
+         if (!isEnabled && wasEnabled)
+         {
+            comboBoxProjectName.Items.Clear();
+         }
+         else if (!wasEnabled && isEnabled)
+         {
+            DataCache dataCache = getDataCache(EDataCacheType.Live);
+            string[] projectNames = dataCache?.ProjectCache?.GetProjects()
+               .OrderBy(project => project.Path_With_Namespace)
+               .Select(project => project.Path_With_Namespace)
+               .ToArray() ?? Array.Empty<string>();
+            string defaultProjectName = getDefaultProjectName();
+            WinFormsHelpers.FillComboBox(comboBoxProjectName, projectNames,
+               projectName => projectName == defaultProjectName);
+         }
+
+         updateSearchButtonState();
+      }
+
+      private void setSearchByAuthorEnabled(bool isEnabled)
+      {
+         checkBoxSearchByAuthor.Enabled = isEnabled;
+         linkLabelFindMe.Enabled = isEnabled;
+
+         bool wasEnabled = comboBoxUser.Enabled;
+         comboBoxUser.Enabled = isEnabled;
+
+         if (!isEnabled && wasEnabled)
+         {
+            comboBoxUser.Items.Clear();
+         }
+         else if (!wasEnabled && isEnabled)
+         {
+            DataCache dataCache = getDataCache(EDataCacheType.Live);
+            User[] users = dataCache?.UserCache?.GetUsers()
+               .OrderBy(user => user.Name).ToArray() ?? Array.Empty<User>();
+            string defaultUserFullName = getCurrentUser().Name;
+            WinFormsHelpers.FillComboBox(comboBoxUser, users, user => user.Name == defaultUserFullName);
+         }
+
+         updateSearchButtonState();
       }
    }
 }

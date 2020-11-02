@@ -22,6 +22,11 @@ namespace mrHelper.App.Forms
    {
       private void prepareControlsToStart()
       {
+         disableLiveTabControls();
+         disableSearchTabControls();
+         disableRecentTabControls();
+         disableSelectedMergeRequestControls();
+
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          labelOperationStatus.Text = String.Empty;
          labelStorageStatus.Text = String.Empty;
@@ -49,11 +54,9 @@ namespace mrHelper.App.Forms
             toolTip.SetToolTip(linkLabelSendFeedback, Program.ServiceManager.GetBugReportEmail());
          }
 
-         setTooltipsForSearchOptions();
-         updateSearchButtonState();
-
          _timeTrackingTimer.Tick += new System.EventHandler(onTimeTrackingTimer);
 
+         setTooltipsForSearchOptions();
          startClipboardCheckTimer();
          createListViewContextMenu();
 
@@ -209,10 +212,45 @@ namespace mrHelper.App.Forms
          linkLabelAbortGitClone.Visible = enabled;
       }
 
+      private void updateMergeRequestList(EDataCacheType mode)
+      {
+         DataCache dataCache = getDataCache(mode);
+         IMergeRequestCache mergeRequestCache = dataCache?.MergeRequestCache;
+         if (mergeRequestCache == null)
+         {
+            return;
+         }
+
+         MergeRequestListView listView = getListView(mode);
+         listView.UpdateItems(!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings),
+            mode == EDataCacheType.Live ? _mergeRequestFilter : null);
+
+         if (mode == EDataCacheType.Live)
+         {
+            if (listView.Items.Count > 0 || Program.Settings.DisplayFilterEnabled)
+            {
+               enableMergeRequestFilterControls(true);
+               listView.EnableListView();
+            }
+            updateTrayIcon();
+            updateTaskbarIcon();
+            onLiveMergeRequestListRefreshed();
+         }
+         else if (listView.Items.Count > 0)
+         {
+            listView.EnableListView();
+         }
+      }
+
       private void enableMergeRequestFilterControls(bool enabled)
       {
          checkBoxDisplayFilter.Enabled = enabled;
          textBoxDisplayFilter.Enabled = enabled;
+      }
+
+      private void enableMergeRequestListControls(bool enabled)
+      {
+         buttonReloadList.Enabled = enabled;
       }
 
       private void updateMergeRequestDetails(FullMergeRequestKey? fmkOpt)
@@ -257,6 +295,7 @@ namespace mrHelper.App.Forms
 
          linkLabelTimeTrackingMergeRequest.Visible = enabled;
          buttonTimeTrackingStart.Enabled = enabled;
+         buttonTimeTrackingCancel.Enabled = false;
 
          if (enabled)
          {
@@ -387,7 +426,6 @@ namespace mrHelper.App.Forms
          forEachListView(listView => listView.DeselectAllListViewItems());
          labelTimeTrackingTrackedLabel.Visible = isLiveDataCacheSelected;
          buttonEditTime.Visible = isLiveDataCacheSelected;
-         disableCommonUIControls();
       }
 
       private void onMergeRequestSelectionChanged(EDataCacheType mode)
@@ -397,10 +435,9 @@ namespace mrHelper.App.Forms
          if (!fmkOpt.HasValue)
          {
             Trace.TraceInformation(String.Format(
-               "[MainForm] User deselected merge request. Mode={0}", getCurrentTabDataCacheType().ToString()));
-            disableCommonUIControls();
-            updateAbortGitCloneButtonState();
-            updateStorageStatusText(null, null);
+               "[MainForm] User deselected merge request. Mode={0}",
+               getCurrentTabDataCacheType().ToString()));
+            disableSelectedMergeRequestControls();
             return;
          }
 
@@ -924,36 +961,39 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void disableAllUIControls(bool clearListView, EDataCacheType mode)
+      private void disableLiveTabControls()
       {
-         getListView(mode).DisableListView(clearListView);
-
-         if (mode == EDataCacheType.Live)
-         {
-            buttonReloadList.Enabled = false;
-            buttonCreateNew.Enabled = false;
-            enableMergeRequestFilterControls(false);
-         }
-         else if (mode == EDataCacheType.Search)
-         {
-            buttonSearch.Enabled = false;
-         }
-
-         if (getCurrentTabDataCacheType() == mode)
-         {
-            // to avoid touching controls shared between tabs
-            disableCommonUIControls();
-         }
+         getListView(EDataCacheType.Live).DisableListView(true);
+         setMergeRequestEditEnabled(false);
+         enableMergeRequestFilterControls(false);
+         enableMergeRequestListControls(false);
       }
 
-      private void disableCommonUIControls()
+      private void disableSearchTabControls()
       {
-         enableMergeRequestActions(false);
+         getListView(EDataCacheType.Search).DisableListView(true);
+         enableSimpleSearchControls(false);
+         setSearchByProjectEnabled(false);
+         setSearchByAuthorEnabled(false);
+         updateSearchButtonState();
+      }
+
+      private void disableRecentTabControls()
+      {
+         getListView(EDataCacheType.Recent).DisableListView(true);
+      }
+
+      private void disableSelectedMergeRequestControls()
+      {
          enableCustomActions(false, null, null);
-         updateStorageDependentControlState(null);
+         enableMergeRequestActions(false);
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
          updateTotalTime(null, null, null, null);
+         updateAbortGitCloneButtonState();
+
+         updateStorageStatusText(null, null);
+         updateStorageDependentControlState(null);
          revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
       }
 
@@ -961,17 +1001,38 @@ namespace mrHelper.App.Forms
       {
          buttonCreateNew.Enabled = enabled;
          MergeRequestListViewContextMenu contextMenu = getListView(EDataCacheType.Live).GetContextMenu();
-         contextMenu.SetEditActionEnabled(enabled);
-         contextMenu.SetMergeActionEnabled(true);
+         contextMenu?.SetEditActionEnabled(enabled);
+         contextMenu?.SetMergeActionEnabled(true);
+      }
+
+      private void enableSimpleSearchControls(bool enabled)
+      {
+         // unlike comboBoxUser and checkBoxSearchByProject, the following controls don't depend on external data
+         checkBoxSearchByTargetBranch.Enabled = enabled;
+         textBoxSearchTargetBranch.Enabled = enabled;
+         checkBoxSearchByTitleAndDescription.Enabled = enabled;
+         textBoxSearchText.Enabled = enabled;
       }
 
       private void updateSearchButtonState()
       {
          buttonSearch.Enabled =
-            checkBoxSearchByAuthor.Checked
-         || checkBoxSearchByProject.Checked
-         || checkBoxSearchByTargetBranch.Checked
-         || checkBoxSearchByTitleAndDescription.Checked;
+              (checkBoxSearchByAuthor.Enabled
+            && checkBoxSearchByAuthor.Checked
+            && comboBoxUser.Enabled
+            && comboBoxUser.SelectedItem != null)
+         ||   (checkBoxSearchByProject.Enabled
+            && checkBoxSearchByProject.Checked
+            && comboBoxProjectName.Enabled
+            && comboBoxProjectName.SelectedItem != null)
+         ||   (checkBoxSearchByTargetBranch.Enabled
+            && checkBoxSearchByTargetBranch.Checked
+            && textBoxSearchTargetBranch.Enabled
+            && !String.IsNullOrWhiteSpace(textBoxSearchTargetBranch.Text))
+         ||   (checkBoxSearchByTitleAndDescription.Enabled
+            && checkBoxSearchByTitleAndDescription.Checked
+            && textBoxSearchText.Enabled
+            && !String.IsNullOrWhiteSpace(textBoxSearchText.Text));
       }
 
       private void applyKnownHostSelectionChange()
@@ -1125,13 +1186,13 @@ namespace mrHelper.App.Forms
       private void onUpdating()
       {
          buttonReloadList.Text = "Updating...";
-         buttonReloadList.Enabled = false;
+         enableMergeRequestListControls(false);
       }
 
       private void onUpdated(string oldButtonText)
       {
          buttonReloadList.Text = oldButtonText;
-         buttonReloadList.Enabled = true;
+         enableMergeRequestListControls(true);
       }
 
       private void selectCurrentUserInSearchDropdown()

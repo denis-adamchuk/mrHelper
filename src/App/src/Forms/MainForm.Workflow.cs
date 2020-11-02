@@ -31,13 +31,12 @@ namespace mrHelper.App.Forms
 
    internal partial class MainForm
    {
-      private bool startWorkflowDefaultExceptionHandler(Exception ex, EDataCacheType mode)
+      private bool startWorkflowDefaultExceptionHandler(Exception ex)
       {
          if (ex is DataCacheException || ex is UnknownHostException || ex is NoProjectsException)
          {
             if (!(ex is DataCacheConnectionCancelledException))
             {
-               disableAllUIControls(true, mode);
                ExceptionHandlers.Handle("Cannot switch host", ex);
                string message = ex.Message;
                if (ex is DataCacheException wx)
@@ -61,15 +60,23 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
+            dropConnectionToHost();
             if (exceptionHandler == null)
             {
-               exceptionHandler = new Func<Exception, bool>(
-                  e => startWorkflowDefaultExceptionHandler(e, EDataCacheType.Live));
+               exceptionHandler = new Func<Exception, bool>(e => startWorkflowDefaultExceptionHandler(e));
             }
             if (!exceptionHandler(ex))
             {
                throw;
             }
+         }
+      }
+
+      private void dropConnectionToHost()
+      {
+         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
+         {
+            getDataCache(mode).Disconnect();
          }
       }
 
@@ -87,12 +94,7 @@ namespace mrHelper.App.Forms
             "[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
             hostname, Program.Settings.WorkflowType));
 
-         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
-         {
-            disableAllUIControls(true, mode);
-            getDataCache(mode).Disconnect();
-         }
-
+         dropConnectionToHost();
          labelOperationStatus.Text = String.Format("Connecting to {0}...", hostname);
 
          if (String.IsNullOrWhiteSpace(hostname))
@@ -191,9 +193,7 @@ namespace mrHelper.App.Forms
 
       private void onLiveDataCacheDisconnected()
       {
-         setMergeRequestEditEnabled(false);
-         setSearchByProjectEnabled(false);
-         setSearchByAuthorEnabled(false);
+         disableLiveTabControls();
          stopListViewRefreshTimer();
          WinFormsHelpers.CloseAllFormsExceptOne(this);
          disposeGitHelpers();
@@ -203,8 +203,6 @@ namespace mrHelper.App.Forms
 
       private void onLiveDataCacheConnecting(string hostname)
       {
-         disableAllUIControls(false, EDataCacheType.Live);
-
          if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {
             // in Project-based workflow we want to create all groups at once in a user-defined order
@@ -257,9 +255,8 @@ namespace mrHelper.App.Forms
          loadRecentMergeRequests();
 
          updateMergeRequestList(EDataCacheType.Live);
-
-         buttonSearch.Enabled = true;
-         buttonReloadList.Enabled = true;
+         enableMergeRequestListControls(true);
+         enableSimpleSearchControls(true);
          labelOperationStatus.Text = "Merge requests loaded";
 
          IEnumerable<ProjectKey> projects = getDataCache(EDataCacheType.Live).MergeRequestCache.GetProjects();
@@ -278,52 +275,6 @@ namespace mrHelper.App.Forms
 
             MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostname, projectname), iid);
             getListView(EDataCacheType.Live).SelectMergeRequest(mrk, false);
-         }
-      }
-
-      private void setSearchByProjectEnabled(bool isEnabled)
-      {
-         checkBoxSearchByProject.Enabled = isEnabled;
-
-         bool wasEnabled = comboBoxProjectName.Enabled;
-         comboBoxProjectName.Enabled = isEnabled;
-
-         if (!isEnabled && wasEnabled)
-         {
-            comboBoxProjectName.Items.Clear();
-         }
-         else if (!wasEnabled && isEnabled)
-         {
-            DataCache dataCache = getDataCache(EDataCacheType.Live);
-            string[] projectNames = dataCache?.ProjectCache?.GetProjects()
-               .OrderBy(project => project.Path_With_Namespace)
-               .Select(project => project.Path_With_Namespace)
-               .ToArray() ?? Array.Empty<string>();
-            string defaultProjectName = getDefaultProjectName();
-            WinFormsHelpers.FillComboBox(comboBoxProjectName, projectNames,
-               projectName => projectName == defaultProjectName);
-         }
-      }
-
-      private void setSearchByAuthorEnabled(bool isEnabled)
-      {
-         checkBoxSearchByAuthor.Enabled = isEnabled;
-         linkLabelFindMe.Enabled = isEnabled;
-
-         bool wasEnabled = comboBoxUser.Enabled;
-         comboBoxUser.Enabled = isEnabled;
-
-         if (!isEnabled && wasEnabled)
-         {
-            comboBoxUser.Items.Clear();
-         }
-         else if (!wasEnabled && isEnabled)
-         {
-            DataCache dataCache = getDataCache(EDataCacheType.Live);
-            User[] users = dataCache?.UserCache?.GetUsers()
-               .OrderBy(user => user.Name).ToArray() ?? Array.Empty<User>();
-            string defaultUserFullName = getCurrentUser().Name;
-            WinFormsHelpers.FillComboBox(comboBoxUser, users, user => user.Name == defaultUserFullName);
          }
       }
 

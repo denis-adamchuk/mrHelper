@@ -17,14 +17,8 @@ namespace mrHelper.App.Forms
       private void mainForm_Load(object sender, EventArgs e)
       {
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
-
          checkForApplicationUpdates();
-
          initializeWork();
-
-         Trace.TraceInformation(String.Format("[Mainform] Connecting to URL on startup {0}",
-            _startUrl?.ToString() ?? "null"));
-         reconnect(_startUrl);
       }
 
       private void mainForm_FormClosing(object sender, FormClosingEventArgs e)

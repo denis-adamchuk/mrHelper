@@ -87,7 +87,6 @@ namespace mrHelper.App.Forms
                MinimumSize = new System.Drawing.Size { Width = 72, Height = 0 },
                Text = name,
                UseVisualStyleBackColor = true,
-               Enabled = false,
                TabStop = false,
                Tag = command.GetDependency()
             };
@@ -159,6 +158,10 @@ namespace mrHelper.App.Forms
          initializeColorScheme();
          initializeIconScheme();
          initializeBadgeScheme();
+
+         Trace.TraceInformation(String.Format(
+            "[Mainform] Connecting to URL on startup {0}", _startUrl?.ToString() ?? "null"));
+         reconnect(_startUrl);
       }
 
       private void finalizeWork()
@@ -390,6 +393,7 @@ namespace mrHelper.App.Forms
       private void subscribeToSearchDataCache()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Search);
+         dataCache.Disconnected += onSearchDataCacheDisconnected;
          dataCache.Connecting += onSearchDataCacheConnecting;
          dataCache.Connected += onSearchDataCacheConnected;
       }
@@ -397,6 +401,7 @@ namespace mrHelper.App.Forms
       private void unsubscribeFromSearchDataCache()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Search);
+         dataCache.Disconnected -= onSearchDataCacheDisconnected;
          dataCache.Connecting -= onSearchDataCacheConnecting;
          dataCache.Connected -= onSearchDataCacheConnected;
       }
