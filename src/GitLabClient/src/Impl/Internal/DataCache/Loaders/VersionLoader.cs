@@ -55,14 +55,14 @@ namespace mrHelper.GitLabClient.Loaders
             throw exception;
          }
 
-         IEnumerable<Tuple<MergeRequestKey, string>> missingCommitIds = gatherMissingCommitIds(mergeRequestKeys);
+         IEnumerable<Tuple<ProjectKey, string>> missingCommitIds = gatherMissingCommitIds(mergeRequestKeys);
          IEnumerable<Commit> missingCommits = await loadMissingCommits(missingCommitIds.Distinct());
          applyCommitsToVersions(mergeRequestKeys, missingCommits);
       }
 
-      private IEnumerable<Tuple<MergeRequestKey, string>> gatherMissingCommitIds(IEnumerable<MergeRequestKey> allKeys)
+      private IEnumerable<Tuple<ProjectKey, string>> gatherMissingCommitIds(IEnumerable<MergeRequestKey> allKeys)
       {
-         List<Tuple<MergeRequestKey, string>> missingCommitIds = new List<Tuple<MergeRequestKey, string>>();
+         List<Tuple<ProjectKey, string>> missingCommitIds = new List<Tuple<ProjectKey, string>>();
          foreach (MergeRequestKey mrk in allKeys)
          {
             IEnumerable<Commit> commits = _cacheUpdater.Cache.GetCommits(mrk);
@@ -72,7 +72,7 @@ namespace mrHelper.GitLabClient.Loaders
                if (!commits.Any(x => x.Id == version.Head_Commit_SHA)
                 && !String.IsNullOrEmpty(version.Head_Commit_SHA))
                {
-                  missingCommitIds.Add(new Tuple<MergeRequestKey, string>(mrk, version.Head_Commit_SHA));
+                  missingCommitIds.Add(new Tuple<ProjectKey, string>(mrk.ProjectKey, version.Head_Commit_SHA));
                }
             }
          }
@@ -80,11 +80,11 @@ namespace mrHelper.GitLabClient.Loaders
       }
 
       async private Task<IEnumerable<Commit>> loadMissingCommits(
-         IEnumerable<Tuple<MergeRequestKey, string>> missingCommitIds)
+         IEnumerable<Tuple<ProjectKey, string>> missingCommitIds)
       {
          Exception exception = null;
          List<Commit> missingCommits = new List<Commit>();
-         async Task loadMissingCommits(Tuple<MergeRequestKey, string> commitIds)
+         async Task loadMissingCommits(Tuple<ProjectKey, string> commitIds)
          {
             if (exception != null)
             {
@@ -93,7 +93,7 @@ namespace mrHelper.GitLabClient.Loaders
 
             try
             {
-               missingCommits.Add(await LoadCommit(commitIds.Item1.ProjectKey, commitIds.Item2));
+               missingCommits.Add(await LoadCommit(commitIds.Item1, commitIds.Item2));
             }
             catch (BaseLoaderException ex)
             {
