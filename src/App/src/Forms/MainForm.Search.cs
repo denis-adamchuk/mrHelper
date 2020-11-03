@@ -110,6 +110,8 @@ namespace mrHelper.App.Forms
       {
          updateMergeRequestList(EDataCacheType.Search);
          enableSimpleSearchControls(true);
+         setSearchByAuthorEnabled(getDataCache(EDataCacheType.Live)?.UserCache?.GetUsers()?.Any() ?? false);
+         setSearchByProjectEnabled(getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects()?.Any() ?? false);
          updateSearchButtonState();
 
          bool areResults = getListView(EDataCacheType.Search).Items.Count > 0;

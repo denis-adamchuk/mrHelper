@@ -343,6 +343,7 @@ namespace mrHelper.App.Forms
 
       private void textBoxSearch_KeyDown(object sender, KeyEventArgs e)
       {
+         updateSearchButtonState();
          if (e.KeyCode == Keys.Enter)
          {
             onStartSearch();
