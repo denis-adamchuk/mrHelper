@@ -100,7 +100,8 @@ namespace mrHelper.StorageSupport
       abstract protected Task<object> runCommandAsync(GitDiffArguments arguments);
       abstract protected Task<object> runCommandAsync(GitShowRevisionArguments arguments);
 
-      private IEnumerable<string> runCommandAndCacheResult<T>(T arguments, Dictionary<T, IEnumerable<string>> cache)
+      private IEnumerable<string> runCommandAndCacheResult<T>(T arguments,
+         SelfCleanUpDictionary<T, IEnumerable<string>> cache)
       {
          if (_isDisposed)
          {
@@ -125,7 +126,8 @@ namespace mrHelper.StorageSupport
          return result;
       }
 
-      async private Task runCommandAndCacheResultAsync<T>(T arguments, Dictionary<T, IEnumerable<string>> cache)
+      async private Task runCommandAndCacheResultAsync<T>(T arguments,
+         SelfCleanUpDictionary<T, IEnumerable<string>> cache)
       {
          if (_isDisposed || cache.ContainsKey(arguments) || !((dynamic)arguments).IsValid())
          {
@@ -133,11 +135,11 @@ namespace mrHelper.StorageSupport
          }
 
          IEnumerable<string> result = (IEnumerable<string>)(await runCommandAsync((dynamic)arguments));
-         if (result == null)
+         if (result == null || cache.ContainsKey(arguments))
          {
             return;
          }
-         cache[arguments] = result;
+         cache.Add(arguments, result);
       }
 
       protected ExternalProcess.Result startExternalProcess(
@@ -185,11 +187,13 @@ namespace mrHelper.StorageSupport
 
       protected readonly IExternalProcessManager _processManager;
 
-      private readonly Dictionary<GitDiffArguments, IEnumerable<string>> _cachedDiffs =
-         new Dictionary<GitDiffArguments, IEnumerable<string>>();
+      private readonly SelfCleanUpDictionary<GitDiffArguments, IEnumerable<string>> _cachedDiffs =
+         new SelfCleanUpDictionary<GitDiffArguments, IEnumerable<string>>(CacheCleanupPeriodSeconds);
 
-      private readonly Dictionary<GitShowRevisionArguments, IEnumerable<string>> _cachedRevisions =
-         new Dictionary<GitShowRevisionArguments, IEnumerable<string>>();
+      private readonly SelfCleanUpDictionary<GitShowRevisionArguments, IEnumerable<string>> _cachedRevisions =
+         new SelfCleanUpDictionary<GitShowRevisionArguments, IEnumerable<string>>(CacheCleanupPeriodSeconds);
+
+      private readonly static int CacheCleanupPeriodSeconds = 60 * 60 * 24 * 5; // 5 days
    }
 }
 

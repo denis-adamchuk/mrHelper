@@ -79,6 +79,7 @@
     <Compile Include="Tools\Persistence\PersistentStateItf.cs" />
     <Compile Include="Tools\Persistence\PersistentStorage.cs" />
     <Compile Include="Tools\MarkDownUtils.cs" />
+    <Compile Include="Tools\SelfCleanupDictionary.cs" />
     <Compile Include="Tools\StringUtils.cs" />
     <Compile Include="Tools\TaskUtils.cs" />
     <Compile Include="Tools\SparsedList\SparsedList.cs" />
