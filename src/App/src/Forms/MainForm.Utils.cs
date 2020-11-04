@@ -1,14 +1,11 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Drawing;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
-using static mrHelper.App.Helpers.ServiceManager;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
@@ -220,119 +217,60 @@ namespace mrHelper.App.Forms
          return _timeTracker != null;
       }
 
-      // TODO Extract all this stuff into ApplicationUpdater entity
-      private void checkForApplicationUpdates()
+      private bool notifyAboutNewVersion()
       {
-         if (!_checkForUpdatesTimer.Enabled)
+         Debug.Assert(StaticUpdateChecker.NewVersionInformation != null);
+         if (isTrackingTime())
          {
-            _checkForUpdatesTimer.Tick += new System.EventHandler(onCheckForUpdatesTimer);
-            _checkForUpdatesTimer.Start();
+            _applicationUpdateReminderPostponedTillTimerStop = false;
+            _applicationUpdateNotificationPostponedTillTimerStop = true;
+            Trace.TraceInformation("[MainForm] New version appeared during time tracking");
          }
-
-         LatestVersionInformation info = Program.ServiceManager.GetLatestVersionInfo();
-         if (info == null || String.IsNullOrWhiteSpace(info.VersionNumber))
+         else if (ApplicationUpdateHelper.ShowCheckForUpdatesDialog())
          {
-            return;
+            doCloseOnUpgrade();
+            return true;
          }
-
-         try
-         {
-            System.Version currentVersion = new System.Version(Application.ProductVersion);
-            System.Version latestVersion = new System.Version(info.VersionNumber);
-            if (currentVersion >= latestVersion)
-            {
-               return;
-            }
-
-            if (!String.IsNullOrWhiteSpace(_newVersionNumber))
-            {
-               System.Version cachedLatestVersion = new System.Version(_newVersionNumber);
-               if (cachedLatestVersion >= latestVersion)
-               {
-                  return;
-               }
-            }
-         }
-         catch (ArgumentException ex)
-         {
-            ExceptionHandlers.Handle("Wrong version number", ex);
-            return;
-         }
-
-         Trace.TraceInformation(String.Format("[CheckForUpdates] New version {0} is found", info.VersionNumber));
-
-         if (String.IsNullOrEmpty(info.InstallerFilePath) || !System.IO.File.Exists(info.InstallerFilePath))
-         {
-            Trace.TraceWarning(String.Format("[CheckForUpdates] Installer cannot be found at \"{0}\"",
-               info.InstallerFilePath));
-            return;
-         }
-
-         Task.Run(
-            () =>
-         {
-            if (info == null)
-            {
-               return;
-            }
-
-            string filename = Path.GetFileName(info.InstallerFilePath);
-            string tempFolder = Environment.GetEnvironmentVariable("TEMP");
-            string destFilePath = Path.Combine(tempFolder, filename);
-
-            Debug.Assert(!System.IO.File.Exists(destFilePath));
-
-            try
-            {
-               System.IO.File.Copy(info.InstallerFilePath, destFilePath);
-            }
-            catch (Exception ex)
-            {
-               ExceptionHandlers.Handle("Cannot download a new version", ex);
-               return;
-            }
-
-            _newVersionFilePath = destFilePath;
-            _newVersionNumber = info.VersionNumber;
-            BeginInvoke(new Action(() =>
-            {
-               linkLabelNewVersion.Visible = true;
-               updateCaption();
-            }));
-         });
+         return false;
       }
 
-      private void onCheckForUpdatesTimer(object sender, EventArgs e)
+      private bool remindAboutNewVersion()
       {
-         Trace.TraceInformation("[CheckForUpdates] Checking for updates on timer");
-         checkForApplicationUpdates();
+         Trace.TraceInformation("[MainForm] Reminder timer triggered (or re-triggered after timer stop)");
+         if (StaticUpdateChecker.NewVersionInformation != null && Program.Settings.RemindAboutAvailableNewVersion)
+         {
+            if (isTrackingTime())
+            {
+               _applicationUpdateReminderPostponedTillTimerStop = true;
+               _applicationUpdateNotificationPostponedTillTimerStop = false;
+               Trace.TraceInformation("[MainForm] Reminder triggered during time tracking");
+            }
+            else if (ApplicationUpdateHelper.RemindAboutAvailableVersion())
+            {
+               doCloseOnUpgrade();
+               return true;
+            }
+         }
+         return false;
       }
 
       private void upgradeApplicationByUserRequest()
       {
-         if (String.IsNullOrEmpty(_newVersionFilePath))
+         if (StaticUpdateChecker.NewVersionInformation == null)
          {
-            Debug.Assert(false);
+            Debug.Assert(false); // Should not UI control be disabled now?..
             return;
          }
 
-         if (MessageBox.Show("Do you want to close the application and install a new version?", "Confirmation",
-               MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+         Trace.TraceInformation("[MainForm] User clicked at new version label in UI");
+         if (ApplicationUpdateHelper.InstallUpdate(StaticUpdateChecker.NewVersionInformation.InstallerFilePath))
          {
-            Trace.TraceInformation("[CheckForUpdates] User discarded to install a new version");
-            return;
+            doCloseOnUpgrade();
          }
-
-         try
+         else
          {
-            Process.Start(_newVersionFilePath);
+            Trace.TraceInformation("[MainForm] User discarded to install a new version");
          }
-         catch (Exception ex)
-         {
-            ExceptionHandlers.Handle("[CheckForUpdates] Cannot launch installer", ex);
-         }
-
-         doClose();
       }
 
       private void changeProjectEnabledState(ProjectKey projectKey, bool state)
@@ -491,6 +429,12 @@ namespace mrHelper.App.Forms
       {
          setExitingFlag();
          Close();
+      }
+
+      private void doCloseOnUpgrade()
+      {
+         Trace.TraceInformation("[MainForm] Application is exiting to install a new version...");
+         doClose();
       }
 
       private void setExitingFlag()
@@ -774,6 +718,37 @@ namespace mrHelper.App.Forms
             MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             Program.Settings.ShowWarningOnCreateMergeRequest = false;
+         }
+      }
+
+      private void onWorkstationLocked()
+      {
+         if (isTrackingTime())
+         {
+            stopTimeTrackingTimer();
+            MessageBox.Show("mrHelper stopped time tracking because workstation was locked", "Warning",
+               MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            Trace.TraceInformation("[MainForm] Time tracking stopped because workstation was locked");
+         }
+      }
+
+      private void updateNewVersionStatus()
+      {
+         linkLabelNewVersion.Visible = StaticUpdateChecker.NewVersionInformation != null;
+         updateCaption();
+      }
+
+      private void onNewVersionAvailable()
+      {
+         Debug.Assert(StaticUpdateChecker.NewVersionInformation != null);
+         updateNewVersionStatus();
+
+         // when a new version appears in the middle of work, re-schedule a reminder to trigger in 24 hours
+         stopNewVersionReminderTimer();
+         if (!notifyAboutNewVersion())
+         {
+            Trace.TraceInformation("[MainForm] Reminder timer restarted");
+            startNewVersionReminderTimer();
          }
       }
    }

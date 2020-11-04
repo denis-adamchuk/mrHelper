@@ -55,20 +55,15 @@ namespace mrHelper.App
       {
          using (LaunchContext context = new LaunchContext())
          {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
             Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
 
             try
             {
                string currentLogFileName = getLogFileName(context);
-               CustomTraceListener listener = null;
-               try
-               {
-                  listener = new CustomTraceListener(currentLogFileName,
-                    String.Format("Merge Request Helper {0} started. PID {1}",
-                       Application.ProductVersion, Process.GetCurrentProcess().Id));
-                  Trace.Listeners.Add(listener);
-               }
-               catch (ArgumentException)
+               CustomTraceListener listener = createTraceListener(currentLogFileName);
+               if (listener == null)
                {
                   // Cannot do anything good here
                   return;
@@ -76,62 +71,19 @@ namespace mrHelper.App
 
                Directory.SetCurrentDirectory(Path.GetDirectoryName(context.CurrentProcess.MainModule.FileName));
                ServiceManager = new ServiceManager();
-
-               FeedbackReporter = new FeedbackReporter(
-                  () =>
-               {
-                  listener.Flush();
-                  listener.Close();
-                  Trace.Listeners.Remove(listener);
-               },
-                  () =>
-               {
-                  try
-                  {
-                     listener = new CustomTraceListener(currentLogFileName, null);
-                     Trace.Listeners.Add(listener);
-                  }
-                  catch (Exception)
-                  {
-                     // Cannot do anything good here
-                  }
-               },
-               getApplicationDataPath());
+               createFeedbackReporter(currentLogFileName, listener);
 
                LaunchOptions options = LaunchOptions.FromContext(context);
-               switch (options.Mode)
+               if (options.Mode == LaunchOptions.LaunchMode.Normal)
                {
-                  case LaunchOptions.LaunchMode.DiffTool:
-                     onLaunchFromDiffTool(options);
-                     break;
-
-                  case LaunchOptions.LaunchMode.Register:
-                     if (registerCustomProtocol())
-                     {
-                        integrateInGitExtensions();
-                        integrateInSourceTree();
-                     }
-                     break;
-
-                  case LaunchOptions.LaunchMode.Unregister:
-                     unregisterCustomProtocol();
-                     break;
-
-                  case LaunchOptions.LaunchMode.Normal:
-                     if (context.IsRunningSingleInstance)
-                     {
-                        onLaunchMainInstance(options);
-                     }
-                     else
-                     {
-                        onLaunchAnotherInstance(context);
-                     }
-                     break;
-
-                  default:
-                     Debug.Assert(false);
-                     break;
+                  cleanUpOldFiles();
+                  if (ApplicationUpdateHelper.ShowCheckForUpdatesDialog())
+                  {
+                     Trace.TraceInformation("Application is exiting to install a new version");
+                     return;
+                  }
                }
+               launchFromContext(options, context);
             }
             catch (Exception ex) // whatever unhandled exception
             {
@@ -140,15 +92,89 @@ namespace mrHelper.App
          }
       }
 
+      private static CustomTraceListener createTraceListener(string currentLogFileName)
+      {
+         CustomTraceListener listener = null;
+         try
+         {
+            listener = new CustomTraceListener(currentLogFileName,
+              String.Format("Merge Request Helper {0} started. PID {1}",
+                 Application.ProductVersion, Process.GetCurrentProcess().Id));
+            Trace.Listeners.Add(listener);
+         }
+         catch (ArgumentException)
+         {
+            listener = null;
+         }
+
+         return listener;
+      }
+
+      private static void launchFromContext(LaunchOptions options, LaunchContext context)
+      {
+         switch (options.Mode)
+         {
+            case LaunchOptions.LaunchMode.DiffTool:
+               onLaunchFromDiffTool(options);
+               break;
+
+            case LaunchOptions.LaunchMode.Register:
+               if (registerCustomProtocol())
+               {
+                  integrateInGitExtensions();
+                  integrateInSourceTree();
+               }
+               break;
+
+            case LaunchOptions.LaunchMode.Unregister:
+               unregisterCustomProtocol();
+               break;
+
+            case LaunchOptions.LaunchMode.Normal:
+               if (context.IsRunningSingleInstance)
+               {
+                  onLaunchMainInstance(options);
+               }
+               else
+               {
+                  onLaunchAnotherInstance(context);
+               }
+               break;
+
+            default:
+               Debug.Assert(false);
+               break;
+         }
+      }
+
+      private static void createFeedbackReporter(string currentLogFileName, CustomTraceListener listener)
+      {
+         FeedbackReporter = new FeedbackReporter(
+            () =>
+            {
+               listener.Flush();
+               listener.Close();
+               Trace.Listeners.Remove(listener);
+            },
+            () =>
+            {
+               try
+               {
+                  listener = new CustomTraceListener(currentLogFileName, null);
+                  Trace.Listeners.Add(listener);
+               }
+               catch (Exception)
+               {
+                  // Cannot do anything good here
+               }
+            },
+         getApplicationDataPath());
+      }
+
       private static void onLaunchMainInstance(LaunchOptions options)
       {
-         Application.EnableVisualStyles();
-         Application.SetCompatibleTextRenderingDefault(false);
-
-         cleanUpOldFiles();
-
          bool runningAsUwp = new DesktopBridge.Helpers().IsRunningAsUwp();
-         Trace.TraceInformation(String.Format("[MainForm] Running as UWP = {0}", runningAsUwp ? "Yes" : "No"));
+         Trace.TraceInformation(String.Format("Running as UWP = {0}", runningAsUwp ? "Yes" : "No"));
          if (runningAsUwp)
          {
             revertOldInstallations();
@@ -339,7 +365,7 @@ namespace mrHelper.App
             };
             Process p = Process.Start(startInfo);
             p.WaitForExit();
-            Trace.TraceInformation(String.Format("[MainForm] {0} exited with code {1}", revertMsiProjectName, p.ExitCode));
+            Trace.TraceInformation(String.Format("{0} exited with code {1}", revertMsiProjectName, p.ExitCode));
          }
       }
 

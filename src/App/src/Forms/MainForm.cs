@@ -22,6 +22,7 @@ namespace mrHelper.App.Forms
       private static readonly int ClipboardCheckingTimerInterval = 1000 * 1; // 1 second
       private static readonly int ProjectAndUserCacheCheckTimerInterval = 1000 * 1; // 1 second
       private static readonly int ListViewRefreshTimerInterval = 1000 * 20; // 20 seconds
+      private static readonly int NewVersionReminderTimerInterval = 1000 * 60 * 60 * 24; // 24 hours
 
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -47,7 +48,10 @@ namespace mrHelper.App.Forms
       private bool _exiting = false;
       private bool _userIsMovingSplitter1 = false;
       private bool _userIsMovingSplitter2 = false;
+      private bool _applicationUpdateNotificationPostponedTillTimerStop;
+      private bool _applicationUpdateReminderPostponedTillTimerStop;
 
+      private readonly PeriodicUpdateChecker _applicationUpdateChecker;
       private readonly bool _startMinimized;
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mdPipeline;
@@ -67,6 +71,10 @@ namespace mrHelper.App.Forms
       private readonly Timer _listViewRefreshTimer = new Timer
       {
          Interval = ListViewRefreshTimerInterval
+      };
+      private readonly Timer _newVersionReminderTimer = new Timer
+      {
+         Interval = NewVersionReminderTimerInterval
       };
 
       private LocalCommitStorageFactory _storageFactory;
@@ -106,13 +114,6 @@ namespace mrHelper.App.Forms
       private ColorScheme _colorScheme;
       private Dictionary<string, string> _iconScheme;
       private Dictionary<string, string> _badgeScheme;
-
-      private string _newVersionFilePath;
-      private string _newVersionNumber;
-      private readonly System.Windows.Forms.Timer _checkForUpdatesTimer = new System.Windows.Forms.Timer
-      {
-         Interval = Constants.CheckForUpdatesTimerInterval
-      };
 
       private class HostComboBoxItem
       {

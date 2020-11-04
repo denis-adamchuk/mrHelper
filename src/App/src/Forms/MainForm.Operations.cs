@@ -269,17 +269,16 @@ namespace mrHelper.App.Forms
 
       private void stopTimeTrackingTimer()
       {
-         BeginInvoke(new Action(async () => await stopTimeTrackingTimerAsync()));
+         ITotalTimeCache totalTimeCache = getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache;
+         BeginInvoke(new Action(async () => await stopTimeTrackingTimerAsync(totalTimeCache)));
       }
 
-      async private Task stopTimeTrackingTimerAsync()
+      async private Task stopTimeTrackingTimerAsync(ITotalTimeCache totalTimeCache)
       {
          if (!isTrackingTime())
          {
             return;
          }
-
-         DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
 
          // Stop timer
          _timeTrackingTimer.Stop();
@@ -324,7 +323,7 @@ namespace mrHelper.App.Forms
             labelOperationStatus.Text = "Tracked time less than 1 second is ignored";
          }
 
-         onTimerStopped(dataCache?.TotalTimeCache);
+         onTimerStopped(totalTimeCache);
       }
 
       private void cancelTimeTrackingTimer()

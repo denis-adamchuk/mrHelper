@@ -30,17 +30,20 @@ namespace mrHelper.App.Forms
          disposeLocalGitRepositoryFactory();
          disposeLiveDataCacheDependencies();
 
-         _checkForUpdatesTimer?.Stop();
-         _checkForUpdatesTimer?.Dispose();
+         unsubscribeFromApplicationUpdates();
+         _applicationUpdateChecker.Dispose();
 
          _timeTrackingTimer?.Stop();
          _timeTrackingTimer?.Dispose();
 
-         _clipboardCheckingTimer?.Stop();
+         stopClipboardCheckTimer();
          _clipboardCheckingTimer?.Dispose();
 
-         _listViewRefreshTimer?.Stop();
+         stopListViewRefreshTimer();
          _listViewRefreshTimer?.Dispose();
+
+         stopNewVersionReminderTimer();
+         _newVersionReminderTimer?.Dispose();
 
          // This allows to handle all pending invocations that other threads are
          // already ready to make before we dispose ourselves
@@ -240,6 +243,7 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
+         this.checkBoxRemindAboutAvailableNewVersion = new System.Windows.Forms.CheckBox();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -1177,7 +1181,7 @@ namespace mrHelper.App.Forms
          // checkBoxDisableSpellChecker
          // 
          this.checkBoxDisableSpellChecker.AutoSize = true;
-         this.checkBoxDisableSpellChecker.Location = new System.Drawing.Point(374, 18);
+         this.checkBoxDisableSpellChecker.Location = new System.Drawing.Point(340, 18);
          this.checkBoxDisableSpellChecker.Name = "checkBoxDisableSpellChecker";
          this.checkBoxDisableSpellChecker.Size = new System.Drawing.Size(192, 17);
          this.checkBoxDisableSpellChecker.TabIndex = 23;
@@ -1864,6 +1868,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxGeneralBehavior
          // 
+         this.groupBoxGeneralBehavior.Controls.Add(this.checkBoxRemindAboutAvailableNewVersion);
          this.groupBoxGeneralBehavior.Controls.Add(this.checkBoxDisableSpellChecker);
          this.groupBoxGeneralBehavior.Controls.Add(this.checkBoxRunWhenWindowsStarts);
          this.groupBoxGeneralBehavior.Controls.Add(this.checkBoxMinimizeOnClose);
@@ -2367,6 +2372,18 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
+         // checkBoxRemindAboutAvailableNewVersion
+         // 
+         this.checkBoxRemindAboutAvailableNewVersion.AutoSize = true;
+         this.checkBoxRemindAboutAvailableNewVersion.Location = new System.Drawing.Point(340, 41);
+         this.checkBoxRemindAboutAvailableNewVersion.Name = "checkBoxRemindAboutAvailableNewVersion";
+         this.checkBoxRemindAboutAvailableNewVersion.Size = new System.Drawing.Size(231, 17);
+         this.checkBoxRemindAboutAvailableNewVersion.TabIndex = 24;
+         this.checkBoxRemindAboutAvailableNewVersion.Text = "Remind about available new version";
+         this.toolTip.SetToolTip(this.checkBoxRemindAboutAvailableNewVersion, "Remind about available new version once a day");
+         this.checkBoxRemindAboutAvailableNewVersion.UseVisualStyleBackColor = true;
+         this.checkBoxRemindAboutAvailableNewVersion.CheckedChanged += new System.EventHandler(this.checkBoxRemindAboutAvailableNewVersion_CheckedChanged);
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2640,6 +2657,7 @@ namespace mrHelper.App.Forms
       private ColumnHeader columnHeaderRecentTargetBranch;
       private GroupBox groupBoxRecentMergeRequest;
       private TextBox textBoxRecentMergeRequestsHint;
+      private CheckBox checkBoxRemindAboutAvailableNewVersion;
    }
 }
 

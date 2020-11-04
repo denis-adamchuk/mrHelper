@@ -38,6 +38,9 @@ namespace mrHelper.App.Helpers
       private static readonly string AllowAuthorToTrackTimeKeyName      = "AllowAuthorToTrackTime";
       private static readonly bool   AllowAuthorToTrackTimeDefaultValue = false;
 
+      private static readonly string RemindAboutAvailableNewVersionKeyName      = "RemindAboutAvailableNewVersion";
+      private static readonly bool   RemindAboutAvailableNewVersionDefaultValue = true;
+
       private static readonly string CheckedLabelsFilterKeyName = "CheckedLabelsFilter";
       private static readonly bool   CheckedLabelsFilterDefaultValue = false;
 
@@ -289,6 +292,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : AllowAuthorToTrackTimeDefaultValue;
          }
          set { setValue(AllowAuthorToTrackTimeKeyName, boolToString(value)); }
+      }
+
+      public bool RemindAboutAvailableNewVersion
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               RemindAboutAvailableNewVersionKeyName, boolToString(RemindAboutAvailableNewVersionDefaultValue)),
+                  out bool result) ? result : RemindAboutAvailableNewVersionDefaultValue;
+         }
+         set { setValue(RemindAboutAvailableNewVersionKeyName, boolToString(value)); }
       }
 
       public bool DisplayFilterEnabled

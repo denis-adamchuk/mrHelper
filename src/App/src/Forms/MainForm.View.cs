@@ -58,7 +58,10 @@ namespace mrHelper.App.Forms
 
          setTooltipsForSearchOptions();
          startClipboardCheckTimer();
+         startNewVersionReminderTimer();
+         subscribeToNewVersionReminderTimer();
          createListViewContextMenu();
+         updateNewVersionStatus();
 
          forEachListView(listView => listView.SetCurrentUserGetter(hostname => getCurrentUser(hostname)));
 
@@ -478,8 +481,10 @@ namespace mrHelper.App.Forms
       {
          Text = Constants.MainWindowCaption
            + " (" + Application.ProductVersion + ")"
-           + (!String.IsNullOrEmpty(_newVersionNumber) ? String.Format(
-              "   New version {0} is available!", _newVersionNumber) : String.Empty);
+           + (StaticUpdateChecker.NewVersionInformation != null
+              ? String.Format("   New version {0} is available!",
+                 StaticUpdateChecker.NewVersionInformation.VersionNumber)
+              : String.Empty);
       }
 
       private void updateTrayIcon()
@@ -1106,6 +1111,17 @@ namespace mrHelper.App.Forms
 
          updateTrayIcon();
          updateTaskbarIcon();
+
+         Debug.Assert(!_applicationUpdateNotificationPostponedTillTimerStop
+                   || !_applicationUpdateReminderPostponedTillTimerStop); // cannot have both enabled
+         if (_applicationUpdateNotificationPostponedTillTimerStop)
+         {
+            notifyAboutNewVersion();
+         }
+         else if (_applicationUpdateReminderPostponedTillTimerStop)
+         {
+            remindAboutNewVersion();
+         }
       }
 
       private void processFontChange()

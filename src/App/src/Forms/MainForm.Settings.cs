@@ -29,6 +29,7 @@ namespace mrHelper.App.Forms
          checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
          textBoxDisplayFilter.Text = Program.Settings.DisplayFilter;
          checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
+         checkBoxRemindAboutAvailableNewVersion.Checked = Program.Settings.RemindAboutAvailableNewVersion;
          checkBoxRunWhenWindowsStarts.Checked = Program.Settings.RunWhenWindowsStarts;
          checkBoxDisableSplitterRestrictions.Checked = Program.Settings.DisableSplitterRestrictions;
          checkBoxNewDiscussionIsTopMostForm.Checked = Program.Settings.NewDiscussionIsTopMostForm;
@@ -953,6 +954,14 @@ namespace mrHelper.App.Forms
          if (!_loadingConfiguration)
          {
             Program.Settings.MinimizeOnClose = value;
+         }
+      }
+
+      private void applyRemindAboutAvailableNewVersionChange(bool value)
+      {
+         if (!_loadingConfiguration)
+         {
+            Program.Settings.RemindAboutAvailableNewVersion = value;
          }
       }
 

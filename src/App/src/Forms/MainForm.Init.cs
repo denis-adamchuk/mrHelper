@@ -53,19 +53,7 @@ namespace mrHelper.App.Forms
          forEachListView(listView => listView.Deselected += listViewMergeRequests_Deselected);
 
          SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
-      }
-
-      private void SystemEvents_SessionSwitch(object sender, SessionSwitchEventArgs e)
-      {
-         if (e.Reason == SessionSwitchReason.SessionLock)
-         {
-            if (isTrackingTime())
-            {
-               stopTimeTrackingTimer();
-               MessageBox.Show("mrHelper stopped time tracking because workstation was locked", "Warning",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-         }
+         _applicationUpdateChecker = new PeriodicUpdateChecker(this);
       }
 
       private void addCustomActions()
@@ -138,8 +126,7 @@ namespace mrHelper.App.Forms
 
                if (command.GetStopTimer())
                {
-                  await stopTimeTrackingTimerAsync();
-                  onTimerStopped(totalTimeCache);
+                  await stopTimeTrackingTimerAsync(totalTimeCache);
                }
 
                bool reload = command.GetReload();
@@ -226,6 +213,7 @@ namespace mrHelper.App.Forms
 
       private void prepareFormToStart()
       {
+         subscribeToApplicationUpdatesAndRequestThem();
          addCustomActions();
          setControlStateFromConfiguration();
          applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
@@ -262,6 +250,11 @@ namespace mrHelper.App.Forms
          _clipboardCheckingTimer.Start();
       }
 
+      private void stopClipboardCheckTimer()
+      {
+         _clipboardCheckingTimer.Stop();
+      }
+
       private void startListViewRefreshTimer()
       {
          _listViewRefreshTimer.Tick += (s, e) => getListView(EDataCacheType.Live).Invalidate();
@@ -271,6 +264,31 @@ namespace mrHelper.App.Forms
       private void stopListViewRefreshTimer()
       {
          _listViewRefreshTimer.Stop();
+      }
+
+      private void subscribeToNewVersionReminderTimer()
+      {
+         _newVersionReminderTimer.Tick += (s, e) => remindAboutNewVersion();
+      }
+
+      private void startNewVersionReminderTimer()
+      {
+         _newVersionReminderTimer.Start();
+      }
+
+      private void stopNewVersionReminderTimer()
+      {
+         _newVersionReminderTimer.Stop();
+      }
+
+      private void subscribeToApplicationUpdatesAndRequestThem()
+      {
+         _applicationUpdateChecker.NewVersionAvailable += onNewVersionAvailable;
+      }
+
+      private void unsubscribeFromApplicationUpdates()
+      {
+         _applicationUpdateChecker.NewVersionAvailable -= onNewVersionAvailable;
       }
 
       private void createListViewContextMenu()

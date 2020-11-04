@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using mrHelper.App.Helpers;
 using mrHelper.CommonNative;
 using mrHelper.CommonControls.Tools;
+using Microsoft.Win32;
 
 namespace mrHelper.App.Forms
 {
@@ -17,7 +18,6 @@ namespace mrHelper.App.Forms
       private void mainForm_Load(object sender, EventArgs e)
       {
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
-         checkForApplicationUpdates();
          initializeWork();
       }
 
@@ -82,6 +82,14 @@ namespace mrHelper.App.Forms
       private void linkLabelSendFeedback_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          sendFeedback();
+      }
+
+      private void SystemEvents_SessionSwitch(object sender, SessionSwitchEventArgs e)
+      {
+         if (e.Reason == SessionSwitchReason.SessionLock)
+         {
+            onWorkstationLocked();
+         }
       }
 
       // Settings & Workflow
@@ -236,6 +244,11 @@ namespace mrHelper.App.Forms
       private void checkBoxMinimizeOnClose_CheckedChanged(object sender, EventArgs e)
       {
          applyMinimizeOnCloseChange((sender as CheckBox).Checked);
+      }
+
+      private void checkBoxRemindAboutAvailableNewVersion_CheckedChanged(object sender, EventArgs e)
+      {
+         applyRemindAboutAvailableNewVersionChange((sender as CheckBox).Checked);
       }
 
       private void checkBoxNewDiscussionIsTopMostForm_CheckedChanged(object sender, EventArgs e)

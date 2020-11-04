@@ -13,6 +13,8 @@ namespace mrHelper.Common.Constants
       public static string UWP_Launcher_Name = "mrHelper.Launcher.exe";
       public static string MainWindowCaption = "Merge Request Helper";
       public static string StartNewThreadCaption = "Start a thread";
+      public static string MsiExecName = "msiexec.exe";
+      public static string MsiExecSilentLaunchArguments = "/passive /norestart LAUNCH_AFTER_INSTALL=1";
 
       public static string NotStartedTimeTrackingText = "Not Started";
       public static string NotAllowedTimeTrackingText = "<mine>";
@@ -37,6 +39,8 @@ namespace mrHelper.Common.Constants
       public static char GitLabLabelPrefixChar = GitLabLabelPrefix[0];
 
       public static int CheckForUpdatesTimerInterval = 1000 * 60 * 60 * 4; // 4 hours
+      public static int AutoUpgradePeriodBeginHour = 1; // 1AM
+      public static int AutoUpgradePeriodEndHour   = 6; // 6AM
 
       public static int DiscussionCheckOnNewThreadInterval = 1000 * 3; // 3 seconds
       public static int DiscussionCheckOnNewThreadFromDiffToolInterval = 1000 * 15; // 15 seconds
