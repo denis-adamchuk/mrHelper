@@ -906,7 +906,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       private Control MostRecentFocusedDiscussionControl;
       private readonly IEnumerable<ICommand> _commands;
-      private readonly HtmlToolTip _htmlTooltip = new HtmlToolTip
+      private readonly HtmlToolTipEx _htmlTooltip = new HtmlToolTipEx
       {
          AutoPopDelay = 20000, // 20s
          InitialDelay = 300,

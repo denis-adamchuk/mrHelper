@@ -34,7 +34,7 @@ namespace mrHelper.App.Controls
          Action<DiscussionBox> onContentChanging,
          Action<DiscussionBox> onContentChanged,
          Action<Control> onControlGotFocus,
-         HtmlToolTip htmlTooltip,
+         HtmlToolTipEx htmlTooltip,
          Action onAddComment,
          Action onAddThread,
          IEnumerable<ICommand> commands,
@@ -1357,7 +1357,7 @@ namespace mrHelper.App.Controls
       private readonly Action _onAddThread;
       private readonly IEnumerable<ICommand> _commands;
       private readonly Action<ICommand> _onCommand;
-      private readonly TheArtOfDev.HtmlRenderer.WinForms.HtmlToolTip _htmlTooltip;
+      private readonly HtmlToolTipEx _htmlTooltip;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }
 }
