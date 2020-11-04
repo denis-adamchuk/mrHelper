@@ -10,6 +10,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using mrHelper.App.Controls;
+using Microsoft.Win32;
 
 namespace mrHelper.App.Forms
 {
@@ -50,6 +51,21 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingCancel.ConfirmationText = "Tracked time will be lost, are you sure?";
 
          forEachListView(listView => listView.Deselected += listViewMergeRequests_Deselected);
+
+         SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
+      }
+
+      private void SystemEvents_SessionSwitch(object sender, SessionSwitchEventArgs e)
+      {
+         if (e.Reason == SessionSwitchReason.SessionLock)
+         {
+            if (isTrackingTime())
+            {
+               stopTimeTrackingTimer();
+               MessageBox.Show("mrHelper stopped time tracking because workstation was locked", "Warning",
+                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+         }
       }
 
       private void addCustomActions()
