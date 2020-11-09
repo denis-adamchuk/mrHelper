@@ -381,6 +381,11 @@ namespace mrHelper.App.Forms
          int getNoteCount(Discussion d) => d.Notes.Count();
 
          IEnumerable<Discussion> discussions = await loadDiscussionsAsync();
+         if (discussions == null)
+         {
+            return;
+         }
+
          IEnumerable<Discussion> nonSystemDiscussions = discussions
             .Where(discussion => SystemFilter.DoesMatchFilter(discussion));
          IEnumerable<Discussion> cachedDiscussions = getAllBoxes().Select(box => box.Discussion);
