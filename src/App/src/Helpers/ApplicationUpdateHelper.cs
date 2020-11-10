@@ -17,7 +17,7 @@ namespace mrHelper.App.Helpers
             return false;
          }
 
-         launchInstallerWithUI(newVersionFilePath);
+         launchInstallerWithoutUI(newVersionFilePath);
          return true;
       }
 
@@ -45,20 +45,6 @@ namespace mrHelper.App.Helpers
          Debug.Assert(!String.IsNullOrEmpty(form.NewVersionFilePath));
          launchInstallerWithoutUI(form.NewVersionFilePath);
          return true;
-      }
-
-      private static void launchInstallerWithUI(string newVersionFilePath)
-      {
-         Trace.TraceInformation(String.Format(
-            "[ApplicationUpdateHelper] Launching installer with UI: \"{0}\"", newVersionFilePath));
-         try
-         {
-            Process.Start(newVersionFilePath);
-         }
-         catch (Exception ex)
-         {
-            ExceptionHandlers.Handle("[ApplicationUpdateHelper] Cannot launch installer", ex);
-         }
       }
 
       private static void launchInstallerWithoutUI(string newVersionFilePath)
