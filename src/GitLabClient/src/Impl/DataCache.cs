@@ -39,8 +39,6 @@ namespace mrHelper.GitLabClient
                hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater, context);
 
             traceInformation(String.Format("Connecting data cache to {0}...", hostname));
-            ConnectionContext = context;
-
             string accessToken = hostProperties.GetAccessToken(hostname);
             await new CurrentUserLoader(_operator).Load(hostname, accessToken);
             User currentUser = GlobalCache.GetAuthenticatedUser(hostname, accessToken);
@@ -48,6 +46,7 @@ namespace mrHelper.GitLabClient
             await mergeRequestListLoader.Load();
             _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser, context);
 
+            ConnectionContext = context;
             traceInformation(String.Format("Data cache connected to {0}", hostname));
             Connected?.Invoke(hostname, currentUser);
          }

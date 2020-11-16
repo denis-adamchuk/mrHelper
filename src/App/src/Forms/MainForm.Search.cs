@@ -165,7 +165,7 @@ namespace mrHelper.App.Forms
       private void updateRecentDataCacheQueryColletion(string hostname)
       {
          IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(hostname);
-         _recentDataCache?.ConnectionContext?.QueryCollection.Assign(queries);
+         getDataCache(EDataCacheType.Recent)?.ConnectionContext?.QueryCollection.Assign(queries);
       }
 
       private IEnumerable<SearchQuery> convertRecentMergeRequestsToSearchQueries(string hostname)

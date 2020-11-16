@@ -279,7 +279,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         bool needReload = mrk.ProjectKey.HostName != getHostName();
+         bool isConnected = getDataCache(EDataCacheType.Live)?.ConnectionContext != null;
+         bool needReload = mrk.ProjectKey.HostName != getHostName() || !isConnected;
          if (needReload)
          {
             Trace.TraceInformation("[MainForm.ExternalCalls] Restart workflow for url {0}", url);
@@ -545,7 +546,6 @@ namespace mrHelper.App.Forms
          labelOperationStatus.Text = String.Empty;
 
          DataCache dataCache = getDataCache(EDataCacheType.Live);
-         Debug.Assert(dataCache.MergeRequestCache != null);
          Debug.Assert(dataCache.ConnectionContext != null);
          SearchQueryCollection queries = dataCache.ConnectionContext.QueryCollection;
          return GitLabClient.Helpers.DoesMatchSearchQuery(queries, mergeRequest, mrk.ProjectKey);
