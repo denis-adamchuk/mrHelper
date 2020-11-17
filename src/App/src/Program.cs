@@ -73,17 +73,7 @@ namespace mrHelper.App
                ServiceManager = new ServiceManager();
                createFeedbackReporter(currentLogFileName, listener);
 
-               LaunchOptions options = LaunchOptions.FromContext(context);
-               if (options.Mode == LaunchOptions.LaunchMode.Normal)
-               {
-                  cleanUpOldFiles();
-                  if (ApplicationUpdateHelper.ShowCheckForUpdatesDialog())
-                  {
-                     Trace.TraceInformation("Application is exiting to install a new version");
-                     return;
-                  }
-               }
-               launchFromContext(options, context);
+               launchFromContext(context);
             }
             catch (Exception ex) // whatever unhandled exception
             {
@@ -110,8 +100,9 @@ namespace mrHelper.App
          return listener;
       }
 
-      private static void launchFromContext(LaunchOptions options, LaunchContext context)
+      private static void launchFromContext(LaunchContext context)
       {
+         LaunchOptions options = LaunchOptions.FromContext(context);
          switch (options.Mode)
          {
             case LaunchOptions.LaunchMode.DiffTool:
@@ -173,6 +164,13 @@ namespace mrHelper.App
 
       private static void onLaunchMainInstance(LaunchOptions options)
       {
+         cleanUpOldFiles();
+         if (ApplicationUpdateHelper.ShowCheckForUpdatesDialog())
+         {
+            Trace.TraceInformation("Application is exiting to install a new version");
+            return;
+         }
+
          bool runningAsUwp = new DesktopBridge.Helpers().IsRunningAsUwp();
          Trace.TraceInformation(String.Format("Running as UWP = {0}", runningAsUwp ? "Yes" : "No"));
          if (runningAsUwp)
