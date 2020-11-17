@@ -67,12 +67,19 @@ namespace mrHelper.Common.Tools
 
       public static string ConvertNewlineUnixToWindows(string input)
       {
-         return input.Replace("\n", "\r\n");
+         return isUnixNewline(input) ? input.Replace("\n", "\r\n") : input;
       }
 
       public static string ConvertNewlineWindowsToUnix(string input)
       {
-         return input.Replace("\r\n", "\n");
+         return isUnixNewline(input) ? input : input.Replace("\r\n", "\n");
+      }
+
+      private static bool isUnixNewline(string input)
+      {
+         int crCount = System.Text.RegularExpressions.Regex.Matches(input, "\r").Count;
+         int lfCount = System.Text.RegularExpressions.Regex.Matches(input, "\n").Count;
+         return lfCount > crCount * 2;
       }
 
       public static string GetGitLabAttachmentPrefix(string host, string projectname)
