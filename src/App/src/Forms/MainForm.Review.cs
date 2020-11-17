@@ -149,6 +149,7 @@ namespace mrHelper.App.Forms
             mrk.IId, (storage?.Path ?? "null")));
 
          labelOperationStatus.Text = "Discussions opened";
+         ensureMergeRequestIsReviewed(mrk);
       }
 
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
