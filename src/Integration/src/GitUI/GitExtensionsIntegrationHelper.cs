@@ -122,6 +122,7 @@ namespace mrHelper.Integration.GitUI
             new XElement("Arguments", arguments),
             new XElement("Command", gitBashFilePath),
             new XElement("Enabled", "true"),
+            new XElement("Icon", "BranchLocal"),
             new XElement("AddToRevisionGridContextMenu", "true"),
             new XElement("OnEvent", "ShowInUserMenuBar"),
             new XElement("AskConfirmation", "false"),
