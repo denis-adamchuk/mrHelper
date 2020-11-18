@@ -16,7 +16,7 @@ namespace mrHelper.App.Forms
    {
       private void AcceptMergeRequestForm_Load(object sender, EventArgs e)
       {
-         invokeFetchAndApply(true);
+         invokeFetchAndApplyOnInitialize();
       }
 
       private void buttonDiscussions_Click(object sender, EventArgs e)
@@ -213,7 +213,7 @@ namespace mrHelper.App.Forms
             comboBoxCommit.Items.AddRange(_commits.ToArray());
             if (comboBoxCommit.Items.Count > 0)
             {
-               comboBoxCommit.SelectedIndex = 0;
+               comboBoxCommit.SelectedIndex = comboBoxCommit.Items.Count - 1;
             }
          }
 
@@ -261,7 +261,7 @@ namespace mrHelper.App.Forms
          switch (_mergeStatus)
          {
             case MergeStatus.NotAvailable:
-               Debug.Assert(false); // why dependencies resolved then?
+            case MergeStatus.Unchecked:
                labelMergeStatus.Text = "Checking for conflicts...";
                labelMergeStatus.ForeColor = Color.Blue;
                buttonMerge.Enabled = false;

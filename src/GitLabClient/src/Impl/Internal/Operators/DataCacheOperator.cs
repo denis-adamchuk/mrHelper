@@ -38,6 +38,17 @@ namespace mrHelper.GitLabClient.Operators
                            await gl.Projects.Get(projectName).LoadTaskAsync())));
       }
 
+      internal Task<MergeRequest> GetMergeRequestAsync(string projectName, int iid, bool? includeRebaseInProgress = null)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (MergeRequest)await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(projectName).MergeRequests.Get(iid).LoadTaskAsync(includeRebaseInProgress))));
+      }
+
       internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchQuery searchQuery)
       {
          return callWithSharedClient(

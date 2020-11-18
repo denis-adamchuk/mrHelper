@@ -22,23 +22,16 @@ namespace mrHelper.GitLabClient.Loaders
       {
          bool fetchOnlyOpenMergeRequests = _updateOnlyOpened;
 
-         IEnumerable<MergeRequest> mergeRequests = await call(
-            () => _operator.SearchMergeRequestsAsync(
-               new SearchQuery
-               {
-                  IId = mrk.IId,
-                  ProjectName = mrk.ProjectKey.ProjectName,
-                  State = fetchOnlyOpenMergeRequests ? "opened" : null,
-                  MaxResults = 1
-               }),
+         MergeRequest mergeRequest = await call(
+            () => _operator.GetMergeRequestAsync(mrk.ProjectKey.ProjectName, mrk.IId, true),
             String.Format("Cancelled loading MR with IId {0}", mrk.IId),
             String.Format("Cannot load merge request with IId {0}", mrk.IId));
 
-         if (mergeRequests.Any())
+         if (mergeRequest != null && (!fetchOnlyOpenMergeRequests || mergeRequest.State == "opened"))
          {
             DateTime? oldUpdatedAt = _cacheUpdater.Cache.GetMergeRequest(mrk)?.Updated_At;
-            DateTime newUpdatedAt = mergeRequests.First().Updated_At;
-            _cacheUpdater.UpdateMergeRequest(mrk, mergeRequests.First());
+            DateTime newUpdatedAt = mergeRequest.Updated_At;
+            _cacheUpdater.UpdateMergeRequest(mrk, mergeRequest);
 
             if (!oldUpdatedAt.HasValue || oldUpdatedAt < newUpdatedAt)
             {

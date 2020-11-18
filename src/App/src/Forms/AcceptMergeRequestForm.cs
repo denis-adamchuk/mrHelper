@@ -242,8 +242,21 @@ namespace mrHelper.App.Forms
          }
          else if (mergeRequest.Merge_Error == null)
          {
-            _rebaseState = mergeRequest.Has_Conflicts
-               ? RemoteRebaseState.Required : RemoteRebaseState.SucceededOrNotNeeded;
+            if (mergeRequest.Has_Conflicts)
+            {
+               _rebaseState = RemoteRebaseState.Required;
+            }
+            else if (_rebaseState == RemoteRebaseState.InProgress)
+            {
+               _rebaseState = RemoteRebaseState.SucceededOrNotNeeded;
+            }
+            else if (_rebaseState == RemoteRebaseState.NotAvailable || _rebaseState == RemoteRebaseState.Failed)
+            {
+               // We have to set initial state of a dialog to Required because it is not possible to tell from GitLab
+               // API if MR needs Rebase or not because has_conflicts flag value can be false even when
+               // GitLab Web UI tells that fast-forwarding merge is not possible and Rebase is needed.
+               _rebaseState = RemoteRebaseState.Required;
+            }
          }
          else
          {
@@ -298,8 +311,23 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            _mergeStatus = mergeRequest.Merge_Status == "can_be_merged"
-               ? MergeStatus.CanBeMerged : MergeStatus.CannotBeMerged;
+            if (mergeRequest.Merge_Status == "can_be_merged")
+            {
+               _mergeStatus = MergeStatus.CanBeMerged;
+            }
+            else if (mergeRequest.Merge_Status == "cannot_be_merged")
+            {
+               _mergeStatus = MergeStatus.CannotBeMerged;
+            }
+            else if (mergeRequest.Merge_Status == "unchecked")
+            {
+               _mergeStatus = MergeStatus.Unchecked;
+            }
+            else
+            {
+               Debug.Assert(false); // unknown Merge_Status
+               _mergeStatus = MergeStatus.NotAvailable;
+            }
          }
 
          if (prevStatus != _mergeStatus)
@@ -333,7 +361,7 @@ namespace mrHelper.App.Forms
          {
             _synchronizationTimer = new Timer
             {
-               Interval = rebaseStatusUpdateInterval
+               Interval = mergeRequestUpdateInterval
             };
             _synchronizationTimer.Start();
          }
@@ -359,34 +387,45 @@ namespace mrHelper.App.Forms
 
       private void enableProcessingTimer()
       {
-         if (!_needProcessSynchronizationTimer)
+         if (_synchronizationTimerSuspendCount > 0)
          {
-            _needProcessSynchronizationTimer = true;
+            _synchronizationTimerSuspendCount--;
          }
       }
 
       private void disableProcessingTimer()
       {
-         if (_needProcessSynchronizationTimer)
-         {
-            _needProcessSynchronizationTimer = false;
-         }
+         _synchronizationTimerSuspendCount++;
       }
 
       private void onSynchronizationTimer(object sender, EventArgs e)
       {
-         if (_needProcessSynchronizationTimer)
+         if (IsHandleCreated)
          {
-            invokeFetchAndApply(false);
+            invokeFetchAndApplyOnTimer();
          }
       }
 
-      private void invokeFetchAndApply(bool isSynchronousFetch)
+      private void invokeFetchAndApplyOnInitialize()
       {
-         if (IsHandleCreated)
+         BeginInvoke(new Action(() => applyMergeRequest(fetchUpdatedMergeRequest(_getCache()))), null);
+      }
+
+      private void invokeFetchAndApplyOnTimer()
+      {
+         BeginInvoke(new Action(async () =>
          {
-            BeginInvoke(new Action(async () => applyMergeRequest(await fetchUpdatedMergeRequest(isSynchronousFetch))), null);
-         }
+            if (_synchronizationTimerSuspendCount != 0)
+            {
+               return;
+            }
+
+            MergeRequest mergeRequest = await fetchUpdatedMergeRequestAsync();
+            if (_synchronizationTimerSuspendCount == 0)
+            {
+               applyMergeRequest(mergeRequest);
+            }
+         }), null);
       }
 
       private IMergeRequestEditor getEditor()
@@ -402,26 +441,31 @@ namespace mrHelper.App.Forms
             .GetMergeRequestEditor();
       }
 
-      async private Task<MergeRequest> fetchUpdatedMergeRequest(bool isSynchronousFetch)
+      async private Task<MergeRequest> fetchUpdatedMergeRequestAsync()
       {
          disableProcessingTimer();
          try
          {
-            DataCache dataCache = isSynchronousFetch ? _getCache() : await _fetchCache();
-            if (dataCache == null || dataCache.MergeRequestCache == null || dataCache.ProjectCache == null)
-            {
-               Debug.Assert(false);
-               return null;
-            }
-
-            checkProjectProperties(dataCache.ProjectCache);
-            refreshCommits(dataCache.MergeRequestCache);
-            return dataCache.MergeRequestCache.GetMergeRequest(_mergeRequestKey);
+            DataCache dataCache = await _fetchCache();
+            return fetchUpdatedMergeRequest(dataCache);
          }
          finally
          {
             enableProcessingTimer();
          }
+      }
+
+      private MergeRequest fetchUpdatedMergeRequest(DataCache dataCache)
+      {
+         if (dataCache == null || dataCache.MergeRequestCache == null || dataCache.ProjectCache == null)
+         {
+            Debug.Assert(false);
+            return null;
+         }
+
+         checkProjectProperties(dataCache.ProjectCache);
+         refreshCommits(dataCache.MergeRequestCache);
+         return dataCache.MergeRequestCache.GetMergeRequest(_mergeRequestKey);
       }
 
       async private Task<MergeRequestRebaseResponse> rebaseAsync()
@@ -440,7 +484,14 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            enableProcessingTimer();
+            BeginInvoke(new Action(async () =>
+            {
+               // Don't enable timer processing immediately to prevent flickering of Rebase state:
+               // a timer might bring us an outdated state of rebase_in_progress flag.
+               // This delay is a way to skip one timer occurrence.
+               await Task.Delay(mergeRequestUpdateInterval);
+               enableProcessingTimer();
+            }), null);
             traceInformation("[AcceptMergeRequestForm] Rebase operation finished");
          }
       }
@@ -592,10 +643,10 @@ namespace mrHelper.App.Forms
             message, _mergeRequestKey.IId, _mergeRequestKey.ProjectKey.ProjectName);
       }
 
-      private static readonly int rebaseStatusUpdateInterval = 1000; // ms
+      private static readonly int mergeRequestUpdateInterval = 1000; // ms
       private static Timer _synchronizationTimer;
       private static int _synchronizationTimerUsers = 0;
-      private bool _needProcessSynchronizationTimer;
+      private int _synchronizationTimerSuspendCount = 0;
 
       private readonly string _repositoryPath;
       private readonly MergeRequestKey _mergeRequestKey;
@@ -631,7 +682,8 @@ namespace mrHelper.App.Forms
       {
          NotAvailable,
          CanBeMerged,
-         CannotBeMerged
+         CannotBeMerged,
+         Unchecked
       }
 
       private User _author;

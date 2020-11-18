@@ -1007,7 +1007,7 @@ namespace mrHelper.App.Forms
          buttonCreateNew.Enabled = enabled;
          MergeRequestListViewContextMenu contextMenu = getListView(EDataCacheType.Live).GetContextMenu();
          contextMenu?.SetEditActionEnabled(enabled);
-         contextMenu?.SetMergeActionEnabled(true);
+         contextMenu?.SetMergeActionEnabled(enabled);
       }
 
       private void enableSimpleSearchControls(bool enabled)
