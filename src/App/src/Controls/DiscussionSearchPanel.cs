@@ -6,11 +6,12 @@ namespace mrHelper.App.Controls
 {
    public partial class DiscussionSearchPanel : UserControl
    {
-      internal DiscussionSearchPanel(Action<SearchQuery, bool> onFind)
+      internal DiscussionSearchPanel(Action<SearchQuery, bool> onFind, Action onTextChanged)
       {
          InitializeComponent();
 
          _onFind = onFind;
+         _onTextChanged = onTextChanged;
          labelFoundCount.Visible = false;
          enableButtons();
       }
@@ -43,6 +44,7 @@ namespace mrHelper.App.Controls
       private void textBoxSearch_TextChanged(object sender, EventArgs e)
       {
          enableButtons();
+         _onTextChanged();
       }
 
       private void textBoxSearch_KeyDown(object sender, KeyEventArgs e)
@@ -58,7 +60,8 @@ namespace mrHelper.App.Controls
          buttonFindNext.PerformClick();
       }
 
-      readonly Action<SearchQuery, bool> _onFind;
+      private readonly Action<SearchQuery, bool> _onFind;
+      private readonly Action _onTextChanged;
    }
 }
 

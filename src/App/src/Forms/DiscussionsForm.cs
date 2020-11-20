@@ -184,7 +184,7 @@ namespace mrHelper.App.Forms
 
          ActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction, _commands,
             onCommandAction);
-         SearchPanel = new DiscussionSearchPanel(onFind);
+         SearchPanel = new DiscussionSearchPanel(onFind, resetSearch);
          FontSelectionPanel = new DiscussionFontSelectionPanel(font => applyFont(font));
 
          Controls.Add(FilterPanel);

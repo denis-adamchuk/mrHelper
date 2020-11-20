@@ -119,18 +119,28 @@ namespace mrHelper.App.Helpers
 
       internal TextSearchResult? FindNext(Control control, int startPosition)
       {
-         int iCurrent = 0;
-         while (_allControls[iCurrent] != control) ++iCurrent;
+         int iDefaultCurrent = 0;
+         int iCurrent = iDefaultCurrent;
+         while (iCurrent < _allControls.Length && _allControls[iCurrent] != control) ++iCurrent;
+         if (iCurrent >= _allControls.Length)
+         {
+            iCurrent = iDefaultCurrent;
+         }
 
-         return find(0, _allControls.Count(), iCurrent, startPosition, true);
+         return iCurrent < _allControls.Length ? find(0, _allControls.Length, iCurrent, startPosition, true) : null;
       }
 
       internal TextSearchResult? FindPrev(Control control, int startPosition)
       {
-         int iCurrent = _allControls.Count() - 1;
-         while (_allControls[iCurrent] != control) --iCurrent;
+         int iDefaultCurrent = _allControls.Count() - 1;
+         int iCurrent = iDefaultCurrent;
+         while (iCurrent >= 0 && _allControls[iCurrent] != control) --iCurrent;
+         if (iCurrent < 0)
+         {
+            iCurrent = iDefaultCurrent;
+         }
 
-         return find(_allControls.Count() - 1, -1, iCurrent, startPosition, false);
+         return iCurrent >= 0 ? find(_allControls.Count() - 1, -1, iCurrent, startPosition, false) : null;
       }
 
       internal TextSearchResult? find(int iStart, int iEnd, int iCurrent, int iCurrentInsideControlPosition,
