@@ -189,18 +189,17 @@ namespace mrHelper.App.Forms
          bool wasEnabled = comboBoxProjectName.Enabled;
          comboBoxProjectName.Enabled = isEnabled;
 
-         if (!isEnabled && wasEnabled)
-         {
-            comboBoxProjectName.Items.Clear();
-         }
-         else if (!wasEnabled && isEnabled)
+         if (!wasEnabled && isEnabled)
          {
             DataCache dataCache = getDataCache(EDataCacheType.Live);
             string[] projectNames = dataCache?.ProjectCache?.GetProjects()
                .OrderBy(project => project.Path_With_Namespace)
                .Select(project => project.Path_With_Namespace)
                .ToArray() ?? Array.Empty<string>();
-            string defaultProjectName = getDefaultProjectName();
+            string selectedProject = (string)comboBoxProjectName.SelectedItem;
+            string previousSelection = selectedProject == null ? String.Empty : selectedProject;
+            string defaultProjectName = projectNames.SingleOrDefault(name => name == previousSelection) == null
+               ? getDefaultProjectName() : previousSelection;
             WinFormsHelpers.FillComboBox(comboBoxProjectName, projectNames,
                projectName => projectName == defaultProjectName);
          }
@@ -216,16 +215,15 @@ namespace mrHelper.App.Forms
          bool wasEnabled = comboBoxUser.Enabled;
          comboBoxUser.Enabled = isEnabled;
 
-         if (!isEnabled && wasEnabled)
-         {
-            comboBoxUser.Items.Clear();
-         }
-         else if (!wasEnabled && isEnabled)
+         if (!wasEnabled && isEnabled)
          {
             DataCache dataCache = getDataCache(EDataCacheType.Live);
             User[] users = dataCache?.UserCache?.GetUsers()
                .OrderBy(user => user.Name).ToArray() ?? Array.Empty<User>();
-            string defaultUserFullName = getCurrentUser().Name;
+            User selectedUser = (User)comboBoxUser.SelectedItem;
+            string previousSelection = selectedUser == null ? String.Empty : selectedUser.Name;
+            string defaultUserFullName = users.SingleOrDefault(user => user.Name == previousSelection) == null
+               ? getCurrentUser().Name : previousSelection;
             WinFormsHelpers.FillComboBox(comboBoxUser, users, user => user.Name == defaultUserFullName);
          }
 
