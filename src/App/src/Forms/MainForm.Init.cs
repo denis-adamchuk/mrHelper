@@ -294,16 +294,20 @@ namespace mrHelper.App.Forms
       private void createListViewContextMenu()
       {
          getListView(EDataCacheType.Live).AssignContextMenu(new MergeRequestListViewContextMenu(
+            showDiscussionsForSelectedMergeRequest,
             refreshSelectedMergeRequest,
             editSelectedMergeRequest,
             acceptSelectedMergeRequest,
-            closeSelectedMergeRequest));
+            closeSelectedMergeRequest,
+            showDiscussionsForSelectedMergeRequest));
 
          getListView(EDataCacheType.Recent).AssignContextMenu(new MergeRequestListViewContextMenu(
+            showDiscussionsForSelectedMergeRequest,
             refreshSelectedMergeRequest,
             null,
             null,
-            null));
+            null,
+            showDiscussionsForSelectedMergeRequest));
       }
 
       private void startEventPendingTimer(Func<bool> onCheck, int checkInterval, Action onEvent)

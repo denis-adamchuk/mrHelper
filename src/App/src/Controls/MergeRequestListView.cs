@@ -679,6 +679,12 @@ namespace mrHelper.App.Controls
          base.OnMouseDown(e);
       }
 
+      protected override void OnMouseDoubleClick(MouseEventArgs e)
+      {
+         base.OnMouseDoubleClick(e);
+         GetContextMenu().LaunchDefaultAction();
+      }
+
       protected override void OnColumnWidthChanged(ColumnWidthChangedEventArgs e)
       {
          base.OnColumnWidthChanged(e);
