@@ -87,9 +87,9 @@ namespace mrHelper.App.Forms
 
          bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
          Form formExisting = WinFormsHelpers.FindFormByTag("DiscussionsForm", doesMatchTag);
-         if (formExisting != null)
+         if (formExisting is DiscussionsForm existingDiscussionsForm)
          {
-            formExisting.Activate();
+            existingDiscussionsForm.Restore();
             Trace.TraceInformation(String.Format("[MainForm] Activated an existing Discussions view for MR {0}", mrk.IId));
             return;
          }

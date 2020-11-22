@@ -147,6 +147,21 @@ namespace mrHelper.App.Forms
          FontSelectionPanel.Focus();
       }
 
+      protected override void OnResize(EventArgs e)
+      {
+         base.OnResize(e);
+         if (this.WindowState != FormWindowState.Minimized)
+         {
+            _previousState = this.WindowState;
+         }
+      }
+
+      public void Restore()
+      {
+         this.WindowState = _previousState;
+         Activate();
+      }
+
       private void DiscussionsForm_Shown(object sender, EventArgs e)
       {
          // Subscribe to layout changes during Form lifetime
@@ -213,7 +228,7 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            MostRecentFocusedDiscussionControl?.Focus();
+            _mostRecentFocusedDiscussionControl?.Focus();
             continueSearch(forward);
          }
       }
@@ -628,7 +643,7 @@ namespace mrHelper.App.Forms
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
-               sender => MostRecentFocusedDiscussionControl = sender,
+               sender => _mostRecentFocusedDiscussionControl = sender,
                _htmlTooltip, onAddCommentAction, onAddThreadAction, _commands, onCommandAction,
                _diffContextPosition, _discussionColumnWidth, _needShiftReplies)
             {
@@ -752,7 +767,7 @@ namespace mrHelper.App.Forms
          }
 
          int startPosition = 0;
-         Control control = MostRecentFocusedDiscussionControl ?? ActiveControl;
+         Control control = _mostRecentFocusedDiscussionControl ?? ActiveControl;
          if (control is ITextControl textControl && textControl.HighlightState != null)
          {
             startPosition = forward
@@ -775,7 +790,7 @@ namespace mrHelper.App.Forms
       {
          TextSearch = null;
          SearchPanel.DisplayFoundCount(null);
-         MostRecentFocusedDiscussionControl = null;
+         _mostRecentFocusedDiscussionControl = null;
          TextSearchResult?.Control.ClearHighlight();
          TextSearchResult = null;
       }
@@ -909,7 +924,8 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search
       /// </summary>
-      private Control MostRecentFocusedDiscussionControl;
+      private Control _mostRecentFocusedDiscussionControl;
+      private FormWindowState _previousState;
       private readonly IEnumerable<ICommand> _commands;
       private readonly HtmlToolTipEx _htmlTooltip = new HtmlToolTipEx
       {
