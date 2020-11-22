@@ -359,7 +359,7 @@ namespace mrHelper.App.Forms
 
          string errorMessage = String.Format("Cannot open URL {0}", url);
          ExceptionHandlers.Handle(errorMessage, ex);
-         labelOperationStatus.Text = errorMessage;
+         addOperationRecord(errorMessage);
       }
 
       async private Task restartWorkflowByUrlAsync(string hostname)
@@ -383,9 +383,10 @@ namespace mrHelper.App.Forms
             // We need to update the MR list here because cached one is possible outdated
             if (updateIfNeeded)
             {
-               labelOperationStatus.Text = String.Format(
-                  "Merge Request with IId {0} is not found in the cache, updating the list...", mrk.IId);
+               addOperationRecord(String.Format(
+                  "Merge Request with IId {0} is not found in the cache. List update has started.", mrk.IId));
                await checkForUpdatesAsync(getDataCache(EDataCacheType.Live), null);
+               addOperationRecord("Merge request list update has completed");
                if (getHostName() != mrk.ProjectKey.HostName || dataCache.MergeRequestCache == null)
                {
                   throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
@@ -537,13 +538,13 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         labelOperationStatus.Text = String.Format("Checking merge request at {0}...", url);
+         addOperationRecord(String.Format("Checking merge request at {0} started", url));
          MergeRequest mergeRequest = await searchMergeRequestAsync(mrk);
          if (mergeRequest == null)
          {
             throw new UrlConnectionException("Merge request does not exist. ", null);
          }
-         labelOperationStatus.Text = String.Empty;
+         addOperationRecord(String.Format("Checking merge request at {0} has completed", url));
 
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          Debug.Assert(dataCache.ConnectionContext != null);

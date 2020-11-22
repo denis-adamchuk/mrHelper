@@ -43,7 +43,7 @@ namespace mrHelper.App.Forms
                {
                   message = wx.UserMessage;
                }
-               labelOperationStatus.Text = message;
+               addOperationRecord(message);
                MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return true;
@@ -95,13 +95,12 @@ namespace mrHelper.App.Forms
             hostname, Program.Settings.WorkflowType));
 
          dropConnectionToHost();
-         labelOperationStatus.Text = String.Format("Connecting to {0}...", hostname);
-
          if (String.IsNullOrWhiteSpace(hostname))
          {
             return;
          }
 
+         addOperationRecord(String.Format("Connecting to {0}...", hostname));
          if (Program.Settings.GetAccessToken(hostname) == String.Empty)
          {
             throw new UnknownHostException(hostname);
@@ -118,6 +117,7 @@ namespace mrHelper.App.Forms
             await initializeLabelListIfEmpty(hostname);
             await startUserBasedWorkflowAsync(hostname);
          }
+         addOperationRecord(String.Format("Connection to {0} is established", hostname));
       }
 
       private async Task startProjectBasedWorkflowAsync(string hostname)
@@ -216,12 +216,12 @@ namespace mrHelper.App.Forms
                listView.CreateGroupForProject(projectKey, false);
             }
 
-            labelOperationStatus.Text = String.Format("Loading merge requests of {0} project{1} from {2}...",
-               projects.Count(), projects.Count() > 1 ? "s" : "", hostname);
+            addOperationRecord(String.Format("Loading merge requests of {0} project{1} from {2} has started",
+               projects.Count(), projects.Count() > 1 ? "s" : "", hostname));
          }
          else
          {
-            labelOperationStatus.Text = String.Format("Loading merge requests from {0}...", hostname);
+            addOperationRecord(String.Format("Loading merge requests from {0} has started", hostname));
          }
       }
 
@@ -241,12 +241,23 @@ namespace mrHelper.App.Forms
                                    && (dataCache?.UserCache?.GetUsers()?.Any() ?? false),
                                 ProjectAndUserCacheCheckTimerInterval,
                                 () => setMergeRequestEditEnabled(true));
+         addOperationRecord("Project list download has started");
          startEventPendingTimer(() => (dataCache?.ProjectCache?.GetProjects()?.Any() ?? false),
                                 ProjectAndUserCacheCheckTimerInterval,
-                                () => setSearchByProjectEnabled(true));
+                                () =>
+                                {
+                                   addOperationRecord("Project list download has finished. " +
+                                                      "It is possible to create/edit and accept merge requests");
+                                   setSearchByProjectEnabled(true);
+                                });
+         addOperationRecord("User list download has started");
          startEventPendingTimer(() => (dataCache?.UserCache?.GetUsers()?.Any() ?? false),
                                 ProjectAndUserCacheCheckTimerInterval,
-                                () => setSearchByAuthorEnabled(true));
+                                () =>
+                                {
+                                   addOperationRecord("User list download has finished");
+                                   setSearchByAuthorEnabled(true);
+                                });
 
          IEnumerable<MergeRequestKey> closedReviewed = gatherClosedReviewedMergeRequests(dataCache, hostname);
          addRecentMergeRequestKeys(closedReviewed);
@@ -257,7 +268,7 @@ namespace mrHelper.App.Forms
          updateMergeRequestList(EDataCacheType.Live);
          enableMergeRequestListControls(true);
          enableSimpleSearchControls(true);
-         labelOperationStatus.Text = "Merge requests loaded";
+         addOperationRecord("Loading merge requests has completed");
 
          IEnumerable<ProjectKey> projects = getDataCache(EDataCacheType.Live).MergeRequestCache.GetProjects();
          foreach (ProjectKey projectKey in projects)
@@ -299,7 +310,7 @@ namespace mrHelper.App.Forms
          GitLabClient.ProjectAccessor projectAccessor = Shortcuts.GetProjectAccessor(
             new GitLabInstance(hostname, Program.Settings), _modificationNotifier);
 
-         labelOperationStatus.Text = "Preparing workflow to the first launch...";
+         addOperationRecord("Preparing workflow to the first launch has started");
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
             hostname, Program.Settings);
          List<Tuple<string, bool>> upgraded = new List<Tuple<string, bool>>();
@@ -317,7 +328,7 @@ namespace mrHelper.App.Forms
          ConfigurationHelper.SetProjectsForHost(hostname, upgraded, Program.Settings);
          updateProjectsListView();
          Program.Settings.SelectedProjectsUpgraded = true;
-         labelOperationStatus.Text = "Workflow prepared.";
+         addOperationRecord("Workflow has been prepared to the first launch");
       }
 
       async private Task initializeLabelListIfEmpty(string hostname)
@@ -331,7 +342,7 @@ namespace mrHelper.App.Forms
             new GitLabInstance(hostname, Program.Settings));
 
          bool migratedLabels = false;
-         labelOperationStatus.Text = "Preparing workflow to the first launch...";
+         addOperationRecord("Preparing workflow to the first launch has started");
          List<Tuple<string, bool>> labels = new List<Tuple<string, bool>>();
          MergeRequestFilterState filter = _mergeRequestFilter.Filter;
          if (filter.Enabled)
@@ -365,7 +376,7 @@ namespace mrHelper.App.Forms
          }
          ConfigurationHelper.SetUsersForHost(hostname, labels, Program.Settings);
          updateUsersListView();
-         labelOperationStatus.Text = "Workflow prepared.";
+         addOperationRecord("Workflow has been prepared to the first launch");
 
          if (Program.Settings.ShowWarningOnFilterMigration)
          {
@@ -504,7 +515,7 @@ namespace mrHelper.App.Forms
 
          if (getHostName() != String.Empty)
          {
-            Trace.TraceInformation("[MainForm] User decided to Reload List");
+            addOperationRecord("List refresh has started");
 
             string oldButtonText = buttonReloadList.Text;
             onUpdating();
@@ -513,7 +524,7 @@ namespace mrHelper.App.Forms
                () =>
                {
                   onUpdated(oldButtonText);
-                  Trace.TraceInformation("[MainForm] Finished updating by user request");
+                  addOperationRecord("List refresh has completed");
                });
          }
       }

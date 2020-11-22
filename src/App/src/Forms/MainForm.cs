@@ -41,6 +41,8 @@ namespace mrHelper.App.Forms
       private static readonly int NewOrClosedMergeRequestRefreshListTimerInterval = 1000 * 3; // 3 seconds
       private static readonly int PseudoTimerInterval = 100 * 1; // 0.1 second
 
+      private static readonly int OperationRecordHistoryDepth = 10;
+
       private bool _forceMaximizeOnNextRestore;
       private bool _applySplitterDistanceOnNextRestore;
       private FormWindowState _prevWindowState;
@@ -99,6 +101,7 @@ namespace mrHelper.App.Forms
       private readonly Dictionary<MergeRequestKey, string> _latestStorageUpdateStatus =
          new Dictionary<MergeRequestKey, string>();
       private readonly Dictionary<string, User> _currentUser = new Dictionary<string, User>();
+      private readonly List<string> _operationRecordHistory = new List<string>();
 
       // TODO Data caches should be hidden into a holder and accessed via getDataCache() only
       private DataCache _liveDataCache;

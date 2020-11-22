@@ -118,7 +118,7 @@ namespace mrHelper.App.Forms
 
          MergeRequestKey mrk = new MergeRequestKey(fmk.Value.ProjectKey, fmk.Value.MergeRequest.IId);
          requestUpdates(getDataCache(type), mrk, 100, () =>
-            labelOperationStatus.Text = String.Format("Merge Request !{0} refreshed", mrk.IId));
+            addOperationRecord(String.Format("Merge Request !{0} has been refreshed", mrk.IId)));
       }
 
       private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties,
@@ -164,7 +164,7 @@ namespace mrHelper.App.Forms
             getCommitStorage(mrk.ProjectKey, false)?.Path,
             () =>
             {
-               labelOperationStatus.Text = String.Format("Merge Request !{0} has been merged successfully", mrk.IId);
+               addOperationRecord(String.Format("Merge Request !{0} has been merged successfully", mrk.IId));
                requestUpdates(EDataCacheType.Live, null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
             },
             showDiscussionsFormAsync,
@@ -234,8 +234,7 @@ namespace mrHelper.App.Forms
                }
 
                updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName, dataCache.TotalTimeCache);
-
-               labelOperationStatus.Text = "Total spent time updated";
+               addOperationRecord("Total spent time has been updated");
 
                Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
                   mrk.IId, mrk.ProjectKey.ProjectName, diff.ToString()));
@@ -265,6 +264,7 @@ namespace mrHelper.App.Forms
          updateTaskbarIcon();
 
          onTimerStarted();
+         addOperationRecord("Time tracking has started");
       }
 
       private void stopTimeTrackingTimer()
@@ -292,7 +292,7 @@ namespace mrHelper.App.Forms
          TimeSpan span = timeTracker.Elapsed;
          if (span.TotalSeconds > 1)
          {
-            labelOperationStatus.Text = "Sending tracked time...";
+            addOperationRecord("Sending tracked time has started");
             string duration = String.Format("{0}h {1}m {2}s",
                span.ToString("hh"), span.ToString("mm"), span.ToString("ss"));
             string status = String.Format("Tracked time {0} sent successfully", duration);
@@ -316,11 +316,11 @@ namespace mrHelper.App.Forms
                ExceptionHandlers.Handle(status, ex);
                MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            labelOperationStatus.Text = status;
+            addOperationRecord(status);
          }
          else
          {
-            labelOperationStatus.Text = "Tracked time less than 1 second is ignored";
+            addOperationRecord("Tracked time less than 1 second is ignored");
          }
 
          onTimerStopped(totalTimeCache);
@@ -339,7 +339,7 @@ namespace mrHelper.App.Forms
          _timeTracker.Cancel();
          _timeTracker = null;
          _timeTrackingTabPage = null;
-         labelOperationStatus.Text = "Time tracking cancelled";
+         addOperationRecord("Time tracking cancelled");
 
          onTimerStopped(getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache);
       }
@@ -353,7 +353,7 @@ namespace mrHelper.App.Forms
 
             bool res = await DiscussionHelper.AddCommentAsync(
                mrk, mergeRequest.Title, _modificationNotifier, getCurrentUser());
-            labelOperationStatus.Text = res ? "Added a comment" : "Comment is not added";
+            addOperationRecord(res ? "New comment has been added" : "Comment has not been added");
          }));
       }
 
@@ -366,14 +366,14 @@ namespace mrHelper.App.Forms
 
             bool res = (await DiscussionHelper.AddThreadAsync(mrk, mergeRequest.Title, _modificationNotifier,
                getCurrentUser(), getDataCache(getCurrentTabDataCacheType()))) != null;
-            labelOperationStatus.Text = res ? "Added a discussion thread" : "Discussion thread is not added";
+            addOperationRecord(res ? "A new discussion thread has been added" : "Discussion thread has not been added");
          }));
       }
 
       async private Task createNewMergeRequestAsync(SubmitNewMergeRequestParameters parameters, string firstNote)
       {
          setMergeRequestEditEnabled(false);
-         labelOperationStatus.Text = "Creating a merge request at GitLab...";
+         addOperationRecord("Creating a merge request at GitLab has started");
 
          GitLabInstance gitLabInstance = new GitLabInstance(parameters.ProjectKey.HostName, Program.Settings);
          MergeRequestKey? mrkOpt = await MergeRequestEditHelper.SubmitNewMergeRequestAsync(gitLabInstance,
@@ -382,16 +382,15 @@ namespace mrHelper.App.Forms
          {
             // all error handling is done at the callee side
             string message = "Merge Request has not been created";
-            labelOperationStatus.Text = message;
+            addOperationRecord(message);
             setMergeRequestEditEnabled(true);
-            Trace.TraceInformation("[MainForm] {0}", message);
             return;
          }
 
          requestUpdates(EDataCacheType.Live, null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
 
-         labelOperationStatus.Text = String.Format("Merge Request !{0} has been created in project {1}",
-            mrkOpt.Value.IId, parameters.ProjectKey.ProjectName);
+         addOperationRecord(String.Format("Merge Request !{0} has been created in project {1}",
+            mrkOpt.Value.IId, parameters.ProjectKey.ProjectName));
          setMergeRequestEditEnabled(true);
 
          _newMergeRequestDialogStatesByHosts[getHostName()] = new NewMergeRequestProperties(
@@ -430,8 +429,7 @@ namespace mrHelper.App.Forms
          string statusMessage = modified
             ? String.Format("Merge Request !{0} has been modified", mrk.IId)
             : String.Format("No changes have been made to Merge Request !{0}", mrk.IId);
-         labelOperationStatus.Text = statusMessage;
-         Trace.TraceInformation("[MainForm] {0}", statusMessage);
+         addOperationRecord(statusMessage);
 
          if (modified)
          {
@@ -455,8 +453,7 @@ namespace mrHelper.App.Forms
             await MergeRequestEditHelper.CloseMergeRequest(gitLabInstance, _modificationNotifier, mrk);
 
             string statusMessage = String.Format("Merge Request !{0} has been closed", mrk.IId);
-            labelOperationStatus.Text = statusMessage;
-            Trace.TraceInformation("[MainForm] {0}", statusMessage);
+            addOperationRecord(statusMessage);
 
             requestUpdates(EDataCacheType.Live, null, new int[] { NewOrClosedMergeRequestRefreshListTimerInterval });
          }

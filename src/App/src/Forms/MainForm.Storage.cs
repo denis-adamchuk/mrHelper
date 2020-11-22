@@ -10,7 +10,6 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
-using mrHelper.App.Controls;
 
 namespace mrHelper.App.Forms
 {
@@ -20,7 +19,7 @@ namespace mrHelper.App.Forms
       {
          if (!_mergeRequestsUpdatingByUserRequest.Any())
          {
-            return String.Empty;
+            return "All storages are up-to-date";
          }
 
          var mergeRequestGroups = _mergeRequestsUpdatingByUserRequest
@@ -123,8 +122,7 @@ namespace mrHelper.App.Forms
             MessageBox.Show("Storage folder is changed.\n Please restart Diff Tool if you have already launched it.",
                "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-            labelOperationStatus.Text = "File storage folder changed";
-            Trace.TraceInformation(String.Format("[MainForm] File storage changed to {0}", newFolder));
+            addOperationRecord(String.Format("[MainForm] File storage path has changed to {0}", newFolder));
 
             Trace.TraceInformation(String.Format("[MainForm] Reconnecting after file storage path change"));
             reconnect();
@@ -214,7 +212,7 @@ namespace mrHelper.App.Forms
          {
             _mergeRequestsUpdatingByUserRequest.Add(mrk);
             updateStorageDependentControlState(mrk);
-            labelOperationStatus.Text = getStorageSummaryUpdateInformation();
+            addOperationRecord(getStorageSummaryUpdateInformation());
             await storage.Updater.StartUpdate(contextProvider, status => onStorageUpdateProgressChange(status, mrk),
                () => onStorageUpdateStateChange());
             return true;
@@ -225,13 +223,13 @@ namespace mrHelper.App.Forms
             {
                MessageBox.Show("Cannot perform requested action without up-to-date storage", "Warning",
                   MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               labelOperationStatus.Text = "Storage update cancelled by user";
+               addOperationRecord("Storage update cancelled by user");
             }
             else if (ex is LocalCommitStorageUpdaterFailedException fex)
             {
                ExceptionHandlers.Handle(ex.Message, ex);
                MessageBox.Show(fex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               labelOperationStatus.Text = "Failed to update storage";
+               addOperationRecord("Failed to update storage");
             }
             else if (ex is LocalCommitStorageUpdaterLimitException mex)
             {
@@ -243,7 +241,7 @@ namespace mrHelper.App.Forms
                string extraMessage = "If there are multiple revisions try selecting two other ones";
                MessageBox.Show(mex.OriginalMessage + ". " + extraMessage, "Error",
                   MessageBoxButtons.OK, MessageBoxIcon.Error);
-               labelOperationStatus.Text = "Failed to update storage";
+               addOperationRecord("Failed to update storage");
             }
             return false;
          }
@@ -253,7 +251,7 @@ namespace mrHelper.App.Forms
             {
                _mergeRequestsUpdatingByUserRequest.Remove(mrk);
                updateStorageDependentControlState(mrk);
-               labelOperationStatus.Text = getStorageSummaryUpdateInformation();
+               addOperationRecord(getStorageSummaryUpdateInformation());
             }
          }
       }

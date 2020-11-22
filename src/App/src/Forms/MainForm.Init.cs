@@ -105,7 +105,7 @@ namespace mrHelper.App.Forms
 
                ITotalTimeCache totalTimeCache = getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache;
 
-               labelOperationStatus.Text = "Command " + name + " is in progress";
+               addOperationRecord(String.Format("Command {0} execution has started", name));
                try
                {
                   await command.Run();
@@ -115,14 +115,14 @@ namespace mrHelper.App.Forms
                   string errorMessage = "Custom action failed";
                   ExceptionHandlers.Handle(errorMessage, ex);
                   MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  labelOperationStatus.Text = "Command " + name + " failed";
+                  addOperationRecord(String.Format("Command {0} failed", name));
                   return;
                }
 
-               string statusMessage = String.Format("Command {0} completed for merge request !{1} in project {2}",
+               string statusMessage = String.Format(
+                  "Command {0} execution has completed for merge request !{1} in project {2}",
                   name, mergeRequestKey.Value.IId, mergeRequestKey.Value.ProjectKey.ProjectName);
-               labelOperationStatus.Text = statusMessage;
-               Trace.TraceInformation(String.Format("[MainForm] {0}", statusMessage));
+               addOperationRecord(statusMessage);
 
                if (command.GetStopTimer())
                {

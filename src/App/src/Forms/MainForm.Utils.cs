@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text;
 using System.Drawing;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -666,6 +667,7 @@ namespace mrHelper.App.Forms
 
       private void reconnect(string url = null)
       {
+         addOperationRecord("Reconnection request has been queued");
          enqueueUrl(url);
       }
 
@@ -750,6 +752,27 @@ namespace mrHelper.App.Forms
             Trace.TraceInformation("[MainForm] Reminder timer restarted");
             startNewVersionReminderTimer();
          }
+      }
+
+      private void addOperationRecord(string text)
+      {
+         string textWithTimestamp = String.Format("{0} {1}",
+            DateTime.Now.ToLocalTime().ToString(Constants.TimeStampFormat), text);
+         _operationRecordHistory.Add(textWithTimestamp);
+         if (_operationRecordHistory.Count() > OperationRecordHistoryDepth)
+         {
+            _operationRecordHistory.RemoveAt(0);
+         }
+
+         labelOperationStatus.Text = text;
+         Trace.TraceInformation("[MainForm] {0}", text);
+
+         StringBuilder builder = new StringBuilder(OperationRecordHistoryDepth);
+         foreach (string record in _operationRecordHistory)
+         {
+            builder.AppendLine(record);
+         }
+         toolTip.SetToolTip(labelOperationStatus, builder.ToString());
       }
    }
 }

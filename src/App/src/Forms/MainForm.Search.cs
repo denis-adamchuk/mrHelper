@@ -49,8 +49,6 @@ namespace mrHelper.App.Forms
       async private Task searchMergeRequestsAsync(string hostname, SearchQueryCollection queryCollection,
          EDataCacheType mode)
       {
-         labelOperationStatus.Text = String.Empty;
-
          if (String.IsNullOrWhiteSpace(hostname))
          {
             return;
@@ -103,7 +101,7 @@ namespace mrHelper.App.Forms
       private void onSearchDataCacheConnecting(string hostname)
       {
          getListView(EDataCacheType.Search).Items.Clear();
-         labelOperationStatus.Text = String.Format("Search in progress at {0}...", hostname);
+         addOperationRecord(String.Format("Search at {0} has started", hostname));
       }
 
       private void onSearchDataCacheConnected(string hostname, User user)
@@ -115,7 +113,7 @@ namespace mrHelper.App.Forms
          updateSearchButtonState();
 
          bool areResults = getListView(EDataCacheType.Search).Items.Count > 0;
-         labelOperationStatus.Text = areResults ? String.Empty : "Nothing found. Try more specific search query.";
+         addOperationRecord(areResults ? "Search has finished" : "Nothing found. Try changing search query.");
 
          // current mode may have changed during 'await'
          if (getCurrentTabDataCacheType() == EDataCacheType.Search)
@@ -133,7 +131,7 @@ namespace mrHelper.App.Forms
       private void onRecentDataCacheConnecting(string hostname)
       {
          getListView(EDataCacheType.Recent).Items.Clear();
-         labelOperationStatus.Text = "Loading a list of recently reviewed merge requests...";
+         addOperationRecord("Loading a list of recently reviewed merge requests has started");
       }
 
       private void onRecentDataCacheConnected(string hostname, User user)
@@ -141,7 +139,7 @@ namespace mrHelper.App.Forms
          subscribeToRecentDataCacheInternalEvents();
          updateMergeRequestList(EDataCacheType.Recent);
 
-         labelOperationStatus.Text = String.Empty;
+         addOperationRecord("List of recently reviewed merge requests has been loaded");
 
          // current mode may have changed during 'await'
          if (getCurrentTabDataCacheType() == EDataCacheType.Recent)

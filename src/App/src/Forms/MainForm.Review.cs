@@ -94,7 +94,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         labelOperationStatus.Text = "Rendering discussion contexts...";
+         addOperationRecord("Rendering discussion contexts has started");
          labelOperationStatus.Refresh();
 
          DiscussionsForm form;
@@ -136,11 +136,11 @@ namespace mrHelper.App.Forms
          {
             MessageBox.Show("No discussions to show.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
             Trace.TraceInformation(String.Format("[MainForm] No discussions to show for MR IID {0}", mrk.IId));
-            labelOperationStatus.Text = "No discussions to show";
+            addOperationRecord("No discussions to show");
             return;
          }
 
-         labelOperationStatus.Text = "Opening Discussions view...";
+         addOperationRecord("Opening Discussions view has started");
          labelOperationStatus.Refresh();
 
          form.Show();
@@ -148,7 +148,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation(String.Format("[MainForm] Opened Discussions for MR IId {0} (at {1})",
             mrk.IId, (storage?.Path ?? "null")));
 
-         labelOperationStatus.Text = "Discussions opened";
+         addOperationRecord("Discussions view has opened");
          ensureMergeRequestIsReviewed(mrk);
       }
 
@@ -196,7 +196,7 @@ namespace mrHelper.App.Forms
       private void launchDiffTool(string leftSHA, string rightSHA, ILocalCommitStorage storage,
          MergeRequestKey mrk, string accessToken, string sessionName)
       {
-         labelOperationStatus.Text = "Launching diff tool...";
+         addOperationRecord("Launching diff tool has started");
 
          int? pid = null;
          try
@@ -206,8 +206,9 @@ namespace mrHelper.App.Forms
          }
          catch (DiffToolLaunchException)
          {
-            MessageBox.Show("Cannot launch diff tool", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            labelOperationStatus.Text = String.Empty;
+            string message = "Cannot launch diff tool";
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            addOperationRecord(message);
          }
 
          if (!pid.HasValue)
@@ -221,11 +222,11 @@ namespace mrHelper.App.Forms
 
          if (pid == -1)
          {
-            labelOperationStatus.Text = "Diff tool was not launched. Most likely the difference is empty.";
+            addOperationRecord("Diff tool was not launched. Most likely the difference is empty.");
          }
          else
          {
-            labelOperationStatus.Text = "Diff tool launched";
+            addOperationRecord("Diff tool has launched");
             saveInterprocessSnapshot(pid.Value, leftSHA, rightSHA, mrk, accessToken, sessionName);
          }
       }
@@ -287,7 +288,7 @@ namespace mrHelper.App.Forms
             return null;
          }
 
-         labelOperationStatus.Text = "Loading discussions...";
+         addOperationRecord("Loading discussions has started");
          IEnumerable<Discussion> discussions;
          try
          {
@@ -298,14 +299,14 @@ namespace mrHelper.App.Forms
             string message = "Cannot load discussions from GitLab";
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            labelOperationStatus.Text = message;
+            addOperationRecord(message);
             return null;
          }
 
          bool anyDiscussions = discussions != null && discussions.Any();
-         labelOperationStatus.Text = anyDiscussions
-            ? "Discussions loaded"
-            : "There are no discussions in this Merge Request";
+         addOperationRecord(anyDiscussions
+            ? "Discussions have been loaded"
+            : "There are no discussions in this Merge Request");
          return discussions;
       }
 
