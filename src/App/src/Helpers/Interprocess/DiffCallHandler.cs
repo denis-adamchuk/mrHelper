@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
@@ -19,12 +20,16 @@ namespace mrHelper.App.Interprocess
    internal class DiffCallHandler
    {
       internal DiffCallHandler(IGitCommandService git, IModificationListener modificationListener,
-         User currentUser, Action<MergeRequestKey> onDiscussionSubmitted)
+         User currentUser, Action<MergeRequestKey> onDiscussionSubmitted,
+         Func<MergeRequestKey, IEnumerable<ReportedDiscussionNote>> getMyNotes,
+         Action<MergeRequestKey> showDiscussions)
       {
          _git = git ?? throw new ArgumentException("git argument cannot be null");
          _modificationListener = modificationListener;
          _currentUser = currentUser;
          _onDiscussionSubmitted = onDiscussionSubmitted;
+         _getMyNotes = getMyNotes;
+         _showDiscussions = showDiscussions;
       }
 
       public void Handle(MatchInfo matchInfo, Snapshot snapshot)
@@ -56,14 +61,14 @@ namespace mrHelper.App.Interprocess
             throw;
          }
 
-         NewDiscussionForm form = new NewDiscussionForm(
-            matchInfo.LeftFileName, matchInfo.RightFileName, position, _git,
+         MergeRequestKey mrk = getMergeRequestKey(snapshot);
+         NewDiscussionForm form = new NewDiscussionForm(_git,
+            position,
             async (body, includeContext) =>
             {
                try
                {
                   await submitDiscussionAsync(matchInfo, snapshot, position, body, includeContext);
-                  _onDiscussionSubmitted?.Invoke(getMergeRequestKey(snapshot));
                }
                catch (DiscussionCreatorException ex)
                {
@@ -73,8 +78,35 @@ namespace mrHelper.App.Interprocess
                      "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
                      MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
                }
-            });
+            },
+            _getMyNotes(mrk).ToArray(),
+            async (notePosition, content) =>
+            {
+               try
+               {
+                  await editDiscussionNoteAsync(notePosition.DiscussionId, notePosition.Id, content.Body, snapshot);
+               }
+               catch (DiscussionEditorException ex)
+               {
+                  string message = "Cannot edit a discussion note at GitLab";
+                  ExceptionHandlers.Handle(message, ex);
+                  MessageBox.Show(String.Format("{0}. Check your connection and try again.", message),
+                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+                     MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+               }
+            },
+            () => _showDiscussions?.Invoke(mrk),
+            () => _onDiscussionSubmitted?.Invoke(mrk));
          form.Show();
+      }
+
+      private Task editDiscussionNoteAsync(string discussionId, int noteId, string text, Snapshot snapshot)
+      {
+         MergeRequestKey mrk = getMergeRequestKey(snapshot);
+         GitLabInstance gitLabInstance = new GitLabInstance(snapshot.Host, Program.Settings);
+         IDiscussionEditor editor = Shortcuts.GetDiscussionEditor(
+            gitLabInstance, _modificationListener, mrk, discussionId);
+         return editor.ModifyNoteBodyAsync(noteId, text);
       }
 
       private FileNameMatcher getFileNameMatcher(IGitCommandService git, MergeRequestKey mrk)
@@ -242,6 +274,8 @@ namespace mrHelper.App.Interprocess
       private readonly IModificationListener _modificationListener;
       private readonly User _currentUser;
       private readonly Action<MergeRequestKey> _onDiscussionSubmitted;
+      private readonly Func<MergeRequestKey, IEnumerable<ReportedDiscussionNote>> _getMyNotes;
+      private readonly Action<MergeRequestKey> _showDiscussions;
 
       private struct MismatchWhitelistKey : IEquatable<MismatchWhitelistKey>
       {

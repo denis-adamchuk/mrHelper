@@ -123,11 +123,40 @@ namespace mrHelper.App.Forms
                return;
             }
 
+            if ((dataCache.ConnectionContext?.GetHashCode() ?? 0) != snapshot.DataCacheHashCode)
+            {
+               Trace.TraceWarning("[MainForm] Data Cache was changed after launching diff tool");
+               MessageBox.Show("It seems that data cache changed seriously after launching diff tool. " +
+                  "Please restart diff tool.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning,
+                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+               return;
+            }
+
             DiffCallHandler handler = new DiffCallHandler(storage.Git, _modificationNotifier, getCurrentUser(),
                (mrk) =>
                {
                   dataCache.DiscussionCache?.RequestUpdate(mrk,
                      Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null);
+               },
+               (mrk) =>
+               {
+                  DiscussionFilter discussionFilter = new DiscussionFilter(
+                     getCurrentUser(), null, DiscussionFilterState.CurrentUserOnly);
+                  IEnumerable<Discussion> discussions = dataCache.DiscussionCache?.GetDiscussions(mrk) ?? Array.Empty<Discussion>();
+                  return discussions
+                     .Where(discussion => discussionFilter.DoesMatchFilter(discussion))
+                     .Select(discussion =>
+                     {
+                        DiscussionNote firstNote = discussion.Notes.First();
+                        Core.Matching.DiffPosition firstNotePosition = PositionConverter.Convert(firstNote.Position);
+                        return new ReportedDiscussionNote(firstNote.Id, discussion.Id, firstNotePosition, firstNote.Body);
+                     });
+               },
+               (mrk) =>
+               {
+                  MergeRequest mr = dataCache.MergeRequestCache?.GetMergeRequest(mrk);
+                  BeginInvoke(new Action(async () =>
+                     await showDiscussionsFormAsync(mrk, mr.Title, mr.Author, mr.Web_Url)), null);
                });
             handler.Handle(matchInfo, snapshot);
          }

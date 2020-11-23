@@ -74,6 +74,16 @@ namespace mrHelper.App.Helpers.GitLab
             .GetDiscussionAccessor()
             .GetSingleDiscussionAccessor(discussionId);
       }
+
+      internal static IDiscussionEditor GetDiscussionEditor(GitLabInstance gitLabInstance,
+         IModificationListener modificationListener, MergeRequestKey mrk, string discussionId)
+      {
+         return GetMergeRequestAccessor(gitLabInstance, modificationListener, mrk.ProjectKey)
+            .GetSingleMergeRequestAccessor(mrk.IId)
+            .GetDiscussionAccessor()
+            .GetSingleDiscussionAccessor(discussionId)
+            .GetDiscussionEditor();
+      }
    }
 }
 

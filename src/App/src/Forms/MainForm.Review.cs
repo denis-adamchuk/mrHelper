@@ -177,7 +177,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         launchDiffTool(leftSHA, rightSHA, storage, mrk, accessToken, getDataCacheName(dataCache));
+         launchDiffTool(leftSHA, rightSHA, storage, mrk, accessToken, dataCache);
 
          HashSet<string> reviewedRevisions = getReviewedRevisions(mrk);
          foreach (string sha in includedSHA)
@@ -194,7 +194,7 @@ namespace mrHelper.App.Forms
       }
 
       private void launchDiffTool(string leftSHA, string rightSHA, ILocalCommitStorage storage,
-         MergeRequestKey mrk, string accessToken, string sessionName)
+         MergeRequestKey mrk, string accessToken, DataCache dataCache)
       {
          addOperationRecord("Launching diff tool has started");
 
@@ -227,7 +227,7 @@ namespace mrHelper.App.Forms
          else
          {
             addOperationRecord("Diff tool has launched");
-            saveInterprocessSnapshot(pid.Value, leftSHA, rightSHA, mrk, accessToken, sessionName);
+            saveInterprocessSnapshot(pid.Value, leftSHA, rightSHA, mrk, accessToken, dataCache);
          }
       }
 
@@ -257,7 +257,7 @@ namespace mrHelper.App.Forms
       }
 
       private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA, MergeRequestKey mrk,
-         string accessToken, string sessionName)
+         string accessToken, DataCache dataCache)
       {
          // leftSHA - Base commit SHA in the source branch
          // rightSHA - SHA referencing HEAD of this merge request
@@ -268,7 +268,8 @@ namespace mrHelper.App.Forms
             mrk.ProjectKey.ProjectName,
             new Core.Matching.DiffRefs(leftSHA, rightSHA),
             textBoxStorageFolder.Text,
-            sessionName);
+            getDataCacheName(dataCache),
+            dataCache.ConnectionContext?.GetHashCode() ?? 0);
 
          SnapshotSerializer serializer = new SnapshotSerializer();
          try
