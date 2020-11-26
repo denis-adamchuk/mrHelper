@@ -21,12 +21,11 @@ namespace mrHelper.App.Forms
    {
       internal NewDiscussionForm(IGitCommandService git,
          DiffPosition newDiscussionPosition,
-         Func<string, bool, Task> onSubmitNewDiscussion,
          ReportedDiscussionNote[] oldNotes,
+         Action onDialogClosed,
+         Func<string, bool, Task> onSubmitNewDiscussion,
          Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> onEditOldNote,
-         Func<ReportedDiscussionNoteKey, Task> onDeleteOldNote,
-         Action onShowDiscussions,
-         Action onDialogClosed)
+         Func<ReportedDiscussionNoteKey, Task> onDeleteOldNote)
       {
          InitializeComponent();
          this.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
@@ -38,7 +37,6 @@ namespace mrHelper.App.Forms
          labelNoteAboutInvisibleCharacters.Text = Constants.WarningOnUnescapedMarkdown;
          _newDiscussionPosition = newDiscussionPosition;
          _git = git;
-         _onShowDiscussions = onShowDiscussions;
          _onDialogClosed = onDialogClosed;
 
          buttonCancel.ConfirmationCondition =
@@ -133,11 +131,6 @@ namespace mrHelper.App.Forms
             deleteNote();
             updateControlState();
          }
-      }
-
-      private void buttonDiscussions_Click(object sender, EventArgs e)
-      {
-         _onShowDiscussions?.Invoke();
       }
 
       private void panelNavigation_SizeChanged(object sender, EventArgs e)
@@ -364,7 +357,6 @@ namespace mrHelper.App.Forms
       private static int MaximumTextLengthTocancelWithoutConfirmation = 5;
 
       private readonly IGitCommandService _git;
-      private readonly Action _onShowDiscussions;
       private readonly Action _onDialogClosed;
 
       /// <summary>

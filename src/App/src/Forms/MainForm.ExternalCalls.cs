@@ -151,12 +151,6 @@ namespace mrHelper.App.Forms
                         Core.Matching.DiffPosition firstNotePosition = PositionConverter.Convert(firstNote.Position);
                         return new ReportedDiscussionNote(firstNote.Id, discussion.Id, firstNotePosition, firstNote.Body);
                      });
-               },
-               (mrk) =>
-               {
-                  MergeRequest mr = dataCache.MergeRequestCache?.GetMergeRequest(mrk);
-                  BeginInvoke(new Action(async () =>
-                     await showDiscussionsFormAsync(mrk, mr.Title, mr.Author, mr.Web_Url)), null);
                });
             handler.Handle(matchInfo, snapshot);
          }
