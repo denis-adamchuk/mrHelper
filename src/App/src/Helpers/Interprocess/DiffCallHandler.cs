@@ -95,6 +95,21 @@ namespace mrHelper.App.Interprocess
                      MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
                }
             },
+            async (notePosition) =>
+            {
+               try
+               {
+                  await deleteDiscussionNoteAsync(notePosition.DiscussionId, notePosition.Id, snapshot);
+               }
+               catch (DiscussionEditorException ex)
+               {
+                  string message = "Cannot delete a discussion note at GitLab";
+                  ExceptionHandlers.Handle(message, ex);
+                  MessageBox.Show(String.Format("{0}. Check your connection and try again.", message),
+                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+                     MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+               }
+            },
             () => _showDiscussions?.Invoke(mrk),
             () => _onDiscussionSubmitted?.Invoke(mrk));
          form.Show();
@@ -107,6 +122,15 @@ namespace mrHelper.App.Interprocess
          IDiscussionEditor editor = Shortcuts.GetDiscussionEditor(
             gitLabInstance, _modificationListener, mrk, discussionId);
          return editor.ModifyNoteBodyAsync(noteId, text);
+      }
+
+      private Task deleteDiscussionNoteAsync(string discussionId, int noteId, Snapshot snapshot)
+      {
+         MergeRequestKey mrk = getMergeRequestKey(snapshot);
+         GitLabInstance gitLabInstance = new GitLabInstance(snapshot.Host, Program.Settings);
+         IDiscussionEditor editor = Shortcuts.GetDiscussionEditor(
+            gitLabInstance, _modificationListener, mrk, discussionId);
+         return editor.DeleteNoteAsync(noteId);
       }
 
       private FileNameMatcher getFileNameMatcher(IGitCommandService git, MergeRequestKey mrk)

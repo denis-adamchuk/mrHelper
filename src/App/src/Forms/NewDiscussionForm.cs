@@ -13,6 +13,7 @@ using mrHelper.CommonControls.Tools;
 using mrHelper.Common.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.App.Interprocess;
+using System.Drawing;
 
 namespace mrHelper.App.Forms
 {
@@ -23,6 +24,7 @@ namespace mrHelper.App.Forms
          Func<string, bool, Task> onSubmitNewDiscussion,
          ReportedDiscussionNote[] oldNotes,
          Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> onEditOldNote,
+         Func<ReportedDiscussionNoteKey, Task> onDeleteOldNote,
          Action onShowDiscussions,
          Action onDialogClosed)
       {
@@ -43,11 +45,11 @@ namespace mrHelper.App.Forms
             () => getNewNoteText().Length > MaximumTextLengthTocancelWithoutConfirmation;
          _onSubmitNewDiscussion = onSubmitNewDiscussion;
          _onEditOldNote = onEditOldNote;
-         _reportedNotes = oldNotes;
-         _currentNoteIndex = getNewNoteFakeIndex();
+         _onDeleteOldNote = onDeleteOldNote;
+         _reportedNotes = oldNotes.ToList();
 
+         resetCurrentNoteIndex();
          updateControlState();
-         showCurrentNote();
       }
 
       async private void buttonOK_Click(object sender, EventArgs e)
@@ -55,6 +57,7 @@ namespace mrHelper.App.Forms
          Hide();
          await submitNewDiscussion();
          await submitOldEditedNotes();
+         await submitOldDeletedNotes();
          Close();
       }
 
@@ -62,6 +65,7 @@ namespace mrHelper.App.Forms
       {
          Hide();
          await submitOldEditedNotes();
+         await submitOldDeletedNotes();
          Close();
       }
 
@@ -106,45 +110,39 @@ namespace mrHelper.App.Forms
 
       private void buttonPrev_Click(object sender, EventArgs e)
       {
-         Debug.Assert(_reportedNotes.Length > 0);
-         Debug.Assert(isCurrentNoteNew() || _currentNoteIndex != 0);
+         Debug.Assert(_reportedNotes.Any());
+         Debug.Assert(_currentNoteIndex > 0);
          decrementCurrentNoteIndex();
-         showCurrentNote();
          updateControlState();
       }
 
 
       private void buttonNext_Click(object sender, EventArgs e)
       {
-         Debug.Assert(_reportedNotes.Length > 0);
-         Debug.Assert(!isCurrentNoteNew());
+         Debug.Assert(_reportedNotes.Any());
+         Debug.Assert(_currentNoteIndex < _reportedNotes.Count());
          incrementCurrentNoteIndex();
-         showCurrentNote();
          updateControlState();
       }
 
-      private void buttonFirst_Click(object sender, EventArgs e)
+      private void buttonDelete_Click(object sender, EventArgs e)
       {
-         Debug.Assert(_reportedNotes.Length > 0);
-         Debug.Assert(isCurrentNoteNew() || _currentNoteIndex != 0);
-         scrollCurrentNoteIndexToBegin();
-         showCurrentNote();
-         updateControlState();
+         if (MessageBox.Show("Discussion note will be deleted, are you sure?", "Confirm deletion",
+            MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+         {
+            deleteNote();
+            updateControlState();
+         }
       }
 
-      private void buttonLast_Click(object sender, EventArgs e)
+      private void buttonDiscussions_Click(object sender, EventArgs e)
       {
-         Debug.Assert(_reportedNotes.Length > 0);
-         Debug.Assert(!isCurrentNoteNew());
-         resetCurrentNote();
-         showCurrentNote();
-         updateControlState();
+         _onShowDiscussions?.Invoke();
       }
 
-      private void NewDiscussionForm_Resize(object sender, EventArgs e)
+      private void panelNavigation_SizeChanged(object sender, EventArgs e)
       {
          updateLabelCounterPosition();
-         updateDiscussionsLinkLabelPosition();
       }
 
       private void labelCounter_TextChanged(object sender, EventArgs e)
@@ -152,24 +150,50 @@ namespace mrHelper.App.Forms
          updateLabelCounterPosition();
       }
 
-      private void linkLabelDiscussions_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      private void decrementCurrentNoteIndex()
       {
-         _onShowDiscussions?.Invoke();
+         _currentNoteIndex--;
       }
 
-      private void showCurrentNote()
+      private void incrementCurrentNoteIndex()
       {
-         DiffPosition position = isCurrentNoteNew()
-            ? _newDiscussionPosition
-            : _reportedNotes[_currentNoteIndex].Position.DiffPosition;
-         showDiscussionContext(position, _git);
-         textBoxDiscussionBody.Text = getCurrentNoteText();
-         updatePreview();
+         if (_currentNoteIndex < _reportedNotes.Count() - 1)
+         {
+            _currentNoteIndex++;
+         }
+         else
+         {
+            resetCurrentNoteIndex();
+         }
+      }
+
+      private void resetCurrentNoteIndex()
+      {
+         _currentNoteIndex = getNewNoteFakeIndex();
+      }
+
+      private void deleteNote()
+      {
+         ReportedDiscussionNoteKey key = _reportedNotes[_currentNoteIndex].Key;
+         _deletedNotes.Add(key);
+         _cachedNoteText.Remove(key);
+         _reportedNotes.RemoveAt(_currentNoteIndex);
       }
 
       private void saveNoteText(int index, string text)
       {
-         _cachedNoteText[index] = text;
+         if (index == getNewNoteFakeIndex())
+         {
+            _cachedNewNoteText = text;
+         }
+         else
+         {
+            ReportedDiscussionNote note = _reportedNotes[index];
+            if (note.Content.Body != text)
+            {
+               _cachedNoteText[note.Key] = text;
+            }
+         }
       }
 
       private string getCurrentNoteText()
@@ -178,23 +202,23 @@ namespace mrHelper.App.Forms
          {
             return getNewNoteText();
          }
-         else if (_cachedNoteText.TryGetValue(_currentNoteIndex, out string value))
-         {
-            return value;
-         }
          else
          {
-            return _reportedNotes[_currentNoteIndex].Content.Body;
+            ReportedDiscussionNoteKey key = _reportedNotes[_currentNoteIndex].Key;
+            if (_cachedNoteText.TryGetValue(key, out string value))
+            {
+               return value;
+            }
+            else
+            {
+               return _reportedNotes[_currentNoteIndex].Content.Body;
+            }
          }
       }
 
       private string getNewNoteText()
       {
-         if (_cachedNoteText.TryGetValue(getNewNoteFakeIndex(), out string value))
-         {
-            return value;
-         }
-         return String.Empty;
+         return _cachedNewNoteText;
       }
 
       private void updatePreview()
@@ -255,28 +279,24 @@ namespace mrHelper.App.Forms
 
       private void updateControlState()
       {
-         buttonFirst.Enabled = buttonPrev.Enabled = _reportedNotes.Any() && _currentNoteIndex != 0;
-         buttonLast.Enabled = buttonNext.Enabled = _reportedNotes.Any() && !isCurrentNoteNew();
+         buttonPrev.Enabled = _reportedNotes.Any() && _currentNoteIndex > 0;
+         buttonNext.Enabled = _reportedNotes.Any() && _currentNoteIndex < _reportedNotes.Count();
+         toolTip.SetToolTip(buttonNext,
+            _currentNoteIndex < _reportedNotes.Count() - 1 ? "Go to my next discussion" : "Go to new discussion");
+         buttonDelete.Enabled = !isCurrentNoteNew();
          buttonOK.Enabled = isCurrentNoteNew();
-         checkBoxIncludeContext.Enabled = isCurrentNoteNew();
+
          labelCounter.Visible = !isCurrentNoteNew();
-         if (!isCurrentNoteNew())
-         {
-            labelCounter.Text = String.Format("{0} / {1}", _currentNoteIndex + 1, _reportedNotes.Length);
-         }
-      }
+         labelCounter.Text = String.Format("{0} / {1}", _currentNoteIndex + 1, _reportedNotes.Count());
 
-      private void updateLabelCounterPosition()
-      {
-         labelCounter.Location = new System.Drawing.Point(
-            buttonLast.Location.X + (buttonLast.Width / 2 - labelCounter.Width / 2), labelCounter.Location.Y);
-      }
+         DiffPosition position = isCurrentNoteNew()
+            ? _newDiscussionPosition
+            : _reportedNotes[_currentNoteIndex].Position.DiffPosition;
+         showDiscussionContext(position, _git);
+         textBoxDiscussionBody.Text = getCurrentNoteText();
+         checkBoxIncludeContext.Enabled = isCurrentNoteNew();
 
-      private void updateDiscussionsLinkLabelPosition()
-      {
-         linkLabelDiscussions.Location = new System.Drawing.Point(
-            buttonLast.Location.X + (buttonLast.Width / 2 - linkLabelDiscussions.Width / 2),
-            linkLabelDiscussions.Location.Y);
+         updatePreview();
       }
 
       private void updateInvisibleCharactersLabel(string text)
@@ -285,32 +305,22 @@ namespace mrHelper.App.Forms
          labelNoteAboutInvisibleCharacters.Visible = areUnescapedCharacters;
       }
 
+      private void updateLabelCounterPosition()
+      {
+         int buttonPrevRightBorder = buttonPrev.Location.X + buttonPrev.Width;
+         int space = buttonNext.Location.X - buttonPrevRightBorder;
+         int labelOffsetFromButtonPrev = space / 2 - labelCounter.Width / 2;
+         int labelLocationX = buttonPrevRightBorder + labelOffsetFromButtonPrev;
+         int labelLocationY = labelCounter.Location.Y;
+         labelCounter.Location = new System.Drawing.Point(labelLocationX, labelLocationY);
+      }
+
       private void createWPFTextBox()
       {
          textBoxDiscussionBody = Helpers.WPFHelpers.CreateWPFTextBox(textBoxDiscussionBodyHost,
             false, String.Empty, true, !Program.Settings.DisableSpellChecker);
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
          textBoxDiscussionBody.TextChanged += textBoxDiscussionBody_TextChanged;
-      }
-
-      private void decrementCurrentNoteIndex()
-      {
-         _currentNoteIndex--;
-      }
-
-      private void incrementCurrentNoteIndex()
-      {
-         _currentNoteIndex++;
-      }
-
-      private void scrollCurrentNoteIndexToBegin()
-      {
-         _currentNoteIndex = 0;
-      }
-
-      private void resetCurrentNote()
-      {
-         _currentNoteIndex = getNewNoteFakeIndex();
       }
 
       private async Task submitNewDiscussion()
@@ -322,17 +332,22 @@ namespace mrHelper.App.Forms
 
       private async Task submitOldEditedNotes()
       {
-         foreach (KeyValuePair<int, string> keyValuePair in _cachedNoteText)
+         foreach (KeyValuePair<ReportedDiscussionNoteKey, string> keyValuePair in _cachedNoteText)
          {
-            if (keyValuePair.Key != getNewNoteFakeIndex())
-            {
-               string discussionId = _reportedNotes[keyValuePair.Key].Key.DiscussionId;
-               int noteId = _reportedNotes[keyValuePair.Key].Key.Id;
-               string body = keyValuePair.Value;
-               await _onEditOldNote(
-                  new ReportedDiscussionNoteKey(noteId, discussionId),
-                  new ReportedDiscussionNoteContent(body));
-            }
+            string discussionId = keyValuePair.Key.DiscussionId;
+            int noteId = keyValuePair.Key.Id;
+            string body = keyValuePair.Value;
+            await _onEditOldNote(
+               new ReportedDiscussionNoteKey(noteId, discussionId),
+               new ReportedDiscussionNoteContent(body));
+         }
+      }
+
+      private async Task submitOldDeletedNotes()
+      {
+         foreach (ReportedDiscussionNoteKey item in _deletedNotes)
+         {
+            await _onDeleteOldNote(new ReportedDiscussionNoteKey(item.Id, item.DiscussionId));
          }
       }
 
@@ -343,7 +358,7 @@ namespace mrHelper.App.Forms
 
       private int getNewNoteFakeIndex()
       {
-         return _reportedNotes.Length;
+         return _reportedNotes.Count();
       }
 
       private static int MaximumTextLengthTocancelWithoutConfirmation = 5;
@@ -356,7 +371,9 @@ namespace mrHelper.App.Forms
       /// Historical notes
       /// </summary>
       private readonly Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> _onEditOldNote;
-      private readonly ReportedDiscussionNote[] _reportedNotes;
+      private readonly Func<ReportedDiscussionNoteKey, Task> _onDeleteOldNote;
+      private readonly List<ReportedDiscussionNote> _reportedNotes = new List<ReportedDiscussionNote>();
+      private readonly List<ReportedDiscussionNoteKey> _deletedNotes = new List<ReportedDiscussionNoteKey>();
 
       /// <summary>
       /// New note
@@ -365,15 +382,17 @@ namespace mrHelper.App.Forms
       private readonly DiffPosition _newDiscussionPosition;
 
       /// <summary>
-      /// Currently selected note index in _reportedNotes collection. If `null`, current note is the new note.
+      /// Currently selected note index in _reportedNotes collection.
+      /// If the index is equal to _reportedNotes size then current note is the new note.
       /// </summary>
       private int _currentNoteIndex;
 
       /// <summary>
-      /// Cached texts of edited and new discussions.
+      /// Cached texts of edited and new discussions, where Key is an index in _reportedNotes.
       /// </summary>
-      private readonly Dictionary<int, string> _cachedNoteText = new Dictionary<int, string>();
+      private readonly Dictionary<ReportedDiscussionNoteKey, string> _cachedNoteText =
+         new Dictionary<ReportedDiscussionNoteKey, string>();
+      private string _cachedNewNoteText = String.Empty;
    }
 }
-
 

@@ -40,19 +40,19 @@
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.buttonPrev = new System.Windows.Forms.Button();
          this.buttonNext = new System.Windows.Forms.Button();
+         this.buttonDelete = new System.Windows.Forms.Button();
          this.tabControlMode = new System.Windows.Forms.TabControl();
          this.tabPageEdit = new System.Windows.Forms.TabPage();
          this.tabPagePreview = new System.Windows.Forms.TabPage();
          this.htmlPanelPreview = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.labelNoteAboutInvisibleCharacters = new System.Windows.Forms.Label();
-         this.buttonLast = new System.Windows.Forms.Button();
-         this.buttonFirst = new System.Windows.Forms.Button();
+         this.panelNavigation = new System.Windows.Forms.Panel();
          this.labelCounter = new System.Windows.Forms.Label();
-         this.linkLabelDiscussions = new System.Windows.Forms.LinkLabel();
          this.htmlContextCanvas.SuspendLayout();
          this.tabControlMode.SuspendLayout();
          this.tabPageEdit.SuspendLayout();
          this.tabPagePreview.SuspendLayout();
+         this.panelNavigation.SuspendLayout();
          this.SuspendLayout();
          // 
          // buttonCancel
@@ -60,7 +60,7 @@
          this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonCancel.ConfirmationText = "All changes will be lost, are you sure?";
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonCancel.Location = new System.Drawing.Point(667, 345);
+         this.buttonCancel.Location = new System.Drawing.Point(666, 222);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
          this.buttonCancel.TabIndex = 4;
@@ -96,7 +96,7 @@
          // 
          this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonOK.Location = new System.Drawing.Point(667, 316);
+         this.buttonOK.Location = new System.Drawing.Point(667, 193);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
          this.buttonOK.TabIndex = 3;
@@ -133,7 +133,7 @@
          this.textBoxDiscussionBodyHost.Dock = System.Windows.Forms.DockStyle.Fill;
          this.textBoxDiscussionBodyHost.Location = new System.Drawing.Point(3, 3);
          this.textBoxDiscussionBodyHost.Name = "textBoxDiscussionBodyHost";
-         this.textBoxDiscussionBodyHost.Size = new System.Drawing.Size(635, 199);
+         this.textBoxDiscussionBodyHost.Size = new System.Drawing.Size(635, 86);
          this.textBoxDiscussionBodyHost.TabIndex = 11;
          this.textBoxDiscussionBodyHost.Text = "textBoxDiscussionBodyHost";
          this.textBoxDiscussionBodyHost.Child = null;
@@ -141,7 +141,7 @@
          // buttonInsertCode
          // 
          this.buttonInsertCode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonInsertCode.Location = new System.Drawing.Point(667, 126);
+         this.buttonInsertCode.Location = new System.Drawing.Point(667, 149);
          this.buttonInsertCode.Name = "buttonInsertCode";
          this.buttonInsertCode.Size = new System.Drawing.Size(75, 23);
          this.buttonInsertCode.TabIndex = 12;
@@ -152,10 +152,10 @@
          // 
          // buttonPrev
          // 
-         this.buttonPrev.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonPrev.Location = new System.Drawing.Point(667, 155);
+         this.buttonPrev.Location = new System.Drawing.Point(0, 0);
+         this.buttonPrev.Margin = new System.Windows.Forms.Padding(0);
          this.buttonPrev.Name = "buttonPrev";
-         this.buttonPrev.Size = new System.Drawing.Size(75, 23);
+         this.buttonPrev.Size = new System.Drawing.Size(22, 22);
          this.buttonPrev.TabIndex = 15;
          this.buttonPrev.Text = "<";
          this.toolTip.SetToolTip(this.buttonPrev, "Go to my previous discussion");
@@ -164,15 +164,29 @@
          // 
          // buttonNext
          // 
-         this.buttonNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonNext.Location = new System.Drawing.Point(667, 242);
+         this.buttonNext.Location = new System.Drawing.Point(86, 0);
+         this.buttonNext.Margin = new System.Windows.Forms.Padding(0);
          this.buttonNext.Name = "buttonNext";
-         this.buttonNext.Size = new System.Drawing.Size(75, 23);
+         this.buttonNext.Size = new System.Drawing.Size(22, 22);
          this.buttonNext.TabIndex = 16;
          this.buttonNext.Text = ">";
          this.toolTip.SetToolTip(this.buttonNext, "Go to my next discussion");
          this.buttonNext.UseVisualStyleBackColor = true;
          this.buttonNext.Click += new System.EventHandler(this.buttonNext_Click);
+         // 
+         // buttonDelete
+         // 
+         this.buttonDelete.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonDelete.Location = new System.Drawing.Point(120, 0);
+         this.buttonDelete.Margin = new System.Windows.Forms.Padding(0);
+         this.buttonDelete.Name = "buttonDelete";
+         this.buttonDelete.Size = new System.Drawing.Size(22, 22);
+         this.buttonDelete.TabIndex = 21;
+         this.buttonDelete.Text = "X";
+         this.toolTip.SetToolTip(this.buttonDelete, "Delete current note");
+         this.buttonDelete.UseVisualStyleBackColor = true;
+         this.buttonDelete.Click += new System.EventHandler(this.buttonDelete_Click);
          // 
          // tabControlMode
          // 
@@ -184,7 +198,7 @@
          this.tabControlMode.Location = new System.Drawing.Point(12, 127);
          this.tabControlMode.Name = "tabControlMode";
          this.tabControlMode.SelectedIndex = 0;
-         this.tabControlMode.Size = new System.Drawing.Size(649, 231);
+         this.tabControlMode.Size = new System.Drawing.Size(649, 118);
          this.tabControlMode.TabIndex = 13;
          this.tabControlMode.SelectedIndexChanged += new System.EventHandler(this.tabControlMode_SelectedIndexChanged);
          // 
@@ -194,7 +208,7 @@
          this.tabPageEdit.Location = new System.Drawing.Point(4, 22);
          this.tabPageEdit.Name = "tabPageEdit";
          this.tabPageEdit.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageEdit.Size = new System.Drawing.Size(641, 205);
+         this.tabPageEdit.Size = new System.Drawing.Size(641, 92);
          this.tabPageEdit.TabIndex = 0;
          this.tabPageEdit.Text = "Edit";
          this.tabPageEdit.UseVisualStyleBackColor = true;
@@ -205,7 +219,7 @@
          this.tabPagePreview.Location = new System.Drawing.Point(4, 22);
          this.tabPagePreview.Name = "tabPagePreview";
          this.tabPagePreview.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPagePreview.Size = new System.Drawing.Size(641, 205);
+         this.tabPagePreview.Size = new System.Drawing.Size(641, 92);
          this.tabPagePreview.TabIndex = 1;
          this.tabPagePreview.Text = "Preview";
          this.tabPagePreview.UseVisualStyleBackColor = true;
@@ -219,7 +233,7 @@
          this.htmlPanelPreview.Dock = System.Windows.Forms.DockStyle.Fill;
          this.htmlPanelPreview.Location = new System.Drawing.Point(3, 3);
          this.htmlPanelPreview.Name = "htmlPanelPreview";
-         this.htmlPanelPreview.Size = new System.Drawing.Size(635, 199);
+         this.htmlPanelPreview.Size = new System.Drawing.Size(635, 86);
          this.htmlPanelPreview.TabIndex = 0;
          this.htmlPanelPreview.Text = null;
          // 
@@ -228,70 +242,44 @@
          this.labelNoteAboutInvisibleCharacters.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.labelNoteAboutInvisibleCharacters.AutoSize = true;
          this.labelNoteAboutInvisibleCharacters.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-         this.labelNoteAboutInvisibleCharacters.Location = new System.Drawing.Point(13, 363);
+         this.labelNoteAboutInvisibleCharacters.Location = new System.Drawing.Point(12, 244);
          this.labelNoteAboutInvisibleCharacters.Name = "labelNoteAboutInvisibleCharacters";
-         this.labelNoteAboutInvisibleCharacters.Size = new System.Drawing.Size(0, 13);
+         this.labelNoteAboutInvisibleCharacters.Size = new System.Drawing.Size(181, 13);
          this.labelNoteAboutInvisibleCharacters.TabIndex = 14;
+         this.labelNoteAboutInvisibleCharacters.Text = "<labelNoteAboutInvisibleCharacters>";
          this.labelNoteAboutInvisibleCharacters.Visible = false;
          // 
-         // buttonLast
+         // panelNavigation
          // 
-         this.buttonLast.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonLast.Location = new System.Drawing.Point(666, 213);
-         this.buttonLast.Name = "buttonLast";
-         this.buttonLast.Size = new System.Drawing.Size(75, 23);
-         this.buttonLast.TabIndex = 17;
-         this.buttonLast.Text = ">>>";
-         this.toolTip.SetToolTip(this.buttonLast, "Go to new discussion");
-         this.buttonLast.UseVisualStyleBackColor = true;
-         this.buttonLast.Click += new System.EventHandler(this.buttonLast_Click);
-         // 
-         // buttonFirst
-         // 
-         this.buttonFirst.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonFirst.Location = new System.Drawing.Point(667, 184);
-         this.buttonFirst.Name = "buttonFirst";
-         this.buttonFirst.Size = new System.Drawing.Size(75, 23);
-         this.buttonFirst.TabIndex = 18;
-         this.buttonFirst.Text = "<<<";
-         this.toolTip.SetToolTip(this.buttonFirst, "Go to my first discussion in this merge request");
-         this.buttonFirst.UseVisualStyleBackColor = true;
-         this.buttonFirst.Click += new System.EventHandler(this.buttonFirst_Click);
+         this.panelNavigation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.panelNavigation.Controls.Add(this.buttonPrev);
+         this.panelNavigation.Controls.Add(this.labelCounter);
+         this.panelNavigation.Controls.Add(this.buttonNext);
+         this.panelNavigation.Controls.Add(this.buttonDelete);
+         this.panelNavigation.Location = new System.Drawing.Point(515, 124);
+         this.panelNavigation.Margin = new System.Windows.Forms.Padding(0);
+         this.panelNavigation.Name = "panelNavigation";
+         this.panelNavigation.Size = new System.Drawing.Size(142, 22);
+         this.panelNavigation.TabIndex = 24;
+         this.panelNavigation.SizeChanged += new System.EventHandler(this.panelNavigation_SizeChanged);
          // 
          // labelCounter
          // 
          this.labelCounter.AutoSize = true;
-         this.labelCounter.Location = new System.Drawing.Point(667, 268);
+         this.labelCounter.Location = new System.Drawing.Point(25, 4);
          this.labelCounter.Name = "labelCounter";
-         this.labelCounter.Size = new System.Drawing.Size(55, 13);
+         this.labelCounter.Size = new System.Drawing.Size(60, 13);
          this.labelCounter.TabIndex = 19;
-         this.labelCounter.Text = "<counter>";
+         this.labelCounter.Text = "<100/100>";
          this.labelCounter.TextChanged += new System.EventHandler(this.labelCounter_TextChanged);
-         // 
-         // linkLabelDiscussions
-         // 
-         this.linkLabelDiscussions.AutoSize = true;
-         this.linkLabelDiscussions.Location = new System.Drawing.Point(667, 290);
-         this.linkLabelDiscussions.Name = "linkLabelDiscussions";
-         this.linkLabelDiscussions.Size = new System.Drawing.Size(63, 13);
-         this.linkLabelDiscussions.TabIndex = 20;
-         this.linkLabelDiscussions.TabStop = true;
-         this.linkLabelDiscussions.Text = "Discussions";
-         this.toolTip.SetToolTip(this.linkLabelDiscussions, "Show all discussions for this merge request");
-         this.linkLabelDiscussions.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelDiscussions_LinkClicked);
          // 
          // NewDiscussionForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(754, 380);
-         this.Controls.Add(this.linkLabelDiscussions);
-         this.Controls.Add(this.labelCounter);
-         this.Controls.Add(this.buttonFirst);
-         this.Controls.Add(this.buttonLast);
-         this.Controls.Add(this.buttonNext);
-         this.Controls.Add(this.buttonPrev);
+         this.ClientSize = new System.Drawing.Size(754, 262);
+         this.Controls.Add(this.panelNavigation);
          this.Controls.Add(this.labelNoteAboutInvisibleCharacters);
          this.Controls.Add(this.tabControlMode);
          this.Controls.Add(this.buttonInsertCode);
@@ -302,16 +290,17 @@
          this.Controls.Add(this.buttonCancel);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
-         this.MinimumSize = new System.Drawing.Size(770, 419);
+         this.MinimumSize = new System.Drawing.Size(770, 301);
          this.Name = "NewDiscussionForm";
          this.Text = "Start a thread";
          this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.NewDiscussionForm_FormClosed);
          this.Shown += new System.EventHandler(this.newDiscussionForm_Shown);
-         this.Resize += new System.EventHandler(this.NewDiscussionForm_Resize);
          this.htmlContextCanvas.ResumeLayout(false);
          this.tabControlMode.ResumeLayout(false);
          this.tabPageEdit.ResumeLayout(false);
          this.tabPagePreview.ResumeLayout(false);
+         this.panelNavigation.ResumeLayout(false);
+         this.panelNavigation.PerformLayout();
          this.ResumeLayout(false);
          this.PerformLayout();
 
@@ -333,11 +322,10 @@
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelPreview;
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelContext;
       private System.Windows.Forms.Label labelNoteAboutInvisibleCharacters;
+      private System.Windows.Forms.Panel panelNavigation;
       private System.Windows.Forms.Button buttonPrev;
-      private System.Windows.Forms.Button buttonNext;
-      private System.Windows.Forms.Button buttonLast;
-      private System.Windows.Forms.Button buttonFirst;
       private System.Windows.Forms.Label labelCounter;
-      private System.Windows.Forms.LinkLabel linkLabelDiscussions;
+      private System.Windows.Forms.Button buttonNext;
+      private System.Windows.Forms.Button buttonDelete;
    }
 }
