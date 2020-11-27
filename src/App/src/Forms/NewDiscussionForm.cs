@@ -34,13 +34,13 @@ namespace mrHelper.App.Forms
          createWPFTextBox();
 
          this.Text = Constants.StartNewThreadCaption;
-         labelNoteAboutInvisibleCharacters.Text = Constants.WarningOnUnescapedMarkdown;
+         labelInvisibleCharactersHint.Text = Constants.WarningOnUnescapedMarkdown;
          _newDiscussionPosition = newDiscussionPosition;
          _git = git;
          _onDialogClosed = onDialogClosed;
 
          buttonCancel.ConfirmationCondition =
-            () => getNewNoteText().Length > MaximumTextLengthTocancelWithoutConfirmation;
+            () => (getNewNoteText().Length > MaximumTextLengthTocancelWithoutConfirmation) || areHistoryModifications();
          _onSubmitNewDiscussion = onSubmitNewDiscussion;
          _onEditOldNote = onEditOldNote;
          _onDeleteOldNote = onDeleteOldNote;
@@ -52,18 +52,16 @@ namespace mrHelper.App.Forms
 
       async private void buttonOK_Click(object sender, EventArgs e)
       {
-         Hide();
-         await submitNewDiscussion();
-         await submitOldEditedNotes();
-         await submitOldDeletedNotes();
-         Close();
+         if (checkModifications(out bool needSubmitNewDiscussion, out bool needSubmitModifications))
+         {
+            Hide();
+            await submit(needSubmitNewDiscussion, needSubmitModifications);
+            Close();
+         }
       }
 
-      async private void buttonCancel_Click(object sender, EventArgs e)
+      private void buttonCancel_Click(object sender, EventArgs e)
       {
-         Hide();
-         await submitOldEditedNotes();
-         await submitOldDeletedNotes();
          Close();
       }
 
@@ -91,7 +89,8 @@ namespace mrHelper.App.Forms
       private void textBoxDiscussionBody_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
       {
          saveNoteText(_currentNoteIndex, textBoxDiscussionBody.Text);
-         updateInvisibleCharactersLabel(textBoxDiscussionBody.Text);
+         updateInvisibleCharactersHint();
+         updateModificationsHint();
       }
 
       private void buttonInsertCode_Click(object sender, EventArgs e)
@@ -125,11 +124,23 @@ namespace mrHelper.App.Forms
 
       private void buttonDelete_Click(object sender, EventArgs e)
       {
-         if (MessageBox.Show("Discussion note will be deleted, are you sure?", "Confirm deletion",
-            MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+         if (confirmNoteDeletion())
          {
             deleteNote();
             updateControlState();
+         }
+
+      }
+
+      private void panelNavigation_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+      {
+         if (e.Delta < 0)
+         {
+            buttonPrev.PerformClick();
+         }
+         else if (e.Delta > 0)
+         {
+            buttonNext.PerformClick();
          }
       }
 
@@ -169,7 +180,7 @@ namespace mrHelper.App.Forms
       {
          ReportedDiscussionNoteKey key = _reportedNotes[_currentNoteIndex].Key;
          _deletedNotes.Add(key);
-         _cachedNoteText.Remove(key);
+         _modifiedNoteTexts.Remove(key);
          _reportedNotes.RemoveAt(_currentNoteIndex);
       }
 
@@ -184,7 +195,11 @@ namespace mrHelper.App.Forms
             ReportedDiscussionNote note = _reportedNotes[index];
             if (note.Content.Body != text)
             {
-               _cachedNoteText[note.Key] = text;
+               _modifiedNoteTexts[note.Key] = text;
+            }
+            else
+            {
+               _modifiedNoteTexts.Remove(note.Key);
             }
          }
       }
@@ -198,7 +213,7 @@ namespace mrHelper.App.Forms
          else
          {
             ReportedDiscussionNoteKey key = _reportedNotes[_currentNoteIndex].Key;
-            if (_cachedNoteText.TryGetValue(key, out string value))
+            if (_modifiedNoteTexts.TryGetValue(key, out string value))
             {
                return value;
             }
@@ -220,7 +235,7 @@ namespace mrHelper.App.Forms
             Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(htmlPanelPreview));
 
          var pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
-         string body = MarkDownUtils.ConvertToHtml(textBoxDiscussionBody.Text, String.Empty, pipeline);
+         string body = MarkDownUtils.ConvertToHtml(getCurrentNoteText(), String.Empty, pipeline);
          htmlPanelPreview.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
       }
 
@@ -277,7 +292,6 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(buttonNext,
             _currentNoteIndex < _reportedNotes.Count() - 1 ? "Go to my next discussion" : "Go to new discussion");
          buttonDelete.Enabled = !isCurrentNoteNew();
-         buttonOK.Enabled = isCurrentNoteNew();
 
          labelCounter.Visible = !isCurrentNoteNew();
          labelCounter.Text = String.Format("{0} / {1}", _currentNoteIndex + 1, _reportedNotes.Count());
@@ -290,12 +304,19 @@ namespace mrHelper.App.Forms
          checkBoxIncludeContext.Enabled = isCurrentNoteNew();
 
          updatePreview();
+         updateModificationsHint();
       }
 
-      private void updateInvisibleCharactersLabel(string text)
+      private void updateInvisibleCharactersHint()
       {
+         string text = getCurrentNoteText();
          bool areUnescapedCharacters = StringUtils.DoesContainUnescapedSpecialCharacters(text);
-         labelNoteAboutInvisibleCharacters.Visible = areUnescapedCharacters;
+         labelInvisibleCharactersHint.Visible = areUnescapedCharacters;
+      }
+
+      private void updateModificationsHint()
+      {
+         labelModificationsHint.Visible = areHistoryModifications();
       }
 
       private void updateLabelCounterPosition()
@@ -308,12 +329,67 @@ namespace mrHelper.App.Forms
          labelCounter.Location = new System.Drawing.Point(labelLocationX, labelLocationY);
       }
 
+      private bool areHistoryModifications()
+      {
+         return _modifiedNoteTexts.Any() || _deletedNotes.Any();
+      }
+
       private void createWPFTextBox()
       {
          textBoxDiscussionBody = Helpers.WPFHelpers.CreateWPFTextBox(textBoxDiscussionBodyHost,
             false, String.Empty, true, !Program.Settings.DisableSpellChecker);
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
          textBoxDiscussionBody.TextChanged += textBoxDiscussionBody_TextChanged;
+      }
+
+      private bool checkModifications(out bool needSubmitNewDiscussion, out bool needSubmitModifications)
+      {
+         needSubmitNewDiscussion = getNewNoteText() != String.Empty;
+         needSubmitModifications = areHistoryModifications();
+         if (!needSubmitNewDiscussion && needSubmitModifications)
+         {
+            DialogResult result =
+               MessageBox.Show("Do you want to apply modifications to old records only? " +
+                               "New discussion will not be reported.", "Confirmation",
+                               MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+            switch (result)
+            {
+               case DialogResult.Yes:
+                  needSubmitModifications = true;
+                  return true;
+
+               case DialogResult.No:
+                  needSubmitModifications = false;
+                  return true;
+
+               case DialogResult.Cancel:
+                  needSubmitModifications = false;
+                  return false;
+            }
+            Debug.Assert(false);
+            return false;
+         }
+         return true;
+      }
+
+      private bool confirmNoteDeletion()
+      {
+         return MessageBox.Show("Discussion note will be deleted, are you sure?", "Confirm deletion",
+                                MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2)
+                             == DialogResult.Yes;
+      }
+
+      private async Task submit(bool needSubmitNewDiscussion, bool needSubmitModifications)
+      {
+         if (needSubmitNewDiscussion)
+         {
+            await submitNewDiscussion();
+         }
+         if (needSubmitModifications)
+         {
+            await submitOldEditedNotes();
+            await submitOldDeletedNotes();
+         }
       }
 
       private async Task submitNewDiscussion()
@@ -325,7 +401,7 @@ namespace mrHelper.App.Forms
 
       private async Task submitOldEditedNotes()
       {
-         foreach (KeyValuePair<ReportedDiscussionNoteKey, string> keyValuePair in _cachedNoteText)
+         foreach (KeyValuePair<ReportedDiscussionNoteKey, string> keyValuePair in _modifiedNoteTexts)
          {
             string discussionId = keyValuePair.Key.DiscussionId;
             int noteId = keyValuePair.Key.Id;
@@ -382,7 +458,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// Cached texts of edited and new discussions, where Key is an index in _reportedNotes.
       /// </summary>
-      private readonly Dictionary<ReportedDiscussionNoteKey, string> _cachedNoteText =
+      private readonly Dictionary<ReportedDiscussionNoteKey, string> _modifiedNoteTexts =
          new Dictionary<ReportedDiscussionNoteKey, string>();
       private string _cachedNewNoteText = String.Empty;
    }

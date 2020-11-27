@@ -26,7 +26,7 @@ namespace mrHelper.GitLabClient.Accessors
          _stopwatch.Start();
 
          Trace.TraceInformation(String.Format(
-            "[TimeTracker] Starting time tracking for MR IId {0} (project {1}",
+            "[TimeTracker] Starting time tracking for MR IId {0} (project {1})",
             _mergeRequestKey.IId, _mergeRequestKey.ProjectKey.ProjectName));
       }
 

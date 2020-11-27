@@ -45,9 +45,10 @@
          this.tabPageEdit = new System.Windows.Forms.TabPage();
          this.tabPagePreview = new System.Windows.Forms.TabPage();
          this.htmlPanelPreview = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
-         this.labelNoteAboutInvisibleCharacters = new System.Windows.Forms.Label();
+         this.labelInvisibleCharactersHint = new System.Windows.Forms.Label();
          this.panelNavigation = new System.Windows.Forms.Panel();
          this.labelCounter = new System.Windows.Forms.Label();
+         this.labelModificationsHint = new System.Windows.Forms.Label();
          this.htmlContextCanvas.SuspendLayout();
          this.tabControlMode.SuspendLayout();
          this.tabPageEdit.SuspendLayout();
@@ -152,7 +153,7 @@
          // 
          // buttonPrev
          // 
-         this.buttonPrev.Location = new System.Drawing.Point(0, 0);
+         this.buttonPrev.Location = new System.Drawing.Point(268, 0);
          this.buttonPrev.Margin = new System.Windows.Forms.Padding(0);
          this.buttonPrev.Name = "buttonPrev";
          this.buttonPrev.Size = new System.Drawing.Size(22, 22);
@@ -164,7 +165,7 @@
          // 
          // buttonNext
          // 
-         this.buttonNext.Location = new System.Drawing.Point(86, 0);
+         this.buttonNext.Location = new System.Drawing.Point(355, 0);
          this.buttonNext.Margin = new System.Windows.Forms.Padding(0);
          this.buttonNext.Name = "buttonNext";
          this.buttonNext.Size = new System.Drawing.Size(22, 22);
@@ -178,7 +179,7 @@
          // 
          this.buttonDelete.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonDelete.Location = new System.Drawing.Point(120, 0);
+         this.buttonDelete.Location = new System.Drawing.Point(399, 0);
          this.buttonDelete.Margin = new System.Windows.Forms.Padding(0);
          this.buttonDelete.Name = "buttonDelete";
          this.buttonDelete.Size = new System.Drawing.Size(22, 22);
@@ -237,41 +238,53 @@
          this.htmlPanelPreview.TabIndex = 0;
          this.htmlPanelPreview.Text = null;
          // 
-         // labelNoteAboutInvisibleCharacters
+         // labelInvisibleCharactersHint
          // 
-         this.labelNoteAboutInvisibleCharacters.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-         this.labelNoteAboutInvisibleCharacters.AutoSize = true;
-         this.labelNoteAboutInvisibleCharacters.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-         this.labelNoteAboutInvisibleCharacters.Location = new System.Drawing.Point(12, 244);
-         this.labelNoteAboutInvisibleCharacters.Name = "labelNoteAboutInvisibleCharacters";
-         this.labelNoteAboutInvisibleCharacters.Size = new System.Drawing.Size(181, 13);
-         this.labelNoteAboutInvisibleCharacters.TabIndex = 14;
-         this.labelNoteAboutInvisibleCharacters.Text = "<labelNoteAboutInvisibleCharacters>";
-         this.labelNoteAboutInvisibleCharacters.Visible = false;
+         this.labelInvisibleCharactersHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+         this.labelInvisibleCharactersHint.AutoSize = true;
+         this.labelInvisibleCharactersHint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+         this.labelInvisibleCharactersHint.Location = new System.Drawing.Point(12, 244);
+         this.labelInvisibleCharactersHint.Name = "labelInvisibleCharactersHint";
+         this.labelInvisibleCharactersHint.Size = new System.Drawing.Size(149, 13);
+         this.labelInvisibleCharactersHint.TabIndex = 14;
+         this.labelInvisibleCharactersHint.Text = "<labelInvisibleCharactersHint>";
+         this.labelInvisibleCharactersHint.Visible = false;
          // 
          // panelNavigation
          // 
          this.panelNavigation.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.panelNavigation.Controls.Add(this.labelModificationsHint);
          this.panelNavigation.Controls.Add(this.buttonPrev);
          this.panelNavigation.Controls.Add(this.labelCounter);
          this.panelNavigation.Controls.Add(this.buttonNext);
          this.panelNavigation.Controls.Add(this.buttonDelete);
-         this.panelNavigation.Location = new System.Drawing.Point(515, 124);
+         this.panelNavigation.Location = new System.Drawing.Point(236, 124);
          this.panelNavigation.Margin = new System.Windows.Forms.Padding(0);
          this.panelNavigation.Name = "panelNavigation";
-         this.panelNavigation.Size = new System.Drawing.Size(142, 22);
+         this.panelNavigation.Size = new System.Drawing.Size(421, 22);
          this.panelNavigation.TabIndex = 24;
          this.panelNavigation.SizeChanged += new System.EventHandler(this.panelNavigation_SizeChanged);
+         this.panelNavigation.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelNavigation_MouseWheel);
          // 
          // labelCounter
          // 
          this.labelCounter.AutoSize = true;
-         this.labelCounter.Location = new System.Drawing.Point(25, 4);
+         this.labelCounter.Location = new System.Drawing.Point(293, 4);
          this.labelCounter.Name = "labelCounter";
          this.labelCounter.Size = new System.Drawing.Size(60, 13);
          this.labelCounter.TabIndex = 19;
          this.labelCounter.Text = "<100/100>";
          this.labelCounter.TextChanged += new System.EventHandler(this.labelCounter_TextChanged);
+         // 
+         // labelModificationsHint
+         // 
+         this.labelModificationsHint.AutoSize = true;
+         this.labelModificationsHint.Location = new System.Drawing.Point(3, 4);
+         this.labelModificationsHint.Name = "labelModificationsHint";
+         this.labelModificationsHint.Size = new System.Drawing.Size(235, 13);
+         this.labelModificationsHint.TabIndex = 22;
+         this.labelModificationsHint.Text = "Modifications are applied when the dialog closes";
+         this.labelModificationsHint.Visible = false;
          // 
          // NewDiscussionForm
          // 
@@ -280,7 +293,7 @@
          this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(754, 262);
          this.Controls.Add(this.panelNavigation);
-         this.Controls.Add(this.labelNoteAboutInvisibleCharacters);
+         this.Controls.Add(this.labelInvisibleCharactersHint);
          this.Controls.Add(this.tabControlMode);
          this.Controls.Add(this.buttonInsertCode);
          this.Controls.Add(this.htmlContextCanvas);
@@ -321,11 +334,12 @@
       private System.Windows.Forms.TabPage tabPagePreview;
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelPreview;
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelContext;
-      private System.Windows.Forms.Label labelNoteAboutInvisibleCharacters;
+      private System.Windows.Forms.Label labelInvisibleCharactersHint;
       private System.Windows.Forms.Panel panelNavigation;
       private System.Windows.Forms.Button buttonPrev;
       private System.Windows.Forms.Label labelCounter;
       private System.Windows.Forms.Button buttonNext;
       private System.Windows.Forms.Button buttonDelete;
+      private System.Windows.Forms.Label labelModificationsHint;
    }
 }

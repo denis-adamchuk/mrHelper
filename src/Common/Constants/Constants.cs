@@ -43,7 +43,7 @@ namespace mrHelper.Common.Constants
       public static int AutoUpgradePeriodEndHour   = 6; // 6AM
 
       public static int DiscussionCheckOnNewThreadInterval = 1000 * 3; // 3 seconds
-      public static int DiscussionCheckOnNewThreadFromDiffToolInterval = 1000 * 5; // 5 seconds
+      public static int DiscussionCheckOnNewThreadFromDiffToolInterval = 500; // 0.5 seconds
 
       public static string[] ThemeNames = { "Default", "New Year 2020" };
       public static string DefaultThemeName = "Default";
