@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Collections.Generic;
 using System.Configuration;
 using System.ComponentModel;
@@ -8,6 +9,7 @@ using System.Diagnostics;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Helpers
 {
@@ -216,6 +218,9 @@ namespace mrHelper.App.Helpers
       private static readonly string MainWindowFontSizeNameDefaultValue  =
          Constants.DefaultMainWindowFontSizeChoice;
 
+      private static readonly string AccessTokensProtectedKeyName = "AccessTokensProtected";
+      private static readonly bool AccessTokensProtectedDefaultValue = false;
+
       public event PropertyChangedEventHandler PropertyChanged;
 
       internal UserDefinedSettings()
@@ -249,14 +254,14 @@ namespace mrHelper.App.Helpers
       // TODO Sync KnownHosts and KnownAccessTokens
       public string[] KnownHosts
       {
-         get { return getValues(KnownHostsKeyName, KnownHostsDefaultValue).ToArray(); }
+         get { return getValues(KnownHostsKeyName, KnownHostsDefaultValue, setValues).ToArray(); }
          set { setValues(KnownHostsKeyName, value); }
       }
 
       public string[] KnownAccessTokens
       {
-         get { return getValues(KnownAccessTokensKeyName, KnownAccessTokensDefaultValue).ToArray(); }
-         set { setValues(KnownAccessTokensKeyName, value); }
+         get { return getAccessTokens().ToArray(); }
+         set { setAccessTokens(value); }
       }
 
       public string LocalGitFolder
@@ -926,6 +931,34 @@ namespace mrHelper.App.Helpers
          return String.Empty;
       }
 
+      private bool AccessTokensProtected
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               AccessTokensProtectedKeyName, boolToString(AccessTokensProtectedDefaultValue)),
+                  out bool result) ? result : AccessTokensProtectedDefaultValue;
+         }
+         set { setValue(AccessTokensProtectedKeyName, boolToString(value)); }
+      }
+
+      private IEnumerable<string> getAccessTokens()
+      {
+         if (!AccessTokensProtected)
+         {
+            IEnumerable<string> values = getValues(KnownAccessTokensKeyName, Array.Empty<string>(), setValues);
+            setValuesCrypto(KnownAccessTokensKeyName, values.ToArray());
+            AccessTokensProtected = true;
+         }
+         return getValuesCrypto(KnownAccessTokensKeyName, Array.Empty<string>());
+      }
+
+      private void setAccessTokens(IEnumerable<string> accessTokens)
+      {
+         setValuesCrypto(KnownAccessTokensKeyName, accessTokens.ToArray());
+         AccessTokensProtected = true;
+      }
+
       private string getValue(string key, string defaultValue)
       {
          KeyValueConfigurationElement currentValue = _config.AppSettings.Settings[key];
@@ -968,7 +1001,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      private IEnumerable<string> getValues(string key, string[] defaultValues)
+      private IEnumerable<string> getValues(string key, string[] defaultValues, Action<string, string[]> setter)
       {
          if (_config.AppSettings.Settings[key] != null)
          {
@@ -984,7 +1017,7 @@ namespace mrHelper.App.Helpers
             return values;
          }
 
-         setValues(key, defaultValues);
+         setter(key, defaultValues);
          return defaultValues;
       }
 
@@ -992,6 +1025,33 @@ namespace mrHelper.App.Helpers
       {
          string valuesString = string.Join(";", values);
          setValue(key, valuesString);
+      }
+
+      private IEnumerable<string> getValuesCrypto(string key, string[] defaultValues)
+      {
+         List<string> values = new List<string>();
+         IEnumerable<string> protectedValues = getValues(key, defaultValues, setValuesCrypto);
+         foreach (string protectedValue in protectedValues)
+         {
+            byte[] protectedBytes = Base64Helper.FromBase64StringSafe(protectedValue);
+            byte[] rawBytes = protectedBytes == null ? null : CryptoHelper.UnprotectSafe(protectedBytes);
+            string value = rawBytes == null ? protectedValue : Encoding.ASCII.GetString(rawBytes);
+            values.Add(value);
+         }
+         return values;
+      }
+
+      private void setValuesCrypto(string key, string[] values)
+      {
+         List<string> protectedStrings = new List<string>();
+         foreach (string value in values)
+         {
+            byte[] rawBytes = Encoding.ASCII.GetBytes(value);
+            byte[] protectedBytes = CryptoHelper.ProtectSafe(rawBytes);
+            string protectedString = protectedBytes == null ? value : Base64Helper.ToBase64StringSafe(protectedBytes);
+            protectedStrings.Add(protectedString);
+         }
+         setValues(key, protectedStrings.ToArray());
       }
 
       private string boolToString(bool value)

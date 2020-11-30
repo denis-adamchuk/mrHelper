@@ -42,6 +42,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Security" />
     <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
@@ -69,6 +70,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tools\AppFinder.cs" />
     <Compile Include="Tools\AutoStartHelper.cs" />
+    <Compile Include="Tools\Base64Helper.cs" />
+    <Compile Include="Tools\CryptoHelper.cs" />
     <Compile Include="Tools\CustomTraceListener.cs" />
     <Compile Include="Tools\EMailSender.cs" />
     <Compile Include="Tools\ExternalProcess.cs" />
