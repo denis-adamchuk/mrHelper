@@ -1,6 +1,7 @@
-using mrHelper.Common.Interfaces;
 using System;
 using System.Linq;
+using System.Text;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Common.Tools
 {
@@ -286,6 +287,38 @@ namespace mrHelper.Common.Tools
 
          return title.StartsWith(WorkInProgressPrefix)
             ? title.Substring(WorkInProgressPrefix.Length) : WorkInProgressPrefix + title;
+      }
+
+      public static byte[] GetBytesSafe(string value)
+      {
+         if (value != null)
+         {
+            try
+            {
+               return Encoding.ASCII.GetBytes(value);
+            }
+            catch (Exception ex)
+            {
+               Exceptions.ExceptionHandlers.Handle("Cannot get bytes from string", ex);
+            }
+         }
+         return null;
+      }
+
+      public static string GetStringSafe(byte[] value)
+      {
+         if (value != null)
+         {
+            try
+            {
+               return Encoding.ASCII.GetString(value);
+            }
+            catch (Exception ex)
+            {
+               Exceptions.ExceptionHandlers.Handle("Cannot get string from bytes", ex);
+            }
+         }
+         return null;
       }
 
       private static readonly string WorkInProgressPrefix = "WIP: ";

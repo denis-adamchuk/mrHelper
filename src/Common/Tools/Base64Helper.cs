@@ -6,20 +6,34 @@ namespace mrHelper.Common.Tools
    {
       public static byte[] FromBase64StringSafe(string base64String)
       {
-         try
+         if (base64String != null)
          {
-            return Convert.FromBase64String(base64String);
+            try
+            {
+               return Convert.FromBase64String(base64String);
+            }
+            catch (Exception ex)
+            {
+               Exceptions.ExceptionHandlers.Handle("Cannot decode base64 string", ex);
+            }
          }
-         catch (FormatException ex)
-         {
-            Exceptions.ExceptionHandlers.Handle("Cannot decode base64 string", ex);
-            return null;
-         }
+         return null;
       }
 
       public static string ToBase64StringSafe(byte[] bytes)
       {
-         return Convert.ToBase64String(bytes);
+         if (bytes != null)
+         {
+            try
+            {
+               return Convert.ToBase64String(bytes);
+            }
+            catch (Exception ex)
+            {
+               Exceptions.ExceptionHandlers.Handle("Cannot encode base64 string", ex);
+            }
+         }
+         return null;
       }
    }
 }

@@ -221,6 +221,9 @@ namespace mrHelper.App.Helpers
       private static readonly string AccessTokensProtectedKeyName = "AccessTokensProtected";
       private static readonly bool AccessTokensProtectedDefaultValue = false;
 
+      private static readonly string BadValueSaved = "bad-value-saved";
+      private static readonly string BadValueLoaded = "bad-value-loaded";
+
       public event PropertyChangedEventHandler PropertyChanged;
 
       internal UserDefinedSettings()
@@ -947,15 +950,15 @@ namespace mrHelper.App.Helpers
          if (!AccessTokensProtected)
          {
             IEnumerable<string> values = getValues(KnownAccessTokensKeyName, Array.Empty<string>(), setValues);
-            setValuesCrypto(KnownAccessTokensKeyName, values.ToArray());
+            writeProtectedValues(KnownAccessTokensKeyName, values.ToArray());
             AccessTokensProtected = true;
          }
-         return getValuesCrypto(KnownAccessTokensKeyName, Array.Empty<string>());
+         return readProtectedValues(KnownAccessTokensKeyName, Array.Empty<string>());
       }
 
       private void setAccessTokens(IEnumerable<string> accessTokens)
       {
-         setValuesCrypto(KnownAccessTokensKeyName, accessTokens.ToArray());
+         writeProtectedValues(KnownAccessTokensKeyName, accessTokens.ToArray());
          AccessTokensProtected = true;
       }
 
@@ -1027,29 +1030,35 @@ namespace mrHelper.App.Helpers
          setValue(key, valuesString);
       }
 
-      private IEnumerable<string> getValuesCrypto(string key, string[] defaultValues)
+      /// <summary>
+      /// Reads protected values by key, un-protects them and returns unprotected
+      /// </summary>
+      private IEnumerable<string> readProtectedValues(string key, string[] defaultRawValues)
       {
-         List<string> values = new List<string>();
-         IEnumerable<string> protectedValues = getValues(key, defaultValues, setValuesCrypto);
+         List<string> rawValues = new List<string>();
+         IEnumerable<string> protectedValues = getValues(key, defaultRawValues, writeProtectedValues);
          foreach (string protectedValue in protectedValues)
          {
             byte[] protectedBytes = Base64Helper.FromBase64StringSafe(protectedValue);
-            byte[] rawBytes = protectedBytes == null ? null : CryptoHelper.UnprotectSafe(protectedBytes);
-            string value = rawBytes == null ? protectedValue : Encoding.ASCII.GetString(rawBytes);
-            values.Add(value);
+            byte[] rawBytes = CryptoHelper.UnprotectSafe(protectedBytes);
+            string rawValue = StringUtils.GetStringSafe(rawBytes);
+            rawValues.Add(rawValue == null ? BadValueLoaded : rawValue);
          }
-         return values;
+         return rawValues;
       }
 
-      private void setValuesCrypto(string key, string[] values)
+      /// <summary>
+      /// Protects passed raw values and writes them to config by key
+      /// </summary>
+      private void writeProtectedValues(string key, string[] rawValues)
       {
          List<string> protectedStrings = new List<string>();
-         foreach (string value in values)
+         foreach (string rawValue in rawValues)
          {
-            byte[] rawBytes = Encoding.ASCII.GetBytes(value);
+            byte[] rawBytes = StringUtils.GetBytesSafe(rawValue);
             byte[] protectedBytes = CryptoHelper.ProtectSafe(rawBytes);
-            string protectedString = protectedBytes == null ? value : Base64Helper.ToBase64StringSafe(protectedBytes);
-            protectedStrings.Add(protectedString);
+            string protectedString = Base64Helper.ToBase64StringSafe(protectedBytes);
+            protectedStrings.Add(protectedString == null ? BadValueSaved : protectedString);
          }
          setValues(key, protectedStrings.ToArray());
       }
