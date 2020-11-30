@@ -7,6 +7,11 @@ namespace mrHelper.App.Helpers
    {
       public static DiffPosition Convert(Position position)
       {
+         if (position == null)
+         {
+            return null;
+         }
+
          return new DiffPosition(
             position.Old_Path, position.New_Path,
             position.Old_Line, position.New_Line,

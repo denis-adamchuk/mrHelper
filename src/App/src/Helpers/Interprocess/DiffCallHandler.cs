@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
@@ -19,19 +20,21 @@ namespace mrHelper.App.Interprocess
    internal class DiffCallHandler
    {
       internal DiffCallHandler(IGitCommandService git, IModificationListener modificationListener,
-         User currentUser, Action<MergeRequestKey> onDiscussionSubmitted)
+         User currentUser, Action<MergeRequestKey> onDiscussionSubmitted,
+         Func<MergeRequestKey, IEnumerable<ReportedDiscussionNote>> getMyNotes)
       {
          _git = git ?? throw new ArgumentException("git argument cannot be null");
          _modificationListener = modificationListener;
          _currentUser = currentUser;
          _onDiscussionSubmitted = onDiscussionSubmitted;
+         _getMyNotes = getMyNotes;
       }
 
       public void Handle(MatchInfo matchInfo, Snapshot snapshot)
       {
-         FileNameMatcher fileNameMatcher = getFileNameMatcher(_git, getMergeRequestKey(snapshot));
+         MergeRequestKey mrk = getMergeRequestKey(snapshot);
+         FileNameMatcher fileNameMatcher = getFileNameMatcher(_git, mrk);
          LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(_git);
-
          DiffPosition position = new DiffPosition(null, null, null, null, snapshot.Refs);
 
          try
@@ -56,24 +59,19 @@ namespace mrHelper.App.Interprocess
             throw;
          }
 
-         NewDiscussionForm form = new NewDiscussionForm(
-            matchInfo.LeftFileName, matchInfo.RightFileName, position, _git,
+         NewDiscussionForm form = new NewDiscussionForm(_git,
+            position,
+            _getMyNotes(mrk).ToArray(),
+            () => _onDiscussionSubmitted?.Invoke(mrk),
             async (body, includeContext) =>
-            {
-               try
-               {
-                  await submitDiscussionAsync(matchInfo, snapshot, position, body, includeContext);
-                  _onDiscussionSubmitted?.Invoke(getMergeRequestKey(snapshot));
-               }
-               catch (DiscussionCreatorException ex)
-               {
-                  string message = "Cannot create a discussion at GitLab";
-                  ExceptionHandlers.Handle(message, ex);
-                  MessageBox.Show(String.Format("{0}. Check your connection and try again.", message),
-                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
-                     MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-               }
-            });
+               await actOnGitLab(snapshot, "create", (gli) =>
+                  submitDiscussionAsync(mrk, gli, matchInfo, snapshot.Refs, position, body, includeContext)),
+            async (notePosition, content) =>
+               await actOnGitLab(snapshot, "edit", (gli) =>
+                  editDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, content.Body, snapshot)),
+            async (notePosition) =>
+               await actOnGitLab(snapshot, "delete", (gli) =>
+                  deleteDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, snapshot)));
          form.Show();
       }
 
@@ -154,8 +152,25 @@ namespace mrHelper.App.Interprocess
          });
       }
 
-      async private Task submitDiscussionAsync(MatchInfo matchInfo, Snapshot snapshot, DiffPosition position,
-         string body, bool includeContext)
+      async private Task actOnGitLab(Snapshot snapshot, string actionName, Func<GitLabInstance, Task> action)
+      {
+         try
+         {
+            await action(new GitLabInstance(snapshot.Host, Program.Settings));
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(ex is DiscussionEditorException || ex is DiscussionCreatorException);
+            string message = String.Format("Cannot {0} a discussion at GitLab", actionName);
+            ExceptionHandlers.Handle(message, ex);
+            MessageBox.Show(String.Format("{0}. Check your connection and try again.", message),
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+         }
+      }
+
+      async private Task submitDiscussionAsync(MergeRequestKey mrk, GitLabInstance gitLabInstance,
+         MatchInfo matchInfo, Core.Matching.DiffRefs diffRefs, DiffPosition position, string body, bool includeContext)
       {
          if (body.Length == 0)
          {
@@ -168,8 +183,6 @@ namespace mrHelper.App.Interprocess
          NewDiscussionParameters parameters = new NewDiscussionParameters(
             body, includeContext ? createPositionParameters(position) : new PositionParameters?());
 
-         MergeRequestKey mrk = getMergeRequestKey(snapshot);
-         GitLabInstance gitLabInstance = new GitLabInstance(snapshot.Host, Program.Settings);
          IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
             gitLabInstance, _modificationListener, mrk, _currentUser);
 
@@ -188,7 +201,7 @@ namespace mrHelper.App.Interprocess
                   "Body:\n{4}",
                   position.ToString(),
                   includeContext.ToString(),
-                  snapshot.Refs.ToString(),
+                  diffRefs.ToString(),
                   matchInfo.ToString(),
                   body);
 
@@ -197,6 +210,22 @@ namespace mrHelper.App.Interprocess
                throw;
             }
          }
+      }
+
+      private Task editDiscussionNoteAsync(MergeRequestKey mrk, GitLabInstance gitLabInstance,
+         string discussionId, int noteId, string text, Snapshot snapshot)
+      {
+         IDiscussionEditor editor = Shortcuts.GetDiscussionEditor(
+            gitLabInstance, _modificationListener, mrk, discussionId);
+         return editor.ModifyNoteBodyAsync(noteId, text);
+      }
+
+      private Task deleteDiscussionNoteAsync(MergeRequestKey mrk, GitLabInstance gitLabInstance,
+         string discussionId, int noteId, Snapshot snapshot)
+      {
+         IDiscussionEditor editor = Shortcuts.GetDiscussionEditor(
+            gitLabInstance, _modificationListener, mrk, discussionId);
+         return editor.DeleteNoteAsync(noteId);
       }
 
       private static PositionParameters createPositionParameters(DiffPosition position)
@@ -242,6 +271,7 @@ namespace mrHelper.App.Interprocess
       private readonly IModificationListener _modificationListener;
       private readonly User _currentUser;
       private readonly Action<MergeRequestKey> _onDiscussionSubmitted;
+      private readonly Func<MergeRequestKey, IEnumerable<ReportedDiscussionNote>> _getMyNotes;
 
       private struct MismatchWhitelistKey : IEquatable<MismatchWhitelistKey>
       {

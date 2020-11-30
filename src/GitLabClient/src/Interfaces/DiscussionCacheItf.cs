@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using GitLabSharp.Entities;
 using GitLabSharp.Utils;
 
 namespace mrHelper.GitLabClient
@@ -35,6 +37,8 @@ namespace mrHelper.GitLabClient
    public interface IDiscussionCache : IDiscussionLoader
    {
       DiscussionCount GetDiscussionCount(MergeRequestKey mrk);
+
+      IEnumerable<Discussion> GetDiscussions(MergeRequestKey mrk);
 
       void RequestUpdate(MergeRequestKey? mrk, int interval, Action onUpdateFinished);
 

@@ -138,6 +138,11 @@ namespace mrHelper.GitLabClient.Managers
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()), ex);
          }
 
+         return GetDiscussions(mrk);
+      }
+
+      public IEnumerable<Discussion> GetDiscussions(MergeRequestKey mrk)
+      {
          return _cachedDiscussions.ContainsKey(mrk) ? _cachedDiscussions[mrk].Discussions : null;
       }
 

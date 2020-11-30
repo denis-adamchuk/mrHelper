@@ -10,7 +10,7 @@ namespace mrHelper.App.Interprocess
    public class Snapshot
    {
       public Snapshot(int mergeRequestIId, string host, string accessToken, string project,
-         DiffRefs refs, string tempFolder, string sessionName)
+         DiffRefs refs, string tempFolder, string dataCacheName, int dataCacheHashCode)
       {
          MergeRequestIId = mergeRequestIId;
          Host = host;
@@ -18,7 +18,8 @@ namespace mrHelper.App.Interprocess
          Project = project;
          Refs = refs;
          TempFolder = tempFolder;
-         DataCacheName = sessionName;
+         DataCacheName = dataCacheName;
+         DataCacheHashCode = dataCacheHashCode;
       }
 
       [JsonProperty]
@@ -41,5 +42,9 @@ namespace mrHelper.App.Interprocess
 
       [JsonProperty]
       public string DataCacheName { get; protected set; }
+
+      [JsonProperty]
+      public int DataCacheHashCode { get; protected set; }
    }
 }
+

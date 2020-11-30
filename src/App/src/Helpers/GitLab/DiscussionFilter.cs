@@ -65,6 +65,16 @@ namespace mrHelper.App.Helpers
          }
       }
 
+      static public DiscussionFilterState CurrentUserOnly
+      {
+         get
+         {
+            return new DiscussionFilterState(true, true, false,
+               FilterByAnswers.Answered | FilterByAnswers.Unanswered,
+               FilterByResolution.Resolved | FilterByResolution.NotResolved);
+         }
+      }
+
       public override bool Equals(object obj)
       {
          return obj is DiscussionFilterState state && Equals(state);
@@ -127,13 +137,16 @@ namespace mrHelper.App.Helpers
             return false;
          }
 
-         bool isLastNoteFromMergeRequestAuthor = discussion.Notes.Last().Author.Id == MergeRequestAuthor.Id;
-         bool matchByAnswers =
-                (Filter.ByAnswers.HasFlag(FilterByAnswers.Answered) && isLastNoteFromMergeRequestAuthor)
-             || (Filter.ByAnswers.HasFlag(FilterByAnswers.Unanswered) && !isLastNoteFromMergeRequestAuthor);
-         if (!matchByAnswers)
+         if (MergeRequestAuthor != null)
          {
-            return false;
+            bool isLastNoteFromMergeRequestAuthor = discussion.Notes.Last().Author.Id == MergeRequestAuthor.Id;
+            bool matchByAnswers =
+                   (Filter.ByAnswers.HasFlag(FilterByAnswers.Answered) && isLastNoteFromMergeRequestAuthor)
+                || (Filter.ByAnswers.HasFlag(FilterByAnswers.Unanswered) && !isLastNoteFromMergeRequestAuthor);
+            if (!matchByAnswers)
+            {
+               return false;
+            }
          }
 
          bool isDiscussionResolved = discussion.Notes.Cast<DiscussionNote>().All(x => (!x.Resolvable || x.Resolved));

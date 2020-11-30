@@ -611,22 +611,6 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(linkLabelFromClipboard, tooltip);
       }
 
-      private void moveCopyFromClipboardLinkLabel()
-      {
-         int tabCount = tabControlMode.TabPages.Count;
-         Debug.Assert(tabCount > 0);
-
-         Rectangle tabRect = tabControlMode.GetTabRect(tabCount - 1);
-
-         int linkLabelTopRelativeToTabRect = tabRect.Height / 2 - linkLabelFromClipboard.Height / 2;
-         int linkLabelTop = tabRect.Top + linkLabelTopRelativeToTabRect;
-
-         int linkLabelHorizontalOffsetFromRightmostTab = 20;
-         int linkLabelLeft = tabRect.X + tabRect.Width + linkLabelHorizontalOffsetFromRightmostTab;
-
-         linkLabelFromClipboard.Location = new System.Drawing.Point(linkLabelLeft, linkLabelTop);
-      }
-
       private static void sendFeedback()
       {
          try
