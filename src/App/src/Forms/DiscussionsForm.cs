@@ -866,7 +866,8 @@ namespace mrHelper.App.Forms
       {
          get
          {
-            return String.Format("Discussions for merge request \"{0}\"", _mergeRequestTitle);
+            return String.Format("Discussions for merge request !{0} in {1} -- \"{2}\"",
+               _mergeRequestKey.IId, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestTitle);
          }
       }
 
