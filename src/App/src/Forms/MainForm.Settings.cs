@@ -114,7 +114,6 @@ namespace mrHelper.App.Forms
 
       private void setKnownHostsDropdownValue()
       {
-         Debug.Assert(Program.Settings.KnownHosts.Count() == Program.Settings.KnownAccessTokens.Count());
          // Remove all items except header
          for (int iListViewItem = 1; iListViewItem < listViewKnownHosts.Items.Count; ++iListViewItem)
          {
@@ -123,21 +122,20 @@ namespace mrHelper.App.Forms
 
          List<string> newKnownHosts = new List<string>();
          List<string> newAccessTokens = new List<string>();
-         for (int iKnownHost = 0; iKnownHost < Program.Settings.KnownHosts.Count(); ++iKnownHost)
+         string[] hosts = Program.Settings.GetHosts().ToArray();
+         for (int iKnownHost = 0; iKnownHost < hosts.Length; ++iKnownHost)
          {
             // Upgrade from old versions which did not have prefix
-            string host = StringUtils.GetHostWithPrefix(Program.Settings.KnownHosts[iKnownHost]);
-            string accessToken = Program.Settings.KnownAccessTokens.Length > iKnownHost
-               ? Program.Settings.KnownAccessTokens[iKnownHost]
-               : String.Empty;
+            string host = StringUtils.GetHostWithPrefix(hosts[iKnownHost]);
+            string accessToken = Program.Settings.GetAccessToken(host);
             if (addKnownHost(host, accessToken))
             {
                newKnownHosts.Add(host);
                newAccessTokens.Add(accessToken);
             }
          }
-         Program.Settings.KnownHosts = newKnownHosts.ToArray();
-         Program.Settings.KnownAccessTokens = newAccessTokens.ToArray();
+         Program.Settings.SetAuthInfo(Enumerable.Zip(newKnownHosts, newAccessTokens,
+            (a, b) => new Tuple<string, string>(a, b)));
       }
 
       private void setDefaultRevisionTypeRadioValue()
@@ -314,8 +312,7 @@ namespace mrHelper.App.Forms
 
       private bool addKnownHost(string host, string accessToken)
       {
-         Trace.TraceInformation(String.Format("[MainForm] Adding host {0} with token {1}",
-            host, accessToken));
+         Trace.TraceInformation("[MainForm] Adding host {0}", host);
 
          foreach (ListViewItem listItem in listViewKnownHosts.Items)
          {
@@ -471,7 +468,7 @@ namespace mrHelper.App.Forms
 
       private string getInitialHostNameIfKnown()
       {
-         return Program.Settings.KnownHosts.Any(host => host == _initialHostName) ? _initialHostName : null;
+         return Program.Settings.GetHosts().Any(host => host == _initialHostName) ? _initialHostName : null;
       }
 
       private void setInitialHostName(string hostname)
@@ -566,16 +563,15 @@ namespace mrHelper.App.Forms
 
       private void updateKnownHostAndTokensInSettings()
       {
-         Program.Settings.KnownHosts = listViewKnownHosts
+         IEnumerable<string> hosts = listViewKnownHosts
             .Items
             .Cast<ListViewItem>()
-            .Select(i => i.Text)
-            .ToArray();
-         Program.Settings.KnownAccessTokens = listViewKnownHosts
+            .Select(i => i.Text);
+         IEnumerable<string> tokens = listViewKnownHosts
             .Items
             .Cast<ListViewItem>()
-            .Select(i => i.SubItems[1].Text)
-            .ToArray();
+            .Select(i => i.SubItems[1].Text);
+         Program.Settings.SetAuthInfo(Enumerable.Zip(hosts, tokens, (a, b) => new Tuple<string, string>(a, b)));
       }
 
       private void onTextBoxDisplayFilterUpdate()

@@ -158,9 +158,7 @@ namespace mrHelper.App.Forms
          DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
          getShaForDiffTool(out string leftSHA, out string rightSHA,
             out IEnumerable<string> includedSHA, out RevisionType? type);
-         string accessToken = Program.Settings.GetAccessToken(mrk.ProjectKey.HostName);
          if (dataCache == null
-          || String.IsNullOrWhiteSpace(accessToken)
           || String.IsNullOrWhiteSpace(leftSHA)
           || String.IsNullOrWhiteSpace(rightSHA)
           || includedSHA == null
@@ -177,7 +175,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         launchDiffTool(leftSHA, rightSHA, storage, mrk, accessToken, dataCache);
+         launchDiffTool(leftSHA, rightSHA, storage, mrk, dataCache);
 
          HashSet<string> reviewedRevisions = getReviewedRevisions(mrk);
          foreach (string sha in includedSHA)
@@ -194,7 +192,7 @@ namespace mrHelper.App.Forms
       }
 
       private void launchDiffTool(string leftSHA, string rightSHA, ILocalCommitStorage storage,
-         MergeRequestKey mrk, string accessToken, DataCache dataCache)
+         MergeRequestKey mrk, DataCache dataCache)
       {
          addOperationRecord("Launching diff tool has started");
 
@@ -227,7 +225,7 @@ namespace mrHelper.App.Forms
          else
          {
             addOperationRecord("Diff tool has launched");
-            saveInterprocessSnapshot(pid.Value, leftSHA, rightSHA, mrk, accessToken, dataCache);
+            saveInterprocessSnapshot(pid.Value, leftSHA, rightSHA, mrk, dataCache);
          }
       }
 
@@ -257,14 +255,13 @@ namespace mrHelper.App.Forms
       }
 
       private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA, MergeRequestKey mrk,
-         string accessToken, DataCache dataCache)
+         DataCache dataCache)
       {
          // leftSHA - Base commit SHA in the source branch
          // rightSHA - SHA referencing HEAD of this merge request
          Snapshot snapshot = new Snapshot(
             mrk.IId,
             mrk.ProjectKey.HostName,
-            accessToken,
             mrk.ProjectKey.ProjectName,
             new Core.Matching.DiffRefs(leftSHA, rightSHA),
             textBoxStorageFolder.Text,

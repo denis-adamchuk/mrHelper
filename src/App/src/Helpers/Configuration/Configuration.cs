@@ -254,14 +254,13 @@ namespace mrHelper.App.Helpers
          ConfigurationManager.RefreshSection("appSettings");
       }
 
-      // TODO Sync KnownHosts and KnownAccessTokens
-      public string[] KnownHosts
+      private string[] KnownHosts
       {
          get { return getValues(KnownHostsKeyName, KnownHostsDefaultValue, setValues).ToArray(); }
          set { setValues(KnownHostsKeyName, value); }
       }
 
-      public string[] KnownAccessTokens
+      private string[] KnownAccessTokens
       {
          get { return getAccessTokens().ToArray(); }
          set { setAccessTokens(value); }
@@ -934,6 +933,17 @@ namespace mrHelper.App.Helpers
          return String.Empty;
       }
 
+      public IEnumerable<string> GetHosts()
+      {
+         return KnownHosts;
+      }
+
+      public void SetAuthInfo(IEnumerable<Tuple<string, string>> hostToken)
+      {
+         KnownHosts = hostToken.Select(tuple => tuple.Item1).ToArray();
+         KnownAccessTokens = hostToken.Select(tuple => tuple.Item2).ToArray();
+      }
+
       private bool AccessTokensProtected
       {
          get
@@ -982,7 +992,10 @@ namespace mrHelper.App.Helpers
          {
             _config.AppSettings.Settings.Add(key, value);
             notify = true;
-            Trace.TraceInformation("[Configuration] Added a new property {0} with value {1}", key, value);
+            if (needLogValueChange(key))
+            {
+               Trace.TraceInformation("[Configuration] Added a new property {0} with value {1}", key, value);
+            }
          }
          else if (_config.AppSettings.Settings[key].Value != value)
          {
@@ -994,14 +1007,22 @@ namespace mrHelper.App.Helpers
             string newValueWithoutPrefix = value.StartsWith(DefaultValuePrefix)
                ? value.Substring(DefaultValuePrefix.Length) : value;
             notify = oldValueWithoutPrefix != newValueWithoutPrefix;
-            Trace.TraceInformation("[Configuration] Changed value of property {0} from {1} to {2}, notify={3}",
-               key, oldValue, value, notify);
+            if (needLogValueChange(key))
+            {
+               Trace.TraceInformation("[Configuration] Changed value of property {0} from {1} to {2}, notify={3}",
+                  key, oldValue, value, notify);
+            }
          }
 
          if (notify)
          {
             OnPropertyChanged(key);
          }
+      }
+
+      private bool needLogValueChange(string key)
+      {
+         return key != KnownAccessTokensKeyName;
       }
 
       private IEnumerable<string> getValues(string key, string[] defaultValues, Action<string, string[]> setter)
