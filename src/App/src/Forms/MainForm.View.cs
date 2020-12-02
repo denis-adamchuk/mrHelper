@@ -30,6 +30,7 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          labelOperationStatus.Text = String.Empty;
          labelStorageStatus.Text = String.Empty;
+         comboBoxSearchByState.SelectedIndex = 0;
 
          if (_keywords == null)
          {
@@ -735,7 +736,9 @@ namespace mrHelper.App.Forms
           + checkBoxSearchByAuthor.Width
           + calcHorzDistance(checkBoxSearchByAuthor, linkLabelFindMe)
           + linkLabelFindMe.Width
-          + 50 /* a minimum gap between Find Me link label and right border */
+          + calcHorzDistance(linkLabelFindMe, labelSearchByState)
+          + labelSearchByState.Width
+          + 50 /* a minimum gap between State label and right border */
           + calcHorzDistance(groupBoxSearchMergeRequest, null)
           + calcHorzDistance(tabControlMode, null);
 
@@ -750,7 +753,9 @@ namespace mrHelper.App.Forms
           + comboBoxProjectName.Width
           + calcHorzDistance(comboBoxProjectName, comboBoxUser)
           + comboBoxUser.Width
-          + calcHorzDistance(comboBoxUser, buttonSearch)
+          + calcHorzDistance(comboBoxUser, comboBoxSearchByState)
+          + comboBoxSearchByState.Width
+          + calcHorzDistance(comboBoxSearchByState, buttonSearch)
           + buttonSearch.Width
           + 50 /* a minimum gap between Search button and right border */
           + calcHorzDistance(groupBoxSearchMergeRequest, null)
@@ -1017,6 +1022,7 @@ namespace mrHelper.App.Forms
          textBoxSearchTargetBranch.Enabled = enabled;
          checkBoxSearchByTitleAndDescription.Enabled = enabled;
          textBoxSearchText.Enabled = enabled;
+         comboBoxSearchByState.Enabled = enabled;
       }
 
       private void updateSearchButtonState()

@@ -422,6 +422,10 @@ namespace mrHelper.App.Forms
             query.AuthorUserName = (comboBoxUser.SelectedItem as User).Username;
          }
 
+         string stateToSearch = comboBoxSearchByState.SelectedItem.ToString();
+         bool unspecifiedState = stateToSearch == "any";
+         query.State = unspecifiedState ? null : stateToSearch;
+
          Debug.Assert(query != null);
          searchMergeRequests(new SearchQueryCollection(query));
       }

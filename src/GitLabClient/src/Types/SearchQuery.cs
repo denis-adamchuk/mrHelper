@@ -18,7 +18,7 @@ namespace mrHelper.GitLabClient
       {
          return String.Format(
             "IId: {0}, Project: {1}, TargetBranch: {2}, Text: {3}, Author: {4}, " +
-            "Label: {5}, MaxResults: {6}, OnlyOpen: {7}",
+            "Label: {5}, MaxResults: {6}, State: {7}",
             IId.HasValue ? IId.Value.ToString() : "N/A",
             ProjectName != null ? ProjectName : "N/A",
             TargetBranchName != null ? TargetBranchName : "N/A",

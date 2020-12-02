@@ -92,6 +92,8 @@ namespace mrHelper.App.Forms
          this.checkBoxDisplayFilter = new System.Windows.Forms.CheckBox();
          this.tabPageSearch = new System.Windows.Forms.TabPage();
          this.groupBoxSearchMergeRequest = new System.Windows.Forms.GroupBox();
+         this.labelSearchByState = new System.Windows.Forms.Label();
+         this.comboBoxSearchByState = new System.Windows.Forms.ComboBox();
          this.textBoxSearchTargetBranch = new System.Windows.Forms.TextBox();
          this.linkLabelFindMe = new System.Windows.Forms.LinkLabel();
          this.buttonSearch = new System.Windows.Forms.Button();
@@ -165,6 +167,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderRecentJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.checkBoxRemindAboutAvailableNewVersion = new System.Windows.Forms.CheckBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -243,7 +246,6 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
-         this.checkBoxRemindAboutAvailableNewVersion = new System.Windows.Forms.CheckBox();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -435,7 +437,7 @@ namespace mrHelper.App.Forms
          // 
          this.textBoxSearchText.Location = new System.Drawing.Point(3, 42);
          this.textBoxSearchText.Name = "textBoxSearchText";
-         this.textBoxSearchText.Size = new System.Drawing.Size(160, 20);
+         this.textBoxSearchText.Size = new System.Drawing.Size(146, 20);
          this.textBoxSearchText.TabIndex = 1;
          this.toolTip.SetToolTip(this.textBoxSearchText, "Press Enter to search");
          this.textBoxSearchText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearch_KeyDown);
@@ -615,6 +617,8 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxSearchMergeRequest
          // 
+         this.groupBoxSearchMergeRequest.Controls.Add(this.labelSearchByState);
+         this.groupBoxSearchMergeRequest.Controls.Add(this.comboBoxSearchByState);
          this.groupBoxSearchMergeRequest.Controls.Add(this.textBoxSearchTargetBranch);
          this.groupBoxSearchMergeRequest.Controls.Add(this.linkLabelFindMe);
          this.groupBoxSearchMergeRequest.Controls.Add(this.buttonSearch);
@@ -634,11 +638,33 @@ namespace mrHelper.App.Forms
          this.groupBoxSearchMergeRequest.TabStop = false;
          this.groupBoxSearchMergeRequest.Text = "Search Merge Request";
          // 
+         // labelSearchByState
+         // 
+         this.labelSearchByState.AutoSize = true;
+         this.labelSearchByState.Location = new System.Drawing.Point(611, 22);
+         this.labelSearchByState.Name = "labelSearchByState";
+         this.labelSearchByState.Size = new System.Drawing.Size(32, 13);
+         this.labelSearchByState.TabIndex = 14;
+         this.labelSearchByState.Text = "State";
+         // 
+         // comboBoxSearchByState
+         // 
+         this.comboBoxSearchByState.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxSearchByState.Items.AddRange(new object[] {
+            "any",
+            "opened",
+            "closed",
+            "merged"});
+         this.comboBoxSearchByState.Location = new System.Drawing.Point(611, 42);
+         this.comboBoxSearchByState.Name = "comboBoxSearchByState";
+         this.comboBoxSearchByState.Size = new System.Drawing.Size(82, 21);
+         this.comboBoxSearchByState.TabIndex = 13;
+         // 
          // textBoxSearchTargetBranch
          // 
-         this.textBoxSearchTargetBranch.Location = new System.Drawing.Point(169, 42);
+         this.textBoxSearchTargetBranch.Location = new System.Drawing.Point(155, 42);
          this.textBoxSearchTargetBranch.Name = "textBoxSearchTargetBranch";
-         this.textBoxSearchTargetBranch.Size = new System.Drawing.Size(140, 20);
+         this.textBoxSearchTargetBranch.Size = new System.Drawing.Size(123, 20);
          this.textBoxSearchTargetBranch.TabIndex = 12;
          this.toolTip.SetToolTip(this.textBoxSearchTargetBranch, "Press Enter to search");
          this.textBoxSearchTargetBranch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearch_KeyDown);
@@ -646,7 +672,7 @@ namespace mrHelper.App.Forms
          // linkLabelFindMe
          // 
          this.linkLabelFindMe.AutoSize = true;
-         this.linkLabelFindMe.Location = new System.Drawing.Point(627, 21);
+         this.linkLabelFindMe.Location = new System.Drawing.Point(561, 21);
          this.linkLabelFindMe.Name = "linkLabelFindMe";
          this.linkLabelFindMe.Size = new System.Drawing.Size(44, 13);
          this.linkLabelFindMe.TabIndex = 11;
@@ -668,9 +694,9 @@ namespace mrHelper.App.Forms
          // 
          this.comboBoxUser.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxUser.FormattingEnabled = true;
-         this.comboBoxUser.Location = new System.Drawing.Point(496, 42);
+         this.comboBoxUser.Location = new System.Drawing.Point(465, 42);
          this.comboBoxUser.Name = "comboBoxUser";
-         this.comboBoxUser.Size = new System.Drawing.Size(175, 21);
+         this.comboBoxUser.Size = new System.Drawing.Size(140, 21);
          this.comboBoxUser.TabIndex = 9;
          this.comboBoxUser.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxUser_Format);
          // 
@@ -678,7 +704,7 @@ namespace mrHelper.App.Forms
          // 
          this.comboBoxProjectName.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxProjectName.FormattingEnabled = true;
-         this.comboBoxProjectName.Location = new System.Drawing.Point(315, 42);
+         this.comboBoxProjectName.Location = new System.Drawing.Point(284, 42);
          this.comboBoxProjectName.Name = "comboBoxProjectName";
          this.comboBoxProjectName.Size = new System.Drawing.Size(175, 21);
          this.comboBoxProjectName.TabIndex = 8;
@@ -687,7 +713,7 @@ namespace mrHelper.App.Forms
          // checkBoxSearchByAuthor
          // 
          this.checkBoxSearchByAuthor.AutoSize = true;
-         this.checkBoxSearchByAuthor.Location = new System.Drawing.Point(496, 20);
+         this.checkBoxSearchByAuthor.Location = new System.Drawing.Point(465, 21);
          this.checkBoxSearchByAuthor.Name = "checkBoxSearchByAuthor";
          this.checkBoxSearchByAuthor.Size = new System.Drawing.Size(57, 17);
          this.checkBoxSearchByAuthor.TabIndex = 7;
@@ -699,7 +725,7 @@ namespace mrHelper.App.Forms
          // checkBoxSearchByProject
          // 
          this.checkBoxSearchByProject.AutoSize = true;
-         this.checkBoxSearchByProject.Location = new System.Drawing.Point(315, 20);
+         this.checkBoxSearchByProject.Location = new System.Drawing.Point(284, 20);
          this.checkBoxSearchByProject.Name = "checkBoxSearchByProject";
          this.checkBoxSearchByProject.Size = new System.Drawing.Size(59, 17);
          this.checkBoxSearchByProject.TabIndex = 6;
@@ -711,7 +737,7 @@ namespace mrHelper.App.Forms
          // checkBoxSearchByTargetBranch
          // 
          this.checkBoxSearchByTargetBranch.AutoSize = true;
-         this.checkBoxSearchByTargetBranch.Location = new System.Drawing.Point(169, 20);
+         this.checkBoxSearchByTargetBranch.Location = new System.Drawing.Point(155, 19);
          this.checkBoxSearchByTargetBranch.Name = "checkBoxSearchByTargetBranch";
          this.checkBoxSearchByTargetBranch.Size = new System.Drawing.Size(94, 17);
          this.checkBoxSearchByTargetBranch.TabIndex = 5;
@@ -1448,6 +1474,18 @@ namespace mrHelper.App.Forms
          this.columnHeaderRecentTargetBranch.Tag = "TargetBranch";
          this.columnHeaderRecentTargetBranch.Text = "Target Branch";
          this.columnHeaderRecentTargetBranch.Width = 100;
+         // 
+         // checkBoxRemindAboutAvailableNewVersion
+         // 
+         this.checkBoxRemindAboutAvailableNewVersion.AutoSize = true;
+         this.checkBoxRemindAboutAvailableNewVersion.Location = new System.Drawing.Point(340, 41);
+         this.checkBoxRemindAboutAvailableNewVersion.Name = "checkBoxRemindAboutAvailableNewVersion";
+         this.checkBoxRemindAboutAvailableNewVersion.Size = new System.Drawing.Size(197, 17);
+         this.checkBoxRemindAboutAvailableNewVersion.TabIndex = 24;
+         this.checkBoxRemindAboutAvailableNewVersion.Text = "Remind about available new version";
+         this.toolTip.SetToolTip(this.checkBoxRemindAboutAvailableNewVersion, "Remind about available new version once a day");
+         this.checkBoxRemindAboutAvailableNewVersion.UseVisualStyleBackColor = true;
+         this.checkBoxRemindAboutAvailableNewVersion.CheckedChanged += new System.EventHandler(this.checkBoxRemindAboutAvailableNewVersion_CheckedChanged);
          // 
          // contextMenuStrip
          // 
@@ -2372,18 +2410,6 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
-         // checkBoxRemindAboutAvailableNewVersion
-         // 
-         this.checkBoxRemindAboutAvailableNewVersion.AutoSize = true;
-         this.checkBoxRemindAboutAvailableNewVersion.Location = new System.Drawing.Point(340, 41);
-         this.checkBoxRemindAboutAvailableNewVersion.Name = "checkBoxRemindAboutAvailableNewVersion";
-         this.checkBoxRemindAboutAvailableNewVersion.Size = new System.Drawing.Size(231, 17);
-         this.checkBoxRemindAboutAvailableNewVersion.TabIndex = 24;
-         this.checkBoxRemindAboutAvailableNewVersion.Text = "Remind about available new version";
-         this.toolTip.SetToolTip(this.checkBoxRemindAboutAvailableNewVersion, "Remind about available new version once a day");
-         this.checkBoxRemindAboutAvailableNewVersion.UseVisualStyleBackColor = true;
-         this.checkBoxRemindAboutAvailableNewVersion.CheckedChanged += new System.EventHandler(this.checkBoxRemindAboutAvailableNewVersion_CheckedChanged);
-         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2658,6 +2684,8 @@ namespace mrHelper.App.Forms
       private GroupBox groupBoxRecentMergeRequest;
       private TextBox textBoxRecentMergeRequestsHint;
       private CheckBox checkBoxRemindAboutAvailableNewVersion;
+      private Label labelSearchByState;
+      private ComboBox comboBoxSearchByState;
    }
 }
 
