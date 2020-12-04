@@ -109,12 +109,17 @@
     <Compile Include="src\Controls\MergeRequestListViewContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="src\Controls\MergeRequestListViewContextMenu.Designer.cs">
-      <DependentUpon>MergeRequestListViewContextMenu.cs</DependentUpon>
+    <Compile Include="src\Controls\MergeRequestListViewSubItemInfo.cs">
     </Compile>
     <Compile Include="src\Controls\MergeRequestListView.cs" />
     <Compile Include="src\Controls\MergeRequestListView.Designer.cs">
       <DependentUpon>MergeRequestListView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Controls\MergeRequestListViewToolTip.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="src\Controls\MergeRequestListViewToolTip.Designer.cs">
+      <DependentUpon>MergeRequestListViewToolTip.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Controls\RevisionBrowser.cs">
       <SubType>UserControl</SubType>

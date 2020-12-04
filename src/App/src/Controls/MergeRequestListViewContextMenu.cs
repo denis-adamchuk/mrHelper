@@ -3,13 +3,11 @@ using System.Windows.Forms;
 
 namespace mrHelper.App.Controls
 {
-   public partial class MergeRequestListViewContextMenu : ContextMenuStrip
+   public class MergeRequestListViewContextMenu : ContextMenuStrip
    {
       public MergeRequestListViewContextMenu(Action onDiscussions, Action onRefresh, Action onEdit,
          Action onMerge, Action onClose, Action onDefault)
       {
-         InitializeComponent();
-
          ToolStripItemCollection items = Items;
          if (onDiscussions != null)
          {
@@ -60,18 +58,22 @@ namespace mrHelper.App.Controls
 
       public void SetEditActionEnabled(bool enabled)
       {
-         if (_editItem != null)
-         {
-            _editItem.Enabled = enabled;
-         }
+         _isEditActionEnabled = enabled;
       }
 
       public void SetMergeActionEnabled(bool enabled)
       {
-         if (_mergeItem != null)
-         {
-            _mergeItem.Enabled = enabled;
-         }
+         _isMergeActionEnabled = enabled;
+      }
+
+      public void DisableAll()
+      {
+         _disabledAll = true;
+      }
+
+      public void EnableAll()
+      {
+         _disabledAll = false;
       }
 
       public void LaunchDefaultAction()
@@ -79,9 +81,30 @@ namespace mrHelper.App.Controls
          _defaultItem?.PerformClick();
       }
 
+      public void UpdateItemState()
+      {
+         foreach (ToolStripItem item in Items)
+         {
+            item.Enabled = !_disabledAll;
+         }
+
+         if (_editItem != null)
+         {
+            _editItem.Enabled = _isEditActionEnabled && !_disabledAll;
+         }
+
+         if (_mergeItem != null)
+         {
+            _mergeItem.Enabled = _isMergeActionEnabled && !_disabledAll;
+         }
+      }
+
       private readonly ToolStripItem _editItem;
       private readonly ToolStripItem _mergeItem;
       private readonly ToolStripItem _defaultItem;
+      private bool _isEditActionEnabled;
+      private bool _isMergeActionEnabled;
+      private bool _disabledAll;
    }
 }
 

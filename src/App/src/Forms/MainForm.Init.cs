@@ -50,7 +50,12 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingCancel.ConfirmationCondition = () => true;
          buttonTimeTrackingCancel.ConfirmationText = "Tracked time will be lost, are you sure?";
 
-         forEachListView(listView => listView.Deselected += listViewMergeRequests_Deselected);
+         listViewLiveMergeRequests.Tag = Constants.LiveListViewName;
+         listViewFoundMergeRequests.Tag = Constants.SearchListViewName;
+         listViewRecentMergeRequests.Tag = Constants.RecentListViewName;
+
+         forEachListView(listView => listView.CollapsingToggled += listViewMergeRequests_CollapsingToggled);
+         forEachListView(listView => listView.Initialize());
 
          SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
          _applicationUpdateChecker = new PeriodicUpdateChecker(this);
@@ -189,6 +194,8 @@ namespace mrHelper.App.Forms
          _persistentStorage = new PersistentStorage();
          _persistentStorage.OnSerialize += onPersistentStorageSerialize;
          _persistentStorage.OnDeserialize += onPersistentStorageDeserialize;
+         forEachListView(listView => listView.SetPersistentStorage(_persistentStorage));
+
          try
          {
             _persistentStorage.Deserialize();
@@ -301,13 +308,16 @@ namespace mrHelper.App.Forms
             closeSelectedMergeRequest,
             showDiscussionsForSelectedMergeRequest));
 
-         getListView(EDataCacheType.Recent).AssignContextMenu(new MergeRequestListViewContextMenu(
-            showDiscussionsForSelectedMergeRequest,
-            refreshSelectedMergeRequest,
-            null,
-            null,
-            null,
-            showDiscussionsForSelectedMergeRequest));
+         foreach (EDataCacheType mode in new EDataCacheType[] { EDataCacheType.Recent, EDataCacheType.Search })
+         {
+            getListView(mode).AssignContextMenu(new MergeRequestListViewContextMenu(
+               showDiscussionsForSelectedMergeRequest,
+               mode == EDataCacheType.Search ? (null as Action) : refreshSelectedMergeRequest,
+               null,
+               null,
+               null,
+               showDiscussionsForSelectedMergeRequest));
+         }
       }
 
       private void startEventPendingTimer(Func<bool> onCheck, int checkInterval, Action onEvent)
@@ -343,7 +353,8 @@ namespace mrHelper.App.Forms
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Live");
          _liveDataCache = new DataCache(dataCacheContext, _modificationNotifier);
-         getListView(EDataCacheType.Live).AssignDataCache(_liveDataCache);
+         getListView(EDataCacheType.Live).SetDataCache(_liveDataCache);
+         getListView(EDataCacheType.Live).SetFilter(_mergeRequestFilter);
 
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          _expressionResolver = new ExpressionResolver(dataCache);
@@ -425,7 +436,7 @@ namespace mrHelper.App.Forms
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Search");
          _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier);
-         getListView(EDataCacheType.Search).AssignDataCache(_searchDataCache);
+         getListView(EDataCacheType.Search).SetDataCache(_searchDataCache);
       }
 
       private void subscribeToSearchDataCache()
@@ -449,7 +460,7 @@ namespace mrHelper.App.Forms
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Recent");
          _recentDataCache = new DataCache(dataCacheContext, _modificationNotifier);
-         getListView(EDataCacheType.Recent).AssignDataCache(_recentDataCache);
+         getListView(EDataCacheType.Recent).SetDataCache(_recentDataCache);
       }
 
       private void subscribeToRecentDataCacheInternalEvents()

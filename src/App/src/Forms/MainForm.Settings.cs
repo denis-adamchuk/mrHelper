@@ -52,9 +52,7 @@ namespace mrHelper.App.Forms
          setDefaultRevisionTypeRadioValue();
          setWorkflowTypeRadioValue();
          setDontUseGitRadioValue();
-         selectDiifContextDepthDropdownValue();
-         setColumnWidthsFromSettings();
-         setColumnIndicesFromSettings();
+         selectDiffContextDepthDropdownValue();
          setFontFromSettings();
          setThemeFromSettings();
          createMessageFilterFromSettings();
@@ -67,23 +65,6 @@ namespace mrHelper.App.Forms
       {
          _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());
          _mergeRequestFilter.FilterChanged += () => updateMergeRequestList(EDataCacheType.Live);
-      }
-
-      private void setColumnWidthsFromSettings()
-      {
-         getListView(EDataCacheType.Live).SetColumnWidths(Program.Settings.ListViewMergeRequestsColumnWidths);
-         getListView(EDataCacheType.Search).SetColumnWidths(Program.Settings.ListViewFoundMergeRequestsColumnWidths);
-         getListView(EDataCacheType.Recent).SetColumnWidths(Program.Settings.ListViewRecentMergeRequestsColumnWidths);
-      }
-
-      private void setColumnIndicesFromSettings()
-      {
-         getListView(EDataCacheType.Live).SetColumnIndices(Program.Settings.ListViewMergeRequestsDisplayIndices,
-            x => Program.Settings.ListViewMergeRequestsDisplayIndices = x);
-         getListView(EDataCacheType.Search).SetColumnIndices(Program.Settings.ListViewFoundMergeRequestsDisplayIndices,
-            x => Program.Settings.ListViewFoundMergeRequestsDisplayIndices = x);
-         getListView(EDataCacheType.Recent).SetColumnIndices(Program.Settings.ListViewRecentMergeRequestsDisplayIndices,
-            x => Program.Settings.ListViewRecentMergeRequestsDisplayIndices = x);
       }
 
       private void setThemeFromSettings()
@@ -100,7 +81,7 @@ namespace mrHelper.App.Forms
          applyFont(Program.Settings.MainWindowFontSizeName);
       }
 
-      private void selectDiifContextDepthDropdownValue()
+      private void selectDiffContextDepthDropdownValue()
       {
          if (comboBoxDCDepth.Items.Contains(Program.Settings.DiffContextDepth))
          {

@@ -296,10 +296,17 @@ namespace mrHelper.App.Forms
       {
          MergeRequestKey mrk = parseUrlIntoMergeRequestKey(parsedUrl);
 
-         // First, try to select a MR from a list of visible MRs
-         if (trySelectMergeRequest(mrk))
+         // First, try to select a MR from lists of visible MRs
+         bool tryOpenAtLiveTab = true;
+         switch (trySelectMergeRequest(mrk))
          {
-            return;
+            case SelectionResult.NotFound:
+               break;
+            case SelectionResult.Selected:
+               return;
+            case SelectionResult.Hidden:
+               tryOpenAtLiveTab = false;
+               break;
          }
 
          bool isConnected = getDataCache(EDataCacheType.Live)?.ConnectionContext != null;
@@ -310,53 +317,71 @@ namespace mrHelper.App.Forms
             await restartWorkflowByUrlAsync(mrk.ProjectKey.HostName);
          }
 
-         // Check if MR can be shown at the Live tab.
-         // Note that if even it can be shown, it is possibly not shown now:
-         // - Live tab can be outdated => will be updated
-         // - Filter is On and requested MR is hidden => will be proposed to clear Filter
-         bool tryOpenAtLiveTab = await checkLiveDataCacheFilterAsync(mrk, url);
+         // If MR is not found at the Live tab at all or user rejected to unhide it,
+         // don't try to open it at the Live tab.
+         // Otherwise, check if requested MR match workflow filters.
+         tryOpenAtLiveTab = tryOpenAtLiveTab && (await checkLiveDataCacheFilterAsync(mrk, url));
          if (!tryOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url, !needReload))
          {
             await openUrlAtSearchTabAsync(mrk);
          }
       }
 
-      private bool trySelectMergeRequest(MergeRequestKey mrk)
+      private enum SelectionResult
       {
-         DataCache dataCache = getDataCache(EDataCacheType.Live);
-         if (dataCache?.MergeRequestCache?.GetMergeRequest(mrk) != null)
+         NotFound,
+         Hidden,
+         Selected,
+      }
+
+      private SelectionResult trySelectMergeRequest(MergeRequestKey mrk)
+      {
+         bool isCached(EDataCacheType mode) => getDataCache(mode)?.MergeRequestCache?.GetMergeRequest(mrk) != null;
+
+         // We want to check lists in specific order:
+         EDataCacheType[] modes = new EDataCacheType[]
          {
-            tabControlMode.SelectedTab = tabPageLive;
-            if (getListView(EDataCacheType.Live).SelectMergeRequest(mrk, true))
-            {
-               return true;
-            }
-            // e.g. MR is hidden at Live tab due to filters...
+            EDataCacheType.Live,
+            EDataCacheType.Recent,
+            EDataCacheType.Search
+         };
+
+         // Check if requested MR is cached
+         if (modes.All(mode => !isCached(mode)))
+         {
+            return SelectionResult.NotFound;
          }
 
-         dataCache = getDataCache(EDataCacheType.Recent);
-         if (dataCache?.MergeRequestCache?.GetMergeRequest(mrk) != null)
+         // Try selecting an item which is not hidden by filters
+         foreach (EDataCacheType mode in modes)
          {
-            tabControlMode.SelectedTab = tabPageRecent;
-            if (getListView(EDataCacheType.Recent).SelectMergeRequest(mrk, true))
+            if (isCached(mode) && switchTabAndSelectMergeRequest(mode, mrk, true))
             {
-               return true;
+               return SelectionResult.Selected;
             }
-            Debug.Assert(false); // unexpected because Recent tab has no filters...
          }
 
-         dataCache = getDataCache(EDataCacheType.Search);
-         if (dataCache?.MergeRequestCache?.GetMergeRequest(mrk) != null)
+         // If we are here, requested MR is hidden on each tab where it is cached
+         foreach (EDataCacheType mode in modes)
          {
-            tabControlMode.SelectedTab = tabPageSearch;
-            if (getListView(EDataCacheType.Search).SelectMergeRequest(mrk, true))
+            if (isCached(mode))
             {
-               return true;
+               if (unhideFilteredMergeRequest(mode, mrk))
+               {
+                  if (switchTabAndSelectMergeRequest(mode, mrk, true))
+                  {
+                     return SelectionResult.Selected;
+                  }
+                  Debug.Assert(false);
+               }
+               else
+               {
+                  break; // don't ask more than once
+               }
             }
-            Debug.Assert(false); // unexpected because Search tab has no filters...
          }
 
-         return false;
+         return SelectionResult.Hidden;
       }
 
       async private Task<MergeRequest> searchMergeRequestAsync(MergeRequestKey mrk)
@@ -423,14 +448,13 @@ namespace mrHelper.App.Forms
             }
          }
 
-         tabControlMode.SelectedTab = tabPageLive;
-         if (!getListView(EDataCacheType.Live).SelectMergeRequest(mrk, true) && getListView(EDataCacheType.Live).Enabled)
+         if (!switchTabAndSelectMergeRequest(EDataCacheType.Live, mrk, true) && getListView(EDataCacheType.Live).Enabled)
          {
             // We could not select MR, but let's check if it is cached or not.
             if (dataCache.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
             {
                // If it is cached, it is probably hidden by filters and user might want to un-hide it.
-               if (!unhideFilteredMergeRequest(mrk))
+               if (!unhideFilteredMergeRequest(EDataCacheType.Live, mrk))
                {
                   return false; // user decided to not un-hide merge request
                }
@@ -459,7 +483,7 @@ namespace mrHelper.App.Forms
 
       async private Task openUrlAtSearchTabAsync(MergeRequestKey mrk)
       {
-         tabControlMode.SelectedTab = tabPageSearch;
+         switchMode(EDataCacheType.Search);
          await searchMergeRequestsSafeAsync(
             new SearchQueryCollection(new SearchQuery
             {
@@ -470,9 +494,10 @@ namespace mrHelper.App.Forms
             EDataCacheType.Search,
             new Func<Exception, bool>(x =>
                throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
+         getListView(EDataCacheType.Search).EnsureGroupIsNotCollapsed(mrk.ProjectKey);
       }
 
-      private bool unhideFilteredMergeRequest(MergeRequestKey mrk)
+      private bool unhideFilteredMergeRequest(EDataCacheType dataCacheType, MergeRequestKey mrk)
       {
          Trace.TraceInformation("[MainForm] Notify user that MR is hidden");
 
@@ -484,8 +509,11 @@ namespace mrHelper.App.Forms
             return false;
          }
 
-         _lastMergeRequestsByHosts[mrk.ProjectKey.HostName] = mrk;
-         checkBoxDisplayFilter.Checked = false;
+         if (dataCacheType == EDataCacheType.Live)
+         {
+            checkBoxDisplayFilter.Checked = false;
+         }
+         getListView(dataCacheType).EnsureGroupIsNotCollapsed(mrk.ProjectKey);
          return true;
       }
 

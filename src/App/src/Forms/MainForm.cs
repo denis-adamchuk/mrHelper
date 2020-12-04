@@ -108,7 +108,7 @@ namespace mrHelper.App.Forms
       private DataCache _searchDataCache;
       private DataCache _recentDataCache;
 
-      private TabPage _timeTrackingTabPage;
+      private EDataCacheType? _timeTrackingMode;
       private ITimeTracker _timeTracker;
 
       private string _initialHostName;

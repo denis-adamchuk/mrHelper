@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using GitLabSharp.Entities;
+using mrHelper.Common.Constants;
 using mrHelper.StorageSupport;
 using Newtonsoft.Json;
 
@@ -390,6 +391,74 @@ namespace mrHelper.App.Helpers
 
       public static bool IsProjectBasedWorkflowSelected(UserDefinedSettings settings)
          => settings.WorkflowType == "Projects";
+
+      public static Dictionary<string, int> GetColumnWidths(UserDefinedSettings settings, string listViewName)
+      {
+         if (listViewName == Constants.LiveListViewName)
+         {
+            return settings.ListViewMergeRequestsColumnWidths;
+         }
+         else if (listViewName == Constants.SearchListViewName)
+         {
+            return settings.ListViewFoundMergeRequestsColumnWidths;
+         }
+         else if (listViewName == Constants.RecentListViewName)
+         {
+            return settings.ListViewRecentMergeRequestsColumnWidths;
+         }
+         Debug.Assert(false);
+         return null;
+      }
+
+      public static void SetColumnWidths(UserDefinedSettings settings, Dictionary<string, int> widths, string listViewName)
+      {
+         if (listViewName == Constants.LiveListViewName)
+         {
+            settings.ListViewMergeRequestsColumnWidths = widths;
+         }
+         else if (listViewName == Constants.SearchListViewName)
+         {
+            settings.ListViewFoundMergeRequestsColumnWidths = widths;
+         }
+         else if (listViewName == Constants.RecentListViewName)
+         {
+            settings.ListViewRecentMergeRequestsColumnWidths = widths;
+         }
+      }
+
+      public static Dictionary<string, int> GetColumnIndices(UserDefinedSettings settings, string listViewName)
+      {
+         if (listViewName == Constants.LiveListViewName)
+         {
+            return settings.ListViewMergeRequestsDisplayIndices;
+         }
+         else if (listViewName == Constants.SearchListViewName)
+         {
+            return settings.ListViewFoundMergeRequestsDisplayIndices;
+         }
+         else if (listViewName == Constants.RecentListViewName)
+         {
+            return settings.ListViewRecentMergeRequestsDisplayIndices;
+         }
+         Debug.Assert(false);
+         return null;
+      }
+
+      public static void SetColumnIndices(UserDefinedSettings settings, Dictionary<string, int> indices, string listViewName)
+      {
+         if (listViewName == Constants.LiveListViewName)
+         {
+            settings.ListViewMergeRequestsDisplayIndices = indices;
+         }
+         else if (listViewName == Constants.SearchListViewName)
+         {
+            settings.ListViewFoundMergeRequestsDisplayIndices = indices;
+         }
+         else if (listViewName == Constants.RecentListViewName)
+         {
+            settings.ListViewRecentMergeRequestsDisplayIndices = indices;
+         }
+      }
    }
 }
 

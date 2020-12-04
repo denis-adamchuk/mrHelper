@@ -344,14 +344,15 @@ namespace mrHelper.App.Forms
          editTimeOfSelectedMergeRequest();
       }
 
-      private void listViewMergeRequests_Deselected(object sender)
+      private void listViewMergeRequests_CollapsingToggled(object sender)
       {
-         onMergeRequestSelectionChanged(getCurrentTabDataCacheType());
+         updateMergeRequestList(getListViewType(sender as Controls.MergeRequestListView));
+         saveState();
       }
 
       private void listViewMergeRequests_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
       {
-         onMergeRequestSelectionChanged(getCurrentTabDataCacheType());
+         onMergeRequestSelectionChanged(getListViewType(sender as Controls.MergeRequestListView));
       }
 
       private void textBoxSearch_KeyDown(object sender, KeyEventArgs e)

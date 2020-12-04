@@ -22,9 +22,9 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
-         getDataCache(EDataCacheType.Live)?.Dispose();
-         getDataCache(EDataCacheType.Search)?.Dispose();
-         getDataCache(EDataCacheType.Recent)?.Dispose();
+         _liveDataCache.Dispose();
+         _searchDataCache.Dispose();
+         _recentDataCache.Dispose();
 
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();

@@ -87,9 +87,11 @@ namespace mrHelper.App.Forms
 
             case EDataCacheType.Search:
                return new DataCacheUpdateRules(null, null, false);
-         }
 
-         Debug.Assert(false);
+            default:
+               Debug.Assert(false);
+               break;
+         }
          return null;
       }
 
@@ -195,7 +197,7 @@ namespace mrHelper.App.Forms
                .Select(project => project.Path_With_Namespace)
                .ToArray() ?? Array.Empty<string>();
             string selectedProject = (string)comboBoxProjectName.SelectedItem;
-            string previousSelection = selectedProject == null ? String.Empty : selectedProject;
+            string previousSelection = selectedProject ?? String.Empty;
             string defaultProjectName = projectNames.SingleOrDefault(name => name == previousSelection) == null
                ? getDefaultProjectName() : previousSelection;
             WinFormsHelpers.FillComboBox(comboBoxProjectName, projectNames,

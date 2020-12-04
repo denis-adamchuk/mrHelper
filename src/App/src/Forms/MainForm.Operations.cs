@@ -251,7 +251,7 @@ namespace mrHelper.App.Forms
 
          // Reset and start stopwatch
          Debug.Assert(getMergeRequestKey(null).HasValue);
-         _timeTrackingTabPage = tabControlMode.SelectedTab;
+         _timeTrackingMode = getCurrentTabDataCacheType();
 
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
          _timeTracker = Shortcuts.GetTimeTracker(gitLabInstance, _modificationNotifier, getMergeRequestKey(null).Value);
@@ -286,7 +286,7 @@ namespace mrHelper.App.Forms
          // Reset member right now to not send tracked time again on re-entrance
          ITimeTracker timeTracker = _timeTracker;
          _timeTracker = null;
-         _timeTrackingTabPage = null;
+         _timeTrackingMode = null;
 
          // Stop stopwatch and send tracked time
          TimeSpan span = timeTracker.Elapsed;
@@ -338,7 +338,7 @@ namespace mrHelper.App.Forms
 
          _timeTracker.Cancel();
          _timeTracker = null;
-         _timeTrackingTabPage = null;
+         _timeTrackingMode = null;
          addOperationRecord("Time tracking cancelled");
 
          onTimerStopped(getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache);

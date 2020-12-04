@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Text;
+using System.Collections.Generic;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.Common.Tools
@@ -319,6 +320,25 @@ namespace mrHelper.Common.Tools
             }
          }
          return null;
+      }
+
+      public static string JoinSubstrings(IEnumerable<string> substrings)
+      {
+         return String.Join("\n", substrings);
+      }
+
+      public static string JoinSubstringsLimited(IEnumerable<string> substrings, int maxRows, string maxRowsHint)
+      {
+         if (substrings.Count() == maxRows)
+         {
+            return JoinSubstrings(substrings.Take(maxRows));
+         }
+         string result = JoinSubstrings(substrings.Take(maxRows - 1));
+         if (substrings.Count() > maxRows)
+         {
+            result += String.Format("\n{0}", maxRowsHint);
+         }
+         return result;
       }
 
       private static readonly string WorkInProgressPrefix = "WIP: ";

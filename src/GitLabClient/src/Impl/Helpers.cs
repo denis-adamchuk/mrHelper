@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
 using System.Diagnostics;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using GitLabSharp.Entities;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
@@ -101,7 +102,6 @@ namespace mrHelper.GitLabClient
       public static bool DoesMatchSearchQuery(SearchQueryCollection queries, MergeRequest mergeRequest,
          ProjectKey projectKey)
       {
-         // TODO Test each condition
          foreach (SearchQuery query in queries.Queries)
          {
             if ((query.State == null || query.State == mergeRequest.State)
@@ -117,6 +117,66 @@ namespace mrHelper.GitLabClient
             }
          }
          return false;
+      }
+
+      private struct LabelGroup
+      {
+         internal IEnumerable<string> Labels;
+         internal int Priority;
+      }
+
+      public static IEnumerable<string> GroupLabels(IEnumerable<FullMergeRequestKey> keys,
+         IEnumerable<string> unimportantSuffices, User currentUser)
+      {
+         int getPriority(IEnumerable<string> labels)
+         {
+            Debug.Assert(labels.Any());
+            if (GitLabClient.Helpers.IsUserMentioned(labels.First(), currentUser))
+            {
+               return 0;
+            }
+            else if (labels.Any(x => unimportantSuffices.Any(y => x.EndsWith(y))))
+            {
+               return 2;
+            }
+            return 1;
+         }
+
+         return keys
+            .SelectMany(fmk => fmk.MergeRequest.Labels)
+            .GroupBy(
+               label => label
+                  .StartsWith(Constants.GitLabLabelPrefix) && label.IndexOf('-') != -1
+                     ? label.Substring(0, label.IndexOf('-'))
+                     : label,
+               label => label,
+               (baseLabel, labels) => new LabelGroup
+               {
+                  Labels = labels,
+                  Priority = getPriority(labels)
+               })
+            .OrderBy(x => x.Priority)
+            .Select(labelGroup => String.Format("{0}", String.Join(",", labelGroup.Labels.Distinct())));
+      }
+
+      public static IEnumerable<string> GroupLabels(FullMergeRequestKey fmk,
+         IEnumerable<string> unimportantSuffices, User currentUser)
+      {
+         return GroupLabels(new FullMergeRequestKey[] { fmk }, unimportantSuffices, currentUser);
+      }
+
+      private static readonly Regex jira_re = new Regex(@"(?'name'(?!([A-Z0-9a-z]{1,10})-?$)[A-Z]{1}[A-Z0-9]+-\d+)");
+      public static string GetJiraTask(MergeRequest mergeRequest)
+      {
+         Match m = jira_re.Match(mergeRequest.Title);
+         return !m.Success || m.Groups.Count < 1 || !m.Groups["name"].Success ? String.Empty : m.Groups["name"].Value;
+      }
+
+      public static string GetJiraTaskUrl(MergeRequest mergeRequest, string jiraServiceUrl)
+      {
+         string jiraTask = GetJiraTask(mergeRequest);
+         return jiraServiceUrl != String.Empty && jiraTask != String.Empty ?
+            String.Format("{0}/browse/{1}", jiraServiceUrl, jiraTask) : String.Empty;
       }
    }
 }

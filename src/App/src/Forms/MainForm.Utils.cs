@@ -74,6 +74,25 @@ namespace mrHelper.App.Forms
          return EDataCacheType.Live;
       }
 
+      private EDataCacheType getListViewType(MergeRequestListView listView)
+      {
+         if (listView == listViewLiveMergeRequests)
+         {
+            return EDataCacheType.Live;
+         }
+         else if (listView == listViewFoundMergeRequests)
+         {
+            return EDataCacheType.Search;
+         }
+         else if (listView == listViewRecentMergeRequests)
+         {
+            return EDataCacheType.Recent;
+         }
+
+         Debug.Assert(false);
+         return EDataCacheType.Live;
+      }
+
       private MergeRequestListView getListView(EDataCacheType mode)
       {
          switch (mode)
@@ -103,8 +122,9 @@ namespace mrHelper.App.Forms
       {
          MergeRequestListView listView = proposedListView ?? getListView(getCurrentTabDataCacheType());
          FullMergeRequestKey? fmk = listView.GetSelectedMergeRequest();
-         return fmk.HasValue ? new MergeRequestKey(fmk.Value.ProjectKey, fmk.Value.MergeRequest.IId)
-                             : new Nullable<MergeRequestKey>();
+         return fmk.HasValue && fmk.Value.MergeRequest != null
+            ? new MergeRequestKey(fmk.Value.ProjectKey, fmk.Value.MergeRequest.IId)
+            : new Nullable<MergeRequestKey>();
       }
 
       private string getDefaultProjectName()

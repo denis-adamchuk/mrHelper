@@ -1,6 +1,6 @@
 ﻿namespace mrHelper.App.Controls
 {
-   partial class MergeRequestListViewContextMenu
+   public partial class MergeRequestListViewToolTip
    {
       /// <summary> 
       /// Required designer variable.
@@ -17,6 +17,8 @@
          {
             components.Dispose();
          }
+         _toolTipTimer?.Stop();
+         _toolTipTimer?.Dispose();
          base.Dispose(disposing);
       }
 

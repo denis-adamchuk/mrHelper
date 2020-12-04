@@ -65,20 +65,6 @@ namespace mrHelper.App.Forms
          updateNewVersionStatus();
 
          forEachListView(listView => listView.SetCurrentUserGetter(hostname => getCurrentUser(hostname)));
-
-         getListView(EDataCacheType.Live).SetColumnWidthSaver(new Action<Dictionary<string, int>>(
-            widths => Program.Settings.ListViewMergeRequestsColumnWidths = widths));
-         getListView(EDataCacheType.Search).SetColumnWidthSaver(new Action<Dictionary<string, int>>(
-            widths => Program.Settings.ListViewFoundMergeRequestsColumnWidths = widths));
-         getListView(EDataCacheType.Recent).SetColumnWidthSaver(new Action<Dictionary<string, int>>(
-            widths => Program.Settings.ListViewRecentMergeRequestsColumnWidths = widths));
-
-         getListView(EDataCacheType.Live).SetColumnIndicesSaver(new Action<Dictionary<string, int>>(
-            Indices => Program.Settings.ListViewMergeRequestsDisplayIndices = Indices));
-         getListView(EDataCacheType.Search).SetColumnIndicesSaver(new Action<Dictionary<string, int>>(
-            Indices => Program.Settings.ListViewFoundMergeRequestsDisplayIndices = Indices));
-         getListView(EDataCacheType.Recent).SetColumnIndicesSaver(new Action<Dictionary<string, int>>(
-            Indices => Program.Settings.ListViewRecentMergeRequestsDisplayIndices = Indices));
       }
 
       private void forEachListView(Action<MergeRequestListView> action)
@@ -226,15 +212,14 @@ namespace mrHelper.App.Forms
          }
 
          MergeRequestListView listView = getListView(mode);
-         listView.UpdateItems(!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings),
-            mode == EDataCacheType.Live ? _mergeRequestFilter : null);
+         listView.UpdateItems(!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings));
 
          if (mode == EDataCacheType.Live)
          {
             if (listView.Items.Count > 0 || Program.Settings.DisplayFilterEnabled)
             {
                enableMergeRequestFilterControls(true);
-               listView.EnableListView();
+               listView.Enabled = true;
             }
             updateTrayIcon();
             updateTaskbarIcon();
@@ -242,7 +227,7 @@ namespace mrHelper.App.Forms
          }
          else if (listView.Items.Count > 0)
          {
-            listView.EnableListView();
+            listView.Enabled = true;
          }
       }
 
@@ -447,15 +432,16 @@ namespace mrHelper.App.Forms
 
          FullMergeRequestKey fmk = fmkOpt.Value;
          listView.EnsureSelectionVisible();
+         if (fmk.MergeRequest == null)
+         {
+            return; // List view item with summary information for a collapsed group
+         }
 
          Trace.TraceInformation(String.Format(
             "[MainForm] User requested to change merge request to IId {0}, mode = {1}",
             fmk.MergeRequest.IId.ToString(), getCurrentTabDataCacheType().ToString()));
 
-         Debug.Assert(fmk.MergeRequest != null);
-
          DataCache dataCache = getDataCache(mode);
-
          enableCustomActions(true, fmk.MergeRequest.Labels, fmk.MergeRequest.Author);
          enableMergeRequestActions(true);
          updateMergeRequestDetails(fmk);
@@ -520,7 +506,7 @@ namespace mrHelper.App.Forms
          foreach (KeyValuePair<string, string> nameToFilename in _iconScheme)
          {
             string resolved = _expressionResolver.Resolve(nameToFilename.Key);
-            if (getListView(EDataCacheType.Live).GetAllMergeRequests()
+            if (getListView(EDataCacheType.Live).GetMatchingFilterMergeRequests()
                .Select(x => x.MergeRequest)
                .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Icon_{{Label:{0}}}", y))))
             {
@@ -551,7 +537,7 @@ namespace mrHelper.App.Forms
          foreach (KeyValuePair<string, string> nameToFilename in _badgeScheme)
          {
             string resolved = _expressionResolver.Resolve(nameToFilename.Key);
-            if (getListView(EDataCacheType.Live).GetAllMergeRequests()
+            if (getListView(EDataCacheType.Live).GetMatchingFilterMergeRequests()
                .Select(x => x.MergeRequest)
                .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Badge_{{Label:{0}}}", y))))
             {
@@ -1176,17 +1162,11 @@ namespace mrHelper.App.Forms
 
       private void gotoTimeTrackingMergeRequest()
       {
-         if (_timeTracker == null || _timeTrackingTabPage == null)
+         if (_timeTracker == null || !_timeTrackingMode.HasValue)
          {
             return;
          }
-
-         if (_timeTrackingTabPage != tabControlMode.SelectedTab)
-         {
-            tabControlMode.SelectedTab = _timeTrackingTabPage;
-         }
-
-         getListView(getCurrentTabDataCacheType()).SelectMergeRequest(_timeTracker.MergeRequest, true);
+         switchTabAndSelectMergeRequest(_timeTrackingMode.Value, _timeTracker.MergeRequest, true);
       }
 
       private void formatHostListItem(ListControlConvertEventArgs e)
@@ -1264,6 +1244,34 @@ namespace mrHelper.App.Forms
          int linkLabelLeft = tabRect.X + tabRect.Width + linkLabelHorizontalOffsetFromRightmostTab;
 
          linkLabelFromClipboard.Location = new System.Drawing.Point(linkLabelLeft, linkLabelTop);
+      }
+
+      private bool switchTabAndSelectMergeRequest(EDataCacheType mode, MergeRequestKey? mrk, bool exact)
+      {
+         switchMode(mode);
+         return getListView(mode).SelectMergeRequest(mrk, exact);
+      }
+
+      private void switchMode(EDataCacheType mode)
+      {
+         if (mode != getCurrentTabDataCacheType())
+         {
+            switch (mode)
+            {
+               case EDataCacheType.Live:
+                  tabControlMode.SelectedTab = tabPageLive;
+                  break;
+               case EDataCacheType.Search:
+                  tabControlMode.SelectedTab = tabPageSearch;
+                  break;
+               case EDataCacheType.Recent:
+                  tabControlMode.SelectedTab = tabPageRecent;
+                  break;
+               default:
+                  Debug.Assert(false);
+                  break;
+            }
+         }
       }
    }
 }

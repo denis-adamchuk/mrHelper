@@ -48,6 +48,10 @@ namespace mrHelper.Common.Constants
       public static string[] ThemeNames = { "Default", "New Year 2020" };
       public static string DefaultThemeName = "Default";
 
+      public static string LiveListViewName = "Live";
+      public static string SearchListViewName = "Search";
+      public static string RecentListViewName = "Recent";
+
       public static string WarningOnUnescapedMarkdown =
          "Warning: Some markdown characters may require surrounding them with apostrophes, e.g. `<vector>` or `f<int>()`";
 
