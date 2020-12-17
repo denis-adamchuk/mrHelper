@@ -215,7 +215,8 @@ namespace mrHelper.App.Forms
             {
                TimeSpan newSpan = form.TimeSpan;
                bool add = newSpan > oldSpan;
-               TimeSpan diff = add ? newSpan - oldSpan : oldSpan - newSpan;
+               TimeSpan diffTemp = add ? newSpan - oldSpan : oldSpan - newSpan;
+               TimeSpan diff = new TimeSpan(diffTemp.Hours, diffTemp.Minutes, diffTemp.Seconds);
                if (diff == TimeSpan.Zero || dataCache?.TotalTimeCache == null)
                {
                   return;
@@ -323,7 +324,10 @@ namespace mrHelper.App.Forms
             addOperationRecord("Tracked time less than 1 second is ignored");
          }
 
-         onTimerStopped(totalTimeCache);
+         if (!isTrackingTime())
+         {
+            onTimerStopped(totalTimeCache);
+         }
       }
 
       private void cancelTimeTrackingTimer()
