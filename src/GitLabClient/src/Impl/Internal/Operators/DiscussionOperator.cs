@@ -34,9 +34,17 @@ namespace mrHelper.GitLabClient.Operators
                }));
       }
 
-      internal Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk)
+      async internal Task<IEnumerable<Discussion>> GetDiscussionsAsync(MergeRequestKey mrk,
+         CachedDiscussionsTimestamp? cachedRevisionTimestamp)
       {
-         return callWithSharedClient(
+         IEnumerable<Discussion> cachedDiscussions = cachedRevisionTimestamp.HasValue
+            ? GlobalCache.GetDiscussions(mrk, cachedRevisionTimestamp.Value) : null;
+         if (cachedDiscussions != null)
+         {
+            return cachedDiscussions;
+         }
+
+         Task<IEnumerable<Discussion>> task = callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
@@ -44,6 +52,13 @@ namespace mrHelper.GitLabClient.Operators
                         async (gl) =>
                            await gl.Projects.Get(mrk.ProjectKey.ProjectName).MergeRequests.Get(mrk.IId).
                               Discussions.LoadAllTaskAsync()))));
+
+         IEnumerable<Discussion> discussions = await task;
+         if (cachedRevisionTimestamp.HasValue)
+         {
+            GlobalCache.SetDiscussions(mrk, discussions, cachedRevisionTimestamp.Value);
+         }
+         return discussions;
       }
 
       internal Task<Discussion> GetDiscussionAsync(MergeRequestKey mrk, string discussionId)

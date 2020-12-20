@@ -8,8 +8,8 @@ using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Constants;
-using mrHelper.GitLabClient.Accessors;
 using mrHelper.GitLabClient.Operators;
+using static mrHelper.GitLabClient.Operators.GlobalCache;
 
 namespace mrHelper.GitLabClient.Managers
 {
@@ -305,12 +305,17 @@ namespace mrHelper.GitLabClient.Managers
                return;
             }
 
+            CachedDiscussionsTimestamp? ts = mostRecentNoteAndNoteCount.Item1 == null
+               ? new CachedDiscussionsTimestamp?()
+               : new CachedDiscussionsTimestamp(
+                  mostRecentNoteAndNoteCount.Item1.Updated_At, mostRecentNoteAndNoteCount.Item2);
+
             IEnumerable<Discussion> discussions;
             try
             {
                _loading.Add(mrk);
                DiscussionsLoading?.Invoke(mrk);
-               discussions = await _operator.GetDiscussionsAsync(mrk);
+               discussions = await _operator.GetDiscussionsAsync(mrk, ts);
             }
             catch (OperatorException)
             {
@@ -498,6 +503,7 @@ namespace mrHelper.GitLabClient.Managers
             "Remove MR from cache after a Thread is (un)resolved: Host={0}, Project={1}, IId={2}",
             mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
          _cachedDiscussions.Remove(mrk);
+         GlobalCache.DeleteDiscussions(mrk);
       }
 
       public void OnMergeRequestEvent(UserEvents.MergeRequestEvent e)

@@ -138,7 +138,7 @@ namespace mrHelper.GitLabClient.Accessors
          IEnumerable<Discussion> discussions;
          try
          {
-            discussions = await _discussionOperator.GetDiscussionsAsync(_mergeRequestKey);
+            discussions = await _discussionOperator.GetDiscussionsAsync(_mergeRequestKey, null);
          }
          catch (OperatorException ex)
          {

@@ -1063,7 +1063,7 @@ namespace mrHelper.App.Helpers
             byte[] protectedBytes = Base64Helper.FromBase64StringSafe(protectedValue);
             byte[] rawBytes = CryptoHelper.UnprotectSafe(protectedBytes);
             string rawValue = StringUtils.GetStringSafe(rawBytes);
-            rawValues.Add(rawValue == null ? BadValueLoaded : rawValue);
+            rawValues.Add(rawValue ?? BadValueLoaded);
          }
          return rawValues;
       }
@@ -1079,7 +1079,7 @@ namespace mrHelper.App.Helpers
             byte[] rawBytes = StringUtils.GetBytesSafe(rawValue);
             byte[] protectedBytes = CryptoHelper.ProtectSafe(rawBytes);
             string protectedString = Base64Helper.ToBase64StringSafe(protectedBytes);
-            protectedStrings.Add(protectedString == null ? BadValueSaved : protectedString);
+            protectedStrings.Add(protectedString ?? BadValueSaved);
          }
          setValues(key, protectedStrings.ToArray());
       }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
@@ -32,7 +33,7 @@ namespace mrHelper.GitLabClient.Loaders
 
             try
             {
-               await (tuple.Item2 ? LoadVersionsAsync(tuple.Item1) : LoadCommitsAsync(tuple.Item1));
+               await (tuple.Item2 ? loadVersionsAsync(tuple.Item1) : loadCommitsAsync(tuple.Item1));
             }
             catch (BaseLoaderException ex)
             {
@@ -93,7 +94,7 @@ namespace mrHelper.GitLabClient.Loaders
 
             try
             {
-               missingCommits.Add(await LoadCommit(commitIds.Item1, commitIds.Item2));
+               missingCommits.Add(await loadCommit(commitIds.Item1, commitIds.Item2));
             }
             catch (BaseLoaderException ex)
             {
@@ -115,10 +116,9 @@ namespace mrHelper.GitLabClient.Loaders
          {
             IEnumerable<Commit> commits = _cacheUpdater.Cache.GetCommits(mrk);
             IEnumerable<Version> versions = _cacheUpdater.Cache.GetVersions(mrk);
-            List<Version> versionsExtended = new List<Version>();
             foreach (Version version in versions)
             {
-               if (String.IsNullOrEmpty(version.Head_Commit_SHA))
+               if (String.IsNullOrEmpty(version.Head_Commit_SHA) || version.Commits != null)
                {
                   continue;
                }
@@ -129,32 +129,38 @@ namespace mrHelper.GitLabClient.Loaders
                   commit = missingCommits.SingleOrDefault(x => x.Id == version.Head_Commit_SHA);
                }
                IEnumerable<Commit> versionCommits = commit == null ? null : new Commit[] { commit };
-               versionsExtended.Add(new Version(version.Id, version.Base_Commit_SHA, version.Head_Commit_SHA,
-                  version.Start_Commit_SHA, version.Created_At, version.Diffs, versionCommits));
+               version.Commits = versionCommits;
             }
-            _cacheUpdater.UpdateVersions(mrk, versionsExtended);
          }
       }
 
-      async public Task LoadCommitsAsync(MergeRequestKey mrk)
+      async private Task loadCommitsAsync(MergeRequestKey mrk)
       {
+         MergeRequest cachedMergeRequest = _cacheUpdater.Cache.GetMergeRequest(mrk);
+         string actualTimestamp = cachedMergeRequest?.Sha ?? null;
+         Debug.Assert(actualTimestamp != null);
+
          IEnumerable<Commit> commits = await call(
-            () => _operator.GetCommitsAsync(mrk.ProjectKey.ProjectName, mrk.IId),
+            () => _operator.GetCommitsAsync(mrk.ProjectKey.ProjectName, mrk.IId, actualTimestamp),
             String.Format("Cancelled loading commits for merge request with IId {0}", mrk.IId),
             String.Format("Cannot load commits for merge request with IId {0}", mrk.IId));
          _cacheUpdater.UpdateCommits(mrk, commits);
       }
 
-      async public Task LoadVersionsAsync(MergeRequestKey mrk)
+      async private Task loadVersionsAsync(MergeRequestKey mrk)
       {
+         MergeRequest cachedMergeRequest = _cacheUpdater.Cache.GetMergeRequest(mrk);
+         string actualTimestamp = cachedMergeRequest?.Sha ?? null;
+         Debug.Assert(actualTimestamp != null);
+
          IEnumerable<Version> versions = await call(
-            () => _operator.GetVersionsAsync(mrk.ProjectKey.ProjectName, mrk.IId),
+            () => _operator.GetVersionsAsync(mrk.ProjectKey.ProjectName, mrk.IId, actualTimestamp),
             String.Format("Cancelled loading versions for merge request with IId {0}", mrk.IId),
             String.Format("Cannot load versions for merge request with IId {0}", mrk.IId));
          _cacheUpdater.UpdateVersions(mrk, versions);
       }
 
-      async public Task<Commit> LoadCommit(ProjectKey projectKey, string id)
+      async private Task<Commit> loadCommit(ProjectKey projectKey, string id)
       {
          return await call(
             () => _operator.GetCommitAsync(projectKey.ProjectName, id),

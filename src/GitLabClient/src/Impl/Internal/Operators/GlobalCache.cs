@@ -3,9 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.GitLabClient.Operators
 {
+   public struct CachedDiscussionsTimestamp
+   {
+      public CachedDiscussionsTimestamp(DateTime time, int count)
+      {
+         Time = time;
+         Count = count;
+      }
+
+      public DateTime Time { get; }
+      public int Count { get; }
+   }
+
    static internal class GlobalCache
    {
       static internal User GetAuthenticatedUser(string hostname, string accessToken)
@@ -78,6 +91,70 @@ namespace mrHelper.GitLabClient.Operators
          _users[hostname] = users.ToArray();
       }
 
+      static internal Commit GetCommit(ProjectKey projectKey, string id)
+      {
+         foreach (KeyValuePair<MergeRequestKey,
+            TimedEntity<WeakReference<IEnumerable<Commit>>, string>> commitCollection in _commits)
+         {
+            if (commitCollection.Key.ProjectKey.Equals(projectKey))
+            {
+               if (commitCollection.Value.Data.TryGetTarget(out IEnumerable<Commit> target))
+               {
+                  Commit matchingCommit = target.SingleOrDefault(commit => commit.Id == id);
+                  if (matchingCommit != null)
+                  {
+                     return matchingCommit;
+                  }
+               }
+            }
+         }
+         return null;
+      }
+
+      static internal IEnumerable<Version> GetVersions(MergeRequestKey mrk, string cachedRevisionTimestamp)
+      {
+         return getCachedVersions(mrk, cachedRevisionTimestamp);
+      }
+
+      static internal void SetVersions(MergeRequestKey mrk, IEnumerable<Version> versions,
+         string revisionTimestamp)
+      {
+         WeakReference<IEnumerable<Version>> weakVersions = new WeakReference<IEnumerable<Version>>(versions);
+         _versions[mrk] = new TimedEntity<WeakReference<IEnumerable<Version>>, string>(weakVersions, revisionTimestamp);
+      }
+
+      static internal IEnumerable<Commit> GetCommits(MergeRequestKey mrk, string cachedRevisionTimestamp)
+      {
+         return getCachedCommits(mrk, cachedRevisionTimestamp);
+      }
+
+      static internal void SetCommits(MergeRequestKey mrk, IEnumerable<Commit> commits,
+         string revisionTimestamp)
+      {
+         WeakReference<IEnumerable<Commit>> weakCommits = new WeakReference<IEnumerable<Commit>>(commits);
+         _commits[mrk] = new TimedEntity<WeakReference<IEnumerable<Commit>>, string>(weakCommits, revisionTimestamp);
+      }
+
+      static internal IEnumerable<Discussion> GetDiscussions(MergeRequestKey mrk,
+         CachedDiscussionsTimestamp cachedRevisionTimestamp)
+      {
+         return getCachedDiscussions(mrk, cachedRevisionTimestamp);
+      }
+
+      static internal void SetDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions,
+         CachedDiscussionsTimestamp revisionTimestamp)
+      {
+         WeakReference<IEnumerable<Discussion>> weakDiscussions = new WeakReference<IEnumerable<Discussion>>(discussions);
+         _discussions[mrk] = new TimedEntity<WeakReference<IEnumerable<Discussion>>, CachedDiscussionsTimestamp>(
+            weakDiscussions, revisionTimestamp);
+      }
+
+      // TODO See comment in DiscussionManager
+      static internal void DeleteDiscussions(MergeRequestKey mrk)
+      {
+         _discussions.Remove(mrk);
+      }
+
       private struct AuthenticatedUserKey : IEquatable<AuthenticatedUserKey>
       {
          internal AuthenticatedUserKey(string hostName, string accessToken)
@@ -105,8 +182,104 @@ namespace mrHelper.GitLabClient.Operators
             return hashCode;
          }
 
-         internal string HostName;
-         internal string AccessToken;
+         internal string HostName { get; }
+         internal string AccessToken { get; }
+      }
+
+      private static IEnumerable<Version> getCachedVersions(MergeRequestKey mrk, string cachedRevisionTimestamp)
+      {
+         if (!_versions.TryGetValue(mrk, out var versionCollection))
+         {
+            return null;
+         }
+
+         if (!versionCollection.Data.TryGetTarget(out var target))
+         {
+            return null;
+         }
+
+         if (versionCollection.Timestamp != cachedRevisionTimestamp)
+         {
+            return null;
+         }
+
+         return target;
+
+         //return (_versions.TryGetValue(mrk, out var versionCollection)
+         //      && versionCollection.Data.TryGetTarget(out var target)
+         //      && versionCollection.Timestamp == cachedRevisionTimestamp) ? target : null;
+      }
+
+      private static IEnumerable<Commit> getCachedCommits(MergeRequestKey mrk, string cachedRevisionTimestamp)
+      {
+         if (!_commits.TryGetValue(mrk, out var commitCollection))
+         {
+            return null;
+         }
+
+         if (!commitCollection.Data.TryGetTarget(out var target))
+         {
+            return null;
+         }
+
+         if (commitCollection.Timestamp != cachedRevisionTimestamp)
+         {
+            return null;
+         }
+
+         return target;
+
+         //return (_commits.TryGetValue(mrk, out var commitCollection)
+         //      && commitCollection.Data.TryGetTarget(out var target)
+         //      && commitCollection.Timestamp == cachedRevisionTimestamp) ? target : null;
+      }
+
+      private static IEnumerable<Discussion> getCachedDiscussions(MergeRequestKey mrk,
+         CachedDiscussionsTimestamp cachedRevisionTimestamp)
+      {
+         if (!_discussions.TryGetValue(mrk, out var discussionCollection))
+         {
+            return null;
+         }
+
+         if (!discussionCollection.Data.TryGetTarget(out var target))
+         {
+            return null;
+         }
+
+         if (discussionCollection.Timestamp.Time != cachedRevisionTimestamp.Time)
+         {
+            return null;
+         }
+
+         if (discussionCollection.Timestamp.Count != cachedRevisionTimestamp.Count)
+         {
+            return null;
+         }
+
+         return target;
+
+         //return (_discussions.TryGetValue(mrk, out var discussionCollection)
+         //      && discussionCollection.Data.TryGetTarget(out var target)
+         //      && discussionCollection.Timestamp.Time == cachedRevisionTimestamp.Time
+         //      && discussionCollection.Timestamp.Count == cachedRevisionTimestamp.Count) ? target : null;
+      }
+
+      private struct TimedEntity<TData, TTimestamp>
+      {
+         public TimedEntity(TData data, TTimestamp timestamp)
+         {
+            Data = data;
+            Timestamp = timestamp;
+         }
+
+         internal TData Data { get; }
+         internal TTimestamp Timestamp { get; }
+
+         public static implicit operator TimedEntity<TData, TTimestamp>(TimedEntity<IEnumerable<Version>, DateTime> v)
+         {
+            throw new NotImplementedException();
+         }
       }
 
       static private readonly Dictionary<AuthenticatedUserKey, User> _authenticatedUsers =
@@ -119,6 +292,15 @@ namespace mrHelper.GitLabClient.Operators
          new Dictionary<string, IEnumerable<Project>>();
       static private readonly Dictionary<string, IEnumerable<User>> _users =
          new Dictionary<string, IEnumerable<User>>();
+      static private readonly Dictionary<MergeRequestKey,
+         TimedEntity<WeakReference<IEnumerable<Version>>, string>> _versions =
+            new Dictionary<MergeRequestKey, TimedEntity<WeakReference<IEnumerable<Version>>, string>>();
+      static private readonly Dictionary<MergeRequestKey,
+         TimedEntity<WeakReference<IEnumerable<Commit>>, string>> _commits =
+            new Dictionary<MergeRequestKey, TimedEntity<WeakReference<IEnumerable<Commit>>, string>>();
+      static private readonly Dictionary<MergeRequestKey,
+         TimedEntity<WeakReference<IEnumerable<Discussion>>, CachedDiscussionsTimestamp>> _discussions =
+            new Dictionary<MergeRequestKey, TimedEntity<WeakReference<IEnumerable<Discussion>>, CachedDiscussionsTimestamp>>();
    }
 }
 
