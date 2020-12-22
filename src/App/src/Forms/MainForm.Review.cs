@@ -149,7 +149,7 @@ namespace mrHelper.App.Forms
             mrk.IId, (storage?.Path ?? "null")));
 
          addOperationRecord("Discussions view has opened");
-         ensureMergeRequestIsReviewed(mrk);
+         ensureMergeRequestInRecentDataCache(mrk);
       }
 
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
@@ -183,6 +183,7 @@ namespace mrHelper.App.Forms
             reviewedRevisions.Add(sha);
          }
          setReviewedRevisions(mrk, reviewedRevisions);
+         ensureMergeRequestInRecentDataCache(mrk);
 
          MergeRequestKey? currentMrk = getMergeRequestKey(null);
          if (currentMrk.HasValue && currentMrk.Value.Equals(mrk))
@@ -309,7 +310,7 @@ namespace mrHelper.App.Forms
       }
 
       /// <summary>
-      /// Clean up records that correspond to merge requests that are missing in the cache
+      /// Collect records that correspond to merge requests that are missing in the cache
       /// </summary>
       private IEnumerable<MergeRequestKey> gatherClosedReviewedMergeRequests(DataCache dataCache, string hostname)
       {
@@ -366,90 +367,9 @@ namespace mrHelper.App.Forms
          saveState();
       }
 
-      private void ensureMergeRequestIsReviewed(MergeRequestKey mrk)
-      {
-         if (!isReviewedMergeRequest(mrk))
-         {
-            setReviewedRevisions(mrk, new HashSet<string>());
-         }
-      }
-
       private bool isReviewedMergeRequest(MergeRequestKey mrk)
       {
          return _reviewedRevisions.ContainsKey(mrk);
-      }
-
-      private void addRecentMergeRequestKeys(IEnumerable<MergeRequestKey> keys)
-      {
-         foreach (MergeRequestKey key in keys)
-         {
-            _recentMergeRequests.Add(key);
-         }
-
-         if (keys.Any())
-         {
-            saveState();
-         }
-      }
-
-      private bool cleanupOldRecentMergeRequests(string hostname)
-      {
-         bool changed = false;
-         IEnumerable<IGrouping<ProjectKey, MergeRequestKey>> groups =
-            _recentMergeRequests
-            .Where(key => key.ProjectKey.HostName == hostname)
-            .GroupBy(key => key.ProjectKey);
-         foreach (IGrouping<ProjectKey, MergeRequestKey> group in groups)
-         {
-            IEnumerable<MergeRequestKey> groupedKeys = group.AsEnumerable();
-            if (groupedKeys.Any())
-            {
-               IEnumerable<MergeRequestKey> oldMergeRequests = groupedKeys
-                  .OrderByDescending(mergeRequestKey => mergeRequestKey.IId)
-                  .Skip(Constants.RecentMergeRequestPerProjectCount)
-                  .ToArray(); // copy
-               foreach (MergeRequestKey mergeRequestKey in oldMergeRequests)
-               {
-                  _recentMergeRequests.Remove(mergeRequestKey);
-                  changed = true;
-               }
-               cleanupReviewedMergeRequests(oldMergeRequests);
-            }
-         }
-
-         if (changed)
-         {
-            saveState();
-         }
-
-         return changed;
-      }
-
-      private bool cleanupReopenedRecentMergeRequests()
-      {
-         bool changed = false;
-         List<MergeRequestKey> reopened = new List<MergeRequestKey>();
-         foreach (MergeRequestKey key in _recentMergeRequests)
-         {
-            MergeRequest mergeRequest = getDataCache(EDataCacheType.Live)?.MergeRequestCache?.GetMergeRequest(key);
-            if (mergeRequest != null && mergeRequest.State == "opened")
-            {
-               reopened.Add(key);
-            }
-         }
-
-         foreach (MergeRequestKey key in reopened)
-         {
-            _recentMergeRequests.Remove(key);
-            changed = true;
-         }
-
-         if (changed)
-         {
-            saveState();
-         }
-
-         return changed;
       }
    }
 }

@@ -134,6 +134,10 @@ namespace mrHelper.GitLabClient.Loaders.Cache
             }
             _mergeRequests[mrk.ProjectKey] = mergeRequests;
          }
+         else
+         {
+            _mergeRequests[mrk.ProjectKey] = new MergeRequest[] { mergeRequest };
+         }
       }
 
       /// <summary>

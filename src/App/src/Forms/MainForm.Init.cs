@@ -142,7 +142,7 @@ namespace mrHelper.App.Forms
                      Program.Settings.OneShotUpdateSecondChanceDelayMs });
                }
 
-               ensureMergeRequestIsReviewed(mergeRequestKey.Value);
+               ensureMergeRequestInRecentDataCache(mergeRequestKey.Value);
             };
             groupBoxActions.Controls.Add(button);
             id++;

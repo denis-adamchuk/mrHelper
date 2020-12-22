@@ -260,9 +260,7 @@ namespace mrHelper.App.Forms
                                 });
 
          IEnumerable<MergeRequestKey> closedReviewed = gatherClosedReviewedMergeRequests(dataCache, hostname);
-         addRecentMergeRequestKeys(closedReviewed);
-         cleanupOldRecentMergeRequests(hostname);
-         cleanupReopenedRecentMergeRequests();
+         cleanupReviewedMergeRequests(closedReviewed);
          loadRecentMergeRequests();
 
          updateMergeRequestList(EDataCacheType.Live);

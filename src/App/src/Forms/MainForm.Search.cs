@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
+using mrHelper.Common.Constants;
+using mrHelper.Common.Interfaces;
 using mrHelper.CommonControls.Tools;
 using mrHelper.GitLabClient;
 
@@ -152,11 +154,18 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void addMergeRequestToRecentDataCache(MergeRequestKey mrk)
+      private void ensureMergeRequestInRecentDataCache(MergeRequestKey mrk)
       {
-         MergeRequestKey[] closedMergeRequests = new MergeRequestKey[] { mrk };
-         addRecentMergeRequestKeys(closedMergeRequests);
+         if (_recentMergeRequests.Contains(mrk))
+         {
+            return;
+         }
+
+         _recentMergeRequests.Add(mrk);
+
          bool needUpdateFullList = cleanupOldRecentMergeRequests(mrk.ProjectKey.HostName);
+         saveState();
+
          updateRecentDataCacheQueryColletion(mrk.ProjectKey.HostName);
          MergeRequestKey? keyForUpdate = needUpdateFullList ? new Nullable<MergeRequestKey>() : mrk;
          requestUpdates(EDataCacheType.Recent, keyForUpdate, new[] { PseudoTimerInterval });
@@ -178,6 +187,32 @@ namespace mrHelper.App.Forms
                ProjectName = key.ProjectKey.ProjectName
             })
             .ToArray();
+      }
+
+      private bool cleanupOldRecentMergeRequests(string hostname)
+      {
+         bool changed = false;
+         IEnumerable<IGrouping<ProjectKey, MergeRequestKey>> groups =
+            _recentMergeRequests
+            .Where(key => key.ProjectKey.HostName == hostname)
+            .GroupBy(key => key.ProjectKey);
+         foreach (IGrouping<ProjectKey, MergeRequestKey> group in groups)
+         {
+            IEnumerable<MergeRequestKey> groupedKeys = group.AsEnumerable();
+            if (groupedKeys.Any())
+            {
+               IEnumerable<MergeRequestKey> oldMergeRequests = groupedKeys
+                  .OrderByDescending(mergeRequestKey => mergeRequestKey.IId)
+                  .Skip(Constants.RecentMergeRequestPerProjectCount)
+                  .ToArray(); // copy
+               foreach (MergeRequestKey mergeRequestKey in oldMergeRequests)
+               {
+                  _recentMergeRequests.Remove(mergeRequestKey);
+                  changed = true;
+               }
+            }
+         }
+         return changed;
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

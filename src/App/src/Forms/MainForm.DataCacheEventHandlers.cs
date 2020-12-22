@@ -63,15 +63,9 @@ namespace mrHelper.App.Forms
          MergeRequestKey mrk = new MergeRequestKey(
             e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
 
-         if (e.AddedToCache && cleanupReopenedRecentMergeRequests())
-         {
-            updateRecentDataCacheQueryColletion(mrk.ProjectKey.HostName);
-            requestUpdates(EDataCacheType.Recent, null, new[] { PseudoTimerInterval });
-         }
-
          if (e.RemovedFromCache && isReviewedMergeRequest(mrk))
          {
-            addMergeRequestToRecentDataCache(mrk);
+            cleanupReviewedMergeRequests(new MergeRequestKey[] { mrk });
          }
 
          updateMergeRequestList(EDataCacheType.Live);
