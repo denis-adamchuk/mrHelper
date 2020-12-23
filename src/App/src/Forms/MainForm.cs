@@ -90,7 +90,7 @@ namespace mrHelper.App.Forms
       private readonly GitLabClient.Accessors.ModificationNotifier _modificationNotifier =
          new GitLabClient.Accessors.ModificationNotifier();
 
-      private HashSet<MergeRequestKey> _recentMergeRequests = new HashSet<MergeRequestKey>();
+      private Dictionary<MergeRequestKey, DateTime> _recentMergeRequests = new Dictionary<MergeRequestKey, DateTime>();
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedRevisions =
          new Dictionary<MergeRequestKey, HashSet<string>>();
       private Dictionary<string, MergeRequestKey> _lastMergeRequestsByHosts =

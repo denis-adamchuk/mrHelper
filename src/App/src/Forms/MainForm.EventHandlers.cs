@@ -281,6 +281,11 @@ namespace mrHelper.App.Forms
          applyDiffContextDepthChange();
       }
 
+      private void comboBoxRecentMergeRequestsPerProjectCount_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         applyRecentMergeRequestsPerProjectCount();
+      }
+
       private void checkBoxFlatReplies_CheckedChanged(object sender, EventArgs e)
       {
          applyNeedShiftRepliesChange(!(sender as CheckBox).Checked);

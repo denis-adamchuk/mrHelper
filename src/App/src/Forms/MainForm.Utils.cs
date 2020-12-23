@@ -489,24 +489,26 @@ namespace mrHelper.App.Forms
                item => item.Value);
          writer.Set("ReviewedCommits", reviewedRevisions);
 
-         IEnumerable<string> recentMergeRequests = _recentMergeRequests.Select(
-               item => item.ProjectKey.HostName + "|"
-                     + item.ProjectKey.ProjectName + "|"
-                     + item.IId.ToString());
-         writer.Set("RecentMergeRequests", recentMergeRequests);
+         Dictionary<string, string> recentMergeRequests = _recentMergeRequests.ToDictionary(
+               item => item.Key.ProjectKey.HostName
+               + "|" + item.Key.ProjectKey.ProjectName
+               + "|" + item.Key.IId.ToString(),
+               item => item.Value.ToLongTimeString());
+         writer.Set("RecentMergeRequestsWithDateTime", recentMergeRequests);
 
          Dictionary<string, string> mergeRequestsByHosts = _lastMergeRequestsByHosts.ToDictionary(
-               item => item.Value.ProjectKey.HostName + "|" + item.Value.ProjectKey.ProjectName,
+               item => item.Value.ProjectKey.HostName
+               + "|" + item.Value.ProjectKey.ProjectName,
                item => item.Value.IId.ToString());
          writer.Set("MergeRequestsByHosts", mergeRequestsByHosts);
 
          Dictionary<string, string> newMergeRequestDialogStatesByHosts =
             _newMergeRequestDialogStatesByHosts.ToDictionary(
                item => item.Key,
-               item => item.Value.DefaultProject + "|"
-                     + item.Value.AssigneeUsername + "|"
-                     + item.Value.IsBranchDeletionNeeded.ToString() + "|"
-                     + item.Value.IsSquashNeeded.ToString());
+               item => item.Value.DefaultProject
+               + "|" + item.Value.AssigneeUsername
+               + "|" + item.Value.IsBranchDeletionNeeded.ToString()
+               + "|" + item.Value.IsSquashNeeded.ToString());
          writer.Set("NewMergeRequestDialogStatesByHosts", newMergeRequestDialogStatesByHosts);
       }
 
@@ -546,6 +548,8 @@ namespace mrHelper.App.Forms
                });
          }
 
+         DateTime defaultDateTimeForRecentMergeRequests = DateTime.Now;
+
          JArray recentMergeRequests = (JArray)reader.Get("RecentMergeRequests");
          if (recentMergeRequests != null)
          {
@@ -560,9 +564,31 @@ namespace mrHelper.App.Forms
                   string hostname2 = StringUtils.GetHostWithPrefix(splitted[0]);
                   string projectname = splitted[1];
                   int iid = int.TryParse(splitted[2], out int parsedIId) ? parsedIId : 0;
-                  _recentMergeRequests.Add(new MergeRequestKey(new ProjectKey(hostname2, projectname), iid));
+                  _recentMergeRequests.Add(new MergeRequestKey(new ProjectKey(hostname2, projectname), iid),
+                     defaultDateTimeForRecentMergeRequests);
                }
             }
+         }
+
+         JObject recentMergeRequestsWithDateTimeObj = (JObject)reader.Get("RecentMergeRequestsWithDateTime");
+         Dictionary<string, object> recentMergeRequestsWithDateTime =
+            recentMergeRequestsWithDateTimeObj?.ToObject<Dictionary<string, object>>();
+         if (recentMergeRequestsWithDateTime != null)
+         {
+            _recentMergeRequests = recentMergeRequestsWithDateTime.ToDictionary(
+               item =>
+               {
+                  string[] splitted = item.Key.Split('|');
+
+                  Debug.Assert(splitted.Length == 3);
+
+                  string host = splitted[0];
+                  string projectName = splitted[1];
+                  int iid = int.Parse(splitted[2]);
+                  return new MergeRequestKey(new ProjectKey(host, projectName), iid);
+               },
+               item => DateTime.TryParse(item.Value.ToString(), out DateTime dt)
+                  ? dt : defaultDateTimeForRecentMergeRequests);
          }
 
          JObject lastMergeRequestsByHostsObj = (JObject)reader.Get("MergeRequestsByHosts");

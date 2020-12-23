@@ -53,6 +53,7 @@ namespace mrHelper.App.Forms
          setWorkflowTypeRadioValue();
          setDontUseGitRadioValue();
          selectDiffContextDepthDropdownValue();
+         selectRecentMergeRequestsPerProjectCountDropdownValue();
          setFontFromSettings();
          setThemeFromSettings();
          createMessageFilterFromSettings();
@@ -90,6 +91,33 @@ namespace mrHelper.App.Forms
          else
          {
             comboBoxDCDepth.SelectedIndex = 0;
+         }
+      }
+
+      private void selectRecentMergeRequestsPerProjectCountDropdownValue()
+      {
+         Debug.Assert(Constants.RecentMergeRequestPerProjectMinCount <= Constants.RecentMergeRequestPerProjectMaxCount);
+         int min = Math.Min(Constants.RecentMergeRequestPerProjectMinCount, Constants.RecentMergeRequestPerProjectMaxCount);
+         int max = Math.Max(Constants.RecentMergeRequestPerProjectMinCount, Constants.RecentMergeRequestPerProjectMaxCount);
+
+         comboBoxRecentMergeRequestsPerProjectCount.Items.Clear();
+         foreach (int count in Enumerable.Range(min, max - min + 1))
+         {
+            comboBoxRecentMergeRequestsPerProjectCount.Items.Add(count.ToString());
+         }
+
+         if (comboBoxRecentMergeRequestsPerProjectCount.Items.Count == 0)
+         {
+            comboBoxRecentMergeRequestsPerProjectCount.Items.Add(Constants.RecentMergeRequestPerProjectDefaultCount);
+         }
+
+         if (comboBoxRecentMergeRequestsPerProjectCount.Items.Contains(Program.Settings.RecentMergeRequestsPerProjectCount))
+         {
+            comboBoxRecentMergeRequestsPerProjectCount.Text = Program.Settings.RecentMergeRequestsPerProjectCount;
+         }
+         else
+         {
+            comboBoxRecentMergeRequestsPerProjectCount.SelectedIndex = 0;
          }
       }
 
@@ -887,6 +915,14 @@ namespace mrHelper.App.Forms
          if (!_loadingConfiguration)
          {
             Program.Settings.DiffContextDepth = comboBoxDCDepth.Text;
+         }
+      }
+
+      private void applyRecentMergeRequestsPerProjectCount()
+      {
+         if (!_loadingConfiguration)
+         {
+            Program.Settings.RecentMergeRequestsPerProjectCount = comboBoxRecentMergeRequestsPerProjectCount.Text;
          }
       }
 

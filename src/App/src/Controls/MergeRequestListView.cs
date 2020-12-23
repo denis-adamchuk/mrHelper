@@ -70,6 +70,7 @@ namespace mrHelper.App.Controls
          InitializeComponent();
          ListViewItemSorter = new ListViewItemComparer();
          _toolTip = new MergeRequestListViewToolTip(this);
+         Tag = "DesignTimeName";
       }
 
       internal void Initialize()
@@ -930,16 +931,10 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         if (isGroupCollapsed(group))
-         {
-            group.Header = String.Format(
-               "{0} -- click to expand {1} item(s)",
-               group.Name, getMatchingFilterProjectItems(getGroupProjectKey(group)).Count());
-         }
-         else
-         {
-            group.Header = String.Format("{0} -- click to collapse", group.Name);
-         }
+         string action = isGroupCollapsed(group) ? "expand" : "collapse";
+         group.Header = String.Format(
+            "{0} -- click to {1} {2} item(s)",
+            group.Name, action, getMatchingFilterProjectItems(getGroupProjectKey(group)).Count());
       }
 
       private static bool isSummaryItem(ListViewItem item)
@@ -1043,7 +1038,7 @@ namespace mrHelper.App.Controls
 
       private string getIdentity()
       {
-         return this.Tag.ToString();
+         return Tag.ToString();
       }
 
       private readonly MergeRequestListViewToolTip _toolTip;

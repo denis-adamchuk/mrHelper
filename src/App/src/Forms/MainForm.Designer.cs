@@ -168,6 +168,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderRecentSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxRemindAboutAvailableNewVersion = new System.Windows.Forms.CheckBox();
+         this.comboBoxRecentMergeRequestsPerProjectCount = new System.Windows.Forms.ComboBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -194,6 +195,7 @@ namespace mrHelper.App.Forms
          this.labelDepth = new System.Windows.Forms.Label();
          this.groupBoxNewDiscussionViewUI = new System.Windows.Forms.GroupBox();
          this.groupBoxGeneral = new System.Windows.Forms.GroupBox();
+         this.labelRecentMergeRequestsPerProjectCount = new System.Windows.Forms.Label();
          this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
          this.labelColorScheme = new System.Windows.Forms.Label();
          this.labelVisualTheme = new System.Windows.Forms.Label();
@@ -521,6 +523,7 @@ namespace mrHelper.App.Forms
          this.listViewLiveMergeRequests.OwnerDraw = true;
          this.listViewLiveMergeRequests.Size = new System.Drawing.Size(770, 777);
          this.listViewLiveMergeRequests.TabIndex = 3;
+         this.listViewLiveMergeRequests.Tag = "DesignTimeName";
          this.listViewLiveMergeRequests.UseCompatibleStateImageBehavior = false;
          this.listViewLiveMergeRequests.View = System.Windows.Forms.View.Details;
          this.listViewLiveMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewMergeRequests_ItemSelectionChanged);
@@ -783,6 +786,7 @@ namespace mrHelper.App.Forms
          this.listViewFoundMergeRequests.OwnerDraw = true;
          this.listViewFoundMergeRequests.Size = new System.Drawing.Size(770, 755);
          this.listViewFoundMergeRequests.TabIndex = 3;
+         this.listViewFoundMergeRequests.Tag = "DesignTimeName";
          this.listViewFoundMergeRequests.UseCompatibleStateImageBehavior = false;
          this.listViewFoundMergeRequests.View = System.Windows.Forms.View.Details;
          this.listViewFoundMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewMergeRequests_ItemSelectionChanged);
@@ -1423,6 +1427,7 @@ namespace mrHelper.App.Forms
          this.listViewRecentMergeRequests.OwnerDraw = true;
          this.listViewRecentMergeRequests.Size = new System.Drawing.Size(770, 770);
          this.listViewRecentMergeRequests.TabIndex = 4;
+         this.listViewRecentMergeRequests.Tag = "DesignTimeName";
          this.listViewRecentMergeRequests.UseCompatibleStateImageBehavior = false;
          this.listViewRecentMergeRequests.View = System.Windows.Forms.View.Details;
          this.listViewRecentMergeRequests.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listViewMergeRequests_ItemSelectionChanged);
@@ -1486,6 +1491,17 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.checkBoxRemindAboutAvailableNewVersion, "Remind about available new version once a day");
          this.checkBoxRemindAboutAvailableNewVersion.UseVisualStyleBackColor = true;
          this.checkBoxRemindAboutAvailableNewVersion.CheckedChanged += new System.EventHandler(this.checkBoxRemindAboutAvailableNewVersion_CheckedChanged);
+         // 
+         // comboBoxRecentMergeRequestsPerProjectCount
+         // 
+         this.comboBoxRecentMergeRequestsPerProjectCount.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxRecentMergeRequestsPerProjectCount.FormattingEnabled = true;
+         this.comboBoxRecentMergeRequestsPerProjectCount.Location = new System.Drawing.Point(521, 13);
+         this.comboBoxRecentMergeRequestsPerProjectCount.Name = "comboBoxRecentMergeRequestsPerProjectCount";
+         this.comboBoxRecentMergeRequestsPerProjectCount.Size = new System.Drawing.Size(50, 21);
+         this.comboBoxRecentMergeRequestsPerProjectCount.TabIndex = 28;
+         this.toolTip.SetToolTip(this.comboBoxRecentMergeRequestsPerProjectCount, "How many recent merge requests per project to show at Recent tab");
+         this.comboBoxRecentMergeRequestsPerProjectCount.SelectedIndexChanged += new System.EventHandler(this.comboBoxRecentMergeRequestsPerProjectCount_SelectedIndexChanged);
          // 
          // contextMenuStrip
          // 
@@ -1765,6 +1781,8 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxGeneral
          // 
+         this.groupBoxGeneral.Controls.Add(this.comboBoxRecentMergeRequestsPerProjectCount);
+         this.groupBoxGeneral.Controls.Add(this.labelRecentMergeRequestsPerProjectCount);
          this.groupBoxGeneral.Controls.Add(this.comboBoxColorSchemes);
          this.groupBoxGeneral.Controls.Add(this.labelColorScheme);
          this.groupBoxGeneral.Controls.Add(this.labelVisualTheme);
@@ -1777,6 +1795,15 @@ namespace mrHelper.App.Forms
          this.groupBoxGeneral.TabIndex = 26;
          this.groupBoxGeneral.TabStop = false;
          this.groupBoxGeneral.Text = "General";
+         // 
+         // labelRecentMergeRequestsPerProjectCount
+         // 
+         this.labelRecentMergeRequestsPerProjectCount.AutoSize = true;
+         this.labelRecentMergeRequestsPerProjectCount.Location = new System.Drawing.Point(345, 16);
+         this.labelRecentMergeRequestsPerProjectCount.Name = "labelRecentMergeRequestsPerProjectCount";
+         this.labelRecentMergeRequestsPerProjectCount.Size = new System.Drawing.Size(170, 13);
+         this.labelRecentMergeRequestsPerProjectCount.TabIndex = 27;
+         this.labelRecentMergeRequestsPerProjectCount.Text = "Recent merge requests per project";
          // 
          // comboBoxColorSchemes
          // 
@@ -2686,6 +2713,8 @@ namespace mrHelper.App.Forms
       private CheckBox checkBoxRemindAboutAvailableNewVersion;
       private Label labelSearchByState;
       private ComboBox comboBoxSearchByState;
+      private ComboBox comboBoxRecentMergeRequestsPerProjectCount;
+      private Label labelRecentMergeRequestsPerProjectCount;
    }
 }
 

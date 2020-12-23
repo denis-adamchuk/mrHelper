@@ -156,12 +156,14 @@ namespace mrHelper.App.Forms
 
       private void ensureMergeRequestInRecentDataCache(MergeRequestKey mrk)
       {
-         if (_recentMergeRequests.Contains(mrk))
+         DateTime currentTime = DateTime.Now;
+         if (_recentMergeRequests.ContainsKey(mrk))
          {
+            _recentMergeRequests[mrk] = currentTime;
             return;
          }
 
-         _recentMergeRequests.Add(mrk);
+         _recentMergeRequests.Add(mrk, currentTime);
 
          bool needUpdateFullList = cleanupOldRecentMergeRequests(mrk.ProjectKey.HostName);
          saveState();
@@ -180,30 +182,41 @@ namespace mrHelper.App.Forms
       private IEnumerable<SearchQuery> convertRecentMergeRequestsToSearchQueries(string hostname)
       {
          return _recentMergeRequests
-            .Where(key => key.ProjectKey.HostName == hostname)
+            .Where(key => key.Key.ProjectKey.HostName == hostname)
             .Select(key => new GitLabClient.SearchQuery
             {
-               IId = key.IId,
-               ProjectName = key.ProjectKey.ProjectName
+               IId = key.Key.IId,
+               ProjectName = key.Key.ProjectKey.ProjectName
             })
             .ToArray();
       }
 
       private bool cleanupOldRecentMergeRequests(string hostname)
       {
-         bool changed = false;
-         IEnumerable<IGrouping<ProjectKey, MergeRequestKey>> groups =
-            _recentMergeRequests
-            .Where(key => key.ProjectKey.HostName == hostname)
-            .GroupBy(key => key.ProjectKey);
-         foreach (IGrouping<ProjectKey, MergeRequestKey> group in groups)
+         if (String.IsNullOrEmpty(hostname))
          {
-            IEnumerable<MergeRequestKey> groupedKeys = group.AsEnumerable();
+            return false;
+         }
+
+         if (!int.TryParse(Program.Settings.RecentMergeRequestsPerProjectCount, out int mergeRequestsPerProject))
+         {
+            mergeRequestsPerProject = Constants.RecentMergeRequestPerProjectDefaultCount;
+         }
+
+         bool changed = false;
+         IEnumerable<IGrouping<ProjectKey, KeyValuePair<MergeRequestKey, DateTime>>> groups =
+            _recentMergeRequests
+            .Where(key => key.Key.ProjectKey.HostName == hostname)
+            .GroupBy(key => key.Key.ProjectKey);
+         foreach (IGrouping<ProjectKey, KeyValuePair<MergeRequestKey, DateTime>> group in groups)
+         {
+            IEnumerable<KeyValuePair<MergeRequestKey, DateTime>> groupedKeys = group.AsEnumerable();
             if (groupedKeys.Any())
             {
                IEnumerable<MergeRequestKey> oldMergeRequests = groupedKeys
-                  .OrderByDescending(mergeRequestKey => mergeRequestKey.IId)
-                  .Skip(Constants.RecentMergeRequestPerProjectCount)
+                  .OrderByDescending(kv => kv.Value)
+                  .Skip(mergeRequestsPerProject)
+                  .Select(kv => kv.Key)
                   .ToArray(); // copy
                foreach (MergeRequestKey mergeRequestKey in oldMergeRequests)
                {

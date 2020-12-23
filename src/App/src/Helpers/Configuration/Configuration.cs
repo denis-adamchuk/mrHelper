@@ -143,6 +143,9 @@ namespace mrHelper.App.Helpers
       private static readonly string ComparisonsToKeepKeyName = "FileStorageComparisonsToKeep";
       private static readonly int    ComparisonsToKeepDefaultValue = 200;
 
+      private static readonly string RecentMergeRequestsPerProjectCountKeyName = "RecentMergeRequestsPerProjectCount";
+      private static readonly string RecentMergeRequestsPerProjectCountDefaultValue = Constants.RecentMergeRequestPerProjectDefaultCount.ToString();
+
       private static readonly string Notifications_NewMergeRequests_KeyName      = "Notifications_NewMergeRequests";
       private static readonly bool   Notifications_NewMergeRequests_DefaultValue = true;
 
@@ -556,6 +559,12 @@ namespace mrHelper.App.Helpers
                   out int result) ? result : ComparisonsToKeepDefaultValue;
          }
          set { setValue(ComparisonsToKeepKeyName, value.ToString()); }
+      }
+
+      public string RecentMergeRequestsPerProjectCount
+      {
+         get { return getValue(RecentMergeRequestsPerProjectCountKeyName, RecentMergeRequestsPerProjectCountDefaultValue); }
+         set { setValue(RecentMergeRequestsPerProjectCountKeyName, value); }
       }
 
       public bool Notifications_NewMergeRequests
