@@ -981,33 +981,18 @@ namespace mrHelper.App.Controls
 
       private void onSerialize(IPersistentStateSetter writer)
       {
-         IEnumerable<string> collapsedProjects = _collapsedProjects.Select(
-               item => item.HostName + "|"
-                     + item.ProjectName);
-         writer.Set(String.Format("CollapsedProjects_{0}", getIdentity()), collapsedProjects);
+         string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
+         new PersistentStateSaveHelper(recordName, writer).Save(_collapsedProjects);
       }
 
       private void onDeserialize(IPersistentStateGetter reader)
       {
-         HashSet<ProjectKey> collapsedProjectsHashSet = new HashSet<ProjectKey>();
-         JArray collapsedProjects = (JArray)reader.Get(String.Format("CollapsedProjects_{0}", getIdentity()));
-         if (collapsedProjects != null)
+         string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
+         new PersistentStateLoadHelper(recordName, reader).Load(out HashSet<ProjectKey> collapsedProjectsHashSet);
+         if (collapsedProjectsHashSet != null)
          {
-            foreach (JToken token in collapsedProjects)
-            {
-               if (token.Type == JTokenType.String)
-               {
-                  string item = token.Value<string>();
-                  string[] splitted = item.Split('|');
-                  Debug.Assert(splitted.Length == 2);
-
-                  string hostname2 = StringUtils.GetHostWithPrefix(splitted[0]);
-                  string projectname = splitted[1];
-                  collapsedProjectsHashSet.Add(new ProjectKey(hostname2, projectname));
-               }
-            }
+            setCollapsedProjects(collapsedProjectsHashSet);
          }
-         setCollapsedProjects(collapsedProjectsHashSet);
       }
 
       private void setColumnWidths(Dictionary<string, int> widths)

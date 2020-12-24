@@ -281,6 +281,7 @@
     <Compile Include="src\Helpers\ApplicationUpdateHelper.cs" />
     <Compile Include="src\Helpers\Interprocess\ReportedDiscussionNote.cs" />
     <Compile Include="src\Helpers\PeriodicUpdateChecker.cs" />
+    <Compile Include="src\Helpers\PersistentStateHelpers.cs" />
     <Compile Include="src\Helpers\StaticUpdateChecker.cs" />
     <Compile Include="src\Helpers\Configuration\Configuration.cs" />
     <Compile Include="src\Helpers\Configuration\ConfigurationHelper.cs" />

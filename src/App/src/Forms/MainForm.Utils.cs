@@ -480,156 +480,53 @@ namespace mrHelper.App.Forms
 
       private void onPersistentStorageSerialize(IPersistentStateSetter writer)
       {
-         writer.Set("SelectedHost", getHostName());
-
-         Dictionary<string, HashSet<string>> reviewedRevisions = _reviewedRevisions.ToDictionary(
-               item => item.Key.ProjectKey.HostName
-               + "|" + item.Key.ProjectKey.ProjectName
-               + "|" + item.Key.IId.ToString(),
-               item => item.Value);
-         writer.Set("ReviewedCommits", reviewedRevisions);
-
-         Dictionary<string, string> recentMergeRequests = _recentMergeRequests.ToDictionary(
-               item => item.Key.ProjectKey.HostName
-               + "|" + item.Key.ProjectKey.ProjectName
-               + "|" + item.Key.IId.ToString(),
-               item => item.Value.ToLongTimeString());
-         writer.Set("RecentMergeRequestsWithDateTime", recentMergeRequests);
-
-         Dictionary<string, string> mergeRequestsByHosts = _lastMergeRequestsByHosts.ToDictionary(
-               item => item.Value.ProjectKey.HostName
-               + "|" + item.Value.ProjectKey.ProjectName,
-               item => item.Value.IId.ToString());
-         writer.Set("MergeRequestsByHosts", mergeRequestsByHosts);
-
-         Dictionary<string, string> newMergeRequestDialogStatesByHosts =
-            _newMergeRequestDialogStatesByHosts.ToDictionary(
-               item => item.Key,
-               item => item.Value.DefaultProject
-               + "|" + item.Value.AssigneeUsername
-               + "|" + item.Value.IsBranchDeletionNeeded.ToString()
-               + "|" + item.Value.IsSquashNeeded.ToString());
-         writer.Set("NewMergeRequestDialogStatesByHosts", newMergeRequestDialogStatesByHosts);
+         new PersistentStateSaveHelper("SelectedHost", writer).Save(getHostName());
+         new PersistentStateSaveHelper("ReviewedCommits", writer).Save(_reviewedRevisions);
+         new PersistentStateSaveHelper("RecentMergeRequestsWithDateTime", writer).Save(_recentMergeRequests);
+         new PersistentStateSaveHelper("MergeRequestsByHosts", writer).Save(_lastMergeRequestsByHosts);
+         new PersistentStateSaveHelper("NewMergeRequestDialogStatesByHosts", writer).Save(_newMergeRequestDialogStatesByHosts);
       }
 
       private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
       {
-         string hostname = (string)reader.Get("SelectedHost");
+         new PersistentStateLoadHelper("SelectedHost", reader).Load(out string hostname);
          if (hostname != null)
          {
             setInitialHostName(StringUtils.GetHostWithPrefix(hostname));
          }
 
-         JObject reviewedRevisionsObj = (JObject)reader.Get("ReviewedCommits");
-         Dictionary<string, object> reviewedRevisions =
-            reviewedRevisionsObj?.ToObject<Dictionary<string, object>>();
-         if (reviewedRevisions != null)
+         new PersistentStateLoadHelper("ReviewedCommits", reader).Load(
+            out Dictionary<MergeRequestKey, HashSet<string>> revisions);
+         if (revisions != null)
          {
-            _reviewedRevisions = reviewedRevisions.ToDictionary(
-               item =>
-               {
-                  string[] splitted = item.Key.Split('|');
-
-                  Debug.Assert(splitted.Length == 3);
-
-                  string host = splitted[0];
-                  string projectName = splitted[1];
-                  int iid = int.Parse(splitted[2]);
-                  return new MergeRequestKey(new ProjectKey(host, projectName), iid);
-               },
-               item =>
-               {
-                  HashSet<string> commits = new HashSet<string>();
-                  foreach (string commit in (JArray)item.Value)
-                  {
-                     commits.Add(commit);
-                  }
-                  return commits;
-               });
+            _reviewedRevisions = revisions;
          }
 
-         DateTime defaultDateTimeForRecentMergeRequests = DateTime.Now;
-
-         JArray recentMergeRequests = (JArray)reader.Get("RecentMergeRequests");
-         if (recentMergeRequests != null)
+         new PersistentStateLoadHelper("RecentMergeRequests", reader).Load(out HashSet<MergeRequestKey> mergeRequests);
+         new PersistentStateLoadHelper("RecentMergeRequestsWithDateTime", reader).Load(
+            out Dictionary<MergeRequestKey, DateTime> mergeRequestsWithDateTime);
+         if (mergeRequestsWithDateTime != null)
          {
-            foreach (JToken token in recentMergeRequests)
-            {
-               if (token.Type == JTokenType.String)
-               {
-                  string item = token.Value<string>();
-                  string[] splitted = item.Split('|');
-                  Debug.Assert(splitted.Length == 3);
-
-                  string hostname2 = StringUtils.GetHostWithPrefix(splitted[0]);
-                  string projectname = splitted[1];
-                  int iid = int.TryParse(splitted[2], out int parsedIId) ? parsedIId : 0;
-                  _recentMergeRequests.Add(new MergeRequestKey(new ProjectKey(hostname2, projectname), iid),
-                     defaultDateTimeForRecentMergeRequests);
-               }
-            }
+            _recentMergeRequests = mergeRequestsWithDateTime;
+         }
+         else if (mergeRequests != null)
+         {
+            // deprecated format
+            _recentMergeRequests = mergeRequests.ToDictionary(item => item, item => DateTime.Now);
          }
 
-         JObject recentMergeRequestsWithDateTimeObj = (JObject)reader.Get("RecentMergeRequestsWithDateTime");
-         Dictionary<string, object> recentMergeRequestsWithDateTime =
-            recentMergeRequestsWithDateTimeObj?.ToObject<Dictionary<string, object>>();
-         if (recentMergeRequestsWithDateTime != null)
+         new PersistentStateLoadHelper("MergeRequestsByHosts", reader).
+            Load(out Dictionary<string, MergeRequestKey> mergeRequestsByHosts);
+         if (mergeRequestsByHosts != null)
          {
-            _recentMergeRequests = recentMergeRequestsWithDateTime.ToDictionary(
-               item =>
-               {
-                  string[] splitted = item.Key.Split('|');
-
-                  Debug.Assert(splitted.Length == 3);
-
-                  string host = splitted[0];
-                  string projectName = splitted[1];
-                  int iid = int.Parse(splitted[2]);
-                  return new MergeRequestKey(new ProjectKey(host, projectName), iid);
-               },
-               item => DateTime.TryParse(item.Value.ToString(), out DateTime dt)
-                  ? dt : defaultDateTimeForRecentMergeRequests);
+            _lastMergeRequestsByHosts = mergeRequestsByHosts;
          }
 
-         JObject lastMergeRequestsByHostsObj = (JObject)reader.Get("MergeRequestsByHosts");
-         Dictionary<string, object> lastMergeRequestsByHosts =
-            lastMergeRequestsByHostsObj?.ToObject<Dictionary<string, object>>();
-         if (lastMergeRequestsByHosts != null)
+         new PersistentStateLoadHelper("NewMergeRequestDialogStatesByHosts", reader).Load(
+            out Dictionary<string, NewMergeRequestProperties> properties);
+         if (properties != null)
          {
-            _lastMergeRequestsByHosts = lastMergeRequestsByHosts.ToDictionary(
-               item =>
-               {
-                  string[] splitted = item.Key.Split('|');
-                  Debug.Assert(splitted.Length == 2);
-                  return splitted[0];
-               },
-               item =>
-               {
-                  string[] splitted = item.Key.Split('|');
-                  Debug.Assert(splitted.Length == 2);
-
-                  string hostname2 = StringUtils.GetHostWithPrefix(splitted[0]);
-                  string projectname = splitted[1];
-                  int iid = int.Parse((string)item.Value);
-                  return new MergeRequestKey(new ProjectKey(hostname2, projectname), iid);
-               });
-         }
-
-         JObject newMergeRequestDialogStatesByHostsObj = (JObject)reader.Get("NewMergeRequestDialogStatesByHosts");
-         Dictionary<string, object> newMergeRequestDialogStatesByHosts =
-            newMergeRequestDialogStatesByHostsObj?.ToObject<Dictionary<string, object>>();
-         if (newMergeRequestDialogStatesByHosts != null)
-         {
-            _newMergeRequestDialogStatesByHosts = newMergeRequestDialogStatesByHosts
-               .Where(x => ((string)x.Value).Split('|').Length == 4).ToDictionary(
-               item => item.Key,
-               item =>
-               {
-                  string[] splitted = ((string)item.Value).Split('|');
-                  return new NewMergeRequestProperties(
-                     splitted[0], null, null, splitted[1],
-                     splitted[2] == bool.TrueString, splitted[3] == bool.TrueString);
-               });
+            _newMergeRequestDialogStatesByHosts = properties;
          }
       }
 

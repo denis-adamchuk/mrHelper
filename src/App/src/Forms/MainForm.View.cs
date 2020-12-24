@@ -1009,6 +1009,7 @@ namespace mrHelper.App.Forms
          checkBoxSearchByTitleAndDescription.Enabled = enabled;
          textBoxSearchText.Enabled = enabled;
          comboBoxSearchByState.Enabled = enabled;
+         labelSearchByState.Enabled = enabled;
       }
 
       private void updateSearchButtonState()

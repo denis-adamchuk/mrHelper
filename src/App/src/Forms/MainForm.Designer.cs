@@ -1399,8 +1399,7 @@ namespace mrHelper.App.Forms
          this.textBoxRecentMergeRequestsHint.Size = new System.Drawing.Size(463, 28);
          this.textBoxRecentMergeRequestsHint.TabIndex = 5;
          this.textBoxRecentMergeRequestsHint.Text = "This list contains a few merge requests which have been recently reviewed by you " +
-    "in mrHelper.\r\nNew elements will appear in the list once merge requests are close" +
-    "d or merged.";
+    "in mrHelper.\r\nThe maximum number of recent merge requests can be configured in Settings.";
          // 
          // listViewRecentMergeRequests
          // 
