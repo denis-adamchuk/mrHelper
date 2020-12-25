@@ -1,4 +1,5 @@
-﻿using mrHelper.Core.Matching;
+﻿using GitLabSharp.Entities;
+using mrHelper.Core.Matching;
 
 namespace mrHelper.App.Interprocess
 {
@@ -16,12 +17,14 @@ namespace mrHelper.App.Interprocess
 
    internal struct ReportedDiscussionNoteContent
    {
-      public ReportedDiscussionNoteContent(string body) : this()
+      public ReportedDiscussionNoteContent(string body, string authorName) : this()
       {
          Body = body;
+         AuthorName = authorName;
       }
 
       internal string Body { get; }
+      internal string AuthorName { get; }
    }
 
    internal struct ReportedDiscussionNotePosition
@@ -36,11 +39,12 @@ namespace mrHelper.App.Interprocess
 
    internal struct ReportedDiscussionNote
    {
-      public ReportedDiscussionNote(int id, string discussionId, DiffPosition diffPosition, string body)
+      public ReportedDiscussionNote(int id, string discussionId, DiffPosition diffPosition,
+         string body, string authorName)
       {
          Key = new ReportedDiscussionNoteKey(id, discussionId);
          Position = new ReportedDiscussionNotePosition(diffPosition);
-         Content = new ReportedDiscussionNoteContent(body);
+         Content = new ReportedDiscussionNoteContent(body, authorName);
       }
 
       internal ReportedDiscussionNoteKey Key { get; }

@@ -36,7 +36,7 @@ namespace mrHelper.App.Interprocess
       public void Handle(MatchInfo matchInfo, Snapshot snapshot)
       {
          MergeRequestKey mrk = getMergeRequestKey(snapshot);
-         if (matchFileNameAndLineNumber(mrk, snapshot.Refs, matchInfo, out DiffPosition position) != MatchResult.Success)
+         if (matchFileNameAndLineNumber(mrk, snapshot.Refs, matchInfo, out DiffPosition position) == MatchResult.Error)
          {
             MessageBox.Show("Cannot create a discussion. Unexpected file name and/or line number passed",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
@@ -57,7 +57,7 @@ namespace mrHelper.App.Interprocess
             async (notePosition) =>
                await actOnGitLab(snapshot, "delete", (gli) =>
                   deleteDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, snapshot)),
-            (sourcePosition) => getRelatedDiscussions(mrk, sourcePosition).ToArray(),
+            (keyOpt, sourcePosition) => getRelatedDiscussions(mrk, keyOpt, sourcePosition).ToArray(),
             getDiffContext);
          form.Show();
       }
@@ -162,12 +162,14 @@ namespace mrHelper.App.Interprocess
             {
                DiscussionNote firstNote = discussion.Notes.First();
                Core.Matching.DiffPosition firstNotePosition = PositionConverter.Convert(firstNote.Position);
-               return new ReportedDiscussionNote(firstNote.Id, discussion.Id, firstNotePosition, firstNote.Body);
+               return new ReportedDiscussionNote(firstNote.Id, discussion.Id, firstNotePosition,
+                  firstNote.Body, firstNote.Author.Name);
             });
       }
 
       // Collect discussions started for lines within DiffContextDepth range near `position`
-      private IEnumerable<ReportedDiscussionNote> getRelatedDiscussions(MergeRequestKey mrk, DiffPosition position)
+      private IEnumerable<ReportedDiscussionNote> getRelatedDiscussions(MergeRequestKey mrk,
+         ReportedDiscussionNoteKey? keyOpt, DiffPosition position)
       {
          // Obtain a context for a passed position.
          DiffContext ctx = getDiffContext(position);
@@ -204,10 +206,10 @@ namespace mrHelper.App.Interprocess
             {
                foreach (DiffPosition neighbor in neighborPositions)
                {
-                  if (neighbor.Equals(firstNotePosition))
+                  if (neighbor.Equals(firstNotePosition) && (!keyOpt.HasValue || keyOpt.Value.Id != firstNote.Id))
                   {
-                     ReportedDiscussionNote note = new ReportedDiscussionNote(
-                        firstNote.Id, discussion.Id, firstNotePosition, firstNote.Body);
+                     ReportedDiscussionNote note = new ReportedDiscussionNote(firstNote.Id, discussion.Id,
+                        firstNotePosition, firstNote.Body, firstNote.Author.Name);
                      relatedNotes.Add(note);
                   }
                }

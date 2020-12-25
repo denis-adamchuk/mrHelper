@@ -128,8 +128,7 @@ namespace mrHelper.App.Helpers
 
       private string[] readObjectAsArray(IPersistentStateGetter reader, string objectName)
       {
-         return _reader.Get(_recordName) is JArray jArray
-            ? jarrayToStringCollection(jArray).ToArray() ?? Array.Empty<string>() : null;
+         return _reader.Get(_recordName) is JArray jArray ? jarrayToStringCollection(jArray).ToArray() : null;
       }
 
       private Dictionary<string, object> readObjectAsDict(IPersistentStateGetter reader, string objectName)

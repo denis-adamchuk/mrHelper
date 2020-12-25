@@ -116,7 +116,7 @@ namespace mrHelper.Core.Context
       {
          if (Lines == null && other.Lines == null)
          {
-            return SelectedIndex == SelectedIndex;
+            return SelectedIndex == other.SelectedIndex;
          }
          else if (Lines != null && other.Lines != null)
          {

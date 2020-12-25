@@ -41,19 +41,28 @@
          this.buttonPrev = new System.Windows.Forms.Button();
          this.buttonNext = new System.Windows.Forms.Button();
          this.buttonDelete = new System.Windows.Forms.Button();
+         this.buttonPrevRelatedDiscussion = new System.Windows.Forms.Button();
+         this.buttonNextRelatedDiscussion = new System.Windows.Forms.Button();
          this.tabControlMode = new System.Windows.Forms.TabControl();
          this.tabPageEdit = new System.Windows.Forms.TabPage();
          this.tabPagePreview = new System.Windows.Forms.TabPage();
          this.htmlPanelPreview = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.labelInvisibleCharactersHint = new System.Windows.Forms.Label();
          this.panelNavigation = new System.Windows.Forms.Panel();
-         this.labelCounter = new System.Windows.Forms.Label();
          this.labelModificationsHint = new System.Windows.Forms.Label();
+         this.labelCounter = new System.Windows.Forms.Label();
+         this.checkBoxShowRelated = new System.Windows.Forms.CheckBox();
+         this.groupBoxRelated = new System.Windows.Forms.GroupBox();
+         this.labelRelatedDiscussionCounter = new System.Windows.Forms.Label();
+         this.labelRelatedDiscussionLineNumber = new System.Windows.Forms.Label();
+         this.labelRelatedDiscussionAuthor = new System.Windows.Forms.Label();
+         this.htmlPanelPreviewRelatedDiscussion = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.htmlContextCanvas.SuspendLayout();
          this.tabControlMode.SuspendLayout();
          this.tabPageEdit.SuspendLayout();
          this.tabPagePreview.SuspendLayout();
          this.panelNavigation.SuspendLayout();
+         this.groupBoxRelated.SuspendLayout();
          this.SuspendLayout();
          // 
          // buttonCancel
@@ -189,6 +198,32 @@
          this.buttonDelete.UseVisualStyleBackColor = true;
          this.buttonDelete.Click += new System.EventHandler(this.buttonDelete_Click);
          // 
+         // buttonPrevRelatedDiscussion
+         // 
+         this.buttonPrevRelatedDiscussion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonPrevRelatedDiscussion.Location = new System.Drawing.Point(535, 7);
+         this.buttonPrevRelatedDiscussion.Margin = new System.Windows.Forms.Padding(0);
+         this.buttonPrevRelatedDiscussion.Name = "buttonPrevRelatedDiscussion";
+         this.buttonPrevRelatedDiscussion.Size = new System.Drawing.Size(22, 22);
+         this.buttonPrevRelatedDiscussion.TabIndex = 32;
+         this.buttonPrevRelatedDiscussion.Text = "<";
+         this.toolTip.SetToolTip(this.buttonPrevRelatedDiscussion, "Go to my previous discussion");
+         this.buttonPrevRelatedDiscussion.UseVisualStyleBackColor = true;
+         this.buttonPrevRelatedDiscussion.Click += new System.EventHandler(this.buttonRelatedPrev_Click);
+         // 
+         // buttonNextRelatedDiscussion
+         // 
+         this.buttonNextRelatedDiscussion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonNextRelatedDiscussion.Location = new System.Drawing.Point(622, 7);
+         this.buttonNextRelatedDiscussion.Margin = new System.Windows.Forms.Padding(0);
+         this.buttonNextRelatedDiscussion.Name = "buttonNextRelatedDiscussion";
+         this.buttonNextRelatedDiscussion.Size = new System.Drawing.Size(22, 22);
+         this.buttonNextRelatedDiscussion.TabIndex = 33;
+         this.buttonNextRelatedDiscussion.Text = ">";
+         this.toolTip.SetToolTip(this.buttonNextRelatedDiscussion, "Go to my next discussion");
+         this.buttonNextRelatedDiscussion.UseVisualStyleBackColor = true;
+         this.buttonNextRelatedDiscussion.Click += new System.EventHandler(this.buttonRelatedNext_Click);
+         // 
          // tabControlMode
          // 
          this.tabControlMode.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -243,7 +278,7 @@
          this.labelInvisibleCharactersHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.labelInvisibleCharactersHint.AutoSize = true;
          this.labelInvisibleCharactersHint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-         this.labelInvisibleCharactersHint.Location = new System.Drawing.Point(12, 244);
+         this.labelInvisibleCharactersHint.Location = new System.Drawing.Point(12, 248);
          this.labelInvisibleCharactersHint.Name = "labelInvisibleCharactersHint";
          this.labelInvisibleCharactersHint.Size = new System.Drawing.Size(149, 13);
          this.labelInvisibleCharactersHint.TabIndex = 14;
@@ -266,16 +301,6 @@
          this.panelNavigation.SizeChanged += new System.EventHandler(this.panelNavigation_SizeChanged);
          this.panelNavigation.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelNavigation_MouseWheel);
          // 
-         // labelCounter
-         // 
-         this.labelCounter.AutoSize = true;
-         this.labelCounter.Location = new System.Drawing.Point(293, 4);
-         this.labelCounter.Name = "labelCounter";
-         this.labelCounter.Size = new System.Drawing.Size(60, 13);
-         this.labelCounter.TabIndex = 19;
-         this.labelCounter.Text = "<100/100>";
-         this.labelCounter.TextChanged += new System.EventHandler(this.labelCounter_TextChanged);
-         // 
          // labelModificationsHint
          // 
          this.labelModificationsHint.AutoSize = true;
@@ -286,12 +311,100 @@
          this.labelModificationsHint.Text = "Modifications are applied when the dialog closes";
          this.labelModificationsHint.Visible = false;
          // 
+         // labelCounter
+         // 
+         this.labelCounter.AutoSize = true;
+         this.labelCounter.Location = new System.Drawing.Point(293, 4);
+         this.labelCounter.Name = "labelCounter";
+         this.labelCounter.Size = new System.Drawing.Size(60, 13);
+         this.labelCounter.TabIndex = 19;
+         this.labelCounter.Text = "<100/100>";
+         this.labelCounter.SizeChanged += new System.EventHandler(this.labelCounter_SizeChanged);
+         // 
+         // checkBoxShowRelated
+         // 
+         this.checkBoxShowRelated.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.checkBoxShowRelated.AutoSize = true;
+         this.checkBoxShowRelated.Checked = true;
+         this.checkBoxShowRelated.CheckState = System.Windows.Forms.CheckState.Checked;
+         this.checkBoxShowRelated.Location = new System.Drawing.Point(573, 247);
+         this.checkBoxShowRelated.Name = "checkBoxShowRelated";
+         this.checkBoxShowRelated.Size = new System.Drawing.Size(88, 17);
+         this.checkBoxShowRelated.TabIndex = 27;
+         this.checkBoxShowRelated.Text = "Show related";
+         this.checkBoxShowRelated.UseVisualStyleBackColor = true;
+         this.checkBoxShowRelated.CheckedChanged += new System.EventHandler(this.checkBoxShowRelated_CheckedChanged);
+         // 
+         // groupBoxRelated
+         // 
+         this.groupBoxRelated.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.groupBoxRelated.Controls.Add(this.buttonPrevRelatedDiscussion);
+         this.groupBoxRelated.Controls.Add(this.labelRelatedDiscussionCounter);
+         this.groupBoxRelated.Controls.Add(this.buttonNextRelatedDiscussion);
+         this.groupBoxRelated.Controls.Add(this.labelRelatedDiscussionLineNumber);
+         this.groupBoxRelated.Controls.Add(this.labelRelatedDiscussionAuthor);
+         this.groupBoxRelated.Controls.Add(this.htmlPanelPreviewRelatedDiscussion);
+         this.groupBoxRelated.Location = new System.Drawing.Point(13, 265);
+         this.groupBoxRelated.Name = "groupBoxRelated";
+         this.groupBoxRelated.Size = new System.Drawing.Size(648, 131);
+         this.groupBoxRelated.TabIndex = 28;
+         this.groupBoxRelated.TabStop = false;
+         this.groupBoxRelated.Text = "Related threads";
+         this.groupBoxRelated.SizeChanged += new System.EventHandler(this.groupBoxRelated_SizeChanged);
+         this.groupBoxRelated.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.groupBoxRelated_MouseWheel);
+         // 
+         // labelRelatedDiscussionCounter
+         // 
+         this.labelRelatedDiscussionCounter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.labelRelatedDiscussionCounter.AutoSize = true;
+         this.labelRelatedDiscussionCounter.Location = new System.Drawing.Point(560, 11);
+         this.labelRelatedDiscussionCounter.Name = "labelRelatedDiscussionCounter";
+         this.labelRelatedDiscussionCounter.Size = new System.Drawing.Size(60, 13);
+         this.labelRelatedDiscussionCounter.TabIndex = 34;
+         this.labelRelatedDiscussionCounter.Text = "<100/100>";
+         this.labelRelatedDiscussionCounter.SizeChanged += new System.EventHandler(this.labelRelatedDiscussionCounter_SizeChanged);
+         // 
+         // labelRelatedDiscussionLineNumber
+         // 
+         this.labelRelatedDiscussionLineNumber.AutoSize = true;
+         this.labelRelatedDiscussionLineNumber.Location = new System.Drawing.Point(6, 12);
+         this.labelRelatedDiscussionLineNumber.Name = "labelRelatedDiscussionLineNumber";
+         this.labelRelatedDiscussionLineNumber.Size = new System.Drawing.Size(69, 13);
+         this.labelRelatedDiscussionLineNumber.TabIndex = 31;
+         this.labelRelatedDiscussionLineNumber.Text = "Line: <0000>";
+         // 
+         // labelRelatedDiscussionAuthor
+         // 
+         this.labelRelatedDiscussionAuthor.AutoSize = true;
+         this.labelRelatedDiscussionAuthor.Location = new System.Drawing.Point(93, 11);
+         this.labelRelatedDiscussionAuthor.Name = "labelRelatedDiscussionAuthor";
+         this.labelRelatedDiscussionAuthor.Size = new System.Drawing.Size(68, 13);
+         this.labelRelatedDiscussionAuthor.TabIndex = 30;
+         this.labelRelatedDiscussionAuthor.Text = "Author: <....>";
+         // 
+         // htmlPanelPreviewRelatedDiscussion
+         // 
+         this.htmlPanelPreviewRelatedDiscussion.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.htmlPanelPreviewRelatedDiscussion.AutoScroll = true;
+         this.htmlPanelPreviewRelatedDiscussion.BackColor = System.Drawing.SystemColors.Window;
+         this.htmlPanelPreviewRelatedDiscussion.BaseStylesheet = null;
+         this.htmlPanelPreviewRelatedDiscussion.Cursor = System.Windows.Forms.Cursors.IBeam;
+         this.htmlPanelPreviewRelatedDiscussion.Location = new System.Drawing.Point(6, 32);
+         this.htmlPanelPreviewRelatedDiscussion.Name = "htmlPanelPreviewRelatedDiscussion";
+         this.htmlPanelPreviewRelatedDiscussion.Size = new System.Drawing.Size(635, 86);
+         this.htmlPanelPreviewRelatedDiscussion.TabIndex = 29;
+         this.htmlPanelPreviewRelatedDiscussion.Text = null;
+         // 
          // NewDiscussionForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(754, 262);
+         this.ClientSize = new System.Drawing.Size(754, 401);
+         this.Controls.Add(this.groupBoxRelated);
+         this.Controls.Add(this.checkBoxShowRelated);
          this.Controls.Add(this.panelNavigation);
          this.Controls.Add(this.labelInvisibleCharactersHint);
          this.Controls.Add(this.tabControlMode);
@@ -303,7 +416,7 @@
          this.Controls.Add(this.buttonCancel);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
-         this.MinimumSize = new System.Drawing.Size(770, 301);
+         this.MinimumSize = new System.Drawing.Size(770, 440);
          this.Name = "NewDiscussionForm";
          this.Text = "Start a thread";
          this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.NewDiscussionForm_FormClosed);
@@ -314,6 +427,8 @@
          this.tabPagePreview.ResumeLayout(false);
          this.panelNavigation.ResumeLayout(false);
          this.panelNavigation.PerformLayout();
+         this.groupBoxRelated.ResumeLayout(false);
+         this.groupBoxRelated.PerformLayout();
          this.ResumeLayout(false);
          this.PerformLayout();
 
@@ -341,5 +456,13 @@
       private System.Windows.Forms.Button buttonNext;
       private System.Windows.Forms.Button buttonDelete;
       private System.Windows.Forms.Label labelModificationsHint;
+      private System.Windows.Forms.CheckBox checkBoxShowRelated;
+      private System.Windows.Forms.GroupBox groupBoxRelated;
+      private System.Windows.Forms.Button buttonPrevRelatedDiscussion;
+      private System.Windows.Forms.Label labelRelatedDiscussionCounter;
+      private System.Windows.Forms.Button buttonNextRelatedDiscussion;
+      private System.Windows.Forms.Label labelRelatedDiscussionLineNumber;
+      private System.Windows.Forms.Label labelRelatedDiscussionAuthor;
+      private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelPreviewRelatedDiscussion;
    }
 }
