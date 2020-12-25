@@ -16,6 +16,10 @@ namespace mrHelper.Core.Context
          SelectedIndex = selectedIndex;
       }
 
+      public static DiffContext InvalidContext => new DiffContext(null, 0);
+
+      public bool IsValid() => !this.Equals(InvalidContext);
+
       public struct Line : IEquatable<Line>
       {
          public Line(string text, Side? left, Side? right)
@@ -110,8 +114,16 @@ namespace mrHelper.Core.Context
 
       public bool Equals(DiffContext other)
       {
-         return Enumerable.SequenceEqual(Lines, other.Lines) &&
-                SelectedIndex == other.SelectedIndex;
+         if (Lines == null && other.Lines == null)
+         {
+            return SelectedIndex == SelectedIndex;
+         }
+         else if (Lines != null && other.Lines != null)
+         {
+            return Enumerable.SequenceEqual(Lines, other.Lines) &&
+                   SelectedIndex == other.SelectedIndex;
+         }
+         return false;
       }
 
       public override int GetHashCode()

@@ -133,25 +133,9 @@ namespace mrHelper.App.Forms
             }
 
             DiffCallHandler handler = new DiffCallHandler(storage.Git, _modificationNotifier, getCurrentUser(),
-               (mrk) =>
-               {
-                  dataCache.DiscussionCache?.RequestUpdate(mrk,
-                     Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null);
-               },
-               (mrk) =>
-               {
-                  DiscussionFilter discussionFilter = new DiscussionFilter(
-                     getCurrentUser(), null, DiscussionFilterState.CurrentUserOnly);
-                  IEnumerable<Discussion> discussions = dataCache.DiscussionCache?.GetDiscussions(mrk) ?? Array.Empty<Discussion>();
-                  return discussions
-                     .Where(discussion => discussionFilter.DoesMatchFilter(discussion))
-                     .Select(discussion =>
-                     {
-                        DiscussionNote firstNote = discussion.Notes.First();
-                        Core.Matching.DiffPosition firstNotePosition = PositionConverter.Convert(firstNote.Position);
-                        return new ReportedDiscussionNote(firstNote.Id, discussion.Id, firstNotePosition, firstNote.Body);
-                     });
-               });
+               (mrk) => dataCache.DiscussionCache?.RequestUpdate(
+                  mrk, Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null),
+               (mrk) => dataCache.DiscussionCache?.GetDiscussions(mrk) ?? Array.Empty<Discussion>());
             handler.Handle(matchInfo, snapshot);
          }
          finally

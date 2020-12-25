@@ -14,54 +14,39 @@ using mrHelper.Core.Matching;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using static mrHelper.App.Helpers.ConfigurationHelper;
+using mrHelper.Core.Context;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Interprocess
 {
+
    internal class DiffCallHandler
    {
       internal DiffCallHandler(IGitCommandService git, IModificationListener modificationListener,
          User currentUser, Action<MergeRequestKey> onDiscussionSubmitted,
-         Func<MergeRequestKey, IEnumerable<ReportedDiscussionNote>> getMyNotes)
+         Func<MergeRequestKey, IEnumerable<Discussion>> getDiscussions)
       {
          _git = git ?? throw new ArgumentException("git argument cannot be null");
          _modificationListener = modificationListener;
          _currentUser = currentUser;
          _onDiscussionSubmitted = onDiscussionSubmitted;
-         _getMyNotes = getMyNotes;
+         _getDiscussions = getDiscussions;
       }
 
       public void Handle(MatchInfo matchInfo, Snapshot snapshot)
       {
          MergeRequestKey mrk = getMergeRequestKey(snapshot);
-         FileNameMatcher fileNameMatcher = getFileNameMatcher(_git, mrk);
-         LineNumberMatcher lineNumberMatcher = new LineNumberMatcher(_git);
-         DiffPosition position = new DiffPosition(null, null, null, null, snapshot.Refs);
-
-         try
+         if (matchFileNameAndLineNumber(mrk, snapshot.Refs, matchInfo, out DiffPosition position) != MatchResult.Success)
          {
-            if (!fileNameMatcher.Match(matchInfo, position, out position))
-            {
-               return;
-            }
-
-            lineNumberMatcher.Match(matchInfo, position, out position);
-         }
-         catch (Exception ex)
-         {
-            if (ex is ArgumentException || ex is MatchingException)
-            {
-               ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
-               MessageBox.Show("Cannot create a discussion. Unexpected file name and/or line number passed",
-                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
-                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-               return;
-            }
-            throw;
+            MessageBox.Show("Cannot create a discussion. Unexpected file name and/or line number passed",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+            return;
          }
 
-         NewDiscussionForm form = new NewDiscussionForm(_git,
+         NewDiscussionForm form = new NewDiscussionForm(
             position,
-            _getMyNotes(mrk).ToArray(),
+            getReportedDiscussions(mrk).ToArray(),
             () => _onDiscussionSubmitted?.Invoke(mrk),
             async (body, includeContext) =>
                await actOnGitLab(snapshot, "create", (gli) =>
@@ -71,8 +56,164 @@ namespace mrHelper.App.Interprocess
                   editDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, content.Body, snapshot)),
             async (notePosition) =>
                await actOnGitLab(snapshot, "delete", (gli) =>
-                  deleteDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, snapshot)));
+                  deleteDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, snapshot)),
+            (sourcePosition) => getRelatedDiscussions(mrk, sourcePosition).ToArray(),
+            getDiffContext);
          form.Show();
+      }
+
+      private enum MatchResult
+      {
+         Success,
+         Error,
+         Cancelled
+      }
+
+      private MatchResult matchFileNameAndLineNumber(MergeRequestKey mrk, Core.Matching.DiffRefs refs, MatchInfo matchInfo,
+         out DiffPosition position)
+      {
+         MatchResult matchResult = matchFileNameOnly(mrk, refs, matchInfo, out var tempPosition);
+         if (matchResult != MatchResult.Success)
+         {
+            position = new DiffPosition(null, null, null, null, null);
+            return matchResult;
+         }
+         return matchLineNumberOnly(tempPosition.LeftPath, tempPosition.RightPath, refs, matchInfo, out position);
+      }
+
+      private MatchResult matchFileNameOnly(MergeRequestKey mrk, Core.Matching.DiffRefs refs, MatchInfo matchInfo,
+         out DiffPosition position)
+      {
+         position = new DiffPosition(null, null, null, null, null);
+         FileNameMatcher fileNameMatcher = getFileNameMatcher(_git, mrk);
+         DiffPosition tempPosition = new DiffPosition(null, null, null, null, refs);
+         try
+         {
+            if (!fileNameMatcher.Match(matchInfo, tempPosition, out tempPosition))
+            {
+               return MatchResult.Cancelled;
+            }
+         }
+         catch (Exception ex)
+         {
+            if (ex is ArgumentException || ex is MatchingException)
+            {
+               ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
+               return MatchResult.Error;
+            }
+            throw;
+         }
+         position = tempPosition;
+         return MatchResult.Success;
+      }
+
+      private MatchResult matchLineNumberOnly(string leftPath, string rightPath, Core.Matching.DiffRefs refs,
+         MatchInfo matchInfo, out DiffPosition position)
+      {
+         position = new DiffPosition(null, null, null, null, null);
+         LineNumberMatcher matcher = new LineNumberMatcher(_git);
+         DiffPosition tempPosition = new DiffPosition(leftPath, rightPath, null, null, refs);
+         try
+         {
+            matcher.Match(matchInfo, tempPosition, out tempPosition);
+         }
+         catch (Exception ex)
+         {
+            if (ex is ArgumentException || ex is MatchingException)
+            {
+               ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
+               return MatchResult.Error;
+            }
+            throw;
+         }
+         position = tempPosition;
+         return MatchResult.Success;
+      }
+
+      private DiffContext getDiffContext(DiffPosition position)
+      {
+         if (position == null)
+         {
+            return DiffContext.InvalidContext;
+         }
+
+         try
+         {
+            return new SimpleContextMaker(_git).GetContext(position, DiffContextDepth);
+         }
+         catch (Exception ex)
+         {
+            if (ex is ArgumentException || ex is ContextMakingException)
+            {
+               ExceptionHandlers.Handle("Failed to obtain DiffContext", ex);
+               return DiffContext.InvalidContext;
+            }
+            throw;
+         }
+      }
+
+      private IEnumerable<ReportedDiscussionNote> getReportedDiscussions(MergeRequestKey mrk)
+      {
+         DiscussionFilter discussionFilter = new DiscussionFilter(
+            _currentUser, null, DiscussionFilterState.CurrentUserOnly);
+         return _getDiscussions(mrk)
+            .Where(discussion => discussionFilter.DoesMatchFilter(discussion))
+            .Select(discussion =>
+            {
+               DiscussionNote firstNote = discussion.Notes.First();
+               Core.Matching.DiffPosition firstNotePosition = PositionConverter.Convert(firstNote.Position);
+               return new ReportedDiscussionNote(firstNote.Id, discussion.Id, firstNotePosition, firstNote.Body);
+            });
+      }
+
+      // Collect discussions started for lines within DiffContextDepth range near `position`
+      private IEnumerable<ReportedDiscussionNote> getRelatedDiscussions(MergeRequestKey mrk, DiffPosition position)
+      {
+         // Obtain a context for a passed position.
+         DiffContext ctx = getDiffContext(position);
+         if (!ctx.IsValid())
+         {
+            return Array.Empty<ReportedDiscussionNote>();
+         }
+
+         // We know left/right file names for sure but we need to emulate line number matching
+         // for each line number from a diff context.
+         string leftFileName = position.LeftPath;
+         string rightFileName = position.RightPath;
+         Core.Matching.DiffRefs refs = position.Refs;
+         bool isRightSide = position.RightLine != null;
+         List<DiffPosition> neighborPositions = new List<DiffPosition>();
+         foreach (DiffContext.Line line in ctx.Lines)
+         {
+            int number = isRightSide ? line.Right.Value.Number : line.Left.Value.Number;
+            MatchInfo matchInfo = new MatchInfo(leftFileName, rightFileName, number, !isRightSide);
+            MatchResult result = matchLineNumberOnly(leftFileName, rightFileName, refs, matchInfo, out var relPos);
+            if (result == MatchResult.Success)
+            {
+               neighborPositions.Add(relPos);
+            }
+         }
+
+         // Find discussions that reported on each line from the diff context.
+         List<ReportedDiscussionNote> relatedNotes = new List<ReportedDiscussionNote>();
+         foreach (Discussion discussion in _getDiscussions(mrk))
+         {
+            DiscussionNote firstNote = discussion.Notes.First();
+            DiffPosition firstNotePosition = PositionConverter.Convert(firstNote.Position);
+            if (firstNotePosition != null)
+            {
+               foreach (DiffPosition neighbor in neighborPositions)
+               {
+                  if (neighbor.Equals(firstNotePosition))
+                  {
+                     ReportedDiscussionNote note = new ReportedDiscussionNote(
+                        firstNote.Id, discussion.Id, firstNotePosition, firstNote.Body);
+                     relatedNotes.Add(note);
+                  }
+               }
+            }
+         }
+         return relatedNotes;
       }
 
       private FileNameMatcher getFileNameMatcher(IGitCommandService git, MergeRequestKey mrk)
@@ -271,7 +412,7 @@ namespace mrHelper.App.Interprocess
       private readonly IModificationListener _modificationListener;
       private readonly User _currentUser;
       private readonly Action<MergeRequestKey> _onDiscussionSubmitted;
-      private readonly Func<MergeRequestKey, IEnumerable<ReportedDiscussionNote>> _getMyNotes;
+      private readonly Func<MergeRequestKey, IEnumerable<Discussion>> _getDiscussions;
 
       private struct MismatchWhitelistKey : IEquatable<MismatchWhitelistKey>
       {
@@ -305,6 +446,8 @@ namespace mrHelper.App.Interprocess
       }
 
       private static readonly HashSet<MismatchWhitelistKey> _mismatchWhitelist = new HashSet<MismatchWhitelistKey>();
+
+      private static readonly ContextDepth DiffContextDepth = new ContextDepth(2, 2);
    }
 }
 

@@ -14,6 +14,12 @@ namespace mrHelper.Core.Context
       /// </summary>
       public static string GetHtml(DiffContext context, double fontSizePx, int rowsVPaddingPx, bool fullWidth)
       {
+         if (!context.IsValid())
+         {
+            string errorMessage = "Cannot render HTML context.";
+            return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
+         }
+
          return String.Format(
             @"<html>
                <head>
