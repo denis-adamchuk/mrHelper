@@ -169,6 +169,14 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         // Discussions are needed to show previous and related discussions in Start New Thread dialog.
+         // In many cases they are already cached.
+         await loadDiscussionsAsync(dataCache, mrk);
+         if (_exiting)
+         {
+            return;
+         }
+
          ILocalCommitStorage storage = getCommitStorage(mrk.ProjectKey, true);
          if (!await prepareStorageForDiffTool(mrk, storage, leftSHA, rightSHA) || _exiting)
          {
