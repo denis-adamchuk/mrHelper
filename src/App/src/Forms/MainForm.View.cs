@@ -202,6 +202,19 @@ namespace mrHelper.App.Forms
          linkLabelAbortGitClone.Visible = enabled;
       }
 
+      private void initializeListViewGroups(EDataCacheType mode, string hostname)
+      {
+         Controls.MergeRequestListView listView = getListView(mode);
+         listView.Items.Clear();
+         listView.Groups.Clear();
+
+         IEnumerable<ProjectKey> projectKeys = getEnabledProjects(hostname);
+         foreach (ProjectKey projectKey in projectKeys)
+         {
+            listView.CreateGroupForProject(projectKey, false);
+         }
+      }
+
       private void updateMergeRequestList(EDataCacheType mode)
       {
          DataCache dataCache = getDataCache(mode);
@@ -212,7 +225,11 @@ namespace mrHelper.App.Forms
          }
 
          MergeRequestListView listView = getListView(mode);
-         listView.UpdateItems(!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings));
+         if (!doesRequireFixedGroupCollection(mode))
+         {
+            listView.UpdateGroups();
+         }
+         listView.UpdateItems();
 
          if (mode == EDataCacheType.Live)
          {

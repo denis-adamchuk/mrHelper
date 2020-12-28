@@ -111,6 +111,11 @@ namespace mrHelper.App.Forms
          return null;
       }
 
+      private bool doesRequireFixedGroupCollection(EDataCacheType mode)
+      {
+         return ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings) && mode == EDataCacheType.Live;
+      }
+
       private MergeRequest getMergeRequest(MergeRequestListView proposedListView)
       {
          MergeRequestListView listView = proposedListView ?? getListView(getCurrentTabDataCacheType());

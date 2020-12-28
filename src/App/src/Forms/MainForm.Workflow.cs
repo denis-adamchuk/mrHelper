@@ -203,21 +203,16 @@ namespace mrHelper.App.Forms
 
       private void onLiveDataCacheConnecting(string hostname)
       {
+         if (doesRequireFixedGroupCollection(EDataCacheType.Live))
+         {
+            initializeListViewGroups(EDataCacheType.Live, hostname);
+         }
+
          if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {
-            // in Project-based workflow we want to create all groups at once in a user-defined order
-            Controls.MergeRequestListView listView = getListView(EDataCacheType.Live);
-            listView.Items.Clear();
-            listView.Groups.Clear();
-
-            IEnumerable<ProjectKey> projects = getEnabledProjects(hostname);
-            foreach (ProjectKey projectKey in projects)
-            {
-               listView.CreateGroupForProject(projectKey, false);
-            }
-
+            IEnumerable<ProjectKey> projectKeys = getEnabledProjects(hostname);
             addOperationRecord(String.Format("Loading merge requests of {0} project{1} from {2} has started",
-               projects.Count(), projects.Count() > 1 ? "s" : "", hostname));
+               projectKeys.Count(), projectKeys.Count() > 1 ? "s" : "", hostname));
          }
          else
          {

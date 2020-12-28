@@ -112,9 +112,16 @@ namespace mrHelper.GitLabClient.Loaders
 
       private void applyCommitsToVersions(IEnumerable<MergeRequestKey> allKeys, IEnumerable<Commit> missingCommits)
       {
+         IEnumerable<Commit> distinctMissingCommits = missingCommits.GroupBy(commit => commit.Id).Select(c => c.First());
+         Debug.Assert(distinctMissingCommits.Count() == missingCommits.Count());
+
          foreach (MergeRequestKey mrk in allKeys)
          {
             IEnumerable<Commit> commits = _cacheUpdater.Cache.GetCommits(mrk);
+
+            IEnumerable<Commit> distinctCommits = commits.GroupBy(commit => commit.Id).Select(c => c.First());
+            Debug.Assert(distinctCommits.Count() == commits.Count());
+
             IEnumerable<Version> versions = _cacheUpdater.Cache.GetVersions(mrk);
             foreach (Version version in versions)
             {

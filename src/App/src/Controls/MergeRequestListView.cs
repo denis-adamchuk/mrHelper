@@ -277,7 +277,7 @@ namespace mrHelper.App.Controls
          Groups.Insert(indexToInsert, group);
       }
 
-      public void UpdateItems(bool updateGroups)
+      public void UpdateGroups()
       {
          IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
          if (mergeRequestCache == null)
@@ -287,34 +287,40 @@ namespace mrHelper.App.Controls
 
          BeginUpdate();
 
-         IEnumerable<ProjectKey> projectKeys;
-         if (updateGroups)
+         // Add missing project groups
+         IEnumerable<ProjectKey> allProjects = mergeRequestCache.GetProjects();
+         foreach (ProjectKey projectKey in allProjects)
          {
-            // Add missing project groups
-            IEnumerable<ProjectKey> allProjects = mergeRequestCache.GetProjects();
-            foreach (ProjectKey projectKey in allProjects)
+            if (!Groups.Cast<ListViewGroup>().Any(x => projectKey.Equals((ProjectKey)(x.Tag))))
             {
-               if (!Groups.Cast<ListViewGroup>().Any(x => projectKey.Equals((ProjectKey)(x.Tag))))
-               {
-                  CreateGroupForProject(projectKey, true);
-               }
+               CreateGroupForProject(projectKey, true);
             }
+         }
 
-            // Remove deleted project groups
-            projectKeys = Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
-            for (int index = Groups.Count - 1; index >= 0; --index)
+         // Remove deleted project groups
+         for (int index = Groups.Count - 1; index >= 0; --index)
+         {
+            ListViewGroup group = Groups[index];
+            if (!allProjects.Any(x => x.Equals((ProjectKey)group.Tag)))
             {
-               ListViewGroup group = Groups[index];
-               if (!allProjects.Any(x => x.Equals((ProjectKey)group.Tag)))
-               {
-                  Groups.Remove(group);
-               }
+               Groups.Remove(group);
             }
          }
-         else
+
+         EndUpdate();
+      }
+
+      public void UpdateItems()
+      {
+         IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
+         if (mergeRequestCache == null)
          {
-            projectKeys = Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
+            return;
          }
+
+         IEnumerable<ProjectKey> projectKeys = Groups.Cast<ListViewGroup>().Select(x => (ProjectKey)x.Tag);
+
+         BeginUpdate();
 
          // Add missing merge requests and update existing ones
          foreach (ProjectKey projectKey in projectKeys)
@@ -921,7 +927,7 @@ namespace mrHelper.App.Controls
          {
             _collapsedProjects.Add(projectKey);
          }
-         UpdateItems(false);
+         UpdateItems();
       }
 
       private void updateGroupCaption(ListViewGroup group)
