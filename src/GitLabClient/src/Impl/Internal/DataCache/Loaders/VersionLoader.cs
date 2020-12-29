@@ -112,9 +112,27 @@ namespace mrHelper.GitLabClient.Loaders
 
       private void applyCommitsToVersions(IEnumerable<MergeRequestKey> allKeys, IEnumerable<Commit> missingCommits)
       {
+         IEnumerable<Commit> distinctMissingCommits = missingCommits.GroupBy(commit => commit.Id).Select(c => c.First());
+         if (distinctMissingCommits.Count() != missingCommits.Count())
+         {
+            Debug.Assert(false);
+            Trace.TraceError("[VersionLoader] Duplicate id found in missingCommits: {0}",
+               String.Join(";", missingCommits));
+            return;
+         }
+
          foreach (MergeRequestKey mrk in allKeys)
          {
             IEnumerable<Commit> commits = _cacheUpdater.Cache.GetCommits(mrk);
+
+            IEnumerable<Commit> distinctCommits = commits.GroupBy(commit => commit.Id).Select(c => c.First());
+            if (distinctCommits.Count() != commits.Count())
+            {
+               Debug.Assert(false);
+               Trace.TraceError("[VersionLoader] Duplicate id found in commits: {0}", String.Join(";", commits));
+               continue;
+            }
+
             IEnumerable<Version> versions = _cacheUpdater.Cache.GetVersions(mrk);
             foreach (Version version in versions)
             {

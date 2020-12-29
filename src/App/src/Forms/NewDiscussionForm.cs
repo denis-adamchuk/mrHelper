@@ -8,35 +8,36 @@ using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
 using mrHelper.Common.Constants;
 using mrHelper.CommonNative;
-using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Tools;
 using mrHelper.Common.Tools;
-using mrHelper.StorageSupport;
 using mrHelper.App.Interprocess;
-using System.Drawing;
+using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace mrHelper.App.Forms
 {
    internal partial class NewDiscussionForm : CustomFontForm
    {
-      internal NewDiscussionForm(IGitCommandService git,
+      internal NewDiscussionForm(
          DiffPosition newDiscussionPosition,
          ReportedDiscussionNote[] oldNotes,
          Action onDialogClosed,
          Func<string, bool, Task> onSubmitNewDiscussion,
          Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> onEditOldNote,
-         Func<ReportedDiscussionNoteKey, Task> onDeleteOldNote)
+         Func<ReportedDiscussionNoteKey, Task> onDeleteOldNote,
+         Func<ReportedDiscussionNoteKey?, DiffPosition, IEnumerable<ReportedDiscussionNote>> getRelatedDiscussions,
+         Func<DiffPosition, DiffContext> getDiffContext)
       {
          InitializeComponent();
          this.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
 
          applyFont(Program.Settings.MainWindowFontSizeName);
          createWPFTextBox();
+         _groupBoxRelatedThreadsDefaultHeight = groupBoxRelated.Height;
+         checkBoxShowRelated.Checked = false; // let's hide them for beginning
 
          this.Text = Constants.StartNewThreadCaption;
          labelInvisibleCharactersHint.Text = Constants.WarningOnUnescapedMarkdown;
          _newDiscussionPosition = newDiscussionPosition;
-         _git = git;
          _onDialogClosed = onDialogClosed;
 
          buttonCancel.ConfirmationCondition =
@@ -45,6 +46,8 @@ namespace mrHelper.App.Forms
          _onEditOldNote = onEditOldNote;
          _onDeleteOldNote = onDeleteOldNote;
          _reportedNotes = oldNotes.ToList();
+         _getDiffContext = getDiffContext;
+         _getRelatedDiscussions = getRelatedDiscussions;
 
          resetCurrentNoteIndex();
          updateControlState();
@@ -74,7 +77,7 @@ namespace mrHelper.App.Forms
       {
          if (tabControlMode.SelectedTab == tabPagePreview)
          {
-            updatePreview();
+            updatePreview(htmlPanelPreview, getCurrentNoteText());
          }
       }
 
@@ -113,7 +116,6 @@ namespace mrHelper.App.Forms
          updateControlState();
       }
 
-
       private void buttonNext_Click(object sender, EventArgs e)
       {
          Debug.Assert(_reportedNotes.Any());
@@ -129,29 +131,133 @@ namespace mrHelper.App.Forms
             deleteNote();
             updateControlState();
          }
+      }
 
+      private void groupBoxRelated_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+      {
+         if (e.Delta < 0)
+         {
+            buttonNextRelatedDiscussion.PerformClick();
+         }
+         else if (e.Delta > 0)
+         {
+            buttonPrevRelatedDiscussion.PerformClick();
+         }
+      }
+
+      private void panelNavigation_SizeChanged(object sender, EventArgs e)
+      {
+         alignControlBetweenTwoOther(labelCounter, buttonPrev, buttonNext);
+      }
+
+      private void groupBoxRelated_SizeChanged(object sender, EventArgs e)
+      {
+         alignControlBetweenTwoOther(labelRelatedDiscussionCounter,
+            buttonPrevRelatedDiscussion, buttonNextRelatedDiscussion);
+      }
+
+      private void labelCounter_SizeChanged(object sender, EventArgs e)
+      {
+         alignControlBetweenTwoOther(labelCounter, buttonPrev, buttonNext);
+      }
+
+      private void labelRelatedDiscussionCounter_SizeChanged(object sender, EventArgs e)
+      {
+         alignControlBetweenTwoOther(labelRelatedDiscussionCounter,
+            buttonPrevRelatedDiscussion, buttonNextRelatedDiscussion);
+      }
+
+      private void buttonRelatedPrev_Click(object sender, EventArgs e)
+      {
+         Debug.Assert(_relatedDiscussions.Any());
+         Debug.Assert(_relatedDiscussionIndex.HasValue);
+         Debug.Assert(_relatedDiscussionIndex.Value > 0);
+         decrementRelatedDiscussionIndex();
+         updateRelatedDiscussionControlState();
+      }
+
+      private void buttonRelatedNext_Click(object sender, EventArgs e)
+      {
+         Debug.Assert(_relatedDiscussions.Any());
+         Debug.Assert(_relatedDiscussionIndex.HasValue);
+         Debug.Assert(_relatedDiscussionIndex.Value < _relatedDiscussions.Length);
+         incrementRelatedDiscussionIndex();
+         updateRelatedDiscussionControlState();
+      }
+
+      private void checkBoxShowRelated_CheckedChanged(object sender, EventArgs e)
+      {
+         applyRelatedThreadsVisibility();
       }
 
       private void panelNavigation_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
       {
          if (e.Delta < 0)
          {
-            buttonPrev.PerformClick();
+            buttonNext.PerformClick();
          }
          else if (e.Delta > 0)
          {
-            buttonNext.PerformClick();
+            buttonPrev.PerformClick();
          }
       }
 
-      private void panelNavigation_SizeChanged(object sender, EventArgs e)
+      private void applyRelatedThreadsVisibility()
       {
-         updateLabelCounterPosition();
+         if (!checkBoxShowRelated.Checked)
+         {
+            labelInvisibleCharactersHint.Location = new System.Drawing.Point(
+               labelInvisibleCharactersHint.Location.X,
+               labelInvisibleCharactersHint.Location.Y + _groupBoxRelatedThreadsDefaultHeight);
+            checkBoxShowRelated.Location = new System.Drawing.Point(
+               checkBoxShowRelated.Location.X,
+               checkBoxShowRelated.Location.Y + _groupBoxRelatedThreadsDefaultHeight);
+            tabControlMode.Size = new System.Drawing.Size(
+               tabControlMode.Size.Width,
+               tabControlMode.Size.Height + _groupBoxRelatedThreadsDefaultHeight);
+
+            MinimumSize = new System.Drawing.Size(
+               MinimumSize.Width,
+               MinimumSize.Height - _groupBoxRelatedThreadsDefaultHeight);
+            Size = new System.Drawing.Size(
+               Size.Width,
+               Size.Height - _groupBoxRelatedThreadsDefaultHeight);
+
+            groupBoxRelated.Height = 0;
+            groupBoxRelated.Visible = false;
+         }
+         else
+         {
+            groupBoxRelated.Height = _groupBoxRelatedThreadsDefaultHeight;
+            groupBoxRelated.Visible = true;
+
+            Size = new System.Drawing.Size(
+               Size.Width,
+               Size.Height + _groupBoxRelatedThreadsDefaultHeight);
+            MinimumSize = new System.Drawing.Size(
+               MinimumSize.Width,
+               MinimumSize.Height + _groupBoxRelatedThreadsDefaultHeight);
+
+            labelInvisibleCharactersHint.Location = new System.Drawing.Point(
+               labelInvisibleCharactersHint.Location.X,
+               labelInvisibleCharactersHint.Location.Y - _groupBoxRelatedThreadsDefaultHeight);
+            checkBoxShowRelated.Location = new System.Drawing.Point(
+               checkBoxShowRelated.Location.X,
+               checkBoxShowRelated.Location.Y - _groupBoxRelatedThreadsDefaultHeight);
+            tabControlMode.Size = new System.Drawing.Size(
+               tabControlMode.Size.Width,
+               tabControlMode.Size.Height - _groupBoxRelatedThreadsDefaultHeight);
+         }
       }
 
-      private void labelCounter_TextChanged(object sender, EventArgs e)
+      private void decrementRelatedDiscussionIndex()
       {
-         updateLabelCounterPosition();
+         _relatedDiscussionIndex--;
+      }
+
+      private void incrementRelatedDiscussionIndex()
+      {
+         _relatedDiscussionIndex++;
       }
 
       private void decrementCurrentNoteIndex()
@@ -229,17 +335,17 @@ namespace mrHelper.App.Forms
          return _cachedNewNoteText;
       }
 
-      private void updatePreview()
+      private void updatePreview(HtmlPanel previewPanel, string text)
       {
-         htmlPanelPreview.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
-            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(htmlPanelPreview));
+         previewPanel.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
+            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(previewPanel));
 
          var pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
-         string body = MarkDownUtils.ConvertToHtml(getCurrentNoteText(), String.Empty, pipeline);
-         htmlPanelPreview.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
+         string body = MarkDownUtils.ConvertToHtml(text, String.Empty, pipeline);
+         previewPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
       }
 
-      private void showDiscussionContext(DiffPosition position, IGitCommandService git)
+      private void showDiscussionContext(DiffPosition position)
       {
          if (position == null)
          {
@@ -248,7 +354,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         string html = getContextHtmlText(position, git, out string stylesheet);
+         string html = getContextHtmlText(position, out string stylesheet);
          htmlPanelContext.BaseStylesheet = stylesheet;
          htmlPanelContext.Text = html;
 
@@ -258,31 +364,11 @@ namespace mrHelper.App.Forms
                            + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);
       }
 
-      private string getContextHtmlText(DiffPosition position, IGitCommandService git, out string stylesheet)
+      private string getContextHtmlText(DiffPosition position, out string stylesheet)
       {
          stylesheet = String.Empty;
-
-         DiffContext? context;
-         try
-         {
-            ContextDepth depth = new ContextDepth(0, 3);
-            IContextMaker textContextMaker = new SimpleContextMaker(git);
-            context = textContextMaker.GetContext(position, depth);
-         }
-         catch (Exception ex)
-         {
-            if (ex is ArgumentException || ex is ContextMakingException)
-            {
-               string errorMessage = "Cannot render HTML context.";
-               ExceptionHandlers.Handle(errorMessage, ex);
-               return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
-            }
-            throw;
-         }
-
-         Debug.Assert(context.HasValue);
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanelContext);
-         return DiffContextFormatter.GetHtml(context.Value, fontSizePx, 2, true);
+         return DiffContextFormatter.GetHtml(_getDiffContext(position), fontSizePx, 2, true);
       }
 
       private void updateControlState()
@@ -299,11 +385,18 @@ namespace mrHelper.App.Forms
          DiffPosition position = isCurrentNoteNew()
             ? _newDiscussionPosition
             : _reportedNotes[_currentNoteIndex].Position.DiffPosition;
-         showDiscussionContext(position, _git);
+         showDiscussionContext(position);
          textBoxDiscussionBody.Text = getCurrentNoteText();
          checkBoxIncludeContext.Enabled = isCurrentNoteNew();
 
-         updatePreview();
+         ReportedDiscussionNoteKey? keyOpt = isCurrentNoteNew()
+            ? new ReportedDiscussionNoteKey?()
+            : _reportedNotes[_currentNoteIndex].Key;
+         _relatedDiscussions = _getRelatedDiscussions(keyOpt, position).ToArray();
+         checkBoxShowRelated.Text = String.Format("Show related threads ({0})", _relatedDiscussions.Count());
+         updateRelatedDiscussionControlState();
+
+         updatePreview(htmlPanelPreview, getCurrentNoteText());
          updateModificationsHint();
       }
 
@@ -319,14 +412,80 @@ namespace mrHelper.App.Forms
          labelModificationsHint.Visible = areHistoryModifications();
       }
 
-      private void updateLabelCounterPosition()
+      private static void alignControlBetweenTwoOther(Control control, Control controlLeft, Control controlRight)
       {
-         int buttonPrevRightBorder = buttonPrev.Location.X + buttonPrev.Width;
-         int space = buttonNext.Location.X - buttonPrevRightBorder;
-         int labelOffsetFromButtonPrev = space / 2 - labelCounter.Width / 2;
+         int buttonPrevRightBorder = controlLeft.Location.X + controlLeft.Width;
+         int space = controlRight.Location.X - buttonPrevRightBorder;
+         int labelOffsetFromButtonPrev = space / 2 - control.Width / 2;
          int labelLocationX = buttonPrevRightBorder + labelOffsetFromButtonPrev;
-         int labelLocationY = labelCounter.Location.Y;
-         labelCounter.Location = new System.Drawing.Point(labelLocationX, labelLocationY);
+         int labelLocationY = control.Location.Y;
+         control.Location = new System.Drawing.Point(labelLocationX, labelLocationY);
+      }
+
+      private static string getLineNumberFromDiffPosition(DiffPosition position)
+      {
+         if (!Core.Context.Helpers.IsValidPosition(position))
+         {
+            return "N/A";
+         }
+
+         bool isRightSidePosition = Core.Context.Helpers.IsRightSidePosition(position);
+         int number = isRightSidePosition
+            ? Core.Context.Helpers.GetRightLineNumber(position)
+            : Core.Context.Helpers.GetLeftLineNumber(position);
+         return String.Format("{0} ({1})", number, isRightSidePosition ? "After" : "Before");
+      }
+
+      private void updateRelatedDiscussionControlState()
+      {
+         bool areRelatedDisussionsAvailable = _relatedDiscussions.Any();
+         if (areRelatedDisussionsAvailable)
+         {
+            if (!_relatedDiscussionIndex.HasValue)
+            {
+               _relatedDiscussionIndex = 0;
+            }
+            else
+            {
+               _relatedDiscussionIndex = Math.Min(_relatedDiscussionIndex.Value, _relatedDiscussions.Count() - 1);
+            }
+            checkBoxShowRelated.Enabled = true;
+         }
+         else
+         {
+            _relatedDiscussionIndex = null;
+            checkBoxShowRelated.Checked = false;
+            checkBoxShowRelated.Enabled = false;
+         }
+
+         int currentRelatedIndex = areRelatedDisussionsAvailable ? _relatedDiscussionIndex.Value : 0;
+         int currentRelatedIndexOneBased = areRelatedDisussionsAvailable ? _relatedDiscussionIndex.Value + 1 : 0;
+         int totalRelatedIndex = areRelatedDisussionsAvailable ? _relatedDiscussions.Count() : 0;
+         labelRelatedDiscussionCounter.Text = String.Format("{0} / {1}", currentRelatedIndexOneBased, totalRelatedIndex);
+         labelRelatedDiscussionCounter.Visible = areRelatedDisussionsAvailable;
+
+         bool allowScrollForward = areRelatedDisussionsAvailable && currentRelatedIndex < totalRelatedIndex - 1;
+         bool allowScrollBackward = areRelatedDisussionsAvailable && currentRelatedIndex > 0;
+         buttonPrevRelatedDiscussion.Enabled = allowScrollBackward;
+         buttonNextRelatedDiscussion.Enabled = allowScrollForward;
+
+         htmlPanelPreview.Enabled = areRelatedDisussionsAvailable;
+         labelRelatedDiscussionLineNumber.Visible = areRelatedDisussionsAvailable;
+         labelRelatedDiscussionAuthor.Visible = areRelatedDisussionsAvailable;
+         if (areRelatedDisussionsAvailable)
+         {
+            ReportedDiscussionNote note = _relatedDiscussions[_relatedDiscussionIndex.Value];
+            labelRelatedDiscussionLineNumber.Text =
+               "Line: " + getLineNumberFromDiffPosition(note.Position.DiffPosition);
+            labelRelatedDiscussionAuthor.Text = "Author: " + note.Content.AuthorName;
+            updatePreview(htmlPanelPreviewRelatedDiscussion, note.Content.Body);
+         }
+         else
+         {
+            labelRelatedDiscussionLineNumber.Text = String.Empty;
+            labelRelatedDiscussionAuthor.Text = String.Empty;
+            htmlPanelPreviewRelatedDiscussion.Text = String.Empty;
+         }
       }
 
       private bool areHistoryModifications()
@@ -408,7 +567,7 @@ namespace mrHelper.App.Forms
             string body = keyValuePair.Value;
             await _onEditOldNote(
                new ReportedDiscussionNoteKey(noteId, discussionId),
-               new ReportedDiscussionNoteContent(body));
+               new ReportedDiscussionNoteContent(body, String.Empty));
          }
       }
 
@@ -432,7 +591,6 @@ namespace mrHelper.App.Forms
 
       private static int MaximumTextLengthTocancelWithoutConfirmation = 5;
 
-      private readonly IGitCommandService _git;
       private readonly Action _onDialogClosed;
 
       /// <summary>
@@ -444,23 +602,52 @@ namespace mrHelper.App.Forms
       private readonly List<ReportedDiscussionNoteKey> _deletedNotes = new List<ReportedDiscussionNoteKey>();
 
       /// <summary>
-      /// New note
-      /// </summary>
-      private readonly Func<string, bool, Task> _onSubmitNewDiscussion;
-      private readonly DiffPosition _newDiscussionPosition;
-
-      /// <summary>
       /// Currently selected note index in _reportedNotes collection.
       /// If the index is equal to _reportedNotes size then current note is the new note.
       /// </summary>
       private int _currentNoteIndex;
 
       /// <summary>
+      /// New note
+      /// </summary>
+      private readonly Func<string, bool, Task> _onSubmitNewDiscussion;
+
+      /// <summary>
+      /// Other callbacks
+      /// </summary>
+      private readonly Func<DiffPosition, DiffContext> _getDiffContext;
+      private readonly Func<ReportedDiscussionNoteKey?, DiffPosition, IEnumerable<ReportedDiscussionNote>> _getRelatedDiscussions;
+
+      /// <summary>
+      /// DiffPosition for a note that is going to be reported
+      /// </summary>
+      private readonly DiffPosition _newDiscussionPosition;
+
+      /// <summary>
+      /// Cached text of a note that is going to be reported.
+      /// </summary>
+      private string _cachedNewNoteText = String.Empty;
+
+      /// <summary>
+      /// Related discussions for a currently selected note.
+      /// </summary>
+      private ReportedDiscussionNote[] _relatedDiscussions;
+
+      /// <summary>
+      /// An index within _relatedDiscussions.
+      /// </summary>
+      private int? _relatedDiscussionIndex;
+
+      /// <summary>
       /// Cached texts of edited and new discussions, where Key is an index in _reportedNotes.
       /// </summary>
       private readonly Dictionary<ReportedDiscussionNoteKey, string> _modifiedNoteTexts =
          new Dictionary<ReportedDiscussionNoteKey, string>();
-      private string _cachedNewNoteText = String.Empty;
+
+      /// <summary>
+      /// Cached height allows to hide the groupbox and show it back by user request.
+      /// </summary>
+      private readonly int _groupBoxRelatedThreadsDefaultHeight;
    }
 }
 

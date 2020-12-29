@@ -13,7 +13,6 @@ using mrHelper.StorageSupport;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
-using TheArtOfDev.HtmlRenderer.WinForms;
 using mrHelper.Common.Constants;
 using mrHelper.CustomActions;
 using SearchQuery = mrHelper.App.Helpers.SearchQuery;

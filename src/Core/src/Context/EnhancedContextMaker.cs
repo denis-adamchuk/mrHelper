@@ -26,7 +26,7 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException, ContextMakingException.
       /// </summary>
-      public DiffContext GetContext(DiffPosition position, ContextDepth depth)
+      public DiffContext GetContext(DiffPosition position, ContextDepth depth, UnchangedLinePolicy unchangedLinePolicy)
       {
          if (!Context.Helpers.IsValidPosition(position))
          {
@@ -44,8 +44,8 @@ namespace mrHelper.Core.Context
             position.Refs.LeftSHA, position.Refs.RightSHA, position.LeftPath, position.RightPath);
 
          // If RightLine is valid, then it points to either added/modified or unchanged line, handle them the same way
-         bool isRightSideContext = position.RightLine != null;
-         int linenumber = isRightSideContext ? int.Parse(position.RightLine) : int.Parse(position.LeftLine);
+         bool isRightSideContext = Helpers.IsRightSidePosition(position, unchangedLinePolicy);
+         int linenumber = isRightSideContext ? Helpers.GetRightLineNumber(position) : Helpers.GetLeftLineNumber(position);
          string filename = isRightSideContext ? position.RightPath : position.LeftPath;
          string sha = isRightSideContext ? position.Refs.RightSHA : position.Refs.LeftSHA;
 
