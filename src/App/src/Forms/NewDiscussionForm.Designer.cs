@@ -70,7 +70,7 @@
          this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonCancel.ConfirmationText = "All changes will be lost, are you sure?";
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonCancel.Location = new System.Drawing.Point(666, 222);
+         this.buttonCancel.Location = new System.Drawing.Point(742, 227);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
          this.buttonCancel.TabIndex = 4;
@@ -84,7 +84,7 @@
          this.checkBoxIncludeContext.AutoSize = true;
          this.checkBoxIncludeContext.Checked = true;
          this.checkBoxIncludeContext.CheckState = System.Windows.Forms.CheckState.Checked;
-         this.checkBoxIncludeContext.Location = new System.Drawing.Point(545, 14);
+         this.checkBoxIncludeContext.Location = new System.Drawing.Point(620, 14);
          this.checkBoxIncludeContext.Name = "checkBoxIncludeContext";
          this.checkBoxIncludeContext.Size = new System.Drawing.Size(197, 17);
          this.checkBoxIncludeContext.TabIndex = 5;
@@ -98,7 +98,7 @@
          this.textBoxFileName.Location = new System.Drawing.Point(12, 11);
          this.textBoxFileName.Name = "textBoxFileName";
          this.textBoxFileName.ReadOnly = true;
-         this.textBoxFileName.Size = new System.Drawing.Size(527, 20);
+         this.textBoxFileName.Size = new System.Drawing.Size(602, 20);
          this.textBoxFileName.TabIndex = 0;
          this.textBoxFileName.TabStop = false;
          // 
@@ -106,7 +106,7 @@
          // 
          this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonOK.Location = new System.Drawing.Point(667, 193);
+         this.buttonOK.Location = new System.Drawing.Point(742, 198);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
          this.buttonOK.TabIndex = 3;
@@ -122,7 +122,7 @@
          this.htmlContextCanvas.Controls.Add(this.htmlPanelContext);
          this.htmlContextCanvas.Location = new System.Drawing.Point(12, 38);
          this.htmlContextCanvas.Name = "htmlContextCanvas";
-         this.htmlContextCanvas.Size = new System.Drawing.Size(730, 83);
+         this.htmlContextCanvas.Size = new System.Drawing.Size(805, 88);
          this.htmlContextCanvas.TabIndex = 10;
          // 
          // htmlPanelContext
@@ -134,7 +134,7 @@
          this.htmlPanelContext.Dock = System.Windows.Forms.DockStyle.Fill;
          this.htmlPanelContext.Location = new System.Drawing.Point(0, 0);
          this.htmlPanelContext.Name = "htmlPanelContext";
-         this.htmlPanelContext.Size = new System.Drawing.Size(728, 81);
+         this.htmlPanelContext.Size = new System.Drawing.Size(803, 86);
          this.htmlPanelContext.TabIndex = 0;
          this.htmlPanelContext.Text = null;
          // 
@@ -143,7 +143,7 @@
          this.textBoxDiscussionBodyHost.Dock = System.Windows.Forms.DockStyle.Fill;
          this.textBoxDiscussionBodyHost.Location = new System.Drawing.Point(3, 3);
          this.textBoxDiscussionBodyHost.Name = "textBoxDiscussionBodyHost";
-         this.textBoxDiscussionBodyHost.Size = new System.Drawing.Size(635, 86);
+         this.textBoxDiscussionBodyHost.Size = new System.Drawing.Size(710, 86);
          this.textBoxDiscussionBodyHost.TabIndex = 11;
          this.textBoxDiscussionBodyHost.Text = "textBoxDiscussionBodyHost";
          this.textBoxDiscussionBodyHost.Child = null;
@@ -151,7 +151,7 @@
          // buttonInsertCode
          // 
          this.buttonInsertCode.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonInsertCode.Location = new System.Drawing.Point(667, 149);
+         this.buttonInsertCode.Location = new System.Drawing.Point(742, 154);
          this.buttonInsertCode.Name = "buttonInsertCode";
          this.buttonInsertCode.Size = new System.Drawing.Size(75, 23);
          this.buttonInsertCode.TabIndex = 12;
@@ -201,7 +201,7 @@
          // buttonPrevRelatedDiscussion
          // 
          this.buttonPrevRelatedDiscussion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonPrevRelatedDiscussion.Location = new System.Drawing.Point(535, 7);
+         this.buttonPrevRelatedDiscussion.Location = new System.Drawing.Point(610, 7);
          this.buttonPrevRelatedDiscussion.Margin = new System.Windows.Forms.Padding(0);
          this.buttonPrevRelatedDiscussion.Name = "buttonPrevRelatedDiscussion";
          this.buttonPrevRelatedDiscussion.Size = new System.Drawing.Size(22, 22);
@@ -214,7 +214,7 @@
          // buttonNextRelatedDiscussion
          // 
          this.buttonNextRelatedDiscussion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonNextRelatedDiscussion.Location = new System.Drawing.Point(622, 7);
+         this.buttonNextRelatedDiscussion.Location = new System.Drawing.Point(697, 7);
          this.buttonNextRelatedDiscussion.Margin = new System.Windows.Forms.Padding(0);
          this.buttonNextRelatedDiscussion.Name = "buttonNextRelatedDiscussion";
          this.buttonNextRelatedDiscussion.Size = new System.Drawing.Size(22, 22);
@@ -231,10 +231,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
          this.tabControlMode.Controls.Add(this.tabPageEdit);
          this.tabControlMode.Controls.Add(this.tabPagePreview);
-         this.tabControlMode.Location = new System.Drawing.Point(12, 127);
+         this.tabControlMode.Location = new System.Drawing.Point(12, 132);
          this.tabControlMode.Name = "tabControlMode";
          this.tabControlMode.SelectedIndex = 0;
-         this.tabControlMode.Size = new System.Drawing.Size(649, 118);
+         this.tabControlMode.Size = new System.Drawing.Size(724, 118);
          this.tabControlMode.TabIndex = 13;
          this.tabControlMode.SelectedIndexChanged += new System.EventHandler(this.tabControlMode_SelectedIndexChanged);
          // 
@@ -244,7 +244,7 @@
          this.tabPageEdit.Location = new System.Drawing.Point(4, 22);
          this.tabPageEdit.Name = "tabPageEdit";
          this.tabPageEdit.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageEdit.Size = new System.Drawing.Size(641, 92);
+         this.tabPageEdit.Size = new System.Drawing.Size(716, 92);
          this.tabPageEdit.TabIndex = 0;
          this.tabPageEdit.Text = "Edit";
          this.tabPageEdit.UseVisualStyleBackColor = true;
@@ -255,7 +255,7 @@
          this.tabPagePreview.Location = new System.Drawing.Point(4, 22);
          this.tabPagePreview.Name = "tabPagePreview";
          this.tabPagePreview.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPagePreview.Size = new System.Drawing.Size(641, 92);
+         this.tabPagePreview.Size = new System.Drawing.Size(716, 92);
          this.tabPagePreview.TabIndex = 1;
          this.tabPagePreview.Text = "Preview";
          this.tabPagePreview.UseVisualStyleBackColor = true;
@@ -269,7 +269,7 @@
          this.htmlPanelPreview.Dock = System.Windows.Forms.DockStyle.Fill;
          this.htmlPanelPreview.Location = new System.Drawing.Point(3, 3);
          this.htmlPanelPreview.Name = "htmlPanelPreview";
-         this.htmlPanelPreview.Size = new System.Drawing.Size(635, 86);
+         this.htmlPanelPreview.Size = new System.Drawing.Size(710, 86);
          this.htmlPanelPreview.TabIndex = 0;
          this.htmlPanelPreview.Text = null;
          // 
@@ -278,7 +278,7 @@
          this.labelInvisibleCharactersHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.labelInvisibleCharactersHint.AutoSize = true;
          this.labelInvisibleCharactersHint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-         this.labelInvisibleCharactersHint.Location = new System.Drawing.Point(12, 248);
+         this.labelInvisibleCharactersHint.Location = new System.Drawing.Point(12, 253);
          this.labelInvisibleCharactersHint.Name = "labelInvisibleCharactersHint";
          this.labelInvisibleCharactersHint.Size = new System.Drawing.Size(149, 13);
          this.labelInvisibleCharactersHint.TabIndex = 14;
@@ -293,7 +293,7 @@
          this.panelNavigation.Controls.Add(this.labelCounter);
          this.panelNavigation.Controls.Add(this.buttonNext);
          this.panelNavigation.Controls.Add(this.buttonDelete);
-         this.panelNavigation.Location = new System.Drawing.Point(236, 124);
+         this.panelNavigation.Location = new System.Drawing.Point(311, 129);
          this.panelNavigation.Margin = new System.Windows.Forms.Padding(0);
          this.panelNavigation.Name = "panelNavigation";
          this.panelNavigation.Size = new System.Drawing.Size(421, 22);
@@ -327,7 +327,7 @@
          this.checkBoxShowRelated.AutoSize = true;
          this.checkBoxShowRelated.Checked = true;
          this.checkBoxShowRelated.CheckState = System.Windows.Forms.CheckState.Checked;
-         this.checkBoxShowRelated.Location = new System.Drawing.Point(573, 247);
+         this.checkBoxShowRelated.Location = new System.Drawing.Point(648, 252);
          this.checkBoxShowRelated.Name = "checkBoxShowRelated";
          this.checkBoxShowRelated.Size = new System.Drawing.Size(88, 17);
          this.checkBoxShowRelated.TabIndex = 27;
@@ -345,9 +345,9 @@
          this.groupBoxRelated.Controls.Add(this.labelRelatedDiscussionLineNumber);
          this.groupBoxRelated.Controls.Add(this.labelRelatedDiscussionAuthor);
          this.groupBoxRelated.Controls.Add(this.htmlPanelPreviewRelatedDiscussion);
-         this.groupBoxRelated.Location = new System.Drawing.Point(13, 265);
+         this.groupBoxRelated.Location = new System.Drawing.Point(13, 270);
          this.groupBoxRelated.Name = "groupBoxRelated";
-         this.groupBoxRelated.Size = new System.Drawing.Size(648, 131);
+         this.groupBoxRelated.Size = new System.Drawing.Size(723, 131);
          this.groupBoxRelated.TabIndex = 28;
          this.groupBoxRelated.TabStop = false;
          this.groupBoxRelated.Text = "Related threads";
@@ -358,7 +358,7 @@
          // 
          this.labelRelatedDiscussionCounter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.labelRelatedDiscussionCounter.AutoSize = true;
-         this.labelRelatedDiscussionCounter.Location = new System.Drawing.Point(560, 11);
+         this.labelRelatedDiscussionCounter.Location = new System.Drawing.Point(635, 11);
          this.labelRelatedDiscussionCounter.Name = "labelRelatedDiscussionCounter";
          this.labelRelatedDiscussionCounter.Size = new System.Drawing.Size(60, 13);
          this.labelRelatedDiscussionCounter.TabIndex = 34;
@@ -377,7 +377,7 @@
          // labelRelatedDiscussionAuthor
          // 
          this.labelRelatedDiscussionAuthor.AutoSize = true;
-         this.labelRelatedDiscussionAuthor.Location = new System.Drawing.Point(93, 11);
+         this.labelRelatedDiscussionAuthor.Location = new System.Drawing.Point(158, 12);
          this.labelRelatedDiscussionAuthor.Name = "labelRelatedDiscussionAuthor";
          this.labelRelatedDiscussionAuthor.Size = new System.Drawing.Size(68, 13);
          this.labelRelatedDiscussionAuthor.TabIndex = 30;
@@ -393,7 +393,7 @@
          this.htmlPanelPreviewRelatedDiscussion.Cursor = System.Windows.Forms.Cursors.IBeam;
          this.htmlPanelPreviewRelatedDiscussion.Location = new System.Drawing.Point(6, 32);
          this.htmlPanelPreviewRelatedDiscussion.Name = "htmlPanelPreviewRelatedDiscussion";
-         this.htmlPanelPreviewRelatedDiscussion.Size = new System.Drawing.Size(635, 86);
+         this.htmlPanelPreviewRelatedDiscussion.Size = new System.Drawing.Size(710, 86);
          this.htmlPanelPreviewRelatedDiscussion.TabIndex = 29;
          this.htmlPanelPreviewRelatedDiscussion.Text = null;
          // 
@@ -402,7 +402,7 @@
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(754, 401);
+         this.ClientSize = new System.Drawing.Size(829, 406);
          this.Controls.Add(this.groupBoxRelated);
          this.Controls.Add(this.checkBoxShowRelated);
          this.Controls.Add(this.panelNavigation);
@@ -416,7 +416,7 @@
          this.Controls.Add(this.buttonCancel);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
-         this.MinimumSize = new System.Drawing.Size(770, 440);
+         this.MinimumSize = new System.Drawing.Size(845, 445);
          this.Name = "NewDiscussionForm";
          this.Text = "Start a thread";
          this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.NewDiscussionForm_FormClosed);

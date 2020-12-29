@@ -169,6 +169,10 @@ namespace mrHelper.App.Helpers
 
             Core.Matching.DiffPosition position =
                PositionConverter.Convert(discussion.Notes.First().Position);
+            if (!Core.Context.Helpers.IsValidPosition(position))
+            {
+               continue;
+            }
 
             diffArgs.Add(new GitDiffArguments
             (
@@ -198,14 +202,13 @@ namespace mrHelper.App.Helpers
                new GitDiffArguments.DiffContextArguments(Constants.FullContextSize)
             ));
 
-            // the same condition as in EnhancedContextMaker and SimpleContextMaker,
-            // which are consumers of the cache
-            if (position.RightLine != null)
+            if (Core.Context.Helpers.IsRightSidePosition(position))
             {
                revisionArgs.Add(new GitShowRevisionArguments(position.RightPath, position.Refs.RightSHA));
             }
             else
             {
+               Debug.Assert(Core.Context.Helpers.IsLeftSidePosition(position));
                revisionArgs.Add(new GitShowRevisionArguments(position.LeftPath, position.Refs.LeftSHA));
             }
          }

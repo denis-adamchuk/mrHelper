@@ -422,22 +422,18 @@ namespace mrHelper.App.Forms
          control.Location = new System.Drawing.Point(labelLocationX, labelLocationY);
       }
 
-      private static int getLineNumberFromDiffPosition(DiffPosition position)
+      private static string getLineNumberFromDiffPosition(DiffPosition position)
       {
-         // TODO Add comment why Right Line is in priority here
-         int defaultLineNumber = default(int);
-         if (position.RightLine != null)
+         if (!Core.Context.Helpers.IsValidPosition(position))
          {
-            return int.TryParse(position.RightLine, out int lineNumber) ? lineNumber : defaultLineNumber;
+            return "N/A";
          }
-         else if (position.LeftLine != null)
-         {
-            return int.TryParse(position.LeftLine, out int lineNumber) ? lineNumber : defaultLineNumber;
-         }
-         else
-         {
-            return defaultLineNumber;
-         }
+
+         bool isRightSidePosition = Core.Context.Helpers.IsRightSidePosition(position);
+         int number = isRightSidePosition
+            ? Core.Context.Helpers.GetRightLineNumber(position)
+            : Core.Context.Helpers.GetLeftLineNumber(position);
+         return String.Format("{0} ({1})", number, isRightSidePosition ? "After" : "Before");
       }
 
       private void updateRelatedDiscussionControlState()
@@ -453,10 +449,13 @@ namespace mrHelper.App.Forms
             {
                _relatedDiscussionIndex = Math.Min(_relatedDiscussionIndex.Value, _relatedDiscussions.Count() - 1);
             }
+            checkBoxShowRelated.Enabled = true;
          }
          else
          {
             _relatedDiscussionIndex = null;
+            checkBoxShowRelated.Checked = false;
+            checkBoxShowRelated.Enabled = false;
          }
 
          int currentRelatedIndex = areRelatedDisussionsAvailable ? _relatedDiscussionIndex.Value : 0;
@@ -475,9 +474,9 @@ namespace mrHelper.App.Forms
          labelRelatedDiscussionAuthor.Visible = areRelatedDisussionsAvailable;
          if (areRelatedDisussionsAvailable)
          {
-            var note = _relatedDiscussions[_relatedDiscussionIndex.Value];
+            ReportedDiscussionNote note = _relatedDiscussions[_relatedDiscussionIndex.Value];
             labelRelatedDiscussionLineNumber.Text =
-               "Line: " + getLineNumberFromDiffPosition(note.Position.DiffPosition).ToString();
+               "Line: " + getLineNumberFromDiffPosition(note.Position.DiffPosition);
             labelRelatedDiscussionAuthor.Text = "Author: " + note.Content.AuthorName;
             updatePreview(htmlPanelPreviewRelatedDiscussion, note.Content.Body);
          }

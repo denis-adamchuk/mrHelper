@@ -25,7 +25,7 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException, ContextMakingException.
       /// </summary>
-      public DiffContext GetContext(DiffPosition position, ContextDepth depth)
+      public DiffContext GetContext(DiffPosition position, ContextDepth depth, UnchangedLinePolicy unchangedLinePolicy)
       {
          if (!Context.Helpers.IsValidPosition(position))
          {
@@ -39,8 +39,8 @@ namespace mrHelper.Core.Context
                String.Format("Bad \"depth\": {0}", depth.ToString()));
          }
 
-         bool isRightSideContext = position.RightLine != null;
-         int linenumber = isRightSideContext ? int.Parse(position.RightLine) : int.Parse(position.LeftLine);
+         bool isRightSideContext = Helpers.IsRightSidePosition(position, unchangedLinePolicy);
+         int linenumber = isRightSideContext ? Helpers.GetRightLineNumber(position) : Helpers.GetLeftLineNumber(position);
          string filename = isRightSideContext ? position.RightPath : position.LeftPath;
          string sha = isRightSideContext ? position.Refs.RightSHA : position.Refs.LeftSHA;
 

@@ -175,9 +175,15 @@ namespace mrHelper.Core.Context
       }
    }
 
+   public enum UnchangedLinePolicy
+   {
+      TakeFromLeft,
+      TakeFromRight
+   }
+
    public interface IContextMaker
    {
-      DiffContext GetContext(DiffPosition position, ContextDepth depth);
+      DiffContext GetContext(DiffPosition position, ContextDepth depth, UnchangedLinePolicy unchangedLinePolicy);
    }
 }
 

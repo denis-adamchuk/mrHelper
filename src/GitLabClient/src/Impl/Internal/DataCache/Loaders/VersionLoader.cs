@@ -116,7 +116,8 @@ namespace mrHelper.GitLabClient.Loaders
          if (distinctMissingCommits.Count() != missingCommits.Count())
          {
             Debug.Assert(false);
-            Trace.TraceError("[VersionLoader] Duplicate id found in missingCommits: ", String.Join(";", missingCommits));
+            Trace.TraceError("[VersionLoader] Duplicate id found in missingCommits: {0}",
+               String.Join(";", missingCommits));
             return;
          }
 
@@ -128,7 +129,7 @@ namespace mrHelper.GitLabClient.Loaders
             if (distinctCommits.Count() != commits.Count())
             {
                Debug.Assert(false);
-               Trace.TraceError("[VersionLoader] Duplicate id found in commits: ", String.Join(";", commits));
+               Trace.TraceError("[VersionLoader] Duplicate id found in commits: {0}", String.Join(";", commits));
                continue;
             }
 

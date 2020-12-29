@@ -297,13 +297,13 @@ namespace mrHelper.App.Controls
       {
          try
          {
-            return contextMaker.GetContext(position, depth);
+            return contextMaker.GetContext(position, depth, UnchangedLinePolicy.TakeFromRight);
          }
          catch (Exception ex)
          {
             if (ex is ContextMakingException)
             {
-               return _simpleContextMaker.GetContext(position, depth);
+               return _simpleContextMaker.GetContext(position, depth, UnchangedLinePolicy.TakeFromRight);
             }
             throw;
          }
