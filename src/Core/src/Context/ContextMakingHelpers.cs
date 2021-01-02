@@ -9,8 +9,15 @@ namespace mrHelper.Core.Context
       {
          string leftLine = position.LeftLine;
          string rightLine = position.RightLine;
-         return ((leftLine != null && int.TryParse(leftLine, out int LeftLineNumber) && LeftLineNumber > 0)
-              || (rightLine != null && int.TryParse(rightLine, out int RightLineNumber) && RightLineNumber > 0));
+         if (leftLine != null && GetLeftLineNumber(position) < 1)
+         {
+            return false;
+         }
+         if (rightLine != null && GetRightLineNumber(position) < 1)
+         {
+            return false;
+         }
+         return leftLine != null || rightLine != null;
       }
 
       public static bool IsRightSidePosition(DiffPosition position,
@@ -41,6 +48,34 @@ namespace mrHelper.Core.Context
       public static int GetLeftLineNumber(DiffPosition position)
       {
          return int.TryParse(position.LeftLine, out int lineNumber) ? lineNumber : default(int);
+      }
+
+      public static DiffPosition Scroll(DiffPosition position, bool up)
+      {
+         if (IsValidPosition(position))
+         {
+            if (IsLeftSidePosition(position))
+            {
+               int lineNumber = GetLeftLineNumber(position);
+               return new DiffPosition(
+                  position.LeftPath,
+                  position.RightPath,
+                  (lineNumber + 1* (up ? -1 : 1 )).ToString(),
+                  position.RightLine,
+                  position.Refs);
+            }
+            else if (IsRightSidePosition(position))
+            {
+               int lineNumber = GetRightLineNumber(position);
+               return new DiffPosition(
+                  position.LeftPath,
+                  position.RightPath,
+                  position.LeftLine,
+                  (lineNumber + 1 * (up ? -1 : 1 )).ToString(),
+                  position.Refs);
+            }
+         }
+         return position;
       }
 
       public static bool IsValidContextDepth(ContextDepth depth)

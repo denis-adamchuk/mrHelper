@@ -171,14 +171,14 @@ namespace mrHelper.App.Forms
 
          // Discussions are needed to show previous and related discussions in Start New Thread dialog.
          // In many cases they are already cached.
-         await loadDiscussionsAsync(dataCache, mrk);
+         IEnumerable<Discussion> discussions = await loadDiscussionsAsync(dataCache, mrk);
          if (_exiting)
          {
             return;
          }
 
          ILocalCommitStorage storage = getCommitStorage(mrk.ProjectKey, true);
-         if (!await prepareStorageForDiffTool(mrk, storage, leftSHA, rightSHA) || _exiting)
+         if (!await prepareStorageForDiffTool(mrk, storage, leftSHA, rightSHA, discussions) || _exiting)
          {
             return;
          }
@@ -238,8 +238,8 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<bool> prepareStorageForDiffTool(MergeRequestKey mrk, ILocalCommitStorage storage,
-         string leftSHA, string rightSHA)
+      async private Task<bool> prepareStorageForDiffTool(MergeRequestKey mrk,
+         ILocalCommitStorage storage, string leftSHA, string rightSHA, IEnumerable<Discussion> discussions)
       {
          if (storage == null)
          {
@@ -250,7 +250,13 @@ namespace mrHelper.App.Forms
 
          ICommitStorageUpdateContextProvider contextProvider =
             new CommitBasedContextProvider(new string[] { rightSHA }, leftSHA);
-         return await prepareCommitStorage(mrk, storage, contextProvider, true);
+         if (!await prepareCommitStorage(mrk, storage, contextProvider, true) || _exiting)
+         {
+            return false;
+         }
+
+         ICommitStorageUpdateContextProvider contextProvider2 = new DiscussionBasedContextProvider(discussions);
+         return await prepareCommitStorage(mrk, storage, contextProvider2, false);
       }
 
       private void launchDiffToolForSelectedMergeRequest()

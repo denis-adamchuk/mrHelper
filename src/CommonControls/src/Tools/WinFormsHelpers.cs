@@ -281,6 +281,18 @@ namespace mrHelper.CommonControls.Tools
             }
          }
       }
+
+      public static void ClickEither(Button control1, Button control2, bool clickFirstControl, bool clickSecondControl)
+      {
+         if (clickFirstControl)
+         {
+            control1.PerformClick();
+         }
+         else if (clickSecondControl)
+         {
+            control2.PerformClick();
+         }
+      }
    }
 }
 

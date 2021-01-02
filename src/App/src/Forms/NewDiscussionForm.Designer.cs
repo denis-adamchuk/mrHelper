@@ -33,7 +33,7 @@
          this.checkBoxIncludeContext = new System.Windows.Forms.CheckBox();
          this.textBoxFileName = new System.Windows.Forms.TextBox();
          this.buttonOK = new System.Windows.Forms.Button();
-         this.htmlContextCanvas = new System.Windows.Forms.Panel();
+         this.panelHtmlContextCanvas = new System.Windows.Forms.Panel();
          this.htmlPanelContext = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.textBoxDiscussionBodyHost = new System.Windows.Forms.Integration.ElementHost();
          this.buttonInsertCode = new System.Windows.Forms.Button();
@@ -43,6 +43,8 @@
          this.buttonDelete = new System.Windows.Forms.Button();
          this.buttonPrevRelatedDiscussion = new System.Windows.Forms.Button();
          this.buttonNextRelatedDiscussion = new System.Windows.Forms.Button();
+         this.buttonScrollUp = new System.Windows.Forms.Button();
+         this.buttonScrollDown = new System.Windows.Forms.Button();
          this.tabControlMode = new System.Windows.Forms.TabControl();
          this.tabPageEdit = new System.Windows.Forms.TabPage();
          this.tabPagePreview = new System.Windows.Forms.TabPage();
@@ -53,16 +55,22 @@
          this.labelCounter = new System.Windows.Forms.Label();
          this.checkBoxShowRelated = new System.Windows.Forms.CheckBox();
          this.groupBoxRelated = new System.Windows.Forms.GroupBox();
+         this.labelDifferentContextHint = new System.Windows.Forms.Label();
+         this.panelRelatedDiscussionHtmlContextCanvas = new System.Windows.Forms.Panel();
+         this.htmlPanelRelatedDiscussionContext = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
+         this.panelRelatedDiscussionNavigation = new System.Windows.Forms.Panel();
          this.labelRelatedDiscussionCounter = new System.Windows.Forms.Label();
-         this.labelRelatedDiscussionLineNumber = new System.Windows.Forms.Label();
          this.labelRelatedDiscussionAuthor = new System.Windows.Forms.Label();
          this.htmlPanelPreviewRelatedDiscussion = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
-         this.htmlContextCanvas.SuspendLayout();
+         this.panelScroll = new System.Windows.Forms.Panel();
+         this.panelHtmlContextCanvas.SuspendLayout();
          this.tabControlMode.SuspendLayout();
          this.tabPageEdit.SuspendLayout();
          this.tabPagePreview.SuspendLayout();
          this.panelNavigation.SuspendLayout();
          this.groupBoxRelated.SuspendLayout();
+         this.panelRelatedDiscussionHtmlContextCanvas.SuspendLayout();
+         this.panelRelatedDiscussionNavigation.SuspendLayout();
          this.SuspendLayout();
          // 
          // buttonCancel
@@ -84,7 +92,7 @@
          this.checkBoxIncludeContext.AutoSize = true;
          this.checkBoxIncludeContext.Checked = true;
          this.checkBoxIncludeContext.CheckState = System.Windows.Forms.CheckState.Checked;
-         this.checkBoxIncludeContext.Location = new System.Drawing.Point(620, 14);
+         this.checkBoxIncludeContext.Location = new System.Drawing.Point(539, 13);
          this.checkBoxIncludeContext.Name = "checkBoxIncludeContext";
          this.checkBoxIncludeContext.Size = new System.Drawing.Size(197, 17);
          this.checkBoxIncludeContext.TabIndex = 5;
@@ -98,7 +106,7 @@
          this.textBoxFileName.Location = new System.Drawing.Point(12, 11);
          this.textBoxFileName.Name = "textBoxFileName";
          this.textBoxFileName.ReadOnly = true;
-         this.textBoxFileName.Size = new System.Drawing.Size(602, 20);
+         this.textBoxFileName.Size = new System.Drawing.Size(520, 20);
          this.textBoxFileName.TabIndex = 0;
          this.textBoxFileName.TabStop = false;
          // 
@@ -114,16 +122,16 @@
          this.buttonOK.UseVisualStyleBackColor = true;
          this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
          // 
-         // htmlContextCanvas
+         // panelHtmlContextCanvas
          // 
-         this.htmlContextCanvas.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+         this.panelHtmlContextCanvas.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.htmlContextCanvas.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.htmlContextCanvas.Controls.Add(this.htmlPanelContext);
-         this.htmlContextCanvas.Location = new System.Drawing.Point(12, 38);
-         this.htmlContextCanvas.Name = "htmlContextCanvas";
-         this.htmlContextCanvas.Size = new System.Drawing.Size(805, 88);
-         this.htmlContextCanvas.TabIndex = 10;
+         this.panelHtmlContextCanvas.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.panelHtmlContextCanvas.Controls.Add(this.htmlPanelContext);
+         this.panelHtmlContextCanvas.Location = new System.Drawing.Point(12, 38);
+         this.panelHtmlContextCanvas.Name = "panelHtmlContextCanvas";
+         this.panelHtmlContextCanvas.Size = new System.Drawing.Size(805, 88);
+         this.panelHtmlContextCanvas.TabIndex = 10;
          // 
          // htmlPanelContext
          // 
@@ -137,6 +145,7 @@
          this.htmlPanelContext.Size = new System.Drawing.Size(803, 86);
          this.htmlPanelContext.TabIndex = 0;
          this.htmlPanelContext.Text = null;
+         this.htmlPanelContext.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelScroll_MouseWheel);
          // 
          // textBoxDiscussionBodyHost
          // 
@@ -171,6 +180,7 @@
          this.toolTip.SetToolTip(this.buttonPrev, "Go to my previous discussion");
          this.buttonPrev.UseVisualStyleBackColor = true;
          this.buttonPrev.Click += new System.EventHandler(this.buttonPrev_Click);
+         this.buttonPrev.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelNavigation_MouseWheel);
          // 
          // buttonNext
          // 
@@ -183,6 +193,7 @@
          this.toolTip.SetToolTip(this.buttonNext, "Go to my next discussion");
          this.buttonNext.UseVisualStyleBackColor = true;
          this.buttonNext.Click += new System.EventHandler(this.buttonNext_Click);
+         this.buttonNext.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelNavigation_MouseWheel);
          // 
          // buttonDelete
          // 
@@ -201,28 +212,56 @@
          // buttonPrevRelatedDiscussion
          // 
          this.buttonPrevRelatedDiscussion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonPrevRelatedDiscussion.Location = new System.Drawing.Point(610, 7);
+         this.buttonPrevRelatedDiscussion.Location = new System.Drawing.Point(-1, 0);
          this.buttonPrevRelatedDiscussion.Margin = new System.Windows.Forms.Padding(0);
          this.buttonPrevRelatedDiscussion.Name = "buttonPrevRelatedDiscussion";
          this.buttonPrevRelatedDiscussion.Size = new System.Drawing.Size(22, 22);
          this.buttonPrevRelatedDiscussion.TabIndex = 32;
          this.buttonPrevRelatedDiscussion.Text = "<";
-         this.toolTip.SetToolTip(this.buttonPrevRelatedDiscussion, "Go to my previous discussion");
+         this.toolTip.SetToolTip(this.buttonPrevRelatedDiscussion, "Go to previous related discussion");
          this.buttonPrevRelatedDiscussion.UseVisualStyleBackColor = true;
          this.buttonPrevRelatedDiscussion.Click += new System.EventHandler(this.buttonRelatedPrev_Click);
+         this.buttonPrevRelatedDiscussion.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.groupBoxRelated_MouseWheel);
          // 
          // buttonNextRelatedDiscussion
          // 
          this.buttonNextRelatedDiscussion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonNextRelatedDiscussion.Location = new System.Drawing.Point(697, 7);
+         this.buttonNextRelatedDiscussion.Location = new System.Drawing.Point(87, 0);
          this.buttonNextRelatedDiscussion.Margin = new System.Windows.Forms.Padding(0);
          this.buttonNextRelatedDiscussion.Name = "buttonNextRelatedDiscussion";
          this.buttonNextRelatedDiscussion.Size = new System.Drawing.Size(22, 22);
          this.buttonNextRelatedDiscussion.TabIndex = 33;
          this.buttonNextRelatedDiscussion.Text = ">";
-         this.toolTip.SetToolTip(this.buttonNextRelatedDiscussion, "Go to my next discussion");
+         this.toolTip.SetToolTip(this.buttonNextRelatedDiscussion, "Go to next related discussion");
          this.buttonNextRelatedDiscussion.UseVisualStyleBackColor = true;
          this.buttonNextRelatedDiscussion.Click += new System.EventHandler(this.buttonRelatedNext_Click);
+         this.buttonNextRelatedDiscussion.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.groupBoxRelated_MouseWheel);
+         // 
+         // buttonScrollUp
+         // 
+         this.buttonScrollUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonScrollUp.Location = new System.Drawing.Point(735, 9);
+         this.buttonScrollUp.Name = "buttonScrollUp";
+         this.buttonScrollUp.Size = new System.Drawing.Size(38, 23);
+         this.buttonScrollUp.TabIndex = 29;
+         this.buttonScrollUp.Text = "Up";
+         this.toolTip.SetToolTip(this.buttonScrollUp, "Start a thread at the previous line (use mouse wheel to scroll faster)");
+         this.buttonScrollUp.UseVisualStyleBackColor = true;
+         this.buttonScrollUp.Click += new System.EventHandler(this.buttonScrollUp_Click);
+         this.buttonScrollUp.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelScroll_MouseWheel);
+         // 
+         // buttonScrollDown
+         // 
+         this.buttonScrollDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonScrollDown.Location = new System.Drawing.Point(779, 9);
+         this.buttonScrollDown.Name = "buttonScrollDown";
+         this.buttonScrollDown.Size = new System.Drawing.Size(38, 23);
+         this.buttonScrollDown.TabIndex = 30;
+         this.buttonScrollDown.Text = "Dn";
+         this.toolTip.SetToolTip(this.buttonScrollDown, "Start a thread at the next line (use mouse wheel to scroll faster)");
+         this.buttonScrollDown.UseVisualStyleBackColor = true;
+         this.buttonScrollDown.Click += new System.EventHandler(this.buttonScrollDown_Click);
+         this.buttonScrollDown.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelScroll_MouseWheel);
          // 
          // tabControlMode
          // 
@@ -280,9 +319,10 @@
          this.labelInvisibleCharactersHint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
          this.labelInvisibleCharactersHint.Location = new System.Drawing.Point(12, 253);
          this.labelInvisibleCharactersHint.Name = "labelInvisibleCharactersHint";
-         this.labelInvisibleCharactersHint.Size = new System.Drawing.Size(149, 13);
+         this.labelInvisibleCharactersHint.Size = new System.Drawing.Size(537, 13);
          this.labelInvisibleCharactersHint.TabIndex = 14;
-         this.labelInvisibleCharactersHint.Text = "<labelInvisibleCharactersHint>";
+         this.labelInvisibleCharactersHint.Text = "Warning: Some markdown characters may require surrounding them with apostrophes, " +
+    "e.g. `<vector>` or `f<int>()`";
          this.labelInvisibleCharactersHint.Visible = false;
          // 
          // panelNavigation
@@ -327,11 +367,11 @@
          this.checkBoxShowRelated.AutoSize = true;
          this.checkBoxShowRelated.Checked = true;
          this.checkBoxShowRelated.CheckState = System.Windows.Forms.CheckState.Checked;
-         this.checkBoxShowRelated.Location = new System.Drawing.Point(648, 252);
+         this.checkBoxShowRelated.Location = new System.Drawing.Point(568, 252);
          this.checkBoxShowRelated.Name = "checkBoxShowRelated";
-         this.checkBoxShowRelated.Size = new System.Drawing.Size(88, 17);
+         this.checkBoxShowRelated.Size = new System.Drawing.Size(168, 17);
          this.checkBoxShowRelated.TabIndex = 27;
-         this.checkBoxShowRelated.Text = "Show related";
+         this.checkBoxShowRelated.Text = "Show related threads <count>";
          this.checkBoxShowRelated.UseVisualStyleBackColor = true;
          this.checkBoxShowRelated.CheckedChanged += new System.EventHandler(this.checkBoxShowRelated_CheckedChanged);
          // 
@@ -339,49 +379,87 @@
          // 
          this.groupBoxRelated.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBoxRelated.Controls.Add(this.buttonPrevRelatedDiscussion);
-         this.groupBoxRelated.Controls.Add(this.labelRelatedDiscussionCounter);
-         this.groupBoxRelated.Controls.Add(this.buttonNextRelatedDiscussion);
-         this.groupBoxRelated.Controls.Add(this.labelRelatedDiscussionLineNumber);
+         this.groupBoxRelated.Controls.Add(this.labelDifferentContextHint);
+         this.groupBoxRelated.Controls.Add(this.panelRelatedDiscussionHtmlContextCanvas);
+         this.groupBoxRelated.Controls.Add(this.panelRelatedDiscussionNavigation);
          this.groupBoxRelated.Controls.Add(this.labelRelatedDiscussionAuthor);
          this.groupBoxRelated.Controls.Add(this.htmlPanelPreviewRelatedDiscussion);
-         this.groupBoxRelated.Location = new System.Drawing.Point(13, 270);
+         this.groupBoxRelated.Location = new System.Drawing.Point(13, 275);
          this.groupBoxRelated.Name = "groupBoxRelated";
-         this.groupBoxRelated.Size = new System.Drawing.Size(723, 131);
+         this.groupBoxRelated.Size = new System.Drawing.Size(804, 232);
          this.groupBoxRelated.TabIndex = 28;
          this.groupBoxRelated.TabStop = false;
          this.groupBoxRelated.Text = "Related threads";
          this.groupBoxRelated.SizeChanged += new System.EventHandler(this.groupBoxRelated_SizeChanged);
          this.groupBoxRelated.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.groupBoxRelated_MouseWheel);
          // 
+         // labelDifferentContextHint
+         // 
+         this.labelDifferentContextHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.labelDifferentContextHint.AutoSize = true;
+         this.labelDifferentContextHint.ForeColor = System.Drawing.Color.Olive;
+         this.labelDifferentContextHint.Location = new System.Drawing.Point(208, 116);
+         this.labelDifferentContextHint.Name = "labelDifferentContextHint";
+         this.labelDifferentContextHint.Size = new System.Drawing.Size(393, 13);
+         this.labelDifferentContextHint.TabIndex = 37;
+         this.labelDifferentContextHint.Text = "Diff context may look unexpected when a thread was reported for another revision";
+         this.labelDifferentContextHint.Visible = false;
+         // 
+         // panelRelatedDiscussionHtmlContextCanvas
+         // 
+         this.panelRelatedDiscussionHtmlContextCanvas.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.panelRelatedDiscussionHtmlContextCanvas.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.panelRelatedDiscussionHtmlContextCanvas.Controls.Add(this.htmlPanelRelatedDiscussionContext);
+         this.panelRelatedDiscussionHtmlContextCanvas.Location = new System.Drawing.Point(9, 17);
+         this.panelRelatedDiscussionHtmlContextCanvas.Name = "panelRelatedDiscussionHtmlContextCanvas";
+         this.panelRelatedDiscussionHtmlContextCanvas.Size = new System.Drawing.Size(789, 88);
+         this.panelRelatedDiscussionHtmlContextCanvas.TabIndex = 36;
+         // 
+         // htmlPanelRelatedDiscussionContext
+         // 
+         this.htmlPanelRelatedDiscussionContext.AutoScroll = true;
+         this.htmlPanelRelatedDiscussionContext.BackColor = System.Drawing.SystemColors.Window;
+         this.htmlPanelRelatedDiscussionContext.BaseStylesheet = null;
+         this.htmlPanelRelatedDiscussionContext.Cursor = System.Windows.Forms.Cursors.IBeam;
+         this.htmlPanelRelatedDiscussionContext.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.htmlPanelRelatedDiscussionContext.Location = new System.Drawing.Point(0, 0);
+         this.htmlPanelRelatedDiscussionContext.Name = "htmlPanelRelatedDiscussionContext";
+         this.htmlPanelRelatedDiscussionContext.Size = new System.Drawing.Size(787, 86);
+         this.htmlPanelRelatedDiscussionContext.TabIndex = 1;
+         this.htmlPanelRelatedDiscussionContext.Text = null;
+         // 
+         // panelRelatedDiscussionNavigation
+         // 
+         this.panelRelatedDiscussionNavigation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.panelRelatedDiscussionNavigation.Controls.Add(this.buttonPrevRelatedDiscussion);
+         this.panelRelatedDiscussionNavigation.Controls.Add(this.buttonNextRelatedDiscussion);
+         this.panelRelatedDiscussionNavigation.Controls.Add(this.labelRelatedDiscussionCounter);
+         this.panelRelatedDiscussionNavigation.Location = new System.Drawing.Point(607, 111);
+         this.panelRelatedDiscussionNavigation.Name = "panelRelatedDiscussionNavigation";
+         this.panelRelatedDiscussionNavigation.Size = new System.Drawing.Size(109, 22);
+         this.panelRelatedDiscussionNavigation.TabIndex = 35;
+         // 
          // labelRelatedDiscussionCounter
          // 
          this.labelRelatedDiscussionCounter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.labelRelatedDiscussionCounter.AutoSize = true;
-         this.labelRelatedDiscussionCounter.Location = new System.Drawing.Point(635, 11);
+         this.labelRelatedDiscussionCounter.Location = new System.Drawing.Point(24, 5);
          this.labelRelatedDiscussionCounter.Name = "labelRelatedDiscussionCounter";
          this.labelRelatedDiscussionCounter.Size = new System.Drawing.Size(60, 13);
          this.labelRelatedDiscussionCounter.TabIndex = 34;
          this.labelRelatedDiscussionCounter.Text = "<100/100>";
          this.labelRelatedDiscussionCounter.SizeChanged += new System.EventHandler(this.labelRelatedDiscussionCounter_SizeChanged);
          // 
-         // labelRelatedDiscussionLineNumber
-         // 
-         this.labelRelatedDiscussionLineNumber.AutoSize = true;
-         this.labelRelatedDiscussionLineNumber.Location = new System.Drawing.Point(6, 12);
-         this.labelRelatedDiscussionLineNumber.Name = "labelRelatedDiscussionLineNumber";
-         this.labelRelatedDiscussionLineNumber.Size = new System.Drawing.Size(69, 13);
-         this.labelRelatedDiscussionLineNumber.TabIndex = 31;
-         this.labelRelatedDiscussionLineNumber.Text = "Line: <0000>";
-         // 
          // labelRelatedDiscussionAuthor
          // 
          this.labelRelatedDiscussionAuthor.AutoSize = true;
-         this.labelRelatedDiscussionAuthor.Location = new System.Drawing.Point(158, 12);
+         this.labelRelatedDiscussionAuthor.Location = new System.Drawing.Point(6, 116);
          this.labelRelatedDiscussionAuthor.Name = "labelRelatedDiscussionAuthor";
-         this.labelRelatedDiscussionAuthor.Size = new System.Drawing.Size(68, 13);
+         this.labelRelatedDiscussionAuthor.Size = new System.Drawing.Size(103, 13);
          this.labelRelatedDiscussionAuthor.TabIndex = 30;
-         this.labelRelatedDiscussionAuthor.Text = "Author: <....>";
+         this.labelRelatedDiscussionAuthor.Text = "Author: <Full Name>";
          // 
          // htmlPanelPreviewRelatedDiscussion
          // 
@@ -390,38 +468,51 @@
          this.htmlPanelPreviewRelatedDiscussion.AutoScroll = true;
          this.htmlPanelPreviewRelatedDiscussion.BackColor = System.Drawing.SystemColors.Window;
          this.htmlPanelPreviewRelatedDiscussion.BaseStylesheet = null;
+         this.htmlPanelPreviewRelatedDiscussion.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
          this.htmlPanelPreviewRelatedDiscussion.Cursor = System.Windows.Forms.Cursors.IBeam;
-         this.htmlPanelPreviewRelatedDiscussion.Location = new System.Drawing.Point(6, 32);
+         this.htmlPanelPreviewRelatedDiscussion.Location = new System.Drawing.Point(7, 139);
          this.htmlPanelPreviewRelatedDiscussion.Name = "htmlPanelPreviewRelatedDiscussion";
-         this.htmlPanelPreviewRelatedDiscussion.Size = new System.Drawing.Size(710, 86);
+         this.htmlPanelPreviewRelatedDiscussion.Size = new System.Drawing.Size(709, 86);
          this.htmlPanelPreviewRelatedDiscussion.TabIndex = 29;
          this.htmlPanelPreviewRelatedDiscussion.Text = null;
+         // 
+         // panelScroll
+         // 
+         this.panelScroll.Location = new System.Drawing.Point(735, 9);
+         this.panelScroll.Name = "panelScroll";
+         this.panelScroll.Size = new System.Drawing.Size(81, 23);
+         this.panelScroll.TabIndex = 31;
+         this.panelScroll.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelScroll_MouseWheel);
          // 
          // NewDiscussionForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(829, 406);
+         this.ClientSize = new System.Drawing.Size(829, 512);
+         this.Controls.Add(this.buttonScrollDown);
+         this.Controls.Add(this.buttonScrollUp);
          this.Controls.Add(this.groupBoxRelated);
          this.Controls.Add(this.checkBoxShowRelated);
          this.Controls.Add(this.panelNavigation);
          this.Controls.Add(this.labelInvisibleCharactersHint);
          this.Controls.Add(this.tabControlMode);
          this.Controls.Add(this.buttonInsertCode);
-         this.Controls.Add(this.htmlContextCanvas);
+         this.Controls.Add(this.panelHtmlContextCanvas);
          this.Controls.Add(this.checkBoxIncludeContext);
          this.Controls.Add(this.textBoxFileName);
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonCancel);
+         this.Controls.Add(this.panelScroll);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
-         this.MinimumSize = new System.Drawing.Size(845, 445);
+         this.MinimumSize = new System.Drawing.Size(845, 551);
          this.Name = "NewDiscussionForm";
          this.Text = "Start a thread";
          this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.NewDiscussionForm_FormClosed);
+         this.Load += new System.EventHandler(this.NewDiscussionForm_Load);
          this.Shown += new System.EventHandler(this.newDiscussionForm_Shown);
-         this.htmlContextCanvas.ResumeLayout(false);
+         this.panelHtmlContextCanvas.ResumeLayout(false);
          this.tabControlMode.ResumeLayout(false);
          this.tabPageEdit.ResumeLayout(false);
          this.tabPagePreview.ResumeLayout(false);
@@ -429,6 +520,9 @@
          this.panelNavigation.PerformLayout();
          this.groupBoxRelated.ResumeLayout(false);
          this.groupBoxRelated.PerformLayout();
+         this.panelRelatedDiscussionHtmlContextCanvas.ResumeLayout(false);
+         this.panelRelatedDiscussionNavigation.ResumeLayout(false);
+         this.panelRelatedDiscussionNavigation.PerformLayout();
          this.ResumeLayout(false);
          this.PerformLayout();
 
@@ -439,7 +533,7 @@
       private System.Windows.Forms.Button buttonOK;
       private System.Windows.Forms.TextBox textBoxFileName;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;
-        private System.Windows.Forms.Panel htmlContextCanvas;
+        private System.Windows.Forms.Panel panelHtmlContextCanvas;
       private System.Windows.Controls.TextBox textBoxDiscussionBody;
       private System.Windows.Forms.Integration.ElementHost textBoxDiscussionBodyHost;
       private System.Windows.Forms.Button buttonInsertCode;
@@ -461,8 +555,14 @@
       private System.Windows.Forms.Button buttonPrevRelatedDiscussion;
       private System.Windows.Forms.Label labelRelatedDiscussionCounter;
       private System.Windows.Forms.Button buttonNextRelatedDiscussion;
-      private System.Windows.Forms.Label labelRelatedDiscussionLineNumber;
       private System.Windows.Forms.Label labelRelatedDiscussionAuthor;
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelPreviewRelatedDiscussion;
+      private System.Windows.Forms.Panel panelRelatedDiscussionNavigation;
+      private System.Windows.Forms.Panel panelRelatedDiscussionHtmlContextCanvas;
+      private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelRelatedDiscussionContext;
+      private System.Windows.Forms.Button buttonScrollUp;
+      private System.Windows.Forms.Button buttonScrollDown;
+      private System.Windows.Forms.Panel panelScroll;
+      private System.Windows.Forms.Label labelDifferentContextHint;
    }
 }

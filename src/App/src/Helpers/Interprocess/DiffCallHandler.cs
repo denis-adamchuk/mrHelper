@@ -44,13 +44,29 @@ namespace mrHelper.App.Interprocess
             return;
          }
 
+         DiffPosition scrollPosition(DiffPosition diffPosition, bool scrollUp)
+         {
+            if (!Core.Context.Helpers.IsValidPosition(diffPosition))
+            {
+               return diffPosition;
+            }
+            int lineNumber = matchInfo.IsLeftSideLineNumber
+                  ? Core.Context.Helpers.GetLeftLineNumber(diffPosition)
+                  : Core.Context.Helpers.GetRightLineNumber(diffPosition);
+            lineNumber += (scrollUp ? -1 : 1);
+            return matchLineNumberOnly(position.LeftPath, position.RightPath, position.Refs,
+               new MatchInfo(position.LeftPath, position.RightPath, lineNumber, matchInfo.IsLeftSideLineNumber),
+               out var pos) == MatchResult.Success ? pos : null;
+         };
+
          NewDiscussionForm form = new NewDiscussionForm(
             position,
+            scrollPosition,
             getReportedDiscussions(mrk).ToArray(),
             () => _onDiscussionSubmitted?.Invoke(mrk),
-            async (body, includeContext) =>
+            async (body, includeContext, newDiscussionPosition) =>
                await actOnGitLab(snapshot, "create", (gli) =>
-                  submitDiscussionAsync(mrk, gli, matchInfo, snapshot.Refs, position, body, includeContext)),
+                  submitDiscussionAsync(mrk, gli, matchInfo, snapshot.Refs, newDiscussionPosition, body, includeContext)),
             async (notePosition, content) =>
                await actOnGitLab(snapshot, "edit", (gli) =>
                   editDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, content.Body, snapshot)),
@@ -58,7 +74,9 @@ namespace mrHelper.App.Interprocess
                await actOnGitLab(snapshot, "delete", (gli) =>
                   deleteDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, snapshot)),
             (keyOpt, sourcePosition) => getRelatedDiscussions(mrk, keyOpt, sourcePosition).ToArray(),
-            (sourcePosition) => getDiffContext(sourcePosition, UnchangedLinePolicy.TakeFromRight));
+            (sourcePosition) => getDiffContext<EnhancedContextMaker>(sourcePosition,
+               matchInfo.IsLeftSideLineNumber ? UnchangedLinePolicy.TakeFromLeft : UnchangedLinePolicy.TakeFromRight),
+            (sourcePosition) => getDiffContext<EnhancedContextMaker>(sourcePosition, UnchangedLinePolicy.TakeFromRight));
          form.Show();
       }
 
@@ -110,6 +128,7 @@ namespace mrHelper.App.Interprocess
       private MatchResult matchLineNumberOnly(string leftPath, string rightPath, Core.Matching.DiffRefs refs,
          MatchInfo matchInfo, out DiffPosition position)
       {
+         // TODO Don't create a matcher from the scratch each time
          position = new DiffPosition(null, null, null, null, null);
          LineNumberMatcher matcher = new LineNumberMatcher(_git);
          DiffPosition tempPosition = new DiffPosition(leftPath, rightPath, null, null, refs);
@@ -130,7 +149,7 @@ namespace mrHelper.App.Interprocess
          return MatchResult.Success;
       }
 
-      private DiffContext getDiffContext(DiffPosition position, UnchangedLinePolicy unchangedLinePolicy)
+      private DiffContext getDiffContext<T>(DiffPosition position, UnchangedLinePolicy policy) where T : IContextMaker
       {
          if (position == null || !Core.Context.Helpers.IsValidPosition(position))
          {
@@ -139,7 +158,8 @@ namespace mrHelper.App.Interprocess
 
          try
          {
-            return new SimpleContextMaker(_git).GetContext(position, DiffContextDepth, unchangedLinePolicy);
+            T maker = (T)Activator.CreateInstance(typeof(T), _git);
+            return maker.GetContext(position, DiffContextDepth, policy);
          }
          catch (Exception ex)
          {
@@ -167,17 +187,17 @@ namespace mrHelper.App.Interprocess
             });
       }
 
-      bool doPositionsReferenceTheSameLine(DiffPosition position1, DiffPosition position2, bool isRightSide)
+      bool doPositionsReferenceTheSameLine(DiffPosition position1, DiffPosition position2)
       {
          bool matchRightWithRight =
-                position1.RightLine == position2.RightLine
-             && position1.RightPath == position2.RightPath
-             && position1.Refs.RightSHA == position2.Refs.RightSHA;
+                position1.RightLine != null
+             && position1.RightLine == position2.RightLine
+             && position1.RightPath == position2.RightPath;
          bool matchLeftWithLeft =
-                   position1.LeftLine == position2.LeftLine
-                && position1.LeftPath == position2.LeftPath
-                && position1.Refs.LeftSHA == position2.Refs.LeftSHA;
-         return isRightSide ? matchRightWithRight : matchLeftWithLeft;
+                   position1.LeftLine != null
+                && position1.LeftLine == position2.LeftLine
+                && position1.LeftPath == position2.LeftPath;
+         return matchRightWithRight || matchLeftWithLeft;
       }
 
       // Collect discussions started for lines within DiffContextDepth range near `position`
@@ -185,6 +205,11 @@ namespace mrHelper.App.Interprocess
          ReportedDiscussionNoteKey? keyOpt, DiffPosition position)
       {
          List<ReportedDiscussionNote> result = new List<ReportedDiscussionNote>();
+         if (position == null)
+         {
+            return result;
+         }
+
          if (Core.Context.Helpers.IsRightSidePosition(position))
          {
             result.AddRange(getRelatedDiscussionsFromDiffContext(mrk, keyOpt, position, true));
@@ -193,15 +218,14 @@ namespace mrHelper.App.Interprocess
          {
             result.AddRange(getRelatedDiscussionsFromDiffContext(mrk, keyOpt, position, false));
          }
-         return result;
+         return result.GroupBy(note => note.Key.Id).Select(c => c.First());
       }
 
       private IEnumerable<ReportedDiscussionNote> getRelatedDiscussionsFromDiffContext(
          MergeRequestKey mrk, ReportedDiscussionNoteKey? keyOpt, DiffPosition position, bool useRightSideContext)
       {
          // Obtain a context for a passed position.
-         DiffContext ctx = getDiffContext(position,
-            useRightSideContext ? UnchangedLinePolicy.TakeFromRight : UnchangedLinePolicy.TakeFromLeft);
+         DiffContext ctx = getDiffContext<CombinedContextMaker>(position, UnchangedLinePolicy.TakeFromRight);
          if (!ctx.IsValid())
          {
             return Array.Empty<ReportedDiscussionNote>();
@@ -213,14 +237,26 @@ namespace mrHelper.App.Interprocess
          string rightFileName = position.RightPath;
          Core.Matching.DiffRefs refs = position.Refs;
          List<DiffPosition> neighborPositions = new List<DiffPosition>();
-         foreach (DiffContext.Line line in ctx.Lines)
+
+         void addNeighborPosition(bool isLeftSideLineNumber, int lineNumber)
          {
-            int number = useRightSideContext ? line.Right.Value.Number : line.Left.Value.Number;
-            MatchInfo matchInfo = new MatchInfo(leftFileName, rightFileName, number, !useRightSideContext);
-            MatchResult result = matchLineNumberOnly(leftFileName, rightFileName, refs, matchInfo, out var relPos);
+            MatchInfo matchInfo = new MatchInfo(leftFileName, rightFileName, lineNumber, isLeftSideLineNumber);
+            MatchResult result = matchLineNumberOnly(leftFileName, rightFileName, refs, matchInfo, out var pos);
             if (result == MatchResult.Success)
             {
-               neighborPositions.Add(relPos);
+               neighborPositions.Add(pos);
+            }
+         }
+
+         foreach (DiffContext.Line line in ctx.Lines)
+         {
+            if (line.Left.HasValue)
+            {
+               addNeighborPosition(true, line.Left.Value.Number);
+            }
+            if (line.Right.HasValue)
+            {
+               addNeighborPosition(false, line.Right.Value.Number);
             }
          }
 
@@ -234,7 +270,7 @@ namespace mrHelper.App.Interprocess
             {
                foreach (DiffPosition neighbor in neighborPositions)
                {
-                  if (doPositionsReferenceTheSameLine(neighbor, firstNotePosition, useRightSideContext)
+                  if (doPositionsReferenceTheSameLine(neighbor, firstNotePosition)
                      && (!keyOpt.HasValue || keyOpt.Value.Id != firstNote.Id))
                   {
                      ReportedDiscussionNote note = new ReportedDiscussionNote(firstNote.Id, discussion.Id,

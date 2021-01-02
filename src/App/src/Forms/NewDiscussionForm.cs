@@ -19,12 +19,14 @@ namespace mrHelper.App.Forms
    {
       internal NewDiscussionForm(
          DiffPosition newDiscussionPosition,
+         Func<DiffPosition, bool, DiffPosition> scrollPosition,
          ReportedDiscussionNote[] oldNotes,
          Action onDialogClosed,
-         Func<string, bool, Task> onSubmitNewDiscussion,
+         Func<string, bool, DiffPosition, Task> onSubmitNewDiscussion,
          Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> onEditOldNote,
          Func<ReportedDiscussionNoteKey, Task> onDeleteOldNote,
          Func<ReportedDiscussionNoteKey?, DiffPosition, IEnumerable<ReportedDiscussionNote>> getRelatedDiscussions,
+         Func<DiffPosition, DiffContext> getNewDiscussionDiffContext,
          Func<DiffPosition, DiffContext> getDiffContext)
       {
          InitializeComponent();
@@ -33,23 +35,29 @@ namespace mrHelper.App.Forms
          applyFont(Program.Settings.MainWindowFontSizeName);
          createWPFTextBox();
          _groupBoxRelatedThreadsDefaultHeight = groupBoxRelated.Height;
-         checkBoxShowRelated.Checked = false; // let's hide them for beginning
 
          this.Text = Constants.StartNewThreadCaption;
          labelInvisibleCharactersHint.Text = Constants.WarningOnUnescapedMarkdown;
-         _newDiscussionPosition = newDiscussionPosition;
          _onDialogClosed = onDialogClosed;
+         _newDiscussionPosition = newDiscussionPosition;
+         _scrollPosition = scrollPosition;
 
          buttonCancel.ConfirmationCondition =
             () => (getNewNoteText().Length > MaximumTextLengthTocancelWithoutConfirmation) || areHistoryModifications();
          _onSubmitNewDiscussion = onSubmitNewDiscussion;
          _onEditOldNote = onEditOldNote;
          _onDeleteOldNote = onDeleteOldNote;
-         _reportedNotes = oldNotes.ToList();
+         _getNewDiscussionDiffContext = getNewDiscussionDiffContext;
          _getDiffContext = getDiffContext;
          _getRelatedDiscussions = getRelatedDiscussions;
 
+         _reportedNotes = oldNotes.ToList();
          resetCurrentNoteIndex();
+      }
+
+      private void NewDiscussionForm_Load(object sender, EventArgs e)
+      {
+         checkBoxShowRelated.Checked = false;
          updateControlState();
       }
 
@@ -66,6 +74,25 @@ namespace mrHelper.App.Forms
       private void buttonCancel_Click(object sender, EventArgs e)
       {
          Close();
+      }
+
+      private void buttonScrollUp_Click(object sender, EventArgs e)
+      {
+         Debug.Assert(canScroll(true));
+         _newDiscussionPosition = scroll(true);
+         updateControlState();
+      }
+
+      private void buttonScrollDown_Click(object sender, EventArgs e)
+      {
+         Debug.Assert(canScroll(false));
+         _newDiscussionPosition = scroll(false);
+         updateControlState();
+      }
+
+      private void panelScroll_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+      {
+         WinFormsHelpers.ClickEither(buttonScrollDown, buttonScrollUp, e.Delta < 0, e.Delta > 0);
       }
 
       private void NewDiscussionForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -135,14 +162,7 @@ namespace mrHelper.App.Forms
 
       private void groupBoxRelated_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
       {
-         if (e.Delta < 0)
-         {
-            buttonNextRelatedDiscussion.PerformClick();
-         }
-         else if (e.Delta > 0)
-         {
-            buttonPrevRelatedDiscussion.PerformClick();
-         }
+         WinFormsHelpers.ClickEither(buttonNextRelatedDiscussion, buttonPrevRelatedDiscussion, e.Delta < 0, e.Delta > 0);
       }
 
       private void panelNavigation_SizeChanged(object sender, EventArgs e)
@@ -187,24 +207,22 @@ namespace mrHelper.App.Forms
 
       private void checkBoxShowRelated_CheckedChanged(object sender, EventArgs e)
       {
-         applyRelatedThreadsVisibility();
+         updateRelatedThreadsGroupBoxVisibility(checkBoxShowRelated.Checked);
       }
 
       private void panelNavigation_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
       {
-         if (e.Delta < 0)
-         {
-            buttonNext.PerformClick();
-         }
-         else if (e.Delta > 0)
-         {
-            buttonPrev.PerformClick();
-         }
+         WinFormsHelpers.ClickEither(buttonNext, buttonPrev, e.Delta < 0, e.Delta > 0);
       }
 
-      private void applyRelatedThreadsVisibility()
+      private void updateRelatedThreadsGroupBoxVisibility(bool doVisible)
       {
-         if (!checkBoxShowRelated.Checked)
+         if (doVisible == groupBoxRelated.Visible)
+         {
+            return;
+         }
+
+         if (!doVisible)
          {
             labelInvisibleCharactersHint.Location = new System.Drawing.Point(
                labelInvisibleCharactersHint.Location.X,
@@ -228,9 +246,6 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            groupBoxRelated.Height = _groupBoxRelatedThreadsDefaultHeight;
-            groupBoxRelated.Visible = true;
-
             Size = new System.Drawing.Size(
                Size.Width,
                Size.Height + _groupBoxRelatedThreadsDefaultHeight);
@@ -247,6 +262,9 @@ namespace mrHelper.App.Forms
             tabControlMode.Size = new System.Drawing.Size(
                tabControlMode.Size.Width,
                tabControlMode.Size.Height - _groupBoxRelatedThreadsDefaultHeight);
+
+            groupBoxRelated.Height = _groupBoxRelatedThreadsDefaultHeight;
+            groupBoxRelated.Visible = true;
          }
       }
 
@@ -345,18 +363,26 @@ namespace mrHelper.App.Forms
          previewPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
       }
 
-      private void showDiscussionContext(DiffPosition position)
+      private void showDiscussionContext(DiffPosition position, HtmlPanel htmlPanel)
       {
          if (position == null)
          {
-            htmlPanelContext.Text = "This discussion is not associated with a diff context";
+            htmlPanel.Text = "This discussion is not associated with a diff context";
             textBoxFileName.Text = "N/A";
             return;
          }
 
-         string html = getContextHtmlText(position, out string stylesheet);
-         htmlPanelContext.BaseStylesheet = stylesheet;
-         htmlPanelContext.Text = html;
+         string html = getContextHtmlText(position, htmlPanel, out string stylesheet);
+         htmlPanel.BaseStylesheet = stylesheet;
+         htmlPanel.Text = html;
+      }
+
+      private void showFileName(DiffPosition position)
+      {
+         if (position == null)
+         {
+            return;
+         }
 
          string leftSideFileName = position.LeftPath;
          string rightSideFileName = position.RightPath;
@@ -364,11 +390,12 @@ namespace mrHelper.App.Forms
                            + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);
       }
 
-      private string getContextHtmlText(DiffPosition position, out string stylesheet)
+      private string getContextHtmlText(DiffPosition position, HtmlPanel htmlPanel, out string stylesheet)
       {
          stylesheet = String.Empty;
-         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanelContext);
-         return DiffContextFormatter.GetHtml(_getDiffContext(position), fontSizePx, 2, true);
+         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
+         var getContext = isCurrentNoteNew() ? _getNewDiscussionDiffContext(position) : _getDiffContext(position);
+         return DiffContextFormatter.GetHtml(getContext, fontSizePx, 2, true);
       }
 
       private void updateControlState()
@@ -385,7 +412,8 @@ namespace mrHelper.App.Forms
          DiffPosition position = isCurrentNoteNew()
             ? _newDiscussionPosition
             : _reportedNotes[_currentNoteIndex].Position.DiffPosition;
-         showDiscussionContext(position);
+         showDiscussionContext(position, htmlPanelContext);
+         showFileName(position);
          textBoxDiscussionBody.Text = getCurrentNoteText();
          checkBoxIncludeContext.Enabled = isCurrentNoteNew();
 
@@ -395,6 +423,11 @@ namespace mrHelper.App.Forms
          _relatedDiscussions = _getRelatedDiscussions(keyOpt, position).ToArray();
          checkBoxShowRelated.Text = String.Format("Show related threads ({0})", _relatedDiscussions.Count());
          updateRelatedDiscussionControlState();
+
+         bool canScrollUp = isCurrentNoteNew() && canScroll(true);
+         bool canScrollDn = isCurrentNoteNew() && canScroll(false);
+         buttonScrollUp.Enabled = canScrollUp;
+         buttonScrollDown.Enabled = canScrollDn;
 
          updatePreview(htmlPanelPreview, getCurrentNoteText());
          updateModificationsHint();
@@ -454,7 +487,6 @@ namespace mrHelper.App.Forms
          else
          {
             _relatedDiscussionIndex = null;
-            checkBoxShowRelated.Checked = false;
             checkBoxShowRelated.Enabled = false;
          }
 
@@ -470,22 +502,24 @@ namespace mrHelper.App.Forms
          buttonNextRelatedDiscussion.Enabled = allowScrollForward;
 
          htmlPanelPreview.Enabled = areRelatedDisussionsAvailable;
-         labelRelatedDiscussionLineNumber.Visible = areRelatedDisussionsAvailable;
          labelRelatedDiscussionAuthor.Visible = areRelatedDisussionsAvailable;
          if (areRelatedDisussionsAvailable)
          {
             ReportedDiscussionNote note = _relatedDiscussions[_relatedDiscussionIndex.Value];
-            labelRelatedDiscussionLineNumber.Text =
-               "Line: " + getLineNumberFromDiffPosition(note.Position.DiffPosition);
+            bool areRefsEqual = note.Position.DiffPosition.Refs.Equals(_newDiscussionPosition.Refs);
+            labelDifferentContextHint.Visible = !areRefsEqual;
             labelRelatedDiscussionAuthor.Text = "Author: " + note.Content.AuthorName;
             updatePreview(htmlPanelPreviewRelatedDiscussion, note.Content.Body);
+            showDiscussionContext(note.Position.DiffPosition, htmlPanelRelatedDiscussionContext);
          }
          else
          {
-            labelRelatedDiscussionLineNumber.Text = String.Empty;
             labelRelatedDiscussionAuthor.Text = String.Empty;
             htmlPanelPreviewRelatedDiscussion.Text = String.Empty;
+            htmlPanelRelatedDiscussionContext.Text = String.Empty;
          }
+
+         updateRelatedThreadsGroupBoxVisibility(areRelatedDisussionsAvailable && checkBoxShowRelated.Checked);
       }
 
       private bool areHistoryModifications()
@@ -555,7 +589,7 @@ namespace mrHelper.App.Forms
       {
          string body = getNewNoteText();
          bool needIncludeContext = checkBoxIncludeContext.Checked;
-         await _onSubmitNewDiscussion?.Invoke(body, needIncludeContext);
+         await _onSubmitNewDiscussion?.Invoke(body, needIncludeContext, _newDiscussionPosition);
       }
 
       private async Task submitOldEditedNotes()
@@ -589,6 +623,17 @@ namespace mrHelper.App.Forms
          return _reportedNotes.Count();
       }
 
+      private DiffPosition scroll(bool up)
+      {
+         return _scrollPosition(_newDiscussionPosition, up);
+      }
+
+      private bool canScroll(bool up)
+      {
+         Debug.Assert(isCurrentNoteNew());
+         return _getNewDiscussionDiffContext(scroll(up)).IsValid();
+      }
+
       private static int MaximumTextLengthTocancelWithoutConfirmation = 5;
 
       private readonly Action _onDialogClosed;
@@ -598,6 +643,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       private readonly Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> _onEditOldNote;
       private readonly Func<ReportedDiscussionNoteKey, Task> _onDeleteOldNote;
+      private readonly Func<DiffPosition, DiffContext> _getNewDiscussionDiffContext;
       private readonly List<ReportedDiscussionNote> _reportedNotes = new List<ReportedDiscussionNote>();
       private readonly List<ReportedDiscussionNoteKey> _deletedNotes = new List<ReportedDiscussionNoteKey>();
 
@@ -610,7 +656,7 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// New note
       /// </summary>
-      private readonly Func<string, bool, Task> _onSubmitNewDiscussion;
+      private readonly Func<string, bool, DiffPosition, Task> _onSubmitNewDiscussion;
 
       /// <summary>
       /// Other callbacks
@@ -621,7 +667,12 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// DiffPosition for a note that is going to be reported
       /// </summary>
-      private readonly DiffPosition _newDiscussionPosition;
+      private DiffPosition _newDiscussionPosition;
+
+      /// <summary>
+      /// Functor which scrolls a position up/down.
+      /// </summary>
+      private readonly Func<DiffPosition, bool, DiffPosition> _scrollPosition;
 
       /// <summary>
       /// Cached text of a note that is going to be reported.
