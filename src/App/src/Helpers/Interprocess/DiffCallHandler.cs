@@ -19,7 +19,6 @@ using static mrHelper.App.Helpers.ConfigurationHelper;
 
 namespace mrHelper.App.Interprocess
 {
-
    internal class DiffCallHandler
    {
       internal DiffCallHandler(IGitCommandService git, IModificationListener modificationListener,
@@ -35,8 +34,15 @@ namespace mrHelper.App.Interprocess
 
       public void Handle(MatchInfo matchInfo, Snapshot snapshot)
       {
+         if (!matchInfo.IsValid())
+         {
+            throw new ArgumentException(
+               String.Format("Bad match info: {0}", matchInfo.ToString()));
+         }
+
          MergeRequestKey mrk = getMergeRequestKey(snapshot);
-         if (matchFileNameAndLineNumber(mrk, snapshot.Refs, matchInfo, out DiffPosition position) == MatchResult.Error)
+         if (doFullMatch(mrk, snapshot.Refs, matchInfo, out DiffPosition position, out FullContextDiff fullContextDiff)
+            == MatchResult.Error)
          {
             MessageBox.Show("Cannot create a discussion. Unexpected file name and/or line number passed",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
@@ -44,50 +50,81 @@ namespace mrHelper.App.Interprocess
             return;
          }
 
-         DiffPosition scrollPosition(DiffPosition diffPosition, bool scrollUp)
-         {
-            if (!Core.Context.Helpers.IsValidPosition(diffPosition))
-            {
-               return diffPosition;
-            }
+         showNewDiscussionDialog(matchInfo, snapshot, mrk, position, fullContextDiff);
+      }
 
-            bool isLeftSideLineNumber = matchInfo.IsLeftSideLineNumber;
-            int lineNumber = isLeftSideLineNumber 
-                  ? Core.Context.Helpers.GetLeftLineNumber(diffPosition)
-                  : Core.Context.Helpers.GetRightLineNumber(diffPosition);
-            lineNumber += (scrollUp ? -1 : 1);
+      private void showNewDiscussionDialog(MatchInfo matchInfo, Snapshot snapshot, MergeRequestKey mrk,
+         DiffPosition initialNewDiscussionPosition, FullContextDiff fullContextDiff)
+      {
+         DiffPosition fnOnScroll(DiffPosition position, bool scrollUp) =>
+            scrollPosition(position, scrollUp, matchInfo.IsLeftSideLineNumber);
 
-            string leftFileName = position.LeftPath;
-            string rightFileName = position.RightPath;
-            Core.Matching.DiffRefs refs = position.Refs;
-            MatchInfo tempMatchInfo = new MatchInfo(leftFileName, rightFileName, lineNumber, isLeftSideLineNumber);
-            if (matchLineNumberOnly(leftFileName, rightFileName, refs, tempMatchInfo,
-                  out string leftLineNumber, out string rightLineNumber) == MatchResult.Success)
-            {
-               return new DiffPosition(leftFileName, rightFileName, leftLineNumber, rightLineNumber, refs);
-            }
-            return null;
-         };
+         async Task fnOnSubmitNewDiscussion(string body, bool includeContext, DiffPosition position) =>
+            await actOnGitLab(snapshot, "create", (gli) =>
+               submitDiscussionAsync(mrk, gli, matchInfo, snapshot.Refs, position, body, includeContext));
+
+         async Task fnOnEditOldNote(ReportedDiscussionNoteKey notePosition, ReportedDiscussionNoteContent content) =>
+            await actOnGitLab(snapshot, "edit", (gli) =>
+               editDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, content.Body, snapshot));
+
+         async Task fnOnDeleteOldNote(ReportedDiscussionNoteKey notePosition) =>
+            await actOnGitLab(snapshot, "delete", (gli) =>
+               deleteDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, snapshot));
+
+         IEnumerable<ReportedDiscussionNote> fnGetRelatedDiscussions(ReportedDiscussionNoteKey? keyOpt, DiffPosition position) =>
+            getRelatedDiscussions(fullContextDiff, mrk, keyOpt, position).ToArray();
+
+         // We need separate functors for `new` and `old` positions because for a new discussion we need
+         // to distinct cases when user points at unchanged line at left and right sides because it is
+         // important to show proper file content in a diff context window.
+         // And for old discussions we don't have a chance to guess at what side they were created.
+         DiffContext fnGetNewDiscussionDiffContext(DiffPosition position) =>
+            getDiffContext<EnhancedContextMaker>(position,
+                matchInfo.IsLeftSideLineNumber ? UnchangedLinePolicy.TakeFromLeft : UnchangedLinePolicy.TakeFromRight);
+
+         DiffContext fnGetDiffContext(DiffPosition position) =>
+            getDiffContext<EnhancedContextMaker>(position, UnchangedLinePolicy.TakeFromRight);
+
+         void fnOnDialogClosed() =>
+            _onDiscussionSubmitted?.Invoke(mrk);
+
+         ReportedDiscussionNote[] reportedDiscussions = getReportedDiscussions(mrk).ToArray();
 
          NewDiscussionForm form = new NewDiscussionForm(
-            position,
-            scrollPosition,
-            getReportedDiscussions(mrk).ToArray(),
-            () => _onDiscussionSubmitted?.Invoke(mrk),
-            async (body, includeContext, newDiscussionPosition) =>
-               await actOnGitLab(snapshot, "create", (gli) =>
-                  submitDiscussionAsync(mrk, gli, matchInfo, snapshot.Refs, newDiscussionPosition, body, includeContext)),
-            async (notePosition, content) =>
-               await actOnGitLab(snapshot, "edit", (gli) =>
-                  editDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, content.Body, snapshot)),
-            async (notePosition) =>
-               await actOnGitLab(snapshot, "delete", (gli) =>
-                  deleteDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, snapshot)),
-            (keyOpt, sourcePosition) => getRelatedDiscussions(mrk, keyOpt, sourcePosition).ToArray(),
-            (sourcePosition) => getDiffContext<EnhancedContextMaker>(sourcePosition,
-               matchInfo.IsLeftSideLineNumber ? UnchangedLinePolicy.TakeFromLeft : UnchangedLinePolicy.TakeFromRight),
-            (sourcePosition) => getDiffContext<EnhancedContextMaker>(sourcePosition, UnchangedLinePolicy.TakeFromRight));
+            initialNewDiscussionPosition,
+            reportedDiscussions,
+            fnOnScroll,
+            fnOnDialogClosed,
+            fnOnSubmitNewDiscussion,
+            fnOnEditOldNote,
+            fnOnDeleteOldNote,
+            fnGetRelatedDiscussions,
+            fnGetNewDiscussionDiffContext,
+            fnGetDiffContext);
          form.Show();
+      }
+
+      DiffPosition scrollPosition(DiffPosition position, bool scrollUp, bool isLeftSideLine)
+      {
+         if (!Core.Context.Helpers.IsValidPosition(position))
+         {
+            return position;
+         }
+
+         int lineNumber = isLeftSideLine
+               ? Core.Context.Helpers.GetLeftLineNumber(position)
+               : Core.Context.Helpers.GetRightLineNumber(position);
+         lineNumber += (scrollUp ? -1 : 1);
+
+         string leftPath = position.LeftPath;
+         string rightPath = position.RightPath;
+         Core.Matching.DiffRefs refs = position.Refs;
+         if (matchLineNumber(leftPath, rightPath, refs, lineNumber, isLeftSideLine,
+               out string leftLineNumber, out string rightLineNumber) == MatchResult.Success)
+         {
+            return new DiffPosition(leftPath, rightPath, leftLineNumber, rightLineNumber, refs);
+         }
+         return null;
       }
 
       private enum MatchResult
@@ -97,19 +134,19 @@ namespace mrHelper.App.Interprocess
          Cancelled
       }
 
-      private MatchResult matchFileNameAndLineNumber(MergeRequestKey mrk, Core.Matching.DiffRefs refs, MatchInfo matchInfo,
-         out DiffPosition position)
+      private MatchResult doFullMatch(MergeRequestKey mrk, Core.Matching.DiffRefs refs,
+         MatchInfo matchInfo, out DiffPosition position, out FullContextDiff fullContextDiff)
       {
-         MatchResult fileMatchResult = matchFileNameOnly(mrk, refs, matchInfo,
-            out string leftFileName, out string rightFileName);
+         MatchResult fileMatchResult = matchFileName(mrk, refs, matchInfo.LeftFileName, matchInfo.RightFileName,
+            matchInfo.IsLeftSideLineNumber, out string leftFileName, out string rightFileName);
          if (fileMatchResult != MatchResult.Success)
          {
             position = null;
             return fileMatchResult;
          }
 
-         MatchResult lineMatchResult = matchLineNumberOnly(leftFileName, rightFileName, refs, matchInfo,
-            out string leftLineNumber, out string rightLineNumber);
+         MatchResult lineMatchResult = matchLineNumber(leftFileName, rightFileName, refs, matchInfo.LineNumber,
+            matchInfo.IsLeftSideLineNumber, out string leftLineNumber, out string rightLineNumber);
          if (lineMatchResult != MatchResult.Success)
          {
             position = null;
@@ -120,13 +157,15 @@ namespace mrHelper.App.Interprocess
          return MatchResult.Success;
       }
 
-      private MatchResult matchFileNameOnly(MergeRequestKey mrk, Core.Matching.DiffRefs refs, MatchInfo matchInfo,
+      private MatchResult matchFileName(MergeRequestKey mrk, Core.Matching.DiffRefs refs,
+         string originalLeftFileName, string originalRightFileName, bool isLeftSideLine,
          out string leftFileName, out string rightFileName)
       {
          FileNameMatcher fileNameMatcher = getFileNameMatcher(_git, mrk);
          try
          {
-            if (!fileNameMatcher.Match(matchInfo, refs, out leftFileName, out rightFileName))
+            if (!fileNameMatcher.Match(refs, originalLeftFileName, originalRightFileName, isLeftSideLine,
+               out leftFileName, out rightFileName))
             {
                return MatchResult.Cancelled;
             }
@@ -145,14 +184,13 @@ namespace mrHelper.App.Interprocess
          return MatchResult.Success;
       }
 
-      private MatchResult matchLineNumberOnly(string leftPath, string rightPath, Core.Matching.DiffRefs refs,
-         MatchInfo matchInfo, out string leftLineNumber, out string rightLineNumber)
+      private MatchResult matchLineNumber(string leftPath, string rightPath, Core.Matching.DiffRefs refs,
+         int lineNumber, bool isLeftSideLine, out string leftLineNumber, out string rightLineNumber)
       {
-         // TODO Don't create a matcher from the scratch each time
          LineNumberMatcher matcher = new LineNumberMatcher(_git);
          try
          {
-            matcher.Match(matchInfo, refs, leftPath, rightPath, out leftLineNumber, out rightLineNumber);
+            matcher.Match(refs, leftPath, rightPath, lineNumber, isLeftSideLine, out leftLineNumber, out rightLineNumber);
          }
          catch (Exception ex)
          {
@@ -220,28 +258,8 @@ namespace mrHelper.App.Interprocess
       }
 
       // Collect discussions started for lines within DiffContextDepth range near `position`
-      private IEnumerable<ReportedDiscussionNote> getRelatedDiscussions(MergeRequestKey mrk,
-         ReportedDiscussionNoteKey? keyOpt, DiffPosition position)
-      {
-         List<ReportedDiscussionNote> result = new List<ReportedDiscussionNote>();
-         if (position == null)
-         {
-            return result;
-         }
-
-         if (Core.Context.Helpers.IsRightSidePosition(position))
-         {
-            result.AddRange(getRelatedDiscussionsFromDiffContext(mrk, keyOpt, position, true));
-         }
-         if (Core.Context.Helpers.IsLeftSidePosition(position))
-         {
-            result.AddRange(getRelatedDiscussionsFromDiffContext(mrk, keyOpt, position, false));
-         }
-         return result.GroupBy(note => note.Key.Id).Select(c => c.First());
-      }
-
-      private IEnumerable<ReportedDiscussionNote> getRelatedDiscussionsFromDiffContext(
-         MergeRequestKey mrk, ReportedDiscussionNoteKey? keyOpt, DiffPosition position, bool useRightSideContext)
+      private IEnumerable<ReportedDiscussionNote> getRelatedDiscussions(
+         FullContextDiff fullContextDiff, MergeRequestKey mrk, ReportedDiscussionNoteKey? keyOpt, DiffPosition position)
       {
          // Obtain a context for a passed position.
          DiffContext ctx = getDiffContext<CombinedContextMaker>(position, UnchangedLinePolicy.TakeFromRight);
@@ -250,35 +268,27 @@ namespace mrHelper.App.Interprocess
             return Array.Empty<ReportedDiscussionNote>();
          }
 
-         // We know left/right file names for sure but we need to emulate line number matching
-         // for each line number from a diff context.
          string leftFileName = position.LeftPath;
          string rightFileName = position.RightPath;
          Core.Matching.DiffRefs refs = position.Refs;
          List<DiffPosition> neighborPositions = new List<DiffPosition>();
 
-         void addNeighborPosition(bool isLeftSideLineNumber, int lineNumber)
-         {
-            MatchInfo matchInfo = new MatchInfo(leftFileName, rightFileName, lineNumber, isLeftSideLineNumber);
-            MatchResult result = matchLineNumberOnly(leftFileName, rightFileName, refs, matchInfo,
-               out string leftLineNumber, out string rightLineNumber);
-            if (result == MatchResult.Success)
-            {
-               DiffPosition pos = new DiffPosition(leftFileName, rightFileName, leftLineNumber, rightLineNumber, refs);
-               neighborPositions.Add(pos);
-            }
-         }
-
+         // CombinedContextMaker provides a context where line numbers are matched so no need to
+         // match them manually here.
          foreach (DiffContext.Line line in ctx.Lines)
          {
+            Debug.Assert(line.Left.HasValue || line.Right.HasValue);
+            string leftLineNumber = null;
+            string rightLineNumber = null;
             if (line.Left.HasValue)
             {
-               addNeighborPosition(true, line.Left.Value.Number);
+               leftLineNumber = line.Left.Value.Number.ToString();
             }
             if (line.Right.HasValue)
             {
-               addNeighborPosition(false, line.Right.Value.Number);
+               rightLineNumber = line.Right.Value.Number.ToString();
             }
+            neighborPositions.Add(new DiffPosition(leftFileName, rightFileName, leftLineNumber, rightLineNumber, refs));
          }
 
          // Find discussions that reported on each line from the diff context.
@@ -301,7 +311,7 @@ namespace mrHelper.App.Interprocess
                }
             }
          }
-         return relatedNotes;
+         return relatedNotes.GroupBy(note => note.Key.Id).Select(c => c.First());
       }
 
       private FileNameMatcher getFileNameMatcher(IGitCommandService git, MergeRequestKey mrk)

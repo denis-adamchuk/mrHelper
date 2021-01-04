@@ -27,6 +27,10 @@ namespace mrHelper.StorageSupport
       int LaunchDiffTool(DiffToolArguments arguments);
 
       IFileRenameDetector RenameDetector { get; }
+
+      FullContextDiffProvider FullContextDiffProvider { get; }
+
+      GitDiffAnalyzer GitDiffAnalyzer { get; }
    }
 }
 

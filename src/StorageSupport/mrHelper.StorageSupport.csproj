@@ -48,6 +48,8 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="src\Impl\Internal\Common\FullContextDiffProvider.cs" />
+    <Compile Include="src\Impl\Internal\Common\GitDiffAnalyzer.cs" />
     <Compile Include="src\Impl\Internal\Common\InternalUpdateContext.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageComparisonCache.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageDiffCache.cs" />

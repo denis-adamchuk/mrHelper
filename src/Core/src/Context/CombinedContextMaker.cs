@@ -46,17 +46,24 @@ namespace mrHelper.Core.Context
          string leftSHA = position.Refs.LeftSHA;
          string rightSHA = position.Refs.RightSHA;
 
-         FullContextDiffProvider provider = new FullContextDiffProvider(_git);
-         FullContextDiff context = provider.GetFullContextDiff(leftSHA, rightSHA, leftFilename, rightFilename);
-         Debug.Assert(context.Left.Count == context.Right.Count);
-         if (linenumber > context.Left.Count)
+         try
          {
-            throw new ArgumentException(
-               String.Format("Line number {0} is greater than total line number count, invalid \"position\": {1}",
-               linenumber.ToString(), position.ToString()));
-         }
+            FullContextDiff context = _git.FullContextDiffProvider.GetFullContextDiff(
+               leftSHA, rightSHA, leftFilename, rightFilename);
+            Debug.Assert(context.Left.Count == context.Right.Count);
+            if (linenumber > context.Left.Count)
+            {
+               throw new ArgumentException(
+                  String.Format("Line number {0} is greater than total line number count, invalid \"position\": {1}",
+                  linenumber.ToString(), position.ToString()));
+            }
 
-         return createDiffContext(linenumber, isRightSideContext, context, depth);
+            return createDiffContext(linenumber, isRightSideContext, context, depth);
+         }
+         catch (FullContextDiffProviderException ex)
+         {
+            throw new ContextMakingException("Cannot obtain full context diff", ex);
+         }
       }
 
       // isRightSideContext is true when linenumber corresponds to the right side (sha2).

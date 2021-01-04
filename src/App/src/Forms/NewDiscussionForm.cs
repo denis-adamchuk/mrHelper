@@ -19,8 +19,8 @@ namespace mrHelper.App.Forms
    {
       internal NewDiscussionForm(
          DiffPosition newDiscussionPosition,
-         Func<DiffPosition, bool, DiffPosition> scrollPosition,
          ReportedDiscussionNote[] oldNotes,
+         Func<DiffPosition, bool, DiffPosition> scrollPosition,
          Action onDialogClosed,
          Func<string, bool, DiffPosition, Task> onSubmitNewDiscussion,
          Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> onEditOldNote,
@@ -453,20 +453,6 @@ namespace mrHelper.App.Forms
          int labelLocationX = buttonPrevRightBorder + labelOffsetFromButtonPrev;
          int labelLocationY = control.Location.Y;
          control.Location = new System.Drawing.Point(labelLocationX, labelLocationY);
-      }
-
-      private static string getLineNumberFromDiffPosition(DiffPosition position)
-      {
-         if (!Core.Context.Helpers.IsValidPosition(position))
-         {
-            return "N/A";
-         }
-
-         bool isRightSidePosition = Core.Context.Helpers.IsRightSidePosition(position);
-         int number = isRightSidePosition
-            ? Core.Context.Helpers.GetRightLineNumber(position)
-            : Core.Context.Helpers.GetLeftLineNumber(position);
-         return String.Format("{0} ({1})", number, isRightSidePosition ? "After" : "Before");
       }
 
       private void updateRelatedDiscussionControlState()

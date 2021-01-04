@@ -89,6 +89,10 @@ namespace mrHelper.StorageSupport
 
       abstract public IFileRenameDetector RenameDetector { get; }
 
+      public FullContextDiffProvider FullContextDiffProvider { get; }
+
+      public GitDiffAnalyzer GitDiffAnalyzer { get; }
+
       public void Dispose()
       {
          _isDisposed = true;

@@ -4,9 +4,9 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
-using mrHelper.StorageSupport;
+using mrHelper.Common.Exceptions;
 
-namespace mrHelper.Core.Context
+namespace mrHelper.StorageSupport
 {
    /// <summary>
    /// Contains a diff between two revisions with all lines from each of revision including missing lines.
@@ -23,6 +23,15 @@ namespace mrHelper.Core.Context
       public SparsedList<string> Right { get; }
    }
 
+   public class FullContextDiffProviderException : ExceptionEx
+   {
+      public FullContextDiffProviderException(string message, Exception innerException)
+         : base(message, innerException)
+      {
+      }
+   }
+
+
    /// <summary>
    /// Provides two lists of the same size. First list contains lines from sha1 and null for missing lines.
    /// Seconds list contains lines from sha2 and null for missing lines.
@@ -35,7 +44,7 @@ namespace mrHelper.Core.Context
       }
 
       /// <summary>
-      /// Throws ContextMakingException.
+      /// Throws FullContextDiffProviderException.
       /// </summary>
       public FullContextDiff GetFullContextDiff(string leftSHA, string rightSHA,
          string leftFileName, string rightFileName)
@@ -54,12 +63,12 @@ namespace mrHelper.Core.Context
          }
          catch (GitNotAvailableDataException ex)
          {
-            throw new ContextMakingException("Cannot obtain git diff", ex);
+            throw new FullContextDiffProviderException("Cannot obtain git diff", ex);
          }
 
          if (fullDiff == null)
          {
-            throw new ContextMakingException("Cannot obtain git diff", null);
+            throw new FullContextDiffProviderException("Cannot obtain git diff", null);
          }
 
          if (fullDiff.Count() == 0)

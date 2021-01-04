@@ -1,10 +1,18 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using mrHelper.Core.Context;
-using mrHelper.StorageSupport;
+using mrHelper.Common.Exceptions;
 
-namespace mrHelper.Core.Git
+namespace mrHelper.StorageSupport
 {
+   public class GitDiffAnalyzerException : ExceptionEx
+   {
+      public GitDiffAnalyzerException(string message, Exception innerException)
+         : base(message, innerException)
+      {
+      }
+   }
+
    /// <summary>
    /// Checks whether a line number belongs to added/modified or deleted sections (or none of them)
    /// </summary>
@@ -32,17 +40,17 @@ namespace mrHelper.Core.Git
 
       /// <summary>
       /// Note: filename1 or filename2 can be 'null'
-      /// Throws ContextMakingException.
+      /// Throws GitDiffAnalyzerException.
       /// </summary>
-      public GitDiffAnalyzer(IGitCommandService git,
-         string sha1, string sha2, string filename1, string filename2)
+      public GitDiffAnalyzer(IGitCommandService git)
       {
-         _sections = getDiffSections(git, sha1, sha2, filename1, filename2);
+         _git = git;
       }
 
-      public bool IsLineAddedOrModified(int linenumber)
+      public bool IsLineAddedOrModified(int linenumber, string sha1, string sha2, string filename1, string filename2)
       {
-         foreach (GitDiffSection section in _sections)
+         IEnumerable<GitDiffSection> sections = getDiffSections(_git, sha1, sha2, filename1, filename2);
+         foreach (GitDiffSection section in sections)
          {
             if (linenumber >= section.RightSectionStart && linenumber < section.RightSectionEnd)
             {
@@ -52,9 +60,10 @@ namespace mrHelper.Core.Git
          return false;
       }
 
-      public bool IsLineDeleted(int linenumber)
+      public bool IsLineDeleted(int linenumber, string sha1, string sha2, string filename1, string filename2)
       {
-         foreach (GitDiffSection section in _sections)
+         IEnumerable<GitDiffSection> sections = getDiffSections(_git, sha1, sha2, filename1, filename2);
+         foreach (GitDiffSection section in sections)
          {
             if (linenumber >= section.LeftSectionStart && linenumber < section.LeftSectionEnd)
             {
@@ -65,7 +74,7 @@ namespace mrHelper.Core.Git
       }
 
       /// <summary>
-      /// Throws ContextMakingException.
+      /// Throws GitDiffAnalyzerException.
       /// </summary>
       static private IEnumerable<GitDiffSection> getDiffSections(IGitCommandService git,
          string sha1, string sha2, string filename1, string filename2)
@@ -84,12 +93,12 @@ namespace mrHelper.Core.Git
          }
          catch (GitNotAvailableDataException ex)
          {
-            throw new ContextMakingException("Cannot obtain git diff", ex);
+            throw new GitDiffAnalyzerException("Cannot obtain git diff", ex);
          }
 
          if (diff == null)
          {
-            throw new ContextMakingException("Cannot obtain git diff", null);
+            throw new GitDiffAnalyzerException("Cannot obtain git diff", null);
          }
 
          foreach (string line in diff)
@@ -121,7 +130,7 @@ namespace mrHelper.Core.Git
          return sections;
       }
 
-      private readonly IEnumerable<GitDiffSection> _sections;
+      private readonly IGitCommandService _git;
    }
 }
 

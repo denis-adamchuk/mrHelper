@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
-using mrHelper.Core.Git;
 using mrHelper.Core.Matching;
 using mrHelper.StorageSupport;
 
@@ -40,9 +39,6 @@ namespace mrHelper.Core.Context
                String.Format("Bad \"depth\": {0}", depth.ToString()));
          }
 
-         GitDiffAnalyzer analyzer = new GitDiffAnalyzer(_git,
-            position.Refs.LeftSHA, position.Refs.RightSHA, position.LeftPath, position.RightPath);
-
          // If RightLine is valid, then it points to either added/modified or unchanged line, handle them the same way
          bool isRightSideContext = Helpers.IsRightSidePosition(position, unchangedLinePolicy);
          int linenumber = isRightSideContext ? Helpers.GetRightLineNumber(position) : Helpers.GetLeftLineNumber(position);
@@ -73,13 +69,13 @@ namespace mrHelper.Core.Context
                linenumber.ToString(), position.ToString()));
          }
 
-         return createDiffContext(linenumber, isRightSideContext, contents, analyzer, depth);
+         return createDiffContext(linenumber, isRightSideContext, contents, depth, position);
       }
 
       // isRightSideContext is true when linenumber and sha correspond to the right side
       // linenumber is one-based
       private DiffContext createDiffContext(int linenumber, bool isRightSideContext, IEnumerable<string> contents,
-         GitDiffAnalyzer analyzer, ContextDepth depth)
+         ContextDepth depth, DiffPosition position)
       {
          List<DiffContext.Line> lines = new List<DiffContext.Line>();
 
@@ -91,8 +87,7 @@ namespace mrHelper.Core.Context
                // we have just reached the end
                break;
             }
-            lines.Add(getLineContext(
-               startLineNumber + iContextLine, isRightSideContext, analyzer, contents));
+            lines.Add(getLineContext(startLineNumber + iContextLine, isRightSideContext, contents, position));
          }
 
          // zero-based index of a selected line in DiffContext.Lines
@@ -101,13 +96,13 @@ namespace mrHelper.Core.Context
 
       // linenumber is one-based
       private DiffContext.Line getLineContext(int linenumber, bool isRightSideContext,
-         GitDiffAnalyzer analyzer, IEnumerable<string> contents)
+         IEnumerable<string> contents, DiffPosition position)
       {
          Debug.Assert(linenumber > 0 && linenumber <= contents.Count());
 
          // this maker supports all three states
          DiffContext.Line.Side side = new DiffContext.Line.Side(
-            linenumber, getLineState(analyzer, linenumber, isRightSideContext));
+            linenumber, getLineState(linenumber, isRightSideContext, position));
 
          return new DiffContext.Line(contents.ElementAt(linenumber - 1),
             isRightSideContext ? new DiffContext.Line.Side?() : side,
@@ -115,20 +110,30 @@ namespace mrHelper.Core.Context
       }
 
       // linenumber is one-based
-      private DiffContext.Line.State getLineState(GitDiffAnalyzer analyzer, int linenumber, bool isRightSideContext)
+      private DiffContext.Line.State getLineState(int linenumber, bool isRightSideContext, DiffPosition position)
       {
-         if (isRightSideContext)
+         try
          {
-            return analyzer.IsLineAddedOrModified(linenumber)
-               ? DiffContext.Line.State.Changed : DiffContext.Line.State.Unchanged;
+            if (isRightSideContext)
+            {
+               return _git.GitDiffAnalyzer.IsLineAddedOrModified(linenumber,
+                     position.Refs.LeftSHA, position.Refs.RightSHA, position.LeftPath, position.RightPath)
+                  ? DiffContext.Line.State.Changed : DiffContext.Line.State.Unchanged;
+            }
+            else
+            {
+               return _git.GitDiffAnalyzer.IsLineDeleted(linenumber,
+                     position.Refs.LeftSHA, position.Refs.RightSHA, position.LeftPath, position.RightPath)
+                  ? DiffContext.Line.State.Changed : DiffContext.Line.State.Unchanged;
+            }
          }
-         else
+         catch (GitDiffAnalyzerException ex)
          {
-            return analyzer.IsLineDeleted(linenumber)
-               ? DiffContext.Line.State.Changed : DiffContext.Line.State.Unchanged;
+            throw new ContextMakingException("Cannot determine a line state", ex);
          }
       }
 
       private readonly IGitCommandService _git;
    }
 }
+

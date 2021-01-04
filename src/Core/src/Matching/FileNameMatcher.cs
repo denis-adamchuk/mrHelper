@@ -23,20 +23,14 @@ namespace mrHelper.Core.Matching
       /// <summary>
       /// Throws MatchingException.
       /// </summary>
-      public bool Match(MatchInfo matchInfo, DiffRefs refs, out string leftFileName, out string rightFileName)
+      public bool Match(DiffRefs refs, string originalLeftFileName, string originalRightFileName, bool isLeftSideLine,
+         out string leftFileName, out string rightFileName)
       {
-         if (!matchInfo.IsValid())
-         {
-            throw new ArgumentException(
-               String.Format("Bad match info: {0}", matchInfo.ToString()));
-         }
-
-         bool isLeftSide = matchInfo.IsLeftSideLineNumber;
-         string currentName = isLeftSide ? matchInfo.LeftFileName : matchInfo.RightFileName;
-         string oppositeName = isLeftSide ? matchInfo.RightFileName : matchInfo.LeftFileName;
-         oppositeName = getOppositeName(refs, isLeftSide, currentName, oppositeName);
-         leftFileName = isLeftSide ? currentName : oppositeName;
-         rightFileName = isLeftSide ? oppositeName : currentName;
+         string currentName = isLeftSideLine ? originalLeftFileName : originalRightFileName;
+         string oppositeName = isLeftSideLine ? originalRightFileName : originalLeftFileName;
+         oppositeName = getOppositeName(refs, isLeftSideLine, currentName, oppositeName);
+         leftFileName = isLeftSideLine ? currentName : oppositeName;
+         rightFileName = isLeftSideLine ? oppositeName : currentName;
          return oppositeName != null;
       }
 

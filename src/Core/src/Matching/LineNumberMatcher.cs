@@ -23,44 +23,34 @@ namespace mrHelper.Core.Matching
       /// Throws ArgumentException in case of bad arguments.
       /// Throws MatchingException.
       /// </summary>
-      public void Match(MatchInfo matchInfo, DiffRefs refs, string leftPath, string rightPath,
-         out string leftLineNumber, out string rightLineNumber)
+      public void Match(DiffRefs refs, string leftPath, string rightPath,
+         int lineNumber, bool isLeftSideLine, out string leftLineNumber, out string rightLineNumber)
       {
-         if (!matchInfo.IsValid())
-         {
-            throw new ArgumentException(
-               String.Format("Bad match info: {0}", matchInfo.ToString()));
-         }
-
-         int currentLine = matchInfo.LineNumber;
-         bool isLeftSide = matchInfo.IsLeftSideLineNumber;
-
          int? oppositeLine;
          try
          {
-            oppositeLine = getOppositeLine(refs, isLeftSide, leftPath, rightPath, currentLine);
+            oppositeLine = getOppositeLine(refs, isLeftSideLine, leftPath, rightPath, lineNumber);
          }
          catch (BadPosition)
          {
             throw new ArgumentException(
-               String.Format("Bad match info: {0}", matchInfo.ToString()));
+               String.Format("Bad position: Line Number {0} ({1})", lineNumber, isLeftSideLine ? "Left" : "Right"));
          }
-         catch (ContextMakingException ex)
+         catch (FullContextDiffProviderException ex)
          {
             throw new MatchingException("Cannot match lines", ex);
          }
 
-         string currentLineAsString = currentLine.ToString();
+         string currentLineAsString = lineNumber.ToString();
          string oppositeLineAsString = oppositeLine?.ToString();
-         leftLineNumber = isLeftSide ? currentLineAsString : oppositeLineAsString;
-         rightLineNumber = isLeftSide ? oppositeLineAsString : currentLineAsString;
+         leftLineNumber = isLeftSideLine ? currentLineAsString : oppositeLineAsString;
+         rightLineNumber = isLeftSideLine ? oppositeLineAsString : currentLineAsString;
       }
 
       private int? getOppositeLine(DiffRefs refs, bool isLeftSide, string leftFileName, string rightFileName,
          int lineNumber)
       {
-         FullContextDiffProvider provider = new FullContextDiffProvider(_git);
-         FullContextDiff context = provider.GetFullContextDiff(
+         FullContextDiff context = _git.FullContextDiffProvider.GetFullContextDiff(
             refs.LeftSHA, refs.RightSHA, leftFileName, rightFileName);
 
          Debug.Assert(context.Left.Count == context.Right.Count);
