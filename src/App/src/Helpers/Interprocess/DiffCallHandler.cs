@@ -50,13 +50,23 @@ namespace mrHelper.App.Interprocess
             {
                return diffPosition;
             }
-            int lineNumber = matchInfo.IsLeftSideLineNumber
+
+            bool isLeftSideLineNumber = matchInfo.IsLeftSideLineNumber;
+            int lineNumber = isLeftSideLineNumber 
                   ? Core.Context.Helpers.GetLeftLineNumber(diffPosition)
                   : Core.Context.Helpers.GetRightLineNumber(diffPosition);
             lineNumber += (scrollUp ? -1 : 1);
-            return matchLineNumberOnly(position.LeftPath, position.RightPath, position.Refs,
-               new MatchInfo(position.LeftPath, position.RightPath, lineNumber, matchInfo.IsLeftSideLineNumber),
-               out var pos) == MatchResult.Success ? pos : null;
+
+            string leftFileName = position.LeftPath;
+            string rightFileName = position.RightPath;
+            Core.Matching.DiffRefs refs = position.Refs;
+            MatchInfo tempMatchInfo = new MatchInfo(leftFileName, rightFileName, lineNumber, isLeftSideLineNumber);
+            if (matchLineNumberOnly(leftFileName, rightFileName, refs, tempMatchInfo,
+                  out string leftLineNumber, out string rightLineNumber) == MatchResult.Success)
+            {
+               return new DiffPosition(leftFileName, rightFileName, leftLineNumber, rightLineNumber, refs);
+            }
+            return null;
          };
 
          NewDiscussionForm form = new NewDiscussionForm(
@@ -90,24 +100,33 @@ namespace mrHelper.App.Interprocess
       private MatchResult matchFileNameAndLineNumber(MergeRequestKey mrk, Core.Matching.DiffRefs refs, MatchInfo matchInfo,
          out DiffPosition position)
       {
-         MatchResult matchResult = matchFileNameOnly(mrk, refs, matchInfo, out var tempPosition);
-         if (matchResult != MatchResult.Success)
+         MatchResult fileMatchResult = matchFileNameOnly(mrk, refs, matchInfo,
+            out string leftFileName, out string rightFileName);
+         if (fileMatchResult != MatchResult.Success)
          {
-            position = new DiffPosition(null, null, null, null, null);
-            return matchResult;
+            position = null;
+            return fileMatchResult;
          }
-         return matchLineNumberOnly(tempPosition.LeftPath, tempPosition.RightPath, refs, matchInfo, out position);
+
+         MatchResult lineMatchResult = matchLineNumberOnly(leftFileName, rightFileName, refs, matchInfo,
+            out string leftLineNumber, out string rightLineNumber);
+         if (lineMatchResult != MatchResult.Success)
+         {
+            position = null;
+            return fileMatchResult;
+         }
+
+         position = new DiffPosition(leftFileName, rightFileName, leftLineNumber, rightLineNumber, refs);
+         return MatchResult.Success;
       }
 
       private MatchResult matchFileNameOnly(MergeRequestKey mrk, Core.Matching.DiffRefs refs, MatchInfo matchInfo,
-         out DiffPosition position)
+         out string leftFileName, out string rightFileName)
       {
-         position = new DiffPosition(null, null, null, null, null);
          FileNameMatcher fileNameMatcher = getFileNameMatcher(_git, mrk);
-         DiffPosition tempPosition = new DiffPosition(null, null, null, null, refs);
          try
          {
-            if (!fileNameMatcher.Match(matchInfo, tempPosition, out tempPosition))
+            if (!fileNameMatcher.Match(matchInfo, refs, out leftFileName, out rightFileName))
             {
                return MatchResult.Cancelled;
             }
@@ -116,36 +135,36 @@ namespace mrHelper.App.Interprocess
          {
             if (ex is ArgumentException || ex is MatchingException)
             {
+               leftFileName = null;
+               rightFileName = null;
                ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
                return MatchResult.Error;
             }
             throw;
          }
-         position = tempPosition;
          return MatchResult.Success;
       }
 
       private MatchResult matchLineNumberOnly(string leftPath, string rightPath, Core.Matching.DiffRefs refs,
-         MatchInfo matchInfo, out DiffPosition position)
+         MatchInfo matchInfo, out string leftLineNumber, out string rightLineNumber)
       {
          // TODO Don't create a matcher from the scratch each time
-         position = new DiffPosition(null, null, null, null, null);
          LineNumberMatcher matcher = new LineNumberMatcher(_git);
-         DiffPosition tempPosition = new DiffPosition(leftPath, rightPath, null, null, refs);
          try
          {
-            matcher.Match(matchInfo, tempPosition, out tempPosition);
+            matcher.Match(matchInfo, refs, leftPath, rightPath, out leftLineNumber, out rightLineNumber);
          }
          catch (Exception ex)
          {
             if (ex is ArgumentException || ex is MatchingException)
             {
+               leftLineNumber = null;
+               rightLineNumber = null;
                ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
                return MatchResult.Error;
             }
             throw;
          }
-         position = tempPosition;
          return MatchResult.Success;
       }
 
@@ -241,9 +260,11 @@ namespace mrHelper.App.Interprocess
          void addNeighborPosition(bool isLeftSideLineNumber, int lineNumber)
          {
             MatchInfo matchInfo = new MatchInfo(leftFileName, rightFileName, lineNumber, isLeftSideLineNumber);
-            MatchResult result = matchLineNumberOnly(leftFileName, rightFileName, refs, matchInfo, out var pos);
+            MatchResult result = matchLineNumberOnly(leftFileName, rightFileName, refs, matchInfo,
+               out string leftLineNumber, out string rightLineNumber);
             if (result == MatchResult.Success)
             {
+               DiffPosition pos = new DiffPosition(leftFileName, rightFileName, leftLineNumber, rightLineNumber, refs);
                neighborPositions.Add(pos);
             }
          }

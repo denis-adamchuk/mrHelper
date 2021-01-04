@@ -23,7 +23,8 @@ namespace mrHelper.Core.Matching
       /// Throws ArgumentException in case of bad arguments.
       /// Throws MatchingException.
       /// </summary>
-      public void Match(MatchInfo matchInfo, DiffPosition inDiffPosition, out DiffPosition outDiffPosition)
+      public void Match(MatchInfo matchInfo, DiffRefs refs, string leftPath, string rightPath,
+         out string leftLineNumber, out string rightLineNumber)
       {
          if (!matchInfo.IsValid())
          {
@@ -37,8 +38,7 @@ namespace mrHelper.Core.Matching
          int? oppositeLine;
          try
          {
-            oppositeLine = getOppositeLine(inDiffPosition.Refs, isLeftSide, inDiffPosition.LeftPath,
-               inDiffPosition.RightPath, currentLine);
+            oppositeLine = getOppositeLine(refs, isLeftSide, leftPath, rightPath, currentLine);
          }
          catch (BadPosition)
          {
@@ -52,13 +52,8 @@ namespace mrHelper.Core.Matching
 
          string currentLineAsString = currentLine.ToString();
          string oppositeLineAsString = oppositeLine?.ToString();
-
-         outDiffPosition = new DiffPosition(
-            inDiffPosition.LeftPath,
-            inDiffPosition.RightPath,
-            isLeftSide ? currentLineAsString : oppositeLineAsString,
-            isLeftSide ? oppositeLineAsString : currentLineAsString,
-            inDiffPosition.Refs);
+         leftLineNumber = isLeftSide ? currentLineAsString : oppositeLineAsString;
+         rightLineNumber = isLeftSide ? oppositeLineAsString : currentLineAsString;
       }
 
       private int? getOppositeLine(DiffRefs refs, bool isLeftSide, string leftFileName, string rightFileName,

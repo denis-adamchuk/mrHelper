@@ -7,6 +7,10 @@ namespace mrHelper.Core.Context
    {
       public static bool IsValidPosition(DiffPosition position)
       {
+         if (position == null)
+         {
+            return false;
+         }
          string leftLine = position.LeftLine;
          string rightLine = position.RightLine;
          if (leftLine != null && GetLeftLineNumber(position) < 1)

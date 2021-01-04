@@ -23,7 +23,7 @@ namespace mrHelper.Core.Matching
       /// <summary>
       /// Throws MatchingException.
       /// </summary>
-      public bool Match(MatchInfo matchInfo, DiffPosition inDiffPosition, out DiffPosition outDiffPosition)
+      public bool Match(MatchInfo matchInfo, DiffRefs refs, out string leftFileName, out string rightFileName)
       {
          if (!matchInfo.IsValid())
          {
@@ -34,14 +34,9 @@ namespace mrHelper.Core.Matching
          bool isLeftSide = matchInfo.IsLeftSideLineNumber;
          string currentName = isLeftSide ? matchInfo.LeftFileName : matchInfo.RightFileName;
          string oppositeName = isLeftSide ? matchInfo.RightFileName : matchInfo.LeftFileName;
-         oppositeName = getOppositeName(inDiffPosition.Refs, isLeftSide, currentName, oppositeName);
-
-         outDiffPosition = new DiffPosition(
-            isLeftSide ? currentName : oppositeName,
-            isLeftSide ? oppositeName : currentName,
-            inDiffPosition.LeftLine,
-            inDiffPosition.RightLine,
-            inDiffPosition.Refs);
+         oppositeName = getOppositeName(refs, isLeftSide, currentName, oppositeName);
+         leftFileName = isLeftSide ? currentName : oppositeName;
+         rightFileName = isLeftSide ? oppositeName : currentName;
          return oppositeName != null;
       }
 
