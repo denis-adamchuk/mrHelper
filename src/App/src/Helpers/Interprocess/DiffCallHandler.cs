@@ -41,16 +41,27 @@ namespace mrHelper.App.Interprocess
          }
 
          MergeRequestKey mrk = getMergeRequestKey(snapshot);
-         if (doFullMatch(mrk, snapshot.Refs, matchInfo, out DiffPosition position, out FullContextDiff fullContextDiff)
-            == MatchResult.Error)
+         MatchResult matchResult = doFullMatch(mrk, snapshot.Refs, matchInfo,
+            out DiffPosition position, out FullContextDiff fullContextDiff);
+         switch (matchResult)
          {
-            MessageBox.Show("Cannot create a discussion. Unexpected file name and/or line number passed",
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
-               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-            return;
-         }
+            case MatchResult.Cancelled:
+               break;
 
-         showNewDiscussionDialog(matchInfo, snapshot, mrk, position, fullContextDiff);
+            case MatchResult.Error:
+               MessageBox.Show("Cannot create a discussion. Unexpected file name and/or line number passed",
+                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+               break;
+
+            case MatchResult.Success:
+               showNewDiscussionDialog(matchInfo, snapshot, mrk, position, fullContextDiff);
+               break;
+
+            default:
+               Debug.Assert(false);
+               break;
+         }
       }
 
       private void showNewDiscussionDialog(MatchInfo matchInfo, Snapshot snapshot, MergeRequestKey mrk,
@@ -246,15 +257,15 @@ namespace mrHelper.App.Interprocess
 
       bool doPositionsReferenceTheSameLine(DiffPosition position1, DiffPosition position2)
       {
-         bool matchRightWithRight =
+         bool matchRight =
                 position1.RightLine != null
-             && position1.RightLine == position2.RightLine
+             && (position1.RightLine == position2.RightLine || position1.RightLine == position2.LeftLine)
              && position1.RightPath == position2.RightPath;
-         bool matchLeftWithLeft =
+         bool matchLeft =
                    position1.LeftLine != null
-                && position1.LeftLine == position2.LeftLine
+                && (position1.LeftLine == position2.LeftLine || position1.LeftLine == position2.RightLine)
                 && position1.LeftPath == position2.LeftPath;
-         return matchRightWithRight || matchLeftWithLeft;
+         return matchRight || matchLeft;
       }
 
       // Collect discussions started for lines within DiffContextDepth range near `position`

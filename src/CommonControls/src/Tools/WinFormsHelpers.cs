@@ -282,16 +282,24 @@ namespace mrHelper.CommonControls.Tools
          }
       }
 
-      public static void ClickEither(Button control1, Button control2, bool clickFirstControl, bool clickSecondControl)
+      public static void PerformClick(Tuple<Button, bool>[] buttonsToClick)
       {
-         if (clickFirstControl)
+         foreach (Tuple<Button, bool> button in buttonsToClick)
          {
-            control1.PerformClick();
+            if (button.Item2)
+            {
+               button.Item1.PerformClick();
+            }
          }
-         else if (clickSecondControl)
-         {
-            control2.PerformClick();
-         }
+      }
+
+      public static void ConvertMouseWheelToClick(Button buttonOnScrollDown, Button buttonOnScrollUp, int delta)
+      {
+         IEnumerable<Tuple<Button, bool>> clickMap = Enumerable.Zip(
+            new Button[]{ buttonOnScrollDown, buttonOnScrollUp},
+            new bool[]{ delta < 0, delta > 0},
+            (arg1, arg2) => new Tuple<Button, bool>(arg1, arg2));
+         WinFormsHelpers.PerformClick(clickMap.ToArray());
       }
    }
 }

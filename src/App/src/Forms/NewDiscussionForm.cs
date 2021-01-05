@@ -20,7 +20,7 @@ namespace mrHelper.App.Forms
       internal NewDiscussionForm(
          DiffPosition newDiscussionPosition,
          ReportedDiscussionNote[] oldNotes,
-         Func<DiffPosition, bool, DiffPosition> scrollPosition,
+         Func<DiffPosition, bool, DiffPosition> onScrollPosition,
          Action onDialogClosed,
          Func<string, bool, DiffPosition, Task> onSubmitNewDiscussion,
          Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> onEditOldNote,
@@ -35,21 +35,25 @@ namespace mrHelper.App.Forms
          applyFont(Program.Settings.MainWindowFontSizeName);
          createWPFTextBox();
          _groupBoxRelatedThreadsDefaultHeight = groupBoxRelated.Height;
+         _diffContextDefaultHeight = panelHtmlContextCanvas.Height;
 
          this.Text = Constants.StartNewThreadCaption;
          labelInvisibleCharactersHint.Text = Constants.WarningOnUnescapedMarkdown;
-         _onDialogClosed = onDialogClosed;
-         _newDiscussionPosition = newDiscussionPosition;
-         _scrollPosition = scrollPosition;
 
          buttonCancel.ConfirmationCondition =
             () => (getNewNoteText().Length > MaximumTextLengthTocancelWithoutConfirmation) || areHistoryModifications();
+
+         _onDialogClosed = onDialogClosed;
+         _onScrollPosition = onScrollPosition;
          _onSubmitNewDiscussion = onSubmitNewDiscussion;
          _onEditOldNote = onEditOldNote;
          _onDeleteOldNote = onDeleteOldNote;
          _getNewDiscussionDiffContext = getNewDiscussionDiffContext;
          _getDiffContext = getDiffContext;
          _getRelatedDiscussions = getRelatedDiscussions;
+
+         NewDiscussionPosition = newDiscussionPosition;
+         _needIncludeContextInNewDiscussion = true;
 
          _reportedNotes = oldNotes.ToList();
          resetCurrentNoteIndex();
@@ -58,7 +62,6 @@ namespace mrHelper.App.Forms
       private void NewDiscussionForm_Load(object sender, EventArgs e)
       {
          checkBoxShowRelated.Checked = false;
-         updateControlState();
       }
 
       async private void buttonOK_Click(object sender, EventArgs e)
@@ -79,20 +82,20 @@ namespace mrHelper.App.Forms
       private void buttonScrollUp_Click(object sender, EventArgs e)
       {
          Debug.Assert(canScroll(true));
-         _newDiscussionPosition = scroll(true);
+         NewDiscussionPosition = scroll(true);
          updateControlState();
       }
 
       private void buttonScrollDown_Click(object sender, EventArgs e)
       {
          Debug.Assert(canScroll(false));
-         _newDiscussionPosition = scroll(false);
+         NewDiscussionPosition = scroll(false);
          updateControlState();
       }
 
       private void panelScroll_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
       {
-         WinFormsHelpers.ClickEither(buttonScrollDown, buttonScrollUp, e.Delta < 0, e.Delta > 0);
+         WinFormsHelpers.ConvertMouseWheelToClick(buttonScrollDown, buttonScrollUp, e.Delta);
       }
 
       private void NewDiscussionForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -118,7 +121,7 @@ namespace mrHelper.App.Forms
 
       private void textBoxDiscussionBody_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
       {
-         saveNoteText(_currentNoteIndex, textBoxDiscussionBody.Text);
+         saveNoteText(CurrentNoteIndex, textBoxDiscussionBody.Text);
          updateInvisibleCharactersHint();
          updateModificationsHint();
       }
@@ -138,7 +141,7 @@ namespace mrHelper.App.Forms
       private void buttonPrev_Click(object sender, EventArgs e)
       {
          Debug.Assert(_reportedNotes.Any());
-         Debug.Assert(_currentNoteIndex > 0);
+         Debug.Assert(CurrentNoteIndex > 0);
          decrementCurrentNoteIndex();
          updateControlState();
       }
@@ -146,7 +149,7 @@ namespace mrHelper.App.Forms
       private void buttonNext_Click(object sender, EventArgs e)
       {
          Debug.Assert(_reportedNotes.Any());
-         Debug.Assert(_currentNoteIndex < _reportedNotes.Count());
+         Debug.Assert(CurrentNoteIndex < _reportedNotes.Count());
          incrementCurrentNoteIndex();
          updateControlState();
       }
@@ -162,7 +165,7 @@ namespace mrHelper.App.Forms
 
       private void groupBoxRelated_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
       {
-         WinFormsHelpers.ClickEither(buttonNextRelatedDiscussion, buttonPrevRelatedDiscussion, e.Delta < 0, e.Delta > 0);
+         WinFormsHelpers.ConvertMouseWheelToClick(buttonNextRelatedDiscussion, buttonPrevRelatedDiscussion, e.Delta);
       }
 
       private void panelNavigation_SizeChanged(object sender, EventArgs e)
@@ -193,7 +196,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(_relatedDiscussionIndex.HasValue);
          Debug.Assert(_relatedDiscussionIndex.Value > 0);
          decrementRelatedDiscussionIndex();
-         updateRelatedDiscussionControlState();
+         updateControlState();
       }
 
       private void buttonRelatedNext_Click(object sender, EventArgs e)
@@ -202,21 +205,117 @@ namespace mrHelper.App.Forms
          Debug.Assert(_relatedDiscussionIndex.HasValue);
          Debug.Assert(_relatedDiscussionIndex.Value < _relatedDiscussions.Length);
          incrementRelatedDiscussionIndex();
-         updateRelatedDiscussionControlState();
+         updateControlState();
       }
 
       private void checkBoxShowRelated_CheckedChanged(object sender, EventArgs e)
       {
-         updateRelatedThreadsGroupBoxVisibility(checkBoxShowRelated.Checked);
+         updateRelatedDiscussions();
+         updateControlState();
+      }
+
+      private void checkBoxIncludeContext_CheckedChanged(object sender, EventArgs e)
+      {
+         if (isCurrentNoteNew())
+         {
+            _needIncludeContextInNewDiscussion = checkBoxIncludeContext.Checked;
+         }
+         updateRelatedDiscussions();
+         updateControlState();
       }
 
       private void panelNavigation_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
       {
-         WinFormsHelpers.ClickEither(buttonNext, buttonPrev, e.Delta < 0, e.Delta > 0);
+         WinFormsHelpers.ConvertMouseWheelToClick(buttonNext, buttonPrev, e.Delta);
       }
 
-      private void updateRelatedThreadsGroupBoxVisibility(bool doVisible)
+      private bool needShowDiffContext()
       {
+         return checkBoxIncludeContext.Checked && getCurrentNoteDiffPosition() != null;
+      }
+
+      private void updateDiffContextVisibility()
+      {
+         bool doVisible = needShowDiffContext();
+         if (doVisible == panelHtmlContextCanvas.Visible)
+         {
+            return;
+         }
+
+         if (!doVisible)
+         {
+            tabControlMode.Location = new System.Drawing.Point(
+               tabControlMode.Location.X,
+               tabControlMode.Location.Y - _diffContextDefaultHeight);
+            tabControlMode.Size = new System.Drawing.Size(
+               tabControlMode.Size.Width,
+               tabControlMode.Size.Height + _diffContextDefaultHeight);
+            panelNavigation.Location = new System.Drawing.Point(
+               panelNavigation.Location.X,
+               panelNavigation.Location.Y - _diffContextDefaultHeight);
+            buttonInsertCode.Location = new System.Drawing.Point(
+               buttonInsertCode.Location.X,
+               buttonInsertCode.Location.Y - _diffContextDefaultHeight);
+            buttonOK.Location = new System.Drawing.Point(
+               buttonOK.Location.X,
+               buttonOK.Location.Y - _diffContextDefaultHeight);
+            buttonCancel.Location = new System.Drawing.Point(
+               buttonCancel.Location.X,
+               buttonCancel.Location.Y - _diffContextDefaultHeight);
+
+            MinimumSize = new System.Drawing.Size(
+               MinimumSize.Width,
+               MinimumSize.Height - _diffContextDefaultHeight);
+            Size = new System.Drawing.Size(
+               Size.Width,
+               Size.Height - _diffContextDefaultHeight);
+
+            panelHtmlContextCanvas.Height = 0;
+            panelHtmlContextCanvas.Visible = false;
+         }
+         else
+         {
+            Size = new System.Drawing.Size(
+               Size.Width,
+               Size.Height + _diffContextDefaultHeight);
+            MinimumSize = new System.Drawing.Size(
+               MinimumSize.Width,
+               MinimumSize.Height + _diffContextDefaultHeight);
+
+            tabControlMode.Size = new System.Drawing.Size(
+               tabControlMode.Size.Width,
+               tabControlMode.Size.Height - _diffContextDefaultHeight);
+            tabControlMode.Location = new System.Drawing.Point(
+               tabControlMode.Location.X,
+               tabControlMode.Location.Y + _diffContextDefaultHeight);
+            panelNavigation.Location = new System.Drawing.Point(
+               panelNavigation.Location.X,
+               panelNavigation.Location.Y + _diffContextDefaultHeight);
+            buttonInsertCode.Location = new System.Drawing.Point(
+               buttonInsertCode.Location.X,
+               buttonInsertCode.Location.Y + _diffContextDefaultHeight);
+            buttonOK.Location = new System.Drawing.Point(
+               buttonOK.Location.X,
+               buttonOK.Location.Y + _diffContextDefaultHeight);
+            buttonCancel.Location = new System.Drawing.Point(
+               buttonCancel.Location.X,
+               buttonCancel.Location.Y + _diffContextDefaultHeight);
+
+            panelHtmlContextCanvas.Height = _diffContextDefaultHeight;
+            panelHtmlContextCanvas.Visible = true;
+         }
+      }
+
+      private bool needShowRelatedDiscussions()
+      {
+         return checkBoxShowRelated.Checked
+             && _relatedDiscussions.Any()
+             && needShowDiffContext();
+       }
+
+      private void updateRelatedThreadsGroupBoxVisibility()
+      {
+         bool doVisible = needShowRelatedDiscussions(); ;
          if (doVisible == groupBoxRelated.Visible)
          {
             return;
@@ -280,14 +379,14 @@ namespace mrHelper.App.Forms
 
       private void decrementCurrentNoteIndex()
       {
-         _currentNoteIndex--;
+         CurrentNoteIndex--;
       }
 
       private void incrementCurrentNoteIndex()
       {
-         if (_currentNoteIndex < _reportedNotes.Count() - 1)
+         if (CurrentNoteIndex < _reportedNotes.Count() - 1)
          {
-            _currentNoteIndex++;
+            CurrentNoteIndex++;
          }
          else
          {
@@ -297,15 +396,15 @@ namespace mrHelper.App.Forms
 
       private void resetCurrentNoteIndex()
       {
-         _currentNoteIndex = getNewNoteFakeIndex();
+         CurrentNoteIndex = getNewNoteFakeIndex();
       }
 
       private void deleteNote()
       {
-         ReportedDiscussionNoteKey key = _reportedNotes[_currentNoteIndex].Key;
+         ReportedDiscussionNoteKey key = _reportedNotes[CurrentNoteIndex].Key;
          _deletedNotes.Add(key);
          _modifiedNoteTexts.Remove(key);
-         _reportedNotes.RemoveAt(_currentNoteIndex);
+         _reportedNotes.RemoveAt(CurrentNoteIndex);
       }
 
       private void saveNoteText(int index, string text)
@@ -336,14 +435,14 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            ReportedDiscussionNoteKey key = _reportedNotes[_currentNoteIndex].Key;
+            ReportedDiscussionNoteKey key = _reportedNotes[CurrentNoteIndex].Key;
             if (_modifiedNoteTexts.TryGetValue(key, out string value))
             {
                return value;
             }
             else
             {
-               return _reportedNotes[_currentNoteIndex].Content.Body;
+               return _reportedNotes[CurrentNoteIndex].Content.Body;
             }
          }
       }
@@ -367,8 +466,7 @@ namespace mrHelper.App.Forms
       {
          if (position == null)
          {
-            htmlPanel.Text = "This discussion is not associated with a diff context";
-            textBoxFileName.Text = "N/A";
+            htmlPanel.Text = "This discussion is not associated with code";
             return;
          }
 
@@ -381,6 +479,7 @@ namespace mrHelper.App.Forms
       {
          if (position == null)
          {
+            textBoxFileName.Text = "This discussion is not associated with code";
             return;
          }
 
@@ -400,37 +499,55 @@ namespace mrHelper.App.Forms
 
       private void updateControlState()
       {
-         buttonPrev.Enabled = _reportedNotes.Any() && _currentNoteIndex > 0;
-         buttonNext.Enabled = _reportedNotes.Any() && _currentNoteIndex < _reportedNotes.Count();
+         buttonPrev.Enabled = _reportedNotes.Any() && CurrentNoteIndex > 0;
+         buttonNext.Enabled = _reportedNotes.Any() && CurrentNoteIndex < _reportedNotes.Count();
          toolTip.SetToolTip(buttonNext,
-            _currentNoteIndex < _reportedNotes.Count() - 1 ? "Go to my next discussion" : "Go to new discussion");
+            CurrentNoteIndex < _reportedNotes.Count() - 1 ? "Go to my next discussion" : "Go to new discussion");
          buttonDelete.Enabled = !isCurrentNoteNew();
 
          labelCounter.Visible = !isCurrentNoteNew();
-         labelCounter.Text = String.Format("{0} / {1}", _currentNoteIndex + 1, _reportedNotes.Count());
-
-         DiffPosition position = isCurrentNoteNew()
-            ? _newDiscussionPosition
-            : _reportedNotes[_currentNoteIndex].Position.DiffPosition;
-         showDiscussionContext(position, htmlPanelContext);
-         showFileName(position);
+         labelCounter.Text = String.Format("{0} / {1}", CurrentNoteIndex + 1, _reportedNotes.Count());
          textBoxDiscussionBody.Text = getCurrentNoteText();
+
+         checkBoxIncludeContext.Checked = isCurrentNoteNew()
+            ? _needIncludeContextInNewDiscussion : getCurrentNoteDiffPosition() != null;
          checkBoxIncludeContext.Enabled = isCurrentNoteNew();
 
-         ReportedDiscussionNoteKey? keyOpt = isCurrentNoteNew()
-            ? new ReportedDiscussionNoteKey?()
-            : _reportedNotes[_currentNoteIndex].Key;
-         _relatedDiscussions = _getRelatedDiscussions(keyOpt, position).ToArray();
-         checkBoxShowRelated.Text = String.Format("Show related threads ({0})", _relatedDiscussions.Count());
-         updateRelatedDiscussionControlState();
+         bool isScrollingEnabled = isCurrentNoteNew() && _needIncludeContextInNewDiscussion;
+         buttonScrollUp.Visible = isScrollingEnabled;
+         buttonScrollUp.Enabled = isScrollingEnabled && canScroll(true);
+         buttonScrollDown.Visible = isScrollingEnabled;
+         buttonScrollDown.Enabled = isScrollingEnabled && canScroll(false);
 
-         bool canScrollUp = isCurrentNoteNew() && canScroll(true);
-         bool canScrollDn = isCurrentNoteNew() && canScroll(false);
-         buttonScrollUp.Enabled = canScrollUp;
-         buttonScrollDown.Enabled = canScrollDn;
+         showFileName(needShowDiffContext() ? getCurrentNoteDiffPosition() : null);
+         showDiscussionContext(needShowDiffContext() ? getCurrentNoteDiffPosition() : null, htmlPanelContext);
+
+         updateDiffContextVisibility();
+         updateRelatedDiscussionControlState();
 
          updatePreview(htmlPanelPreview, getCurrentNoteText());
          updateModificationsHint();
+      }
+
+      private DiffPosition getCurrentNoteDiffPosition()
+      {
+         return isCurrentNoteNew()
+            ? NewDiscussionPosition
+            : _reportedNotes[CurrentNoteIndex].Position.DiffPosition;
+      }
+
+      private void updateRelatedDiscussions()
+      {
+         if (!needShowDiffContext())
+         {
+            _relatedDiscussions = Array.Empty<ReportedDiscussionNote>();
+            return;
+         }
+
+         ReportedDiscussionNoteKey? keyOpt = isCurrentNoteNew()
+            ? new ReportedDiscussionNoteKey?()
+            : _reportedNotes[CurrentNoteIndex].Key;
+         _relatedDiscussions = _getRelatedDiscussions(keyOpt, getCurrentNoteDiffPosition()).ToArray();
       }
 
       private void updateInvisibleCharactersHint()
@@ -475,6 +592,7 @@ namespace mrHelper.App.Forms
             _relatedDiscussionIndex = null;
             checkBoxShowRelated.Enabled = false;
          }
+         checkBoxShowRelated.Text = String.Format("Show related threads ({0})", _relatedDiscussions.Count());
 
          int currentRelatedIndex = areRelatedDisussionsAvailable ? _relatedDiscussionIndex.Value : 0;
          int currentRelatedIndexOneBased = areRelatedDisussionsAvailable ? _relatedDiscussionIndex.Value + 1 : 0;
@@ -489,10 +607,12 @@ namespace mrHelper.App.Forms
 
          htmlPanelPreview.Enabled = areRelatedDisussionsAvailable;
          labelRelatedDiscussionAuthor.Visible = areRelatedDisussionsAvailable;
-         if (areRelatedDisussionsAvailable)
+
+         updateRelatedThreadsGroupBoxVisibility();
+         if (needShowRelatedDiscussions())
          {
             ReportedDiscussionNote note = _relatedDiscussions[_relatedDiscussionIndex.Value];
-            bool areRefsEqual = note.Position.DiffPosition.Refs.Equals(_newDiscussionPosition.Refs);
+            bool areRefsEqual = note.Position.DiffPosition.Refs.Equals(NewDiscussionPosition.Refs);
             labelDifferentContextHint.Visible = !areRefsEqual;
             labelRelatedDiscussionAuthor.Text = "Author: " + note.Content.AuthorName;
             updatePreview(htmlPanelPreviewRelatedDiscussion, note.Content.Body);
@@ -505,7 +625,8 @@ namespace mrHelper.App.Forms
             htmlPanelRelatedDiscussionContext.Text = String.Empty;
          }
 
-         updateRelatedThreadsGroupBoxVisibility(areRelatedDisussionsAvailable && checkBoxShowRelated.Checked);
+         // We want to hide "Show related" checkbox when related discussions don't make sense or unwanted
+         checkBoxShowRelated.Visible = needShowDiffContext();
       }
 
       private bool areHistoryModifications()
@@ -574,8 +695,7 @@ namespace mrHelper.App.Forms
       private async Task submitNewDiscussion()
       {
          string body = getNewNoteText();
-         bool needIncludeContext = checkBoxIncludeContext.Checked;
-         await _onSubmitNewDiscussion?.Invoke(body, needIncludeContext, _newDiscussionPosition);
+         await _onSubmitNewDiscussion?.Invoke(body, _needIncludeContextInNewDiscussion, NewDiscussionPosition);
       }
 
       private async Task submitOldEditedNotes()
@@ -601,7 +721,7 @@ namespace mrHelper.App.Forms
 
       private bool isCurrentNoteNew()
       {
-         return _currentNoteIndex == getNewNoteFakeIndex();
+         return CurrentNoteIndex == getNewNoteFakeIndex();
       }
 
       private int getNewNoteFakeIndex()
@@ -611,7 +731,7 @@ namespace mrHelper.App.Forms
 
       private DiffPosition scroll(bool up)
       {
-         return _scrollPosition(_newDiscussionPosition, up);
+         return _onScrollPosition(NewDiscussionPosition, up);
       }
 
       private bool canScroll(bool up)
@@ -637,6 +757,18 @@ namespace mrHelper.App.Forms
       /// Currently selected note index in _reportedNotes collection.
       /// If the index is equal to _reportedNotes size then current note is the new note.
       /// </summary>
+      private int CurrentNoteIndex
+      {
+         get
+         {
+            return _currentNoteIndex;
+         }
+         set
+         {
+            _currentNoteIndex = value;
+            updateRelatedDiscussions();
+         }
+      }
       private int _currentNoteIndex;
 
       /// <summary>
@@ -653,12 +785,29 @@ namespace mrHelper.App.Forms
       /// <summary>
       /// DiffPosition for a note that is going to be reported
       /// </summary>
+      private DiffPosition NewDiscussionPosition
+      {
+         get
+         {
+            return _newDiscussionPosition;
+         }
+         set
+         {
+            _newDiscussionPosition = value;
+            updateRelatedDiscussions();
+         }
+      }
       private DiffPosition _newDiscussionPosition;
+
+      /// <summary>
+      /// User-defined checkbox value for a new discussion. Saved to restore on navigation.
+      /// </summary>
+      private bool _needIncludeContextInNewDiscussion;
 
       /// <summary>
       /// Functor which scrolls a position up/down.
       /// </summary>
-      private readonly Func<DiffPosition, bool, DiffPosition> _scrollPosition;
+      private readonly Func<DiffPosition, bool, DiffPosition> _onScrollPosition;
 
       /// <summary>
       /// Cached text of a note that is going to be reported.
@@ -685,6 +834,7 @@ namespace mrHelper.App.Forms
       /// Cached height allows to hide the groupbox and show it back by user request.
       /// </summary>
       private readonly int _groupBoxRelatedThreadsDefaultHeight;
+      private readonly int _diffContextDefaultHeight;
    }
 }
 

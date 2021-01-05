@@ -4,12 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
-using mrHelper.App.Helpers;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.CommonControls.Tools;
 using mrHelper.GitLabClient;
-using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 
 namespace mrHelper.App.Forms
 {

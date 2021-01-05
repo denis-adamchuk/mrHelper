@@ -98,6 +98,7 @@
          this.checkBoxIncludeContext.TabIndex = 5;
          this.checkBoxIncludeContext.Text = "Include diff context in the discussion";
          this.checkBoxIncludeContext.UseVisualStyleBackColor = true;
+         this.checkBoxIncludeContext.CheckedChanged += new System.EventHandler(this.checkBoxIncludeContext_CheckedChanged);
          // 
          // textBoxFileName
          // 
