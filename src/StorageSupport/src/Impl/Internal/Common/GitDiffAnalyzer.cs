@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using mrHelper.Common.Exceptions;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.StorageSupport
 {
@@ -49,7 +50,7 @@ namespace mrHelper.StorageSupport
 
       public bool IsLineAddedOrModified(int linenumber, string sha1, string sha2, string filename1, string filename2)
       {
-         IEnumerable<GitDiffSection> sections = getDiffSections(_git, sha1, sha2, filename1, filename2);
+         IEnumerable<GitDiffSection> sections = getDiffSections(sha1, sha2, filename1, filename2);
          foreach (GitDiffSection section in sections)
          {
             if (linenumber >= section.RightSectionStart && linenumber < section.RightSectionEnd)
@@ -62,7 +63,7 @@ namespace mrHelper.StorageSupport
 
       public bool IsLineDeleted(int linenumber, string sha1, string sha2, string filename1, string filename2)
       {
-         IEnumerable<GitDiffSection> sections = getDiffSections(_git, sha1, sha2, filename1, filename2);
+         IEnumerable<GitDiffSection> sections = getDiffSections(sha1, sha2, filename1, filename2);
          foreach (GitDiffSection section in sections)
          {
             if (linenumber >= section.LeftSectionStart && linenumber < section.LeftSectionEnd)
@@ -76,9 +77,14 @@ namespace mrHelper.StorageSupport
       /// <summary>
       /// Throws GitDiffAnalyzerException.
       /// </summary>
-      static private IEnumerable<GitDiffSection> getDiffSections(IGitCommandService git,
-         string sha1, string sha2, string filename1, string filename2)
+      private IEnumerable<GitDiffSection> getDiffSections(string sha1, string sha2, string filename1, string filename2)
       {
+         CacheKey key = new CacheKey(sha1, sha2, filename1, filename2);
+         if (_cachedSections.TryGetValue(key, out IEnumerable<GitDiffSection> cachedSections))
+         {
+            return cachedSections;
+         }
+
          List<GitDiffSection> sections = new List<GitDiffSection>();
 
          GitDiffArguments arguments = new GitDiffArguments(
@@ -89,7 +95,7 @@ namespace mrHelper.StorageSupport
          IEnumerable<string> diff;
          try
          {
-            diff = git?.ShowDiff(arguments);
+            diff = _git?.ShowDiff(arguments);
          }
          catch (GitNotAvailableDataException ex)
          {
@@ -127,10 +133,32 @@ namespace mrHelper.StorageSupport
             sections.Add(section);
          }
 
+         _cachedSections.Add(key, sections);
          return sections;
       }
 
       private readonly IGitCommandService _git;
+
+      private struct CacheKey
+      {
+         public CacheKey(string leftSha, string rightSha, string leftPath, string rightPath)
+         {
+            LeftSha = leftSha;
+            RightSha = rightSha;
+            LeftPath = leftPath;
+            RightPath = rightPath;
+         }
+
+         internal string LeftSha { get; }
+         internal string RightSha { get; }
+         internal string LeftPath { get; }
+         internal string RightPath { get; }
+      }
+
+      private readonly SelfCleanUpDictionary<CacheKey, IEnumerable<GitDiffSection>> _cachedSections =
+         new SelfCleanUpDictionary<CacheKey, IEnumerable<GitDiffSection>>(CacheCleanupPeriodSeconds);
+
+      private readonly static int CacheCleanupPeriodSeconds = 60 * 60 * 24 * 5; // 5 days
    }
 }
 

@@ -20,6 +20,8 @@ namespace mrHelper.StorageSupport
       internal GitCommandService(IExternalProcessManager processManager)
       {
          _processManager = processManager;
+         FullContextDiffProvider = new FullContextDiffProvider(this);
+         GitDiffAnalyzer = new GitDiffAnalyzer(this);
       }
 
       public IEnumerable<string> ShowRevision(GitShowRevisionArguments arguments)

@@ -49,6 +49,12 @@ namespace mrHelper.StorageSupport
       public FullContextDiff GetFullContextDiff(string leftSHA, string rightSHA,
          string leftFileName, string rightFileName)
       {
+         CacheKey key = new CacheKey(leftSHA, rightSHA, leftFileName, rightFileName);
+         if (_cachedContexts.TryGetValue(key, out FullContextDiff context))
+         {
+            return context;
+         }
+
          FullContextDiff fullContextDiff = new FullContextDiff(new SparsedList<string>(), new SparsedList<string>());
 
          GitDiffArguments arguments = new GitDiffArguments(
@@ -92,7 +98,7 @@ namespace mrHelper.StorageSupport
                }
                continue;
             }
-            var lineOrig = line.Substring(1, line.Length - 1);
+            string lineOrig = line.Substring(1, line.Length - 1);
             switch (sign)
             {
                case '-':
@@ -109,10 +115,33 @@ namespace mrHelper.StorageSupport
                   break;
             }
          }
+
+         _cachedContexts.Add(key, fullContextDiff);
          return fullContextDiff;
       }
 
       private readonly IGitCommandService _git;
+
+      private struct CacheKey
+      {
+         public CacheKey(string leftSha, string rightSha, string leftPath, string rightPath)
+         {
+            LeftSha = leftSha;
+            RightSha = rightSha;
+            LeftPath = leftPath;
+            RightPath = rightPath;
+         }
+
+         internal string LeftSha { get; }
+         internal string RightSha { get; }
+         internal string LeftPath { get; }
+         internal string RightPath { get; }
+      }
+
+      private readonly SelfCleanUpDictionary<CacheKey, FullContextDiff> _cachedContexts =
+         new SelfCleanUpDictionary<CacheKey, FullContextDiff>(CacheCleanupPeriodSeconds);
+
+      private readonly static int CacheCleanupPeriodSeconds = 60 * 60 * 24 * 5; // 5 days
    }
 }
 
