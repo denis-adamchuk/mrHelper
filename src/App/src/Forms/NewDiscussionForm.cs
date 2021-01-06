@@ -61,7 +61,14 @@ namespace mrHelper.App.Forms
 
       private void NewDiscussionForm_Load(object sender, EventArgs e)
       {
-         checkBoxShowRelated.Checked = false;
+         bool currentCheckBoxShowRelatedState = checkBoxShowRelated.Checked;
+         checkBoxShowRelated.Checked = Program.Settings.ShowRelatedThreads;
+         bool firedCheckedChangedEvent = currentCheckBoxShowRelatedState != checkBoxShowRelated.Checked;
+         if (!firedCheckedChangedEvent) // optimization: don't execute code which is executed within event handler
+         {
+            updateRelatedDiscussions();
+            updateControlState();
+         }
       }
 
       async private void buttonOK_Click(object sender, EventArgs e)
@@ -210,6 +217,7 @@ namespace mrHelper.App.Forms
 
       private void checkBoxShowRelated_CheckedChanged(object sender, EventArgs e)
       {
+         Program.Settings.ShowRelatedThreads = checkBoxShowRelated.Checked;
          updateRelatedDiscussions();
          updateControlState();
       }
@@ -614,7 +622,8 @@ namespace mrHelper.App.Forms
             ReportedDiscussionNote note = _relatedDiscussions[_relatedDiscussionIndex.Value];
             bool areRefsEqual = note.Position.DiffPosition.Refs.Equals(NewDiscussionPosition.Refs);
             labelDifferentContextHint.Visible = !areRefsEqual;
-            labelRelatedDiscussionAuthor.Text = "Author: " + note.Content.AuthorName;
+            labelRelatedDiscussionAuthor.Text = String.Format("{0} on {1}",
+               note.Details.AuthorName, note.Details.CreatedAt.ToLocalTime().ToString(Constants.TimeStampFormat));
             updatePreview(htmlPanelPreviewRelatedDiscussion, note.Content.Body);
             showDiscussionContext(note.Position.DiffPosition, htmlPanelRelatedDiscussionContext);
          }
@@ -625,7 +634,7 @@ namespace mrHelper.App.Forms
             htmlPanelRelatedDiscussionContext.Text = String.Empty;
          }
 
-         // We want to hide "Show related" checkbox when related discussions don't make sense or unwanted
+         // We want to hide "Show related" check box when related discussions don't make sense or unwanted
          checkBoxShowRelated.Visible = needShowDiffContext();
       }
 
@@ -707,7 +716,7 @@ namespace mrHelper.App.Forms
             string body = keyValuePair.Value;
             await _onEditOldNote(
                new ReportedDiscussionNoteKey(noteId, discussionId),
-               new ReportedDiscussionNoteContent(body, String.Empty));
+               new ReportedDiscussionNoteContent(body));
          }
       }
 

@@ -251,7 +251,7 @@ namespace mrHelper.App.Interprocess
                DiscussionNote firstNote = discussion.Notes.First();
                Core.Matching.DiffPosition firstNotePosition = PositionConverter.Convert(firstNote.Position);
                return new ReportedDiscussionNote(firstNote.Id, discussion.Id, firstNotePosition,
-                  firstNote.Body, firstNote.Author.Name);
+                  firstNote.Body, firstNote.Author.Name, firstNote.Created_At);
             });
       }
 
@@ -316,7 +316,7 @@ namespace mrHelper.App.Interprocess
                      && (!keyOpt.HasValue || keyOpt.Value.Id != firstNote.Id))
                   {
                      ReportedDiscussionNote note = new ReportedDiscussionNote(firstNote.Id, discussion.Id,
-                        firstNotePosition, firstNote.Body, firstNote.Author.Name);
+                        firstNotePosition, firstNote.Body, firstNote.Author.Name, firstNote.Created_At);
                      relatedNotes.Add(note);
                   }
                }

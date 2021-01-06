@@ -103,6 +103,9 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowWarningOnHideToTrayKeyName      = "ShowWarningOnHideToTray";
       private static readonly bool   ShowWarningOnHideToTrayDefaultValue = true;
 
+      private static readonly string ShowRelatedThreadsKeyName      = "ShowRelatedThreads";
+      private static readonly bool   ShowRelatedThreadsDefaultValue = true;
+
       private static readonly string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
       private static readonly string ColorSchemeFileNameDefaultValue = "";
 
@@ -468,6 +471,17 @@ namespace mrHelper.App.Helpers
                   out bool result) ? result : ShowWarningOnHideToTrayDefaultValue;
          }
          set { setValue(ShowWarningOnHideToTrayKeyName, boolToString(value)); }
+      }
+
+      public bool ShowRelatedThreads
+      {
+         get
+         {
+            return bool.TryParse(getValue(
+               ShowRelatedThreadsKeyName, boolToString(ShowRelatedThreadsDefaultValue)),
+                  out bool result) ? result : ShowRelatedThreadsDefaultValue;
+         }
+         set { setValue(ShowRelatedThreadsKeyName, boolToString(value)); }
       }
 
       public string DiffContextDepth
