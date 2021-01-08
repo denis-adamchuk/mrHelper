@@ -271,7 +271,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
          this.tabControlMode.Controls.Add(this.tabPageEdit);
          this.tabControlMode.Controls.Add(this.tabPagePreview);
-         this.tabControlMode.Location = new System.Drawing.Point(12, 132);
+         this.tabControlMode.Location = new System.Drawing.Point(12, 134);
          this.tabControlMode.Name = "tabControlMode";
          this.tabControlMode.SelectedIndex = 0;
          this.tabControlMode.Size = new System.Drawing.Size(724, 118);
@@ -318,7 +318,7 @@
          this.labelInvisibleCharactersHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.labelInvisibleCharactersHint.AutoSize = true;
          this.labelInvisibleCharactersHint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
-         this.labelInvisibleCharactersHint.Location = new System.Drawing.Point(12, 253);
+         this.labelInvisibleCharactersHint.Location = new System.Drawing.Point(12, 254);
          this.labelInvisibleCharactersHint.Name = "labelInvisibleCharactersHint";
          this.labelInvisibleCharactersHint.Size = new System.Drawing.Size(537, 13);
          this.labelInvisibleCharactersHint.TabIndex = 14;
@@ -368,7 +368,7 @@
          this.checkBoxShowRelated.AutoSize = true;
          this.checkBoxShowRelated.Checked = true;
          this.checkBoxShowRelated.CheckState = System.Windows.Forms.CheckState.Checked;
-         this.checkBoxShowRelated.Location = new System.Drawing.Point(568, 252);
+         this.checkBoxShowRelated.Location = new System.Drawing.Point(568, 253);
          this.checkBoxShowRelated.Name = "checkBoxShowRelated";
          this.checkBoxShowRelated.Size = new System.Drawing.Size(168, 17);
          this.checkBoxShowRelated.TabIndex = 27;
