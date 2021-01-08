@@ -9,7 +9,6 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Constants;
 using mrHelper.GitLabClient.Operators;
-using static mrHelper.GitLabClient.Operators.GlobalCache;
 
 namespace mrHelper.GitLabClient.Managers
 {
@@ -266,7 +265,14 @@ namespace mrHelper.GitLabClient.Managers
 
       private void scheduleUpdate(IEnumerable<MergeRequestKey> keys, DiscussionUpdateType type)
       {
-         // make a copy of `keys` just in case
+         bool isSchedulingGlobalPeriodicUpdate() => keys == null && type == DiscussionUpdateType.PeriodicUpdate;
+         bool isProcessingGlobalPeriodicUpdate() => _scheduledUpdates
+            .Any(item => item.MergeRequests == null && item.Type == DiscussionUpdateType.PeriodicUpdate);
+         if (isSchedulingGlobalPeriodicUpdate() && isProcessingGlobalPeriodicUpdate())
+         {
+            return;
+         }
+
          _scheduledUpdates.Enqueue(new ScheduledUpdate(keys, type));
 
          _timer?.SynchronizingObject.BeginInvoke(new Action(async () =>
@@ -277,8 +283,9 @@ namespace mrHelper.GitLabClient.Managers
 
             if (_scheduledUpdates.Any())
             {
-               ScheduledUpdate scheduledUpdate = _scheduledUpdates.Dequeue();
+               ScheduledUpdate scheduledUpdate = _scheduledUpdates.Peek();
                await processScheduledUpdate(scheduledUpdate);
+               _scheduledUpdates.Dequeue();
             }
          }), null);
       }
