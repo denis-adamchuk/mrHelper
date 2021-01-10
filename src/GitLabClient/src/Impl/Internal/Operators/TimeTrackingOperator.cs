@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using GitLabSharp.Accessors;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Operators
 {
@@ -10,8 +11,9 @@ namespace mrHelper.GitLabClient.Operators
    /// </summary>
    internal class TimeTrackingOperator : BaseOperator
    {
-      internal TimeTrackingOperator(string hostname, IHostProperties settings)
-         : base(hostname, settings)
+      internal TimeTrackingOperator(string hostname, IHostProperties settings,
+         IConnectionLossListener connectionLossListener)
+         : base(hostname, settings, connectionLossListener)
       {
       }
 

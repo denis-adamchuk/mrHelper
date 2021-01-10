@@ -8,13 +8,14 @@ using mrHelper.App.Helpers.GitLab;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.App.Forms.Helpers
 {
    internal static class DiscussionHelper
    {
       async internal static Task<bool> AddCommentAsync(GitLabClient.MergeRequestKey mrk, string title,
-         IModificationListener modificationListener, User currentUser)
+         IModificationListener modificationListener, User currentUser, IConnectionLossListener connectionLossListener)
       {
          string caption = String.Format("Add comment to merge request \"{0}\"", title);
          DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
@@ -35,7 +36,7 @@ namespace mrHelper.App.Forms.Helpers
                {
                   GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
                   IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-                     gitLabInstance, modificationListener, mrk, currentUser);
+                     gitLabInstance, modificationListener, mrk, currentUser, connectionLossListener);
                   string body = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
                   await creator.CreateNoteAsync(new CreateNewNoteParameters(body));
                }
@@ -54,7 +55,8 @@ namespace mrHelper.App.Forms.Helpers
       }
 
       async internal static Task<Discussion> AddThreadAsync(GitLabClient.MergeRequestKey mrk, string title,
-         IModificationListener modificationListener, User currentUser, DataCache dataCache)
+         IModificationListener modificationListener, User currentUser, DataCache dataCache,
+         IConnectionLossListener connectionLossListener)
       {
          string caption = String.Format("Create a new thread in merge request \"{0}\"", title);
          DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
@@ -82,7 +84,7 @@ namespace mrHelper.App.Forms.Helpers
                {
                   GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
                   IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-                     gitLabInstance, modificationListener, mrk, currentUser);
+                     gitLabInstance, modificationListener, mrk, currentUser, connectionLossListener);
                   string body = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
                   discussion = await creator.CreateDiscussionAsync(new NewDiscussionParameters(body, null), false);
                }

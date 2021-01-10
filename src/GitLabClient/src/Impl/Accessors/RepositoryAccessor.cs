@@ -8,6 +8,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Constants;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient
 {
@@ -21,10 +22,12 @@ namespace mrHelper.GitLabClient
 
    public class RepositoryAccessor : IDisposable
    {
-      internal RepositoryAccessor(IHostProperties settings, ProjectKey projectKey)
+      internal RepositoryAccessor(IHostProperties settings, ProjectKey projectKey,
+         IConnectionLossListener connectionLossListener)
       {
          _settings = settings;
          _projectKey = projectKey;
+         _connectionLossListener = connectionLossListener;
       }
 
       public Task<Comparison> Compare(string from, string to)
@@ -109,7 +112,7 @@ namespace mrHelper.GitLabClient
       {
          if (_operator == null)
          {
-            _operator = new RepositoryOperator(_projectKey, _settings);
+            _operator = new RepositoryOperator(_projectKey, _settings, _connectionLossListener);
          }
 
          try
@@ -131,7 +134,7 @@ namespace mrHelper.GitLabClient
       {
          if (_operator == null)
          {
-            _operator = new RepositoryOperator(_projectKey, _settings);
+            _operator = new RepositoryOperator(_projectKey, _settings, _connectionLossListener);
          }
 
          try
@@ -150,6 +153,7 @@ namespace mrHelper.GitLabClient
       }
 
       private readonly ProjectKey _projectKey;
+      private readonly IConnectionLossListener _connectionLossListener;
       private readonly IHostProperties _settings;
 
       private RepositoryOperator _operator;

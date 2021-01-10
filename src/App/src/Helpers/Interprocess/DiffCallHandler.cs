@@ -16,6 +16,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using static mrHelper.App.Helpers.ConfigurationHelper;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.App.Interprocess
 {
@@ -23,13 +24,15 @@ namespace mrHelper.App.Interprocess
    {
       internal DiffCallHandler(IGitCommandService git, IModificationListener modificationListener,
          User currentUser, Action<MergeRequestKey> onDiscussionSubmitted,
-         Func<MergeRequestKey, IEnumerable<Discussion>> getDiscussions)
+         Func<MergeRequestKey, IEnumerable<Discussion>> getDiscussions,
+         IConnectionLossListener connectionLossListener)
       {
          _git = git ?? throw new ArgumentException("git argument cannot be null");
          _modificationListener = modificationListener;
          _currentUser = currentUser;
          _onDiscussionSubmitted = onDiscussionSubmitted;
          _getDiscussions = getDiscussions;
+         _connectionLossListener = connectionLossListener;
       }
 
       public void Handle(MatchInfo matchInfo, Snapshot snapshot)
@@ -433,7 +436,7 @@ namespace mrHelper.App.Interprocess
             body, includeContext ? createPositionParameters(position) : new PositionParameters?());
 
          IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-            gitLabInstance, _modificationListener, mrk, _currentUser);
+            gitLabInstance, _modificationListener, mrk, _currentUser, _connectionLossListener);
 
          try
          {
@@ -465,7 +468,7 @@ namespace mrHelper.App.Interprocess
          string discussionId, int noteId, string text)
       {
          IDiscussionEditor editor = Shortcuts.GetDiscussionEditor(
-            gitLabInstance, _modificationListener, mrk, discussionId);
+            gitLabInstance, _modificationListener, mrk, discussionId, _connectionLossListener);
          return editor.ModifyNoteBodyAsync(noteId, text);
       }
 
@@ -473,7 +476,7 @@ namespace mrHelper.App.Interprocess
          string discussionId, int noteId)
       {
          IDiscussionEditor editor = Shortcuts.GetDiscussionEditor(
-            gitLabInstance, _modificationListener, mrk, discussionId);
+            gitLabInstance, _modificationListener, mrk, discussionId, _connectionLossListener);
          return editor.DeleteNoteAsync(noteId);
       }
 
@@ -521,6 +524,7 @@ namespace mrHelper.App.Interprocess
       private readonly User _currentUser;
       private readonly Action<MergeRequestKey> _onDiscussionSubmitted;
       private readonly Func<MergeRequestKey, IEnumerable<Discussion>> _getDiscussions;
+      private readonly IConnectionLossListener _connectionLossListener;
 
       private struct MismatchWhitelistKey : IEquatable<MismatchWhitelistKey>
       {

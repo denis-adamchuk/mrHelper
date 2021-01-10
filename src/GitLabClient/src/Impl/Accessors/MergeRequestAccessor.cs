@@ -7,7 +7,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient.Accessors;
-using GitLabSharp.Accessors;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient
 {
@@ -22,17 +22,18 @@ namespace mrHelper.GitLabClient
    public class MergeRequestAccessor
    {
       internal MergeRequestAccessor(IHostProperties settings, ProjectKey projectKey,
-         IModificationListener modificationListener)
+         IModificationListener modificationListener, IConnectionLossListener connectionLossListener)
       {
          _settings = settings;
          _projectKey = projectKey;
          _modificationListener = modificationListener;
+         _connectionLossListener = connectionLossListener;
       }
 
       async public Task<MergeRequest> SearchMergeRequestAsync(int mergeRequestIId, bool onlyOpen)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
-            _projectKey.HostName, _settings))
+            _projectKey.HostName, _settings, _connectionLossListener))
          {
             try
             {
@@ -55,17 +56,19 @@ namespace mrHelper.GitLabClient
 
       public MergeRequestCreator GetMergeRequestCreator()
       {
-         return new MergeRequestCreator(_projectKey, _settings);
+         return new MergeRequestCreator(_projectKey, _settings, _connectionLossListener);
       }
 
       public SingleMergeRequestAccessor GetSingleMergeRequestAccessor(int iid)
       {
-         return new SingleMergeRequestAccessor(_settings, new MergeRequestKey(_projectKey, iid), _modificationListener);
+         return new SingleMergeRequestAccessor(_settings, new MergeRequestKey(_projectKey, iid),
+            _modificationListener, _connectionLossListener);
       }
 
       private readonly IHostProperties _settings;
       private readonly ProjectKey _projectKey;
       private readonly IModificationListener _modificationListener;
+      private readonly IConnectionLossListener _connectionLossListener;
    }
 }
 

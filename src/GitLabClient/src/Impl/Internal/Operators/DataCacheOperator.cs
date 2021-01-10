@@ -6,6 +6,7 @@ using Version = GitLabSharp.Entities.Version;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Constants;
 using System;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Operators
 {
@@ -14,8 +15,9 @@ namespace mrHelper.GitLabClient.Operators
    /// </summary>
    internal class DataCacheOperator : BaseOperator
    {
-      internal DataCacheOperator(string host, IHostProperties settings)
-         : base(host, settings)
+      internal DataCacheOperator(string host, IHostProperties settings,
+         IConnectionLossListener connectionLossListener)
+         : base(host, settings, connectionLossListener)
       {
       }
 

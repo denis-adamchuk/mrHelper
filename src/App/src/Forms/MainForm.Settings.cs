@@ -506,8 +506,7 @@ namespace mrHelper.App.Forms
          {
             string hostname = StringUtils.GetHostWithPrefix(form.Host);
             string accessToken = form.AccessToken;
-            ConnectionChecker connectionChecker = new ConnectionChecker();
-            ConnectionCheckStatus status = await connectionChecker.CheckConnection(hostname, accessToken);
+            ConnectionCheckStatus status = await _connectionChecker.CheckConnection(hostname, accessToken);
             if (status != ConnectionCheckStatus.OK)
             {
                string message =
@@ -624,7 +623,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(projects != null);
 
          GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _connectionChecker);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects",
             "Add project", "Type project name in group/project format",
             projects, new EditProjectsListViewCallback(rawDataAccessor), true))
@@ -660,7 +659,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(users != null);
 
          GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _connectionChecker);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users",
             "Add username", "Type a name of GitLab user, teams allowed",
             users, new EditUsersListViewCallback(rawDataAccessor), false))

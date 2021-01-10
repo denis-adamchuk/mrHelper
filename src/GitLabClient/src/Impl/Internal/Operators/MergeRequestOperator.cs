@@ -4,13 +4,15 @@ using System.Threading.Tasks;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Operators
 {
    internal class MergeRequestOperator : BaseOperator
    {
-      internal MergeRequestOperator(string host, IHostProperties settings)
-         : base(host, settings)
+      internal MergeRequestOperator(string host, IHostProperties settings,
+         IConnectionLossListener connectionLossListener)
+         : base(host, settings, connectionLossListener)
       {
       }
 

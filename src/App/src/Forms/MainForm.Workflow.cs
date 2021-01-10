@@ -301,7 +301,7 @@ namespace mrHelper.App.Forms
          }
 
          GitLabClient.ProjectAccessor projectAccessor = Shortcuts.GetProjectAccessor(
-            new GitLabInstance(hostname, Program.Settings), _modificationNotifier);
+            new GitLabInstance(hostname, Program.Settings), _modificationNotifier, _connectionChecker);
 
          addOperationRecord("Preparing workflow to the first launch has started");
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
@@ -332,7 +332,7 @@ namespace mrHelper.App.Forms
          }
 
          GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(
-            new GitLabInstance(hostname, Program.Settings));
+            new GitLabInstance(hostname, Program.Settings), _connectionChecker);
 
          bool migratedLabels = false;
          addOperationRecord("Preparing workflow to the first launch has started");

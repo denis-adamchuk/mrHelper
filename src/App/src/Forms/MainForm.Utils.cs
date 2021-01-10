@@ -234,7 +234,7 @@ namespace mrHelper.App.Forms
          }
 
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _connectionChecker);
          return rawDataAccessor.GetProjectAccessor(_modificationNotifier);
       }
 

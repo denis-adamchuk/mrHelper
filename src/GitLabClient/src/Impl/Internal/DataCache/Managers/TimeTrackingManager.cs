@@ -8,6 +8,7 @@ using GitLabSharp.Entities;
 using mrHelper.GitLabClient.Operators;
 using mrHelper.GitLabClient.Accessors;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Managers
 {
@@ -24,9 +25,10 @@ namespace mrHelper.GitLabClient.Managers
          IHostProperties hostProperties,
          User user,
          IDiscussionLoader discussionLoader,
-         IModificationNotifier modificationNotifier)
+         IModificationNotifier modificationNotifier,
+         IConnectionLossListener connectionLossListener)
       {
-         _operator = new TimeTrackingOperator(hostname, hostProperties);
+         _operator = new TimeTrackingOperator(hostname, hostProperties, connectionLossListener);
          _currentUser = user;
          _modificationNotifier = modificationNotifier;
 

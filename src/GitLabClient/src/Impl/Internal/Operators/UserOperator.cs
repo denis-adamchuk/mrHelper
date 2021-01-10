@@ -3,13 +3,15 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Operators
 {
    internal class UserOperator : BaseOperator
    {
-      internal UserOperator(string host, IHostProperties settings)
-         : base(host, settings)
+      internal UserOperator(string host, IHostProperties settings,
+         IConnectionLossListener connectionLossListener)
+         : base(host, settings, connectionLossListener)
       {
       }
 

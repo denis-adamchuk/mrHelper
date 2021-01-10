@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Accessors
 {
@@ -12,12 +13,13 @@ namespace mrHelper.GitLabClient.Accessors
    internal class TimeTracker : ITimeTracker
    {
       internal TimeTracker(MergeRequestKey mrk, IHostProperties hostProperties,
-         IModificationListener modificationListener)
+         IModificationListener modificationListener, IConnectionLossListener connectionLossListener)
       {
          _mergeRequestKey = mrk;
          _hostProperties = hostProperties;
          _modificationListener = modificationListener;
          _stopwatch = new Stopwatch();
+         _connectionLossListener = connectionLossListener;
       }
 
       public void Start()
@@ -35,7 +37,8 @@ namespace mrHelper.GitLabClient.Accessors
          _stopwatch.Stop();
          TimeSpan span = _stopwatch.Elapsed;
 
-         MergeRequestEditor editor = new MergeRequestEditor(_hostProperties, _mergeRequestKey, _modificationListener);
+         MergeRequestEditor editor = new MergeRequestEditor(
+            _hostProperties, _mergeRequestKey, _modificationListener, _connectionLossListener);
          try
          {
             await editor.AddTrackedTime(span, true);
@@ -81,6 +84,7 @@ namespace mrHelper.GitLabClient.Accessors
       private readonly IHostProperties _hostProperties;
       private readonly IModificationListener _modificationListener;
       private readonly Stopwatch _stopwatch;
+      private readonly IConnectionLossListener _connectionLossListener;
    }
 }
 

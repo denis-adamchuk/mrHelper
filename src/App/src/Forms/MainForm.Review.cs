@@ -126,7 +126,7 @@ namespace mrHelper.App.Forms
                }
             },
             () => dataCache?.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null),
-            webUrl)
+            webUrl, _connectionChecker)
             {
                Tag = mrk
             };

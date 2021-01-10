@@ -9,6 +9,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Constants;
 using mrHelper.GitLabClient.Operators;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Managers
 {
@@ -32,9 +33,10 @@ namespace mrHelper.GitLabClient.Managers
          User user,
          IMergeRequestCache mergeRequestCache,
          DataCacheConnectionContext dataCacheConnectionContext,
-         IModificationNotifier modificationNotifier)
+         IModificationNotifier modificationNotifier,
+         IConnectionLossListener connectionLossListener)
       {
-         _operator = new DiscussionOperator(hostname, hostProperties);
+         _operator = new DiscussionOperator(hostname, hostProperties, connectionLossListener);
 
          _parser = new DiscussionParser(this, dataCacheContext.DiscussionKeywords, user);
          _parser.DiscussionEvent += onDiscussionParserEvent;

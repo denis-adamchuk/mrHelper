@@ -2,22 +2,25 @@
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Interfaces;
 using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Accessors
 {
    public class MergeRequestCreator : IMergeRequestCreator
    {
-      internal MergeRequestCreator(ProjectKey projectKey, IHostProperties hostProperties)
+      internal MergeRequestCreator(ProjectKey projectKey, IHostProperties hostProperties,
+         IConnectionLossListener connectionLossListener)
       {
          _projectKey = projectKey;
          _hostProperties = hostProperties;
+         _connectionLossListener = connectionLossListener;
       }
 
       async public Task<MergeRequest> CreateMergeRequest(CreateNewMergeRequestParameters parameters)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
-            _projectKey.HostName, _hostProperties))
+            _projectKey.HostName, _hostProperties, _connectionLossListener))
          {
             try
             {
@@ -40,6 +43,7 @@ namespace mrHelper.GitLabClient.Accessors
 
       private readonly ProjectKey _projectKey;
       private readonly IHostProperties _hostProperties;
+      private readonly IConnectionLossListener _connectionLossListener;
    }
 }
 

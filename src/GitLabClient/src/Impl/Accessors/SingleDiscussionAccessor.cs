@@ -1,6 +1,7 @@
 ﻿using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Accessors;
+using mrHelper.GitLabClient.Interfaces;
 using mrHelper.GitLabClient.Operators;
 using System.Threading.Tasks;
 
@@ -9,17 +10,19 @@ namespace mrHelper.GitLabClient
    public class SingleDiscussionAccessor
    {
       internal SingleDiscussionAccessor(IHostProperties settings, MergeRequestKey mrk, string discussionId,
-         IModificationListener modificationListener)
+         IModificationListener modificationListener, IConnectionLossListener connectionLossListener)
       {
          _settings = settings;
          _mrk = mrk;
          _discussionId = discussionId;
          _modificationListener = modificationListener;
+         _connectionLossListener = connectionLossListener;
       }
 
       async public Task<Discussion> GetDiscussion()
       {
-         using (DiscussionOperator discussionOperator = new DiscussionOperator(_mrk.ProjectKey.HostName, _settings))
+         using (DiscussionOperator discussionOperator = new DiscussionOperator(
+            _mrk.ProjectKey.HostName, _settings, _connectionLossListener))
          {
             try
             {
@@ -46,13 +49,14 @@ namespace mrHelper.GitLabClient
 
       public IDiscussionEditor GetDiscussionEditor()
       {
-         return new DiscussionEditor(_mrk, _discussionId, _settings, _modificationListener);
+         return new DiscussionEditor(_mrk, _discussionId, _settings, _modificationListener, _connectionLossListener);
       }
 
       private readonly IHostProperties _settings;
       private readonly MergeRequestKey _mrk;
       private readonly string _discussionId;
       private readonly IModificationListener _modificationListener;
+      private readonly IConnectionLossListener _connectionLossListener;
    }
 }
 

@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Interfaces;
 using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Accessors
@@ -11,18 +12,19 @@ namespace mrHelper.GitLabClient.Accessors
    internal class DiscussionEditor : IDiscussionEditor
    {
       internal DiscussionEditor(MergeRequestKey mrk, string discussionId, IHostProperties hostProperties,
-         IModificationListener modificationListener)
+         IModificationListener modificationListener, IConnectionLossListener connectionLossListener)
       {
          _hostProperties = hostProperties;
          _mergeRequestKey = mrk;
          _discussionId = discussionId;
          _modificationListener = modificationListener;
+         _connectionLossListener = connectionLossListener;
       }
 
       async public Task ReplyAsync(string body)
       {
          using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
-               _hostProperties))
+               _hostProperties, _connectionLossListener))
          {
             try
             {
@@ -38,7 +40,7 @@ namespace mrHelper.GitLabClient.Accessors
       async public Task ReplyAndResolveDiscussionAsync(string body, bool resolve)
       {
          using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
-               _hostProperties))
+               _hostProperties, _connectionLossListener))
          {
             try
             {
@@ -54,7 +56,7 @@ namespace mrHelper.GitLabClient.Accessors
       async public Task<DiscussionNote> ModifyNoteBodyAsync(int noteId, string body)
       {
          using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
-               _hostProperties))
+               _hostProperties, _connectionLossListener))
          {
             try
             {
@@ -70,7 +72,7 @@ namespace mrHelper.GitLabClient.Accessors
       async public Task DeleteNoteAsync(int noteId)
       {
          using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
-               _hostProperties))
+               _hostProperties, _connectionLossListener))
          {
             try
             {
@@ -86,7 +88,7 @@ namespace mrHelper.GitLabClient.Accessors
       async public Task ResolveNoteAsync(int noteId, bool resolve)
       {
          using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
-               _hostProperties))
+               _hostProperties, _connectionLossListener))
          {
             try
             {
@@ -102,7 +104,7 @@ namespace mrHelper.GitLabClient.Accessors
       async public Task<Discussion> ResolveDiscussionAsync(bool resolve)
       {
          using (DiscussionOperator discussionOperator = new DiscussionOperator(_mergeRequestKey.ProjectKey.HostName,
-               _hostProperties))
+               _hostProperties, _connectionLossListener))
          {
             try
             {
@@ -123,6 +125,7 @@ namespace mrHelper.GitLabClient.Accessors
       private readonly IHostProperties _hostProperties;
       private readonly string _discussionId;
       private readonly IModificationListener _modificationListener;
+      private readonly IConnectionLossListener _connectionLossListener;
    }
 }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using GitLabSharp.Entities;
 using GitLabSharp.Accessors;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Operators
 {
@@ -11,8 +12,9 @@ namespace mrHelper.GitLabClient.Operators
    /// </summary>
    internal class RepositoryOperator : BaseOperator
    {
-      internal RepositoryOperator(ProjectKey projectKey, IHostProperties settings)
-         : base(projectKey.HostName, settings)
+      internal RepositoryOperator(ProjectKey projectKey, IHostProperties settings,
+         IConnectionLossListener connectionLossListener)
+         : base(projectKey.HostName, settings, connectionLossListener)
       {
          _projectname = projectKey.ProjectName;
       }

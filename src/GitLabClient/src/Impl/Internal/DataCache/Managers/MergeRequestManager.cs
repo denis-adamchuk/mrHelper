@@ -5,6 +5,7 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.GitLabClient.Loaders.Cache;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Managers
 {
@@ -18,7 +19,8 @@ namespace mrHelper.GitLabClient.Managers
          string hostname,
          IHostProperties hostProperties,
          DataCacheConnectionContext context,
-         IModificationNotifier modificationNotifier)
+         IModificationNotifier modificationNotifier,
+         IConnectionLossListener connectionLossListener)
       {
          _dataCacheContext = dataCacheContext;
          _cacheUpdater = cacheUpdater;
@@ -35,7 +37,7 @@ namespace mrHelper.GitLabClient.Managers
                context.QueryCollection);
 
             _updateManager = new UpdateManager(_dataCacheContext, hostname, hostProperties,
-               updateContext, _cacheUpdater);
+               updateContext, _cacheUpdater, connectionLossListener);
             _updateManager.MergeRequestEvent += onUpdate;
             _updateManager.MergeRequestListRefreshed += onListRefreshed;
             _updateManager.MergeRequestRefreshed += onMergeRequestRefreshed;

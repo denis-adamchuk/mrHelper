@@ -352,7 +352,7 @@ namespace mrHelper.App.Forms
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Live");
-         _liveDataCache = new DataCache(dataCacheContext, _modificationNotifier);
+         _liveDataCache = new DataCache(dataCacheContext, _modificationNotifier, _connectionChecker);
          getListView(EDataCacheType.Live).SetDataCache(_liveDataCache);
          getListView(EDataCacheType.Live).SetFilter(_mergeRequestFilter);
 
@@ -435,7 +435,7 @@ namespace mrHelper.App.Forms
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Search");
-         _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier);
+         _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier, _connectionChecker);
          getListView(EDataCacheType.Search).SetDataCache(_searchDataCache);
       }
 
@@ -459,7 +459,7 @@ namespace mrHelper.App.Forms
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Recent");
-         _recentDataCache = new DataCache(dataCacheContext, _modificationNotifier);
+         _recentDataCache = new DataCache(dataCacheContext, _modificationNotifier, _connectionChecker);
          getListView(EDataCacheType.Recent).SetDataCache(_recentDataCache);
       }
 

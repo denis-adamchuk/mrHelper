@@ -9,6 +9,7 @@ using mrHelper.GitLabClient.Loaders.Cache;
 using mrHelper.GitLabClient.Operators;
 using mrHelper.GitLabClient.Loaders;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Managers
 {
@@ -22,9 +23,10 @@ namespace mrHelper.GitLabClient.Managers
          string hostname,
          IHostProperties hostProperties,
          DataCacheConnectionContext context,
-         InternalCacheUpdater cacheUpdater)
+         InternalCacheUpdater cacheUpdater,
+         IConnectionLossListener connectionLossListener)
       {
-         DataCacheOperator updateOperator = new DataCacheOperator(hostname, hostProperties);
+         DataCacheOperator updateOperator = new DataCacheOperator(hostname, hostProperties, connectionLossListener);
          _mergeRequestListLoader = new MergeRequestListLoader(
             hostname, updateOperator, new VersionLoader(updateOperator, cacheUpdater), cacheUpdater, context);
          _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater,

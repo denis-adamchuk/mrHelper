@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Operators
 {
@@ -13,8 +14,9 @@ namespace mrHelper.GitLabClient.Operators
    /// </summary>
    internal class DiscussionOperator : BaseOperator
    {
-      internal DiscussionOperator(string hostname, IHostProperties settings)
-         : base(hostname, settings)
+      internal DiscussionOperator(string hostname, IHostProperties settings,
+         IConnectionLossListener connectionLossListener)
+         : base(hostname, settings, connectionLossListener)
       {
       }
 

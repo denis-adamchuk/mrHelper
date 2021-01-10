@@ -8,6 +8,7 @@ using GitLabSharp.Accessors;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Accessors
 {
@@ -16,9 +17,11 @@ namespace mrHelper.GitLabClient.Accessors
    /// </summary>
    public class DiscussionCreator : IDiscussionCreator, IDisposable
    {
-      internal DiscussionCreator(MergeRequestKey mrk, IHostProperties hostProperties, User currentUser)
+      internal DiscussionCreator(MergeRequestKey mrk, IHostProperties hostProperties,
+         User currentUser, IConnectionLossListener connectionLossListener)
       {
-         _discussionOperator = new DiscussionOperator(mrk.ProjectKey.HostName, hostProperties);
+         _discussionOperator = new DiscussionOperator(
+            mrk.ProjectKey.HostName, hostProperties, connectionLossListener);
          _mergeRequestKey = mrk;
          _currentUser = currentUser;
       }

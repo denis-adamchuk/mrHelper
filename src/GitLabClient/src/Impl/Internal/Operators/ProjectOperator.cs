@@ -2,13 +2,15 @@
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Operators
 {
    internal class ProjectOperator : BaseOperator
    {
-      internal ProjectOperator(string hostname, IHostProperties hostProperties)
-         : base(hostname, hostProperties)
+      internal ProjectOperator(string hostname, IHostProperties hostProperties,
+         IConnectionLossListener connectionLossListener)
+         : base(hostname, hostProperties, connectionLossListener)
       {
       }
 

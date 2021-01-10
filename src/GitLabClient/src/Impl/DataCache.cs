@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Interfaces;
 using mrHelper.GitLabClient.Loaders;
 using mrHelper.GitLabClient.Loaders.Cache;
 using mrHelper.GitLabClient.Managers;
@@ -12,10 +13,12 @@ namespace mrHelper.GitLabClient
 {
    public class DataCache : IDisposable
    {
-      public DataCache(DataCacheContext dataCacheContext, IModificationNotifier modificationNotifier)
+      public DataCache(DataCacheContext dataCacheContext,
+         IModificationNotifier modificationNotifier, IConnectionLossListener connectionLossListener)
       {
          _dataCacheContext = dataCacheContext;
          _modificationNotifier = modificationNotifier;
+         _conectionLossListener = connectionLossListener;
       }
 
       public event Action<string, User> Connected;
@@ -28,7 +31,7 @@ namespace mrHelper.GitLabClient
 
          string hostname = gitLabInstance.HostName;
          IHostProperties hostProperties = gitLabInstance.HostProperties;
-         _operator = new DataCacheOperator(hostname, hostProperties);
+         _operator = new DataCacheOperator(hostname, hostProperties, _conectionLossListener);
 
          try
          {
@@ -112,11 +115,13 @@ namespace mrHelper.GitLabClient
          DataCacheConnectionContext context)
       {
          MergeRequestManager mergeRequestManager = new MergeRequestManager(
-            _dataCacheContext, cacheUpdater, hostname, hostProperties, context, _modificationNotifier);
+            _dataCacheContext, cacheUpdater, hostname, hostProperties, context,
+            _modificationNotifier, _conectionLossListener);
          DiscussionManager discussionManager = new DiscussionManager(
-            _dataCacheContext, hostname, hostProperties, user, mergeRequestManager, context, _modificationNotifier);
+            _dataCacheContext, hostname, hostProperties, user, mergeRequestManager, context,
+            _modificationNotifier, _conectionLossListener);
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
-            hostname, hostProperties, user, discussionManager, _modificationNotifier);
+            hostname, hostProperties, user, discussionManager, _modificationNotifier, _conectionLossListener);
 
          IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
          ProjectCache projectCache = new ProjectCache(loader, _dataCacheContext, hostname);
@@ -129,6 +134,7 @@ namespace mrHelper.GitLabClient
       private DataCacheInternal _internal;
       private readonly DataCacheContext _dataCacheContext;
       private readonly IModificationNotifier _modificationNotifier;
+      private readonly IConnectionLossListener _conectionLossListener;
    }
 }
 
