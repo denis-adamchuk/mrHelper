@@ -374,7 +374,7 @@ namespace mrHelper.App.Controls
                FullMergeRequestKey fmk = new FullMergeRequestKey(getGroupProjectKey(group), null);
                ListViewItem item = createListViewMergeRequestItem(fmk);
                Items.Add(item);
-               setListViewSubItemsTagsForSummary(item, fmk.ProjectKey);
+               setListViewSubItemsTagsForSummary(item);
             }
          }
 
@@ -544,7 +544,7 @@ namespace mrHelper.App.Controls
          setListViewRowHeight(this, maxLineCount);
       }
 
-      private void setListViewSubItemsTagsForSummary(ListViewItem item, ProjectKey projectKey)
+      private void setListViewSubItemsTagsForSummary(ListViewItem item)
       {
          Debug.Assert(isSummaryItem(item));
 

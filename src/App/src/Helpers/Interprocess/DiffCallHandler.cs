@@ -41,8 +41,7 @@ namespace mrHelper.App.Interprocess
          }
 
          MergeRequestKey mrk = getMergeRequestKey(snapshot);
-         MatchResult matchResult = doFullMatch(mrk, snapshot.Refs, matchInfo,
-            out DiffPosition position, out FullContextDiff fullContextDiff);
+         MatchResult matchResult = doFullMatch(mrk, snapshot.Refs, matchInfo, out DiffPosition position);
          switch (matchResult)
          {
             case MatchResult.Cancelled:
@@ -55,7 +54,7 @@ namespace mrHelper.App.Interprocess
                break;
 
             case MatchResult.Success:
-               showNewDiscussionDialog(matchInfo, snapshot, mrk, position, fullContextDiff);
+               showNewDiscussionDialog(matchInfo, snapshot, mrk, position);
                break;
 
             default:
@@ -65,7 +64,7 @@ namespace mrHelper.App.Interprocess
       }
 
       private void showNewDiscussionDialog(MatchInfo matchInfo, Snapshot snapshot, MergeRequestKey mrk,
-         DiffPosition initialNewDiscussionPosition, FullContextDiff fullContextDiff)
+         DiffPosition initialNewDiscussionPosition)
       {
          DiffPosition fnOnScroll(DiffPosition position, bool scrollUp) =>
             scrollPosition(position, scrollUp, matchInfo.IsLeftSideLineNumber);
@@ -76,14 +75,14 @@ namespace mrHelper.App.Interprocess
 
          async Task fnOnEditOldNote(ReportedDiscussionNoteKey notePosition, ReportedDiscussionNoteContent content) =>
             await actOnGitLab(snapshot, "edit", (gli) =>
-               editDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, content.Body, snapshot));
+               editDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, content.Body));
 
          async Task fnOnDeleteOldNote(ReportedDiscussionNoteKey notePosition) =>
             await actOnGitLab(snapshot, "delete", (gli) =>
-               deleteDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, snapshot));
+               deleteDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id));
 
          IEnumerable<ReportedDiscussionNote> fnGetRelatedDiscussions(ReportedDiscussionNoteKey? keyOpt, DiffPosition position) =>
-            getRelatedDiscussions(fullContextDiff, mrk, keyOpt, position).ToArray();
+            getRelatedDiscussions(mrk, keyOpt, position).ToArray();
 
          // We need separate functors for `new` and `old` positions because for a new discussion we need
          // to distinct cases when user points at unchanged line at left and right sides because it is
@@ -146,7 +145,7 @@ namespace mrHelper.App.Interprocess
       }
 
       private MatchResult doFullMatch(MergeRequestKey mrk, Core.Matching.DiffRefs refs,
-         MatchInfo matchInfo, out DiffPosition position, out FullContextDiff fullContextDiff)
+         MatchInfo matchInfo, out DiffPosition position)
       {
          MatchResult fileMatchResult = matchFileName(mrk, refs, matchInfo.LeftFileName, matchInfo.RightFileName,
             matchInfo.IsLeftSideLineNumber, out string leftFileName, out string rightFileName);
@@ -270,7 +269,7 @@ namespace mrHelper.App.Interprocess
 
       // Collect discussions started for lines within DiffContextDepth range near `position`
       private IEnumerable<ReportedDiscussionNote> getRelatedDiscussions(
-         FullContextDiff fullContextDiff, MergeRequestKey mrk, ReportedDiscussionNoteKey? keyOpt, DiffPosition position)
+         MergeRequestKey mrk, ReportedDiscussionNoteKey? keyOpt, DiffPosition position)
       {
          // Obtain a context for a passed position.
          DiffContext ctx = getDiffContext<CombinedContextMaker>(position, UnchangedLinePolicy.TakeFromRight);
@@ -463,7 +462,7 @@ namespace mrHelper.App.Interprocess
       }
 
       private Task editDiscussionNoteAsync(MergeRequestKey mrk, GitLabInstance gitLabInstance,
-         string discussionId, int noteId, string text, Snapshot snapshot)
+         string discussionId, int noteId, string text)
       {
          IDiscussionEditor editor = Shortcuts.GetDiscussionEditor(
             gitLabInstance, _modificationListener, mrk, discussionId);
@@ -471,7 +470,7 @@ namespace mrHelper.App.Interprocess
       }
 
       private Task deleteDiscussionNoteAsync(MergeRequestKey mrk, GitLabInstance gitLabInstance,
-         string discussionId, int noteId, Snapshot snapshot)
+         string discussionId, int noteId)
       {
          IDiscussionEditor editor = Shortcuts.GetDiscussionEditor(
             gitLabInstance, _modificationListener, mrk, discussionId);
@@ -536,7 +535,7 @@ namespace mrHelper.App.Interprocess
 
          public override bool Equals(object obj)
          {
-            return obj is MismatchWhitelistKey && Equals((MismatchWhitelistKey)obj);
+            return obj is MismatchWhitelistKey key && Equals(key);
          }
 
          public bool Equals(MismatchWhitelistKey other)

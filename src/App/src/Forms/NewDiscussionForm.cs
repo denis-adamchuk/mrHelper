@@ -749,7 +749,7 @@ namespace mrHelper.App.Forms
          return _getNewDiscussionDiffContext(scroll(up)).IsValid();
       }
 
-      private static int MaximumTextLengthTocancelWithoutConfirmation = 5;
+      private static readonly int MaximumTextLengthTocancelWithoutConfirmation = 5;
 
       private readonly Action _onDialogClosed;
 

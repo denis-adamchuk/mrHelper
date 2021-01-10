@@ -23,7 +23,6 @@ namespace mrHelper.App.Helpers
       private static readonly string[] KnownHostsDefaultValue = Array.Empty<string>();
 
       private static readonly string KnownAccessTokensKeyName = "KnownAccessTokens";
-      private static readonly string[] KnownAccessTokensDefaultValue = Array.Empty<string>();
 
       private static readonly string LocalGitFolderKeyName = "LocalGitFolder";
       private static readonly string LocalGitFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");

@@ -84,7 +84,7 @@ namespace mrHelper.App
 
       private static CustomTraceListener createTraceListener(string currentLogFileName)
       {
-         CustomTraceListener listener = null;
+         CustomTraceListener listener;
          try
          {
             listener = new CustomTraceListener(currentLogFileName,

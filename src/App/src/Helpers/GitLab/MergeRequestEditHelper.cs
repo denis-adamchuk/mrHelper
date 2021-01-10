@@ -108,7 +108,7 @@ namespace mrHelper.App.Helpers.GitLab
             parameters.SourceBranch, parameters.TargetBranch, parameters.Title, assigneeId,
             parameters.Description, parameters.DeleteSourceBranch, parameters.Squash);
 
-         MergeRequest mergeRequest = null;
+         MergeRequest mergeRequest;
          try
          {
             mergeRequest = await Shortcuts
