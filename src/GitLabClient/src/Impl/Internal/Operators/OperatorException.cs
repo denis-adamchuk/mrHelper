@@ -56,11 +56,7 @@ namespace mrHelper.GitLabClient.Operators
 
       private static void handleException(Exception ex)
       {
-         if (ex is GitLabTaskRunnerCancelled)
-         {
-            throw new OperatorException(ex);
-         }
-         else if (ex is GitLabSharpException || ex is GitLabRequestException)
+         if (ex is GitLabTaskRunnerCancelled || ex is GitLabSharpException || ex is GitLabRequestException)
          {
             throw new OperatorException(ex);
          }
