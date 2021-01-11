@@ -59,6 +59,10 @@ namespace mrHelper.App.Forms
 
          SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
          _applicationUpdateChecker = new PeriodicUpdateChecker(this);
+
+         _connectionChecker = new GitLabClient.ConnectionChecker(Program.Settings, this);
+         _connectionChecker.ConnectionLost += connectionChecker_ConnectionLost;
+         _connectionChecker.ConnectionRestored += connectionChecker_ConnectionRestored;
       }
 
       private void addCustomActions()

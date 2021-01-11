@@ -22,6 +22,8 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
+         _connectionChecker.Dispose();
+
          _liveDataCache.Dispose();
          _searchDataCache.Dispose();
          _recentDataCache.Dispose();
@@ -1399,7 +1401,8 @@ namespace mrHelper.App.Forms
          this.textBoxRecentMergeRequestsHint.Size = new System.Drawing.Size(463, 28);
          this.textBoxRecentMergeRequestsHint.TabIndex = 5;
          this.textBoxRecentMergeRequestsHint.Text = "This list contains a few merge requests which have been recently reviewed by you " +
-    "in mrHelper.\r\nThe maximum number of recent merge requests can be configured in Settings.";
+    "in mrHelper.\r\nThe maximum number of recent merge requests can be configured in S" +
+    "ettings.";
          // 
          // listViewRecentMergeRequests
          // 

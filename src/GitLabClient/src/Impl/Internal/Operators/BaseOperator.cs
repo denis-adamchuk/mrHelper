@@ -25,9 +25,25 @@ namespace mrHelper.GitLabClient.Operators
          }
          catch (OperatorException ex)
          {
-            _connectionLossListener?.OnConnectionLost(Hostname);
+            if (isConnectionFailureException(ex))
+            {
+               _connectionLossListener?.OnConnectionLost(Hostname);
+            }
             throw;
          }
+      }
+
+      private bool isConnectionFailureException(OperatorException ex)
+      {
+         if (ex.InnerException is GitLabSharp.Accessors.GitLabRequestException rx)
+         {
+            if (rx.InnerException is System.Net.WebException wx)
+            {
+               return wx.Status != System.Net.WebExceptionStatus.Success && wx.Response == null;
+            }
+            return rx.InnerException is System.TimeoutException;
+         }
+         return false;
       }
 
       protected string Hostname { get; }

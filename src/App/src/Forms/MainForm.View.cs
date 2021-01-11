@@ -483,12 +483,18 @@ namespace mrHelper.App.Forms
 
       private void updateCaption()
       {
-         Text = Constants.MainWindowCaption
-           + " (" + Application.ProductVersion + ")"
-           + (StaticUpdateChecker.NewVersionInformation != null
-              ? String.Format("   New version {0} is available!",
-                 StaticUpdateChecker.NewVersionInformation.VersionNumber)
-              : String.Empty);
+         string mainCaption = Constants.MainWindowCaption;
+         string currentVersion = " (" + Application.ProductVersion + ")";
+         string newVersion = StaticUpdateChecker.NewVersionInformation != null
+              ? String.Format("   New version {0} is available!", StaticUpdateChecker.NewVersionInformation.VersionNumber)
+              : String.Empty;
+         string connectionStatus =
+            String.IsNullOrEmpty(getHostName())
+            ? "   not connected"
+            : (_connectionChecker.IsConnected(getHostName())
+               ? "   connected to " + getHostName()
+               : "   CONNECTION IS LOST (trying to reconnect)");
+         Text = String.Format("{0} {1} {2} {3}", mainCaption, currentVersion, newVersion, connectionStatus);
       }
 
       private void updateTrayIcon()

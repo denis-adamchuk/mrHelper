@@ -710,6 +710,16 @@ namespace mrHelper.App.Forms
          }
          toolTip.SetToolTip(labelOperationStatus, builder.ToString());
       }
+
+      private void connectionChecker_ConnectionLost(string _)
+      {
+         updateCaption();
+      }
+
+      private void connectionChecker_ConnectionRestored(string _)
+      {
+         updateCaption();
+      }
    }
 }
 
