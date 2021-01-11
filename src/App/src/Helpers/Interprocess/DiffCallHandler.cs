@@ -34,12 +34,6 @@ namespace mrHelper.App.Interprocess
 
       public void Handle(MatchInfo matchInfo, Snapshot snapshot)
       {
-         if (!matchInfo.IsValid())
-         {
-            throw new ArgumentException(
-               String.Format("Bad match info: {0}", matchInfo.ToString()));
-         }
-
          MergeRequestKey mrk = getMergeRequestKey(snapshot);
          MatchResult matchResult = doFullMatch(mrk, snapshot.Refs, matchInfo, out DiffPosition position);
          switch (matchResult)
@@ -147,6 +141,12 @@ namespace mrHelper.App.Interprocess
       private MatchResult doFullMatch(MergeRequestKey mrk, Core.Matching.DiffRefs refs,
          MatchInfo matchInfo, out DiffPosition position)
       {
+         if (!matchInfo.IsValid())
+         {
+            position = null;
+            return MatchResult.Error;
+         }
+
          MatchResult fileMatchResult = matchFileName(mrk, refs, matchInfo.LeftFileName, matchInfo.RightFileName,
             matchInfo.IsLeftSideLineNumber, out string leftFileName, out string rightFileName);
          if (fileMatchResult != MatchResult.Success)
