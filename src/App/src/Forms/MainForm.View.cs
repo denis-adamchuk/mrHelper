@@ -488,13 +488,45 @@ namespace mrHelper.App.Forms
          string newVersion = StaticUpdateChecker.NewVersionInformation != null
               ? String.Format("   New version {0} is available!", StaticUpdateChecker.NewVersionInformation.VersionNumber)
               : String.Empty;
-         string connectionStatus =
-            String.IsNullOrEmpty(getHostName())
-            ? "   not connected"
-            : (_connectionChecker.IsConnected(getHostName())
-               ? "   connected to " + getHostName()
-               : "   CONNECTION IS LOST (trying to reconnect)");
-         Text = String.Format("{0} {1} {2} {3}", mainCaption, currentVersion, newVersion, connectionStatus);
+         Text = String.Format("{0} {1} {2}", mainCaption, currentVersion, newVersion);
+      }
+
+      private void applyConnectionState(EConnectionState state)
+      {
+         string tooltipText = "";
+         string connectionStatus = "";
+         Color connectionStatusColor = Color.Black;
+         switch (state)
+         {
+            case EConnectionState.NotConnected:
+               stopLostConnectionIndicatorTimer();
+               connectionStatus = "Not connected";
+               break;
+
+            case EConnectionState.Connecting:
+               stopLostConnectionIndicatorTimer();
+               connectionStatus = String.Format("Connecting to {0}", getHostName());
+               break;
+
+            case EConnectionState.Connected:
+               stopLostConnectionIndicatorTimer();
+               connectionStatus = String.Format("Connected to {0}", getHostName());
+               connectionStatusColor = Color.Green;
+               break;
+
+            case EConnectionState.ConnectionLost:
+               startLostConnectionIndicatorTimer();
+               double elapsedSecondsDouble = (DateTime.Now - _lostConnectionIndicatorTimerStartTime.Value).TotalMilliseconds;
+               int elapsedSeconds = Convert.ToInt32(elapsedSecondsDouble / LostConnectionIndicationTimerInterval);
+               connectionStatus = elapsedSeconds % 2 == 0 ? ConnectionLostText.ToLower() : ConnectionLostText.ToUpper();
+               connectionStatusColor = Color.Red;
+               tooltipText = String.Format("Connection was lost on {0}",
+                  _lostConnectionIndicatorTimerStartTime.Value.ToLocalTime().ToString(Constants.TimeStampFormat));
+               break;
+         }
+         labelConnectionStatus.Text = connectionStatus;
+         labelConnectionStatus.ForeColor = connectionStatusColor;
+         toolTip.SetToolTip(labelConnectionStatus, tooltipText);
       }
 
       private void updateTrayIcon()
@@ -1254,20 +1286,19 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void moveCopyFromClipboardLinkLabel()
+      private void placeControlNearToRightmostTab(TabControl tabControl, Control control, int horzOffset)
       {
-         int tabCount = tabControlMode.TabPages.Count;
+         int tabCount = tabControl.TabPages.Count;
          Debug.Assert(tabCount > 0);
 
-         Rectangle tabRect = tabControlMode.GetTabRect(tabCount - 1);
+         Rectangle tabRect = tabControl.GetTabRect(tabCount - 1);
 
-         int linkLabelTopRelativeToTabRect = tabRect.Height / 2 - linkLabelFromClipboard.Height / 2;
-         int linkLabelTop = tabRect.Top + linkLabelTopRelativeToTabRect;
+         int controlTopRelativeToTabRect = tabRect.Height / 2 - linkLabelFromClipboard.Height / 2;
+         int controlTop = tabRect.Top + controlTopRelativeToTabRect;
 
-         int linkLabelHorizontalOffsetFromRightmostTab = 20;
-         int linkLabelLeft = tabRect.X + tabRect.Width + linkLabelHorizontalOffsetFromRightmostTab;
+         int controlLeft = tabRect.X + tabRect.Width + horzOffset;
 
-         linkLabelFromClipboard.Location = new System.Drawing.Point(linkLabelLeft, linkLabelTop);
+         control.Location = new System.Drawing.Point(controlLeft, controlTop);
       }
 
       private bool switchTabAndSelectMergeRequest(EDataCacheType mode, MergeRequestKey? mrk, bool exact)

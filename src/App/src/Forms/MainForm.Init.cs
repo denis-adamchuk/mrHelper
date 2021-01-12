@@ -63,6 +63,7 @@ namespace mrHelper.App.Forms
          _connectionChecker = new GitLabClient.ConnectionChecker(Program.Settings, this);
          _connectionChecker.ConnectionLost += connectionChecker_ConnectionLost;
          _connectionChecker.ConnectionRestored += connectionChecker_ConnectionRestored;
+         applyConnectionState(EConnectionState.NotConnected);
       }
 
       private void addCustomActions()
@@ -253,6 +254,27 @@ namespace mrHelper.App.Forms
             Constants.MaxSearchResults);
          extendControlTooltip(checkBoxSearchByAuthor,
             Constants.MaxSearchResults);
+      }
+
+      private void startLostConnectionIndicatorTimer()
+      {
+         if (!_lostConnectionIndicatorTimerStartTime.HasValue)
+         {
+            _lostConnectionIndicatorTimer.Tick += new EventHandler(onLostConnectionIndicatorTimer);
+            _lostConnectionIndicatorTimer.Start();
+
+            _lostConnectionIndicatorTimerStartTime = DateTime.Now;
+         }
+      }
+
+      private void stopLostConnectionIndicatorTimer()
+      {
+         if (_lostConnectionIndicatorTimerStartTime.HasValue)
+         {
+            _lostConnectionIndicatorTimerStartTime = null;
+
+            _lostConnectionIndicatorTimer.Stop();
+         }
       }
 
       private void startClipboardCheckTimer()

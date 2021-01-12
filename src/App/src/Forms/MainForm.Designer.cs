@@ -38,6 +38,9 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer?.Stop();
          _timeTrackingTimer?.Dispose();
 
+         stopLostConnectionIndicatorTimer();
+         _lostConnectionIndicatorTimer?.Dispose();
+
          stopClipboardCheckTimer();
          _clipboardCheckingTimer?.Dispose();
 
@@ -250,6 +253,8 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
+         this.panelConnectionStatus = new System.Windows.Forms.Panel();
+         this.labelConnectionStatus = new System.Windows.Forms.Label();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -305,6 +310,7 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.SuspendLayout();
          this.groupBoxReview.SuspendLayout();
          this.groupBoxSelectRevisions.SuspendLayout();
+         this.panelConnectionStatus.SuspendLayout();
          this.SuspendLayout();
          // 
          // revisionBrowser
@@ -1554,6 +1560,7 @@ namespace mrHelper.App.Forms
          this.tabControl.TabIndex = 0;
          this.tabControl.SelectedIndexChanged += new System.EventHandler(this.tabControl_SelectedIndexChanged);
          this.tabControl.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
+         this.tabControl.SizeChanged += new System.EventHandler(this.tabControl_SizeChanged);
          // 
          // tabPageSettings
          // 
@@ -2439,11 +2446,31 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
+         // panelConnectionStatus
+         // 
+         this.panelConnectionStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.panelConnectionStatus.Controls.Add(this.labelConnectionStatus);
+         this.panelConnectionStatus.Location = new System.Drawing.Point(300, 4);
+         this.panelConnectionStatus.Name = "panelConnectionStatus";
+         this.panelConnectionStatus.Size = new System.Drawing.Size(297, 13);
+         this.panelConnectionStatus.TabIndex = 1;
+         // 
+         // labelConnectionStatus
+         // 
+         this.labelConnectionStatus.AutoSize = true;
+         this.labelConnectionStatus.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.labelConnectionStatus.Location = new System.Drawing.Point(0, 0);
+         this.labelConnectionStatus.Name = "labelConnectionStatus";
+         this.labelConnectionStatus.Size = new System.Drawing.Size(64, 13);
+         this.labelConnectionStatus.TabIndex = 0;
+         this.labelConnectionStatus.Text = "connected?";
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.ClientSize = new System.Drawing.Size(1284, 890);
+         this.Controls.Add(this.panelConnectionStatus);
          this.Controls.Add(this.tabControl);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.Name = "MainForm";
@@ -2525,6 +2552,8 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.ResumeLayout(false);
          this.groupBoxReview.ResumeLayout(false);
          this.groupBoxSelectRevisions.ResumeLayout(false);
+         this.panelConnectionStatus.ResumeLayout(false);
+         this.panelConnectionStatus.PerformLayout();
          this.ResumeLayout(false);
 
       }
@@ -2717,6 +2746,8 @@ namespace mrHelper.App.Forms
       private ComboBox comboBoxSearchByState;
       private ComboBox comboBoxRecentMergeRequestsPerProjectCount;
       private Label labelRecentMergeRequestsPerProjectCount;
+      private Panel panelConnectionStatus;
+      private Label labelConnectionStatus;
    }
 }
 

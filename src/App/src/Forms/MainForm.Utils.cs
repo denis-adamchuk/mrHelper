@@ -563,6 +563,11 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(linkLabelFromClipboard, tooltip);
       }
 
+      private void onLostConnectionIndicatorTimer(object sender, EventArgs e)
+      {
+         applyConnectionState(EConnectionState.ConnectionLost);
+      }
+
       private static void sendFeedback()
       {
          try
@@ -713,12 +718,12 @@ namespace mrHelper.App.Forms
 
       private void connectionChecker_ConnectionLost(string _)
       {
-         updateCaption();
+         applyConnectionState(EConnectionState.ConnectionLost);
       }
 
       private void connectionChecker_ConnectionRestored(string _)
       {
-         updateCaption();
+         applyConnectionState(EConnectionState.Connected);
       }
    }
 }

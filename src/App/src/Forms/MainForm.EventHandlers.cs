@@ -459,7 +459,12 @@ namespace mrHelper.App.Forms
 
       private void tabControlMode_SizeChanged(object sender, EventArgs e)
       {
-         moveCopyFromClipboardLinkLabel();
+         placeControlNearToRightmostTab(tabControlMode, linkLabelFromClipboard, 20);
+      }
+
+      private void tabControl_SizeChanged(object sender, EventArgs e)
+      {
+         placeControlNearToRightmostTab(tabControl, panelConnectionStatus, 300);
       }
 
       private void LinkLabelFromClipboard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
