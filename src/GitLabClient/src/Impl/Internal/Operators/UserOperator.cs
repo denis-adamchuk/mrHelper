@@ -15,17 +15,6 @@ namespace mrHelper.GitLabClient.Operators
       {
       }
 
-      internal Task<User> SearchCurrentUserAsync()
-      {
-         return callWithSharedClient(
-            async (client) =>
-               await OperatorCallWrapper.Call(
-                  async () =>
-                     (User)await client.RunAsync(
-                        async (gl) =>
-                           await gl.CurrentUser.LoadTaskAsync())));
-      }
-
       async internal Task<User> SearchUserByNameAsync(string name)
       {
          IEnumerable<User> users = await callWithSharedClient(

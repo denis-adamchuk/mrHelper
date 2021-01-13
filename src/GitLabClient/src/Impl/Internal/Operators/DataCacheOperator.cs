@@ -7,6 +7,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Constants;
 using System;
 using mrHelper.GitLabClient.Interfaces;
+using mrHelper.GitLabClient.Operators.Search;
 
 namespace mrHelper.GitLabClient.Operators
 {
@@ -19,15 +20,6 @@ namespace mrHelper.GitLabClient.Operators
          IConnectionLossListener connectionLossListener)
          : base(host, settings, connectionLossListener)
       {
-      }
-
-      internal Task<User> GetCurrentUserAsync()
-      {
-         return callWithSharedClient(
-            async (client) =>
-               await OperatorCallWrapper.Call(
-                  () =>
-                     CommonOperator.SearchCurrentUserAsync(client)));
       }
 
       internal Task<Project> GetProjectAsync(string projectName)
@@ -50,15 +42,6 @@ namespace mrHelper.GitLabClient.Operators
                      (MergeRequest)await client.RunAsync(
                         async (gl) =>
                            await gl.Projects.Get(projectName).MergeRequests.Get(iid).LoadTaskAsync(includeRebaseInProgress))));
-      }
-
-      internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchQuery searchQuery)
-      {
-         return callWithSharedClient(
-            async (client) =>
-               await OperatorCallWrapper.Call(
-                  () =>
-                     CommonOperator.SearchMergeRequestsAsync(client, searchQuery)));
       }
 
       async internal Task<IEnumerable<Commit>> GetCommitsAsync(string projectName, int iid,

@@ -61,7 +61,6 @@
     <Compile Include="src\Interfaces\DiscussionCreatorItf.cs" />
     <Compile Include="src\Impl\Accessors\DiscussionAccessor.cs" />
     <Compile Include="src\Impl\Internal\Operators\BaseOperator.cs" />
-    <Compile Include="src\Impl\Internal\Operators\CommonOperator.cs" />
     <Compile Include="src\Impl\GitLabInstance.cs" />
     <Compile Include="src\Impl\Accessors\RawDataAccessor.cs" />
     <Compile Include="src\Impl\Internal\Operators\GlobalCache.cs" />

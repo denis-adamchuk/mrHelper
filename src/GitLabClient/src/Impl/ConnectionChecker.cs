@@ -44,12 +44,12 @@ namespace mrHelper.GitLabClient
          {
             try
             {
-               await CommonOperator.SearchCurrentUserAsync(client);
+               await client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync());
                return ConnectionCheckStatus.OK;
             }
-            catch (OperatorException ox)
+            catch (Exception ex)
             {
-               if (ox.InnerException is GitLabRequestException rx)
+               if (ex.InnerException is GitLabRequestException rx)
                {
                   if (rx.InnerException is System.Net.WebException wx)
                   {

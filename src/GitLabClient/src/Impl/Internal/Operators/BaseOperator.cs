@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using GitLabSharp;
+using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Interfaces;
+using mrHelper.GitLabClient.Operators.Search;
 
 namespace mrHelper.GitLabClient.Operators
 {
@@ -51,6 +54,28 @@ namespace mrHelper.GitLabClient.Operators
       public void Dispose()
       {
          _client.Dispose();
+      }
+
+      internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchQuery searchQuery)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (IEnumerable<MergeRequest>)(await client.RunAsync(
+                        async (gl) =>
+                           await (new MergeRequestSearchProcessor(searchQuery).Process(gl))))));
+      }
+
+      internal Task<User> SearchCurrentUserAsync()
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (User)await client.RunAsync(
+                        async (gl) =>
+                           await gl.CurrentUser.LoadTaskAsync())));
       }
 
       private readonly IHostProperties _settings;

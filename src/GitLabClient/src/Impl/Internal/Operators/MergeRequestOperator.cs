@@ -16,15 +16,6 @@ namespace mrHelper.GitLabClient.Operators
       {
       }
 
-      internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchQuery searchQuery)
-      {
-         return callWithSharedClient(
-            async (client) =>
-               await OperatorCallWrapper.Call(
-                  async () =>
-                     await CommonOperator.SearchMergeRequestsAsync(client, searchQuery)));
-      }
-
       internal Task<MergeRequest> CreateMergeRequest(string projectName, CreateNewMergeRequestParameters parameters)
       {
          return callWithSharedClient(
