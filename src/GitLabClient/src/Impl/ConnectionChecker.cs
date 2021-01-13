@@ -9,7 +9,6 @@ using GitLabSharp;
 using GitLabSharp.Accessors;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Interfaces;
-using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient
 {
@@ -65,14 +64,24 @@ namespace mrHelper.GitLabClient
          }
       }
 
-      public bool IsConnected(string hostname)
+      private bool isConnected(string hostname)
       {
          return !_timer.ContainsKey(hostname);
       }
 
+      //public void OnConnectionLost(string hostname)
+      //{
+      //   ConnectionLost?.Invoke(hostname);
+      //}
+
+      //public void OnConnectionRestored(string hostname)
+      //{
+      //   ConnectionRestored?.Invoke(hostname);
+      //}
+
       public void OnConnectionLost(string hostname)
       {
-         if (IsConnected(hostname))
+         if (isConnected(hostname))
          {
             startConnectionCheckingTimer(hostname);
             ConnectionLost?.Invoke(hostname);
@@ -103,7 +112,7 @@ namespace mrHelper.GitLabClient
 
       private void onConnectionRestored(string hostname)
       {
-         Debug.Assert(!IsConnected(hostname));
+         Debug.Assert(!isConnected(hostname));
          stopConnectionCheckingTimer(hostname);
          ConnectionRestored?.Invoke(hostname);
       }

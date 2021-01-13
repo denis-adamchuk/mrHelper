@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Tools;
 using mrHelper.GitLabClient.Interfaces;
 using mrHelper.GitLabClient.Operators.Search;
 
@@ -19,6 +20,40 @@ namespace mrHelper.GitLabClient.Operators
          _client = new GitLabTaskRunner(hostname, _settings.GetAccessToken(hostname));
          _connectionLossListener = connectionLossListener;
       }
+
+      /*
+         protected Task<T> callWithSharedClient<T>(Func<GitLabTaskRunner, Task<T>> func)
+         {
+            return callWithSharedClientRecursive(func, 1);
+         }
+
+         async protected Task<T> callWithSharedClientRecursive<T>(Func<GitLabTaskRunner, Task<T>> func, int attempt)
+         {
+            try
+            {
+               return await func(_client);
+            }
+            catch (OperatorException ex)
+            {
+               if (!isConnectionFailureException(ex))
+               {
+                  throw;
+               }
+            }
+
+            if (attempt == 1)
+            {
+               _connectionLossListener?.OnConnectionLost(Hostname);
+            }
+            await Task.Delay(30000);
+            T result = await callWithSharedClientRecursive(func, attempt + 1);
+            if (attempt == 1)
+            {
+               _connectionLossListener?.OnConnectionRestored(Hostname);
+            }
+            return result;
+         }
+      */
 
       async protected Task<T> callWithSharedClient<T>(Func<GitLabTaskRunner, Task<T>> func)
       {

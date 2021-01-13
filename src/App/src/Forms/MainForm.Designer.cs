@@ -38,8 +38,7 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer?.Stop();
          _timeTrackingTimer?.Dispose();
 
-         stopLostConnectionIndicatorTimer();
-         _lostConnectionIndicatorTimer?.Dispose();
+         stopAndDisposeLostConnectionIndicatorTimer();
 
          stopClipboardCheckTimer();
          _clipboardCheckingTimer?.Dispose();

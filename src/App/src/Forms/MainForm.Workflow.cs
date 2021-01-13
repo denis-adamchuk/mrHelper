@@ -95,7 +95,7 @@ namespace mrHelper.App.Forms
             hostname, Program.Settings.WorkflowType));
 
          dropConnectionToHost();
-         applyConnectionState(EConnectionState.NotConnected);
+         applyConnectionStatus("Not connected", System.Drawing.Color.Black, null);
          if (String.IsNullOrWhiteSpace(hostname))
          {
             return;
@@ -220,7 +220,7 @@ namespace mrHelper.App.Forms
             addOperationRecord(String.Format("Loading merge requests from {0} has started", hostname));
          }
 
-         applyConnectionState(EConnectionState.Connecting);
+         setConnectionStatus(EConnectionState.ConnectingLive);
       }
 
       private void onLiveDataCacheConnected(string hostname, User user)
@@ -284,7 +284,7 @@ namespace mrHelper.App.Forms
             getListView(EDataCacheType.Live).SelectMergeRequest(mrk, false);
          }
 
-         applyConnectionState(EConnectionState.Connected);
+         setConnectionStatus(EConnectionState.Connected);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

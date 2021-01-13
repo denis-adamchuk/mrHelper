@@ -136,6 +136,7 @@ namespace mrHelper.App.Forms
       {
          getListView(EDataCacheType.Recent).Items.Clear();
          addOperationRecord("Loading a list of recently reviewed merge requests has started");
+         setConnectionStatus(EConnectionState.ConnectingRecent);
       }
 
       private void onRecentDataCacheConnected(string hostname, User user)

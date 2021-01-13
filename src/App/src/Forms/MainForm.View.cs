@@ -491,41 +491,11 @@ namespace mrHelper.App.Forms
          Text = String.Format("{0} {1} {2}", mainCaption, currentVersion, newVersion);
       }
 
-      private void applyConnectionState(EConnectionState state)
+
+      private void applyConnectionStatus(string text, Color color, string tooltipText)
       {
-         string tooltipText = "";
-         string connectionStatus = "";
-         Color connectionStatusColor = Color.Black;
-         switch (state)
-         {
-            case EConnectionState.NotConnected:
-               stopLostConnectionIndicatorTimer();
-               connectionStatus = "Not connected";
-               break;
-
-            case EConnectionState.Connecting:
-               stopLostConnectionIndicatorTimer();
-               connectionStatus = String.Format("Connecting to {0}", getHostName());
-               break;
-
-            case EConnectionState.Connected:
-               stopLostConnectionIndicatorTimer();
-               connectionStatus = String.Format("Connected to {0}", getHostName());
-               connectionStatusColor = Color.Green;
-               break;
-
-            case EConnectionState.ConnectionLost:
-               startLostConnectionIndicatorTimer();
-               double elapsedSecondsDouble = (DateTime.Now - _lostConnectionIndicatorTimerStartTime.Value).TotalMilliseconds;
-               int elapsedSeconds = Convert.ToInt32(elapsedSecondsDouble / LostConnectionIndicationTimerInterval);
-               connectionStatus = elapsedSeconds % 2 == 0 ? ConnectionLostText.ToLower() : ConnectionLostText.ToUpper();
-               connectionStatusColor = Color.Red;
-               tooltipText = String.Format("Connection was lost on {0}",
-                  _lostConnectionIndicatorTimerStartTime.Value.ToLocalTime().ToString(Constants.TimeStampFormat));
-               break;
-         }
-         labelConnectionStatus.Text = connectionStatus;
-         labelConnectionStatus.ForeColor = connectionStatusColor;
+         labelConnectionStatus.Text = text;
+         labelConnectionStatus.ForeColor = color;
          toolTip.SetToolTip(labelConnectionStatus, tooltipText);
       }
 

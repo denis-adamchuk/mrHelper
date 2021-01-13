@@ -563,11 +563,6 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(linkLabelFromClipboard, tooltip);
       }
 
-      private void onLostConnectionIndicatorTimer(object sender, EventArgs e)
-      {
-         applyConnectionState(EConnectionState.ConnectionLost);
-      }
-
       private static void sendFeedback()
       {
          try
@@ -716,14 +711,79 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(labelOperationStatus, builder.ToString());
       }
 
-      private void connectionChecker_ConnectionLost(string _)
+      private void setConnectionStatus(EConnectionState status)
       {
-         applyConnectionState(EConnectionState.ConnectionLost);
+         _connectionStatus = status;
+         switch (status)
+         {
+            case EConnectionState.ConnectingLive:
+               applyConnectionStatus(String.Format("Connecting to {0}", getHostName()), Color.Black, null);
+               break;
+
+            case EConnectionState.ConnectingRecent:
+               applyConnectionStatus(String.Format("Connecting to {0}", getHostName()), Color.Black, null);
+               break;
+
+            case EConnectionState.Connected:
+               applyConnectionStatus(String.Format("Connected to {0}", getHostName()), Color.Green, null);
+               break;
+         }
       }
 
-      private void connectionChecker_ConnectionRestored(string _)
+      private void onConnectionLost()
       {
-         applyConnectionState(EConnectionState.Connected);
+         if (_lostConnectionInfo.HasValue)
+         {
+            return;
+         }
+
+         Timer timer = new Timer
+         {
+            Interval = LostConnectionIndicationTimerInterval
+         };
+         _lostConnectionInfo = new LostConnectionInfo(timer, DateTime.Now);
+         startLostConnectionIndicatorTimer();
+      }
+
+      private void onConnectionRestored()
+      {
+         if (!_lostConnectionInfo.HasValue)
+         {
+            return;
+         }
+
+         stopAndDisposeLostConnectionIndicatorTimer();
+         _lostConnectionInfo = null;
+         if (_connectionStatus.HasValue)
+         {
+            if (_connectionStatus.Value == EConnectionState.Connected)
+            {
+               setConnectionStatus(_connectionStatus.Value);
+            }
+            else if (_connectionStatus.Value == EConnectionState.ConnectingLive)
+            {
+               reconnect();
+            }
+            else if (_connectionStatus.Value == EConnectionState.ConnectingRecent)
+            {
+               loadRecentMergeRequests();
+            }
+         }
+      }
+
+      private void onLostConnectionIndicatorTimer(object sender, EventArgs e)
+      {
+         if (!_lostConnectionInfo.HasValue)
+         {
+            return;
+         }
+
+         double elapsedSecondsDouble = (DateTime.Now - _lostConnectionInfo.Value.TimeStamp).TotalMilliseconds;
+         int elapsedSeconds = Convert.ToInt32(elapsedSecondsDouble / LostConnectionIndicationTimerInterval);
+         string text = elapsedSeconds % 2 == 0 ? ConnectionLostText.ToLower() : ConnectionLostText.ToUpper();
+         string tooltipText = String.Format("Connection was lost at {0}",
+            _lostConnectionInfo.Value.TimeStamp.ToLocalTime().ToString(Constants.TimeStampFormat));
+         applyConnectionStatus(text, Color.Red, tooltipText);
       }
    }
 }

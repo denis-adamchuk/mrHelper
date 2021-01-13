@@ -61,9 +61,8 @@ namespace mrHelper.App.Forms
          _applicationUpdateChecker = new PeriodicUpdateChecker(this);
 
          _connectionChecker = new GitLabClient.ConnectionChecker(Program.Settings, this);
-         _connectionChecker.ConnectionLost += connectionChecker_ConnectionLost;
-         _connectionChecker.ConnectionRestored += connectionChecker_ConnectionRestored;
-         applyConnectionState(EConnectionState.NotConnected);
+         _connectionChecker.ConnectionLost += (_) => onConnectionLost();
+         _connectionChecker.ConnectionRestored += (_) => onConnectionRestored();
       }
 
       private void addCustomActions()
@@ -258,22 +257,19 @@ namespace mrHelper.App.Forms
 
       private void startLostConnectionIndicatorTimer()
       {
-         if (!_lostConnectionIndicatorTimerStartTime.HasValue)
+         if (_lostConnectionInfo.HasValue)
          {
-            _lostConnectionIndicatorTimer.Tick += new EventHandler(onLostConnectionIndicatorTimer);
-            _lostConnectionIndicatorTimer.Start();
-
-            _lostConnectionIndicatorTimerStartTime = DateTime.Now;
+            _lostConnectionInfo.Value.IndicatorTimer.Tick += new EventHandler(onLostConnectionIndicatorTimer);
+            _lostConnectionInfo.Value.IndicatorTimer.Start();
          }
       }
 
-      private void stopLostConnectionIndicatorTimer()
+      private void stopAndDisposeLostConnectionIndicatorTimer()
       {
-         if (_lostConnectionIndicatorTimerStartTime.HasValue)
+         if (_lostConnectionInfo.HasValue)
          {
-            _lostConnectionIndicatorTimerStartTime = null;
-
-            _lostConnectionIndicatorTimer.Stop();
+            _lostConnectionInfo.Value.IndicatorTimer.Stop();
+            _lostConnectionInfo.Value.IndicatorTimer.Dispose();
          }
       }
 

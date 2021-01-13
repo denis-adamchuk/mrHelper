@@ -136,16 +136,24 @@ namespace mrHelper.App.Forms
 
       private enum EConnectionState
       {
-         NotConnected,
-         Connecting,
-         Connected,
-         ConnectionLost
+         ConnectingLive,
+         ConnectingRecent,
+         Connected
       }
-      private readonly Timer _lostConnectionIndicatorTimer = new Timer
+      private EConnectionState? _connectionStatus;
+
+      private struct LostConnectionInfo
       {
-         Interval = LostConnectionIndicationTimerInterval
-      };
-      private DateTime? _lostConnectionIndicatorTimerStartTime;
+         public LostConnectionInfo(Timer indicatorTimer, DateTime timeStamp)
+         {
+            IndicatorTimer = indicatorTimer;
+            TimeStamp = timeStamp;
+         }
+
+         internal Timer IndicatorTimer { get; }
+         internal DateTime TimeStamp { get; }
+      }
+      private LostConnectionInfo? _lostConnectionInfo;
    }
 }
 
