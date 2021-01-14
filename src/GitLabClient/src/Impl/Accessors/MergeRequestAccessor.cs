@@ -22,18 +22,18 @@ namespace mrHelper.GitLabClient
    public class MergeRequestAccessor
    {
       internal MergeRequestAccessor(IHostProperties settings, ProjectKey projectKey,
-         IModificationListener modificationListener, IConnectionLossListener connectionLossListener)
+         IModificationListener modificationListener, INetworkOperationStatusListener networkOperationStatusListener)
       {
          _settings = settings;
          _projectKey = projectKey;
          _modificationListener = modificationListener;
-         _connectionLossListener = connectionLossListener;
+         _networkOperationStatusListener = networkOperationStatusListener;
       }
 
       async public Task<MergeRequest> SearchMergeRequestAsync(int mergeRequestIId, bool onlyOpen)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
-            _projectKey.HostName, _settings, _connectionLossListener))
+            _projectKey.HostName, _settings, _networkOperationStatusListener))
          {
             try
             {
@@ -56,19 +56,19 @@ namespace mrHelper.GitLabClient
 
       public MergeRequestCreator GetMergeRequestCreator()
       {
-         return new MergeRequestCreator(_projectKey, _settings, _connectionLossListener);
+         return new MergeRequestCreator(_projectKey, _settings, _networkOperationStatusListener);
       }
 
       public SingleMergeRequestAccessor GetSingleMergeRequestAccessor(int iid)
       {
          return new SingleMergeRequestAccessor(_settings, new MergeRequestKey(_projectKey, iid),
-            _modificationListener, _connectionLossListener);
+            _modificationListener, _networkOperationStatusListener);
       }
 
       private readonly IHostProperties _settings;
       private readonly ProjectKey _projectKey;
       private readonly IModificationListener _modificationListener;
-      private readonly IConnectionLossListener _connectionLossListener;
+      private readonly INetworkOperationStatusListener _networkOperationStatusListener;
    }
 }
 

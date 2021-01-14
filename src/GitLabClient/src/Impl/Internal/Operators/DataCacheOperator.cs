@@ -17,9 +17,31 @@ namespace mrHelper.GitLabClient.Operators
    internal class DataCacheOperator : BaseOperator
    {
       internal DataCacheOperator(string host, IHostProperties settings,
-         IConnectionLossListener connectionLossListener)
-         : base(host, settings, connectionLossListener)
+         INetworkOperationStatusListener networkOperationStatusListener)
+         : base(host, settings, networkOperationStatusListener)
       {
+      }
+
+      internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchQuery searchQuery)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (IEnumerable<MergeRequest>)(await client.RunAsync(
+                        async (gl) =>
+                           await (new MergeRequestSearchProcessor(searchQuery).Process(gl))))));
+      }
+
+      internal Task<User> SearchCurrentUserAsync()
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (User)await client.RunAsync(
+                        async (gl) =>
+                           await gl.CurrentUser.LoadTaskAsync())));
       }
 
       internal Task<Project> GetProjectAsync(string projectName)

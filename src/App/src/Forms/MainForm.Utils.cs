@@ -713,13 +713,12 @@ namespace mrHelper.App.Forms
 
       private void setConnectionStatus(EConnectionState status)
       {
-         _connectionStatus = status;
+         Debug.Assert(!_lostConnectionInfo.HasValue || status == EConnectionState.ConnectingLive);
+         resetLostConnectionInfo();
+
          switch (status)
          {
             case EConnectionState.ConnectingLive:
-               applyConnectionStatus(String.Format("Connecting to {0}", getHostName()), Color.Black, null);
-               break;
-
             case EConnectionState.ConnectingRecent:
                applyConnectionStatus(String.Format("Connecting to {0}", getHostName()), Color.Black, null);
                break;
@@ -728,21 +727,32 @@ namespace mrHelper.App.Forms
                applyConnectionStatus(String.Format("Connected to {0}", getHostName()), Color.Green, null);
                break;
          }
+
+         _connectionStatus = status;
       }
 
-      private void onConnectionLost()
+      private void createLostConnectionInfo()
       {
-         if (_lostConnectionInfo.HasValue)
-         {
-            return;
-         }
-
          Timer timer = new Timer
          {
             Interval = LostConnectionIndicationTimerInterval
          };
          _lostConnectionInfo = new LostConnectionInfo(timer, DateTime.Now);
          startLostConnectionIndicatorTimer();
+      }
+
+      private void resetLostConnectionInfo()
+      {
+         stopAndDisposeLostConnectionIndicatorTimer();
+         _lostConnectionInfo = null;
+      }
+
+      private void onConnectionLost()
+      {
+         if (!_lostConnectionInfo.HasValue)
+         {
+            createLostConnectionInfo();
+         }
       }
 
       private void onConnectionRestored()
@@ -752,8 +762,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         stopAndDisposeLostConnectionIndicatorTimer();
-         _lostConnectionInfo = null;
+         resetLostConnectionInfo();
          if (_connectionStatus.HasValue)
          {
             if (_connectionStatus.Value == EConnectionState.Connected)

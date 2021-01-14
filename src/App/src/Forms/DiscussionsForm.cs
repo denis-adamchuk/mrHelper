@@ -30,7 +30,7 @@ namespace mrHelper.App.Forms
          IGitCommandService git, User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          ColorScheme colorScheme, Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit,
-         Action onDiscussionModified, string webUrl, IConnectionLossListener connectionLossListener)
+         Action onDiscussionModified, string webUrl, INetworkOperationStatusListener networkOperationStatusListener)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -49,7 +49,7 @@ namespace mrHelper.App.Forms
          _diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
          _discussionColumnWidth = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
          _needShiftReplies = Program.Settings.NeedShiftReplies;
-         _connectionLossListener = connectionLossListener;
+         _networkOperationStatusListener = networkOperationStatusListener;
 
          CustomCommandLoader loader = new CustomCommandLoader(this);
          try
@@ -245,7 +245,7 @@ namespace mrHelper.App.Forms
          {
             Discussion discussion = await DiscussionHelper.AddThreadAsync(
                _mergeRequestKey, _mergeRequestTitle, _modificationListener, _currentUser, _dataCache,
-               _connectionLossListener);
+               _networkOperationStatusListener);
             if (discussion != null)
             {
                renderDiscussionsWithSuspendedLayout(Array.Empty<Discussion>(), new Discussion[] { discussion });
@@ -258,7 +258,7 @@ namespace mrHelper.App.Forms
          BeginInvoke(new Action(async () =>
          {
             await DiscussionHelper.AddCommentAsync(
-               _mergeRequestKey, _mergeRequestTitle, _modificationListener, _currentUser, _connectionLossListener);
+               _mergeRequestKey, _mergeRequestTitle, _modificationListener, _currentUser, _networkOperationStatusListener);
             onRefreshAction();
          }));
       }
@@ -641,7 +641,7 @@ namespace mrHelper.App.Forms
          foreach (Discussion discussion in discussions)
          {
             SingleDiscussionAccessor accessor = Shortcuts.GetSingleDiscussionAccessor(
-               _gitLabInstance, _modificationListener, _mergeRequestKey, discussion.Id, _connectionLossListener);
+               _gitLabInstance, _modificationListener, _mergeRequestKey, discussion.Id, _networkOperationStatusListener);
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
@@ -909,7 +909,7 @@ namespace mrHelper.App.Forms
       private ConfigurationHelper.DiffContextPosition _diffContextPosition;
       private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
       private bool _needShiftReplies;
-      private IConnectionLossListener _connectionLossListener;
+      private INetworkOperationStatusListener _networkOperationStatusListener;
       private DiscussionFilterPanel FilterPanel;
       private DiscussionFilter DisplayFilter; // filters out discussions by user preferences
       private DiscussionFilter SystemFilter; // filters out discussions with System notes

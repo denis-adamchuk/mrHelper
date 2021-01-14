@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace mrHelper.GitLabClient.Interfaces
+﻿namespace mrHelper.GitLabClient.Interfaces
 {
-   public interface IConnectionLossListener
+   public interface INetworkOperationStatusListener
    {
-      void OnConnectionLost(string hostname);
+      void OnFailure(string hostname);
+
+      void OnSuccess(string hostname);
    }
 }
 

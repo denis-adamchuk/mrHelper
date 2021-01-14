@@ -18,10 +18,10 @@ namespace mrHelper.GitLabClient.Accessors
    public class DiscussionCreator : IDiscussionCreator, IDisposable
    {
       internal DiscussionCreator(MergeRequestKey mrk, IHostProperties hostProperties,
-         User currentUser, IConnectionLossListener connectionLossListener)
+         User currentUser, INetworkOperationStatusListener networkOperationStatusListener)
       {
          _discussionOperator = new DiscussionOperator(
-            mrk.ProjectKey.HostName, hostProperties, connectionLossListener);
+            mrk.ProjectKey.HostName, hostProperties, networkOperationStatusListener);
          _mergeRequestKey = mrk;
          _currentUser = currentUser;
       }

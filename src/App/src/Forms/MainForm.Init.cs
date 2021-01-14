@@ -1,6 +1,6 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
+using System.Diagnostics;
 using System.Windows.Forms;
 using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
@@ -63,6 +63,7 @@ namespace mrHelper.App.Forms
          _connectionChecker = new GitLabClient.ConnectionChecker(Program.Settings, this);
          _connectionChecker.ConnectionLost += (_) => onConnectionLost();
          _connectionChecker.ConnectionRestored += (_) => onConnectionRestored();
+         applyConnectionStatus("Not connected", System.Drawing.Color.Black, null);
       }
 
       private void addCustomActions()

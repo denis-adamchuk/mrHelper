@@ -151,6 +151,8 @@ namespace mrHelper.App.Forms
          {
             getListView(EDataCacheType.Recent).SelectMergeRequest(new MergeRequestKey?(), false);
          }
+
+         setConnectionStatus(EConnectionState.Connected);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

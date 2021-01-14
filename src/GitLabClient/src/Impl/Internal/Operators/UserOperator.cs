@@ -10,9 +10,20 @@ namespace mrHelper.GitLabClient.Operators
    internal class UserOperator : BaseOperator
    {
       internal UserOperator(string host, IHostProperties settings,
-         IConnectionLossListener connectionLossListener)
-         : base(host, settings, connectionLossListener)
+         INetworkOperationStatusListener networkOperationStatusListener)
+         : base(host, settings, networkOperationStatusListener)
       {
+      }
+
+      internal Task<User> SearchCurrentUserAsync()
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (User)await client.RunAsync(
+                        async (gl) =>
+                           await gl.CurrentUser.LoadTaskAsync())));
       }
 
       async internal Task<User> SearchUserByNameAsync(string name)

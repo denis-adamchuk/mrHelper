@@ -283,8 +283,6 @@ namespace mrHelper.App.Forms
             MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostname, projectname), iid);
             getListView(EDataCacheType.Live).SelectMergeRequest(mrk, false);
          }
-
-         setConnectionStatus(EConnectionState.Connected);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

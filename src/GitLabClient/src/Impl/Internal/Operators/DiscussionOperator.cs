@@ -15,8 +15,8 @@ namespace mrHelper.GitLabClient.Operators
    internal class DiscussionOperator : BaseOperator
    {
       internal DiscussionOperator(string hostname, IHostProperties settings,
-         IConnectionLossListener connectionLossListener)
-         : base(hostname, settings, connectionLossListener)
+         INetworkOperationStatusListener networkOperationStatusListener)
+         : base(hostname, settings, networkOperationStatusListener)
       {
       }
 

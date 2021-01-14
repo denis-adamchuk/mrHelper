@@ -18,29 +18,29 @@ namespace mrHelper.GitLabClient
    public class DiscussionAccessor
    {
       internal DiscussionAccessor(IHostProperties settings, MergeRequestKey mrk,
-         IModificationListener modificationListener, IConnectionLossListener connectionLossListener)
+         IModificationListener modificationListener, INetworkOperationStatusListener networkOperationStatusListener)
       {
          _settings = settings;
          _mrk = mrk;
          _modificationListener = modificationListener;
-         _connectionLossListener = connectionLossListener;
+         _networkOperationStatusListener = networkOperationStatusListener;
       }
 
       public DiscussionCreator GetDiscussionCreator(User user)
       {
-         return new DiscussionCreator(_mrk, _settings, user, _connectionLossListener);
+         return new DiscussionCreator(_mrk, _settings, user, _networkOperationStatusListener);
       }
 
       public SingleDiscussionAccessor GetSingleDiscussionAccessor(string discussionId)
       {
          return new SingleDiscussionAccessor(_settings, _mrk, discussionId, _modificationListener,
-            _connectionLossListener);
+            _networkOperationStatusListener);
       }
 
       private readonly IHostProperties _settings;
       private readonly MergeRequestKey _mrk;
       private readonly IModificationListener _modificationListener;
-      private readonly IConnectionLossListener _connectionLossListener;
+      private readonly INetworkOperationStatusListener _networkOperationStatusListener;
    }
 }
 

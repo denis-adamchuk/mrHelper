@@ -9,16 +9,16 @@ namespace mrHelper.GitLabClient
    public class UserAccessor
    {
       internal UserAccessor(string hostname, IHostProperties hostProperties,
-         IConnectionLossListener connectionLossListener)
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
          _hostname = hostname;
          _hostProperties = hostProperties;
-         _connectionLossListener = connectionLossListener;
+         _networkOperationStatusListener = networkOperationStatusListener;
       }
 
       async public Task<User> GetCurrentUserAsync()
       {
-         using (UserOperator userOperator = new UserOperator(_hostname, _hostProperties, _connectionLossListener))
+         using (UserOperator userOperator = new UserOperator(_hostname, _hostProperties, _networkOperationStatusListener))
          {
             try
             {
@@ -33,7 +33,7 @@ namespace mrHelper.GitLabClient
 
       async public Task<User> SearchUserByNameAsync(string name)
       {
-         using (UserOperator userOperator = new UserOperator(_hostname, _hostProperties, _connectionLossListener))
+         using (UserOperator userOperator = new UserOperator(_hostname, _hostProperties, _networkOperationStatusListener))
          {
             try
             {
@@ -48,7 +48,7 @@ namespace mrHelper.GitLabClient
 
       async public Task<User> SearchUserByUsernameAsync(string username)
       {
-         using (UserOperator userOperator = new UserOperator(_hostname, _hostProperties, _connectionLossListener))
+         using (UserOperator userOperator = new UserOperator(_hostname, _hostProperties, _networkOperationStatusListener))
          {
             try
             {
@@ -63,7 +63,7 @@ namespace mrHelper.GitLabClient
 
       private readonly string _hostname;
       private readonly IHostProperties _hostProperties;
-      private readonly IConnectionLossListener _connectionLossListener;
+      private readonly INetworkOperationStatusListener _networkOperationStatusListener;
    }
 }
 

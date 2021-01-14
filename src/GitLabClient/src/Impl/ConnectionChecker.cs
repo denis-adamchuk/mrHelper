@@ -19,7 +19,7 @@ namespace mrHelper.GitLabClient
       BadAccessToken
    }
 
-   public class ConnectionChecker : IConnectionLossListener, IDisposable
+   public class ConnectionChecker : INetworkOperationStatusListener, IDisposable
    {
       public ConnectionChecker(IHostProperties hostProperties, ISynchronizeInvoke synchronizeInvoke)
       {
@@ -64,22 +64,7 @@ namespace mrHelper.GitLabClient
          }
       }
 
-      private bool isConnected(string hostname)
-      {
-         return !_timer.ContainsKey(hostname);
-      }
-
-      //public void OnConnectionLost(string hostname)
-      //{
-      //   ConnectionLost?.Invoke(hostname);
-      //}
-
-      //public void OnConnectionRestored(string hostname)
-      //{
-      //   ConnectionRestored?.Invoke(hostname);
-      //}
-
-      public void OnConnectionLost(string hostname)
+      public void OnFailure(string hostname)
       {
          if (isConnected(hostname))
          {
@@ -88,8 +73,22 @@ namespace mrHelper.GitLabClient
          }
       }
 
+      public void OnSuccess(string hostname)
+      {
+         if (!isConnected(hostname))
+         {
+            stopConnectionCheckingTimer(hostname);
+            ConnectionRestored?.Invoke(hostname);
+         }
+      }
+
       public event Action<string> ConnectionLost;
       public event Action<string> ConnectionRestored;
+
+      private bool isConnected(string hostname)
+      {
+         return !_timer.ContainsKey(hostname);
+      }
 
       private void onTimer(object sender, ElapsedEventArgs e)
       {
@@ -102,17 +101,37 @@ namespace mrHelper.GitLabClient
 
          _synchronizeInvoke.BeginInvoke(new Action(async () =>
             {
-               ConnectionCheckStatus result = await CheckConnection(hostname, _hostProperties.GetAccessToken(hostname));
-               if (result == ConnectionCheckStatus.OK)
+               Debug.Assert(!isConnected(hostname));
+               if (_checking.Add(hostname))
                {
-                  onConnectionRestored(hostname);
+                  return;
+               }
+
+               try
+               {
+                  string token = _hostProperties.GetAccessToken(hostname);
+                  ConnectionCheckStatus result = await CheckConnection(hostname, token);
+                  if (!isConnected(hostname) && result == ConnectionCheckStatus.OK)
+                  {
+                     // connection has been probably already restored while we awaited for a check result
+                     onConnectionRestored(hostname);
+                  }
+               }
+               finally
+               {
+                  _checking.Remove(hostname);
                }
             }), null);
       }
 
       private void onConnectionRestored(string hostname)
       {
-         Debug.Assert(!isConnected(hostname));
+         if (isConnected(hostname))
+         {
+            Debug.Assert(false);
+            return;
+         }
+
          stopConnectionCheckingTimer(hostname);
          ConnectionRestored?.Invoke(hostname);
       }
@@ -139,6 +158,7 @@ namespace mrHelper.GitLabClient
       private readonly IHostProperties _hostProperties;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly Dictionary<string, Timer> _timer = new Dictionary<string, Timer>();
+      private readonly HashSet<string> _checking = new HashSet<string>();
 
       private readonly int ConnectionCheckingTimerInterval = 30 * 1000; // 30 sec
    }

@@ -34,9 +34,9 @@ namespace mrHelper.GitLabClient.Managers
          IMergeRequestCache mergeRequestCache,
          DataCacheConnectionContext dataCacheConnectionContext,
          IModificationNotifier modificationNotifier,
-         IConnectionLossListener connectionLossListener)
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
-         _operator = new DiscussionOperator(hostname, hostProperties, connectionLossListener);
+         _operator = new DiscussionOperator(hostname, hostProperties, networkOperationStatusListener);
 
          _parser = new DiscussionParser(this, dataCacheContext.DiscussionKeywords, user);
          _parser.DiscussionEvent += onDiscussionParserEvent;

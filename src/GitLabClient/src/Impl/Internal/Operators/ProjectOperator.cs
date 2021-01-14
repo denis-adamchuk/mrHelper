@@ -9,8 +9,8 @@ namespace mrHelper.GitLabClient.Operators
    internal class ProjectOperator : BaseOperator
    {
       internal ProjectOperator(string hostname, IHostProperties hostProperties,
-         IConnectionLossListener connectionLossListener)
-         : base(hostname, hostProperties, connectionLossListener)
+         INetworkOperationStatusListener networkOperationStatusListener)
+         : base(hostname, hostProperties, networkOperationStatusListener)
       {
       }
 

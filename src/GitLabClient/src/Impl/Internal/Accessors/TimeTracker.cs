@@ -13,13 +13,13 @@ namespace mrHelper.GitLabClient.Accessors
    internal class TimeTracker : ITimeTracker
    {
       internal TimeTracker(MergeRequestKey mrk, IHostProperties hostProperties,
-         IModificationListener modificationListener, IConnectionLossListener connectionLossListener)
+         IModificationListener modificationListener, INetworkOperationStatusListener networkOperationStatusListener)
       {
          _mergeRequestKey = mrk;
          _hostProperties = hostProperties;
          _modificationListener = modificationListener;
          _stopwatch = new Stopwatch();
-         _connectionLossListener = connectionLossListener;
+         _networkOperationStatusListener = networkOperationStatusListener;
       }
 
       public void Start()
@@ -38,7 +38,7 @@ namespace mrHelper.GitLabClient.Accessors
          TimeSpan span = _stopwatch.Elapsed;
 
          MergeRequestEditor editor = new MergeRequestEditor(
-            _hostProperties, _mergeRequestKey, _modificationListener, _connectionLossListener);
+            _hostProperties, _mergeRequestKey, _modificationListener, _networkOperationStatusListener);
          try
          {
             await editor.AddTrackedTime(span, true);
@@ -84,7 +84,7 @@ namespace mrHelper.GitLabClient.Accessors
       private readonly IHostProperties _hostProperties;
       private readonly IModificationListener _modificationListener;
       private readonly Stopwatch _stopwatch;
-      private readonly IConnectionLossListener _connectionLossListener;
+      private readonly INetworkOperationStatusListener _networkOperationStatusListener;
    }
 }
 

@@ -20,7 +20,7 @@ namespace mrHelper.GitLabClient.Managers
          IHostProperties hostProperties,
          DataCacheConnectionContext context,
          IModificationNotifier modificationNotifier,
-         IConnectionLossListener connectionLossListener)
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
          _dataCacheContext = dataCacheContext;
          _cacheUpdater = cacheUpdater;
@@ -37,7 +37,7 @@ namespace mrHelper.GitLabClient.Managers
                context.QueryCollection);
 
             _updateManager = new UpdateManager(_dataCacheContext, hostname, hostProperties,
-               updateContext, _cacheUpdater, connectionLossListener);
+               updateContext, _cacheUpdater, networkOperationStatusListener);
             _updateManager.MergeRequestEvent += onUpdate;
             _updateManager.MergeRequestListRefreshed += onListRefreshed;
             _updateManager.MergeRequestRefreshed += onMergeRequestRefreshed;

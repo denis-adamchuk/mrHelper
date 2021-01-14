@@ -24,9 +24,9 @@ namespace mrHelper.GitLabClient.Managers
          IHostProperties hostProperties,
          DataCacheConnectionContext context,
          InternalCacheUpdater cacheUpdater,
-         IConnectionLossListener connectionLossListener)
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
-         DataCacheOperator updateOperator = new DataCacheOperator(hostname, hostProperties, connectionLossListener);
+         DataCacheOperator updateOperator = new DataCacheOperator(hostname, hostProperties, networkOperationStatusListener);
          _mergeRequestListLoader = new MergeRequestListLoader(
             hostname, updateOperator, new VersionLoader(updateOperator, cacheUpdater), cacheUpdater, context);
          _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater,

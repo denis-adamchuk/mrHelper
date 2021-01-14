@@ -26,9 +26,9 @@ namespace mrHelper.GitLabClient.Managers
          User user,
          IDiscussionLoader discussionLoader,
          IModificationNotifier modificationNotifier,
-         IConnectionLossListener connectionLossListener)
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
-         _operator = new TimeTrackingOperator(hostname, hostProperties, connectionLossListener);
+         _operator = new TimeTrackingOperator(hostname, hostProperties, networkOperationStatusListener);
          _currentUser = user;
          _modificationNotifier = modificationNotifier;
 

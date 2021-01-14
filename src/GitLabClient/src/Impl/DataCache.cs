@@ -14,11 +14,11 @@ namespace mrHelper.GitLabClient
    public class DataCache : IDisposable
    {
       public DataCache(DataCacheContext dataCacheContext,
-         IModificationNotifier modificationNotifier, IConnectionLossListener connectionLossListener)
+         IModificationNotifier modificationNotifier, INetworkOperationStatusListener networkOperationStatusListener)
       {
          _dataCacheContext = dataCacheContext;
          _modificationNotifier = modificationNotifier;
-         _conectionLossListener = connectionLossListener;
+         _conectionLossListener = networkOperationStatusListener;
       }
 
       public event Action<string, User> Connected;
@@ -134,7 +134,7 @@ namespace mrHelper.GitLabClient
       private DataCacheInternal _internal;
       private readonly DataCacheContext _dataCacheContext;
       private readonly IModificationNotifier _modificationNotifier;
-      private readonly IConnectionLossListener _conectionLossListener;
+      private readonly INetworkOperationStatusListener _conectionLossListener;
    }
 }
 

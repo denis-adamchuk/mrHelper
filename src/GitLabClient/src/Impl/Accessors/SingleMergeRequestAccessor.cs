@@ -17,33 +17,33 @@ namespace mrHelper.GitLabClient
    public class SingleMergeRequestAccessor
    {
       internal SingleMergeRequestAccessor(IHostProperties settings, MergeRequestKey mrk,
-         IModificationListener modificationListener, IConnectionLossListener connectionLossListener)
+         IModificationListener modificationListener, INetworkOperationStatusListener networkOperationStatusListener)
       {
          _settings = settings;
          _mrk = mrk;
          _modificationListener = modificationListener;
-         _connectionLossListener = connectionLossListener;
+         _networkOperationStatusListener = networkOperationStatusListener;
       }
 
       public IMergeRequestEditor GetMergeRequestEditor()
       {
-         return new MergeRequestEditor(_settings, _mrk, _modificationListener, _connectionLossListener);
+         return new MergeRequestEditor(_settings, _mrk, _modificationListener, _networkOperationStatusListener);
       }
 
       public DiscussionAccessor GetDiscussionAccessor()
       {
-         return new DiscussionAccessor(_settings, _mrk, _modificationListener, _connectionLossListener);
+         return new DiscussionAccessor(_settings, _mrk, _modificationListener, _networkOperationStatusListener);
       }
 
       public ITimeTracker GetTimeTracker()
       {
-         return new TimeTracker(_mrk, _settings, _modificationListener, _connectionLossListener);
+         return new TimeTracker(_mrk, _settings, _modificationListener, _networkOperationStatusListener);
       }
 
       private readonly MergeRequestKey _mrk;
       private readonly IHostProperties _settings;
       private readonly IModificationListener _modificationListener;
-      private readonly IConnectionLossListener _connectionLossListener;
+      private readonly INetworkOperationStatusListener _networkOperationStatusListener;
    }
 }
 

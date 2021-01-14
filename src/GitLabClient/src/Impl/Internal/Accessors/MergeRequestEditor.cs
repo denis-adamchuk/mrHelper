@@ -12,18 +12,18 @@ namespace mrHelper.GitLabClient.Accessors
    {
       internal MergeRequestEditor(IHostProperties hostProperties,
          MergeRequestKey mrk, IModificationListener modificationListener,
-         IConnectionLossListener connectionLossListener)
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
          _mrk = mrk;
          _hostProperties = hostProperties;
          _modificationListener = modificationListener;
-         _connectionLossListener = connectionLossListener;
+         _networkOperationStatusListener = networkOperationStatusListener;
       }
 
       async public Task<MergeRequest> ModifyMergeRequest(UpdateMergeRequestParameters parameters)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
-            _mrk.ProjectKey.HostName, _hostProperties, _connectionLossListener))
+            _mrk.ProjectKey.HostName, _hostProperties, _networkOperationStatusListener))
          {
             try
             {
@@ -49,7 +49,7 @@ namespace mrHelper.GitLabClient.Accessors
          try
          {
             using (TimeTrackingOperator timeTrackingOperator = new TimeTrackingOperator(
-               _mrk.ProjectKey.HostName, _hostProperties, _connectionLossListener))
+               _mrk.ProjectKey.HostName, _hostProperties, _networkOperationStatusListener))
             {
                await timeTrackingOperator.AddSpanAsync(add, span, _mrk);
                _modificationListener.OnTrackedTimeModified(_mrk, span, add);
@@ -64,7 +64,7 @@ namespace mrHelper.GitLabClient.Accessors
       async public Task<MergeRequestRebaseResponse> Rebase(bool? skipCI)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
-            _mrk.ProjectKey.HostName, _hostProperties, _connectionLossListener))
+            _mrk.ProjectKey.HostName, _hostProperties, _networkOperationStatusListener))
          {
             try
             {
@@ -88,7 +88,7 @@ namespace mrHelper.GitLabClient.Accessors
       async public Task<MergeRequest> Merge(AcceptMergeRequestParameters parameters)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
-            _mrk.ProjectKey.HostName, _hostProperties, _connectionLossListener))
+            _mrk.ProjectKey.HostName, _hostProperties, _networkOperationStatusListener))
          {
             try
             {
@@ -113,7 +113,7 @@ namespace mrHelper.GitLabClient.Accessors
       private readonly MergeRequestKey _mrk;
       private readonly IHostProperties _hostProperties;
       private readonly IModificationListener _modificationListener;
-      private readonly IConnectionLossListener _connectionLossListener;
+      private readonly INetworkOperationStatusListener _networkOperationStatusListener;
    }
 }
 
