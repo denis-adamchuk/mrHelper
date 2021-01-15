@@ -102,7 +102,7 @@ namespace mrHelper.App.Forms
          {
             IAsyncGitCommandService git = storage?.Git;
 
-            DiscussionsForm discussionsForm = new DiscussionsForm(dataCache, gitLabInstance, _modificationNotifier,
+            DiscussionsForm discussionsForm = new DiscussionsForm(dataCache, gitLabInstance,
                git, currentUser, mrk, discussions, title, author, _colorScheme,
                async (key, discussionsUpdated) =>
             {
@@ -126,7 +126,7 @@ namespace mrHelper.App.Forms
                }
             },
             () => dataCache?.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null),
-            webUrl, _connectionChecker)
+            webUrl, _shortcuts)
             {
                Tag = mrk
             };

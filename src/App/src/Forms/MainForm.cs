@@ -10,6 +10,7 @@ using mrHelper.StorageSupport;
 using mrHelper.CustomActions;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
+using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Forms
 {
@@ -93,6 +94,7 @@ namespace mrHelper.App.Forms
       private readonly GitLabClient.Accessors.ModificationNotifier _modificationNotifier =
          new GitLabClient.Accessors.ModificationNotifier();
       private readonly GitLabClient.ConnectionChecker _connectionChecker;
+      private readonly Shortcuts _shortcuts;
 
       private Dictionary<MergeRequestKey, DateTime> _recentMergeRequests = new Dictionary<MergeRequestKey, DateTime>();
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedRevisions =

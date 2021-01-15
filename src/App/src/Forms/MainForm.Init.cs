@@ -63,6 +63,7 @@ namespace mrHelper.App.Forms
          _connectionChecker = new GitLabClient.ConnectionChecker(Program.Settings, this);
          _connectionChecker.ConnectionLost += (_) => onConnectionLost();
          _connectionChecker.ConnectionRestored += (_) => onConnectionRestored();
+         _shortcuts = new App.Helpers.GitLab.Shortcuts(_modificationNotifier, _connectionChecker);
          applyConnectionStatus("Not connected", System.Drawing.Color.Black, null);
       }
 

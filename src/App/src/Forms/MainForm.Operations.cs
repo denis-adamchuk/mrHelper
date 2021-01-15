@@ -174,7 +174,7 @@ namespace mrHelper.App.Forms
                await checkForUpdatesAsync(dataCache, mrk, DataCacheUpdateKind.MergeRequest);
                return dataCache;
             },
-            () => Shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName))
+            () => _shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName))
          {
             Tag = mrk
          };
@@ -200,8 +200,7 @@ namespace mrHelper.App.Forms
       {
          Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
-         IMergeRequestEditor editor = Shortcuts.GetMergeRequestEditor(
-            gitLabInstance, _modificationNotifier, mrk, _connectionChecker);
+         IMergeRequestEditor editor = _shortcuts.GetMergeRequestEditor(gitLabInstance, mrk);
          DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
          TimeSpan? oldSpanOpt = dataCache?.TotalTimeCache?.GetTotalTime(mrk).Amount;
          if (!oldSpanOpt.HasValue)
@@ -256,8 +255,7 @@ namespace mrHelper.App.Forms
          _timeTrackingMode = getCurrentTabDataCacheType();
 
          GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
-         _timeTracker = Shortcuts.GetTimeTracker(gitLabInstance, _modificationNotifier,
-            getMergeRequestKey(null).Value, _connectionChecker);
+         _timeTracker = _shortcuts.GetTimeTracker(gitLabInstance, getMergeRequestKey(null).Value);
          _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
@@ -357,8 +355,7 @@ namespace mrHelper.App.Forms
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            bool res = await DiscussionHelper.AddCommentAsync(
-               mrk, mergeRequest.Title, _modificationNotifier, getCurrentUser(), _connectionChecker);
+            bool res = await DiscussionHelper.AddCommentAsync(mrk, mergeRequest.Title, getCurrentUser(), _shortcuts);
             addOperationRecord(res ? "New comment has been added" : "Comment has not been added");
          }));
       }
@@ -370,8 +367,8 @@ namespace mrHelper.App.Forms
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            bool res = (await DiscussionHelper.AddThreadAsync(mrk, mergeRequest.Title, _modificationNotifier,
-               getCurrentUser(), getDataCache(getCurrentTabDataCacheType()), _connectionChecker)) != null;
+            bool res = (await DiscussionHelper.AddThreadAsync(mrk, mergeRequest.Title,
+               getCurrentUser(), getDataCache(getCurrentTabDataCacheType()), _shortcuts)) != null;
             addOperationRecord(res ? "A new discussion thread has been added" : "Discussion thread has not been added");
          }));
       }
@@ -383,7 +380,7 @@ namespace mrHelper.App.Forms
 
          GitLabInstance gitLabInstance = new GitLabInstance(parameters.ProjectKey.HostName, Program.Settings);
          MergeRequestKey? mrkOpt = await MergeRequestEditHelper.SubmitNewMergeRequestAsync(gitLabInstance,
-            _modificationNotifier, parameters, firstNote, getCurrentUser(), _connectionChecker);
+            parameters, firstNote, getCurrentUser(), _shortcuts);
          if (mrkOpt == null)
          {
             // all error handling is done at the callee side
@@ -429,9 +426,9 @@ namespace mrHelper.App.Forms
             form.Description, form.TargetBranch, form.DeleteSourceBranch, form.Squash);
 
          GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings);
-         bool modified = await MergeRequestEditHelper.ApplyChangesToMergeRequest(gitLabInstance, _modificationNotifier,
+         bool modified = await MergeRequestEditHelper.ApplyChangesToMergeRequest(gitLabInstance,
             item.ProjectKey, item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser,
-            _connectionChecker);
+            _shortcuts);
 
          string statusMessage = modified
             ? String.Format("Merge Request !{0} has been modified", mrk.IId)
@@ -457,7 +454,7 @@ namespace mrHelper.App.Forms
          if (MessageBox.Show(message, "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
          {
             GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings);
-            await MergeRequestEditHelper.CloseMergeRequest(gitLabInstance, _modificationNotifier, mrk, _connectionChecker);
+            await MergeRequestEditHelper.CloseMergeRequest(gitLabInstance, mrk, _shortcuts);
 
             string statusMessage = String.Format("Merge Request !{0} has been closed", mrk.IId);
             addOperationRecord(statusMessage);

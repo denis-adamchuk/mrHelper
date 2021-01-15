@@ -132,11 +132,11 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            DiffCallHandler handler = new DiffCallHandler(storage.Git, _modificationNotifier, getCurrentUser(),
+            DiffCallHandler handler = new DiffCallHandler(storage.Git, getCurrentUser(),
                (mrk) => dataCache.DiscussionCache?.RequestUpdate(
                   mrk, Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null),
                (mrk) => dataCache.DiscussionCache?.GetDiscussions(mrk) ?? Array.Empty<Discussion>(),
-               _connectionChecker);
+               _shortcuts);
             handler.Handle(matchInfo, snapshot);
          }
          finally
@@ -372,8 +372,8 @@ namespace mrHelper.App.Forms
       async private Task<MergeRequest> searchMergeRequestAsync(MergeRequestKey mrk)
       {
          GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-         return await Shortcuts
-            .GetMergeRequestAccessor(gitLabInstance, _modificationNotifier, mrk.ProjectKey, _connectionChecker)
+         return await _shortcuts
+            .GetMergeRequestAccessor(gitLabInstance, mrk.ProjectKey)
             .SearchMergeRequestAsync(mrk.IId, false);
       }
 
