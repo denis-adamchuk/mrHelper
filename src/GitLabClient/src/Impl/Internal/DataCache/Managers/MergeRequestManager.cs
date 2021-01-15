@@ -5,7 +5,6 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.GitLabClient.Loaders.Cache;
-using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Managers
 {

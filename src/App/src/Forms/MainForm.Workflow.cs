@@ -53,6 +53,17 @@ namespace mrHelper.App.Forms
 
       async private Task switchHostToSelectedAsync(Func<Exception, bool> exceptionHandler)
       {
+         if (_gitLabInstance != null)
+         {
+            _gitLabInstance.ConnectionLost -= onConnectionLost;
+            _gitLabInstance.ConnectionRestored -= onConnectionRestored;
+            _gitLabInstance.Dispose();
+         }
+         _gitLabInstance = new GitLabInstance(getHostName(), Program.Settings, this);
+         _gitLabInstance.ConnectionLost += onConnectionLost;
+         _gitLabInstance.ConnectionRestored += onConnectionRestored;
+         _shortcuts = new Shortcuts(_gitLabInstance);
+
          updateTabControlSelection();
          try
          {
@@ -163,7 +174,7 @@ namespace mrHelper.App.Forms
             queryCollection);
 
          DataCache dataCache = getDataCache(EDataCacheType.Live);
-         await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
+         await dataCache.Connect(_gitLabInstance, connectionContext);
       }
 
       private void onForbiddenProject(ProjectKey projectKey)
@@ -303,8 +314,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         GitLabClient.ProjectAccessor projectAccessor = _shortcuts.GetProjectAccessor(
-            new GitLabInstance(hostname, Program.Settings));
+         GitLabClient.ProjectAccessor projectAccessor = _shortcuts.GetProjectAccessor();
 
          addOperationRecord("Preparing workflow to the first launch has started");
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
@@ -334,8 +344,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         GitLabClient.UserAccessor userAccessor = _shortcuts.GetUserAccessor(
-            new GitLabInstance(hostname, Program.Settings));
+         GitLabClient.UserAccessor userAccessor = _shortcuts.GetUserAccessor();
 
          bool migratedLabels = false;
          addOperationRecord("Preparing workflow to the first launch has started");

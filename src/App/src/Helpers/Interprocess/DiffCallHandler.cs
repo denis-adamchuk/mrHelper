@@ -16,7 +16,6 @@ using mrHelper.Common.Exceptions;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using static mrHelper.App.Helpers.ConfigurationHelper;
-using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.App.Interprocess
 {
@@ -66,16 +65,16 @@ namespace mrHelper.App.Interprocess
             scrollPosition(position, scrollUp, matchInfo.IsLeftSideLineNumber);
 
          async Task fnOnSubmitNewDiscussion(string body, bool includeContext, DiffPosition position) =>
-            await actOnGitLab(snapshot, "create", (gli) =>
-               submitDiscussionAsync(mrk, gli, matchInfo, snapshot.Refs, position, body, includeContext));
+            await actOnGitLab("create", () =>
+               submitDiscussionAsync(mrk, matchInfo, snapshot.Refs, position, body, includeContext));
 
          async Task fnOnEditOldNote(ReportedDiscussionNoteKey notePosition, ReportedDiscussionNoteContent content) =>
-            await actOnGitLab(snapshot, "edit", (gli) =>
-               editDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id, content.Body));
+            await actOnGitLab("edit", () =>
+               editDiscussionNoteAsync(mrk, notePosition.DiscussionId, notePosition.Id, content.Body));
 
          async Task fnOnDeleteOldNote(ReportedDiscussionNoteKey notePosition) =>
-            await actOnGitLab(snapshot, "delete", (gli) =>
-               deleteDiscussionNoteAsync(mrk, gli, notePosition.DiscussionId, notePosition.Id));
+            await actOnGitLab("delete", () =>
+               deleteDiscussionNoteAsync(mrk, notePosition.DiscussionId, notePosition.Id));
 
          IEnumerable<ReportedDiscussionNote> fnGetRelatedDiscussions(ReportedDiscussionNoteKey? keyOpt, DiffPosition position) =>
             getRelatedDiscussions(mrk, keyOpt, position).ToArray();
@@ -403,11 +402,11 @@ namespace mrHelper.App.Interprocess
          });
       }
 
-      async private Task actOnGitLab(Snapshot snapshot, string actionName, Func<GitLabInstance, Task> action)
+      async private Task actOnGitLab(string actionName, Func<Task> action)
       {
          try
          {
-            await action(new GitLabInstance(snapshot.Host, Program.Settings));
+            await action();
          }
          catch (Exception ex)
          {
@@ -420,7 +419,7 @@ namespace mrHelper.App.Interprocess
          }
       }
 
-      async private Task submitDiscussionAsync(MergeRequestKey mrk, GitLabInstance gitLabInstance,
+      async private Task submitDiscussionAsync(MergeRequestKey mrk,
          MatchInfo matchInfo, Core.Matching.DiffRefs diffRefs, DiffPosition position, string body, bool includeContext)
       {
          if (body.Length == 0)
@@ -434,7 +433,7 @@ namespace mrHelper.App.Interprocess
          NewDiscussionParameters parameters = new NewDiscussionParameters(
             body, includeContext ? createPositionParameters(position) : new PositionParameters?());
 
-         IDiscussionCreator creator = _shortcuts.GetDiscussionCreator(gitLabInstance, mrk, _currentUser);
+         IDiscussionCreator creator = _shortcuts.GetDiscussionCreator(mrk, _currentUser);
 
          try
          {
@@ -462,17 +461,15 @@ namespace mrHelper.App.Interprocess
          }
       }
 
-      private Task editDiscussionNoteAsync(MergeRequestKey mrk, GitLabInstance gitLabInstance,
-         string discussionId, int noteId, string text)
+      private Task editDiscussionNoteAsync(MergeRequestKey mrk, string discussionId, int noteId, string text)
       {
-         IDiscussionEditor editor = _shortcuts.GetDiscussionEditor(gitLabInstance, mrk, discussionId);
+         IDiscussionEditor editor = _shortcuts.GetDiscussionEditor(mrk, discussionId);
          return editor.ModifyNoteBodyAsync(noteId, text);
       }
 
-      private Task deleteDiscussionNoteAsync(MergeRequestKey mrk, GitLabInstance gitLabInstance,
-         string discussionId, int noteId)
+      private Task deleteDiscussionNoteAsync(MergeRequestKey mrk, string discussionId, int noteId)
       {
-         IDiscussionEditor editor = _shortcuts.GetDiscussionEditor(gitLabInstance, mrk, discussionId);
+         IDiscussionEditor editor = _shortcuts.GetDiscussionEditor(mrk, discussionId);
          return editor.DeleteNoteAsync(noteId);
       }
 

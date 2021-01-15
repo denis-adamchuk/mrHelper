@@ -8,7 +8,6 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Constants;
-using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient
 {

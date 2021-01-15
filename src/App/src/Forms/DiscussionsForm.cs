@@ -16,7 +16,6 @@ using mrHelper.App.Forms.Helpers;
 using mrHelper.Common.Constants;
 using mrHelper.CustomActions;
 using SearchQuery = mrHelper.App.Helpers.SearchQuery;
-using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -638,7 +637,7 @@ namespace mrHelper.App.Forms
          foreach (Discussion discussion in discussions)
          {
             SingleDiscussionAccessor accessor = _shortcuts.GetSingleDiscussionAccessor(
-               _gitLabInstance, _mergeRequestKey, discussion.Id);
+               _mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,

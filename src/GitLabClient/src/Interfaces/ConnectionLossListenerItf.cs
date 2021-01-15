@@ -1,10 +1,10 @@
-﻿namespace mrHelper.GitLabClient.Interfaces
+﻿namespace mrHelper.GitLabClient
 {
    public interface INetworkOperationStatusListener
    {
-      void OnFailure(string hostname);
+      void OnFailure();
 
-      void OnSuccess(string hostname);
+      void OnSuccess();
    }
 }
 

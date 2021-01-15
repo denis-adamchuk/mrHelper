@@ -3,12 +3,9 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.GitLabClient.Operators;
-using mrHelper.GitLabClient.Accessors;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Managers
 {

@@ -371,9 +371,8 @@ namespace mrHelper.App.Forms
 
       async private Task<MergeRequest> searchMergeRequestAsync(MergeRequestKey mrk)
       {
-         GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
          return await _shortcuts
-            .GetMergeRequestAccessor(gitLabInstance, mrk.ProjectKey)
+            .GetMergeRequestAccessor(mrk.ProjectKey)
             .SearchMergeRequestAsync(mrk.IId, false);
       }
 

@@ -33,8 +33,7 @@ namespace mrHelper.App.Forms.Helpers
 
                try
                {
-                  GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-                  IDiscussionCreator creator = shortcuts.GetDiscussionCreator(gitLabInstance, mrk, currentUser);
+                  IDiscussionCreator creator = shortcuts.GetDiscussionCreator(mrk, currentUser);
                   string body = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
                   await creator.CreateNoteAsync(new CreateNewNoteParameters(body));
                }
@@ -79,9 +78,7 @@ namespace mrHelper.App.Forms.Helpers
                Discussion discussion = null;
                try
                {
-                  GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-                  IDiscussionCreator creator = shortcuts.GetDiscussionCreator(
-                     gitLabInstance, mrk, currentUser);
+                  IDiscussionCreator creator = shortcuts.GetDiscussionCreator(mrk, currentUser);
                   string body = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
                   discussion = await creator.CreateDiscussionAsync(new NewDiscussionParameters(body, null), false);
                }

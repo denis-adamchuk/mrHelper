@@ -128,7 +128,7 @@ namespace mrHelper.App.Forms
          var sourceBranchesInUse = GitLabClient.Helpers.GetSourceBranchesByUser(getCurrentUser(), dataCache);
 
          MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
-            getProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList, sourceBranchesInUse,
+            _shortcuts.GetProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList, sourceBranchesInUse,
             _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()));
          if (form.ShowDialog() != DialogResult.OK)
          {
@@ -174,7 +174,7 @@ namespace mrHelper.App.Forms
                await checkForUpdatesAsync(dataCache, mrk, DataCacheUpdateKind.MergeRequest);
                return dataCache;
             },
-            () => _shortcuts.GetMergeRequestAccessor(getProjectAccessor(), mrk.ProjectKey.ProjectName))
+            () => _shortcuts.GetMergeRequestAccessor(mrk.ProjectKey.ProjectName))
          {
             Tag = mrk
          };
@@ -199,8 +199,7 @@ namespace mrHelper.App.Forms
       private async Task editTrackedTimeAsync(MergeRequestKey mrk, MergeRequest mr)
       {
          Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
-         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
-         IMergeRequestEditor editor = _shortcuts.GetMergeRequestEditor(gitLabInstance, mrk);
+         IMergeRequestEditor editor = _shortcuts.GetMergeRequestEditor(mrk);
          DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
          TimeSpan? oldSpanOpt = dataCache?.TotalTimeCache?.GetTotalTime(mrk).Amount;
          if (!oldSpanOpt.HasValue)
@@ -254,8 +253,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(getMergeRequestKey(null).HasValue);
          _timeTrackingMode = getCurrentTabDataCacheType();
 
-         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
-         _timeTracker = _shortcuts.GetTimeTracker(gitLabInstance, getMergeRequestKey(null).Value);
+         _timeTracker = _shortcuts.GetTimeTracker(getMergeRequestKey(null).Value);
          _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
@@ -378,8 +376,7 @@ namespace mrHelper.App.Forms
          setMergeRequestEditEnabled(false);
          addOperationRecord("Creating a merge request at GitLab has started");
 
-         GitLabInstance gitLabInstance = new GitLabInstance(parameters.ProjectKey.HostName, Program.Settings);
-         MergeRequestKey? mrkOpt = await MergeRequestEditHelper.SubmitNewMergeRequestAsync(gitLabInstance,
+         MergeRequestKey? mrkOpt = await MergeRequestEditHelper.SubmitNewMergeRequestAsync(
             parameters, firstNote, getCurrentUser(), _shortcuts);
          if (mrkOpt == null)
          {
@@ -414,7 +411,7 @@ namespace mrHelper.App.Forms
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(dataCache.DiscussionCache, mrk);
          MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
-            getProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList);
+            _shortcuts.GetProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList);
          if (form.ShowDialog() != DialogResult.OK)
          {
             Trace.TraceInformation("[MainForm] User declined to modify a merge request");
@@ -425,8 +422,7 @@ namespace mrHelper.App.Forms
             new ApplyMergeRequestChangesParameters(form.Title, form.AssigneeUsername,
             form.Description, form.TargetBranch, form.DeleteSourceBranch, form.Squash);
 
-         GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings);
-         bool modified = await MergeRequestEditHelper.ApplyChangesToMergeRequest(gitLabInstance,
+         bool modified = await MergeRequestEditHelper.ApplyChangesToMergeRequest(
             item.ProjectKey, item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser,
             _shortcuts);
 
@@ -453,8 +449,7 @@ namespace mrHelper.App.Forms
             "Do you really want to close (cancel) merge request? It will not be merged to the target branch.";
          if (MessageBox.Show(message, "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
          {
-            GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings);
-            await MergeRequestEditHelper.CloseMergeRequest(gitLabInstance, mrk, _shortcuts);
+            await MergeRequestEditHelper.CloseMergeRequest(mrk, _shortcuts);
 
             string statusMessage = String.Format("Merge Request !{0} has been closed", mrk.IId);
             addOperationRecord(statusMessage);

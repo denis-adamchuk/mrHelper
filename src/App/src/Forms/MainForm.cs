@@ -91,10 +91,8 @@ namespace mrHelper.App.Forms
       private EventFilter _eventFilter;
       private ExpressionResolver _expressionResolver;
       private MergeRequestFilter _mergeRequestFilter;
-      private readonly GitLabClient.Accessors.ModificationNotifier _modificationNotifier =
-         new GitLabClient.Accessors.ModificationNotifier();
-      private readonly GitLabClient.ConnectionChecker _connectionChecker;
-      private readonly Shortcuts _shortcuts;
+      private Shortcuts _shortcuts;
+      private GitLabInstance _gitLabInstance;
 
       private Dictionary<MergeRequestKey, DateTime> _recentMergeRequests = new Dictionary<MergeRequestKey, DateTime>();
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedRevisions =

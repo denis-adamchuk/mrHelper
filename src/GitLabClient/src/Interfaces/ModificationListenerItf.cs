@@ -2,7 +2,7 @@
 
 namespace mrHelper.GitLabClient
 {
-   public interface IModificationListener
+   internal interface IModificationListener
    {
       void OnMergeRequestModified(MergeRequestKey mergeRequestKey);
 

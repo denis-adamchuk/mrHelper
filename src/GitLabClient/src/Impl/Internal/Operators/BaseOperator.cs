@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using GitLabSharp;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Operators
 {
@@ -27,18 +26,18 @@ namespace mrHelper.GitLabClient.Operators
          try
          {
             T result = await func(_client);
-            _networkOperationStatusListener?.OnSuccess(Hostname);
+            _networkOperationStatusListener?.OnSuccess();
             return result;
          }
          catch (OperatorException ex)
          {
             if (isConnectionFailureException(ex))
             {
-               _networkOperationStatusListener?.OnFailure(Hostname);
+               _networkOperationStatusListener?.OnFailure();
             }
             else
             {
-               _networkOperationStatusListener?.OnSuccess(Hostname);
+               _networkOperationStatusListener?.OnSuccess();
             }
             throw;
          }

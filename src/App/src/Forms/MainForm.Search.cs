@@ -73,7 +73,7 @@ namespace mrHelper.App.Forms
             queryCollection);
 
          DataCache dataCache = getDataCache(mode);
-         await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
+         await dataCache.Connect(_gitLabInstance, sessionContext);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

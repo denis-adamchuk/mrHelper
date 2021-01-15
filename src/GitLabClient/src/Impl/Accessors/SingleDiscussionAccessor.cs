@@ -1,7 +1,6 @@
 ﻿using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Accessors;
-using mrHelper.GitLabClient.Interfaces;
 using mrHelper.GitLabClient.Operators;
 using System.Threading.Tasks;
 

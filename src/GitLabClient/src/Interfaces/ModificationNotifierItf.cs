@@ -2,7 +2,7 @@
 
 namespace mrHelper.GitLabClient
 {
-   public interface IModificationNotifier
+   internal interface IModificationNotifier
    {
       event Action<MergeRequestKey> MergeRequestModified;
 

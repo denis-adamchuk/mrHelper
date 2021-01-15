@@ -2,7 +2,6 @@
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitLabClient.Interfaces;
 using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Accessors

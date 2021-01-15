@@ -22,7 +22,12 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
-         _connectionChecker.Dispose();
+         if (_gitLabInstance != null)
+         {
+            _gitLabInstance.ConnectionLost -= onConnectionLost;
+            _gitLabInstance.ConnectionRestored -= onConnectionRestored;
+            _gitLabInstance.Dispose();
+         }
 
          _liveDataCache.Dispose();
          _searchDataCache.Dispose();

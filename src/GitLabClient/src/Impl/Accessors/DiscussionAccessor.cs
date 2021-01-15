@@ -3,7 +3,6 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Accessors;
-using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient
 {

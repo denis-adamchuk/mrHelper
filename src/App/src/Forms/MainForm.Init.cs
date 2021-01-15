@@ -60,10 +60,6 @@ namespace mrHelper.App.Forms
          SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
          _applicationUpdateChecker = new PeriodicUpdateChecker(this);
 
-         _connectionChecker = new GitLabClient.ConnectionChecker(Program.Settings, this);
-         _connectionChecker.ConnectionLost += (_) => onConnectionLost();
-         _connectionChecker.ConnectionRestored += (_) => onConnectionRestored();
-         _shortcuts = new App.Helpers.GitLab.Shortcuts(_modificationNotifier, _connectionChecker);
          applyConnectionStatus("Not connected", System.Drawing.Color.Black, null);
       }
 
@@ -376,7 +372,7 @@ namespace mrHelper.App.Forms
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Live");
-         _liveDataCache = new DataCache(dataCacheContext, _modificationNotifier, _connectionChecker);
+         _liveDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Live).SetDataCache(_liveDataCache);
          getListView(EDataCacheType.Live).SetFilter(_mergeRequestFilter);
 
@@ -459,7 +455,7 @@ namespace mrHelper.App.Forms
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Search");
-         _searchDataCache = new DataCache(dataCacheContext, _modificationNotifier, _connectionChecker);
+         _searchDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Search).SetDataCache(_searchDataCache);
       }
 
@@ -483,7 +479,7 @@ namespace mrHelper.App.Forms
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Recent");
-         _recentDataCache = new DataCache(dataCacheContext, _modificationNotifier, _connectionChecker);
+         _recentDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Recent).SetDataCache(_recentDataCache);
       }
 

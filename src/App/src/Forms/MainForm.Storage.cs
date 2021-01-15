@@ -53,7 +53,7 @@ namespace mrHelper.App.Forms
             try
             {
                _storageFactory = new LocalCommitStorageFactory(this,
-                  getProjectAccessor(),
+                  _shortcuts.GetProjectAccessor(),
                   Program.Settings.LocalGitFolder,
                   Program.Settings.RevisionsToKeep,
                   Program.Settings.ComparisonsToKeep);

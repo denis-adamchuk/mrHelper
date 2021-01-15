@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -5,8 +6,6 @@ using GitLabSharp.Entities;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Constants;
-using System;
-using mrHelper.GitLabClient.Interfaces;
 using mrHelper.GitLabClient.Operators.Search;
 
 namespace mrHelper.GitLabClient.Operators

@@ -225,19 +225,6 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private ProjectAccessor getProjectAccessor()
-      {
-         if (getHostName() == String.Empty)
-         {
-            Debug.Assert(false);
-            return null;
-         }
-
-         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance, _connectionChecker);
-         return rawDataAccessor.GetProjectAccessor(_modificationNotifier);
-      }
-
       private bool isTrackingTime()
       {
          return _timeTracker != null;

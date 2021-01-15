@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitLabClient.Interfaces;
 using mrHelper.GitLabClient.Loaders;
 using mrHelper.GitLabClient.Loaders.Cache;
 using mrHelper.GitLabClient.Managers;
@@ -13,12 +12,9 @@ namespace mrHelper.GitLabClient
 {
    public class DataCache : IDisposable
    {
-      public DataCache(DataCacheContext dataCacheContext,
-         IModificationNotifier modificationNotifier, INetworkOperationStatusListener networkOperationStatusListener)
+      public DataCache(DataCacheContext dataCacheContext)
       {
          _dataCacheContext = dataCacheContext;
-         _modificationNotifier = modificationNotifier;
-         _conectionLossListener = networkOperationStatusListener;
       }
 
       public event Action<string, User> Connected;
@@ -31,7 +27,7 @@ namespace mrHelper.GitLabClient
 
          string hostname = gitLabInstance.HostName;
          IHostProperties hostProperties = gitLabInstance.HostProperties;
-         _operator = new DataCacheOperator(hostname, hostProperties, _conectionLossListener);
+         _operator = new DataCacheOperator(hostname, hostProperties, gitLabInstance.NetworkOperationStatusListener);
 
          try
          {
@@ -47,7 +43,9 @@ namespace mrHelper.GitLabClient
             User currentUser = GlobalCache.GetAuthenticatedUser(hostname, accessToken);
 
             await mergeRequestListLoader.Load();
-            _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser, context);
+            _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser, context,
+               gitLabInstance.ModificationNotifier,
+               gitLabInstance.NetworkOperationStatusListener);
 
             ConnectionContext = context;
             traceInformation(String.Format("Data cache connected to {0}", hostname));
@@ -112,16 +110,18 @@ namespace mrHelper.GitLabClient
          string hostname,
          IHostProperties hostProperties,
          User user,
-         DataCacheConnectionContext context)
+         DataCacheConnectionContext context,
+         IModificationNotifier modificationNotifier,
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
          MergeRequestManager mergeRequestManager = new MergeRequestManager(
             _dataCacheContext, cacheUpdater, hostname, hostProperties, context,
-            _modificationNotifier, _conectionLossListener);
+            modificationNotifier, networkOperationStatusListener);
          DiscussionManager discussionManager = new DiscussionManager(
             _dataCacheContext, hostname, hostProperties, user, mergeRequestManager, context,
-            _modificationNotifier, _conectionLossListener);
+            modificationNotifier, networkOperationStatusListener);
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
-            hostname, hostProperties, user, discussionManager, _modificationNotifier, _conectionLossListener);
+            hostname, hostProperties, user, discussionManager, modificationNotifier, networkOperationStatusListener);
 
          IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
          ProjectCache projectCache = new ProjectCache(loader, _dataCacheContext, hostname);
@@ -133,8 +133,6 @@ namespace mrHelper.GitLabClient
       private DataCacheOperator _operator;
       private DataCacheInternal _internal;
       private readonly DataCacheContext _dataCacheContext;
-      private readonly IModificationNotifier _modificationNotifier;
-      private readonly INetworkOperationStatusListener _conectionLossListener;
    }
 }
 

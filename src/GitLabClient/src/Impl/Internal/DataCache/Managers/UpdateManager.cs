@@ -9,7 +9,6 @@ using mrHelper.GitLabClient.Loaders.Cache;
 using mrHelper.GitLabClient.Operators;
 using mrHelper.GitLabClient.Loaders;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Managers
 {

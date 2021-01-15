@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
-using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Accessors
 {

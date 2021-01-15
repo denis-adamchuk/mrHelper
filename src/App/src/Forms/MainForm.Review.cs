@@ -26,7 +26,6 @@ namespace mrHelper.App.Forms
          // Store data before async/await
          User currentUser = getCurrentUser();
          DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
-         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
          if (dataCache == null)
          {
             Debug.Assert(false);
@@ -50,7 +49,7 @@ namespace mrHelper.App.Forms
          {
             return;
          }
-         showDiscussionForm(gitLabInstance, dataCache, storage, currentUser, mrk, discussions, title, author, webUrl);
+         showDiscussionForm(_gitLabInstance, dataCache, storage, currentUser, mrk, discussions, title, author, webUrl);
       }
 
       async private Task<bool> prepareStorageForDiscussionsForm(MergeRequestKey mrk,

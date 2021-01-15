@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
-using mrHelper.GitLabClient.Interfaces;
 using mrHelper.GitLabClient.Operators.Search;
 
 namespace mrHelper.GitLabClient.Operators

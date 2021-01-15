@@ -8,7 +8,6 @@ using GitLabSharp.Accessors;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
-using mrHelper.GitLabClient.Interfaces;
 
 namespace mrHelper.GitLabClient.Accessors
 {
