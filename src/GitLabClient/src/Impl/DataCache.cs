@@ -35,7 +35,8 @@ namespace mrHelper.GitLabClient
 
             InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
             IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
-               hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater, context);
+               hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater,
+               _dataCacheContext.Callbacks, context.QueryCollection);
 
             traceInformation(String.Format("Connecting data cache to {0}...", hostname));
             string accessToken = hostProperties.GetAccessToken(hostname);
@@ -43,9 +44,8 @@ namespace mrHelper.GitLabClient
             User currentUser = GlobalCache.GetAuthenticatedUser(hostname, accessToken);
 
             await mergeRequestListLoader.Load();
-            _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser, context,
-               gitLabInstance.ModificationNotifier,
-               gitLabInstance.NetworkOperationStatusListener);
+            _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser, context.QueryCollection,
+               gitLabInstance.ModificationNotifier, gitLabInstance.NetworkOperationStatusListener);
 
             ConnectionContext = context;
             traceInformation(String.Format("Data cache connected to {0}", hostname));
@@ -110,15 +110,15 @@ namespace mrHelper.GitLabClient
          string hostname,
          IHostProperties hostProperties,
          User user,
-         DataCacheConnectionContext context,
+         SearchQueryCollection queryCollection,
          IModificationNotifier modificationNotifier,
          INetworkOperationStatusListener networkOperationStatusListener)
       {
          MergeRequestManager mergeRequestManager = new MergeRequestManager(
-            _dataCacheContext, cacheUpdater, hostname, hostProperties, context,
+            _dataCacheContext, cacheUpdater, hostname, hostProperties, queryCollection,
             modificationNotifier, networkOperationStatusListener);
          DiscussionManager discussionManager = new DiscussionManager(
-            _dataCacheContext, hostname, hostProperties, user, mergeRequestManager, context,
+            _dataCacheContext, hostname, hostProperties, user, mergeRequestManager,
             modificationNotifier, networkOperationStatusListener);
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
             hostname, hostProperties, user, discussionManager, modificationNotifier, networkOperationStatusListener);

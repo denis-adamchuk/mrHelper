@@ -370,8 +370,18 @@ namespace mrHelper.App.Forms
 
       private void createLiveDataCacheAndDependencies()
       {
+         // The idea is that:
+         // 1. Already cached MR that became closed remotely will not be removed from the cache
+         // 2. Open MR that are missing in the cache, will be added to the cache
+         // 3. Open MR that exist in the cache, will be updated
+         // 4. Non-cached MR that are closed remotely, will not be added to the cache even if directly requested by IId
+         bool updateOnlyOpened = true;
+
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
-            Program.Settings.UpdateManagerExtendedLogging, "Live");
+            Program.Settings.UpdateManagerExtendedLogging, "Live",
+            new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
+            new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs,
+            updateOnlyOpened));
          _liveDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Live).SetDataCache(_liveDataCache);
          getListView(EDataCacheType.Live).SetFilter(_mergeRequestFilter);
@@ -393,8 +403,11 @@ namespace mrHelper.App.Forms
       private void disposeLiveDataCacheDependencies()
       {
          _userNotifier?.Dispose();
+         _userNotifier = null;
          _eventFilter?.Dispose();
+         _eventFilter = null;
          _expressionResolver?.Dispose();
+         _expressionResolver = null;
       }
 
       private void subscribeToLiveDataCacheInternalEvents()
@@ -454,7 +467,8 @@ namespace mrHelper.App.Forms
       private void createSearchDataCache()
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
-            Program.Settings.UpdateManagerExtendedLogging, "Search");
+            Program.Settings.UpdateManagerExtendedLogging, "Search", new DataCacheCallbacks(null, null),
+            getDataCacheUpdateRules(EDataCacheType.Search));
          _searchDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Search).SetDataCache(_searchDataCache);
       }
@@ -478,7 +492,8 @@ namespace mrHelper.App.Forms
       private void createRecentDataCache()
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
-            Program.Settings.UpdateManagerExtendedLogging, "Recent");
+            Program.Settings.UpdateManagerExtendedLogging, "Recent", new DataCacheCallbacks(null, null),
+            getDataCacheUpdateRules(EDataCacheType.Recent));
          _recentDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Recent).SetDataCache(_recentDataCache);
       }

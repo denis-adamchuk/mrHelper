@@ -21,15 +21,15 @@ namespace mrHelper.GitLabClient.Managers
          DataCacheContext dataCacheContext,
          string hostname,
          IHostProperties hostProperties,
-         DataCacheConnectionContext context,
+         SearchQueryCollection queryCollection,
          InternalCacheUpdater cacheUpdater,
          INetworkOperationStatusListener networkOperationStatusListener)
       {
          DataCacheOperator updateOperator = new DataCacheOperator(hostname, hostProperties, networkOperationStatusListener);
          _mergeRequestListLoader = new MergeRequestListLoader(
-            hostname, updateOperator, new VersionLoader(updateOperator, cacheUpdater), cacheUpdater, context);
+            hostname, updateOperator, new VersionLoader(updateOperator, cacheUpdater), cacheUpdater, null, queryCollection);
          _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater,
-            context.UpdateRules.UpdateOnlyOpenedMergeRequests);
+            dataCacheContext.UpdateRules.UpdateOnlyOpenedMergeRequests);
          _extLogging = dataCacheContext.UpdateManagerExtendedLogging;
          _tagForLogging = dataCacheContext.TagForLogging;
 
@@ -37,7 +37,7 @@ namespace mrHelper.GitLabClient.Managers
 
          _timer = new System.Timers.Timer
          {
-            Interval = context.UpdateRules.UpdateMergeRequestsPeriod.Value
+            Interval = dataCacheContext.UpdateRules.UpdateMergeRequestsPeriod.Value
          };
          _timer.Elapsed += onTimer;
          _timer.SynchronizingObject = dataCacheContext.SynchronizeInvoke;

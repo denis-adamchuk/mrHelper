@@ -22,20 +22,18 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
-         if (_gitLabInstance != null)
-         {
-            _gitLabInstance.ConnectionLost -= onConnectionLost;
-            _gitLabInstance.ConnectionRestored -= onConnectionRestored;
-            _gitLabInstance.Dispose();
-         }
-
-         _liveDataCache.Dispose();
-         _searchDataCache.Dispose();
-         _recentDataCache.Dispose();
-
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
          disposeLiveDataCacheDependencies();
+
+         _liveDataCache.Dispose();
+         _liveDataCache = null;
+         _searchDataCache.Dispose();
+         _searchDataCache = null;
+         _recentDataCache.Dispose();
+         _recentDataCache = null;
+
+         disposeGitLabInstance();
 
          unsubscribeFromApplicationUpdates();
          _applicationUpdateChecker.Dispose();

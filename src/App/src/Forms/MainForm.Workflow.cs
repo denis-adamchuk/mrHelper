@@ -51,19 +51,28 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      async private Task switchHostToSelectedAsync(Func<Exception, bool> exceptionHandler)
+      private void initializeGitLabInstance()
+      {
+         disposeGitLabInstance();
+         _gitLabInstance = new GitLabInstance(getHostName(), Program.Settings, this);
+         _gitLabInstance.ConnectionLost += onConnectionLost;
+         _gitLabInstance.ConnectionRestored += onConnectionRestored;
+         _shortcuts = new Shortcuts(_gitLabInstance);
+      }
+
+      private void disposeGitLabInstance()
       {
          if (_gitLabInstance != null)
          {
             _gitLabInstance.ConnectionLost -= onConnectionLost;
             _gitLabInstance.ConnectionRestored -= onConnectionRestored;
             _gitLabInstance.Dispose();
+            _gitLabInstance = null;
          }
-         _gitLabInstance = new GitLabInstance(getHostName(), Program.Settings, this);
-         _gitLabInstance.ConnectionLost += onConnectionLost;
-         _gitLabInstance.ConnectionRestored += onConnectionRestored;
-         _shortcuts = new Shortcuts(_gitLabInstance);
+      }
 
+      async private Task switchHostToSelectedAsync(Func<Exception, bool> exceptionHandler)
+      {
          updateTabControlSelection();
          try
          {
@@ -71,7 +80,7 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
-            dropConnectionToHost();
+            dropCacheConnections();
             if (exceptionHandler == null)
             {
                exceptionHandler = new Func<Exception, bool>(e => startWorkflowDefaultExceptionHandler(e));
@@ -83,7 +92,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void dropConnectionToHost()
+      private void dropCacheConnections()
       {
          foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
          {
@@ -95,17 +104,19 @@ namespace mrHelper.App.Forms
 
       async private Task startWorkflowAsync(string hostname)
       {
+         dropCacheConnections();
+         initializeGitLabInstance();
+
          // When this thing happens, everything reconnects. If there are some things at gitlab that user
          // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
          // we will miss them. It might be ok when host changes, but if this method used to "refresh"
          // things, missed events are not desirable.
-         // This is why "Update List" button implemented not by means of switchHostToSelected().
+         // This is why "Refresh List" button implemented not by means of startWorkflowAsync().
 
          Trace.TraceInformation(String.Format(
             "[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
             hostname, Program.Settings.WorkflowType));
 
-         dropConnectionToHost();
          applyConnectionStatus("Not connected", System.Drawing.Color.Black, null);
          if (String.IsNullOrWhiteSpace(hostname))
          {
@@ -160,18 +171,7 @@ namespace mrHelper.App.Forms
 
       async private Task connectLiveDataCacheAsync(string hostname, SearchQueryCollection queryCollection)
       {
-         // The idea is that:
-         // 1. Already cached MR that became closed remotely will not be removed from the cache
-         // 2. Open MR that are missing in the cache, will be added to the cache
-         // 3. Open MR that exist in the cache, will be updated
-         // 4. Non-cached MR that are closed remotely, will not be added to the cache even if directly requested by IId
-         bool updateOnlyOpened = true;
-
-         DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(
-            new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
-            new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs,
-               updateOnlyOpened),
-            queryCollection);
+         DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(queryCollection);
 
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          await dataCache.Connect(_gitLabInstance, connectionContext);

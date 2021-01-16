@@ -13,8 +13,12 @@ namespace mrHelper.GitLabClient
       {
          HostProperties = hostProperties;
          HostName = hostname;
+
+         ModificationNotifier modificationNotifier = new ModificationNotifier();
+         ModificationListener = modificationNotifier;
+         ModificationNotifier = modificationNotifier;
+
          _synchronizeInvoke = synchronizeInvoke;
-         _modificationNotifier = new ModificationNotifier();
       }
 
       public void Dispose()
@@ -26,8 +30,8 @@ namespace mrHelper.GitLabClient
 
       internal IHostProperties HostProperties { get; }
       internal string HostName { get; }
-      internal IModificationListener ModificationListener => _modificationNotifier;
-      internal IModificationNotifier ModificationNotifier => _modificationNotifier;
+      internal IModificationListener ModificationListener { get; }
+      internal IModificationNotifier ModificationNotifier { get; }
       internal INetworkOperationStatusListener NetworkOperationStatusListener => this;
 
       public void OnFailure()
@@ -115,7 +119,6 @@ namespace mrHelper.GitLabClient
       }
 
       private readonly ISynchronizeInvoke _synchronizeInvoke;
-      private readonly ModificationNotifier _modificationNotifier;
       private bool _checking;
 
       private Timer _timer;

@@ -67,11 +67,7 @@ namespace mrHelper.App.Forms
       async private Task connectSearchDataCacheAsync(string hostname, SearchQueryCollection queryCollection,
          EDataCacheType mode)
       {
-         DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(
-            new DataCacheCallbacks(null, null),
-            getDataCacheUpdateRules(mode),
-            queryCollection);
-
+         DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(queryCollection);
          DataCache dataCache = getDataCache(mode);
          await dataCache.Connect(_gitLabInstance, sessionContext);
       }

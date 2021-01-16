@@ -1,6 +1,6 @@
 ﻿namespace mrHelper.GitLabClient
 {
-   public interface INetworkOperationStatusListener
+   internal interface INetworkOperationStatusListener
    {
       void OnFailure();
 

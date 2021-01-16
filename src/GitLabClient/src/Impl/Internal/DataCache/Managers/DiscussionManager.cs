@@ -31,7 +31,6 @@ namespace mrHelper.GitLabClient.Managers
          IHostProperties hostProperties,
          User user,
          IMergeRequestCache mergeRequestCache,
-         DataCacheConnectionContext dataCacheConnectionContext,
          IModificationNotifier modificationNotifier,
          INetworkOperationStatusListener networkOperationStatusListener)
       {
@@ -49,11 +48,11 @@ namespace mrHelper.GitLabClient.Managers
 
          _modificationNotifier.DiscussionResolved += onDiscussionModified;
 
-         if (dataCacheConnectionContext.UpdateRules.UpdateDiscussionsPeriod.HasValue)
+         if (dataCacheContext.UpdateRules.UpdateDiscussionsPeriod.HasValue)
          {
             _timer = new System.Timers.Timer
             {
-               Interval = dataCacheConnectionContext.UpdateRules.UpdateDiscussionsPeriod.Value
+               Interval = dataCacheContext.UpdateRules.UpdateDiscussionsPeriod.Value
             };
             _timer.Elapsed += onTimer;
             _timer.SynchronizingObject = dataCacheContext.SynchronizeInvoke;
