@@ -130,13 +130,13 @@ namespace mrHelper.Common.Constants
 
       public static TaskUtils.BatchLimits ComparisonLoadingForNonAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
       {
-         Size = 20,
+         Size = 10,
          Delay = 1000 // this is multiplied by number of storages
       };
 
       public static TaskUtils.BatchLimits FileLoadingForNonAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
       {
-         Size = 10,
+         Size = 5,
          Delay = 1000 // this is multiplied by number of storages
       };
       // @} FileStorageUpdater

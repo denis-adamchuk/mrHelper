@@ -47,7 +47,11 @@ namespace mrHelper.Common.Tools
          while (true)
          {
             BatchLimits limits = getBatchLimits();
-            if (limits.Size <= 0 || limits.Delay < 0)
+            if (limits.Size == 0)
+            {
+               break;
+            }
+            else if (limits.Size < 0 || limits.Delay < 0)
             {
                throw new NotImplementedException();
             }

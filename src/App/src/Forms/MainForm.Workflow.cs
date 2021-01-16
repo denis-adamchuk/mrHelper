@@ -78,7 +78,7 @@ namespace mrHelper.App.Forms
       {
          foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
          {
-            getDataCache(mode).Disconnect();
+            getDataCache(mode)?.Disconnect();
          }
       }
 
