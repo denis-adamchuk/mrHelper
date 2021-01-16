@@ -59,8 +59,6 @@ namespace mrHelper.App.Forms
 
          SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
          _applicationUpdateChecker = new PeriodicUpdateChecker(this);
-
-         applyConnectionStatus("Not connected", System.Drawing.Color.Black, null);
       }
 
       private void addCustomActions()
@@ -463,6 +461,25 @@ namespace mrHelper.App.Forms
             dataCache.DiscussionCache.DiscussionsLoaded -= onPostLoadDiscussions;
          }
       }
+      private DataCacheUpdateRules getDataCacheUpdateRules(EDataCacheType mode)
+      {
+         switch (mode)
+         {
+            case EDataCacheType.Recent:
+               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
+                                               Program.Settings.AutoUpdatePeriodMs,
+                                               false);
+
+            case EDataCacheType.Search:
+               return new DataCacheUpdateRules(null, null, false);
+
+            default:
+               Debug.Assert(false);
+               break;
+         }
+         return null;
+      }
+
 
       private void createSearchDataCache()
       {

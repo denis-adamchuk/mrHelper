@@ -506,7 +506,7 @@ namespace mrHelper.App.Forms
          {
             string hostname = StringUtils.GetHostWithPrefix(form.Host);
             string accessToken = form.AccessToken;
-            ConnectionCheckStatus status = await ConnectionChecker.CheckConnection(hostname, accessToken);
+            ConnectionCheckStatus status = await ConnectionChecker.CheckConnectionAsync(hostname, accessToken);
             if (status != ConnectionCheckStatus.OK)
             {
                string message =

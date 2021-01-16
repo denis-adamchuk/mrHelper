@@ -12,16 +12,16 @@ namespace mrHelper.GitLabClient
 {
    public class DataCache : IDisposable
    {
-      public DataCache(DataCacheContext dataCacheContext)
+      public DataCache(DataCacheContext context)
       {
-         _dataCacheContext = dataCacheContext;
+         _cacheContext = context;
       }
 
       public event Action<string, User> Connected;
       public event Action<string> Connecting;
       public event Action Disconnected;
 
-      async public Task Connect(GitLabInstance gitLabInstance, DataCacheConnectionContext context)
+      async public Task Connect(GitLabInstance gitLabInstance, DataCacheConnectionContext connectionContext)
       {
          Disconnect();
 
@@ -36,7 +36,7 @@ namespace mrHelper.GitLabClient
             InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
             IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
                hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater,
-               _dataCacheContext.Callbacks, context.QueryCollection);
+               _cacheContext.Callbacks, connectionContext.QueryCollection);
 
             traceInformation(String.Format("Connecting data cache to {0}...", hostname));
             string accessToken = hostProperties.GetAccessToken(hostname);
@@ -44,10 +44,11 @@ namespace mrHelper.GitLabClient
             User currentUser = GlobalCache.GetAuthenticatedUser(hostname, accessToken);
 
             await mergeRequestListLoader.Load();
-            _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser, context.QueryCollection,
-               gitLabInstance.ModificationNotifier, gitLabInstance.NetworkOperationStatusListener);
+            _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser,
+               connectionContext.QueryCollection, gitLabInstance.ModificationNotifier,
+               gitLabInstance.NetworkOperationStatusListener);
 
-            ConnectionContext = context;
+            ConnectionContext = connectionContext;
             traceInformation(String.Format("Data cache connected to {0}", hostname));
             Connected?.Invoke(hostname, currentUser);
          }
@@ -102,7 +103,7 @@ namespace mrHelper.GitLabClient
 
       private void traceInformation(string message)
       {
-         Trace.TraceInformation("[DataCache.{0}] {1}", _dataCacheContext.TagForLogging, message);
+         Trace.TraceInformation("[DataCache.{0}] {1}", _cacheContext.TagForLogging, message);
       }
 
       private DataCacheInternal createCacheInternal(
@@ -115,24 +116,24 @@ namespace mrHelper.GitLabClient
          INetworkOperationStatusListener networkOperationStatusListener)
       {
          MergeRequestManager mergeRequestManager = new MergeRequestManager(
-            _dataCacheContext, cacheUpdater, hostname, hostProperties, queryCollection,
+            _cacheContext, cacheUpdater, hostname, hostProperties, queryCollection,
             modificationNotifier, networkOperationStatusListener);
          DiscussionManager discussionManager = new DiscussionManager(
-            _dataCacheContext, hostname, hostProperties, user, mergeRequestManager,
+            _cacheContext, hostname, hostProperties, user, mergeRequestManager,
             modificationNotifier, networkOperationStatusListener);
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
             hostname, hostProperties, user, discussionManager, modificationNotifier, networkOperationStatusListener);
 
          IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
-         ProjectCache projectCache = new ProjectCache(loader, _dataCacheContext, hostname);
+         ProjectCache projectCache = new ProjectCache(loader, _cacheContext, hostname);
          IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
-         UserCache userCache = new UserCache(userListLoader, _dataCacheContext, hostname);
+         UserCache userCache = new UserCache(userListLoader, _cacheContext, hostname);
          return new DataCacheInternal(mergeRequestManager, discussionManager, timeTrackingManager, projectCache, userCache);
       }
 
       private DataCacheOperator _operator;
       private DataCacheInternal _internal;
-      private readonly DataCacheContext _dataCacheContext;
+      private readonly DataCacheContext _cacheContext;
    }
 }
 

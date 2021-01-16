@@ -16,6 +16,7 @@ using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Controls;
 using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 using Newtonsoft.Json.Linq;
+using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Forms
 {
@@ -700,6 +701,9 @@ namespace mrHelper.App.Forms
 
       private void setConnectionStatus(EConnectionState status)
       {
+         Trace.TraceInformation(
+            "[MainForm] Set connection status to {0}. Current status is {1}. Lost connection info has value: {2}.",
+            status.ToString(), _connectionStatus.ToString(), _lostConnectionInfo.HasValue.ToString());
          Debug.Assert(!_lostConnectionInfo.HasValue || status == EConnectionState.ConnectingLive);
          resetLostConnectionInfo();
 
@@ -781,6 +785,29 @@ namespace mrHelper.App.Forms
             _lostConnectionInfo.Value.TimeStamp.ToLocalTime().ToString(Constants.TimeStampFormat));
          applyConnectionStatus(text, Color.Red, tooltipText);
       }
+
+      private void initializeGitLabInstance(string hostname)
+      {
+         Trace.TraceInformation("[MainForm] Initializing GitLabInstance for {0}", hostname);
+         disposeGitLabInstance();
+         _gitLabInstance = new GitLabInstance(hostname, Program.Settings, this);
+         _gitLabInstance.ConnectionLost += onConnectionLost;
+         _gitLabInstance.ConnectionRestored += onConnectionRestored;
+         _shortcuts = new Shortcuts(_gitLabInstance);
+         applyConnectionStatus("Not connected", System.Drawing.Color.Black, null);
+      }
+
+      private void disposeGitLabInstance()
+      {
+         if (_gitLabInstance != null)
+         {
+            _gitLabInstance.ConnectionLost -= onConnectionLost;
+            _gitLabInstance.ConnectionRestored -= onConnectionRestored;
+            _gitLabInstance.Dispose();
+            _gitLabInstance = null;
+         }
+      }
+
    }
 }
 

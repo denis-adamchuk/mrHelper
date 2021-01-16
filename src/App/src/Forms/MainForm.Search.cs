@@ -21,6 +21,7 @@ namespace mrHelper.App.Forms
 
       private void loadRecentMergeRequests()
       {
+         Trace.TraceInformation("[MainForm.Search] Loading recent merge requests from {0}", getHostName());
          IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(getHostName());
          BeginInvoke(new Action(async () =>
             await searchMergeRequestsSafeAsync(new SearchQueryCollection(queries), EDataCacheType.Recent, null)), null);
@@ -67,31 +68,11 @@ namespace mrHelper.App.Forms
       async private Task connectSearchDataCacheAsync(string hostname, SearchQueryCollection queryCollection,
          EDataCacheType mode)
       {
-         DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(queryCollection);
          DataCache dataCache = getDataCache(mode);
-         await dataCache.Connect(_gitLabInstance, sessionContext);
+         await dataCache.Connect(_gitLabInstance, new DataCacheConnectionContext(queryCollection));
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-      private DataCacheUpdateRules getDataCacheUpdateRules(EDataCacheType mode)
-      {
-         switch (mode)
-         {
-            case EDataCacheType.Recent:
-               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
-                                               Program.Settings.AutoUpdatePeriodMs,
-                                               false);
-
-            case EDataCacheType.Search:
-               return new DataCacheUpdateRules(null, null, false);
-
-            default:
-               Debug.Assert(false);
-               break;
-         }
-         return null;
-      }
 
       private void onSearchDataCacheDisconnected()
       {

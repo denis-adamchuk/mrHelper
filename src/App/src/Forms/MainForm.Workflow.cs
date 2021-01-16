@@ -10,7 +10,6 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Constants;
 using mrHelper.GitLabClient;
-using mrHelper.App.Helpers.GitLab;
 using mrHelper.CommonControls.Tools;
 using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 using mrHelper.Common.Tools;
@@ -51,29 +50,12 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      private void initializeGitLabInstance()
-      {
-         disposeGitLabInstance();
-         _gitLabInstance = new GitLabInstance(getHostName(), Program.Settings, this);
-         _gitLabInstance.ConnectionLost += onConnectionLost;
-         _gitLabInstance.ConnectionRestored += onConnectionRestored;
-         _shortcuts = new Shortcuts(_gitLabInstance);
-      }
-
-      private void disposeGitLabInstance()
-      {
-         if (_gitLabInstance != null)
-         {
-            _gitLabInstance.ConnectionLost -= onConnectionLost;
-            _gitLabInstance.ConnectionRestored -= onConnectionRestored;
-            _gitLabInstance.Dispose();
-            _gitLabInstance = null;
-         }
-      }
-
       async private Task switchHostToSelectedAsync(Func<Exception, bool> exceptionHandler)
       {
+         dropCacheConnections();
+         initializeGitLabInstance(getHostName());
          updateTabControlSelection();
+
          try
          {
             await startWorkflowAsync(getHostName());
@@ -102,22 +84,16 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+      // Everything reconnects inside startWorkflowAsync(). If there are some things at gitlab that user
+      // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
+      // we will miss them. It might be ok when host changes, but if this method used to "refresh"
+      // things, missed events are not desirable.
+      // This is why "Refresh List" button implemented not by means of startWorkflowAsync().
       async private Task startWorkflowAsync(string hostname)
       {
-         dropCacheConnections();
-         initializeGitLabInstance();
+         Trace.TraceInformation("[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
+            hostname, Program.Settings.WorkflowType);
 
-         // When this thing happens, everything reconnects. If there are some things at gitlab that user
-         // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
-         // we will miss them. It might be ok when host changes, but if this method used to "refresh"
-         // things, missed events are not desirable.
-         // This is why "Refresh List" button implemented not by means of startWorkflowAsync().
-
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
-            hostname, Program.Settings.WorkflowType));
-
-         applyConnectionStatus("Not connected", System.Drawing.Color.Black, null);
          if (String.IsNullOrWhiteSpace(hostname))
          {
             return;
@@ -172,7 +148,6 @@ namespace mrHelper.App.Forms
       async private Task connectLiveDataCacheAsync(string hostname, SearchQueryCollection queryCollection)
       {
          DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(queryCollection);
-
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          await dataCache.Connect(_gitLabInstance, connectionContext);
       }

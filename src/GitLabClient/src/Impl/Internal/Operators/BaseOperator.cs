@@ -35,7 +35,7 @@ namespace mrHelper.GitLabClient.Operators
             {
                _networkOperationStatusListener?.OnFailure();
             }
-            else
+            else if (!ex.Cancelled)
             {
                _networkOperationStatusListener?.OnSuccess();
             }

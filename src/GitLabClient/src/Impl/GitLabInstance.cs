@@ -23,9 +23,7 @@ namespace mrHelper.GitLabClient
 
       public void Dispose()
       {
-         _timer?.Stop();
-         _timer?.Dispose();
-         _timer = null;
+         stopConnectionCheckingTimer();
       }
 
       internal IHostProperties HostProperties { get; }
@@ -38,8 +36,7 @@ namespace mrHelper.GitLabClient
       {
          if (isConnected())
          {
-            startConnectionCheckingTimer();
-            ConnectionLost?.Invoke();
+            onConnectionLost();
          }
       }
 
@@ -47,8 +44,7 @@ namespace mrHelper.GitLabClient
       {
          if (!isConnected())
          {
-            stopConnectionCheckingTimer();
-            ConnectionRestored?.Invoke();
+            onConnectionRestored();
          }
       }
 
@@ -73,10 +69,12 @@ namespace mrHelper.GitLabClient
                try
                {
                   string token = HostProperties.GetAccessToken(HostName);
-                  ConnectionCheckStatus result = await ConnectionChecker.CheckConnection(HostName, token);
+                  ConnectionCheckStatus result = await ConnectionChecker.CheckConnectionAsync(HostName, token);
                   if (!isConnected() && result == ConnectionCheckStatus.OK)
                   {
-                     // connection has been probably already restored while we awaited for a check result
+                     // isConnected() check is needed because connection has been probably already restored
+                     // while we awaited for a CheckConnectionAsync() result
+                     Trace.TraceInformation("[GitLabInstance] ConnectionChecker.CheckConnection() returned OK");
                      onConnectionRestored();
                   }
                }
@@ -85,6 +83,19 @@ namespace mrHelper.GitLabClient
                   _checking = false;
                }
             }), null);
+      }
+
+      private void onConnectionLost()
+      {
+         if (!isConnected())
+         {
+            Debug.Assert(false);
+            return;
+         }
+
+         startConnectionCheckingTimer();
+         Trace.TraceInformation("[GitLabInstance] Connection lost ({0})", HostName);
+         ConnectionLost?.Invoke();
       }
 
       private void onConnectionRestored()
@@ -96,6 +107,7 @@ namespace mrHelper.GitLabClient
          }
 
          stopConnectionCheckingTimer();
+         Trace.TraceInformation("[GitLabInstance] Connection restored ({0})", HostName);
          ConnectionRestored?.Invoke();
       }
 
@@ -113,8 +125,8 @@ namespace mrHelper.GitLabClient
 
       private void stopConnectionCheckingTimer()
       {
-         _timer.Stop();
-         _timer.Dispose();
+         _timer?.Stop();
+         _timer?.Dispose();
          _timer = null;
       }
 

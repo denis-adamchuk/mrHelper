@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using mrHelper.Common.Interfaces;
-
-namespace mrHelper.GitLabClient
+﻿namespace mrHelper.GitLabClient
 {
    public class DataCacheConnectionContext
    {

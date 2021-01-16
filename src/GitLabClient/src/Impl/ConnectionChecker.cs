@@ -14,7 +14,7 @@ namespace mrHelper.GitLabClient
 
    public static class ConnectionChecker
    {
-      async static public Task<ConnectionCheckStatus> CheckConnection(string hostname, string token)
+      async static public Task<ConnectionCheckStatus> CheckConnectionAsync(string hostname, string token)
       {
          using (GitLabTaskRunner client = new GitLabTaskRunner(hostname, token))
          {

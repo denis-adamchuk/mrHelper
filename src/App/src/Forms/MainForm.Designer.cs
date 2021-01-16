@@ -2463,9 +2463,9 @@ namespace mrHelper.App.Forms
          this.labelConnectionStatus.Dock = System.Windows.Forms.DockStyle.Fill;
          this.labelConnectionStatus.Location = new System.Drawing.Point(0, 0);
          this.labelConnectionStatus.Name = "labelConnectionStatus";
-         this.labelConnectionStatus.Size = new System.Drawing.Size(64, 13);
+         this.labelConnectionStatus.Size = new System.Drawing.Size(78, 13);
          this.labelConnectionStatus.TabIndex = 0;
-         this.labelConnectionStatus.Text = "connected?";
+         this.labelConnectionStatus.Text = "Not connected";
          // 
          // MainForm
          // 
