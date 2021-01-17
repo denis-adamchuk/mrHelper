@@ -17,8 +17,10 @@ namespace mrHelper.App.Helpers
       public CommitStorageUpdateContext GetContext()
       {
          IEnumerable<Discussion> diffNotes =
-               _discussions
-               .Where(x => x.Notes != null && x.Notes.Any() && x.Notes.First().Type == "DiffNote");
+            _discussions != null
+            ?  _discussions
+               .Where(x => x.Notes != null && x.Notes.Any() && x.Notes.First().Type == "DiffNote")
+            : Array.Empty<Discussion>();
 
          Dictionary<string, Dictionary<string, HashSet<RelativeFileInfo>>> baseToHeads =
             new Dictionary<string, Dictionary<string, HashSet<RelativeFileInfo>>>();
