@@ -360,13 +360,44 @@ namespace mrHelper.App.Forms
          onMergeRequestSelectionChanged(getListViewType(sender as Controls.MergeRequestListView));
       }
 
-      private void textBoxSearch_KeyDown(object sender, KeyEventArgs e)
+      private void textBoxSearchText_KeyDown(object sender, KeyEventArgs e)
+      {
+         onSearchTextBoxKeyDown(textBoxSearchText, e.KeyCode);
+      }
+
+      private void textBoxSearchTargetBranch_KeyDown(object sender, KeyEventArgs e)
+      {
+         onSearchTextBoxKeyDown(textBoxSearchTargetBranch, e.KeyCode);
+      }
+
+      private void textBoxSearchText_TextChanged(object sender, EventArgs e)
+      {
+         onSearchTextBoxTextChanged(textBoxSearchText, checkBoxSearchByTitleAndDescription);
+      }
+
+      private void textBoxSearchTargetBranch_TextChanged(object sender, EventArgs e)
+      {
+         onSearchTextBoxTextChanged(textBoxSearchTargetBranch, checkBoxSearchByTargetBranch);
+      }
+
+      private void comboBoxUser_SelectionChangeCommitted(object sender, EventArgs e)
+      {
+         onSearchComboBoxSelectionChangeCommitted(checkBoxSearchByAuthor);
+      }
+
+      private void comboBoxProjectName_SelectionChangeCommitted(object sender, EventArgs e)
+      {
+         onSearchComboBoxSelectionChangeCommitted(checkBoxSearchByProject);
+      }
+
+      private void linkLabelFindMe_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         selectCurrentUserInSearchDropdown();
+      }
+
+      private void checkBoxSearch_CheckedChanged(object sender, EventArgs e)
       {
          updateSearchButtonState();
-         if (e.KeyCode == Keys.Enter && buttonSearch.Enabled)
-         {
-            onStartSearch();
-         }
       }
 
       private void comboBoxProjectName_Format(object sender, ListControlConvertEventArgs e)
@@ -470,16 +501,6 @@ namespace mrHelper.App.Forms
       private void LinkLabelFromClipboard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          connectToUrlFromClipboard();
-      }
-
-      private void linkLabelFindMe_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-      {
-         selectCurrentUserInSearchDropdown();
-      }
-
-      private void checkBoxSearch_CheckedChanged(object sender, EventArgs e)
-      {
-         updateSearchButtonState();
       }
 
       // Other

@@ -452,7 +452,8 @@ namespace mrHelper.App.Forms
          this.textBoxSearchText.Size = new System.Drawing.Size(146, 20);
          this.textBoxSearchText.TabIndex = 1;
          this.toolTip.SetToolTip(this.textBoxSearchText, "Press Enter to search");
-         this.textBoxSearchText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearch_KeyDown);
+         this.textBoxSearchText.TextChanged += new System.EventHandler(this.textBoxSearchText_TextChanged);
+         this.textBoxSearchText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearchText_KeyDown);
          // 
          // buttonReloadList
          // 
@@ -680,7 +681,8 @@ namespace mrHelper.App.Forms
          this.textBoxSearchTargetBranch.Size = new System.Drawing.Size(123, 20);
          this.textBoxSearchTargetBranch.TabIndex = 12;
          this.toolTip.SetToolTip(this.textBoxSearchTargetBranch, "Press Enter to search");
-         this.textBoxSearchTargetBranch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearch_KeyDown);
+         this.textBoxSearchTargetBranch.TextChanged += new System.EventHandler(this.textBoxSearchTargetBranch_TextChanged);
+         this.textBoxSearchTargetBranch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearchTargetBranch_KeyDown);
          // 
          // linkLabelFindMe
          // 
@@ -711,6 +713,7 @@ namespace mrHelper.App.Forms
          this.comboBoxUser.Name = "comboBoxUser";
          this.comboBoxUser.Size = new System.Drawing.Size(140, 21);
          this.comboBoxUser.TabIndex = 9;
+         this.comboBoxUser.SelectionChangeCommitted += new System.EventHandler(this.comboBoxUser_SelectionChangeCommitted);
          this.comboBoxUser.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxUser_Format);
          // 
          // comboBoxProjectName
@@ -721,6 +724,7 @@ namespace mrHelper.App.Forms
          this.comboBoxProjectName.Name = "comboBoxProjectName";
          this.comboBoxProjectName.Size = new System.Drawing.Size(175, 21);
          this.comboBoxProjectName.TabIndex = 8;
+         this.comboBoxProjectName.SelectionChangeCommitted += new System.EventHandler(this.comboBoxProjectName_SelectionChangeCommitted);
          this.comboBoxProjectName.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxProjectName_Format);
          // 
          // checkBoxSearchByAuthor

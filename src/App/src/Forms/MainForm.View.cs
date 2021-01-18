@@ -1058,6 +1058,25 @@ namespace mrHelper.App.Forms
             && !String.IsNullOrWhiteSpace(textBoxSearchText.Text));
       }
 
+      private void onSearchTextBoxKeyDown(TextBox textBox, Keys keys)
+      {
+         updateSearchButtonState();
+         if (keys == Keys.Enter && buttonSearch.Enabled)
+         {
+            onStartSearch();
+         }
+      }
+
+      private void onSearchTextBoxTextChanged(TextBox textBox, CheckBox associatedCheckBox)
+      {
+         associatedCheckBox.Checked = textBox.TextLength > 0;
+      }
+
+      private void onSearchComboBoxSelectionChangeCommitted(CheckBox associatedCheckBox)
+      {
+         associatedCheckBox.Checked = true;
+      }
+
       private void applyKnownHostSelectionChange()
       {
          bool enableRemoveButton = listViewKnownHosts.SelectedItems.Count > 0;

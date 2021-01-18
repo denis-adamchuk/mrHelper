@@ -807,7 +807,6 @@ namespace mrHelper.App.Forms
             _gitLabInstance = null;
          }
       }
-
    }
 }
 

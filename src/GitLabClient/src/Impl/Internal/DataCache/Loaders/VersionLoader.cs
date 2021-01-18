@@ -155,8 +155,8 @@ namespace mrHelper.GitLabClient.Loaders
       async private Task loadCommitsAsync(MergeRequestKey mrk)
       {
          MergeRequest cachedMergeRequest = _cacheUpdater.Cache.GetMergeRequest(mrk);
+         Debug.Assert(cachedMergeRequest != null);
          string actualTimestamp = cachedMergeRequest?.Sha ?? null;
-         Debug.Assert(actualTimestamp != null);
 
          IEnumerable<Commit> commits = await call(
             () => _operator.GetCommitsAsync(mrk.ProjectKey.ProjectName, mrk.IId, actualTimestamp),
@@ -168,8 +168,8 @@ namespace mrHelper.GitLabClient.Loaders
       async private Task loadVersionsAsync(MergeRequestKey mrk)
       {
          MergeRequest cachedMergeRequest = _cacheUpdater.Cache.GetMergeRequest(mrk);
+         Debug.Assert(cachedMergeRequest != null);
          string actualTimestamp = cachedMergeRequest?.Sha ?? null;
-         Debug.Assert(actualTimestamp != null);
 
          IEnumerable<Version> versions = await call(
             () => _operator.GetVersionsAsync(mrk.ProjectKey.ProjectName, mrk.IId, actualTimestamp),

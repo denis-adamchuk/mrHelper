@@ -204,10 +204,6 @@ namespace mrHelper.GitLabClient.Operators
          }
 
          return target;
-
-         //return (_versions.TryGetValue(mrk, out var versionCollection)
-         //      && versionCollection.Data.TryGetTarget(out var target)
-         //      && versionCollection.Timestamp == cachedRevisionTimestamp) ? target : null;
       }
 
       private static IEnumerable<Commit> getCachedCommits(MergeRequestKey mrk, string cachedRevisionTimestamp)
@@ -228,10 +224,6 @@ namespace mrHelper.GitLabClient.Operators
          }
 
          return target;
-
-         //return (_commits.TryGetValue(mrk, out var commitCollection)
-         //      && commitCollection.Data.TryGetTarget(out var target)
-         //      && commitCollection.Timestamp == cachedRevisionTimestamp) ? target : null;
       }
 
       private static IEnumerable<Discussion> getCachedDiscussions(MergeRequestKey mrk,
@@ -258,11 +250,6 @@ namespace mrHelper.GitLabClient.Operators
          }
 
          return target;
-
-         //return (_discussions.TryGetValue(mrk, out var discussionCollection)
-         //      && discussionCollection.Data.TryGetTarget(out var target)
-         //      && discussionCollection.Timestamp.Time == cachedRevisionTimestamp.Time
-         //      && discussionCollection.Timestamp.Count == cachedRevisionTimestamp.Count) ? target : null;
       }
 
       private struct TimedEntity<TData, TTimestamp>
