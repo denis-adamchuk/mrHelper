@@ -476,7 +476,7 @@ namespace mrHelper.App.Forms
          {
             onUpdating();
          }
-         requestUpdates(dataCache, mrk, 100,
+         requestUpdates(dataCache, mrk, PseudoTimerInterval,
             () =>
             {
                updateReceived = true;

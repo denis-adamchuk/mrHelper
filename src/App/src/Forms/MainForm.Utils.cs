@@ -760,6 +760,8 @@ namespace mrHelper.App.Forms
             if (_connectionStatus.Value == EConnectionState.Connected)
             {
                setConnectionStatus(_connectionStatus.Value);
+               requestUpdates(EDataCacheType.Live, null, new int[] { PseudoTimerInterval });
+               requestUpdates(EDataCacheType.Recent, null, new int[] { PseudoTimerInterval });
             }
             else if (_connectionStatus.Value == EConnectionState.ConnectingLive)
             {
