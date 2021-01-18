@@ -519,6 +519,15 @@ namespace mrHelper.App.Forms
             }
          }
 
+         if (isConnectionLost())
+         {
+            if (_iconScheme.ContainsKey("Icon_LostConnection"))
+            {
+               loadNotifyIconFromFile(_iconScheme["Icon_LostConnection"]);
+            }
+            return;
+         }
+
          if (isTrackingTime())
          {
             if (_iconScheme.ContainsKey("Icon_Tracking"))
@@ -546,6 +555,16 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(null);
          if (_badgeScheme == null || !_badgeScheme.Any())
          {
+            return;
+         }
+
+         if (isConnectionLost())
+         {
+            if (_badgeScheme.ContainsKey("Badge_LostConnection"))
+            {
+               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
+                  Color.FromName(_badgeScheme["Badge_LostConnection"]));
+            }
             return;
          }
 

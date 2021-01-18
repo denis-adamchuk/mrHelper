@@ -14,9 +14,8 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Controls;
-using SearchQuery = mrHelper.GitLabClient.SearchQuery;
-using Newtonsoft.Json.Linq;
 using mrHelper.App.Helpers.GitLab;
+using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 
 namespace mrHelper.App.Forms
 {
@@ -703,8 +702,8 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation(
             "[MainForm] Set connection status to {0}. Current status is {1}. Lost connection info has value: {2}.",
-            status.ToString(), _connectionStatus.ToString(), _lostConnectionInfo.HasValue.ToString());
-         Debug.Assert(!_lostConnectionInfo.HasValue || status == EConnectionState.ConnectingLive);
+            status.ToString(), _connectionStatus.ToString(), isConnectionLost().ToString());
+         Debug.Assert(!isConnectionLost() || status == EConnectionState.ConnectingLive);
          resetLostConnectionInfo();
 
          switch (status)
@@ -740,15 +739,17 @@ namespace mrHelper.App.Forms
 
       private void onConnectionLost()
       {
-         if (!_lostConnectionInfo.HasValue)
+         if (!isConnectionLost())
          {
             createLostConnectionInfo();
+            updateTrayIcon();
+            updateTaskbarIcon();
          }
       }
 
       private void onConnectionRestored()
       {
-         if (!_lostConnectionInfo.HasValue)
+         if (!isConnectionLost())
          {
             return;
          }
@@ -769,11 +770,18 @@ namespace mrHelper.App.Forms
                loadRecentMergeRequests();
             }
          }
+         updateTrayIcon();
+         updateTaskbarIcon();
+      }
+
+      private bool isConnectionLost()
+      {
+         return _lostConnectionInfo.HasValue;
       }
 
       private void onLostConnectionIndicatorTimer(object sender, EventArgs e)
       {
-         if (!_lostConnectionInfo.HasValue)
+         if (!isConnectionLost())
          {
             return;
          }
