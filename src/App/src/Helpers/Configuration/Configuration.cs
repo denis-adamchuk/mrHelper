@@ -136,6 +136,9 @@ namespace mrHelper.App.Helpers
       private static readonly string DisableSSLVerificationKeyName      = "DisableSSLVerification";
       private static readonly bool   DisableSSLVerificationDefaultValue = true;
 
+      private static readonly string ServicePointConnectionLimitKeyName = "ServicePointConnectionLimit";
+      private static readonly int    ServicePointConnectionLimitDefaultValue = 25;
+
       private static readonly string LogFilesToKeepKeyName = "LogFilesToKeep";
       private static readonly int    LogFilesToKeepDefaultValue = 10;
 
@@ -539,6 +542,17 @@ namespace mrHelper.App.Helpers
       {
          get { return getValue(MainWindowFontSizeNameKeyName, MainWindowFontSizeNameDefaultValue); }
          set { setValue(MainWindowFontSizeNameKeyName, value); }
+      }
+
+      public int ServicePointConnectionLimit
+      {
+         get
+         {
+            return int.TryParse(getValue(
+               ServicePointConnectionLimitKeyName, ServicePointConnectionLimitDefaultValue.ToString()),
+                  out int result) ? result : ServicePointConnectionLimitDefaultValue;
+         }
+         set { setValue(ServicePointConnectionLimitKeyName, value.ToString()); }
       }
 
       public int LogFilesToKeep

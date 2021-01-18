@@ -22,9 +22,9 @@ namespace mrHelper.GitLabClient.Managers
          INetworkOperationStatusListener networkOperationStatusListener)
       {
          _cacheUpdater = cacheUpdater;
-         _modificationNotifier = modificationNotifier;
          _listRefreshTimestamp = DateTime.Now;
 
+         _modificationNotifier = modificationNotifier;
          _modificationNotifier.MergeRequestModified += onMergeRequestModified;
 
          if (dataCacheContext.UpdateRules.UpdateMergeRequestsPeriod.HasValue)
@@ -39,7 +39,11 @@ namespace mrHelper.GitLabClient.Managers
 
       public void Dispose()
       {
-         _modificationNotifier.MergeRequestModified -= onMergeRequestModified;
+         if (_modificationNotifier != null)
+         {
+            _modificationNotifier.MergeRequestModified -= onMergeRequestModified;
+            _modificationNotifier = null;
+         }
 
          if (_updateManager != null)
          {
@@ -47,6 +51,7 @@ namespace mrHelper.GitLabClient.Managers
             _updateManager.MergeRequestListRefreshed -= onListRefreshed;
             _updateManager.MergeRequestRefreshed -= onMergeRequestRefreshed;
             _updateManager.Dispose();
+            _updateManager = null;
          }
       }
 
@@ -163,8 +168,8 @@ namespace mrHelper.GitLabClient.Managers
       }
 
       private readonly InternalCacheUpdater _cacheUpdater;
-      private readonly UpdateManager _updateManager;
-      private readonly IModificationNotifier _modificationNotifier;
+      private UpdateManager _updateManager;
+      private IModificationNotifier _modificationNotifier;
       private DateTime _listRefreshTimestamp;
       private readonly Dictionary<MergeRequestKey, DateTime> _mergeRequestRefreshTimestamps =
          new Dictionary<MergeRequestKey, DateTime>();

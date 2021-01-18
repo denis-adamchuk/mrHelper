@@ -67,7 +67,9 @@ namespace mrHelper.StorageSupport
 
       public void Dispose()
       {
-         _repositoryAccessor.Dispose();
+         _repositoryAccessor?.Dispose();
+         _repositoryAccessor = null;
+
          _isDisposed = true;
       }
 
@@ -278,7 +280,7 @@ namespace mrHelper.StorageSupport
       async private Task<Comparison> fetchSingleComparisonAsync(string baseSha, string headSha)
       {
          Comparison comparison = _fileStorage.ComparisonCache.LoadComparison(baseSha, headSha);
-         if (comparison != null)
+         if (comparison != null || _repositoryAccessor == null)
          {
             return comparison;
          }
@@ -363,6 +365,11 @@ namespace mrHelper.StorageSupport
 
       async private Task<bool> fetchSingleFileAsync(FileInternal file)
       {
+         if (_repositoryAccessor == null)
+         {
+            return false;
+         }
+
          traceDebug(String.Format("Fetching file {0} with SHA {1}...", file.Path, file.SHA));
          File gitlabFile = await _repositoryAccessor.LoadFile(file.Path, file.SHA);
          if (gitlabFile == null)
@@ -474,7 +481,7 @@ namespace mrHelper.StorageSupport
 
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly IFileStorage _fileStorage;
-      private readonly RepositoryAccessor _repositoryAccessor;
+      private RepositoryAccessor _repositoryAccessor;
       private readonly Func<int> _getStorageCount;
 
       private bool _isDisposed;

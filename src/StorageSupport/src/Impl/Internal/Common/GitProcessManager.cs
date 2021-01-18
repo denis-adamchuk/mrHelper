@@ -39,7 +39,9 @@ namespace mrHelper.StorageSupport
 
       public void Dispose()
       {
-         _externalProcessManager.Dispose();
+         _externalProcessManager?.Dispose();
+         _externalProcessManager = null;
+
          _isDisposed = true;
       }
 
@@ -112,7 +114,7 @@ namespace mrHelper.StorageSupport
       private static readonly int altCancellationExitCode = -1073741510;
 
       private readonly string _path;
-      private readonly ExternalProcessManager _externalProcessManager;
+      private ExternalProcessManager _externalProcessManager;
 
       private bool _isDisposed;
    }

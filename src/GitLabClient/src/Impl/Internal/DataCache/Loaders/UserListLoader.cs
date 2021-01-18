@@ -18,7 +18,10 @@ namespace mrHelper.GitLabClient.Loaders
          if (GlobalCache.GetUsers(_hostname) == null)
          {
             IEnumerable<User> users = await loadUsersAsync();
-            GlobalCache.SetUsers(_hostname, users);
+            if (users != null)
+            {
+               GlobalCache.SetUsers(_hostname, users);
+            }
          }
       }
 

@@ -20,9 +20,14 @@ namespace mrHelper.GitLabClient.Managers
 
       public void Dispose()
       {
-         _mergeRequestManager.Dispose();
-         _discussionManager.Dispose();
-         _timeTrackingManager.Dispose();
+         _mergeRequestManager?.Dispose();
+         _mergeRequestManager = null;
+
+         _discussionManager?.Dispose();
+         _discussionManager = null;
+
+         _timeTrackingManager?.Dispose();
+         _timeTrackingManager = null;
       }
 
       public IMergeRequestCache MergeRequestCache => _mergeRequestManager;
@@ -35,9 +40,9 @@ namespace mrHelper.GitLabClient.Managers
 
       public IUserCache UserCache => _userCache;
 
-      private readonly MergeRequestManager _mergeRequestManager;
-      private readonly DiscussionManager _discussionManager;
-      private readonly TimeTrackingManager _timeTrackingManager;
+      private MergeRequestManager _mergeRequestManager;
+      private DiscussionManager _discussionManager;
+      private TimeTrackingManager _timeTrackingManager;
       private readonly ProjectCache _projectCache;
       private readonly UserCache _userCache;
    }

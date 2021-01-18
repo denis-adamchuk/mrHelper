@@ -25,11 +25,13 @@ namespace mrHelper.App.Helpers
          if (_mergeRequestCache != null)
          {
             _mergeRequestCache.MergeRequestEvent -= notifyOnMergeRequestEvent;
+            _mergeRequestCache = null;
          }
 
          if (_discussionCache != null)
          {
             _discussionCache.DiscussionEvent -= notifyOnDiscussionEvent;
+            _discussionCache = null;
          }
 
          _mergeRequestCache = _dataCache.MergeRequestCache;
@@ -41,16 +43,22 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _dataCache.Connected -= onDataCacheConnected;
+         if (_dataCache != null)
+         {
+            _dataCache.Connected -= onDataCacheConnected;
+            _dataCache = null;
+         }
 
          if (_mergeRequestCache != null)
          {
             _mergeRequestCache.MergeRequestEvent -= notifyOnMergeRequestEvent;
+            _mergeRequestCache = null;
          }
 
          if (_discussionCache != null)
          {
             _discussionCache.DiscussionEvent -= notifyOnDiscussionEvent;
+            _discussionCache = null;
          }
       }
 
@@ -164,7 +172,7 @@ namespace mrHelper.App.Helpers
       private IMergeRequestCache _mergeRequestCache;
       private IDiscussionCache _discussionCache;
 
-      private readonly DataCache _dataCache;
+      private DataCache _dataCache;
       private readonly TrayIcon _trayIcon;
       private readonly EventFilter _eventFilter;
    }

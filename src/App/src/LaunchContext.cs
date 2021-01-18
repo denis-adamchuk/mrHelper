@@ -25,7 +25,8 @@ namespace mrHelper.App
 
       public void Dispose()
       {
-         CurrentProcess.Dispose();
+         CurrentProcess?.Dispose();
+         CurrentProcess = null;
       }
 
       public IntPtr GetWindowByCaption(string caption, bool startsWith)

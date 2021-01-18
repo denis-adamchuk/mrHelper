@@ -15,7 +15,11 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _dataCache.Connected -= onDataCacheConnected;
+         if (_dataCache != null)
+         {
+            _dataCache.Connected -= onDataCacheConnected;
+            _dataCache = null;
+         }
       }
 
       public string Resolve(string expression)
@@ -42,7 +46,7 @@ namespace mrHelper.App.Helpers
       }
 
       private User _currentUser;
-      private readonly DataCache _dataCache;
+      private DataCache _dataCache;
       private readonly Dictionary<string, string> _cached = new Dictionary<string, string>();
    }
 }

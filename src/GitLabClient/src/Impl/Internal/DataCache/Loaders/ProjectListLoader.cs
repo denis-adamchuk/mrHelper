@@ -18,7 +18,10 @@ namespace mrHelper.GitLabClient.Loaders
          if (GlobalCache.GetProjects(_hostname) == null)
          {
             IEnumerable<Project> projects = await loadProjectsAsync();
-            GlobalCache.SetProjects(_hostname, projects);
+            if (projects != null)
+            {
+               GlobalCache.SetProjects(_hostname, projects);
+            }
          }
       }
 

@@ -39,33 +39,37 @@ namespace mrHelper.StorageSupport
       async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider,
          Action<string> onProgressChange, Action onUpdateStateChange)
       {
-         if (_gitRepository.ExpectingClone && !isCloneAllowed(_gitRepository.Path))
+         if (_updaterInternal != null)
          {
-            throw new LocalCommitStorageUpdaterCancelledException();
-         }
+            if (_gitRepository.ExpectingClone && !isCloneAllowed(_gitRepository.Path))
+            {
+               throw new LocalCommitStorageUpdaterCancelledException();
+            }
 
-         await runAsync(_gitRepository, async () => await _updaterInternal.StartUpdate(
-            contextProvider, onProgressChange, onUpdateStateChange));
+            await runAsync(_gitRepository, async () => await _updaterInternal.StartUpdate(
+               contextProvider, onProgressChange, onUpdateStateChange));
+         }
       }
 
       public void StopUpdate()
       {
-         _updaterInternal.StopUpdate();
+         _updaterInternal?.StopUpdate();
       }
 
       public bool CanBeStopped()
       {
-         return _updaterInternal.CanBeStopped();
+         return _updaterInternal != null && _updaterInternal.CanBeStopped();
       }
 
       public void RequestUpdate(ICommitStorageUpdateContextProvider contextProvider, Action onFinished)
       {
-         _updaterInternal.RequestUpdate(contextProvider, onFinished);
+         _updaterInternal?.RequestUpdate(contextProvider, onFinished);
       }
 
       public void Dispose()
       {
-         _updaterInternal.Dispose();
+         _updaterInternal?.Dispose();
+         _updaterInternal = null;
       }
 
       /// <summary>

@@ -24,8 +24,12 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _discussionLoader.DiscussionsLoading -= preProcessDiscussions;
-         _discussionLoader.DiscussionsLoaded -= processDiscussions;
+         if (_discussionLoader != null)
+         {
+            _discussionLoader.DiscussionsLoading -= preProcessDiscussions;
+            _discussionLoader.DiscussionsLoaded -= processDiscussions;
+            _discussionLoader = null;
+         }
       }
 
       /// <summary>
@@ -131,7 +135,7 @@ namespace mrHelper.App.Helpers
 
       private readonly Dictionary<MergeRequestKey, MergeRequestStatistic?> _statistic =
          new Dictionary<MergeRequestKey, MergeRequestStatistic?>();
-      private readonly IDiscussionLoader _discussionLoader;
+      private IDiscussionLoader _discussionLoader;
    }
 }
 

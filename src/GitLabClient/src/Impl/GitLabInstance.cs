@@ -120,6 +120,8 @@ namespace mrHelper.GitLabClient
          timer.Elapsed += onTimer;
          timer.SynchronizingObject = _synchronizeInvoke;
          timer.Start();
+
+         Debug.Assert(_timer == null);
          _timer = timer;
       }
 

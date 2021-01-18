@@ -209,7 +209,7 @@ namespace mrHelper.Common.Tools
          try
          {
             ExternalProcess.AsyncTaskDescriptor descriptor =
-               operationManager.CreateDescriptor("git", arguments, path, null, null);
+               operationManager?.CreateDescriptor("git", arguments, path, null, null);
             if (descriptor == null)
             {
                return false;

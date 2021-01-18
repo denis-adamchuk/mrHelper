@@ -18,11 +18,17 @@ namespace mrHelper.GitLabClient.Operators
 
       public void Dispose()
       {
-         _client.Dispose();
+         _client?.Dispose();
+         _client = null;
       }
 
       async protected Task<T> callWithSharedClient<T>(Func<GitLabTaskRunner, Task<T>> func)
       {
+         if (_client == null)
+         {
+            return default(T);
+         }
+
          try
          {
             T result = await func(_client);
@@ -59,7 +65,7 @@ namespace mrHelper.GitLabClient.Operators
       protected string Hostname { get; }
 
       private readonly IHostProperties _settings;
-      private readonly GitLabTaskRunner _client;
+      private GitLabTaskRunner _client;
       private readonly INetworkOperationStatusListener _networkOperationStatusListener;
    }
 }

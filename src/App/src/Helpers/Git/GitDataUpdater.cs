@@ -52,6 +52,7 @@ namespace mrHelper.App.Helpers
 
          _timer?.Stop();
          _timer?.Dispose();
+         _timer = null;
       }
 
       private void onTimer(object sender, System.Timers.ElapsedEventArgs e)
@@ -131,6 +132,11 @@ namespace mrHelper.App.Helpers
       async private Task<IEnumerable<Discussion>> loadNewDiscussionsAsync(MergeRequestKey mrk,
          DateTime prevLatestChange)
       {
+         if (_discussionCache == null)
+         {
+            return null;
+         }
+
          IEnumerable<Discussion> discussions;
          try
          {
@@ -264,7 +270,7 @@ namespace mrHelper.App.Helpers
          new Dictionary<MergeRequestKey, DateTime>();
 
       private readonly MergeRequestFilter _mergeRequestFilter;
-      private readonly System.Timers.Timer _timer;
+      private System.Timers.Timer _timer;
 
       private static readonly int MaxDiscussionsInMergeRequest = 400;
    }

@@ -22,7 +22,11 @@ namespace mrHelper.GitLabClient.Managers
 
       public void Dispose()
       {
-         _discussionCache.DiscussionsLoadedInternal -= onDiscussionsLoaded;
+         if (_discussionCache != null)
+         {
+            _discussionCache.DiscussionsLoadedInternal -= onDiscussionsLoaded;
+            _discussionCache = null;
+         }
       }
 
       internal event Action<UserEvents.DiscussionEvent, DateTime, DiscussionUpdateType> DiscussionEvent;
@@ -72,7 +76,7 @@ namespace mrHelper.GitLabClient.Managers
 
       private readonly User _currentUser;
       private readonly IEnumerable<string> _keywords;
-      private readonly IDiscussionCacheInternal _discussionCache;
+      private IDiscussionCacheInternal _discussionCache;
    }
 }
 

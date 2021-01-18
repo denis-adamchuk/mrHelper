@@ -57,13 +57,14 @@ namespace mrHelper.StorageSupport
       {
          Trace.TraceInformation(String.Format("[FileStorage] Disposing FileStorage at path {0}", Path));
 
-         _commandService.Dispose();
+         _commandService?.Dispose();
          _commandService = null;
 
-         _updater.Dispose();
+         _updater?.Dispose();
          _updater = null;
 
-         _processManager.Dispose();
+         _processManager?.Dispose();
+         _processManager = null;
       }
 
       public override string ToString()
@@ -73,7 +74,7 @@ namespace mrHelper.StorageSupport
 
       private GitCommandService _commandService;
       private FileStorageUpdater _updater;
-      private readonly GitProcessManager _processManager;
+      private GitProcessManager _processManager;
    }
 }
 

@@ -21,8 +21,12 @@ namespace mrHelper.App.Helpers
 
       public void Dispose()
       {
-         _dataCache.Disconnected -= onDataCacheDisconnected;
-         _dataCache.Connected -= onDataCacheConnected;
+         if (_dataCache != null)
+         {
+            _dataCache.Disconnected -= onDataCacheDisconnected;
+            _dataCache.Connected -= onDataCacheConnected;
+            _dataCache = null;
+         }
       }
 
       internal bool NeedSuppressEvent(MergeRequestEvent e)
@@ -132,14 +136,14 @@ namespace mrHelper.App.Helpers
       private void onDataCacheConnected(string hostname, User user)
       {
          _currentUser = user;
-         _mergeRequestCache = _dataCache.MergeRequestCache;
+         _mergeRequestCache = _dataCache?.MergeRequestCache;
       }
 
       private User _currentUser;
       private IMergeRequestCache _mergeRequestCache;
 
       private readonly UserDefinedSettings _settings;
-      private readonly DataCache _dataCache;
+      private DataCache _dataCache;
       private readonly MergeRequestFilter _mergeRequestFilter;
    }
 }
