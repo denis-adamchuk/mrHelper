@@ -131,7 +131,7 @@ namespace mrHelper.App.Forms
 
          List<string> newKnownHosts = new List<string>();
          List<string> newAccessTokens = new List<string>();
-         string[] hosts = Program.Settings.GetHosts().ToArray();
+         string[] hosts = Program.Settings.KnownHosts.ToArray();
          for (int iKnownHost = 0; iKnownHost < hosts.Length; ++iKnownHost)
          {
             // Upgrade from old versions which did not have prefix
@@ -143,8 +143,8 @@ namespace mrHelper.App.Forms
                newAccessTokens.Add(accessToken);
             }
          }
-         Program.Settings.SetAuthInfo(Enumerable.Zip(newKnownHosts, newAccessTokens,
-            (a, b) => new Tuple<string, string>(a, b)));
+         ConfigurationHelper.SetAuthInfo(Enumerable.Zip(newKnownHosts, newAccessTokens,
+            (a, b) => new Tuple<string, string>(a, b)), Program.Settings);
       }
 
       private void setDefaultRevisionTypeRadioValue()
@@ -477,7 +477,7 @@ namespace mrHelper.App.Forms
 
       private string getInitialHostNameIfKnown()
       {
-         return Program.Settings.GetHosts().Any(host => host == _initialHostName) ? _initialHostName : null;
+         return Program.Settings.KnownHosts.Any(host => host == _initialHostName) ? _initialHostName : null;
       }
 
       private void setInitialHostName(string hostname)
@@ -579,7 +579,8 @@ namespace mrHelper.App.Forms
             .Items
             .Cast<ListViewItem>()
             .Select(i => i.SubItems[1].Text);
-         Program.Settings.SetAuthInfo(Enumerable.Zip(hosts, tokens, (a, b) => new Tuple<string, string>(a, b)));
+         ConfigurationHelper.SetAuthInfo(Enumerable.Zip(hosts, tokens,
+            (a, b) => new Tuple<string, string>(a, b)), Program.Settings);
       }
 
       private void onTextBoxDisplayFilterUpdate()
