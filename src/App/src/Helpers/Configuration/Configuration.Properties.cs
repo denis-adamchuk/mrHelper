@@ -19,10 +19,10 @@ namespace mrHelper.App.Helpers
          set => setAccessTokens(value);
       }
 
-      public string LocalGitFolder
+      public string LocalStorageFolder
       {
-         get => getValue(LocalGitFolderKeyName, LocalGitFolderDefaultValue);
-         set => setValue(LocalGitFolderKeyName, value);
+         get => getValue(LocalStorageFolderKeyName, LocalStorageFolderDefaultValue);
+         set => setValue(LocalStorageFolderKeyName, value);
       }
 
       public string AutoSelectionMode
@@ -428,6 +428,54 @@ namespace mrHelper.App.Helpers
       {
          get => getBoolValue(AccessTokensProtectedKeyName, AccessTokensProtectedDefaultValue);
          set => setBoolValue(AccessTokensProtectedKeyName, value);
+      }
+
+      private int AwaitedUpdateComparisonBatchSize
+      {
+         get => getIntValue(AwaitedUpdateComparisonBatchSizeKeyName, AwaitedUpdateComparisonBatchSizeDefaultValue);
+         set => setIntValue(AwaitedUpdateComparisonBatchSizeKeyName, value);
+      }
+
+      private int AwaitedUpdateFileBatchSize
+      {
+         get => getIntValue(AwaitedUpdateFileBatchSizeKeyName, AwaitedUpdateFileBatchSizeDefaultValue);
+         set => setIntValue(AwaitedUpdateFileBatchSizeKeyName, value);
+      }
+
+      private int AwaitedUpdateComparisonBatchDelay
+      {
+         get => getIntValue(AwaitedUpdateComparisonBatchDelayKeyName, AwaitedUpdateComparisonBatchDelayDefaultValue);
+         set => setIntValue(AwaitedUpdateComparisonBatchDelayKeyName, value);
+      }
+
+      private int AwaitedUpdateFileBatchDelay
+      {
+         get => getIntValue(AwaitedUpdateFileBatchDelayKeyName, AwaitedUpdateFileBatchDelayDefaultValue);
+         set => setIntValue(AwaitedUpdateFileBatchDelayKeyName, value);
+      }
+
+      private int NonAwaitedUpdateComparisonBatchSize
+      {
+         get => getIntValue(NonAwaitedUpdateComparisonBatchSizeKeyName, NonAwaitedUpdateComparisonBatchSizeDefaultValue);
+         set => setIntValue(NonAwaitedUpdateComparisonBatchSizeKeyName, value);
+      }
+
+      private int NonAwaitedUpdateFileBatchSize
+      {
+         get => getIntValue(NonAwaitedUpdateFileBatchSizeKeyName, NonAwaitedUpdateFileBatchSizeDefaultValue);
+         set => setIntValue(NonAwaitedUpdateFileBatchSizeKeyName, value);
+      }
+
+      private int NonAwaitedUpdateComparisonBatchDelay
+      {
+         get => getIntValue(NonAwaitedUpdateComparisonBatchDelayKeyName, NonAwaitedUpdateComparisonBatchDelayDefaultValue);
+         set => setIntValue(NonAwaitedUpdateComparisonBatchDelayKeyName, value);
+      }
+
+      private int NonAwaitedUpdateFileBatchDelay
+      {
+         get => getIntValue(NonAwaitedUpdateFileBatchDelayKeyName, NonAwaitedUpdateFileBatchDelayDefaultValue);
+         set => setIntValue(NonAwaitedUpdateFileBatchDelayKeyName, value);
       }
    }
 }

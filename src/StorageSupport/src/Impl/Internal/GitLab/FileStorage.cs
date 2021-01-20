@@ -32,18 +32,17 @@ namespace mrHelper.StorageSupport
       /// <summary>
       /// </summary>
       internal FileStorage(string parentFolder, ProjectKey projectKey,
-         ISynchronizeInvoke synchronizeInvoke, RepositoryAccessor repositoryAccessor, int revisionsToKeep,
-         int comparisonsToKeep, Func<int> getStorageCount)
+         ISynchronizeInvoke synchronizeInvoke, RepositoryAccessor repositoryAccessor, IFileStorageProperties properties)
       {
          Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey, LocalCommitStorageType.FileStorage);
          ProjectKey = projectKey;
          FileStorageUtils.InitalizeFileStorage(Path, ProjectKey);
 
-         ComparisonCache = new FileStorageComparisonCache(Path, comparisonsToKeep);
-         FileCache = new FileStorageRevisionCache(Path, revisionsToKeep);
+         ComparisonCache = new FileStorageComparisonCache(Path, properties.GetComparisonCountToKeep());
+         FileCache = new FileStorageRevisionCache(Path, properties.GetRevisionCountToKeep());
          DiffCache = new FileStorageDiffCache(Path, this);
 
-         _updater = new FileStorageUpdater(synchronizeInvoke, this, repositoryAccessor, getStorageCount);
+         _updater = new FileStorageUpdater(synchronizeInvoke, this, repositoryAccessor, properties);
 
          _processManager = new GitProcessManager(synchronizeInvoke, Path);
          _commandService = new FileStorageGitCommandService(_processManager, Path, this);

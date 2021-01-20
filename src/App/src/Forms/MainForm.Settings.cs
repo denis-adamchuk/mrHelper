@@ -25,7 +25,7 @@ namespace mrHelper.App.Forms
          _loadingConfiguration = true;
          Trace.TraceInformation("[MainForm] Loading configuration");
 
-         textBoxStorageFolder.Text = Program.Settings.LocalGitFolder;
+         textBoxStorageFolder.Text = Program.Settings.LocalStorageFolder;
          checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
          textBoxDisplayFilter.Text = Program.Settings.DisplayFilter;
          checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;

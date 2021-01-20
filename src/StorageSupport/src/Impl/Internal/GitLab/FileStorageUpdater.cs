@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -7,9 +8,9 @@ using System.ComponentModel;
 using GitLabSharp.Entities;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
+using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient;
-using System.Windows.Forms;
 
 namespace mrHelper.StorageSupport
 {
@@ -50,12 +51,12 @@ namespace mrHelper.StorageSupport
          ISynchronizeInvoke synchronizeInvoke,
          IFileStorage fileStorage,
          RepositoryAccessor repositoryAccessor,
-         Func<int> getStorageCount)
+         IFileStorageProperties properties)
       {
          _synchronizeInvoke = synchronizeInvoke;
          _fileStorage = fileStorage;
          _repositoryAccessor = repositoryAccessor;
-         _getStorageCount = getStorageCount;
+         _properties = properties;
       }
 
       public void StopUpdate() { }
@@ -107,8 +108,8 @@ namespace mrHelper.StorageSupport
             {
                try
                {
-                  traceInformation(String.Format("RequestUpdate() called with context of type {0}, storage count is {1}",
-                     contextProvider?.GetContext()?.GetType().ToString() ?? "null", _getStorageCount()));
+                  traceInformation(String.Format("RequestUpdate() called with context of type {0}",
+                     contextProvider?.GetContext()?.GetType().ToString() ?? "null"));
 
                   await doUpdate(false, contextProvider?.GetContext(), null);
                   onFinished?.Invoke();
@@ -353,7 +354,7 @@ namespace mrHelper.StorageSupport
          }
 
          await TaskUtils.RunConcurrentFunctionsAsync(missingFiles, doFetch,
-            () => getFileFetchBatchLimits(isAwaitedUpdate),
+            () => getFileBatchLimits(isAwaitedUpdate),
             () =>
             {
                traceDebug("Batch completed");
@@ -453,36 +454,22 @@ namespace mrHelper.StorageSupport
 
       private TaskUtils.BatchLimits getComparisonBatchLimits(bool isAwaitedUpdate)
       {
-         if (isAwaitedUpdate)
-         {
-            return Constants.ComparisonLoadingForAwaitedUpdateBatchLimits;
-         }
-
-         return new TaskUtils.BatchLimits
-         {
-            Size = Constants.ComparisonLoadingForNonAwaitedUpdateBatchLimits.Size,
-            Delay = Constants.ComparisonLoadingForNonAwaitedUpdateBatchLimits.Delay * _getStorageCount()
-         };
+         return isAwaitedUpdate
+            ? _properties.GetComparisonBatchLimitsForAwaitedUpdate()
+            : _properties.GetComparisonBatchLimitsForNonAwaitedUpdate();
       }
 
-      private TaskUtils.BatchLimits getFileFetchBatchLimits(bool isAwaitedUpdate)
+      private TaskUtils.BatchLimits getFileBatchLimits(bool isAwaitedUpdate)
       {
-         if (isAwaitedUpdate)
-         {
-            return Constants.FileLoadingForAwaitedUpdateBatchLimits;
-         }
-
-         return new TaskUtils.BatchLimits
-         {
-            Size = Constants.FileLoadingForNonAwaitedUpdateBatchLimits.Size,
-            Delay = Constants.FileLoadingForNonAwaitedUpdateBatchLimits.Delay * _getStorageCount()
-         };
+         return isAwaitedUpdate
+            ? _properties.GetFileBatchLimitsForAwaitedUpdate()
+            : _properties.GetFileBatchLimitsForNonAwaitedUpdate();
       }
 
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly IFileStorage _fileStorage;
       private RepositoryAccessor _repositoryAccessor;
-      private readonly Func<int> _getStorageCount;
+      private readonly IFileStorageProperties _properties;
 
       private bool _isDisposed;
 

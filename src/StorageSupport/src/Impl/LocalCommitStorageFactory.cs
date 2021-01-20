@@ -6,13 +6,14 @@ using System.Diagnostics;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.StorageSupport
 {
    ///<summary>
    /// Creates ILocalCommitStorage objects.
    ///<summary>
-   public class LocalCommitStorageFactory : ILocalCommitStorageFactory, IDisposable
+   public class LocalCommitStorageFactory : ILocalCommitStorageFactory, IDisposable, IFileStorageProperties
    {
       public string ParentFolder { get; }
 
@@ -20,8 +21,11 @@ namespace mrHelper.StorageSupport
       /// Create a factory
       /// Throws ArgumentException if passed ParentFolder does not exist and cannot be created
       /// </summary>
-      public LocalCommitStorageFactory(ISynchronizeInvoke synchronizeInvoke,
-         ProjectAccessor projectAccessor, string parentFolder, int revisionsToKeep, int comparisonsToKeep)
+      public LocalCommitStorageFactory(
+         string parentFolder,
+         ISynchronizeInvoke synchronizeInvoke,
+         ProjectAccessor projectAccessor,
+         IFileStorageProperties properties)
       {
          if (!Directory.Exists(parentFolder))
          {
@@ -48,8 +52,7 @@ namespace mrHelper.StorageSupport
          ParentFolder = parentFolder;
          _synchronizeInvoke = synchronizeInvoke;
          _projectAccessor = projectAccessor;
-         _revisionsToKeep = revisionsToKeep;
-         _comparisonsToKeep = comparisonsToKeep;
+         _properties = properties;
 
          Trace.TraceInformation(String.Format(
             "[LocalCommitStorageFactory] Created a factory for parentFolder {0}", parentFolder));
@@ -81,8 +84,7 @@ namespace mrHelper.StorageSupport
             if (type == LocalCommitStorageType.FileStorage)
             {
                FileStorage storage = new FileStorage(ParentFolder, key, _synchronizeInvoke,
-                  _projectAccessor.GetSingleProjectAccessor(key.ProjectName).GetRepositoryAccessor(),
-                  _revisionsToKeep, _comparisonsToKeep, () => _fileStorages.Count);
+                  _projectAccessor.GetSingleProjectAccessor(key.ProjectName).GetRepositoryAccessor(), this);
                _fileStorages[key] = storage;
                result = storage;
             }
@@ -127,14 +129,43 @@ namespace mrHelper.StorageSupport
          _isDisposed = true;
       }
 
+      public int GetRevisionCountToKeep() => _properties.GetRevisionCountToKeep();
+
+      public int GetComparisonCountToKeep() => _properties.GetComparisonCountToKeep();
+
+      public TaskUtils.BatchLimits GetComparisonBatchLimitsForAwaitedUpdate() =>
+         _properties.GetComparisonBatchLimitsForAwaitedUpdate();
+
+      public TaskUtils.BatchLimits GetFileBatchLimitsForAwaitedUpdate() =>
+         _properties.GetFileBatchLimitsForAwaitedUpdate();
+
+      public TaskUtils.BatchLimits GetComparisonBatchLimitsForNonAwaitedUpdate()
+      {
+         TaskUtils.BatchLimits defaultLimits = _properties.GetComparisonBatchLimitsForNonAwaitedUpdate();
+         return new TaskUtils.BatchLimits
+         {
+            Size = defaultLimits.Size,
+            Delay = defaultLimits.Delay * _fileStorages.Count
+         };
+      }
+
+      public TaskUtils.BatchLimits GetFileBatchLimitsForNonAwaitedUpdate()
+      {
+         TaskUtils.BatchLimits defaultLimits = _properties.GetFileBatchLimitsForNonAwaitedUpdate();
+         return new TaskUtils.BatchLimits
+         {
+            Size = defaultLimits.Size,
+            Delay = defaultLimits.Delay * _fileStorages.Count
+         };
+      }
+
       private readonly Dictionary<ProjectKey, GitRepository> _gitRepositories =
          new Dictionary<ProjectKey, GitRepository>();
       private readonly Dictionary<ProjectKey, FileStorage> _fileStorages =
          new Dictionary<ProjectKey, FileStorage>();
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private readonly ProjectAccessor _projectAccessor;
-      private readonly int _revisionsToKeep;
-      private readonly int _comparisonsToKeep;
+      private readonly IFileStorageProperties _properties;
 
       private bool _isDisposed;
    }

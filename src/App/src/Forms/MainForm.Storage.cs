@@ -52,11 +52,8 @@ namespace mrHelper.App.Forms
          {
             try
             {
-               _storageFactory = new LocalCommitStorageFactory(this,
-                  _shortcuts.GetProjectAccessor(),
-                  Program.Settings.LocalGitFolder,
-                  Program.Settings.RevisionsToKeep,
-                  Program.Settings.ComparisonsToKeep);
+               _storageFactory = new LocalCommitStorageFactory(Program.Settings.LocalStorageFolder,
+                  this, _shortcuts.GetProjectAccessor(), Program.Settings);
                _storageFactory.GitRepositoryCloned += onGitRepositoryCloned;
             }
             catch (ArgumentException ex)
@@ -67,7 +64,7 @@ namespace mrHelper.App.Forms
 
          if (_storageFactory == null && showMessageBoxOnError)
          {
-            MessageBox.Show(String.Format("Cannot create folder {0}", Program.Settings.LocalGitFolder),
+            MessageBox.Show(String.Format("Cannot create folder {0}", Program.Settings.LocalStorageFolder),
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          return _storageFactory;
@@ -106,7 +103,7 @@ namespace mrHelper.App.Forms
          {
             MessageBox.Show(String.Format(
                "Cannot obtain disk storage for project {0} in \"{1}\"",
-               projectKey.ProjectName, Program.Settings.LocalGitFolder),
+               projectKey.ProjectName, Program.Settings.LocalStorageFolder),
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
          return repo;
@@ -117,7 +114,7 @@ namespace mrHelper.App.Forms
          if (_storageFactory == null || _storageFactory.ParentFolder != newFolder)
          {
             textBoxStorageFolder.Text = storageFolderBrowser.SelectedPath;
-            Program.Settings.LocalGitFolder = storageFolderBrowser.SelectedPath;
+            Program.Settings.LocalStorageFolder = storageFolderBrowser.SelectedPath;
 
             MessageBox.Show("Storage folder is changed.\n Please restart Diff Tool if you have already launched it.",
                "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);

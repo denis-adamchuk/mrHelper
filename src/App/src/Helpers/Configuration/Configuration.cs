@@ -14,7 +14,7 @@ namespace mrHelper.App.Helpers
 {
    class ChangesNotAllowedException : Exception {}
 
-   public partial class UserDefinedSettings : INotifyPropertyChanged, IHostProperties
+   public partial class UserDefinedSettings : INotifyPropertyChanged, IHostProperties, IFileStorageProperties
    {
       private static readonly string DefaultValuePrefix = ":";
 
@@ -61,6 +61,46 @@ namespace mrHelper.App.Helpers
             }
          }
          return String.Empty;
+      }
+
+      public int GetRevisionCountToKeep() => RevisionsToKeep;
+
+      public int GetComparisonCountToKeep() => ComparisonsToKeep;
+
+      public TaskUtils.BatchLimits GetComparisonBatchLimitsForAwaitedUpdate()
+      {
+         return new TaskUtils.BatchLimits
+         {
+            Size = AwaitedUpdateComparisonBatchSize,
+            Delay = AwaitedUpdateComparisonBatchDelay
+         };
+      }
+
+      public TaskUtils.BatchLimits GetFileBatchLimitsForAwaitedUpdate()
+      {
+         return new TaskUtils.BatchLimits
+         {
+            Size = AwaitedUpdateFileBatchSize,
+            Delay = AwaitedUpdateFileBatchDelay
+         };
+      }
+
+      public TaskUtils.BatchLimits GetComparisonBatchLimitsForNonAwaitedUpdate()
+      {
+         return new TaskUtils.BatchLimits
+         {
+            Size = NonAwaitedUpdateComparisonBatchSize,
+            Delay = NonAwaitedUpdateComparisonBatchDelay
+         };
+      }
+
+      public TaskUtils.BatchLimits GetFileBatchLimitsForNonAwaitedUpdate()
+      {
+         return new TaskUtils.BatchLimits
+         {
+            Size = NonAwaitedUpdateFileBatchSize,
+            Delay = NonAwaitedUpdateFileBatchDelay
+         };
       }
 
       private IEnumerable<string> getAccessTokens()

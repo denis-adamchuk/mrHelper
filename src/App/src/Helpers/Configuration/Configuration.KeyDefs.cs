@@ -12,8 +12,8 @@ namespace mrHelper.App.Helpers
 
       private static readonly string KnownAccessTokensKeyName = "KnownAccessTokens";
 
-      private static readonly string LocalGitFolderKeyName = "LocalGitFolder";
-      private static readonly string LocalGitFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");
+      private static readonly string LocalStorageFolderKeyName      = "LocalGitFolder";
+      private static readonly string LocalStorageFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");
 
       private static readonly string AutoSelectionModeKeyName      = "AutoSelectionMode";
       private static readonly string AutoSelectionModeDefaultValue = "LastVsLatest";
@@ -136,8 +136,10 @@ namespace mrHelper.App.Helpers
       private static readonly string ComparisonsToKeepKeyName = "FileStorageComparisonsToKeep";
       private static readonly int    ComparisonsToKeepDefaultValue = 200;
 
-      private static readonly string RecentMergeRequestsPerProjectCountKeyName = "RecentMergeRequestsPerProjectCount";
-      private static readonly string RecentMergeRequestsPerProjectCountDefaultValue = Constants.RecentMergeRequestPerProjectDefaultCount.ToString();
+      private static readonly string RecentMergeRequestsPerProjectCountKeyName      =
+         "RecentMergeRequestsPerProjectCount";
+      private static readonly string RecentMergeRequestsPerProjectCountDefaultValue =
+         Constants.RecentMergeRequestPerProjectDefaultCount.ToString();
 
       private static readonly string Notifications_NewMergeRequests_KeyName      = "Notifications_NewMergeRequests";
       private static readonly bool   Notifications_NewMergeRequests_DefaultValue = true;
@@ -214,6 +216,46 @@ namespace mrHelper.App.Helpers
 
       private static readonly string AccessTokensProtectedKeyName      = "AccessTokensProtected";
       private static readonly bool   AccessTokensProtectedDefaultValue = false;
+
+      private static readonly string AwaitedUpdateComparisonBatchSizeKeyName      =
+         "AwaitedUpdateComparisonBatchSize";
+      private static readonly int    AwaitedUpdateComparisonBatchSizeDefaultValue = 
+         Constants.AwaitedUpdateComparisonBatchDefaultLimits.Size;
+
+      private static readonly string AwaitedUpdateComparisonBatchDelayKeyName      =
+         "AwaitedUpdateComparisonBatchDelay";
+      private static readonly int    AwaitedUpdateComparisonBatchDelayDefaultValue = 
+         Constants.AwaitedUpdateComparisonBatchDefaultLimits.Delay;
+
+      private static readonly string AwaitedUpdateFileBatchSizeKeyName      =
+         "AwaitedUpdateFileBatchSize";
+      private static readonly int    AwaitedUpdateFileBatchSizeDefaultValue = 
+         Constants.AwaitedUpdateFileBatchDefaultLimits.Size;
+
+      private static readonly string AwaitedUpdateFileBatchDelayKeyName      =
+         "AwaitedUpdateFileBatchDelay";
+      private static readonly int    AwaitedUpdateFileBatchDelayDefaultValue = 
+         Constants.AwaitedUpdateFileBatchDefaultLimits.Delay;
+
+      private static readonly string NonAwaitedUpdateComparisonBatchSizeKeyName      =
+         "NonAwaitedUpdateComparisonBatchSize";
+      private static readonly int    NonAwaitedUpdateComparisonBatchSizeDefaultValue = 
+         Constants.NonAwaitedUpdateComparisonBatchDefaultLimits.Size;
+
+      private static readonly string NonAwaitedUpdateComparisonBatchDelayKeyName      =
+         "NonAwaitedUpdateComparisonBatchDelay";
+      private static readonly int    NonAwaitedUpdateComparisonBatchDelayDefaultValue = 
+         Constants.NonAwaitedUpdateComparisonBatchDefaultLimits.Delay;
+
+      private static readonly string NonAwaitedUpdateFileBatchSizeKeyName      =
+         "NonAwaitedUpdateFileBatchSize";
+      private static readonly int    NonAwaitedUpdateFileBatchSizeDefaultValue = 
+         Constants.NonAwaitedUpdateFileBatchDefaultLimits.Size;
+
+      private static readonly string NonAwaitedUpdateFileBatchDelayKeyName      =
+         "NonAwaitedUpdateFileBatchDelay";
+      private static readonly int    NonAwaitedUpdateFileBatchDelayDefaultValue = 
+         Constants.NonAwaitedUpdateFileBatchDefaultLimits.Delay;
    }
 }
 
