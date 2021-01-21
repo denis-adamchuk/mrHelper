@@ -9,29 +9,19 @@ namespace mrHelper.App.Helpers
    {
       internal PeriodicUpdateChecker(ISynchronizeInvoke synchronizeInvoke)
       {
-         startApplicationUpdateTimer(synchronizeInvoke);
-      }
-
-      public void Dispose()
-      {
-         stopApplicationUpdateTimer();
-      }
-
-      internal event Action NewVersionAvailable;
-
-      private void startApplicationUpdateTimer(ISynchronizeInvoke synchronizeInvoke)
-      {
          _checkForUpdatesTimer.Elapsed += onCheckForUpdatesTimer;
          _checkForUpdatesTimer.SynchronizingObject = synchronizeInvoke;
          _checkForUpdatesTimer.Start();
       }
 
-      private void stopApplicationUpdateTimer()
+      public void Dispose()
       {
          _checkForUpdatesTimer?.Stop();
          _checkForUpdatesTimer?.Dispose();
          _checkForUpdatesTimer = null;
       }
+
+      internal event Action NewVersionAvailable;
 
       private void onCheckForUpdatesTimer(object sender, System.Timers.ElapsedEventArgs e)
       {

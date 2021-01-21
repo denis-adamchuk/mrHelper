@@ -128,8 +128,8 @@ namespace mrHelper.App.Forms
          var sourceBranchesInUse = GitLabClient.Helpers.GetSourceBranchesByUser(getCurrentUser(), dataCache);
 
          MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
-            _shortcuts.GetProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList, sourceBranchesInUse,
-            _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()));
+            _shortcuts.GetProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList,
+            sourceBranchesInUse, _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()));
          if (form.ShowDialog() != DialogResult.OK)
          {
             Trace.TraceInformation("[MainForm] User declined to create a merge request");

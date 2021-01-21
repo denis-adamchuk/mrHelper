@@ -10,14 +10,8 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.StorageSupport
 {
-   /// <summary>
-   /// Prepares GitRepository to use.
-   /// </summary>
    internal class GitRepositoryUpdater : ILocalCommitStorageUpdater, IDisposable
    {
-      /// <summary>
-      /// Bind to the specific GitRepository object
-      /// </summary>
       internal GitRepositoryUpdater(
          ISynchronizeInvoke synchronizeInvoke,
          IGitRepository gitRepository,
@@ -31,11 +25,6 @@ namespace mrHelper.StorageSupport
             operationManager, mode, onCloned, onFetched);
       }
 
-      /// <summary>
-      /// Update passed GitRepository object.
-      /// Throw InteractiveUpdaterException on unrecoverable errors.
-      /// Throw CancelledByUserException and RepeatOperationException.
-      /// </summary>
       async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider,
          Action<string> onProgressChange, Action onUpdateStateChange)
       {

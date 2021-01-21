@@ -64,8 +64,8 @@ namespace mrHelper.GitLabClient
                {
                   return;
                }
-               _checking = true;
 
+               _checking = true;
                try
                {
                   string token = HostProperties.GetAccessToken(HostName);

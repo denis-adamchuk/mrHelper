@@ -116,8 +116,7 @@ namespace mrHelper.GitLabClient
          INetworkOperationStatusListener networkOperationStatusListener)
       {
          MergeRequestManager mergeRequestManager = new MergeRequestManager(
-            _cacheContext, cacheUpdater, hostname, hostProperties, queryCollection,
-            modificationNotifier, networkOperationStatusListener);
+            _cacheContext, cacheUpdater, hostname, hostProperties, queryCollection, networkOperationStatusListener);
          DiscussionManager discussionManager = new DiscussionManager(
             _cacheContext, hostname, hostProperties, user, mergeRequestManager,
             modificationNotifier, networkOperationStatusListener);
