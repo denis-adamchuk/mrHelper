@@ -23,51 +23,44 @@ namespace mrHelper.GitLabClient
 
       async public Task Connect(GitLabInstance gitLabInstance, DataCacheConnectionContext connectionContext)
       {
-         Disconnect();
+         reset();
 
          string hostname = gitLabInstance.HostName;
          IHostProperties hostProperties = gitLabInstance.HostProperties;
          _operator = new DataCacheOperator(hostname, hostProperties, gitLabInstance.NetworkOperationStatusListener);
 
+         Connecting?.Invoke(hostname);
+         traceInformation(String.Format("Connecting data cache to {0}...", hostname));
+
+         InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
+         IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
+            hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater,
+            _cacheContext.Callbacks, connectionContext.QueryCollection);
+
+         string accessToken = hostProperties.GetAccessToken(hostname);
          try
          {
-            Connecting?.Invoke(hostname);
-
-            InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
-            IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
-               hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater,
-               _cacheContext.Callbacks, connectionContext.QueryCollection);
-
-            traceInformation(String.Format("Connecting data cache to {0}...", hostname));
-            string accessToken = hostProperties.GetAccessToken(hostname);
             await new CurrentUserLoader(_operator).Load(hostname, accessToken);
-            User currentUser = GlobalCache.GetAuthenticatedUser(hostname, accessToken);
-
             await mergeRequestListLoader.Load();
-            _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser,
-               connectionContext.QueryCollection, gitLabInstance.ModificationNotifier,
-               gitLabInstance.NetworkOperationStatusListener);
-
-            ConnectionContext = connectionContext;
-            traceInformation(String.Format("Data cache connected to {0}", hostname));
-            Connected?.Invoke(hostname, currentUser);
          }
          catch (BaseLoaderException ex)
          {
             reset();
-
             if (ex is BaseLoaderCancelledException)
             {
                throw new DataCacheConnectionCancelledException();
             }
             throw new DataCacheException(ex.OriginalMessage, ex);
          }
-      }
 
-      public void Disconnect()
-      {
-         traceInformation("Disconnecting data cache");
-         reset();
+         User currentUser = GlobalCache.GetAuthenticatedUser(hostname, accessToken);
+         _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser,
+            connectionContext.QueryCollection, gitLabInstance.ModificationNotifier,
+            gitLabInstance.NetworkOperationStatusListener);
+
+         ConnectionContext = connectionContext;
+         traceInformation(String.Format("Data cache connected to {0}", hostname));
+         Connected?.Invoke(hostname, currentUser);
       }
 
       public void Dispose()

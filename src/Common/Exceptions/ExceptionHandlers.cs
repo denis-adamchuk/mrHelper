@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Diagnostics;
 
 namespace mrHelper.Common.Exceptions

@@ -228,11 +228,17 @@ namespace mrHelper.App.Forms
          }
          catch (UrlConnectionException ex)
          {
-            if (ex.InnerException is DataCacheConnectionCancelledException)
+            if (ex.InnerException is DataCacheConnectionCancelledException
+             || ex.InnerException is MergeRequestAccessorCancelledException)
             {
                return;
             }
-            reportErrorOnConnect(url, ex.OriginalMessage, ex.InnerException);
+
+            showMessageBoxOnUrlConnectionException(ex);
+
+            string briefMessage = String.Format("Cannot open URL {0}", url);
+            addOperationRecord(briefMessage);
+            ExceptionHandlers.Handle(briefMessage, ex.InnerException);
          }
 
          await switchHostToSelectedAsync(null);
@@ -243,7 +249,7 @@ namespace mrHelper.App.Forms
          if (Program.Settings.GetAccessToken(hostname) == String.Empty)
          {
             throw new UrlConnectionException(String.Format(
-               "Cannot connect to {0} because it is not in the list of known hosts. ", hostname), null);
+               "Cannot connect to {0} because it is not in the list of known hosts. ", hostname));
          }
       }
 
@@ -273,7 +279,7 @@ namespace mrHelper.App.Forms
 
       private class UrlConnectionException : ExceptionEx
       {
-         internal UrlConnectionException(string message, Exception innerException)
+         internal UrlConnectionException(string message, Exception innerException = null)
             : base(message, innerException) { }
       }
 
@@ -288,6 +294,7 @@ namespace mrHelper.App.Forms
             case SelectionResult.NotFound:
                break;
             case SelectionResult.Selected:
+               addOperationRecord("Merge Request was found in cache and selected");
                return;
             case SelectionResult.Hidden:
                tryOpenAtLiveTab = false;
@@ -371,27 +378,34 @@ namespace mrHelper.App.Forms
 
       async private Task<MergeRequest> searchMergeRequestAsync(MergeRequestKey mrk)
       {
-         return await _shortcuts
-            .GetMergeRequestAccessor(mrk.ProjectKey)
-            .SearchMergeRequestAsync(mrk.IId, false);
+         try
+         {
+            MergeRequest mergeRequest = await _shortcuts
+               .GetMergeRequestAccessor(mrk.ProjectKey)
+               .SearchMergeRequestAsync(mrk.IId, false);
+            if (mergeRequest == null)
+            {
+               throw new UrlConnectionException("Merge request does not exist. ");
+            }
+            return mergeRequest;
+         }
+         catch (MergeRequestAccessorException ex)
+         {
+            throw new UrlConnectionException("Failed to check if merge request exists at GitLab. ", ex);
+         }
       }
 
-      private void reportErrorOnConnect(string url, string msg, Exception ex)
+      private void showMessageBoxOnUrlConnectionException(UrlConnectionException ex)
       {
-         string exceptionMessage = ex != null ? ex.Message : String.Empty;
-         if (ex is DataCacheException wfex)
-         {
-            exceptionMessage = wfex.UserMessage;
-         }
+         string errorDescription = ex.OriginalMessage;
+         string innerMessage = ex.InnerException == null ? String.Empty : ex.InnerException.Message;
+         string errorDetails = ex.InnerException is ExceptionEx exex ? exex.UserMessage : innerMessage;
 
-         string msgBoxMessage = String.Format("{0}Cannot open merge request from URL. {1}", msg, exceptionMessage);
+         string msgBoxMessage = String.Format("Cannot open merge request from URL. {0} {1}",
+            errorDescription, errorDetails);
 
          MessageBox.Show(msgBoxMessage, "Warning", MessageBoxButtons.OK,
             MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-
-         string errorMessage = String.Format("Cannot open URL {0}", url);
-         ExceptionHandlers.Handle(errorMessage, ex);
-         addOperationRecord(errorMessage);
       }
 
       async private Task restartWorkflowByUrlAsync(string hostname)
@@ -407,7 +421,7 @@ namespace mrHelper.App.Forms
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (dataCache?.MergeRequestCache == null)
          {
-            throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
+            throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ");
          }
 
          if (!dataCache.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
@@ -421,11 +435,11 @@ namespace mrHelper.App.Forms
                addOperationRecord("Merge request list update has completed");
                if (getHostName() != mrk.ProjectKey.HostName || dataCache.MergeRequestCache == null)
                {
-                  throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ", null);
+                  throw new UrlConnectionException("Merge request loading was cancelled due to host switch. ");
                }
             }
 
-            if (!checkProjectWorkflowFilters(mrk, false))
+            if (!checkProjectWorkflowFilters(mrk))
             {
                // this may happen if project list changed while we were in 'await'
                return false;
@@ -447,7 +461,7 @@ namespace mrHelper.App.Forms
                {
                   Debug.Assert(false);
                   Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
-                  throw new UrlConnectionException("Something went wrong. ", null);
+                  throw new UrlConnectionException("Something went wrong. ");
                }
             }
             else
@@ -456,7 +470,7 @@ namespace mrHelper.App.Forms
                {
                   Debug.Assert(false);
                   Trace.TraceError(String.Format("[MainForm] Cannot open URL {0} by unknown reason", url));
-                  throw new UrlConnectionException("Something went wrong. ", null);
+                  throw new UrlConnectionException("Something went wrong. ");
                }
                return false;
             }
@@ -531,7 +545,7 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[MainForm] Notify that selected project is disabled");
 
-         if (MessageBox.Show("Selected project is not enabled. Do you want to enable it?"
+         if (MessageBox.Show("Selected project is not enabled. Do you want to enable it? "
                + "Selecting 'Yes' will cause reload of all projects. "
                + "Selecting 'No' will open the merge request at Search tab. ",
                "Warning",
@@ -546,20 +560,40 @@ namespace mrHelper.App.Forms
          return true;
       }
 
-      private bool checkProjectWorkflowFilters(MergeRequestKey mrk, bool proposeFix)
+      private bool checkProjectWorkflowFilters(MergeRequestKey mrk)
       {
          if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {
             return true;
          }
 
-         if (!isProjectInTheList(mrk.ProjectKey) && (!proposeFix || !addMissingProject(mrk.ProjectKey)))
+         return isProjectInTheList(mrk.ProjectKey) && isEnabledProject(mrk.ProjectKey);
+      }
+
+      async private Task<bool> fixProjectWorkflowFiltersAsync(MergeRequestKey mrk)
+      {
+         if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {
+            return true;
+         }
+
+         if (!isProjectInTheList(mrk.ProjectKey))
+         {
+            if (addMissingProject(mrk.ProjectKey))
+            {
+               await restartWorkflowByUrlAsync(mrk.ProjectKey.HostName);
+               return true;
+            }
             return false;
          }
 
-         if (!isEnabledProject(mrk.ProjectKey) && (!proposeFix || !enableDisabledProject(mrk.ProjectKey)))
+         if (!isEnabledProject(mrk.ProjectKey))
          {
+            if (enableDisabledProject(mrk.ProjectKey))
+            {
+               await restartWorkflowByUrlAsync(mrk.ProjectKey.HostName);
+               return true;
+            }
             return false;
          }
 
@@ -568,17 +602,14 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> checkLiveDataCacheFilterAsync(MergeRequestKey mrk, string url)
       {
-         if (!checkProjectWorkflowFilters(mrk, true))
+         if (!await fixProjectWorkflowFiltersAsync(mrk))
          {
             return false;
          }
 
          addOperationRecord(String.Format("Checking merge request at {0} started", url));
          MergeRequest mergeRequest = await searchMergeRequestAsync(mrk);
-         if (mergeRequest == null)
-         {
-            throw new UrlConnectionException("Merge request does not exist. ", null);
-         }
+         Debug.Assert(mergeRequest != null);
          addOperationRecord(String.Format("Checking merge request at {0} has completed", url));
 
          DataCache dataCache = getDataCache(EDataCacheType.Live);

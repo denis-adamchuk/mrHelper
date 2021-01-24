@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace mrHelper.Common.Exceptions
 {
@@ -22,11 +21,17 @@ namespace mrHelper.Common.Exceptions
          }
       }
 
-      public string OriginalMessage
+      public string OriginalMessage => base.Message;
+
+      public virtual string UserMessage
       {
          get
          {
-            return base.Message;
+            if (InnerException is ExceptionEx inex)
+            {
+               return inex.UserMessage;
+            }
+            return OriginalMessage;
          }
       }
    }

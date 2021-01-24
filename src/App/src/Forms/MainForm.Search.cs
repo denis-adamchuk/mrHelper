@@ -68,8 +68,24 @@ namespace mrHelper.App.Forms
       async private Task connectSearchDataCacheAsync(string hostname, SearchQueryCollection queryCollection,
          EDataCacheType mode)
       {
-         DataCache dataCache = getDataCache(mode);
-         await dataCache.Connect(_gitLabInstance, new DataCacheConnectionContext(queryCollection));
+         switch (mode)
+         {
+            case EDataCacheType.Search:
+               getDataCache(EDataCacheType.Search)?.Dispose();
+               unsubscribeFromSearchDataCache();
+               createSearchDataCache();
+               subscribeToSearchDataCache();
+               break;
+
+            case EDataCacheType.Recent:
+               getDataCache(EDataCacheType.Recent)?.Dispose();
+               unsubscribeFromRecentDataCache();
+               createRecentDataCache();
+               subscribeToRecentDataCache();
+               break;
+         }
+
+         await getDataCache(mode).Connect(_gitLabInstance, new DataCacheConnectionContext(queryCollection));
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

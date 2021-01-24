@@ -590,7 +590,8 @@ namespace mrHelper.App.Forms
 
       private void reconnect(string url = null)
       {
-         addOperationRecord("Reconnection request has been queued");
+         string suffix = String.IsNullOrEmpty(url) ? String.Empty : String.Format(" ({0})", url);
+         addOperationRecord(String.Format("Reconnection request has been queued {0}", suffix));
          enqueueUrl(url);
       }
 

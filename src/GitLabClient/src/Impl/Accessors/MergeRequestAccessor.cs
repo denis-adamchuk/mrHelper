@@ -18,6 +18,12 @@ namespace mrHelper.GitLabClient
       }
    }
 
+   public class MergeRequestAccessorCancelledException : MergeRequestAccessorException
+   {
+      internal MergeRequestAccessorCancelledException()
+         : base(String.Empty, null) {}
+   }
+
    public class MergeRequestAccessor
    {
       internal MergeRequestAccessor(IHostProperties settings, ProjectKey projectKey,
@@ -46,9 +52,13 @@ namespace mrHelper.GitLabClient
                IEnumerable<MergeRequest> mergeRequests = await mergeRequestOperator.SearchMergeRequestsAsync(query);
                return mergeRequests.Any() ? mergeRequests.First() : null;
             }
-            catch (OperatorException)
+            catch (OperatorException ex)
             {
-               return null;
+               if (ex.Cancelled)
+               {
+                  throw new MergeRequestAccessorCancelledException();
+               }
+               throw new MergeRequestAccessorException("Merge request search failed", ex);
             }
          }
       }
