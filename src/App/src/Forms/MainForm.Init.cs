@@ -154,6 +154,16 @@ namespace mrHelper.App.Forms
          restoreState();
          prepareFormToStart();
 
+         createLiveDataCacheAndDependencies();
+         subscribeToLiveDataCache();
+
+         createSearchDataCache();
+         subscribeToSearchDataCache();
+
+         createRecentDataCache();
+         subscribeToRecentDataCache();
+
+         initializeColorScheme();
          initializeIconScheme();
          initializeBadgeScheme();
 
@@ -356,16 +366,6 @@ namespace mrHelper.App.Forms
          cacheCheckTimer.Start();
       }
 
-      private void disposeDataCaches()
-      {
-         _liveDataCache?.Dispose();
-         _liveDataCache = null;
-         _searchDataCache?.Dispose();
-         _searchDataCache = null;
-         _recentDataCache?.Dispose();
-         _recentDataCache = null;
-      }
-
       private void createLiveDataCacheAndDependencies()
       {
          // The idea is that:
@@ -434,12 +434,9 @@ namespace mrHelper.App.Forms
       private void unsubscribeFromLiveDataCache()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Live);
-         if (dataCache != null)
-         {
-            dataCache.Disconnected -= onLiveDataCacheDisconnected;
-            dataCache.Connecting -= onLiveDataCacheConnecting;
-            dataCache.Connected -= onLiveDataCacheConnected;
-         }
+         dataCache.Disconnected -= onLiveDataCacheDisconnected;
+         dataCache.Connecting -= onLiveDataCacheConnecting;
+         dataCache.Connected -= onLiveDataCacheConnected;
       }
 
       private void unsubscribeFromLiveDataCacheInternalEvents()
@@ -504,12 +501,9 @@ namespace mrHelper.App.Forms
       private void unsubscribeFromSearchDataCache()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Search);
-         if (dataCache != null)
-         {
-            dataCache.Disconnected -= onSearchDataCacheDisconnected;
-            dataCache.Connecting -= onSearchDataCacheConnecting;
-            dataCache.Connected -= onSearchDataCacheConnected;
-         }
+         dataCache.Disconnected -= onSearchDataCacheDisconnected;
+         dataCache.Connecting -= onSearchDataCacheConnecting;
+         dataCache.Connected -= onSearchDataCacheConnected;
       }
 
       private void createRecentDataCache()
@@ -541,12 +535,9 @@ namespace mrHelper.App.Forms
       private void unsubscribeFromRecentDataCache()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Recent);
-         if (dataCache != null)
-         {
-            dataCache.Disconnected -= onRecentDataCacheDisconnected;
-            dataCache.Connecting -= onRecentDataCacheConnecting;
-            dataCache.Connected -= onRecentDataCacheConnected;
-         }
+         dataCache.Disconnected -= onRecentDataCacheDisconnected;
+         dataCache.Connecting -= onRecentDataCacheConnecting;
+         dataCache.Connected -= onRecentDataCacheConnected;
       }
 
       private void unsubscribeFromRecentDataCacheInternalEvents()

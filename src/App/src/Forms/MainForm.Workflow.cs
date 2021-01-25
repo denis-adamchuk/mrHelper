@@ -53,7 +53,7 @@ namespace mrHelper.App.Forms
 
       async private Task switchHostToSelectedAsync(Func<Exception, bool> exceptionHandler)
       {
-         disposeDataCaches();
+         dropCacheConnections();
          initializeGitLabInstance(getHostName());
          updateTabControlSelection();
 
@@ -63,7 +63,7 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
-            disposeDataCaches();
+            dropCacheConnections();
             if (exceptionHandler == null)
             {
                exceptionHandler = new Func<Exception, bool>(e => startWorkflowDefaultExceptionHandler(e));
@@ -72,6 +72,14 @@ namespace mrHelper.App.Forms
             {
                throw;
             }
+         }
+      }
+
+      private void dropCacheConnections()
+      {
+         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
+         {
+            getDataCache(mode)?.Disconnect();
          }
       }
 
@@ -97,12 +105,6 @@ namespace mrHelper.App.Forms
          {
             throw new UnknownHostException(hostname);
          }
-
-         disposeLiveDataCacheDependencies();
-         unsubscribeFromLiveDataCache();
-         createLiveDataCacheAndDependencies();
-         subscribeToLiveDataCache();
-         initializeColorScheme();
 
          if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {

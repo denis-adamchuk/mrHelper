@@ -25,7 +25,14 @@ namespace mrHelper.App.Forms
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
          disposeLiveDataCacheDependencies();
-         disposeDataCaches();
+
+         _liveDataCache.Dispose();
+         _liveDataCache = null;
+         _searchDataCache.Dispose();
+         _searchDataCache = null;
+         _recentDataCache.Dispose();
+         _recentDataCache = null;
+
          disposeGitLabInstance();
 
          unsubscribeFromApplicationUpdates();
