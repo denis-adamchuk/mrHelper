@@ -23,17 +23,7 @@ namespace mrHelper.Common.Exceptions
 
       public string OriginalMessage => base.Message;
 
-      public virtual string UserMessage
-      {
-         get
-         {
-            if (InnerException is ExceptionEx inex)
-            {
-               return inex.UserMessage;
-            }
-            return OriginalMessage;
-         }
-      }
+      public virtual string UserMessage => InnerException is ExceptionEx inex ? inex.UserMessage : OriginalMessage;
    }
 }
 

@@ -28,6 +28,10 @@ namespace mrHelper.GitLabClient.Operators
                   }
                   return wx.Message;
                }
+               else if (rx.InnerException != null)
+               {
+                  return rx.InnerException.Message;
+               }
             }
             return base.UserMessage;
          }
