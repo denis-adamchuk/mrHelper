@@ -52,7 +52,7 @@ namespace mrHelper.App.Forms
       async private Task searchMergeRequestsAsync(string hostname, SearchQueryCollection queryCollection,
          EDataCacheType mode)
       {
-         if (String.IsNullOrWhiteSpace(hostname))
+         if (String.IsNullOrWhiteSpace(hostname) || getDataCache(mode) == null)
          {
             return;
          }

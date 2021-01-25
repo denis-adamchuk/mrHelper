@@ -79,7 +79,11 @@ namespace mrHelper.App.Forms
       {
          foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
          {
-            await getDataCache(mode)?.Disconnect();
+            DataCache dataCache = getDataCache(mode);
+            if (dataCache != null)
+            {
+               await dataCache.Disconnect();
+            }
          }
       }
 
@@ -95,7 +99,7 @@ namespace mrHelper.App.Forms
          Trace.TraceInformation("[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
             hostname, Program.Settings.WorkflowType);
 
-         if (String.IsNullOrWhiteSpace(hostname))
+         if (String.IsNullOrWhiteSpace(hostname) || getDataCache(EDataCacheType.Live) == null)
          {
             return;
          }

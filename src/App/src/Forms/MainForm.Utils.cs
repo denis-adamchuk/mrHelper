@@ -691,12 +691,15 @@ namespace mrHelper.App.Forms
          labelOperationStatus.Text = text;
          Trace.TraceInformation("[MainForm] {0}", text);
 
-         StringBuilder builder = new StringBuilder(OperationRecordHistoryDepth);
-         foreach (string record in _operationRecordHistory)
+         if (!_exiting)
          {
-            builder.AppendLine(record);
+            StringBuilder builder = new StringBuilder(OperationRecordHistoryDepth);
+            foreach (string record in _operationRecordHistory)
+            {
+               builder.AppendLine(record);
+            }
+            toolTip.SetToolTip(labelOperationStatus, builder.ToString());
          }
-         toolTip.SetToolTip(labelOperationStatus, builder.ToString());
       }
 
       private void setConnectionStatus(EConnectionState status)

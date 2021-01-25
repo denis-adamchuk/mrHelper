@@ -613,6 +613,11 @@ namespace mrHelper.App.Forms
          addOperationRecord(String.Format("Checking merge request at {0} has completed", url));
 
          DataCache dataCache = getDataCache(EDataCacheType.Live);
+         if (dataCache == null)
+         {
+            return false;
+         }
+
          Debug.Assert(dataCache.ConnectionContext != null);
          SearchQueryCollection queries = dataCache.ConnectionContext.QueryCollection;
          return GitLabClient.Helpers.DoesMatchSearchQuery(queries, mergeRequest, mrk.ProjectKey);
