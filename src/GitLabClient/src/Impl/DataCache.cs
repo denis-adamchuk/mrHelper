@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Tools;
 using mrHelper.GitLabClient.Loaders;
 using mrHelper.GitLabClient.Loaders.Cache;
 using mrHelper.GitLabClient.Managers;
@@ -23,12 +24,14 @@ namespace mrHelper.GitLabClient
 
       async public Task Connect(GitLabInstance gitLabInstance, DataCacheConnectionContext connectionContext)
       {
-         Disconnect();
+         assertNotConnected();
 
          string hostname = gitLabInstance.HostName;
          IHostProperties hostProperties = gitLabInstance.HostProperties;
          _operator = new DataCacheOperator(hostname, hostProperties, gitLabInstance.NetworkOperationStatusListener);
+         DataCacheOperator myOperator = _operator;
 
+         _isConnecting = true;
          try
          {
             Connecting?.Invoke(hostname);
@@ -62,12 +65,34 @@ namespace mrHelper.GitLabClient
             }
             throw new DataCacheException(ex.OriginalMessage, ex);
          }
+         finally
+         {
+            _isConnecting = false;
+         }
       }
 
-      public void Disconnect()
+      private void assertNotConnected()
       {
-         traceInformation("Disconnecting data cache");
-         reset();
+         Debug.Assert(!_isConnecting);
+         Debug.Assert(_operator == null);
+         Debug.Assert(_internal == null);
+         Debug.Assert(ConnectionContext == null);
+      }
+
+      async public Task Disconnect()
+      {
+         if (_isConnecting)
+         {
+            traceInformation("Disconnecting data cache (async)");
+            _operator?.Dispose(); // causes BaseLoaderCancelledException
+            await TaskUtils.WhileAsync(() => _operator != null);
+            assertNotConnected();
+         }
+         else
+         {
+            traceInformation("Disconnecting data cache (sync)");
+            reset();
+         }
       }
 
       public void Dispose()
@@ -130,6 +155,7 @@ namespace mrHelper.GitLabClient
          return new DataCacheInternal(mergeRequestManager, discussionManager, timeTrackingManager, projectCache, userCache);
       }
 
+      private bool _isConnecting;
       private DataCacheOperator _operator;
       private DataCacheInternal _internal;
       private readonly DataCacheContext _cacheContext;

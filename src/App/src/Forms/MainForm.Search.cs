@@ -69,6 +69,7 @@ namespace mrHelper.App.Forms
          EDataCacheType mode)
       {
          DataCache dataCache = getDataCache(mode);
+         await dataCache.Disconnect();
          await dataCache.Connect(_gitLabInstance, new DataCacheConnectionContext(queryCollection));
       }
 
