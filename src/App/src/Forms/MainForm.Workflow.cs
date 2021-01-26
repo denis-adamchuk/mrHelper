@@ -128,7 +128,7 @@ namespace mrHelper.App.Forms
       {
          IEnumerable<ProjectKey> projects = getEnabledProjects(hostname);
          SearchQueryCollection queryCollection = getCustomDataForProjectBasedWorkflow(projects);
-         await connectLiveDataCacheAsync(hostname, queryCollection);
+         await connectLiveDataCacheAsync(queryCollection);
       }
 
       private IEnumerable<ProjectKey> getEnabledProjects(string hostname)
@@ -147,10 +147,10 @@ namespace mrHelper.App.Forms
       {
          IEnumerable<string> usernames = listViewUsers.Items.Cast<ListViewItem>().Select(item => item.Text);
          SearchQueryCollection queryCollection = getCustomDataForUserBasedWorkflow(usernames);
-         await connectLiveDataCacheAsync(hostname, queryCollection);
+         await connectLiveDataCacheAsync(queryCollection);
       }
 
-      async private Task connectLiveDataCacheAsync(string hostname, SearchQueryCollection queryCollection)
+      async private Task connectLiveDataCacheAsync(SearchQueryCollection queryCollection)
       {
          DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(queryCollection);
          DataCache dataCache = getDataCache(EDataCacheType.Live);

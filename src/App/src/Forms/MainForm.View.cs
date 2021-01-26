@@ -1077,7 +1077,7 @@ namespace mrHelper.App.Forms
             && !String.IsNullOrWhiteSpace(textBoxSearchText.Text));
       }
 
-      private void onSearchTextBoxKeyDown(TextBox textBox, Keys keys)
+      private void onSearchTextBoxKeyDown(Keys keys)
       {
          updateSearchButtonState();
          if (keys == Keys.Enter && buttonSearch.Enabled)

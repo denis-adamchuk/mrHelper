@@ -62,11 +62,10 @@ namespace mrHelper.App.Forms
             throw new UnknownHostException(hostname);
          }
 
-         await connectSearchDataCacheAsync(hostname, queryCollection, mode);
+         await connectSearchDataCacheAsync(queryCollection, mode);
       }
 
-      async private Task connectSearchDataCacheAsync(string hostname, SearchQueryCollection queryCollection,
-         EDataCacheType mode)
+      async private Task connectSearchDataCacheAsync(SearchQueryCollection queryCollection, EDataCacheType mode)
       {
          DataCache dataCache = getDataCache(mode);
          await dataCache.Disconnect();

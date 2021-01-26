@@ -25,7 +25,7 @@ namespace mrHelper.App.Forms
       /// Throws:
       /// </summary>
       internal DiscussionsForm(
-         DataCache dataCache, GitLabInstance gitLabInstance,
+         DataCache dataCache,
          IGitCommandService git, User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          ColorScheme colorScheme, Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit,
@@ -41,7 +41,6 @@ namespace mrHelper.App.Forms
          _colorScheme = colorScheme;
 
          _dataCache = dataCache;
-         _gitLabInstance = gitLabInstance;
          _updateGit = updateGit;
          _onDiscussionModified = onDiscussionModified;
          _diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
@@ -897,7 +896,6 @@ namespace mrHelper.App.Forms
 
       private readonly User _currentUser;
       private readonly DataCache _dataCache;
-      private readonly GitLabInstance _gitLabInstance;
       private readonly Shortcuts _shortcuts;
       private readonly Func<MergeRequestKey, IEnumerable<Discussion>, Task> _updateGit;
       private readonly Action _onDiscussionModified;

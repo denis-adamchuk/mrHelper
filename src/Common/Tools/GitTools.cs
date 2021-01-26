@@ -259,7 +259,7 @@ namespace mrHelper.Common.Tools
          return null;
       }
 
-      public static bool IsSingleCommitFetchSupported(string path)
+      public static bool IsSingleCommitFetchSupported()
       {
          // TODO Check if it is possible to run commands like `git fetch origin <sha>:refs/keep-around/sha`
          return true;
@@ -317,7 +317,7 @@ namespace mrHelper.Common.Tools
          RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
       // optimization
-      private static Dictionary<string, ProjectKey?> _repositoryKeys = new Dictionary<string, ProjectKey?>();
+      private static readonly Dictionary<string, ProjectKey?> _repositoryKeys = new Dictionary<string, ProjectKey?>();
    }
 }
 

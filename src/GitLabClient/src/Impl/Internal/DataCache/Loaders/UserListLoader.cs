@@ -42,7 +42,7 @@ namespace mrHelper.GitLabClient.Loaders
       }
 
       private readonly string _hostname;
-      private static HashSet<string> _loading = new HashSet<string>();
+      private static readonly HashSet<string> _loading = new HashSet<string>();
    }
 }
 

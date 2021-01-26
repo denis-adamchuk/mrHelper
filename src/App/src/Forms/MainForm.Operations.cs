@@ -104,7 +104,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         BeginInvoke(new Action(async () => await closeMergeRequestAsync(getHostName(), fmk.Value)));
+         BeginInvoke(new Action(async () => await closeMergeRequestAsync(fmk.Value)));
       }
 
       private void refreshSelectedMergeRequest()
@@ -442,7 +442,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task closeMergeRequestAsync(string hostname, FullMergeRequestKey item)
+      async private Task closeMergeRequestAsync(FullMergeRequestKey item)
       {
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          string message =

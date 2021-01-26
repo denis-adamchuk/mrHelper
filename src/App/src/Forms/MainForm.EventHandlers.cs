@@ -362,12 +362,12 @@ namespace mrHelper.App.Forms
 
       private void textBoxSearchText_KeyDown(object sender, KeyEventArgs e)
       {
-         onSearchTextBoxKeyDown(textBoxSearchText, e.KeyCode);
+         onSearchTextBoxKeyDown(e.KeyCode);
       }
 
       private void textBoxSearchTargetBranch_KeyDown(object sender, KeyEventArgs e)
       {
-         onSearchTextBoxKeyDown(textBoxSearchTargetBranch, e.KeyCode);
+         onSearchTextBoxKeyDown(e.KeyCode);
       }
 
       private void textBoxSearchText_TextChanged(object sender, EventArgs e)

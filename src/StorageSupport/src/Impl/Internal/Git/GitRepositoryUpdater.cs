@@ -114,7 +114,7 @@ namespace mrHelper.StorageSupport
                {
                   try
                   {
-                     await handleAuthenticationFailedException(repo, async () => await runAsync(repo, command));
+                     await handleAuthenticationFailedException(async () => await runAsync(repo, command));
                      return;
                   }
                   finally
@@ -177,7 +177,7 @@ namespace mrHelper.StorageSupport
             "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
       }
 
-      async private Task handleAuthenticationFailedException(ILocalCommitStorage repo, Func<Task> command)
+      async private Task handleAuthenticationFailedException(Func<Task> command)
       {
          string configKey = "credential.interactive";
          string configValue = "always";
@@ -200,8 +200,8 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      private HashSet<ILocalCommitStorage> _fixingAuthFailed = new HashSet<ILocalCommitStorage>();
-      private IGitRepository _gitRepository;
+      private readonly HashSet<ILocalCommitStorage> _fixingAuthFailed = new HashSet<ILocalCommitStorage>();
+      private readonly IGitRepository _gitRepository;
       private GitRepositoryUpdaterInternal _updaterInternal;
    }
 }

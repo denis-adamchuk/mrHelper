@@ -58,7 +58,7 @@ namespace mrHelper.StorageSupport
       {
          Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey, type);
 
-         if (!GitTools.IsSingleCommitFetchSupported(Path)) //-V3022
+         if (!GitTools.IsSingleCommitFetchSupported()) //-V3022
          {
             throw new ArgumentException("Cannot work with such repositories");
          }
