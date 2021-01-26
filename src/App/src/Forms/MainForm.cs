@@ -10,6 +10,7 @@ using mrHelper.StorageSupport;
 using mrHelper.CustomActions;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
+using mrHelper.App.Helpers.GitLab;
 
 namespace mrHelper.App.Forms
 {
@@ -18,6 +19,7 @@ namespace mrHelper.App.Forms
       ICommandCallback
    {
       // TODO Combine multiple timers into a single one
+      private static readonly int LostConnectionIndicationTimerInterval = 750 * 1; // 0.75 second
       private static readonly int TimeTrackingTimerInterval = 1000 * 1; // 1 second
       private static readonly int ClipboardCheckingTimerInterval = 1000 * 1; // 1 second
       private static readonly int ProjectAndUserCacheCheckTimerInterval = 1000 * 1; // 1 second
@@ -37,6 +39,8 @@ namespace mrHelper.App.Forms
       private static readonly string openFromClipboardDisabledText = "Open from Clipboard (Copy GitLab MR URL to activate)";
 
       private static readonly string RefreshButtonTooltip = "Refresh merge request list in the background";
+
+      private static readonly string ConnectionLostText = "connection is lost (trying to reconnect)";
 
       private static readonly int NewOrClosedMergeRequestRefreshListTimerInterval = 1000 * 3; // 3 seconds
       private static readonly int PseudoTimerInterval = 100 * 1; // 0.1 second
@@ -87,8 +91,8 @@ namespace mrHelper.App.Forms
       private EventFilter _eventFilter;
       private ExpressionResolver _expressionResolver;
       private MergeRequestFilter _mergeRequestFilter;
-      private readonly GitLabClient.Accessors.ModificationNotifier _modificationNotifier =
-         new GitLabClient.Accessors.ModificationNotifier();
+      private Shortcuts _shortcuts;
+      private GitLabInstance _gitLabInstance;
 
       private Dictionary<MergeRequestKey, DateTime> _recentMergeRequests = new Dictionary<MergeRequestKey, DateTime>();
       private Dictionary<MergeRequestKey, HashSet<string>> _reviewedRevisions =
@@ -129,6 +133,27 @@ namespace mrHelper.App.Forms
          internal string Host { get; }
          internal string AccessToken { get; }
       }
+
+      private enum EConnectionState
+      {
+         ConnectingLive,
+         ConnectingRecent,
+         Connected
+      }
+      private EConnectionState? _connectionStatus;
+
+      private struct LostConnectionInfo
+      {
+         public LostConnectionInfo(Timer indicatorTimer, DateTime timeStamp)
+         {
+            IndicatorTimer = indicatorTimer;
+            TimeStamp = timeStamp;
+         }
+
+         internal Timer IndicatorTimer { get; }
+         internal DateTime TimeStamp { get; }
+      }
+      private LostConnectionInfo? _lostConnectionInfo;
    }
 }
 

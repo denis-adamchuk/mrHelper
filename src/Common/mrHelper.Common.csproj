@@ -66,6 +66,7 @@
     <Compile Include="Exceptions\ExternalProcessFailureException.cs" />
     <Compile Include="Interfaces\ExternalProcessManagerItf.cs" />
     <Compile Include="Interfaces\HostPropertiesItf.cs" />
+    <Compile Include="Interfaces\FileStoragePropertiesItf.cs" />
     <Compile Include="Interfaces\ProjectKey.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tools\AppFinder.cs" />

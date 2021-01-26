@@ -4,86 +4,82 @@ using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Helpers.GitLab
 {
-   internal static class Shortcuts
+   internal class Shortcuts
    {
-      internal static ProjectAccessor GetProjectAccessor(GitLabInstance gitLabInstance,
-         IModificationListener modificationListener)
+      internal Shortcuts(GitLabInstance gitLabIntance)
       {
-         return new RawDataAccessor(gitLabInstance)
-            .GetProjectAccessor(modificationListener);
+         _gitLabInstance = gitLabIntance;
       }
 
-      internal static UserAccessor GetUserAccessor(GitLabInstance gitLabInstance)
+      internal ProjectAccessor GetProjectAccessor()
       {
-         return new RawDataAccessor(gitLabInstance)
+         return new RawDataAccessor(_gitLabInstance)
+            .GetProjectAccessor();
+      }
+
+      internal UserAccessor GetUserAccessor()
+      {
+         return new RawDataAccessor(_gitLabInstance)
             .UserAccessor;
       }
 
-      internal static MergeRequestAccessor GetMergeRequestAccessor(GitLabInstance gitLabInstance,
-         IModificationListener modificationListener, ProjectKey projectKey)
+      internal MergeRequestAccessor GetMergeRequestAccessor(ProjectKey projectKey)
       {
-         return new RawDataAccessor(gitLabInstance)
-            .GetProjectAccessor(modificationListener)
-            .GetSingleProjectAccessor(projectKey.ProjectName)
-            .MergeRequestAccessor;
+         return GetMergeRequestAccessor(projectKey.ProjectName);
       }
 
-      internal static MergeRequestAccessor GetMergeRequestAccessor(ProjectAccessor projectAccessor, string projectName)
+      internal MergeRequestAccessor GetMergeRequestAccessor(string projectName)
       {
-         return projectAccessor
+         return GetProjectAccessor()
             .GetSingleProjectAccessor(projectName)
             .MergeRequestAccessor;
       }
 
-      internal static IMergeRequestCreator GetMergeRequestCreator(GitLabInstance gitLabInstance,
-         IModificationListener modificationListener, ProjectKey projectKey)
+      internal IMergeRequestCreator GetMergeRequestCreator(ProjectKey projectKey)
       {
-         return GetMergeRequestAccessor(gitLabInstance, modificationListener, projectKey)
+         return GetMergeRequestAccessor(projectKey)
             .GetMergeRequestCreator();
       }
 
-      internal static IMergeRequestEditor GetMergeRequestEditor(GitLabInstance gitLabInstance,
-         IModificationListener modificationListener, MergeRequestKey mrk)
+      internal IMergeRequestEditor GetMergeRequestEditor(MergeRequestKey mrk)
       {
-         return GetMergeRequestAccessor(gitLabInstance, modificationListener, mrk.ProjectKey)
+         return GetMergeRequestAccessor(mrk.ProjectKey)
             .GetSingleMergeRequestAccessor(mrk.IId)
             .GetMergeRequestEditor();
       }
 
-      internal static ITimeTracker GetTimeTracker(GitLabInstance gitLabInstance,
-         IModificationListener modificationListener, MergeRequestKey mrk)
+      internal ITimeTracker GetTimeTracker(MergeRequestKey mrk)
       {
-         return GetMergeRequestAccessor(gitLabInstance, modificationListener, mrk.ProjectKey)
+         return GetMergeRequestAccessor(mrk.ProjectKey)
             .GetSingleMergeRequestAccessor(mrk.IId).GetTimeTracker();
       }
 
-      internal static IDiscussionCreator GetDiscussionCreator(GitLabInstance gitLabInstance,
-         IModificationListener modificationListener, MergeRequestKey mrk, User user)
+      internal IDiscussionCreator GetDiscussionCreator(MergeRequestKey mrk, User user)
       {
-         return GetMergeRequestAccessor(gitLabInstance, modificationListener, mrk.ProjectKey)
+         return GetMergeRequestAccessor(mrk.ProjectKey)
             .GetSingleMergeRequestAccessor(mrk.IId)
             .GetDiscussionAccessor()
             .GetDiscussionCreator(user);
       }
 
-      internal static SingleDiscussionAccessor GetSingleDiscussionAccessor(GitLabInstance gitLabInstance,
-         IModificationListener modificationListener, MergeRequestKey mrk, string discussionId)
+      internal SingleDiscussionAccessor GetSingleDiscussionAccessor(MergeRequestKey mrk, string discussionId)
       {
-         return GetMergeRequestAccessor(gitLabInstance, modificationListener, mrk.ProjectKey)
+         return GetMergeRequestAccessor(mrk.ProjectKey)
             .GetSingleMergeRequestAccessor(mrk.IId)
             .GetDiscussionAccessor()
             .GetSingleDiscussionAccessor(discussionId);
       }
 
-      internal static IDiscussionEditor GetDiscussionEditor(GitLabInstance gitLabInstance,
-         IModificationListener modificationListener, MergeRequestKey mrk, string discussionId)
+      internal IDiscussionEditor GetDiscussionEditor(MergeRequestKey mrk, string discussionId)
       {
-         return GetMergeRequestAccessor(gitLabInstance, modificationListener, mrk.ProjectKey)
+         return GetMergeRequestAccessor(mrk.ProjectKey)
             .GetSingleMergeRequestAccessor(mrk.IId)
             .GetDiscussionAccessor()
             .GetSingleDiscussionAccessor(discussionId)
             .GetDiscussionEditor();
       }
+
+      private readonly GitLabInstance _gitLabInstance;
    }
 }
 

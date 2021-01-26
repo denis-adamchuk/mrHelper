@@ -25,7 +25,7 @@ namespace mrHelper.App.Forms
          _loadingConfiguration = true;
          Trace.TraceInformation("[MainForm] Loading configuration");
 
-         textBoxStorageFolder.Text = Program.Settings.LocalGitFolder;
+         textBoxStorageFolder.Text = Program.Settings.LocalStorageFolder;
          checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
          textBoxDisplayFilter.Text = Program.Settings.DisplayFilter;
          checkBoxMinimizeOnClose.Checked = Program.Settings.MinimizeOnClose;
@@ -131,7 +131,7 @@ namespace mrHelper.App.Forms
 
          List<string> newKnownHosts = new List<string>();
          List<string> newAccessTokens = new List<string>();
-         string[] hosts = Program.Settings.GetHosts().ToArray();
+         string[] hosts = Program.Settings.KnownHosts.ToArray();
          for (int iKnownHost = 0; iKnownHost < hosts.Length; ++iKnownHost)
          {
             // Upgrade from old versions which did not have prefix
@@ -143,8 +143,8 @@ namespace mrHelper.App.Forms
                newAccessTokens.Add(accessToken);
             }
          }
-         Program.Settings.SetAuthInfo(Enumerable.Zip(newKnownHosts, newAccessTokens,
-            (a, b) => new Tuple<string, string>(a, b)));
+         ConfigurationHelper.SetAuthInfo(Enumerable.Zip(newKnownHosts, newAccessTokens,
+            (a, b) => new Tuple<string, string>(a, b)), Program.Settings);
       }
 
       private void setDefaultRevisionTypeRadioValue()
@@ -477,7 +477,7 @@ namespace mrHelper.App.Forms
 
       private string getInitialHostNameIfKnown()
       {
-         return Program.Settings.GetHosts().Any(host => host == _initialHostName) ? _initialHostName : null;
+         return Program.Settings.KnownHosts.Any(host => host == _initialHostName) ? _initialHostName : null;
       }
 
       private void setInitialHostName(string hostname)
@@ -506,8 +506,7 @@ namespace mrHelper.App.Forms
          {
             string hostname = StringUtils.GetHostWithPrefix(form.Host);
             string accessToken = form.AccessToken;
-            ConnectionChecker connectionChecker = new ConnectionChecker();
-            ConnectionCheckStatus status = await connectionChecker.CheckConnection(hostname, accessToken);
+            ConnectionCheckStatus status = await ConnectionChecker.CheckConnectionAsync(hostname, accessToken);
             if (status != ConnectionCheckStatus.OK)
             {
                string message =
@@ -580,7 +579,8 @@ namespace mrHelper.App.Forms
             .Items
             .Cast<ListViewItem>()
             .Select(i => i.SubItems[1].Text);
-         Program.Settings.SetAuthInfo(Enumerable.Zip(hosts, tokens, (a, b) => new Tuple<string, string>(a, b)));
+         ConfigurationHelper.SetAuthInfo(Enumerable.Zip(hosts, tokens,
+            (a, b) => new Tuple<string, string>(a, b)), Program.Settings);
       }
 
       private void onTextBoxDisplayFilterUpdate()
@@ -623,8 +623,7 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(host, Program.Settings);
          Debug.Assert(projects != null);
 
-         GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(_gitLabInstance);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects",
             "Add project", "Type project name in group/project format",
             projects, new EditProjectsListViewCallback(rawDataAccessor), true))
@@ -659,8 +658,7 @@ namespace mrHelper.App.Forms
          IEnumerable<Tuple<string, bool>> users = ConfigurationHelper.GetUsersForHost(host, Program.Settings);
          Debug.Assert(users != null);
 
-         GitLabInstance gitLabInstance = new GitLabInstance(host, Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(_gitLabInstance);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users",
             "Add username", "Type a name of GitLab user, teams allowed",
             users, new EditUsersListViewCallback(rawDataAccessor), false))

@@ -14,8 +14,8 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Controls;
+using mrHelper.App.Helpers.GitLab;
 using SearchQuery = mrHelper.GitLabClient.SearchQuery;
-using Newtonsoft.Json.Linq;
 
 namespace mrHelper.App.Forms
 {
@@ -223,19 +223,6 @@ namespace mrHelper.App.Forms
          }
 
          return false;
-      }
-
-      private ProjectAccessor getProjectAccessor()
-      {
-         if (getHostName() == String.Empty)
-         {
-            Debug.Assert(false);
-            return null;
-         }
-
-         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
-         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
-         return rawDataAccessor.GetProjectAccessor(_modificationNotifier);
       }
 
       private bool isTrackingTime()
@@ -603,7 +590,8 @@ namespace mrHelper.App.Forms
 
       private void reconnect(string url = null)
       {
-         addOperationRecord("Reconnection request has been queued");
+         string suffix = String.IsNullOrEmpty(url) ? String.Empty : String.Format(" ({0})", url);
+         addOperationRecord(String.Format("Reconnection request has been queued {0}", suffix));
          enqueueUrl(url);
       }
 
@@ -703,12 +691,135 @@ namespace mrHelper.App.Forms
          labelOperationStatus.Text = text;
          Trace.TraceInformation("[MainForm] {0}", text);
 
-         StringBuilder builder = new StringBuilder(OperationRecordHistoryDepth);
-         foreach (string record in _operationRecordHistory)
+         if (!_exiting)
          {
-            builder.AppendLine(record);
+            StringBuilder builder = new StringBuilder(OperationRecordHistoryDepth);
+            foreach (string record in _operationRecordHistory)
+            {
+               builder.AppendLine(record);
+            }
+            toolTip.SetToolTip(labelOperationStatus, builder.ToString());
          }
-         toolTip.SetToolTip(labelOperationStatus, builder.ToString());
+      }
+
+      private void setConnectionStatus(EConnectionState status)
+      {
+         Trace.TraceInformation(
+            "[MainForm] Set connection status to {0}. Current status is {1}. Lost connection info has value: {2}.",
+            status.ToString(), _connectionStatus.ToString(), isConnectionLost().ToString());
+         Debug.Assert(!isConnectionLost() || status == EConnectionState.ConnectingLive);
+         resetLostConnectionInfo();
+
+         switch (status)
+         {
+            case EConnectionState.ConnectingLive:
+            case EConnectionState.ConnectingRecent:
+               applyConnectionStatus(String.Format("Connecting to {0}", getHostName()), Color.Black, null);
+               break;
+
+            case EConnectionState.Connected:
+               applyConnectionStatus(String.Format("Connected to {0}", getHostName()), Color.Green, null);
+               break;
+         }
+
+         _connectionStatus = status;
+      }
+
+      private void createLostConnectionInfo()
+      {
+         Timer timer = new Timer
+         {
+            Interval = LostConnectionIndicationTimerInterval
+         };
+         _lostConnectionInfo = new LostConnectionInfo(timer, DateTime.Now);
+         startLostConnectionIndicatorTimer();
+      }
+
+      private void resetLostConnectionInfo()
+      {
+         stopAndDisposeLostConnectionIndicatorTimer();
+         _lostConnectionInfo = null;
+      }
+
+      private void onConnectionLost()
+      {
+         if (!isConnectionLost())
+         {
+            createLostConnectionInfo();
+            updateTrayIcon();
+            updateTaskbarIcon();
+         }
+      }
+
+      private void onConnectionRestored()
+      {
+         if (!isConnectionLost())
+         {
+            return;
+         }
+
+         resetLostConnectionInfo();
+         if (_connectionStatus.HasValue)
+         {
+            if (_connectionStatus.Value == EConnectionState.Connected)
+            {
+               setConnectionStatus(_connectionStatus.Value);
+               requestUpdates(EDataCacheType.Live, null, new int[] { PseudoTimerInterval });
+               requestUpdates(EDataCacheType.Recent, null, new int[] { PseudoTimerInterval });
+            }
+            else if (_connectionStatus.Value == EConnectionState.ConnectingLive)
+            {
+               reconnect();
+            }
+            else if (_connectionStatus.Value == EConnectionState.ConnectingRecent)
+            {
+               loadRecentMergeRequests();
+            }
+         }
+         updateTrayIcon();
+         updateTaskbarIcon();
+      }
+
+      private bool isConnectionLost()
+      {
+         return _lostConnectionInfo.HasValue;
+      }
+
+      private void onLostConnectionIndicatorTimer(object sender, EventArgs e)
+      {
+         if (!isConnectionLost())
+         {
+            return;
+         }
+
+         double elapsedSecondsDouble = (DateTime.Now - _lostConnectionInfo.Value.TimeStamp).TotalMilliseconds;
+         int elapsedSeconds = Convert.ToInt32(elapsedSecondsDouble / LostConnectionIndicationTimerInterval);
+         string text = elapsedSeconds % 2 == 0 ? ConnectionLostText.ToLower() : ConnectionLostText.ToUpper();
+         string tooltipText = String.Format("Connection was lost at {0}",
+            _lostConnectionInfo.Value.TimeStamp.ToLocalTime().ToString(Constants.TimeStampFormat));
+         applyConnectionStatus(text, Color.Red, tooltipText);
+      }
+
+      private void initializeGitLabInstance(string hostname)
+      {
+         Trace.TraceInformation("[MainForm] Initializing GitLabInstance for {0}", hostname);
+         disposeGitLabInstance();
+         _gitLabInstance = new GitLabInstance(hostname, Program.Settings, this);
+         _gitLabInstance.ConnectionLost += onConnectionLost;
+         _gitLabInstance.ConnectionRestored += onConnectionRestored;
+         _shortcuts = new Shortcuts(_gitLabInstance);
+         applyConnectionStatus("Not connected", System.Drawing.Color.Black, null);
+      }
+
+      private void disposeGitLabInstance()
+      {
+         if (_gitLabInstance != null)
+         {
+            _gitLabInstance.ConnectionLost -= onConnectionLost;
+            _gitLabInstance.ConnectionRestored -= onConnectionRestored;
+            _gitLabInstance.Dispose();
+            _gitLabInstance = null;
+         }
       }
    }
 }

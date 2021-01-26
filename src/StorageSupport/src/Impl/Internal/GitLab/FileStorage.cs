@@ -32,18 +32,17 @@ namespace mrHelper.StorageSupport
       /// <summary>
       /// </summary>
       internal FileStorage(string parentFolder, ProjectKey projectKey,
-         ISynchronizeInvoke synchronizeInvoke, RepositoryAccessor repositoryAccessor, int revisionsToKeep,
-         int comparisonsToKeep, Func<int> getStorageCount)
+         ISynchronizeInvoke synchronizeInvoke, RepositoryAccessor repositoryAccessor, IFileStorageProperties properties)
       {
          Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey, LocalCommitStorageType.FileStorage);
          ProjectKey = projectKey;
          FileStorageUtils.InitalizeFileStorage(Path, ProjectKey);
 
-         ComparisonCache = new FileStorageComparisonCache(Path, comparisonsToKeep);
-         FileCache = new FileStorageRevisionCache(Path, revisionsToKeep);
+         ComparisonCache = new FileStorageComparisonCache(Path, properties.GetComparisonCountToKeep());
+         FileCache = new FileStorageRevisionCache(Path, properties.GetRevisionCountToKeep());
          DiffCache = new FileStorageDiffCache(Path, this);
 
-         _updater = new FileStorageUpdater(synchronizeInvoke, this, repositoryAccessor, getStorageCount);
+         _updater = new FileStorageUpdater(synchronizeInvoke, this, repositoryAccessor, properties);
 
          _processManager = new GitProcessManager(synchronizeInvoke, Path);
          _commandService = new FileStorageGitCommandService(_processManager, Path, this);
@@ -57,13 +56,14 @@ namespace mrHelper.StorageSupport
       {
          Trace.TraceInformation(String.Format("[FileStorage] Disposing FileStorage at path {0}", Path));
 
-         _commandService.Dispose();
+         _commandService?.Dispose();
          _commandService = null;
 
-         _updater.Dispose();
+         _updater?.Dispose();
          _updater = null;
 
-         _processManager.Dispose();
+         _processManager?.Dispose();
+         _processManager = null;
       }
 
       public override string ToString()
@@ -73,7 +73,7 @@ namespace mrHelper.StorageSupport
 
       private GitCommandService _commandService;
       private FileStorageUpdater _updater;
-      private readonly GitProcessManager _processManager;
+      private GitProcessManager _processManager;
    }
 }
 

@@ -25,11 +25,11 @@ namespace mrHelper.App.Forms
       /// Throws:
       /// </summary>
       internal DiscussionsForm(
-         DataCache dataCache, GitLabInstance gitLabInstance, IModificationListener modificationListener,
+         DataCache dataCache,
          IGitCommandService git, User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          ColorScheme colorScheme, Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit,
-         Action onDiscussionModified, string webUrl)
+         Action onDiscussionModified, string webUrl, Shortcuts shortcuts)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -41,13 +41,12 @@ namespace mrHelper.App.Forms
          _colorScheme = colorScheme;
 
          _dataCache = dataCache;
-         _gitLabInstance = gitLabInstance;
-         _modificationListener = modificationListener;
          _updateGit = updateGit;
          _onDiscussionModified = onDiscussionModified;
          _diffContextPosition = ConfigurationHelper.GetDiffContextPosition(Program.Settings);
          _discussionColumnWidth = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
          _needShiftReplies = Program.Settings.NeedShiftReplies;
+         _shortcuts = shortcuts;
 
          CustomCommandLoader loader = new CustomCommandLoader(this);
          try
@@ -242,7 +241,7 @@ namespace mrHelper.App.Forms
          BeginInvoke(new Action(async () =>
          {
             Discussion discussion = await DiscussionHelper.AddThreadAsync(
-               _mergeRequestKey, _mergeRequestTitle, _modificationListener, _currentUser, _dataCache);
+               _mergeRequestKey, _mergeRequestTitle, _currentUser, _dataCache, _shortcuts);
             if (discussion != null)
             {
                renderDiscussionsWithSuspendedLayout(Array.Empty<Discussion>(), new Discussion[] { discussion });
@@ -254,8 +253,7 @@ namespace mrHelper.App.Forms
       {
          BeginInvoke(new Action(async () =>
          {
-            await DiscussionHelper.AddCommentAsync(
-               _mergeRequestKey, _mergeRequestTitle, _modificationListener, _currentUser);
+            await DiscussionHelper.AddCommentAsync(_mergeRequestKey, _mergeRequestTitle, _currentUser, _shortcuts);
             onRefreshAction();
          }));
       }
@@ -637,8 +635,8 @@ namespace mrHelper.App.Forms
       {
          foreach (Discussion discussion in discussions)
          {
-            SingleDiscussionAccessor accessor = Shortcuts.GetSingleDiscussionAccessor(
-               _gitLabInstance, _modificationListener, _mergeRequestKey, discussion.Id);
+            SingleDiscussionAccessor accessor = _shortcuts.GetSingleDiscussionAccessor(
+               _mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
@@ -898,15 +896,13 @@ namespace mrHelper.App.Forms
 
       private readonly User _currentUser;
       private readonly DataCache _dataCache;
-      private readonly GitLabInstance _gitLabInstance;
-      private readonly IModificationListener _modificationListener;
+      private readonly Shortcuts _shortcuts;
       private readonly Func<MergeRequestKey, IEnumerable<Discussion>, Task> _updateGit;
       private readonly Action _onDiscussionModified;
 
       private ConfigurationHelper.DiffContextPosition _diffContextPosition;
       private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
       private bool _needShiftReplies;
-
       private DiscussionFilterPanel FilterPanel;
       private DiscussionFilter DisplayFilter; // filters out discussions by user preferences
       private DiscussionFilter SystemFilter; // filters out discussions with System notes

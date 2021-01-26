@@ -21,14 +21,16 @@ namespace mrHelper.GitLabClient.Managers
          DataCacheContext dataCacheContext,
          string hostname,
          IHostProperties hostProperties,
-         DataCacheConnectionContext context,
-         InternalCacheUpdater cacheUpdater)
+         SearchQueryCollection queryCollection,
+         InternalCacheUpdater cacheUpdater,
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
-         DataCacheOperator updateOperator = new DataCacheOperator(hostname, hostProperties);
+         _updateOperator = new DataCacheOperator(hostname, hostProperties, networkOperationStatusListener);
+         VersionLoader versionLoader = new VersionLoader(_updateOperator, cacheUpdater);
          _mergeRequestListLoader = new MergeRequestListLoader(
-            hostname, updateOperator, new VersionLoader(updateOperator, cacheUpdater), cacheUpdater, context);
-         _mergeRequestLoader = new MergeRequestLoader(updateOperator, cacheUpdater,
-            context.UpdateRules.UpdateOnlyOpenedMergeRequests);
+            hostname, _updateOperator, versionLoader, cacheUpdater, null, queryCollection);
+         _mergeRequestLoader = new MergeRequestLoader(_updateOperator, cacheUpdater,
+            dataCacheContext.UpdateRules.UpdateOnlyOpenedMergeRequests);
          _extLogging = dataCacheContext.UpdateManagerExtendedLogging;
          _tagForLogging = dataCacheContext.TagForLogging;
 
@@ -36,7 +38,7 @@ namespace mrHelper.GitLabClient.Managers
 
          _timer = new System.Timers.Timer
          {
-            Interval = context.UpdateRules.UpdateMergeRequestsPeriod.Value
+            Interval = dataCacheContext.UpdateRules.UpdateMergeRequestsPeriod.Value
          };
          _timer.Elapsed += onTimer;
          _timer.SynchronizingObject = dataCacheContext.SynchronizeInvoke;
@@ -59,6 +61,11 @@ namespace mrHelper.GitLabClient.Managers
             timer.Dispose();
          }
          _oneShotTimers.Clear();
+
+         _mergeRequestListLoader = null;
+         _mergeRequestLoader = null;
+         _updateOperator?.Dispose();
+         _updateOperator = null;
       }
 
       public void RequestOneShotUpdate(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
@@ -244,8 +251,9 @@ namespace mrHelper.GitLabClient.Managers
       private System.Timers.Timer _timer;
       private readonly List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 
-      private readonly IMergeRequestListLoader _mergeRequestListLoader;
-      private readonly IMergeRequestLoader _mergeRequestLoader;
+      private DataCacheOperator _updateOperator;
+      private IMergeRequestListLoader _mergeRequestListLoader;
+      private IMergeRequestLoader _mergeRequestLoader;
       private readonly IInternalCache _cache;
       private readonly InternalMergeRequestCacheComparator _checker =
          new InternalMergeRequestCacheComparator();

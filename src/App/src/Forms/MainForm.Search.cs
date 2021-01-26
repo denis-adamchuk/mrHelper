@@ -21,6 +21,7 @@ namespace mrHelper.App.Forms
 
       private void loadRecentMergeRequests()
       {
+         Trace.TraceInformation("[MainForm.Search] Loading recent merge requests from {0}", getHostName());
          IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(getHostName());
          BeginInvoke(new Action(async () =>
             await searchMergeRequestsSafeAsync(new SearchQueryCollection(queries), EDataCacheType.Recent, null)), null);
@@ -35,6 +36,7 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
+            enableSearchTabControls();
             if (exceptionHandler == null)
             {
                exceptionHandler = new Func<Exception, bool>((e) => startWorkflowDefaultExceptionHandler(e));
@@ -51,7 +53,7 @@ namespace mrHelper.App.Forms
       async private Task searchMergeRequestsAsync(string hostname, SearchQueryCollection queryCollection,
          EDataCacheType mode)
       {
-         if (String.IsNullOrWhiteSpace(hostname))
+         if (String.IsNullOrWhiteSpace(hostname) || getDataCache(mode) == null)
          {
             return;
          }
@@ -61,41 +63,17 @@ namespace mrHelper.App.Forms
             throw new UnknownHostException(hostname);
          }
 
-         await connectSearchDataCacheAsync(hostname, queryCollection, mode);
+         await connectSearchDataCacheAsync(queryCollection, mode);
       }
 
-      async private Task connectSearchDataCacheAsync(string hostname, SearchQueryCollection queryCollection,
-         EDataCacheType mode)
+      async private Task connectSearchDataCacheAsync(SearchQueryCollection queryCollection, EDataCacheType mode)
       {
-         DataCacheConnectionContext sessionContext = new DataCacheConnectionContext(
-            new DataCacheCallbacks(null, null),
-            getDataCacheUpdateRules(mode),
-            queryCollection);
-
          DataCache dataCache = getDataCache(mode);
-         await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), sessionContext);
+         await dataCache.Disconnect();
+         await dataCache.Connect(_gitLabInstance, new DataCacheConnectionContext(queryCollection));
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-      private DataCacheUpdateRules getDataCacheUpdateRules(EDataCacheType mode)
-      {
-         switch (mode)
-         {
-            case EDataCacheType.Recent:
-               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
-                                               Program.Settings.AutoUpdatePeriodMs,
-                                               false);
-
-            case EDataCacheType.Search:
-               return new DataCacheUpdateRules(null, null, false);
-
-            default:
-               Debug.Assert(false);
-               break;
-         }
-         return null;
-      }
 
       private void onSearchDataCacheDisconnected()
       {
@@ -111,10 +89,7 @@ namespace mrHelper.App.Forms
       private void onSearchDataCacheConnected(string hostname, User user)
       {
          updateMergeRequestList(EDataCacheType.Search);
-         enableSimpleSearchControls(true);
-         setSearchByAuthorEnabled(getDataCache(EDataCacheType.Live)?.UserCache?.GetUsers()?.Any() ?? false);
-         setSearchByProjectEnabled(getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects()?.Any() ?? false);
-         updateSearchButtonState();
+         enableSearchTabControls();
 
          bool areResults = getListView(EDataCacheType.Search).Items.Count > 0;
          addOperationRecord(areResults ? "Search has finished" : "Nothing found. Try changing search query.");
@@ -136,6 +111,7 @@ namespace mrHelper.App.Forms
       {
          getListView(EDataCacheType.Recent).Items.Clear();
          addOperationRecord("Loading a list of recently reviewed merge requests has started");
+         setConnectionStatus(EConnectionState.ConnectingRecent);
       }
 
       private void onRecentDataCacheConnected(string hostname, User user)
@@ -150,6 +126,8 @@ namespace mrHelper.App.Forms
          {
             getListView(EDataCacheType.Recent).SelectMergeRequest(new MergeRequestKey?(), false);
          }
+
+         setConnectionStatus(EConnectionState.Connected);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

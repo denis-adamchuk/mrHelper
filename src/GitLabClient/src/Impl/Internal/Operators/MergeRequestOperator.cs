@@ -4,13 +4,15 @@ using System.Threading.Tasks;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient.Operators.Search;
 
 namespace mrHelper.GitLabClient.Operators
 {
    internal class MergeRequestOperator : BaseOperator
    {
-      internal MergeRequestOperator(string host, IHostProperties settings)
-         : base(host, settings)
+      internal MergeRequestOperator(string host, IHostProperties settings,
+         INetworkOperationStatusListener networkOperationStatusListener)
+         : base(host, settings, networkOperationStatusListener)
       {
       }
 
@@ -20,7 +22,9 @@ namespace mrHelper.GitLabClient.Operators
             async (client) =>
                await OperatorCallWrapper.Call(
                   async () =>
-                     await CommonOperator.SearchMergeRequestsAsync(client, searchQuery)));
+                     (IEnumerable<MergeRequest>)(await client.RunAsync(
+                        async (gl) =>
+                           await (new MergeRequestSearchProcessor(searchQuery).Process(gl))))));
       }
 
       internal Task<MergeRequest> CreateMergeRequest(string projectName, CreateNewMergeRequestParameters parameters)

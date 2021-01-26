@@ -10,7 +10,6 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Constants;
 using mrHelper.GitLabClient;
-using mrHelper.App.Helpers.GitLab;
 using mrHelper.CommonControls.Tools;
 using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 using mrHelper.Common.Tools;
@@ -44,7 +43,8 @@ namespace mrHelper.App.Forms
                   message = wx.UserMessage;
                }
                addOperationRecord(message);
-               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
             }
             return true;
          }
@@ -53,14 +53,17 @@ namespace mrHelper.App.Forms
 
       async private Task switchHostToSelectedAsync(Func<Exception, bool> exceptionHandler)
       {
+         await dropCacheConnectionsAsync();
+         initializeGitLabInstance(getHostName());
          updateTabControlSelection();
+
          try
          {
             await startWorkflowAsync(getHostName());
          }
          catch (Exception ex)
          {
-            dropConnectionToHost();
+            await dropCacheConnectionsAsync();
             if (exceptionHandler == null)
             {
                exceptionHandler = new Func<Exception, bool>(e => startWorkflowDefaultExceptionHandler(e));
@@ -72,30 +75,31 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void dropConnectionToHost()
+      async private Task dropCacheConnectionsAsync()
       {
          foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
          {
-            getDataCache(mode).Disconnect();
+            DataCache dataCache = getDataCache(mode);
+            if (dataCache != null)
+            {
+               await dataCache.Disconnect();
+            }
          }
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+      // Everything reconnects inside startWorkflowAsync(). If there are some things at gitlab that user
+      // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
+      // we will miss them. It might be ok when host changes, but if this method used to "refresh"
+      // things, missed events are not desirable.
+      // This is why "Refresh List" button implemented not by means of startWorkflowAsync().
       async private Task startWorkflowAsync(string hostname)
       {
-         // When this thing happens, everything reconnects. If there are some things at gitlab that user
-         // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
-         // we will miss them. It might be ok when host changes, but if this method used to "refresh"
-         // things, missed events are not desirable.
-         // This is why "Update List" button implemented not by means of switchHostToSelected().
+         Trace.TraceInformation("[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
+            hostname, Program.Settings.WorkflowType);
 
-         Trace.TraceInformation(String.Format(
-            "[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
-            hostname, Program.Settings.WorkflowType));
-
-         dropConnectionToHost();
-         if (String.IsNullOrWhiteSpace(hostname))
+         if (String.IsNullOrWhiteSpace(hostname) || getDataCache(EDataCacheType.Live) == null)
          {
             return;
          }
@@ -115,7 +119,7 @@ namespace mrHelper.App.Forms
          else
          {
             await initializeLabelListIfEmpty(hostname);
-            await startUserBasedWorkflowAsync(hostname);
+            await startUserBasedWorkflowAsync();
          }
          addOperationRecord(String.Format("Connection to {0} is established", hostname));
       }
@@ -124,7 +128,7 @@ namespace mrHelper.App.Forms
       {
          IEnumerable<ProjectKey> projects = getEnabledProjects(hostname);
          SearchQueryCollection queryCollection = getCustomDataForProjectBasedWorkflow(projects);
-         await connectLiveDataCacheAsync(hostname, queryCollection);
+         await connectLiveDataCacheAsync(queryCollection);
       }
 
       private IEnumerable<ProjectKey> getEnabledProjects(string hostname)
@@ -139,30 +143,18 @@ namespace mrHelper.App.Forms
          return enabledProjects;
       }
 
-      private async Task startUserBasedWorkflowAsync(string hostname)
+      private async Task startUserBasedWorkflowAsync()
       {
          IEnumerable<string> usernames = listViewUsers.Items.Cast<ListViewItem>().Select(item => item.Text);
          SearchQueryCollection queryCollection = getCustomDataForUserBasedWorkflow(usernames);
-         await connectLiveDataCacheAsync(hostname, queryCollection);
+         await connectLiveDataCacheAsync(queryCollection);
       }
 
-      async private Task connectLiveDataCacheAsync(string hostname, SearchQueryCollection queryCollection)
+      async private Task connectLiveDataCacheAsync(SearchQueryCollection queryCollection)
       {
-         // The idea is that:
-         // 1. Already cached MR that became closed remotely will not be removed from the cache
-         // 2. Open MR that are missing in the cache, will be added to the cache
-         // 3. Open MR that exist in the cache, will be updated
-         // 4. Non-cached MR that are closed remotely, will not be added to the cache even if directly requested by IId
-         bool updateOnlyOpened = true;
-
-         DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(
-            new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
-            new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs,
-               updateOnlyOpened),
-            queryCollection);
-
+         DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(queryCollection);
          DataCache dataCache = getDataCache(EDataCacheType.Live);
-         await dataCache.Connect(new GitLabInstance(hostname, Program.Settings), connectionContext);
+         await dataCache.Connect(_gitLabInstance, connectionContext);
       }
 
       private void onForbiddenProject(ProjectKey projectKey)
@@ -218,6 +210,8 @@ namespace mrHelper.App.Forms
          {
             addOperationRecord(String.Format("Loading merge requests from {0} has started", hostname));
          }
+
+         setConnectionStatus(EConnectionState.ConnectingLive);
       }
 
       private void onLiveDataCacheConnected(string hostname, User user)
@@ -300,8 +294,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         GitLabClient.ProjectAccessor projectAccessor = Shortcuts.GetProjectAccessor(
-            new GitLabInstance(hostname, Program.Settings), _modificationNotifier);
+         GitLabClient.ProjectAccessor projectAccessor = _shortcuts.GetProjectAccessor();
 
          addOperationRecord("Preparing workflow to the first launch has started");
          IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
@@ -331,8 +324,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         GitLabClient.UserAccessor userAccessor = Shortcuts.GetUserAccessor(
-            new GitLabInstance(hostname, Program.Settings));
+         GitLabClient.UserAccessor userAccessor = _shortcuts.GetUserAccessor();
 
          bool migratedLabels = false;
          addOperationRecord("Preparing workflow to the first launch has started");
@@ -489,7 +481,7 @@ namespace mrHelper.App.Forms
          {
             onUpdating();
          }
-         requestUpdates(dataCache, mrk, 100,
+         requestUpdates(dataCache, mrk, PseudoTimerInterval,
             () =>
             {
                updateReceived = true;

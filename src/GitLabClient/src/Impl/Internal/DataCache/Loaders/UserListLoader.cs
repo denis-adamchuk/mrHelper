@@ -18,16 +18,31 @@ namespace mrHelper.GitLabClient.Loaders
          if (GlobalCache.GetUsers(_hostname) == null)
          {
             IEnumerable<User> users = await loadUsersAsync();
-            GlobalCache.SetUsers(_hostname, users);
+            if (users != null)
+            {
+               GlobalCache.SetUsers(_hostname, users);
+            }
          }
       }
 
       async private Task<IEnumerable<User>> loadUsersAsync()
       {
-         return await call(() => _operator.GetUsers(), "Cancelled loading users", "Cannot load users");
+         if (!_loading.Add(_hostname))
+         {
+            return null;
+         }
+         try
+         {
+            return await call(() => _operator.GetUsers(), "Cancelled loading users", "Cannot load users");
+         }
+         finally
+         {
+            _loading.Remove(_hostname);
+         }
       }
 
       private readonly string _hostname;
+      private static readonly HashSet<string> _loading = new HashSet<string>();
    }
 }
 

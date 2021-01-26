@@ -9,17 +9,19 @@ namespace mrHelper.GitLabClient
    public class SingleDiscussionAccessor
    {
       internal SingleDiscussionAccessor(IHostProperties settings, MergeRequestKey mrk, string discussionId,
-         IModificationListener modificationListener)
+         IModificationListener modificationListener, INetworkOperationStatusListener networkOperationStatusListener)
       {
          _settings = settings;
          _mrk = mrk;
          _discussionId = discussionId;
          _modificationListener = modificationListener;
+         _networkOperationStatusListener = networkOperationStatusListener;
       }
 
       async public Task<Discussion> GetDiscussion()
       {
-         using (DiscussionOperator discussionOperator = new DiscussionOperator(_mrk.ProjectKey.HostName, _settings))
+         using (DiscussionOperator discussionOperator = new DiscussionOperator(
+            _mrk.ProjectKey.HostName, _settings, _networkOperationStatusListener))
          {
             try
             {
@@ -46,13 +48,14 @@ namespace mrHelper.GitLabClient
 
       public IDiscussionEditor GetDiscussionEditor()
       {
-         return new DiscussionEditor(_mrk, _discussionId, _settings, _modificationListener);
+         return new DiscussionEditor(_mrk, _discussionId, _settings, _modificationListener, _networkOperationStatusListener);
       }
 
       private readonly IHostProperties _settings;
       private readonly MergeRequestKey _mrk;
       private readonly string _discussionId;
       private readonly IModificationListener _modificationListener;
+      private readonly INetworkOperationStatusListener _networkOperationStatusListener;
    }
 }
 

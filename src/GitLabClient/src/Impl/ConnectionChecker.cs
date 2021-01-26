@@ -1,7 +1,7 @@
-﻿using GitLabSharp;
-using GitLabSharp.Accessors;
-using mrHelper.GitLabClient.Operators;
+﻿using System;
 using System.Threading.Tasks;
+using GitLabSharp;
+using GitLabSharp.Accessors;
 
 namespace mrHelper.GitLabClient
 {
@@ -12,20 +12,20 @@ namespace mrHelper.GitLabClient
       BadAccessToken
    }
 
-   public class ConnectionChecker
+   public static class ConnectionChecker
    {
-      async public Task<ConnectionCheckStatus> CheckConnection(string hostname, string token)
+      async static public Task<ConnectionCheckStatus> CheckConnectionAsync(string hostname, string token)
       {
          using (GitLabTaskRunner client = new GitLabTaskRunner(hostname, token))
          {
             try
             {
-               await CommonOperator.SearchCurrentUserAsync(client);
+               await client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync());
                return ConnectionCheckStatus.OK;
             }
-            catch (OperatorException ox)
+            catch (Exception ex)
             {
-               if (ox.InnerException is GitLabRequestException rx)
+               if (ex.InnerException is GitLabRequestException rx)
                {
                   if (rx.InnerException is System.Net.WebException wx)
                   {

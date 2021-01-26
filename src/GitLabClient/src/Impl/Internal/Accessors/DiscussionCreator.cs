@@ -16,20 +16,28 @@ namespace mrHelper.GitLabClient.Accessors
    /// </summary>
    public class DiscussionCreator : IDiscussionCreator, IDisposable
    {
-      internal DiscussionCreator(MergeRequestKey mrk, IHostProperties hostProperties, User currentUser)
+      internal DiscussionCreator(MergeRequestKey mrk, IHostProperties hostProperties,
+         User currentUser, INetworkOperationStatusListener networkOperationStatusListener)
       {
-         _discussionOperator = new DiscussionOperator(mrk.ProjectKey.HostName, hostProperties);
+         _discussionOperator = new DiscussionOperator(
+            mrk.ProjectKey.HostName, hostProperties, networkOperationStatusListener);
          _mergeRequestKey = mrk;
          _currentUser = currentUser;
       }
 
       public void Dispose()
       {
-         _discussionOperator.Dispose();
+         _discussionOperator?.Dispose();
+         _discussionOperator = null;
       }
 
       async public Task CreateNoteAsync(CreateNewNoteParameters parameters)
       {
+         if (_discussionOperator == null)
+         {
+            return;
+         }
+
          try
          {
             await _discussionOperator.CreateNoteAsync(_mergeRequestKey, parameters);
@@ -42,6 +50,11 @@ namespace mrHelper.GitLabClient.Accessors
 
       async public Task<Discussion> CreateDiscussionAsync(NewDiscussionParameters parameters, bool revertOnError)
       {
+         if (_discussionOperator == null)
+         {
+            return null;
+         }
+
          try
          {
             return await _discussionOperator.CreateDiscussionAsync(_mergeRequestKey, parameters);
@@ -102,6 +115,11 @@ namespace mrHelper.GitLabClient.Accessors
 
       async private Task<bool> createMergeRequestWithoutPosition(NewDiscussionParameters parameters)
       {
+         if (_discussionOperator == null)
+         {
+            return false;
+         }
+
          Debug.Assert(parameters.Position != null);
 
          Trace.TraceInformation("[DicsussionCreator] Reporting a discussion without Position (fallback)");
@@ -185,7 +203,7 @@ namespace mrHelper.GitLabClient.Accessors
          Trace.TraceInformation(message);
       }
 
-      private readonly DiscussionOperator _discussionOperator;
+      private DiscussionOperator _discussionOperator;
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly User _currentUser;
    }

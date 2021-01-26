@@ -8,16 +8,17 @@ namespace mrHelper.GitLabClient
    public class ProjectAccessor
    {
       internal ProjectAccessor(IHostProperties settings, string hostname,
-         IModificationListener modificationListener)
+         IModificationListener modificationListener, INetworkOperationStatusListener networkOperationStatusListener)
       {
          _settings = settings;
          _hostname = hostname;
          _modificationListener = modificationListener;
+         _networkOperationStatusListener = networkOperationStatusListener;
       }
 
       async public Task<Project> SearchProjectAsync(string projectname)
       {
-         using (ProjectOperator projectOperator = new ProjectOperator(_hostname, _settings))
+         using (ProjectOperator projectOperator = new ProjectOperator(_hostname, _settings, _networkOperationStatusListener))
          {
             try
             {
@@ -32,12 +33,14 @@ namespace mrHelper.GitLabClient
 
       public SingleProjectAccessor GetSingleProjectAccessor(string projectName)
       {
-         return new SingleProjectAccessor(new ProjectKey(_hostname, projectName), _settings, _modificationListener);
+         return new SingleProjectAccessor(new ProjectKey(_hostname, projectName),
+            _settings, _modificationListener, _networkOperationStatusListener);
       }
 
       private readonly IHostProperties _settings;
       private readonly string _hostname;
       private readonly IModificationListener _modificationListener;
+      private readonly INetworkOperationStatusListener _networkOperationStatusListener;
    }
 }
 

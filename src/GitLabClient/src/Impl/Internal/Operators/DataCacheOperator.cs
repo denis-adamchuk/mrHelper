@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -5,7 +6,7 @@ using GitLabSharp.Entities;
 using Version = GitLabSharp.Entities.Version;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Constants;
-using System;
+using mrHelper.GitLabClient.Operators.Search;
 
 namespace mrHelper.GitLabClient.Operators
 {
@@ -14,18 +15,32 @@ namespace mrHelper.GitLabClient.Operators
    /// </summary>
    internal class DataCacheOperator : BaseOperator
    {
-      internal DataCacheOperator(string host, IHostProperties settings)
-         : base(host, settings)
+      internal DataCacheOperator(string host, IHostProperties settings,
+         INetworkOperationStatusListener networkOperationStatusListener)
+         : base(host, settings, networkOperationStatusListener)
       {
       }
 
-      internal Task<User> GetCurrentUserAsync()
+      internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchQuery searchQuery)
       {
          return callWithSharedClient(
             async (client) =>
                await OperatorCallWrapper.Call(
-                  () =>
-                     CommonOperator.SearchCurrentUserAsync(client)));
+                  async () =>
+                     (IEnumerable<MergeRequest>)(await client.RunAsync(
+                        async (gl) =>
+                           await (new MergeRequestSearchProcessor(searchQuery).Process(gl))))));
+      }
+
+      internal Task<User> SearchCurrentUserAsync()
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (User)await client.RunAsync(
+                        async (gl) =>
+                           await gl.CurrentUser.LoadTaskAsync())));
       }
 
       internal Task<Project> GetProjectAsync(string projectName)
@@ -48,15 +63,6 @@ namespace mrHelper.GitLabClient.Operators
                      (MergeRequest)await client.RunAsync(
                         async (gl) =>
                            await gl.Projects.Get(projectName).MergeRequests.Get(iid).LoadTaskAsync(includeRebaseInProgress))));
-      }
-
-      internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchQuery searchQuery)
-      {
-         return callWithSharedClient(
-            async (client) =>
-               await OperatorCallWrapper.Call(
-                  () =>
-                     CommonOperator.SearchMergeRequestsAsync(client, searchQuery)));
       }
 
       async internal Task<IEnumerable<Commit>> GetCommitsAsync(string projectName, int iid,

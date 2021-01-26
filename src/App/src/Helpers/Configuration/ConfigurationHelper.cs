@@ -11,6 +11,12 @@ namespace mrHelper.App.Helpers
 {
    public static class ConfigurationHelper
    {
+      public static void SetAuthInfo(IEnumerable<Tuple<string, string>> hostToken, UserDefinedSettings settings)
+      {
+         settings.KnownHosts = hostToken.Select(tuple => tuple.Item1).ToArray();
+         settings.KnownAccessTokens = hostToken.Select(tuple => tuple.Item2).ToArray();
+      }
+
       public enum DiscussionColumnWidth
       {
          Narrow,

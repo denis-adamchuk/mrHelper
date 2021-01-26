@@ -7,7 +7,6 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
 using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient.Accessors;
-using GitLabSharp.Accessors;
 
 namespace mrHelper.GitLabClient
 {
@@ -19,20 +18,27 @@ namespace mrHelper.GitLabClient
       }
    }
 
+   public class MergeRequestAccessorCancelledException : MergeRequestAccessorException
+   {
+      internal MergeRequestAccessorCancelledException()
+         : base(String.Empty, null) {}
+   }
+
    public class MergeRequestAccessor
    {
       internal MergeRequestAccessor(IHostProperties settings, ProjectKey projectKey,
-         IModificationListener modificationListener)
+         IModificationListener modificationListener, INetworkOperationStatusListener networkOperationStatusListener)
       {
          _settings = settings;
          _projectKey = projectKey;
          _modificationListener = modificationListener;
+         _networkOperationStatusListener = networkOperationStatusListener;
       }
 
       async public Task<MergeRequest> SearchMergeRequestAsync(int mergeRequestIId, bool onlyOpen)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
-            _projectKey.HostName, _settings))
+            _projectKey.HostName, _settings, _networkOperationStatusListener))
          {
             try
             {
@@ -46,26 +52,32 @@ namespace mrHelper.GitLabClient
                IEnumerable<MergeRequest> mergeRequests = await mergeRequestOperator.SearchMergeRequestsAsync(query);
                return mergeRequests.Any() ? mergeRequests.First() : null;
             }
-            catch (OperatorException)
+            catch (OperatorException ex)
             {
-               return null;
+               if (ex.Cancelled)
+               {
+                  throw new MergeRequestAccessorCancelledException();
+               }
+               throw new MergeRequestAccessorException("Merge request search failed", ex);
             }
          }
       }
 
       public MergeRequestCreator GetMergeRequestCreator()
       {
-         return new MergeRequestCreator(_projectKey, _settings);
+         return new MergeRequestCreator(_projectKey, _settings, _networkOperationStatusListener);
       }
 
       public SingleMergeRequestAccessor GetSingleMergeRequestAccessor(int iid)
       {
-         return new SingleMergeRequestAccessor(_settings, new MergeRequestKey(_projectKey, iid), _modificationListener);
+         return new SingleMergeRequestAccessor(_settings, new MergeRequestKey(_projectKey, iid),
+            _modificationListener, _networkOperationStatusListener);
       }
 
       private readonly IHostProperties _settings;
       private readonly ProjectKey _projectKey;
       private readonly IModificationListener _modificationListener;
+      private readonly INetworkOperationStatusListener _networkOperationStatusListener;
    }
 }
 

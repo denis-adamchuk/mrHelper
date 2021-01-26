@@ -31,10 +31,10 @@ namespace mrHelper.GitLabClient.Managers
          IHostProperties hostProperties,
          User user,
          IMergeRequestCache mergeRequestCache,
-         DataCacheConnectionContext dataCacheConnectionContext,
-         IModificationNotifier modificationNotifier)
+         IModificationNotifier modificationNotifier,
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
-         _operator = new DiscussionOperator(hostname, hostProperties);
+         _operator = new DiscussionOperator(hostname, hostProperties, networkOperationStatusListener);
 
          _parser = new DiscussionParser(this, dataCacheContext.DiscussionKeywords, user);
          _parser.DiscussionEvent += onDiscussionParserEvent;
@@ -48,11 +48,11 @@ namespace mrHelper.GitLabClient.Managers
 
          _modificationNotifier.DiscussionResolved += onDiscussionModified;
 
-         if (dataCacheConnectionContext.UpdateRules.UpdateDiscussionsPeriod.HasValue)
+         if (dataCacheContext.UpdateRules.UpdateDiscussionsPeriod.HasValue)
          {
             _timer = new System.Timers.Timer
             {
-               Interval = dataCacheConnectionContext.UpdateRules.UpdateDiscussionsPeriod.Value
+               Interval = dataCacheContext.UpdateRules.UpdateDiscussionsPeriod.Value
             };
             _timer.Elapsed += onTimer;
             _timer.SynchronizingObject = dataCacheContext.SynchronizeInvoke;
@@ -65,12 +65,24 @@ namespace mrHelper.GitLabClient.Managers
 
       public void Dispose()
       {
-         _modificationNotifier.DiscussionResolved -= onDiscussionModified;
+         if(_modificationNotifier != null)
+         {
+            _modificationNotifier.DiscussionResolved -= onDiscussionModified;
+            _modificationNotifier = null;
+         }
 
-         _mergeRequestCache.MergeRequestEvent -= OnMergeRequestEvent;
+         if (_mergeRequestCache != null)
+         {
+            _mergeRequestCache.MergeRequestEvent -= OnMergeRequestEvent;
+            _mergeRequestCache = null;
+         }
 
-         _parser.DiscussionEvent -= onDiscussionParserEvent;
-         _parser.Dispose();
+         if (_parser != null)
+         {
+            _parser.DiscussionEvent -= onDiscussionParserEvent;
+            _parser.Dispose();
+            _parser = null;
+         }
 
          _timer?.Stop();
          _timer?.Dispose();
@@ -83,7 +95,8 @@ namespace mrHelper.GitLabClient.Managers
          }
          _oneShotTimers.Clear();
 
-         _operator.Dispose();
+         _operator?.Dispose();
+         _operator = null;
       }
 
       public event Action<MergeRequestKey> DiscussionsLoading;
@@ -292,6 +305,11 @@ namespace mrHelper.GitLabClient.Managers
 
       async private Task updateDiscussionsAsync(MergeRequestKey mrk, DiscussionUpdateType type)
       {
+         if (_operator == null)
+         {
+            return;
+         }
+
          if (_updating.Contains(mrk))
          {
             // Such update can be caused by LoadDiscussions() called while we are looping in processScheduledUpdate()
@@ -564,17 +582,20 @@ namespace mrHelper.GitLabClient.Managers
       {
          List<MergeRequestKey> matchingFilterList = new List<MergeRequestKey>();
          List<MergeRequestKey> nonMatchingFilterList = new List<MergeRequestKey>();
-         foreach (ProjectKey projectKey in _mergeRequestCache.GetProjects())
+         if (_mergeRequestCache != null)
          {
-            matchingFilterList.AddRange(
-               _mergeRequestCache.GetMergeRequests(projectKey)
-                  .Where(x => _mergeRequestFilterChecker.DoesMatchFilter(x))
-                  .Select(x => new MergeRequestKey(projectKey, x.IId)));
+            foreach (ProjectKey projectKey in _mergeRequestCache.GetProjects())
+            {
+               matchingFilterList.AddRange(
+                  _mergeRequestCache.GetMergeRequests(projectKey)
+                     .Where(x => _mergeRequestFilterChecker.DoesMatchFilter(x))
+                     .Select(x => new MergeRequestKey(projectKey, x.IId)));
 
-            nonMatchingFilterList.AddRange(
-               _mergeRequestCache.GetMergeRequests(projectKey)
-                  .Where(x => !_mergeRequestFilterChecker.DoesMatchFilter(x))
-                  .Select(x => new MergeRequestKey(projectKey, x.IId)));
+               nonMatchingFilterList.AddRange(
+                  _mergeRequestCache.GetMergeRequests(projectKey)
+                     .Where(x => !_mergeRequestFilterChecker.DoesMatchFilter(x))
+                     .Select(x => new MergeRequestKey(projectKey, x.IId)));
+            }
          }
          matchingFilter = matchingFilterList;
          nonMatchingFilter = nonMatchingFilterList;
@@ -592,11 +613,11 @@ namespace mrHelper.GitLabClient.Managers
          Trace.TraceInformation("[DiscussionManager.{0}] {1}", _tagForLogging, message);
       }
 
-      private readonly IMergeRequestCache _mergeRequestCache;
+      private IMergeRequestCache _mergeRequestCache;
       private readonly IMergeRequestFilterChecker _mergeRequestFilterChecker;
       private readonly string _tagForLogging;
-      private readonly DiscussionParser _parser;
-      private readonly DiscussionOperator _operator;
+      private DiscussionParser _parser;
+      private DiscussionOperator _operator;
 
       private System.Timers.Timer _timer;
       private readonly List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
@@ -661,7 +682,7 @@ namespace mrHelper.GitLabClient.Managers
       /// </summary>
       private readonly Queue<ScheduledUpdate> _scheduledUpdates = new Queue<ScheduledUpdate>();
 
-      private readonly IModificationNotifier _modificationNotifier;
+      private IModificationNotifier _modificationNotifier;
    }
 }
 

@@ -9,39 +9,19 @@ namespace mrHelper.App.Helpers
    {
       internal PeriodicUpdateChecker(ISynchronizeInvoke synchronizeInvoke)
       {
-         startApplicationUpdateTimer(synchronizeInvoke);
+         _checkForUpdatesTimer.Elapsed += onCheckForUpdatesTimer;
+         _checkForUpdatesTimer.SynchronizingObject = synchronizeInvoke;
+         _checkForUpdatesTimer.Start();
       }
 
       public void Dispose()
       {
-         stopApplicationUpdateTimer();
+         _checkForUpdatesTimer?.Stop();
+         _checkForUpdatesTimer?.Dispose();
+         _checkForUpdatesTimer = null;
       }
 
       internal event Action NewVersionAvailable;
-
-      private void startApplicationUpdateTimer(ISynchronizeInvoke synchronizeInvoke)
-      {
-         if (!_checkForUpdatesTimer.Enabled)
-         {
-            _checkForUpdatesTimer.Elapsed += onCheckForUpdatesTimer;
-            _checkForUpdatesTimer.SynchronizingObject = synchronizeInvoke;
-            _checkForUpdatesTimer.Start();
-         }
-      }
-
-      private void stopApplicationUpdateTimer()
-      {
-         if (_checkForUpdatesTimer.Enabled)
-         {
-            _checkForUpdatesTimer.Stop();
-            _checkForUpdatesTimer.Dispose();
-         }
-      }
-
-      private void onNewVersionCopiedFromServer(string filePath, string versionNumber)
-      {
-         NewVersionAvailable?.Invoke();
-      }
 
       private void onCheckForUpdatesTimer(object sender, System.Timers.ElapsedEventArgs e)
       {
@@ -61,7 +41,7 @@ namespace mrHelper.App.Helpers
 
       private string _previousNewVersionNumber;
 
-      private readonly System.Timers.Timer _checkForUpdatesTimer = new System.Timers.Timer
+      private System.Timers.Timer _checkForUpdatesTimer = new System.Timers.Timer
       {
          Interval = Constants.CheckForUpdatesTimerInterval
       };

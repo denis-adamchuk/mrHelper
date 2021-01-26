@@ -26,7 +26,6 @@ namespace mrHelper.App.Forms
          // Store data before async/await
          User currentUser = getCurrentUser();
          DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
-         GitLabInstance gitLabInstance = new GitLabInstance(getHostName(), Program.Settings);
          if (dataCache == null)
          {
             Debug.Assert(false);
@@ -50,7 +49,7 @@ namespace mrHelper.App.Forms
          {
             return;
          }
-         showDiscussionForm(gitLabInstance, dataCache, storage, currentUser, mrk, discussions, title, author, webUrl);
+         showDiscussionForm(dataCache, storage, currentUser, mrk, discussions, title, author, webUrl);
       }
 
       async private Task<bool> prepareStorageForDiscussionsForm(MergeRequestKey mrk,
@@ -76,9 +75,8 @@ namespace mrHelper.App.Forms
          return await prepareCommitStorage(mrk, storage, contextProvider, false);
       }
 
-      private void showDiscussionForm(GitLabInstance gitLabInstance, DataCache dataCache, ILocalCommitStorage storage,
-         User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author,
-         string webUrl)
+      private void showDiscussionForm(DataCache dataCache, ILocalCommitStorage storage, User currentUser,
+         MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author, string webUrl)
       {
          if (currentUser == null || discussions == null || author == null || currentUser.Id == 0)
          {
@@ -102,7 +100,7 @@ namespace mrHelper.App.Forms
          {
             IAsyncGitCommandService git = storage?.Git;
 
-            DiscussionsForm discussionsForm = new DiscussionsForm(dataCache, gitLabInstance, _modificationNotifier,
+            DiscussionsForm discussionsForm = new DiscussionsForm(dataCache,
                git, currentUser, mrk, discussions, title, author, _colorScheme,
                async (key, discussionsUpdated) =>
             {
@@ -126,7 +124,7 @@ namespace mrHelper.App.Forms
                }
             },
             () => dataCache?.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null),
-            webUrl)
+            webUrl, _shortcuts)
             {
                Tag = mrk
             };

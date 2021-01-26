@@ -10,14 +10,8 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.StorageSupport
 {
-   /// <summary>
-   /// Prepares GitRepository to use.
-   /// </summary>
    internal class GitRepositoryUpdater : ILocalCommitStorageUpdater, IDisposable
    {
-      /// <summary>
-      /// Bind to the specific GitRepository object
-      /// </summary>
       internal GitRepositoryUpdater(
          ISynchronizeInvoke synchronizeInvoke,
          IGitRepository gitRepository,
@@ -31,41 +25,40 @@ namespace mrHelper.StorageSupport
             operationManager, mode, onCloned, onFetched);
       }
 
-      /// <summary>
-      /// Update passed GitRepository object.
-      /// Throw InteractiveUpdaterException on unrecoverable errors.
-      /// Throw CancelledByUserException and RepeatOperationException.
-      /// </summary>
       async public Task StartUpdate(ICommitStorageUpdateContextProvider contextProvider,
          Action<string> onProgressChange, Action onUpdateStateChange)
       {
-         if (_gitRepository.ExpectingClone && !isCloneAllowed(_gitRepository.Path))
+         if (_updaterInternal != null)
          {
-            throw new LocalCommitStorageUpdaterCancelledException();
-         }
+            if (_gitRepository.ExpectingClone && !isCloneAllowed(_gitRepository.Path))
+            {
+               throw new LocalCommitStorageUpdaterCancelledException();
+            }
 
-         await runAsync(_gitRepository, async () => await _updaterInternal.StartUpdate(
-            contextProvider, onProgressChange, onUpdateStateChange));
+            await runAsync(_gitRepository, async () => await _updaterInternal.StartUpdate(
+               contextProvider, onProgressChange, onUpdateStateChange));
+         }
       }
 
       public void StopUpdate()
       {
-         _updaterInternal.StopUpdate();
+         _updaterInternal?.StopUpdate();
       }
 
       public bool CanBeStopped()
       {
-         return _updaterInternal.CanBeStopped();
+         return _updaterInternal != null && _updaterInternal.CanBeStopped();
       }
 
       public void RequestUpdate(ICommitStorageUpdateContextProvider contextProvider, Action onFinished)
       {
-         _updaterInternal.RequestUpdate(contextProvider, onFinished);
+         _updaterInternal?.RequestUpdate(contextProvider, onFinished);
       }
 
       public void Dispose()
       {
-         _updaterInternal.Dispose();
+         _updaterInternal?.Dispose();
+         _updaterInternal = null;
       }
 
       /// <summary>
@@ -121,7 +114,7 @@ namespace mrHelper.StorageSupport
                {
                   try
                   {
-                     await handleAuthenticationFailedException(repo, async () => await runAsync(repo, command));
+                     await handleAuthenticationFailedException(async () => await runAsync(repo, command));
                      return;
                   }
                   finally
@@ -184,7 +177,7 @@ namespace mrHelper.StorageSupport
             "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
       }
 
-      async private Task handleAuthenticationFailedException(ILocalCommitStorage repo, Func<Task> command)
+      async private Task handleAuthenticationFailedException(Func<Task> command)
       {
          string configKey = "credential.interactive";
          string configValue = "always";
@@ -207,8 +200,8 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      private HashSet<ILocalCommitStorage> _fixingAuthFailed = new HashSet<ILocalCommitStorage>();
-      private IGitRepository _gitRepository;
+      private readonly HashSet<ILocalCommitStorage> _fixingAuthFailed = new HashSet<ILocalCommitStorage>();
+      private readonly IGitRepository _gitRepository;
       private GitRepositoryUpdaterInternal _updaterInternal;
    }
 }

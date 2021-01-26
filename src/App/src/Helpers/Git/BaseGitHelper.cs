@@ -35,13 +35,22 @@ namespace mrHelper.App.Helpers
          if (_gitFactory != null)
          {
             _gitFactory.GitRepositoryCloned -= onGitRepositoryCloned;
+            _gitFactory = null;
          }
-         _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
+
+         if (_mergeRequestCache != null)
+         {
+            _mergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
+            _mergeRequestCache = null;
+         }
+
+         _discussionCache = null;
       }
 
       protected void scheduleAllProjectsUpdate()
       {
-         foreach (ProjectKey key in _mergeRequestCache.GetProjects())
+         IEnumerable<ProjectKey> projects = _mergeRequestCache?.GetProjects() ?? Array.Empty<ProjectKey>();
+         foreach (ProjectKey key in projects)
          {
             scheduleSingleProjectUpdate(key);
          }
@@ -106,9 +115,9 @@ namespace mrHelper.App.Helpers
       protected abstract Task doUpdate(ILocalCommitStorage repo);
       protected abstract void onProjectUpdate(ProjectKey projectKey);
 
-      private readonly ILocalCommitStorageFactory _gitFactory;
-      protected readonly IDiscussionCache _discussionCache;
-      protected readonly IMergeRequestCache _mergeRequestCache;
+      private ILocalCommitStorageFactory _gitFactory;
+      protected IDiscussionCache _discussionCache;
+      protected IMergeRequestCache _mergeRequestCache;
       private readonly ISynchronizeInvoke _synchronizeInvoke;
 
       protected readonly HashSet<ILocalCommitStorage> _updating = new HashSet<ILocalCommitStorage>();

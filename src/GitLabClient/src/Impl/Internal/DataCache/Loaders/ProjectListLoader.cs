@@ -18,16 +18,31 @@ namespace mrHelper.GitLabClient.Loaders
          if (GlobalCache.GetProjects(_hostname) == null)
          {
             IEnumerable<Project> projects = await loadProjectsAsync();
-            GlobalCache.SetProjects(_hostname, projects);
+            if (projects != null)
+            {
+               GlobalCache.SetProjects(_hostname, projects);
+            }
          }
       }
 
       async private Task<IEnumerable<Project>> loadProjectsAsync()
       {
-         return await call(() => _operator.GetProjects(), "Cancelled loading projects", "Cannot load projects");
+         if (!_loading.Add(_hostname))
+         {
+            return null;
+         }
+         try
+         {
+            return await call(() => _operator.GetProjects(), "Cancelled loading projects", "Cannot load projects");
+         }
+         finally
+         {
+            _loading.Remove(_hostname);
+         }
       }
 
       private readonly string _hostname;
+      private static readonly HashSet<string> _loading = new HashSet<string>();
    }
 }
 

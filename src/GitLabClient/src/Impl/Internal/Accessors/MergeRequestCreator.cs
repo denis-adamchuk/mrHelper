@@ -8,16 +8,18 @@ namespace mrHelper.GitLabClient.Accessors
 {
    public class MergeRequestCreator : IMergeRequestCreator
    {
-      internal MergeRequestCreator(ProjectKey projectKey, IHostProperties hostProperties)
+      internal MergeRequestCreator(ProjectKey projectKey, IHostProperties hostProperties,
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
          _projectKey = projectKey;
          _hostProperties = hostProperties;
+         _networkOperationStatusListener = networkOperationStatusListener;
       }
 
       async public Task<MergeRequest> CreateMergeRequest(CreateNewMergeRequestParameters parameters)
       {
          using (MergeRequestOperator mergeRequestOperator = new MergeRequestOperator(
-            _projectKey.HostName, _hostProperties))
+            _projectKey.HostName, _hostProperties, _networkOperationStatusListener))
          {
             try
             {
@@ -40,6 +42,7 @@ namespace mrHelper.GitLabClient.Accessors
 
       private readonly ProjectKey _projectKey;
       private readonly IHostProperties _hostProperties;
+      private readonly INetworkOperationStatusListener _networkOperationStatusListener;
    }
 }
 

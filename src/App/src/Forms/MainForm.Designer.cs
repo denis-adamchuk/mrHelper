@@ -22,19 +22,26 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
-         _liveDataCache.Dispose();
-         _searchDataCache.Dispose();
-         _recentDataCache.Dispose();
-
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
          disposeLiveDataCacheDependencies();
+
+         _liveDataCache.Dispose();
+         _liveDataCache = null;
+         _searchDataCache.Dispose();
+         _searchDataCache = null;
+         _recentDataCache.Dispose();
+         _recentDataCache = null;
+
+         disposeGitLabInstance();
 
          unsubscribeFromApplicationUpdates();
          _applicationUpdateChecker.Dispose();
 
          _timeTrackingTimer?.Stop();
          _timeTrackingTimer?.Dispose();
+
+         resetLostConnectionInfo();
 
          stopClipboardCheckTimer();
          _clipboardCheckingTimer?.Dispose();
@@ -248,6 +255,8 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
          this.panel4 = new System.Windows.Forms.Panel();
          this.panel1 = new System.Windows.Forms.Panel();
+         this.panelConnectionStatus = new System.Windows.Forms.Panel();
+         this.labelConnectionStatus = new System.Windows.Forms.Label();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -303,6 +312,7 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.SuspendLayout();
          this.groupBoxReview.SuspendLayout();
          this.groupBoxSelectRevisions.SuspendLayout();
+         this.panelConnectionStatus.SuspendLayout();
          this.SuspendLayout();
          // 
          // revisionBrowser
@@ -442,7 +452,8 @@ namespace mrHelper.App.Forms
          this.textBoxSearchText.Size = new System.Drawing.Size(146, 20);
          this.textBoxSearchText.TabIndex = 1;
          this.toolTip.SetToolTip(this.textBoxSearchText, "Press Enter to search");
-         this.textBoxSearchText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearch_KeyDown);
+         this.textBoxSearchText.TextChanged += new System.EventHandler(this.textBoxSearchText_TextChanged);
+         this.textBoxSearchText.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearchText_KeyDown);
          // 
          // buttonReloadList
          // 
@@ -670,7 +681,8 @@ namespace mrHelper.App.Forms
          this.textBoxSearchTargetBranch.Size = new System.Drawing.Size(123, 20);
          this.textBoxSearchTargetBranch.TabIndex = 12;
          this.toolTip.SetToolTip(this.textBoxSearchTargetBranch, "Press Enter to search");
-         this.textBoxSearchTargetBranch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearch_KeyDown);
+         this.textBoxSearchTargetBranch.TextChanged += new System.EventHandler(this.textBoxSearchTargetBranch_TextChanged);
+         this.textBoxSearchTargetBranch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSearchTargetBranch_KeyDown);
          // 
          // linkLabelFindMe
          // 
@@ -701,6 +713,7 @@ namespace mrHelper.App.Forms
          this.comboBoxUser.Name = "comboBoxUser";
          this.comboBoxUser.Size = new System.Drawing.Size(140, 21);
          this.comboBoxUser.TabIndex = 9;
+         this.comboBoxUser.SelectionChangeCommitted += new System.EventHandler(this.comboBoxUser_SelectionChangeCommitted);
          this.comboBoxUser.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxUser_Format);
          // 
          // comboBoxProjectName
@@ -711,6 +724,7 @@ namespace mrHelper.App.Forms
          this.comboBoxProjectName.Name = "comboBoxProjectName";
          this.comboBoxProjectName.Size = new System.Drawing.Size(175, 21);
          this.comboBoxProjectName.TabIndex = 8;
+         this.comboBoxProjectName.SelectionChangeCommitted += new System.EventHandler(this.comboBoxProjectName_SelectionChangeCommitted);
          this.comboBoxProjectName.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxProjectName_Format);
          // 
          // checkBoxSearchByAuthor
@@ -1399,7 +1413,8 @@ namespace mrHelper.App.Forms
          this.textBoxRecentMergeRequestsHint.Size = new System.Drawing.Size(463, 28);
          this.textBoxRecentMergeRequestsHint.TabIndex = 5;
          this.textBoxRecentMergeRequestsHint.Text = "This list contains a few merge requests which have been recently reviewed by you " +
-    "in mrHelper.\r\nThe maximum number of recent merge requests can be configured in Settings.";
+    "in mrHelper.\r\nThe maximum number of recent merge requests can be configured in S" +
+    "ettings.";
          // 
          // listViewRecentMergeRequests
          // 
@@ -1551,6 +1566,7 @@ namespace mrHelper.App.Forms
          this.tabControl.TabIndex = 0;
          this.tabControl.SelectedIndexChanged += new System.EventHandler(this.tabControl_SelectedIndexChanged);
          this.tabControl.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
+         this.tabControl.SizeChanged += new System.EventHandler(this.tabControl_SizeChanged);
          // 
          // tabPageSettings
          // 
@@ -2436,11 +2452,31 @@ namespace mrHelper.App.Forms
          this.panel1.Size = new System.Drawing.Size(910, 79);
          this.panel1.TabIndex = 5;
          // 
+         // panelConnectionStatus
+         // 
+         this.panelConnectionStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.panelConnectionStatus.Controls.Add(this.labelConnectionStatus);
+         this.panelConnectionStatus.Location = new System.Drawing.Point(300, 4);
+         this.panelConnectionStatus.Name = "panelConnectionStatus";
+         this.panelConnectionStatus.Size = new System.Drawing.Size(297, 13);
+         this.panelConnectionStatus.TabIndex = 1;
+         // 
+         // labelConnectionStatus
+         // 
+         this.labelConnectionStatus.AutoSize = true;
+         this.labelConnectionStatus.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.labelConnectionStatus.Location = new System.Drawing.Point(0, 0);
+         this.labelConnectionStatus.Name = "labelConnectionStatus";
+         this.labelConnectionStatus.Size = new System.Drawing.Size(78, 13);
+         this.labelConnectionStatus.TabIndex = 0;
+         this.labelConnectionStatus.Text = "Not connected";
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.ClientSize = new System.Drawing.Size(1284, 890);
+         this.Controls.Add(this.panelConnectionStatus);
          this.Controls.Add(this.tabControl);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.Name = "MainForm";
@@ -2522,6 +2558,8 @@ namespace mrHelper.App.Forms
          this.groupBoxTimeTracking.ResumeLayout(false);
          this.groupBoxReview.ResumeLayout(false);
          this.groupBoxSelectRevisions.ResumeLayout(false);
+         this.panelConnectionStatus.ResumeLayout(false);
+         this.panelConnectionStatus.PerformLayout();
          this.ResumeLayout(false);
 
       }
@@ -2714,6 +2752,8 @@ namespace mrHelper.App.Forms
       private ComboBox comboBoxSearchByState;
       private ComboBox comboBoxRecentMergeRequestsPerProjectCount;
       private Label labelRecentMergeRequestsPerProjectCount;
+      private Panel panelConnectionStatus;
+      private Label labelConnectionStatus;
    }
 }
 

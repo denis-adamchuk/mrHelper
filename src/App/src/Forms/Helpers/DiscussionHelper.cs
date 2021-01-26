@@ -14,7 +14,7 @@ namespace mrHelper.App.Forms.Helpers
    internal static class DiscussionHelper
    {
       async internal static Task<bool> AddCommentAsync(GitLabClient.MergeRequestKey mrk, string title,
-         IModificationListener modificationListener, User currentUser)
+         User currentUser, Shortcuts shortcuts)
       {
          string caption = String.Format("Add comment to merge request \"{0}\"", title);
          DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
@@ -33,9 +33,7 @@ namespace mrHelper.App.Forms.Helpers
 
                try
                {
-                  GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-                     gitLabInstance, modificationListener, mrk, currentUser);
+                  IDiscussionCreator creator = shortcuts.GetDiscussionCreator(mrk, currentUser);
                   string body = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
                   await creator.CreateNoteAsync(new CreateNewNoteParameters(body));
                }
@@ -54,7 +52,7 @@ namespace mrHelper.App.Forms.Helpers
       }
 
       async internal static Task<Discussion> AddThreadAsync(GitLabClient.MergeRequestKey mrk, string title,
-         IModificationListener modificationListener, User currentUser, DataCache dataCache)
+         User currentUser, DataCache dataCache, Shortcuts shortcuts)
       {
          string caption = String.Format("Create a new thread in merge request \"{0}\"", title);
          DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
@@ -80,9 +78,7 @@ namespace mrHelper.App.Forms.Helpers
                Discussion discussion = null;
                try
                {
-                  GitLabInstance gitLabInstance = new GitLabInstance(mrk.ProjectKey.HostName, Program.Settings);
-                  IDiscussionCreator creator = Shortcuts.GetDiscussionCreator(
-                     gitLabInstance, modificationListener, mrk, currentUser);
+                  IDiscussionCreator creator = shortcuts.GetDiscussionCreator(mrk, currentUser);
                   string body = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
                   discussion = await creator.CreateDiscussionAsync(new NewDiscussionParameters(body, null), false);
                }

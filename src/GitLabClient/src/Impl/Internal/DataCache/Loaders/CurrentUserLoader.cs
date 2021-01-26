@@ -16,7 +16,7 @@ namespace mrHelper.GitLabClient.Loaders
       {
          if (GlobalCache.GetAuthenticatedUser(hostName, accessToken) == null)
          {
-            User user = await call(() => _operator.GetCurrentUserAsync(),
+            User user = await call(() => _operator.SearchCurrentUserAsync(),
                String.Format("Cancelled loading current user from host \"{0}\"", hostName),
                String.Format("Cannot load user from host \"{0}\"", hostName));
             GlobalCache.AddAuthenticatedUser(hostName, accessToken, user);

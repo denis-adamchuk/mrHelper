@@ -61,6 +61,8 @@ namespace mrHelper.App
 
             try
             {
+               initializeGitLabSharpLibrary();
+
                string currentLogFileName = getLogFileName(context);
                CustomTraceListener listener = createTraceListener(currentLogFileName);
                if (listener == null)
@@ -80,6 +82,12 @@ namespace mrHelper.App
                HandleUnhandledException(ex);
             }
          }
+      }
+
+      private static void initializeGitLabSharpLibrary()
+      {
+         GitLabSharp.LibraryContext context = new GitLabSharp.LibraryContext(Settings.ServicePointConnectionLimit);
+         GitLabSharp.GitLabSharp.Initialize(context);
       }
 
       private static CustomTraceListener createTraceListener(string currentLogFileName)
@@ -248,7 +256,7 @@ namespace mrHelper.App
          try
          {
             string diffToolName = Path.GetFileNameWithoutExtension(createDiffTool().GetToolCommand());
-            StorageSupport.LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Program.Settings);
+            StorageSupport.LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Settings);
             string toolProcessName = type == StorageSupport.LocalCommitStorageType.FileStorage ? diffToolName : "git";
             parentToolPID = getParentProcessId(context.CurrentProcess, toolProcessName);
          }

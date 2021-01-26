@@ -39,8 +39,6 @@ namespace mrHelper.Common.Constants
       public static char GitLabLabelPrefixChar = GitLabLabelPrefix[0];
 
       public static int CheckForUpdatesTimerInterval = 1000 * 60 * 60 * 4; // 4 hours
-      public static int AutoUpgradePeriodBeginHour = 1; // 1AM
-      public static int AutoUpgradePeriodEndHour   = 6; // 6AM
 
       public static int DiscussionCheckOnNewThreadInterval = 1000 * 3; // 3 seconds
       public static int DiscussionCheckOnNewThreadFromDiffToolInterval = 500; // 0.5 seconds
@@ -115,28 +113,29 @@ namespace mrHelper.Common.Constants
          Delay = 1000
       };
 
-      // @{ FileStorageUpdater
-      public static TaskUtils.BatchLimits ComparisonLoadingForAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      // @{ Default properties for FileStorageUpdater (can be overridden by user in a configuration file)
+      // AwaitedUpdateComparisonBatchSizeKeyName
+      public static TaskUtils.BatchLimits AwaitedUpdateComparisonBatchDefaultLimits = new TaskUtils.BatchLimits
       {
-         Size = 20,
-         Delay = 1000
+         Size = 25,
+         Delay = 100
       };
 
-      public static TaskUtils.BatchLimits FileLoadingForAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      public static TaskUtils.BatchLimits AwaitedUpdateFileBatchDefaultLimits = new TaskUtils.BatchLimits
+      {
+         Size = 25,
+         Delay = 100
+      };
+
+      public static TaskUtils.BatchLimits NonAwaitedUpdateComparisonBatchDefaultLimits = new TaskUtils.BatchLimits
       {
          Size = 10,
-         Delay = 1000
-      };
-
-      public static TaskUtils.BatchLimits ComparisonLoadingForNonAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
-      {
-         Size = 20,
          Delay = 1000 // this is multiplied by number of storages
       };
 
-      public static TaskUtils.BatchLimits FileLoadingForNonAwaitedUpdateBatchLimits = new TaskUtils.BatchLimits
+      public static TaskUtils.BatchLimits NonAwaitedUpdateFileBatchDefaultLimits = new TaskUtils.BatchLimits
       {
-         Size = 10,
+         Size = 5,
          Delay = 1000 // this is multiplied by number of storages
       };
       // @} FileStorageUpdater

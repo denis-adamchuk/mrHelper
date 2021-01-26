@@ -58,7 +58,7 @@ namespace mrHelper.StorageSupport
       {
          Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey, type);
 
-         if (!GitTools.IsSingleCommitFetchSupported(Path)) //-V3022
+         if (!GitTools.IsSingleCommitFetchSupported()) //-V3022
          {
             throw new ArgumentException("Cannot work with such repositories");
          }
@@ -89,13 +89,14 @@ namespace mrHelper.StorageSupport
       {
          Trace.TraceInformation(String.Format("[GitRepository] Disposing GitRepository at path {0}", Path));
 
-         _commandService.Dispose();
+         _commandService?.Dispose();
          _commandService = null;
 
-         _updater.Dispose();
+         _updater?.Dispose();
          _updater = null;
 
-         _processManager.Dispose();
+         _processManager?.Dispose();
+         _processManager = null;
 
          _isDisposed = true;
       }
@@ -127,7 +128,7 @@ namespace mrHelper.StorageSupport
       private GitCommandService _commandService;
       private GitRepositoryUpdater _updater;
       private bool _isDisposed;
-      private readonly GitProcessManager _processManager;
+      private GitProcessManager _processManager;
       private readonly Action<IGitRepository> _onClonedRepo;
    }
 }

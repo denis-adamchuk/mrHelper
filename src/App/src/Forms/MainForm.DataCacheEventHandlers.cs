@@ -105,9 +105,6 @@ namespace mrHelper.App.Forms
             requestCommitStorageUpdate(e.FullMergeRequestKey.ProjectKey);
          }
 
-         MergeRequestKey mrk = new MergeRequestKey(
-            e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
-
          updateMergeRequestList(EDataCacheType.Recent);
 
          FullMergeRequestKey? fmk = getListView(EDataCacheType.Recent).GetSelectedMergeRequest();

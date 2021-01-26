@@ -10,8 +10,9 @@ namespace mrHelper.GitLabClient.Operators
    /// </summary>
    internal class TimeTrackingOperator : BaseOperator
    {
-      internal TimeTrackingOperator(string hostname, IHostProperties settings)
-         : base(hostname, settings)
+      internal TimeTrackingOperator(string hostname, IHostProperties settings,
+         INetworkOperationStatusListener networkOperationStatusListener)
+         : base(hostname, settings, networkOperationStatusListener)
       {
       }
 

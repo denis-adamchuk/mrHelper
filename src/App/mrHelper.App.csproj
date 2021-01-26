@@ -278,6 +278,8 @@
       <DependentUpon>NewDiscussionForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Helpers\ApplicationUpdateHelper.cs" />
+    <Compile Include="src\Helpers\Configuration\Configuration.KeyDefs.cs" />
+    <Compile Include="src\Helpers\Configuration\Configuration.Properties.cs" />
     <Compile Include="src\Helpers\Interprocess\ReportedDiscussionNote.cs" />
     <Compile Include="src\Helpers\PeriodicUpdateChecker.cs" />
     <Compile Include="src\Helpers\PersistentStateHelpers.cs" />

@@ -15,13 +15,15 @@ namespace mrHelper.GitLabClient.Loaders
    internal class MergeRequestListLoader : BaseDataCacheLoader, IMergeRequestListLoader
    {
       internal MergeRequestListLoader(string hostname, DataCacheOperator op,
-         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater, DataCacheConnectionContext dataCacheConnectionContext)
+         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater,
+         DataCacheCallbacks callbacks, SearchQueryCollection queryCollection)
          : base(op)
       {
          _hostname = hostname;
          _cacheUpdater = cacheUpdater;
          _versionLoader = versionLoader;
-         _dataCacheConnectionContext = dataCacheConnectionContext;
+         _callbacks = callbacks;
+         _queryCollection = queryCollection;
       }
 
       async public Task Load()
@@ -55,7 +57,7 @@ namespace mrHelper.GitLabClient.Loaders
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()
       {
-         SearchQueryCollection queries = _dataCacheConnectionContext.QueryCollection;
+         SearchQueryCollection queries = _queryCollection;
          IEnumerable<MergeRequest> mergeRequests = await fetchMergeRequestsAsync(queries);
          return await groupMergeRequests(mergeRequests);
       }
@@ -87,12 +89,12 @@ namespace mrHelper.GitLabClient.Loaders
                   ProjectKey projectKey = new ProjectKey(_hostname, query.ProjectName);
                   if (isForbiddenProjectException(ex))
                   {
-                     _dataCacheConnectionContext.Callbacks.OnForbiddenProject?.Invoke(projectKey);
+                     _callbacks?.OnForbiddenProject?.Invoke(projectKey);
                      return;
                   }
                   if (isNotFoundProjectException(ex))
                   {
-                     _dataCacheConnectionContext.Callbacks.OnNotFoundProject?.Invoke(projectKey);
+                     _callbacks?.OnNotFoundProject?.Invoke(projectKey);
                      return;
                   }
                }
@@ -204,7 +206,8 @@ namespace mrHelper.GitLabClient.Loaders
       private readonly string _hostname;
       private readonly IVersionLoader _versionLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
-      private readonly DataCacheConnectionContext _dataCacheConnectionContext;
+      private readonly DataCacheCallbacks _callbacks;
+      private readonly SearchQueryCollection _queryCollection;
    }
 }
 

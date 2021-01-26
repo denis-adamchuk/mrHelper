@@ -21,10 +21,12 @@ namespace mrHelper.GitLabClient
 
    public class RepositoryAccessor : IDisposable
    {
-      internal RepositoryAccessor(IHostProperties settings, ProjectKey projectKey)
+      internal RepositoryAccessor(IHostProperties settings, ProjectKey projectKey,
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
          _settings = settings;
          _projectKey = projectKey;
+         _networkOperationStatusListener = networkOperationStatusListener;
       }
 
       public Task<Comparison> Compare(string from, string to)
@@ -109,7 +111,7 @@ namespace mrHelper.GitLabClient
       {
          if (_operator == null)
          {
-            _operator = new RepositoryOperator(_projectKey, _settings);
+            _operator = new RepositoryOperator(_projectKey, _settings, _networkOperationStatusListener);
          }
 
          try
@@ -131,7 +133,7 @@ namespace mrHelper.GitLabClient
       {
          if (_operator == null)
          {
-            _operator = new RepositoryOperator(_projectKey, _settings);
+            _operator = new RepositoryOperator(_projectKey, _settings, _networkOperationStatusListener);
          }
 
          try
@@ -150,6 +152,7 @@ namespace mrHelper.GitLabClient
       }
 
       private readonly ProjectKey _projectKey;
+      private readonly INetworkOperationStatusListener _networkOperationStatusListener;
       private readonly IHostProperties _settings;
 
       private RepositoryOperator _operator;

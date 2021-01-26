@@ -13,6 +13,30 @@ namespace mrHelper.GitLabClient.Operators
       {
       }
 
+      public override string UserMessage
+      {
+         get
+         {
+            if (InnerException is GitLabRequestException rx)
+            {
+               if (rx.InnerException is System.Net.WebException wx)
+               {
+                  if (wx.Response is System.Net.HttpWebResponse response
+                   && response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                  {
+                     return wx.Message + " Check your access token!";
+                  }
+                  return wx.Message;
+               }
+               else if (rx.InnerException != null)
+               {
+                  return rx.InnerException.Message;
+               }
+            }
+            return base.UserMessage;
+         }
+      }
+
       internal bool Cancelled => InnerException is GitLabTaskRunnerCancelled;
    }
 
@@ -56,11 +80,7 @@ namespace mrHelper.GitLabClient.Operators
 
       private static void handleException(Exception ex)
       {
-         if (ex is GitLabTaskRunnerCancelled)
-         {
-            throw new OperatorException(ex);
-         }
-         else if (ex is GitLabSharpException || ex is GitLabRequestException)
+         if (ex is GitLabTaskRunnerCancelled || ex is GitLabSharpException || ex is GitLabRequestException)
          {
             throw new OperatorException(ex);
          }

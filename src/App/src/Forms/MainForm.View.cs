@@ -483,12 +483,20 @@ namespace mrHelper.App.Forms
 
       private void updateCaption()
       {
-         Text = Constants.MainWindowCaption
-           + " (" + Application.ProductVersion + ")"
-           + (StaticUpdateChecker.NewVersionInformation != null
-              ? String.Format("   New version {0} is available!",
-                 StaticUpdateChecker.NewVersionInformation.VersionNumber)
-              : String.Empty);
+         string mainCaption = Constants.MainWindowCaption;
+         string currentVersion = " (" + Application.ProductVersion + ")";
+         string newVersion = StaticUpdateChecker.NewVersionInformation != null
+              ? String.Format("   New version {0} is available!", StaticUpdateChecker.NewVersionInformation.VersionNumber)
+              : String.Empty;
+         Text = String.Format("{0} {1} {2}", mainCaption, currentVersion, newVersion);
+      }
+
+
+      private void applyConnectionStatus(string text, Color color, string tooltipText)
+      {
+         labelConnectionStatus.Text = text;
+         labelConnectionStatus.ForeColor = color;
+         toolTip.SetToolTip(labelConnectionStatus, tooltipText);
       }
 
       private void updateTrayIcon()
@@ -509,6 +517,15 @@ namespace mrHelper.App.Forms
             {
                ExceptionHandlers.Handle(String.Format("Cannot create an icon from file \"{0}\"", filename), ex);
             }
+         }
+
+         if (isConnectionLost())
+         {
+            if (_iconScheme.ContainsKey("Icon_LostConnection"))
+            {
+               loadNotifyIconFromFile(_iconScheme["Icon_LostConnection"]);
+            }
+            return;
          }
 
          if (isTrackingTime())
@@ -538,6 +555,16 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(null);
          if (_badgeScheme == null || !_badgeScheme.Any())
          {
+            return;
+         }
+
+         if (isConnectionLost())
+         {
+            if (_badgeScheme.ContainsKey("Badge_LostConnection"))
+            {
+               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
+                  Color.FromName(_badgeScheme["Badge_LostConnection"]));
+            }
             return;
          }
 
@@ -976,7 +1003,7 @@ namespace mrHelper.App.Forms
 
       private void disableLiveTabControls()
       {
-         getListView(EDataCacheType.Live).DisableListView(true);
+         getListView(EDataCacheType.Live).DisableListView();
          setMergeRequestEditEnabled(false);
          enableMergeRequestFilterControls(false);
          enableMergeRequestListControls(false);
@@ -984,16 +1011,24 @@ namespace mrHelper.App.Forms
 
       private void disableSearchTabControls()
       {
-         getListView(EDataCacheType.Search).DisableListView(true);
+         getListView(EDataCacheType.Search).DisableListView();
          enableSimpleSearchControls(false);
          setSearchByProjectEnabled(false);
          setSearchByAuthorEnabled(false);
          updateSearchButtonState();
       }
 
+      private void enableSearchTabControls()
+      {
+         enableSimpleSearchControls(true);
+         setSearchByAuthorEnabled(getDataCache(EDataCacheType.Live)?.UserCache?.GetUsers()?.Any() ?? false);
+         setSearchByProjectEnabled(getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects()?.Any() ?? false);
+         updateSearchButtonState();
+      }
+
       private void disableRecentTabControls()
       {
-         getListView(EDataCacheType.Recent).DisableListView(true);
+         getListView(EDataCacheType.Recent).DisableListView();
       }
 
       private void disableSelectedMergeRequestControls()
@@ -1048,6 +1083,25 @@ namespace mrHelper.App.Forms
             && checkBoxSearchByTitleAndDescription.Checked
             && textBoxSearchText.Enabled
             && !String.IsNullOrWhiteSpace(textBoxSearchText.Text));
+      }
+
+      private void onSearchTextBoxKeyDown(Keys keys)
+      {
+         updateSearchButtonState();
+         if (keys == Keys.Enter && buttonSearch.Enabled)
+         {
+            onStartSearch();
+         }
+      }
+
+      private void onSearchTextBoxTextChanged(TextBox textBox, CheckBox associatedCheckBox)
+      {
+         associatedCheckBox.Checked = textBox.TextLength > 0;
+      }
+
+      private void onSearchComboBoxSelectionChangeCommitted(CheckBox associatedCheckBox)
+      {
+         associatedCheckBox.Checked = true;
       }
 
       private void applyKnownHostSelectionChange()
@@ -1248,20 +1302,19 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void moveCopyFromClipboardLinkLabel()
+      private void placeControlNearToRightmostTab(TabControl tabControl, Control control, int horzOffset)
       {
-         int tabCount = tabControlMode.TabPages.Count;
+         int tabCount = tabControl.TabPages.Count;
          Debug.Assert(tabCount > 0);
 
-         Rectangle tabRect = tabControlMode.GetTabRect(tabCount - 1);
+         Rectangle tabRect = tabControl.GetTabRect(tabCount - 1);
 
-         int linkLabelTopRelativeToTabRect = tabRect.Height / 2 - linkLabelFromClipboard.Height / 2;
-         int linkLabelTop = tabRect.Top + linkLabelTopRelativeToTabRect;
+         int controlTopRelativeToTabRect = tabRect.Height / 2 - linkLabelFromClipboard.Height / 2;
+         int controlTop = tabRect.Top + controlTopRelativeToTabRect;
 
-         int linkLabelHorizontalOffsetFromRightmostTab = 20;
-         int linkLabelLeft = tabRect.X + tabRect.Width + linkLabelHorizontalOffsetFromRightmostTab;
+         int controlLeft = tabRect.X + tabRect.Width + horzOffset;
 
-         linkLabelFromClipboard.Location = new System.Drawing.Point(linkLabelLeft, linkLabelTop);
+         control.Location = new System.Drawing.Point(controlLeft, controlTop);
       }
 
       private bool switchTabAndSelectMergeRequest(EDataCacheType mode, MergeRequestKey? mrk, bool exact)

@@ -133,7 +133,7 @@ namespace mrHelper.GitLabClient.Operators.Search
          return new PageFilter(_query.MaxResults.Value, 1);
       }
 
-      private SearchQuery _query;
+      private readonly SearchQuery _query;
    }
 }
 

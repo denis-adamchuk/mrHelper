@@ -3,10 +3,8 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.GitLabClient.Operators;
-using mrHelper.GitLabClient.Accessors;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.GitLabClient.Managers
@@ -24,9 +22,10 @@ namespace mrHelper.GitLabClient.Managers
          IHostProperties hostProperties,
          User user,
          IDiscussionLoader discussionLoader,
-         IModificationNotifier modificationNotifier)
+         IModificationNotifier modificationNotifier,
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
-         _operator = new TimeTrackingOperator(hostname, hostProperties);
+         _operator = new TimeTrackingOperator(hostname, hostProperties, networkOperationStatusListener);
          _currentUser = user;
          _modificationNotifier = modificationNotifier;
 
@@ -42,12 +41,21 @@ namespace mrHelper.GitLabClient.Managers
 
       public void Dispose()
       {
-         _modificationNotifier.TrackedTimeModified -= onTrackedTimeModified;
+         if (_modificationNotifier != null)
+         {
+            _modificationNotifier.TrackedTimeModified -= onTrackedTimeModified;
+            _modificationNotifier = null;
+         }
 
-         _discussionLoader.DiscussionsLoading -= preProcessDiscussions;
-         _discussionLoader.DiscussionsLoaded -= processDiscussions;
+         if (_discussionLoader != null)
+         {
+            _discussionLoader.DiscussionsLoading -= preProcessDiscussions;
+            _discussionLoader.DiscussionsLoaded -= processDiscussions;
+            _discussionLoader = null;
+         }
 
-         _operator.Dispose();
+         _operator?.Dispose();
+         _operator = null;
       }
 
       public TrackedTime GetTotalTime(MergeRequestKey mrk)
@@ -143,12 +151,12 @@ namespace mrHelper.GitLabClient.Managers
       /// </summary>
       private readonly HashSet<MergeRequestKey> _loading = new HashSet<MergeRequestKey>();
 
-      private readonly TimeTrackingOperator _operator;
+      private TimeTrackingOperator _operator;
       private readonly Dictionary<MergeRequestKey, TimeSpan> _cachedTrackedTime =
          new Dictionary<MergeRequestKey, TimeSpan>();
       private readonly User _currentUser;
-      private readonly IDiscussionLoader _discussionLoader;
-      private readonly IModificationNotifier _modificationNotifier;
+      private IDiscussionLoader _discussionLoader;
+      private IModificationNotifier _modificationNotifier;
    }
 }
 

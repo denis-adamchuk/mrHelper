@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Tools;
 using mrHelper.GitLabClient.Loaders;
 using mrHelper.GitLabClient.Loaders.Cache;
 using mrHelper.GitLabClient.Managers;
@@ -12,31 +13,33 @@ namespace mrHelper.GitLabClient
 {
    public class DataCache : IDisposable
    {
-      public DataCache(DataCacheContext dataCacheContext, IModificationNotifier modificationNotifier)
+      public DataCache(DataCacheContext context)
       {
-         _dataCacheContext = dataCacheContext;
-         _modificationNotifier = modificationNotifier;
+         _cacheContext = context;
       }
 
       public event Action<string, User> Connected;
       public event Action<string> Connecting;
       public event Action Disconnected;
 
-      async public Task Connect(GitLabInstance gitLabInstance, DataCacheConnectionContext context)
+      async public Task Connect(GitLabInstance gitLabInstance, DataCacheConnectionContext connectionContext)
       {
-         Disconnect();
+         assertNotConnected();
 
          string hostname = gitLabInstance.HostName;
          IHostProperties hostProperties = gitLabInstance.HostProperties;
-         _operator = new DataCacheOperator(hostname, hostProperties);
+         _operator = new DataCacheOperator(hostname, hostProperties, gitLabInstance.NetworkOperationStatusListener);
+         DataCacheOperator myOperator = _operator;
 
+         _isConnecting = true;
          try
          {
             Connecting?.Invoke(hostname);
 
             InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
             IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
-               hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater, context);
+               hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater,
+               _cacheContext.Callbacks, connectionContext.QueryCollection);
 
             traceInformation(String.Format("Connecting data cache to {0}...", hostname));
             string accessToken = hostProperties.GetAccessToken(hostname);
@@ -44,9 +47,11 @@ namespace mrHelper.GitLabClient
             User currentUser = GlobalCache.GetAuthenticatedUser(hostname, accessToken);
 
             await mergeRequestListLoader.Load();
-            _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser, context);
+            _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser,
+               connectionContext.QueryCollection, gitLabInstance.ModificationNotifier,
+               gitLabInstance.NetworkOperationStatusListener);
 
-            ConnectionContext = context;
+            ConnectionContext = connectionContext;
             traceInformation(String.Format("Data cache connected to {0}", hostname));
             Connected?.Invoke(hostname, currentUser);
          }
@@ -60,12 +65,34 @@ namespace mrHelper.GitLabClient
             }
             throw new DataCacheException(ex.OriginalMessage, ex);
          }
+         finally
+         {
+            _isConnecting = false;
+         }
       }
 
-      public void Disconnect()
+      private void assertNotConnected()
       {
-         traceInformation("Disconnecting data cache");
-         reset();
+         Debug.Assert(!_isConnecting);
+         Debug.Assert(_operator == null);
+         Debug.Assert(_internal == null);
+         Debug.Assert(ConnectionContext == null);
+      }
+
+      async public Task Disconnect()
+      {
+         if (_isConnecting)
+         {
+            traceInformation("Disconnecting data cache (async)");
+            _operator?.Dispose(); // causes BaseLoaderCancelledException
+            await TaskUtils.WhileAsync(() => _operator != null);
+            assertNotConnected();
+         }
+         else
+         {
+            traceInformation("Disconnecting data cache (sync)");
+            reset();
+         }
       }
 
       public void Dispose()
@@ -101,7 +128,7 @@ namespace mrHelper.GitLabClient
 
       private void traceInformation(string message)
       {
-         Trace.TraceInformation("[DataCache.{0}] {1}", _dataCacheContext.TagForLogging, message);
+         Trace.TraceInformation("[DataCache.{0}] {1}", _cacheContext.TagForLogging, message);
       }
 
       private DataCacheInternal createCacheInternal(
@@ -109,26 +136,37 @@ namespace mrHelper.GitLabClient
          string hostname,
          IHostProperties hostProperties,
          User user,
-         DataCacheConnectionContext context)
+         SearchQueryCollection queryCollection,
+         IModificationNotifier modificationNotifier,
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
          MergeRequestManager mergeRequestManager = new MergeRequestManager(
-            _dataCacheContext, cacheUpdater, hostname, hostProperties, context, _modificationNotifier);
+            _cacheContext, cacheUpdater, hostname, hostProperties, queryCollection, networkOperationStatusListener);
          DiscussionManager discussionManager = new DiscussionManager(
-            _dataCacheContext, hostname, hostProperties, user, mergeRequestManager, context, _modificationNotifier);
+            _cacheContext, hostname, hostProperties, user, mergeRequestManager,
+            modificationNotifier, networkOperationStatusListener);
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
-            hostname, hostProperties, user, discussionManager, _modificationNotifier);
+            hostname, hostProperties, user, discussionManager, modificationNotifier, networkOperationStatusListener);
 
-         IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
-         ProjectCache projectCache = new ProjectCache(loader, _dataCacheContext, hostname);
-         IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
-         UserCache userCache = new UserCache(userListLoader, _dataCacheContext, hostname);
+         ProjectCache projectCache = null;
+         if (_cacheContext.SupportProjectCache)
+         {
+            IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
+            projectCache = new ProjectCache(loader, _cacheContext, hostname);
+         }
+         UserCache userCache = null; 
+         if (_cacheContext.SupportUserCache)
+         {
+            IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
+            userCache = new UserCache(userListLoader, _cacheContext, hostname);
+         }
          return new DataCacheInternal(mergeRequestManager, discussionManager, timeTrackingManager, projectCache, userCache);
       }
 
+      private bool _isConnecting;
       private DataCacheOperator _operator;
       private DataCacheInternal _internal;
-      private readonly DataCacheContext _dataCacheContext;
-      private readonly IModificationNotifier _modificationNotifier;
+      private readonly DataCacheContext _cacheContext;
    }
 }
 

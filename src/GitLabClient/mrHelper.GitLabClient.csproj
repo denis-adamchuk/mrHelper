@@ -48,9 +48,10 @@
     <Compile Include="src\Impl\Internal\DataCache\Loaders\UserListLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\UserListLoaderItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Managers\UserCache.cs" />
+    <Compile Include="src\Interfaces\NetworkOperationStatusListenerItf.cs" />
     <Compile Include="src\Interfaces\ModificationListenerItf.cs" />
     <Compile Include="src\Impl\Accessors\SingleDiscussionAccessor.cs" />
-    <Compile Include="src\Impl\ModificationNotifier.cs" />
+    <Compile Include="src\Impl\Internal\Accessors\ModificationNotifier.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestListLoaderItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectListLoaderItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestLoaderItf.cs" />
@@ -60,7 +61,6 @@
     <Compile Include="src\Interfaces\DiscussionCreatorItf.cs" />
     <Compile Include="src\Impl\Accessors\DiscussionAccessor.cs" />
     <Compile Include="src\Impl\Internal\Operators\BaseOperator.cs" />
-    <Compile Include="src\Impl\Internal\Operators\CommonOperator.cs" />
     <Compile Include="src\Impl\GitLabInstance.cs" />
     <Compile Include="src\Impl\Accessors\RawDataAccessor.cs" />
     <Compile Include="src\Impl\Internal\Operators\GlobalCache.cs" />

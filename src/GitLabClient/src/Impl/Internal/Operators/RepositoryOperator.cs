@@ -11,8 +11,9 @@ namespace mrHelper.GitLabClient.Operators
    /// </summary>
    internal class RepositoryOperator : BaseOperator
    {
-      internal RepositoryOperator(ProjectKey projectKey, IHostProperties settings)
-         : base(projectKey.HostName, settings)
+      internal RepositoryOperator(ProjectKey projectKey, IHostProperties settings,
+         INetworkOperationStatusListener networkOperationStatusListener)
+         : base(projectKey.HostName, settings, networkOperationStatusListener)
       {
          _projectname = projectKey.ProjectName;
       }
