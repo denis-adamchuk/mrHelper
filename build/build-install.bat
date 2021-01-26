@@ -13,7 +13,7 @@ if %ERRORLEVEL% NEQ 0 EXIT /B 1
 devenv ../mrHelper.sln /build Install
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
-signtool sign /a /t http://timestamp.globalsign.com/scripts/timstamp.dll %target_path%
+signtool sign /a /tr http://timestamp.digicert.com %target_path%
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 EXIT /B 0
