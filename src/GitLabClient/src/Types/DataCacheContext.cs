@@ -44,7 +44,9 @@ namespace mrHelper.GitLabClient
          bool updateManagerExtendedLogging,
          string tagForLogging,
          DataCacheCallbacks callbacks,
-         DataCacheUpdateRules updateRules)
+         DataCacheUpdateRules updateRules,
+         bool supportUserCache,
+         bool supportProjectCache)
       {
          SynchronizeInvoke = synchronizeInvoke;
          MergeRequestFilterChecker = mergeRequestFilterChecker;
@@ -53,6 +55,8 @@ namespace mrHelper.GitLabClient
          TagForLogging = tagForLogging;
          Callbacks = callbacks;
          UpdateRules = updateRules;
+         SupportUserCache = supportUserCache;
+         SupportProjectCache = supportProjectCache;
       }
 
       public ISynchronizeInvoke SynchronizeInvoke { get; }
@@ -60,9 +64,10 @@ namespace mrHelper.GitLabClient
       public IEnumerable<string> DiscussionKeywords { get; }
       public bool UpdateManagerExtendedLogging { get; }
       public string TagForLogging { get; }
-
       public DataCacheCallbacks Callbacks { get; }
       public DataCacheUpdateRules UpdateRules { get; }
+      public bool SupportUserCache { get; }
+      public bool SupportProjectCache { get; }
    }
 }
 

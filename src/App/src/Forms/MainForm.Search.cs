@@ -36,6 +36,7 @@ namespace mrHelper.App.Forms
          }
          catch (Exception ex)
          {
+            enableSearchTabControls();
             if (exceptionHandler == null)
             {
                exceptionHandler = new Func<Exception, bool>((e) => startWorkflowDefaultExceptionHandler(e));
@@ -88,10 +89,7 @@ namespace mrHelper.App.Forms
       private void onSearchDataCacheConnected(string hostname, User user)
       {
          updateMergeRequestList(EDataCacheType.Search);
-         enableSimpleSearchControls(true);
-         setSearchByAuthorEnabled(getDataCache(EDataCacheType.Live)?.UserCache?.GetUsers()?.Any() ?? false);
-         setSearchByProjectEnabled(getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects()?.Any() ?? false);
-         updateSearchButtonState();
+         enableSearchTabControls();
 
          bool areResults = getListView(EDataCacheType.Search).Items.Count > 0;
          addOperationRecord(areResults ? "Search has finished" : "Nothing found. Try changing search query.");

@@ -1018,6 +1018,14 @@ namespace mrHelper.App.Forms
          updateSearchButtonState();
       }
 
+      private void enableSearchTabControls()
+      {
+         enableSimpleSearchControls(true);
+         setSearchByAuthorEnabled(getDataCache(EDataCacheType.Live)?.UserCache?.GetUsers()?.Any() ?? false);
+         setSearchByProjectEnabled(getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects()?.Any() ?? false);
+         updateSearchButtonState();
+      }
+
       private void disableRecentTabControls()
       {
          getListView(EDataCacheType.Recent).DisableListView(true);

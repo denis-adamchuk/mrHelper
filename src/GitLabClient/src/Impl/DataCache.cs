@@ -148,10 +148,18 @@ namespace mrHelper.GitLabClient
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
             hostname, hostProperties, user, discussionManager, modificationNotifier, networkOperationStatusListener);
 
-         IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
-         ProjectCache projectCache = new ProjectCache(loader, _cacheContext, hostname);
-         IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
-         UserCache userCache = new UserCache(userListLoader, _cacheContext, hostname);
+         ProjectCache projectCache = null;
+         if (_cacheContext.SupportProjectCache)
+         {
+            IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
+            projectCache = new ProjectCache(loader, _cacheContext, hostname);
+         }
+         UserCache userCache = null; 
+         if (_cacheContext.SupportUserCache)
+         {
+            IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
+            userCache = new UserCache(userListLoader, _cacheContext, hostname);
+         }
          return new DataCacheInternal(mergeRequestManager, discussionManager, timeTrackingManager, projectCache, userCache);
       }
 
