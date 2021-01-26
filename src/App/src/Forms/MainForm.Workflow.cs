@@ -119,7 +119,7 @@ namespace mrHelper.App.Forms
          else
          {
             await initializeLabelListIfEmpty(hostname);
-            await startUserBasedWorkflowAsync(hostname);
+            await startUserBasedWorkflowAsync();
          }
          addOperationRecord(String.Format("Connection to {0} is established", hostname));
       }
@@ -143,7 +143,7 @@ namespace mrHelper.App.Forms
          return enabledProjects;
       }
 
-      private async Task startUserBasedWorkflowAsync(string hostname)
+      private async Task startUserBasedWorkflowAsync()
       {
          IEnumerable<string> usernames = listViewUsers.Items.Cast<ListViewItem>().Select(item => item.Text);
          SearchQueryCollection queryCollection = getCustomDataForUserBasedWorkflow(usernames);

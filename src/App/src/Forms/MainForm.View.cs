@@ -1003,7 +1003,7 @@ namespace mrHelper.App.Forms
 
       private void disableLiveTabControls()
       {
-         getListView(EDataCacheType.Live).DisableListView(true);
+         getListView(EDataCacheType.Live).DisableListView();
          setMergeRequestEditEnabled(false);
          enableMergeRequestFilterControls(false);
          enableMergeRequestListControls(false);
@@ -1011,7 +1011,7 @@ namespace mrHelper.App.Forms
 
       private void disableSearchTabControls()
       {
-         getListView(EDataCacheType.Search).DisableListView(true);
+         getListView(EDataCacheType.Search).DisableListView();
          enableSimpleSearchControls(false);
          setSearchByProjectEnabled(false);
          setSearchByAuthorEnabled(false);
@@ -1028,7 +1028,7 @@ namespace mrHelper.App.Forms
 
       private void disableRecentTabControls()
       {
-         getListView(EDataCacheType.Recent).DisableListView(true);
+         getListView(EDataCacheType.Recent).DisableListView();
       }
 
       private void disableSelectedMergeRequestControls()

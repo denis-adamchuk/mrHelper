@@ -116,15 +116,11 @@ namespace mrHelper.App.Controls
          _colorScheme = colorScheme;
       }
 
-      internal void DisableListView(bool clear)
+      internal void DisableListView()
       {
          Enabled = false;
          DeselectAllListViewItems();
-
-         if (clear)
-         {
-            Items.Clear();
-         }
+         Items.Clear();
       }
 
       internal void AssignContextMenu(MergeRequestListViewContextMenu contextMenu)

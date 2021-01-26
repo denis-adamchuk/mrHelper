@@ -49,7 +49,7 @@ namespace mrHelper.App.Forms
          {
             return;
          }
-         showDiscussionForm(_gitLabInstance, dataCache, storage, currentUser, mrk, discussions, title, author, webUrl);
+         showDiscussionForm(dataCache, storage, currentUser, mrk, discussions, title, author, webUrl);
       }
 
       async private Task<bool> prepareStorageForDiscussionsForm(MergeRequestKey mrk,
@@ -75,9 +75,8 @@ namespace mrHelper.App.Forms
          return await prepareCommitStorage(mrk, storage, contextProvider, false);
       }
 
-      private void showDiscussionForm(GitLabInstance gitLabInstance, DataCache dataCache, ILocalCommitStorage storage,
-         User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author,
-         string webUrl)
+      private void showDiscussionForm(DataCache dataCache, ILocalCommitStorage storage, User currentUser,
+         MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author, string webUrl)
       {
          if (currentUser == null || discussions == null || author == null || currentUser.Id == 0)
          {
