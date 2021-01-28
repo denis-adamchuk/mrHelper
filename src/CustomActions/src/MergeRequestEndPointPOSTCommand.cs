@@ -4,12 +4,12 @@ using GitLabSharp.Accessors;
 
 namespace mrHelper.CustomActions
 {
-   public class SendNoteCommand : BaseCommand
+   public class MergeRequestEndPointPOSTCommand : BaseCommand
    {
-      public SendNoteCommand(
+      public MergeRequestEndPointPOSTCommand(
          ICommandCallback callback,
          string name,
-         string body,
+         string endpoint,
          string enabledIf,
          string visibleIf,
          bool stopTimer,
@@ -17,12 +17,7 @@ namespace mrHelper.CustomActions
          string hint)
          : base(callback, name, enabledIf, visibleIf, stopTimer, reload, hint)
       {
-         _body = body;
-      }
-
-      public string GetBody()
-      {
-         return _body;
+         _endpoint = endpoint;
       }
 
       async public override Task Run()
@@ -34,11 +29,23 @@ namespace mrHelper.CustomActions
 
          GitLabTaskRunner client = new GitLabTaskRunner(hostname, accessToken);
          await client.RunAsync(async (gitlab) =>
-            await gitlab.Projects.Get(projectName).MergeRequests.
-               Get(iid).Notes.CreateNewTaskAsync(new CreateNewNoteParameters(_body)));
+         {
+            SingleMergeRequestAccessor accessor = gitlab.Projects.Get(projectName).MergeRequests.Get(iid);
+            if (_endpoint == "approve")
+            {
+               return null;
+               //return await accessor.ApproveTaskAsync();
+            }
+            else if (_endpoint == "unapprove")
+            {
+               return null;
+               //return await accessor.UnapproveTaskAsync();
+            }
+            return null;
+         });
       }
 
-      private readonly string _body;
+      private readonly string _endpoint;
    }
 }
 

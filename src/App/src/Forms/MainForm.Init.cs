@@ -97,7 +97,7 @@ namespace mrHelper.App.Forms
                Text = name,
                UseVisualStyleBackColor = true,
                TabStop = false,
-               Tag = command.GetDependency()
+               Tag = command.GetEnabledIf()
             };
             toolTip.SetToolTip(button, command.GetHint());
             button.Click += async (x, y) =>

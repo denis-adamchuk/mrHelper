@@ -6,7 +6,9 @@ namespace mrHelper.CustomActions
    {
       string GetName();
 
-      string GetDependency();
+      string GetEnabledIf();
+
+      string GetVisibleIf();
 
       bool GetStopTimer();
 
