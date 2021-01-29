@@ -219,6 +219,11 @@ namespace mrHelper.App.Forms
 
          checkBoxSquash.Checked = _isSquashNeeded.Value;
          checkBoxDeleteSourceBranch.Checked = _isRemoteBranchDeletionNeeded.Value;
+         if (_sourceBranchName  == "master")
+         {
+            checkBoxDeleteSourceBranch.Enabled = false;
+            checkBoxDeleteSourceBranch.Checked = false;
+         }
 
          string urlTooltip = String.IsNullOrEmpty(_webUrl) ? String.Empty : _webUrl;
          toolTip.SetToolTip(linkLabelOpenAtGitLab, urlTooltip);

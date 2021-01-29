@@ -330,6 +330,11 @@ namespace mrHelper.App.Forms
          buttonEditTitle.Enabled = allDetailsLoaded;
          buttonToggleWIP.Enabled = allDetailsLoaded;
          checkBoxDeleteSourceBranch.Enabled = allDetailsLoaded;
+         if (getSourceBranchName() == "master")
+         {
+            checkBoxDeleteSourceBranch.Enabled = false;
+            checkBoxDeleteSourceBranch.Checked = false;
+         }
          checkBoxSquash.Enabled = allDetailsLoaded;
          textBoxAssigneeUsername.Enabled = allDetailsLoaded;
 
