@@ -31,14 +31,14 @@ namespace mrHelper.App.Helpers
 
       internal void Load(out HashSet<ProjectKey> values)
       {
-         values = readObjectAsArray(_reader, _recordName)?
+         values = readObjectAsArray()?
             .Select(token => loadProjectKey(token))
             .ToHashSet();
       }
 
       internal void Load(out HashSet<MergeRequestKey> values)
       {
-         values = readObjectAsArray(_reader, _recordName)?
+         values = readObjectAsArray()?
             .Select(token => loadMergeRequestKey(token))
             .ToHashSet();
       }
@@ -126,7 +126,7 @@ namespace mrHelper.App.Helpers
          return new ProjectKey(host, projectName);
       }
 
-      private string[] readObjectAsArray(IPersistentStateGetter reader, string objectName)
+      private string[] readObjectAsArray()
       {
          return _reader.Get(_recordName) is JArray jArray ? jarrayToStringCollection(jArray).ToArray() : null;
       }

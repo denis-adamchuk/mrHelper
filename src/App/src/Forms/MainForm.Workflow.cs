@@ -185,6 +185,7 @@ namespace mrHelper.App.Forms
 
       private void onLiveDataCacheDisconnected()
       {
+         clearCustomActionControls();
          disableLiveTabControls();
          stopListViewRefreshTimer();
          WinFormsHelpers.CloseAllFormsExceptOne(this);
@@ -256,6 +257,7 @@ namespace mrHelper.App.Forms
          enableMergeRequestListControls(true);
          enableSimpleSearchControls(true);
          addOperationRecord("Loading merge requests has completed");
+         updateCustomActionControls();
 
          IEnumerable<ProjectKey> projects = getDataCache(EDataCacheType.Live).MergeRequestCache.GetProjects();
          foreach (ProjectKey projectKey in projects)

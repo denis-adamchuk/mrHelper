@@ -1,7 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Timers;
+using GitLabSharp;
+using GitLabSharp.Entities;
+using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Accessors;
 
@@ -19,6 +24,21 @@ namespace mrHelper.GitLabClient
          ModificationNotifier = modificationNotifier;
 
          _synchronizeInvoke = synchronizeInvoke;
+      }
+
+      async public Task<bool> IsApprovalStatusSupported()
+      {
+         if (_isApprovalStatusSupportedCached.HasValue)
+         {
+            return _isApprovalStatusSupportedCached.Value;
+         }
+
+         GitLabVersion version = await getVersionAsync();
+         if (version != null)
+         {
+            _isApprovalStatusSupportedCached = isApprovalStatusSupported(version);
+         }
+         return _isApprovalStatusSupportedCached.Value;
       }
 
       public void Dispose()
@@ -132,8 +152,52 @@ namespace mrHelper.GitLabClient
          _timer = null;
       }
 
+      async private Task<GitLabVersion> getVersionAsync()
+      {
+         string token = HostProperties.GetAccessToken(HostName);
+         using (GitLabTaskRunner client = new GitLabTaskRunner(HostName, token))
+         {
+            try
+            {
+               return (GitLabVersion)(await client.RunAsync(async (gl) => await gl.Version.LoadTaskAsync()));
+            }
+            catch (Exception ex)
+            {
+               ExceptionHandlers.Handle("Cannot obtain GitLab server version", ex);
+            }
+            return null;
+         }
+      }
+
+      private static readonly Regex GitLabVersionRegex = new Regex(
+         @"(?'major_version'\d*)\.(?'minor_version'\d*)\.", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+      private readonly System.Version EarliestGitLabVersionWithApprovalsSupport = new System.Version(13, 6);
+
+      /// <summary>
+      /// This is a VERY simplified way of functionality checking because GitLab has complicated editions and plans.
+      /// TODO: Make approval status support check better.
+      /// </summary>
+      private bool isApprovalStatusSupported(GitLabVersion version)
+      {
+         Debug.Assert(version != null);
+
+         Match m = GitLabVersionRegex.Match(version.Version);
+         if (m.Success
+          && m.Groups["major_version"].Success
+          && int.TryParse(m.Groups["major_version"].Value, out int major_version)
+          && m.Groups["minor_version"].Success
+          && int.TryParse(m.Groups["minor_version"].Value, out int minor_version))
+         {
+            System.Version gitLabVersion = new System.Version(major_version, minor_version);
+            return gitLabVersion >= EarliestGitLabVersionWithApprovalsSupport;
+         }
+         return false;
+      }
+
       private readonly ISynchronizeInvoke _synchronizeInvoke;
       private bool _checking;
+      private bool? _isApprovalStatusSupportedCached;
 
       private Timer _timer;
       private readonly int ConnectionCheckingTimerInterval = 30 * 1000; // 30 sec

@@ -16,6 +16,8 @@ using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Controls;
 using mrHelper.App.Helpers.GitLab;
 using SearchQuery = mrHelper.GitLabClient.SearchQuery;
+using mrHelper.CustomActions;
+using System.Threading.Tasks;
 
 namespace mrHelper.App.Forms
 {
@@ -217,7 +219,17 @@ namespace mrHelper.App.Forms
             return true;
          }
 
+         if (!labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label!{0}}}", x)))
+         {
+            return true;
+         }
+
          if (StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username))
+         {
+            return true;
+         }
+
+         if (!StringUtils.DoesMatchPattern(dependency, "{{Author!{0}}}", author.Username))
          {
             return true;
          }
@@ -821,6 +833,25 @@ namespace mrHelper.App.Forms
             _gitLabInstance = null;
          }
       }
+
+      async private Task<IEnumerable<ICommand>> loadCustomCommandsAsync()
+      {
+         bool isApprovalStatusSupported = await _gitLabInstance?.IsApprovalStatusSupported();
+         CustomCommandLoader loader = new CustomCommandLoader(this);
+         try
+         {
+            string filename = isApprovalStatusSupported
+               ? Constants.CustomActionsWithApprovalStatusSupportFileName
+               : Constants.CustomActionsFileName;
+            return loader.LoadCommands(filename);
+         }
+         catch (CustomCommandLoaderException ex)
+         {
+            // If file doesn't exist the loader throws, leaving the app in an undesirable state.
+            // Do not try to load custom actions if they don't exist.
+            ExceptionHandlers.Handle("Cannot load custom actions", ex);
+         }
+         return null;
+      }
    }
 }
-

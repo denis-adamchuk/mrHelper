@@ -76,7 +76,8 @@ namespace mrHelper.GitLabClient
          {
             ResolvedAllThreads,
             MentionedCurrentUser,
-            Keyword
+            Keyword,
+            ApprovalStatusChange
          }
 
          public class KeywordDescription
@@ -104,6 +105,18 @@ namespace mrHelper.GitLabClient
                hashCode = hashCode * -1521134295 + EqualityComparer<User>.Default.GetHashCode(Author);
                return hashCode;
             }
+         }
+
+         public class ApprovalStatusChangeDescription
+         {
+            public ApprovalStatusChangeDescription(bool isApproved, User author)
+            {
+               IsApproved = isApproved;
+               Author = author;
+            }
+
+            public bool IsApproved { get; }
+            public User Author { get; }
          }
 
          public MergeRequestKey MergeRequestKey { get; }

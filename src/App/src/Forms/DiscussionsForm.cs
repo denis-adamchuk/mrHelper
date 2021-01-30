@@ -29,7 +29,8 @@ namespace mrHelper.App.Forms
          IGitCommandService git, User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          ColorScheme colorScheme, Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit,
-         Action onDiscussionModified, string webUrl, Shortcuts shortcuts)
+         Action onDiscussionModified, string webUrl, Shortcuts shortcuts,
+         IEnumerable<ICommand> commands)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -47,16 +48,7 @@ namespace mrHelper.App.Forms
          _discussionColumnWidth = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
          _needShiftReplies = Program.Settings.NeedShiftReplies;
          _shortcuts = shortcuts;
-
-         CustomCommandLoader loader = new CustomCommandLoader(this);
-         try
-         {
-            _commands = loader.LoadCommands(Constants.CustomActionsFileName);
-         }
-         catch (CustomCommandLoaderException ex)
-         {
-            ExceptionHandlers.Handle("Cannot load custom actions", ex);
-         }
+         _commands = commands;
 
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);

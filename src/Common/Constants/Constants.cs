@@ -24,6 +24,8 @@ namespace mrHelper.Common.Constants
       public static string BashFileName = "bash.exe";
 
       public static string CustomActionsFileName = "CustomActions.xml";
+      public static string CustomActionsWithApprovalStatusSupportFileName = "CustomActionsWithApprovalStatusSupport.xml";
+      public static string KeywordsFileName = "keywords.json";
 
       public static string TimeStampLogFilenameFormat = "yyyy_MM_dd_HHmmss";
 

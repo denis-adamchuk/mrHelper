@@ -33,13 +33,11 @@ namespace mrHelper.CustomActions
             SingleMergeRequestAccessor accessor = gitlab.Projects.Get(projectName).MergeRequests.Get(iid);
             if (_endpoint == "approve")
             {
-               return null;
-               //return await accessor.ApproveTaskAsync();
+               return await accessor.ApproveTaskAsync();
             }
             else if (_endpoint == "unapprove")
             {
-               return null;
-               //return await accessor.UnapproveTaskAsync();
+               return await accessor.UnapproveTaskAsync();
             }
             return null;
          });
