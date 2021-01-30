@@ -24,12 +24,14 @@ namespace mrHelper.App.Forms
          MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(null);
          if (currentMergeRequestKey.HasValue && currentMergeRequestKey.Value.Equals(mrk))
          {
-            MergeRequest currentMergeRequest = getMergeRequest(null);
-            if (currentMergeRequest != null)
+            foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
             {
-               // change control enabled state
-               updateTotalTime(currentMergeRequestKey,
-                  currentMergeRequest.Author, currentMergeRequestKey.Value.ProjectKey.HostName, totalTimeCache);
+               if (getDataCache(mode)?.TotalTimeCache == totalTimeCache)
+               {
+                  // change control enabled state
+                  updateTotalTime(currentMergeRequestKey, getDataCache(mode));
+                  break;
+               }
             }
          }
 

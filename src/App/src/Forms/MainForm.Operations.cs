@@ -189,18 +189,14 @@ namespace mrHelper.App.Forms
             Debug.Assert(getMergeRequestKey(null).HasValue);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            Debug.Assert(getMergeRequest(null) != null);
-            MergeRequest mr = getMergeRequest(null);
-
-            await editTrackedTimeAsync(mrk, mr);
+            await editTrackedTimeAsync(mrk, getDataCache(getCurrentTabDataCacheType()));
          }));
       }
 
-      private async Task editTrackedTimeAsync(MergeRequestKey mrk, MergeRequest mr)
+      private async Task editTrackedTimeAsync(MergeRequestKey mrk, DataCache dataCache)
       {
-         Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
+         Debug.Assert(dataCache == getDataCache(EDataCacheType.Live));
          IMergeRequestEditor editor = _shortcuts.GetMergeRequestEditor(mrk);
-         DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
          TimeSpan? oldSpanOpt = dataCache?.TotalTimeCache?.GetTotalTime(mrk).Amount;
          if (!oldSpanOpt.HasValue)
          {
@@ -233,7 +229,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName, dataCache.TotalTimeCache);
+               updateTotalTime(mrk, dataCache);
                addOperationRecord("Total spent time has been updated");
 
                Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
@@ -257,7 +253,7 @@ namespace mrHelper.App.Forms
          _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
-         updateTotalTime(null, null, null, null);
+         updateTotalTime(null, null);
 
          updateTrayIcon();
          updateTaskbarIcon();
@@ -268,11 +264,10 @@ namespace mrHelper.App.Forms
 
       private void stopTimeTrackingTimer()
       {
-         ITotalTimeCache totalTimeCache = getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache;
-         BeginInvoke(new Action(async () => await stopTimeTrackingTimerAsync(totalTimeCache)));
+         BeginInvoke(new Action(async () => await stopTimeTrackingTimerAsync()));
       }
 
-      async private Task stopTimeTrackingTimerAsync(ITotalTimeCache totalTimeCache)
+      async private Task stopTimeTrackingTimerAsync()
       {
          if (!isTrackingTime())
          {
@@ -324,7 +319,7 @@ namespace mrHelper.App.Forms
 
          if (!isTrackingTime())
          {
-            onTimerStopped(totalTimeCache);
+            onTimerStopped();
          }
       }
 
@@ -343,7 +338,7 @@ namespace mrHelper.App.Forms
          _timeTrackingMode = null;
          addOperationRecord("Time tracking cancelled");
 
-         onTimerStopped(getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache);
+         onTimerStopped();
       }
 
       private void addCommentForSelectedMergeRequest()

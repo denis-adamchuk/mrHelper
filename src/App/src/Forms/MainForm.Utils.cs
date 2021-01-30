@@ -526,7 +526,7 @@ namespace mrHelper.App.Forms
       {
          if (isTrackingTime())
          {
-            updateTotalTime(null, null, null, null);
+            updateTotalTime(null, null);
          }
       }
 

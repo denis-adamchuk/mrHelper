@@ -287,16 +287,27 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(linkLabelConnectedTo, linkLabelConnectedTo.Text);
       }
 
-      private void updateTimeTrackingMergeRequestDetails(bool enabled, string title, ProjectKey projectKey, User author)
+      private void updateTimeTrackingMergeRequestDetails(MergeRequestKey? mrk, DataCache dataCache)
       {
          if (isTrackingTime())
          {
+            updateTotalTime(mrk, dataCache);
             return;
          }
 
-         if (!TimeTrackingHelpers.IsTimeTrackingAllowed(author, projectKey.HostName, getCurrentUser(projectKey.HostName)))
+         bool enabled = true;
+         if (!mrk.HasValue)
          {
             enabled = false;
+         }
+         else
+         {
+            User author = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Author;
+            string hostname = mrk.Value.ProjectKey.HostName;
+            if (!TimeTrackingHelpers.IsTimeTrackingAllowed(author, hostname, getCurrentUser(hostname)))
+            {
+               enabled = false;
+            }
          }
 
          linkLabelTimeTrackingMergeRequest.Visible = enabled;
@@ -305,14 +316,17 @@ namespace mrHelper.App.Forms
 
          if (enabled)
          {
-            Debug.Assert(!String.IsNullOrEmpty(title) && !projectKey.Equals(default(ProjectKey)));
-            linkLabelTimeTrackingMergeRequest.Text = String.Format("{0}   [{1}]", title, projectKey.ProjectName);
+            string title = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Title;
+            Debug.Assert(!String.IsNullOrEmpty(title) && !mrk.Value.ProjectKey.Equals(default(ProjectKey)));
+            linkLabelTimeTrackingMergeRequest.Text = String.Format("{0}   [{1}]", title, mrk.Value.ProjectKey.ProjectName);
          }
 
          linkLabelTimeTrackingMergeRequest.Refresh();
+
+         updateTotalTime(mrk, dataCache);
       }
 
-      private void updateTotalTime(MergeRequestKey? mrk, User author, string hostname, ITotalTimeCache totalTimeCache)
+      private void updateTotalTime(MergeRequestKey? mrk, DataCache dataCache)
       {
          if (isTrackingTime())
          {
@@ -322,20 +336,28 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (!mrk.HasValue
-          || !TimeTrackingHelpers.IsTimeTrackingAllowed(author, hostname, getCurrentUser(hostname))
-          || totalTimeCache == null)
+         if (!mrk.HasValue || dataCache?.TotalTimeCache == null)
          {
             labelTimeTrackingTrackedLabel.Text = String.Empty;
             buttonEditTime.Enabled = false;
+            return;
          }
          else
          {
-            TrackedTime trackedTime = totalTimeCache.GetTotalTime(mrk.Value);
-            labelTimeTrackingTrackedLabel.Text = String.Format("Total Time: {0}",
-               TimeTrackingHelpers.ConvertTotalTimeToText(trackedTime, true));
-            buttonEditTime.Enabled = trackedTime.Amount.HasValue;
+            User author = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Author;
+            string hostname = mrk.Value.ProjectKey.HostName;
+            if (!TimeTrackingHelpers.IsTimeTrackingAllowed(author, hostname, getCurrentUser(hostname)))
+            {
+               labelTimeTrackingTrackedLabel.Text = String.Empty;
+               buttonEditTime.Enabled = false;
+               return;
+            }
          }
+
+         TrackedTime trackedTime = dataCache.TotalTimeCache.GetTotalTime(mrk.Value);
+         labelTimeTrackingTrackedLabel.Text = String.Format("Total Time: {0}",
+            TimeTrackingHelpers.ConvertTotalTimeToText(trackedTime, true));
+         buttonEditTime.Enabled = trackedTime.Amount.HasValue;
 
          // Update total time column in the table
          getListView(EDataCacheType.Live).Invalidate();
@@ -462,13 +484,11 @@ namespace mrHelper.App.Forms
          enableCustomActions(true, fmk.MergeRequest.Labels, fmk.MergeRequest.Author);
          enableMergeRequestActions(true);
          updateMergeRequestDetails(fmk);
-         updateTimeTrackingMergeRequestDetails(
-            true, fmk.MergeRequest.Title, fmk.ProjectKey, fmk.MergeRequest.Author);
-         updateTotalTime(new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId),
-            fmk.MergeRequest.Author, fmk.ProjectKey.HostName, dataCache.TotalTimeCache);
-         updateAbortGitCloneButtonState();
 
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         updateTimeTrackingMergeRequestDetails(mrk, dataCache);
+         updateAbortGitCloneButtonState();
+
          string status = _latestStorageUpdateStatus.TryGetValue(mrk, out string value) ? value : String.Empty;
          updateStorageStatusText(status, mrk);
          updateStorageDependentControlState(mrk);
@@ -1036,8 +1056,7 @@ namespace mrHelper.App.Forms
          enableCustomActions(false, null, null);
          enableMergeRequestActions(false);
          updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
-         updateTotalTime(null, null, null, null);
+         updateTimeTrackingMergeRequestDetails(null, null);
          updateAbortGitCloneButtonState();
 
          updateStorageStatusText(null, null);
@@ -1149,29 +1168,15 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Tomato;
       }
 
-      private void onTimerStopped(ITotalTimeCache totalTimeCache)
+      private void onTimerStopped()
       {
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          buttonTimeTrackingStart.BackColor = System.Drawing.Color.Transparent;
          buttonTimeTrackingCancel.Enabled = false;
          buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Transparent;
 
-         bool isMergeRequestSelected = getMergeRequest(null) != null && getMergeRequestKey(null).HasValue;
-         if (isMergeRequestSelected)
-         {
-            MergeRequest mergeRequest = getMergeRequest(null);
-            MergeRequestKey mrk = getMergeRequestKey(null).Value;
-
-            updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, mrk.ProjectKey, mergeRequest.Author);
-
-            // Take care of controls that 'time tracking' mode shares with normal mode
-            updateTotalTime(mrk, mergeRequest.Author, mrk.ProjectKey.HostName, totalTimeCache);
-         }
-         else
-         {
-            updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
-            updateTotalTime(null, null, null, null);
-         }
+         updateTimeTrackingMergeRequestDetails(
+            getMergeRequestKey(null), getDataCache(getCurrentTabDataCacheType()));
 
          updateTrayIcon();
          updateTaskbarIcon();

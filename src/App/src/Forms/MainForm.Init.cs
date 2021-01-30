@@ -108,8 +108,6 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               ITotalTimeCache totalTimeCache = getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache;
-
                addOperationRecord(String.Format("Command {0} execution has started", name));
                try
                {
@@ -131,7 +129,7 @@ namespace mrHelper.App.Forms
 
                if (command.GetStopTimer())
                {
-                  await stopTimeTrackingTimerAsync(totalTimeCache);
+                  await stopTimeTrackingTimerAsync();
                }
 
                bool reload = command.GetReload();
