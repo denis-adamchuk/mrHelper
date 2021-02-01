@@ -418,11 +418,18 @@ namespace mrHelper.App.Forms
 
          foreach (Control control in groupBoxActions.Controls)
          {
-            string dependency = (string)control.Tag;
-            string resolvedDependency =
-               String.IsNullOrEmpty(dependency) ? String.Empty : _expressionResolver.Resolve(dependency);
-            control.Enabled = isCustomActionEnabled(labels, author, resolvedDependency);
+            string enabledIf = ((ICommand)control.Tag).GetEnabledIf();
+            string resolvedEnabledIf =
+               String.IsNullOrEmpty(enabledIf) ? String.Empty : _expressionResolver.Resolve(enabledIf);
+            control.Enabled = isCustomActionEnabled(labels, author, resolvedEnabledIf);
+
+            string visibleIf = ((ICommand)control.Tag).GetVisibleIf();
+            string resolvedVisibleIf =
+               String.IsNullOrEmpty(visibleIf) ? String.Empty : _expressionResolver.Resolve(visibleIf);
+            control.Visible = isCustomActionEnabled(labels, author, resolvedVisibleIf);
          }
+
+         repositionCustomCommands();
       }
 
       private void onWindowStateChanged()
@@ -987,15 +994,25 @@ namespace mrHelper.App.Forms
 
       private void repositionCustomCommands()
       {
+         int visibleControlCount = groupBoxActions
+            .Controls
+            .Cast<Control>()
+            .Count(control => control.Visible);
+
          int getControlX(Control control, int index) =>
              control.Width * index +
-                (groupBoxActions.Width - groupBoxActions.Controls.Count * control.Width) *
-                (index + 1) / (groupBoxActions.Controls.Count + 1);
+                (groupBoxActions.Width - visibleControlCount * control.Width) *
+                (index + 1) / (visibleControlCount + 1);
 
-         for (int id = 0; id < groupBoxActions.Controls.Count; ++id)
+         int displayIndex = 0;
+         for (int controlIndex = 0; controlIndex < groupBoxActions.Controls.Count; ++controlIndex)
          {
-            Control c = groupBoxActions.Controls[id];
-            c.Location = new Point { X = getControlX(c, id), Y = c.Location.Y };
+            Control c = groupBoxActions.Controls[controlIndex];
+            if (c.Visible)
+            {
+               c.Location = new Point { X = getControlX(c, displayIndex), Y = c.Location.Y };
+               ++displayIndex;
+            }
          }
       }
 
@@ -1362,6 +1379,8 @@ namespace mrHelper.App.Forms
          {
             IEnumerable<ICommand> commands = await loadCustomCommandsAsync();
             recreateCustomActionControls(commands);
+            repositionCustomCommands();
+            onMergeRequestSelectionChanged(getCurrentTabDataCacheType());
          }), null);
       }
 
@@ -1386,7 +1405,7 @@ namespace mrHelper.App.Forms
                Text = name,
                UseVisualStyleBackColor = true,
                TabStop = false,
-               Tag = command.GetEnabledIf()
+               Tag = command
             };
             toolTip.SetToolTip(button, command.GetHint());
             button.Click += async (x, y) =>

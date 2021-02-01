@@ -4,6 +4,7 @@ using System.Text;
 using System.Drawing;
 using System.Diagnostics;
 using System.Windows.Forms;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
@@ -17,7 +18,6 @@ using mrHelper.App.Controls;
 using mrHelper.App.Helpers.GitLab;
 using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 using mrHelper.CustomActions;
-using System.Threading.Tasks;
 
 namespace mrHelper.App.Forms
 {
@@ -214,27 +214,19 @@ namespace mrHelper.App.Forms
             return true;
          }
 
-         if (labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x)))
+         string excludePrefix = "NOT ";
+         bool isExpected = !dependency.StartsWith(excludePrefix);
+         dependency = isExpected ? dependency : dependency.Substring(excludePrefix.Length);
+         if (isExpected)
          {
-            return true;
+            return labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x))
+                || StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username);
          }
-
-         if (!labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label!{0}}}", x)))
+         else
          {
-            return true;
+            return labels.All(x => !StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x))
+                && !StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username);
          }
-
-         if (StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username))
-         {
-            return true;
-         }
-
-         if (!StringUtils.DoesMatchPattern(dependency, "{{Author!{0}}}", author.Username))
-         {
-            return true;
-         }
-
-         return false;
       }
 
       private bool isTrackingTime()

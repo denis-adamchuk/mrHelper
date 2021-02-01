@@ -1,9 +1,9 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Timers;
+using System.Diagnostics;
+using System.ComponentModel;
+using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;

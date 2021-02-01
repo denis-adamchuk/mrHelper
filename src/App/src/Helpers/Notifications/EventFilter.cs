@@ -75,7 +75,8 @@ namespace mrHelper.App.Helpers
             || (isServiceEvent(e)                                         && !_settings.Notifications_Service)
             || (isCurrentUserActivity(_currentUser, e)                    && !_settings.Notifications_MyActivity)
             || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads    && !_settings.Notifications_AllThreadsResolved)
-            || (e.EventType == DiscussionEvent.Type.Keyword               && !_settings.Notifications_Keywords));
+            || (e.EventType == DiscussionEvent.Type.Keyword               && !_settings.Notifications_Keywords)
+            || (e.EventType == DiscussionEvent.Type.ApprovalStatusChange  && !_settings.Notifications_Keywords));
       }
 
       private static bool isCurrentUserActivity(User currentUser, MergeRequest m)
@@ -95,6 +96,9 @@ namespace mrHelper.App.Helpers
 
             case DiscussionEvent.Type.Keyword:
                return ((DiscussionEvent.KeywordDescription)e.Details).Author.Id == currentUser.Id;
+
+            case DiscussionEvent.Type.ApprovalStatusChange:
+               return ((DiscussionEvent.ApprovalStatusChangeDescription)e.Details).Author.Id == currentUser.Id;
 
             default:
                Debug.Assert(false);
@@ -119,6 +123,10 @@ namespace mrHelper.App.Helpers
 
             case DiscussionEvent.Type.Keyword:
                return ((DiscussionEvent.KeywordDescription)e.Details).Author.Username ==
+                  Program.ServiceManager.GetServiceMessageUsername();
+
+            case DiscussionEvent.Type.ApprovalStatusChange:
+               return ((DiscussionEvent.ApprovalStatusChangeDescription)e.Details).Author.Username ==
                   Program.ServiceManager.GetServiceMessageUsername();
 
             default:

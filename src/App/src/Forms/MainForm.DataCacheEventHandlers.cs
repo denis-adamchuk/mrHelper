@@ -81,21 +81,17 @@ namespace mrHelper.App.Forms
          }
 
          FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
-         if (!fmk.HasValue || !fmk.Value.Equals(e.FullMergeRequestKey) || getCurrentTabDataCacheType() != EDataCacheType.Live)
+         if (!fmk.HasValue
+          || !fmk.Value.Equals(e.FullMergeRequestKey)
+          || getCurrentTabDataCacheType() != EDataCacheType.Live)
          {
             return;
          }
 
-         Trace.TraceInformation("[MainForm] Updating selected Merge Request");
-
-         if (e.Details)
+         if (e.Details || e.Commits || e.Labels)
          {
             // Non-grid Details are updated here and Grid ones are updated in updateMergeRequestList() above
-            updateMergeRequestDetails(fmk.Value);
-         }
-
-         if (e.Commits)
-         {
+            Trace.TraceInformation("[MainForm] Updating selected Merge Request");
             onMergeRequestSelectionChanged(EDataCacheType.Live);
          }
       }
@@ -117,16 +113,10 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Trace.TraceInformation("[MainForm] Updating selected Recent Merge Request");
-
-         if (e.Details)
+         if (e.Details || e.Commits || e.Labels)
          {
             // Non-grid Details are updated here and Grid ones are updated in updateMergeRequestList() above
-            updateMergeRequestDetails(fmk.Value);
-         }
-
-         if (e.Commits)
-         {
+            Trace.TraceInformation("[MainForm] Updating selected Recent Merge Request");
             onMergeRequestSelectionChanged(EDataCacheType.Recent);
          }
       }
