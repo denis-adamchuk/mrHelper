@@ -36,6 +36,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       /// Return a list of commits of a specified merge request
       /// </summary>
       IEnumerable<Commit> GetCommits(MergeRequestKey mrk);
+
+      /// <summary>
+      /// Return a list of approvals of a specified merge request
+      /// </summary>
+      MergeRequestApprovalConfiguration GetApprovals(MergeRequestKey mrk);
    }
 }
 

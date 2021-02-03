@@ -18,7 +18,8 @@ namespace mrHelper.GitLabClient.Managers
          string hostname,
          IHostProperties hostProperties,
          SearchQueryCollection queryCollection,
-         INetworkOperationStatusListener networkOperationStatusListener)
+         INetworkOperationStatusListener networkOperationStatusListener,
+         bool isApprovalStatusSupported)
       {
          _cacheUpdater = cacheUpdater;
          _listRefreshTimestamp = DateTime.Now;
@@ -26,7 +27,8 @@ namespace mrHelper.GitLabClient.Managers
          if (dataCacheContext.UpdateRules.UpdateMergeRequestsPeriod.HasValue)
          {
             _updateManager = new UpdateManager(dataCacheContext, hostname, hostProperties,
-               queryCollection, _cacheUpdater, networkOperationStatusListener);
+               queryCollection, _cacheUpdater, networkOperationStatusListener,
+               isApprovalStatusSupported);
             _updateManager.MergeRequestEvent += onUpdate;
             _updateManager.MergeRequestListRefreshed += onListRefreshed;
             _updateManager.MergeRequestRefreshed += onMergeRequestRefreshed;
@@ -88,6 +90,11 @@ namespace mrHelper.GitLabClient.Managers
       public IEnumerable<GitLabSharp.Entities.Commit> GetCommits(MergeRequestKey mrk)
       {
          return _cacheUpdater.Cache.GetCommits(mrk);
+      }
+
+      public GitLabSharp.Entities.MergeRequestApprovalConfiguration GetApprovals(MergeRequestKey mrk)
+      {
+         return _cacheUpdater.Cache.GetApprovals(mrk);
       }
 
       private IEnumerable<Version> getAllVersions(ProjectKey projectKey)

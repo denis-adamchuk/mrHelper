@@ -74,6 +74,20 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       }
 
       /// <summary>
+      /// Cache passed approval configurations
+      /// </summary>
+      internal void UpdateApprovals(MergeRequestKey mrk, MergeRequestApprovalConfiguration approvals)
+      {
+         if (approvals == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
+         _cache.SetApprovals(mrk, approvals);
+      }
+
+      /// <summary>
       /// Cache passed merge request
       /// </summary>
       internal void UpdateMergeRequest(MergeRequestKey mrk, MergeRequest mergeRequest)

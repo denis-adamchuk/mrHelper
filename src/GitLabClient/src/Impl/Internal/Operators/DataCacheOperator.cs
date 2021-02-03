@@ -140,6 +140,17 @@ namespace mrHelper.GitLabClient.Operators
                            await gl.Projects.Get(projectName).Repository.Commits.Get(id).LoadTaskAsync())));
       }
 
+      internal Task<MergeRequestApprovalConfiguration> GetApprovalsAsync(string projectName, int iid)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (MergeRequestApprovalConfiguration)await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(projectName).MergeRequests.Get(iid).GetApprovalConfigurationTaskAsync())));
+      }
+
       internal Task<IEnumerable<Project>> GetProjects()
       {
          return callWithSharedClient(

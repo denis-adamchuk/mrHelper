@@ -166,7 +166,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
 
             bool labelsUpdated = !Enumerable.SequenceEqual(mergeRequest1.Labels, mergeRequest2.Labels);
             bool commitsUpdated = newVersions.Count() > oldVersions.Count();
-            bool detailsUpdated = areMergeRequestsDifferentInDetails(mergeRequest1, mergeRequest2);
+
+            MergeRequestApprovalConfiguration oldApprovals = oldDetails.GetApprovals(mergeRequestKey);
+            MergeRequestApprovalConfiguration newApprovals = newDetails.GetApprovals(mergeRequestKey);
+            bool detailsUpdated = areMergeRequestsDifferentInDetails(mergeRequest1, mergeRequest2)
+                               || areApprovalsDifferent(oldApprovals, newApprovals);
 
             if (labelsUpdated || commitsUpdated || detailsUpdated)
             {
@@ -204,6 +208,52 @@ namespace mrHelper.GitLabClient.Loaders.Cache
           || mergeRequest1.Rebase_In_Progress != mergeRequest2.Rebase_In_Progress
           || mergeRequest1.Has_Conflicts != mergeRequest2.Has_Conflicts
           || mergeRequest1.Blocking_Discussions_Resolved != mergeRequest2.Blocking_Discussions_Resolved;
+      }
+
+      private bool areApprovalsDifferent(MergeRequestApprovalConfiguration approvals1,
+                                         MergeRequestApprovalConfiguration approvals2)
+      {
+         if (approvals1 == null && approvals2 != null)
+         {
+            return true;
+         }
+         else if (approvals1 != null && approvals2 == null)
+         {
+            return true;
+         }
+         else if (approvals1 == approvals2)
+         {
+            return false;
+         }
+
+         if (approvals1.Approved_By == null && approvals2.Approved_By != null)
+         {
+            return true;
+         }
+         else if (approvals1.Approved_By != null && approvals2.Approved_By == null)
+         {
+            return true;
+         }
+         else if (approvals1.Approved_By != null && approvals2.Approved_By != null)
+         {
+            var userIds1 = approvals1.Approved_By.Select(user => user.User.Id);
+            var userIds2 = approvals2.Approved_By.Select(user => user.User.Id);
+            if (!Enumerable.SequenceEqual(userIds1, userIds2))
+            {
+               return true;
+            }
+         }
+
+         return approvals1.Id != approvals2.Id
+             || approvals1.Project_Id != approvals2.Project_Id
+             || approvals1.Title != approvals2.Title
+             || approvals1.Description != approvals2.Description
+             || approvals1.State != approvals2.State
+             || approvals1.Created_At != approvals2.Created_At
+             || approvals1.Updated_At != approvals2.Updated_At
+             || approvals1.Merge_Status != approvals2.Merge_Status
+             || approvals1.Approvals_Required != approvals2.Approvals_Required
+             || approvals1.Approvals_Left != approvals2.Approvals_Left;
       }
    }
 }

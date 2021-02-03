@@ -10,11 +10,13 @@ namespace mrHelper.GitLabClient.Loaders
 {
    internal class MergeRequestLoader : BaseDataCacheLoader, IMergeRequestLoader
    {
-      internal MergeRequestLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater, bool updateOnlyOpened)
+      internal MergeRequestLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater, bool updateOnlyOpened,
+         bool isApprovalStatusSupported)
          : base(op)
       {
          _cacheUpdater = cacheUpdater;
          _versionLoader = new VersionLoader(op, cacheUpdater);
+         _approvalLoader = isApprovalStatusSupported ? new ApprovalLoader(op, cacheUpdater) : null;
          _updateOnlyOpened = updateOnlyOpened;
       }
 
@@ -35,13 +37,19 @@ namespace mrHelper.GitLabClient.Loaders
 
             if (!oldUpdatedAt.HasValue || oldUpdatedAt < newUpdatedAt)
             {
-               await _versionLoader.LoadVersionsAndCommits(new MergeRequestKey[] { mrk });
+               MergeRequestKey[] dummyArray = new MergeRequestKey[] { mrk };
+               await _versionLoader.LoadVersionsAndCommits(dummyArray);
+               if (_approvalLoader != null)
+               {
+                  await _approvalLoader.LoadApprovals(dummyArray);
+               }
             }
          }
       }
 
       private readonly bool _updateOnlyOpened;
       private readonly IVersionLoader _versionLoader;
+      private readonly IApprovalLoader _approvalLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
    }
 }

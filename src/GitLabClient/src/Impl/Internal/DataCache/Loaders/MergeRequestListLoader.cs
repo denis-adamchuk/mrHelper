@@ -15,13 +15,14 @@ namespace mrHelper.GitLabClient.Loaders
    internal class MergeRequestListLoader : BaseDataCacheLoader, IMergeRequestListLoader
    {
       internal MergeRequestListLoader(string hostname, DataCacheOperator op,
-         IVersionLoader versionLoader, InternalCacheUpdater cacheUpdater,
-         DataCacheCallbacks callbacks, SearchQueryCollection queryCollection)
+         InternalCacheUpdater cacheUpdater, DataCacheCallbacks callbacks,
+         SearchQueryCollection queryCollection, bool isApprovalStatusSupported)
          : base(op)
       {
          _hostname = hostname;
          _cacheUpdater = cacheUpdater;
-         _versionLoader = versionLoader;
+         _versionLoader = new VersionLoader(_operator, cacheUpdater);
+         _approvalLoader = isApprovalStatusSupported ? new ApprovalLoader(_operator, cacheUpdater) : null;
          _callbacks = callbacks;
          _queryCollection = queryCollection;
       }
@@ -32,6 +33,10 @@ namespace mrHelper.GitLabClient.Loaders
          IEnumerable<MergeRequestKey> updatedMergeRequests = getUpdatedMergeRequests(mergeRequests);
          _cacheUpdater.UpdateMergeRequests(mergeRequests);
          await _versionLoader.LoadVersionsAndCommits(updatedMergeRequests);
+         if (_approvalLoader != null)
+         {
+            await _approvalLoader.LoadApprovals(updatedMergeRequests);
+         }
       }
 
       private IEnumerable<MergeRequestKey> getUpdatedMergeRequests(
@@ -205,6 +210,7 @@ namespace mrHelper.GitLabClient.Loaders
 
       private readonly string _hostname;
       private readonly IVersionLoader _versionLoader;
+      private readonly IApprovalLoader _approvalLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
       private readonly DataCacheCallbacks _callbacks;
       private readonly SearchQueryCollection _queryCollection;

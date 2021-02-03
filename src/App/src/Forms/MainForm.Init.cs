@@ -338,7 +338,7 @@ namespace mrHelper.App.Forms
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (dataCache?.MergeRequestCache != null)
          {
-            dataCache.MergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
+            dataCache.MergeRequestCache.MergeRequestEvent += onLiveMergeRequestEvent;
             dataCache.MergeRequestCache.MergeRequestListRefreshed += onLiveMergeRequestListRefreshed;
             dataCache.MergeRequestCache.MergeRequestRefreshed += onMergeRequestRefreshed;
          }
@@ -369,7 +369,7 @@ namespace mrHelper.App.Forms
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (dataCache?.MergeRequestCache != null)
          {
-            dataCache.MergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
+            dataCache.MergeRequestCache.MergeRequestEvent -= onLiveMergeRequestEvent;
             dataCache.MergeRequestCache.MergeRequestListRefreshed -= onLiveMergeRequestListRefreshed;
             dataCache.MergeRequestCache.MergeRequestRefreshed -= onMergeRequestRefreshed;
          }

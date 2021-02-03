@@ -402,15 +402,19 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void enableCustomActions(bool enabled, IEnumerable<string> labels, User author)
+      private void enableCustomActions(MergeRequestKey? mrk, DataCache dataCache)
       {
-         if (!enabled)
+         if (!mrk.HasValue)
          {
             foreach (Control control in groupBoxActions.Controls) control.Enabled = false;
             return;
          }
 
-         if (author == null)
+         User author = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Author;
+         IEnumerable<string> labels = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Labels;
+         IEnumerable<User> approvedBy = dataCache?.MergeRequestCache?.GetApprovals(mrk.Value)?.Approved_By?
+            .Select(item => item.User) ?? Array.Empty<User>();
+         if (author == null || labels == null || approvedBy == null)
          {
             Debug.Assert(false);
             return;
@@ -421,12 +425,12 @@ namespace mrHelper.App.Forms
             string enabledIf = ((ICommand)control.Tag).GetEnabledIf();
             string resolvedEnabledIf =
                String.IsNullOrEmpty(enabledIf) ? String.Empty : _expressionResolver.Resolve(enabledIf);
-            control.Enabled = isCustomActionEnabled(labels, author, resolvedEnabledIf);
+            control.Enabled = isCustomActionEnabled(approvedBy, labels, author, resolvedEnabledIf);
 
             string visibleIf = ((ICommand)control.Tag).GetVisibleIf();
             string resolvedVisibleIf =
                String.IsNullOrEmpty(visibleIf) ? String.Empty : _expressionResolver.Resolve(visibleIf);
-            control.Visible = isCustomActionEnabled(labels, author, resolvedVisibleIf);
+            control.Visible = isCustomActionEnabled(approvedBy, labels, author, resolvedVisibleIf);
          }
 
          repositionCustomCommands();
@@ -489,11 +493,10 @@ namespace mrHelper.App.Forms
             fmk.MergeRequest.IId.ToString(), getCurrentTabDataCacheType().ToString()));
 
          DataCache dataCache = getDataCache(mode);
-         enableCustomActions(true, fmk.MergeRequest.Labels, fmk.MergeRequest.Author);
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         enableCustomActions(mrk, dataCache);
          enableMergeRequestActions(true);
          updateMergeRequestDetails(fmk);
-
-         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
          updateTimeTrackingMergeRequestDetails(mrk, dataCache);
          updateAbortGitCloneButtonState();
 
@@ -1071,7 +1074,7 @@ namespace mrHelper.App.Forms
 
       private void disableSelectedMergeRequestControls()
       {
-         enableCustomActions(false, null, null);
+         enableCustomActions(null, null);
          enableMergeRequestActions(false);
          updateMergeRequestDetails(null);
          updateTimeTrackingMergeRequestDetails(null, null);

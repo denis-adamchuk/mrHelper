@@ -55,35 +55,41 @@ namespace mrHelper.App.Forms
          getListView(EDataCacheType.Live).Invalidate();
       }
 
-      private void onMergeRequestEvent(UserEvents.MergeRequestEvent e)
-      {
-         if (e.AddedToCache || e.Commits)
-         {
-            requestCommitStorageUpdate(e.FullMergeRequestKey.ProjectKey);
-         }
+      private void onLiveMergeRequestEvent(UserEvents.MergeRequestEvent e) =>
+         onMergeRequestEvent(e, EDataCacheType.Live);
 
+      private void onRecentMergeRequestEvent(UserEvents.MergeRequestEvent e) =>
+         onMergeRequestEvent(e, EDataCacheType.Recent);
+
+      private void onMergeRequestEvent(UserEvents.MergeRequestEvent e, EDataCacheType type)
+      {
          MergeRequestKey mrk = new MergeRequestKey(
             e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
 
-         if (e.RemovedFromCache && isReviewedMergeRequest(mrk))
+         if (e.AddedToCache || e.Commits)
          {
-            cleanupReviewedMergeRequests(new MergeRequestKey[] { mrk });
+            requestCommitStorageUpdate(mrk.ProjectKey);
          }
 
-         updateMergeRequestList(EDataCacheType.Live);
-
-         if (e.AddedToCache)
+         if (type == EDataCacheType.Live)
          {
-            // some labels may appear within a small delay after new MR is detected
-            requestUpdates(EDataCacheType.Live, mrk, new[] {
-               Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
-               Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
+            if (e.AddedToCache)
+            {
+               // some labels may appear within a small delay after new MR is detected
+               requestUpdates(EDataCacheType.Live, mrk, new[] {
+                  Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
+                  Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
+            }
+            if (e.RemovedFromCache && isReviewedMergeRequest(mrk))
+            {
+               cleanupReviewedMergeRequests(new MergeRequestKey[] { mrk });
+            }
          }
 
-         FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
-         if (!fmk.HasValue
-          || !fmk.Value.Equals(e.FullMergeRequestKey)
-          || getCurrentTabDataCacheType() != EDataCacheType.Live)
+         updateMergeRequestList(type);
+
+         FullMergeRequestKey? fmk = getListView(type).GetSelectedMergeRequest();
+         if (!fmk.HasValue || !fmk.Value.Equals(e.FullMergeRequestKey) || getCurrentTabDataCacheType() != type)
          {
             return;
          }
@@ -91,33 +97,9 @@ namespace mrHelper.App.Forms
          if (e.Details || e.Commits || e.Labels)
          {
             // Non-grid Details are updated here and Grid ones are updated in updateMergeRequestList() above
-            Trace.TraceInformation("[MainForm] Updating selected Merge Request");
-            onMergeRequestSelectionChanged(EDataCacheType.Live);
-         }
-      }
-
-      private void onRecentMergeRequestEvent(UserEvents.MergeRequestEvent e)
-      {
-         if (e.Commits)
-         {
-            requestCommitStorageUpdate(e.FullMergeRequestKey.ProjectKey);
-         }
-
-         updateMergeRequestList(EDataCacheType.Recent);
-
-         FullMergeRequestKey? fmk = getListView(EDataCacheType.Recent).GetSelectedMergeRequest();
-         if (!fmk.HasValue
-          || !fmk.Value.Equals(e.FullMergeRequestKey)
-          || getCurrentTabDataCacheType() != EDataCacheType.Recent)
-         {
-            return;
-         }
-
-         if (e.Details || e.Commits || e.Labels)
-         {
-            // Non-grid Details are updated here and Grid ones are updated in updateMergeRequestList() above
-            Trace.TraceInformation("[MainForm] Updating selected Recent Merge Request");
-            onMergeRequestSelectionChanged(EDataCacheType.Recent);
+            Trace.TraceInformation("[MainForm] Updating selected Merge Request ({0})",
+               getDataCacheName(getDataCache(type)));
+            onMergeRequestSelectionChanged(type);
          }
       }
 

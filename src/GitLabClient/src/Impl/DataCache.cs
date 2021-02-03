@@ -37,9 +37,11 @@ namespace mrHelper.GitLabClient
             Connecting?.Invoke(hostname);
 
             InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
+            bool isApprovalStatusSupported = await gitLabInstance.IsApprovalStatusSupported();
             IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
-               hostname, _operator, new VersionLoader(_operator, cacheUpdater), cacheUpdater,
-               _cacheContext.Callbacks, connectionContext.QueryCollection);
+               hostname, _operator, cacheUpdater,
+               _cacheContext.Callbacks, connectionContext.QueryCollection,
+               isApprovalStatusSupported);
 
             traceInformation(String.Format("Connecting data cache to {0}...", hostname));
             string accessToken = hostProperties.GetAccessToken(hostname);
@@ -49,7 +51,7 @@ namespace mrHelper.GitLabClient
             await mergeRequestListLoader.Load();
             _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser,
                connectionContext.QueryCollection, gitLabInstance.ModificationNotifier,
-               gitLabInstance.NetworkOperationStatusListener);
+               gitLabInstance.NetworkOperationStatusListener, isApprovalStatusSupported);
 
             ConnectionContext = connectionContext;
             traceInformation(String.Format("Data cache connected to {0}", hostname));
@@ -138,10 +140,12 @@ namespace mrHelper.GitLabClient
          User user,
          SearchQueryCollection queryCollection,
          IModificationNotifier modificationNotifier,
-         INetworkOperationStatusListener networkOperationStatusListener)
+         INetworkOperationStatusListener networkOperationStatusListener,
+         bool isApprovalStatusSupported)
       {
          MergeRequestManager mergeRequestManager = new MergeRequestManager(
-            _cacheContext, cacheUpdater, hostname, hostProperties, queryCollection, networkOperationStatusListener);
+            _cacheContext, cacheUpdater, hostname, hostProperties, queryCollection, networkOperationStatusListener,
+            isApprovalStatusSupported);
          DiscussionManager discussionManager = new DiscussionManager(
             _cacheContext, hostname, hostProperties, user, mergeRequestManager,
             modificationNotifier, networkOperationStatusListener);
