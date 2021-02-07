@@ -173,11 +173,11 @@ namespace mrHelper.App
       private static void onLaunchMainInstance(LaunchOptions options)
       {
          cleanUpOldFiles();
-         //if (ApplicationUpdateHelper.ShowCheckForUpdatesDialog())
-         //{
-         //   Trace.TraceInformation("Application is exiting to install a new version");
-         //   return;
-         //}
+         if (ApplicationUpdateHelper.ShowCheckForUpdatesDialog())
+         {
+            Trace.TraceInformation("Application is exiting to install a new version");
+            return;
+         }
 
          bool runningAsUwp = new DesktopBridge.Helpers().IsRunningAsUwp();
          Trace.TraceInformation(String.Format("Running as UWP = {0}", runningAsUwp ? "Yes" : "No"));

@@ -144,7 +144,7 @@ namespace mrHelper.App.Helpers
                return new BalloonText
                (
                   title,
-                  String.Format("{0} \"{1}\" merge request \"{2}\"",
+                  String.Format("{0} {1} merge request \"{2}\"",
                                 asd.Author.Name, asd.IsApproved ? "approved" : "unapproved",
                                 mergeRequest != null ? mergeRequest.Title : e.MergeRequestKey.IId.ToString())
                );

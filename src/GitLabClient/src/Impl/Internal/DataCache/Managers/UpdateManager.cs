@@ -141,7 +141,10 @@ namespace mrHelper.GitLabClient.Managers
          try
          {
             _updating = true;
-            await _mergeRequestLoader.LoadMergeRequest(mrk);
+            if (_mergeRequestLoader != null)
+            {
+               await _mergeRequestLoader.LoadMergeRequest(mrk);
+            }
             MergeRequestRefreshed?.Invoke(mrk);
          }
          catch (BaseLoaderException ex)
@@ -187,7 +190,10 @@ namespace mrHelper.GitLabClient.Managers
          try
          {
             _updating = true;
-            await _mergeRequestListLoader.Load();
+            if (_mergeRequestListLoader != null)
+            {
+               await _mergeRequestListLoader.Load();
+            }
             MergeRequestListRefreshed?.Invoke();
          }
          catch (BaseLoaderException ex)

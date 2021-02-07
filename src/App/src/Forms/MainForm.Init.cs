@@ -396,7 +396,7 @@ namespace mrHelper.App.Forms
                                                false);
 
             case EDataCacheType.Search:
-               return new DataCacheUpdateRules(null, null, false);
+               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, null, false);
 
             default:
                Debug.Assert(false);
@@ -415,6 +415,16 @@ namespace mrHelper.App.Forms
          getListView(EDataCacheType.Search).SetDataCache(_searchDataCache);
       }
 
+      private void subscribeToSearchDataCacheInternalEvents()
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Search);
+         if (dataCache?.TotalTimeCache != null)
+         {
+            dataCache.TotalTimeCache.TotalTimeLoading += onPreLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoaded += onPostLoadTrackedTime;
+         }
+      }
+
       private void subscribeToSearchDataCache()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Search);
@@ -429,6 +439,16 @@ namespace mrHelper.App.Forms
          dataCache.Disconnected -= onSearchDataCacheDisconnected;
          dataCache.Connecting -= onSearchDataCacheConnecting;
          dataCache.Connected -= onSearchDataCacheConnected;
+      }
+
+      private void unsubscribeFromSearchDataCacheInternalEvents()
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Search);
+         if (dataCache?.TotalTimeCache != null)
+         {
+            dataCache.TotalTimeCache.TotalTimeLoading -= onPreLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoaded -= onPostLoadTrackedTime;
+         }
       }
 
       private void createRecentDataCache()
@@ -446,6 +466,12 @@ namespace mrHelper.App.Forms
          if (dataCache?.MergeRequestCache != null)
          {
             dataCache.MergeRequestCache.MergeRequestEvent += onRecentMergeRequestEvent;
+         }
+
+         if (dataCache?.TotalTimeCache != null)
+         {
+            dataCache.TotalTimeCache.TotalTimeLoading += onPreLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoaded += onPostLoadTrackedTime;
          }
       }
 
@@ -471,6 +497,12 @@ namespace mrHelper.App.Forms
          if (dataCache?.MergeRequestCache != null)
          {
             dataCache.MergeRequestCache.MergeRequestEvent -= onRecentMergeRequestEvent;
+         }
+
+         if (dataCache?.TotalTimeCache != null)
+         {
+            dataCache.TotalTimeCache.TotalTimeLoading -= onPreLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoaded -= onPostLoadTrackedTime;
          }
       }
 

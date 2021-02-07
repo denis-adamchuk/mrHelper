@@ -236,8 +236,8 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          }
          else if (approvals1.Approved_By != null && approvals2.Approved_By != null)
          {
-            var userIds1 = approvals1.Approved_By.Select(user => user.User.Id);
-            var userIds2 = approvals2.Approved_By.Select(user => user.User.Id);
+            var userIds1 = approvals1.Approved_By.Select(user => user.User.Id).OrderBy(id => id);
+            var userIds2 = approvals2.Approved_By.Select(user => user.User.Id).OrderBy(id => id);
             if (!Enumerable.SequenceEqual(userIds1, userIds2))
             {
                return true;

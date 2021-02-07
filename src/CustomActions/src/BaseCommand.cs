@@ -18,53 +18,29 @@ namespace mrHelper.CustomActions
          string hint)
       {
          _callback = callback;
-         _name = name;
-         _enabledIf = enabledIf;
-         _visibleIf = visibleIf;
-         _stopTimer = stopTimer;
-         _reload = reload;
-         _hint = hint;
+         Name = name;
+         EnabledIf = enabledIf;
+         VisibleIf = visibleIf;
+         StopTimer = stopTimer;
+         Reload = reload;
+         Hint = hint;
       }
 
-      public string GetName()
-      {
-         return _name;
-      }
+      public string Name { get; }
 
-      public string GetEnabledIf()
-      {
-         return _enabledIf;
-      }
+      public string EnabledIf { get; }
 
-      public string GetVisibleIf()
-      {
-         return _visibleIf;
-      }
+      public string VisibleIf { get; }
 
-      public bool GetStopTimer()
-      {
-         return _stopTimer;
-      }
+      public bool StopTimer { get; }
 
-      public bool GetReload()
-      {
-         return _reload;
-      }
+      public bool Reload { get; }
 
-      public string GetHint()
-      {
-         return _hint;
-      }
+      public string Hint { get; }
 
       public abstract Task Run();
 
       protected readonly ICommandCallback _callback;
-      private readonly string _name;
-      private readonly string _enabledIf;
-      private readonly string _visibleIf;
-      private readonly bool _stopTimer;
-      private readonly bool _reload;
-      private readonly string _hint;
    }
 }
 

@@ -567,7 +567,7 @@ namespace mrHelper.App.Controls
       MenuItem[] getCommandItems()
       {
          return _commands
-            .Select(command => createMenuItem(null, command.GetName(), true, (s, e) => _onCommand?.Invoke(command)))
+            .Select(command => createMenuItem(null, command.Name, true, (s, e) => _onCommand?.Invoke(command)))
             .ToArray();
       }
 

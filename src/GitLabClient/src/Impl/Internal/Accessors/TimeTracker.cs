@@ -31,10 +31,10 @@ namespace mrHelper.GitLabClient.Accessors
             _mergeRequestKey.IId, _mergeRequestKey.ProjectKey.ProjectName));
       }
 
-      async public Task Stop()
+      async public Task<TimeSpan> Stop()
       {
          _stopwatch.Stop();
-         TimeSpan span = _stopwatch.Elapsed;
+         TimeSpan span = Elapsed;
 
          MergeRequestEditor editor = new MergeRequestEditor(
             _hostProperties, _mergeRequestKey, _modificationListener, _networkOperationStatusListener);
@@ -53,17 +53,18 @@ namespace mrHelper.GitLabClient.Accessors
                      if (wex.Response is System.Net.HttpWebResponse response
                       && response.StatusCode == System.Net.HttpStatusCode.Forbidden)
                      {
-                        throw new ForbiddenTimeTrackerException(ex);
+                        throw new ForbiddenTimeTrackerException(ex, span);
                      }
                   }
                }
             }
-            throw new TimeTrackerException("Cannot stop timer", ex);
+            throw new TimeTrackerException("Cannot stop timer", ex, span);
          }
 
          Trace.TraceInformation(String.Format(
             "[TimeTracker] Time tracking stopped. Sending {0} for MR IId {1} (project {2})",
             span.ToString(@"hh\:mm\:ss"), _mergeRequestKey.IId, _mergeRequestKey.ProjectKey.ProjectName));
+         return span;
       }
 
       public void Cancel()
@@ -77,7 +78,15 @@ namespace mrHelper.GitLabClient.Accessors
 
       public MergeRequestKey MergeRequest => _mergeRequestKey;
 
-      public TimeSpan Elapsed { get { return _stopwatch.Elapsed; } }
+      public TimeSpan Elapsed
+      {
+         get
+         {
+            // trim milliseconds
+            TimeSpan spanTemp = _stopwatch.Elapsed;
+            return new TimeSpan(spanTemp.Hours, spanTemp.Minutes, spanTemp.Seconds);
+         }
+      }
 
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly IHostProperties _hostProperties;

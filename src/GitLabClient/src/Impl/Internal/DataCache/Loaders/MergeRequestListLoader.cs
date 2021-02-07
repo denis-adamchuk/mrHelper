@@ -30,34 +30,49 @@ namespace mrHelper.GitLabClient.Loaders
       async public Task Load()
       {
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests = await loadMergeRequestsAsync();
-         IEnumerable<MergeRequestKey> updatedMergeRequests = getUpdatedMergeRequests(mergeRequests);
+         IEnumerable<MergeRequestKey> updatedMergeRequests = getUpdatedMergeRequestKeys(mergeRequests);
          _cacheUpdater.UpdateMergeRequests(mergeRequests);
          await _versionLoader.LoadVersionsAndCommits(updatedMergeRequests);
          if (_approvalLoader != null)
          {
-            await _approvalLoader.LoadApprovals(updatedMergeRequests);
+            // Note: GitLab (13.6) does not changed Updated_At when approval is revoked
+            await _approvalLoader.LoadApprovals(getAllMergeRequestKeys(mergeRequests));
          }
       }
 
-      private IEnumerable<MergeRequestKey> getUpdatedMergeRequests(
+      private IEnumerable<MergeRequestKey> getUpdatedMergeRequestKeys(
          Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
       {
-         List<MergeRequestKey> updatedMergeRequests = new List<MergeRequestKey>();
+         List<MergeRequestKey> updatedMergeRequestKeys = new List<MergeRequestKey>();
          foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
          {
             ProjectKey projectKey = kv.Key;
             foreach (MergeRequest mergeRequest in kv.Value)
             {
-               MergeRequestKey mrk = new MergeRequestKey(kv.Key, mergeRequest.IId);
+               MergeRequestKey mrk = new MergeRequestKey(projectKey, mergeRequest.IId);
                DateTime? oldUpdatedAt = _cacheUpdater.Cache.GetMergeRequest(mrk)?.Updated_At;
                DateTime newUpdatedAt = mergeRequest.Updated_At;
                if (!oldUpdatedAt.HasValue || oldUpdatedAt < newUpdatedAt)
                {
-                  updatedMergeRequests.Add(mrk);
+                  updatedMergeRequestKeys.Add(mrk);
                }
             }
          }
-         return updatedMergeRequests;
+         return updatedMergeRequestKeys;
+      }
+
+      private IEnumerable<MergeRequestKey> getAllMergeRequestKeys(
+         Dictionary<ProjectKey, IEnumerable<MergeRequest>> mergeRequests)
+      {
+         List<MergeRequestKey> allMergeRequestKeys = new List<MergeRequestKey>();
+         foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in mergeRequests)
+         {
+            foreach (MergeRequest mergeRequest in kv.Value)
+            {
+               allMergeRequestKeys.Add(new MergeRequestKey(kv.Key, mergeRequest.IId));
+            }
+         }
+         return allMergeRequestKeys;
       }
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> loadMergeRequestsAsync()

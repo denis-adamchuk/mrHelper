@@ -13,7 +13,6 @@ using mrHelper.StorageSupport;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
-using mrHelper.Common.Constants;
 using mrHelper.CustomActions;
 using SearchQuery = mrHelper.App.Helpers.SearchQuery;
 
@@ -187,8 +186,7 @@ namespace mrHelper.App.Forms
          DisplaySort = new DiscussionSort(DiscussionSortState.Default);
          SortPanel = new DiscussionSortPanel(DisplaySort.SortState, onSortChanged);
 
-         ActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction, _commands,
-            onCommandAction);
+         ActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction);
          SearchPanel = new DiscussionSearchPanel(onFind, resetSearch);
          FontSelectionPanel = new DiscussionFontSelectionPanel(font => applyFont(font));
 

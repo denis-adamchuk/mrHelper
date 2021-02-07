@@ -6,16 +6,27 @@ namespace mrHelper.GitLabClient
 {
    public class TimeTrackerException : ExceptionEx
    {
-      internal TimeTrackerException(string message, Exception innerException)
+      internal TimeTrackerException(string message, Exception innerException, TimeSpan trackedTime)
          : base(message, innerException)
       {
+         TrackedTime = trackedTime;
       }
+
+      public TimeSpan TrackedTime { get; }
    }
 
    public class ForbiddenTimeTrackerException : TimeTrackerException
    {
-      internal ForbiddenTimeTrackerException(Exception innerException)
-         : base(String.Empty, innerException)
+      internal ForbiddenTimeTrackerException(Exception innerException, TimeSpan trackedTime)
+         : base(String.Empty, innerException, trackedTime)
+      {
+      }
+   }
+
+   public class TooSmallSpanTimeTrackerException : TimeTrackerException
+   {
+      internal TooSmallSpanTimeTrackerException(Exception innerException, TimeSpan trackedTime)
+         : base(String.Empty, innerException, trackedTime)
       {
       }
    }
@@ -24,7 +35,7 @@ namespace mrHelper.GitLabClient
    {
       void Start();
 
-      Task Stop();
+      Task<TimeSpan> Stop();
 
       void Cancel();
 

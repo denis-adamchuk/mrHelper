@@ -78,6 +78,7 @@ namespace mrHelper.App.Forms
       private void onSearchDataCacheDisconnected()
       {
          disableSearchTabControls();
+         unsubscribeFromSearchDataCacheInternalEvents();
       }
 
       private void onSearchDataCacheConnecting(string hostname)
@@ -88,6 +89,7 @@ namespace mrHelper.App.Forms
 
       private void onSearchDataCacheConnected(string hostname, User user)
       {
+         subscribeToSearchDataCacheInternalEvents();
          updateMergeRequestList(EDataCacheType.Search);
          enableSearchTabControls();
 

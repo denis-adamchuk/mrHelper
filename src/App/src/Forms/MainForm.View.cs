@@ -422,12 +422,12 @@ namespace mrHelper.App.Forms
 
          foreach (Control control in groupBoxActions.Controls)
          {
-            string enabledIf = ((ICommand)control.Tag).GetEnabledIf();
+            string enabledIf = ((ICommand)control.Tag).EnabledIf;
             string resolvedEnabledIf =
                String.IsNullOrEmpty(enabledIf) ? String.Empty : _expressionResolver.Resolve(enabledIf);
             control.Enabled = isCustomActionEnabled(approvedBy, labels, author, resolvedEnabledIf);
 
-            string visibleIf = ((ICommand)control.Tag).GetVisibleIf();
+            string visibleIf = ((ICommand)control.Tag).VisibleIf;
             string resolvedVisibleIf =
                String.IsNullOrEmpty(visibleIf) ? String.Empty : _expressionResolver.Resolve(visibleIf);
             control.Visible = isCustomActionEnabled(approvedBy, labels, author, resolvedVisibleIf);
@@ -464,8 +464,6 @@ namespace mrHelper.App.Forms
       private void onDataCacheSelectionChanged(bool isLiveDataCacheSelected)
       {
          forEachListView(listView => listView.DeselectAllListViewItems());
-         labelTimeTrackingTrackedLabel.Visible = isLiveDataCacheSelected;
-         buttonEditTime.Visible = isLiveDataCacheSelected;
       }
 
       private void onMergeRequestSelectionChanged(EDataCacheType mode)
@@ -1002,10 +1000,13 @@ namespace mrHelper.App.Forms
             .Cast<Control>()
             .Count(control => control.Visible);
 
-         int getControlX(Control control, int index) =>
-             control.Width * index +
-                (groupBoxActions.Width - visibleControlCount * control.Width) *
+         int getControlX(int controlWidth, int index) =>
+             controlWidth * index +
+                (groupBoxActions.Width - visibleControlCount * controlWidth) *
                 (index + 1) / (visibleControlCount + 1);
+
+         int getControlY(int controlHeight) =>
+            (groupBoxActions.Height - controlHeight) / 2;
 
          int displayIndex = 0;
          for (int controlIndex = 0; controlIndex < groupBoxActions.Controls.Count; ++controlIndex)
@@ -1013,7 +1014,7 @@ namespace mrHelper.App.Forms
             Control c = groupBoxActions.Controls[controlIndex];
             if (c.Visible)
             {
-               c.Location = new Point { X = getControlX(c, displayIndex), Y = c.Location.Y };
+               c.Location = new Point { X = getControlX(c.Width, displayIndex), Y = getControlY(c.Height) };
                ++displayIndex;
             }
          }
@@ -1383,6 +1384,11 @@ namespace mrHelper.App.Forms
             IEnumerable<ICommand> commands = await loadCustomCommandsAsync();
             recreateCustomActionControls(commands);
             repositionCustomCommands();
+
+            resetMergeRequestTabMinimumSizes();
+            initializeMergeRequestTabMinimumSizes();
+            applySavedSplitterDistance();
+
             onMergeRequestSelectionChanged(getCurrentTabDataCacheType());
          }), null);
       }
@@ -1398,19 +1404,24 @@ namespace mrHelper.App.Forms
          int id = 0;
          foreach (ICommand command in commands)
          {
-            string name = command.GetName();
+            string name = command.Name;
+            var buttonSize = new System.Drawing.Size
+            {
+               Width = Convert.ToInt32(72 * CurrentFontMultiplier),
+               Height = Convert.ToInt32(32 * CurrentFontMultiplier)
+            };
             var button = new System.Windows.Forms.Button
             {
                Name = "customAction" + id,
                Location = new System.Drawing.Point { X = 0, Y = 19 },
-               Size = new System.Drawing.Size { Width = 72, Height = 32 },
-               MinimumSize = new System.Drawing.Size { Width = 72, Height = 0 },
+               Size = buttonSize,
+               MinimumSize = buttonSize,
                Text = name,
                UseVisualStyleBackColor = true,
                TabStop = false,
-               Tag = command
+               Tag = command,
             };
-            toolTip.SetToolTip(button, command.GetHint());
+            toolTip.SetToolTip(button, command.Hint);
             button.Click += async (x, y) =>
             {
                MergeRequestKey? mergeRequestKey = getMergeRequestKey(null);
@@ -1438,12 +1449,12 @@ namespace mrHelper.App.Forms
                   name, mergeRequestKey.Value.IId, mergeRequestKey.Value.ProjectKey.ProjectName);
                addOperationRecord(statusMessage);
 
-               if (command.GetStopTimer())
+               if (command.StopTimer)
                {
                   await stopTimeTrackingTimerAsync();
                }
 
-               bool reload = command.GetReload();
+               bool reload = command.Reload;
                if (reload)
                {
                   requestUpdates(EDataCacheType.Live, mergeRequestKey, new int[] {

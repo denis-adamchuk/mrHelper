@@ -35,14 +35,16 @@ namespace mrHelper.GitLabClient.Loaders
             DateTime newUpdatedAt = mergeRequest.Updated_At;
             _cacheUpdater.UpdateMergeRequest(mrk, mergeRequest);
 
+            MergeRequestKey[] dummyArray = new MergeRequestKey[] { mrk };
             if (!oldUpdatedAt.HasValue || oldUpdatedAt < newUpdatedAt)
             {
-               MergeRequestKey[] dummyArray = new MergeRequestKey[] { mrk };
                await _versionLoader.LoadVersionsAndCommits(dummyArray);
-               if (_approvalLoader != null)
-               {
-                  await _approvalLoader.LoadApprovals(dummyArray);
-               }
+            }
+
+            // Note: GitLab (13.6) does not changed Updated_At when approval is revoked
+            if (_approvalLoader != null)
+            {
+               await _approvalLoader.LoadApprovals(dummyArray);
             }
          }
       }
