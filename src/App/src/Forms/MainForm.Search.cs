@@ -70,7 +70,10 @@ namespace mrHelper.App.Forms
       {
          DataCache dataCache = getDataCache(mode);
          await dataCache.Disconnect();
-         await dataCache.Connect(_gitLabInstance, new DataCacheConnectionContext(queryCollection));
+         if (_gitLabInstance != null)
+         {
+            await dataCache.Connect(_gitLabInstance, new DataCacheConnectionContext(queryCollection));
+         }
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

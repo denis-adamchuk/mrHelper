@@ -469,6 +469,7 @@ namespace mrHelper.App.Forms
          // 
          // tabPageLive
          // 
+         this.tabPageLive.AutoScroll = true;
          this.tabPageLive.Controls.Add(this.groupBoxSelectMergeRequest);
          this.tabPageLive.Location = new System.Drawing.Point(4, 22);
          this.tabPageLive.Name = "tabPageLive";
@@ -619,6 +620,7 @@ namespace mrHelper.App.Forms
          // 
          // tabPageSearch
          // 
+         this.tabPageSearch.AutoScroll = true;
          this.tabPageSearch.Controls.Add(this.groupBoxSearchMergeRequest);
          this.tabPageSearch.Location = new System.Drawing.Point(4, 22);
          this.tabPageSearch.Name = "tabPageSearch";
@@ -1382,6 +1384,7 @@ namespace mrHelper.App.Forms
          // 
          // tabPageRecent
          // 
+         this.tabPageRecent.AutoScroll = true;
          this.tabPageRecent.Controls.Add(this.groupBoxRecentMergeRequest);
          this.tabPageRecent.Location = new System.Drawing.Point(4, 22);
          this.tabPageRecent.Name = "tabPageRecent";

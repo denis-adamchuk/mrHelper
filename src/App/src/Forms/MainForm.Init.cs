@@ -134,7 +134,6 @@ namespace mrHelper.App.Forms
          initializeKeywords();
          setControlStateFromConfiguration();
          applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
-         resetMergeRequestTabMinimumSizes();
          disableSSLVerification();
          updateCaption();
          updateTabControlSelection();
