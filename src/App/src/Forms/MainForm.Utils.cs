@@ -389,15 +389,18 @@ namespace mrHelper.App.Forms
 
       private string getClipboardText()
       {
-         try
+         if (Clipboard.ContainsText())
          {
-            return Clipboard.GetText();
+            try
+            {
+               return Clipboard.GetText();
+            }
+            catch (Exception ex)
+            {
+               Debug.Assert(ex is System.Runtime.InteropServices.ExternalException);
+            }
          }
-         catch (Exception ex)
-         {
-            Debug.Assert(ex is System.Runtime.InteropServices.ExternalException);
-            return String.Empty;
-         }
+         return String.Empty;
       }
 
       private void showDiscussionsForSelectedMergeRequest()

@@ -22,7 +22,7 @@ namespace mrHelper.App.Forms
          _integratedInGitExtensions = integratedInGitExtensions;
          _integratedInSourceTree = integratedInSourceTree;
 
-         CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
+         CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"]);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 

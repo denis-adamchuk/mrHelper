@@ -1569,7 +1569,6 @@ namespace mrHelper.App.Forms
          this.tabControl.TabIndex = 0;
          this.tabControl.SelectedIndexChanged += new System.EventHandler(this.tabControl_SelectedIndexChanged);
          this.tabControl.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
-         this.tabControl.SizeChanged += new System.EventHandler(this.tabControl_SizeChanged);
          // 
          // tabPageSettings
          // 
@@ -2286,7 +2285,6 @@ namespace mrHelper.App.Forms
          this.panelFreeSpace.Controls.Add(this.pictureBox1);
          this.panelFreeSpace.Dock = System.Windows.Forms.DockStyle.Fill;
          this.panelFreeSpace.Location = new System.Drawing.Point(0, 427);
-         this.panelFreeSpace.MinimumSize = new System.Drawing.Size(0, 10);
          this.panelFreeSpace.Name = "panelFreeSpace";
          this.panelFreeSpace.Size = new System.Drawing.Size(472, 70);
          this.panelFreeSpace.TabIndex = 9;
@@ -2457,7 +2455,6 @@ namespace mrHelper.App.Forms
          // 
          // panelConnectionStatus
          // 
-         this.panelConnectionStatus.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.panelConnectionStatus.Controls.Add(this.labelConnectionStatus);
          this.panelConnectionStatus.Location = new System.Drawing.Point(300, 4);
          this.panelConnectionStatus.Name = "panelConnectionStatus";

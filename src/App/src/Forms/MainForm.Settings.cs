@@ -929,6 +929,7 @@ namespace mrHelper.App.Forms
          if (!_loadingConfiguration)
          {
             Program.Settings.DisableSplitterRestrictions = disable;
+            resetMergeRequestTabMinimumSizes();
          }
       }
 

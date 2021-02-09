@@ -24,7 +24,7 @@ namespace mrHelper.App.Forms
          Func<GitLabClient.MergeRequestAccessor> getMergeRequestAccessor)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
-            (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
+            (float)Common.Constants.Constants.FontSizeChoices["Design"]);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 

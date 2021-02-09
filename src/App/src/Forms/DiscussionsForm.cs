@@ -50,7 +50,7 @@ namespace mrHelper.App.Forms
          _commands = commands;
 
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
-            (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
+            (float)Common.Constants.Constants.FontSizeChoices["Design"]);
          InitializeComponent();
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);

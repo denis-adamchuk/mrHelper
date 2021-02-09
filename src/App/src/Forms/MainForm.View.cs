@@ -16,6 +16,7 @@ using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Controls;
 using mrHelper.CustomActions;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -99,15 +100,15 @@ namespace mrHelper.App.Forms
          }
 
          if (Program.Settings.MainWindowSplitterDistance != 0
-            && splitContainer1.Panel1MinSize < Program.Settings.MainWindowSplitterDistance
-            && splitContainer1.Width - splitContainer1.Panel2MinSize > Program.Settings.MainWindowSplitterDistance)
+            && splitContainer1.Panel1MinSize <= Program.Settings.MainWindowSplitterDistance
+            && splitContainer1.Width - splitContainer1.Panel2MinSize >= Program.Settings.MainWindowSplitterDistance)
          {
             splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
          }
 
          if (Program.Settings.RightPaneSplitterDistance != 0
-            && splitContainer2.Panel1MinSize < Program.Settings.RightPaneSplitterDistance
-            && splitContainer2.Width - splitContainer2.Panel2MinSize > Program.Settings.RightPaneSplitterDistance)
+            && splitContainer2.Panel1MinSize <= Program.Settings.RightPaneSplitterDistance
+            && splitContainer2.Height - splitContainer2.Panel2MinSize >= Program.Settings.RightPaneSplitterDistance)
          {
             splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
          }
@@ -705,9 +706,14 @@ namespace mrHelper.App.Forms
             + buttonAddComment.Left
                * 2; // for symmetry
 
+         // TODO No idea how to make it more flexible, leave a fixed number so far
+         int maximumNumberOfVisibleCustomActionControl = 6;
          bool hasActions = groupBoxActions.Controls.Count > 0;
+         int defaultWidthOfCustomActionControl = hasActions ? groupBoxActions.Controls[0].Width : 0;
+
          int groupBoxActionsMinWidth =
-            calcMinWidthOfControlGroup(groupBoxActions.Controls.Cast<Control>(), buttonMinDistance)
+            maximumNumberOfVisibleCustomActionControl * defaultWidthOfCustomActionControl
+            + (maximumNumberOfVisibleCustomActionControl - 1) * buttonMinDistance
             + (hasActions ? buttonAddComment.Left : 0) // First button is aligned with "Add a comment"
                * 2; // for symmetry
 
@@ -749,9 +755,20 @@ namespace mrHelper.App.Forms
             + groupBoxActions.Height
             + calcVertDistance(groupBoxActions, panelFreeSpace)
             + panelFreeSpaceMinHeight
+            + calcVertDistance(panelFreeSpace, panelStatusBar)
             + panelStatusBar.Height
             + calcVertDistance(panelStatusBar, panelBottomMenu)
             + panelBottomMenu.Height;
+      }
+
+      private static void setSplitterPanelsMinSize(SplitContainer splitContainer, int panel1MinSize, int panel2MinSize)
+      {
+         splitContainer.Panel1MinSize = panel1MinSize;
+         splitContainer.Panel2MinSize = panel2MinSize;
+         int splitContainerSize = splitContainer.Orientation == Orientation.Vertical
+            ? splitContainer.Width : splitContainer.Height;
+         bool canResetToMinimum = panel1MinSize + panel2MinSize <= splitContainerSize;
+         splitContainer.SplitterDistance = canResetToMinimum ? splitContainerSize - panel2MinSize : panel1MinSize;
       }
 
       private void initializeMergeRequestTabMinimumSizes()
@@ -767,11 +784,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (Program.Settings.DisableSplitterRestrictions)
-         {
-            _initializedMinimumSizes = true;
-            return;
-         }
+         _initializedMinimumSizes = true;
 
          // KISS
          int leftPaneMinWidth = 200;
@@ -784,23 +797,23 @@ namespace mrHelper.App.Forms
          int clientAreaMinHeight = topRightPaneMinHeight + bottomRightPaneMinHeight;
          int nonClientAreaHeight = 150;
 
-         MinimumSize = new Size(clientAreaMinWidth + nonClientAreaWidth, clientAreaMinHeight + nonClientAreaHeight);
-
-         splitContainer1.Panel1MinSize = leftPaneMinWidth;
-         splitContainer1.Panel2MinSize = rightPaneMinWidth;
-         if (splitContainer1.Panel1MinSize + splitContainer1.Panel2MinSize <= splitContainer1.Width)
+         int minimumWidth = clientAreaMinWidth + nonClientAreaWidth;
+         int minimumHeight = clientAreaMinHeight + nonClientAreaHeight;
+         if (Program.Settings.DisableSplitterRestrictions
+          || Screen.GetWorkingArea(this).Width < minimumWidth
+          || Screen.GetWorkingArea(this).Height < minimumHeight)
          {
-            splitContainer1.SplitterDistance = splitContainer1.Width - splitContainer1.Panel2MinSize;
+            MinimumSize = new Size(0, 0);
+            int defaultPanelSize = 25; // from documentation
+            setSplitterPanelsMinSize(splitContainer1, defaultPanelSize, defaultPanelSize);
+            setSplitterPanelsMinSize(splitContainer2, defaultPanelSize, defaultPanelSize);
+            return;
          }
 
-         splitContainer2.Panel1MinSize = topRightPaneMinHeight;
-         splitContainer2.Panel2MinSize = bottomRightPaneMinHeight;
-         if (splitContainer2.Panel1MinSize + splitContainer2.Panel2MinSize <= splitContainer2.Height)
-         {
-            splitContainer2.SplitterDistance = splitContainer2.Height - splitContainer2.Panel2MinSize;
-         }
-
-         _initializedMinimumSizes = true;
+         // Setting MinimumSize here adjusts Splitter Height/Width so that it is safe to change its Panel Sizes
+         MinimumSize = new Size(minimumWidth, minimumHeight);
+         setSplitterPanelsMinSize(splitContainer1, leftPaneMinWidth, rightPaneMinWidth);
+         setSplitterPanelsMinSize(splitContainer2, topRightPaneMinHeight, bottomRightPaneMinHeight);
       }
 
       private void repositionCustomCommands()
@@ -1060,7 +1073,7 @@ namespace mrHelper.App.Forms
       private void processDpiChange()
       {
          Trace.TraceInformation(String.Format("[MainForm] DPI changed, new DPI = {0}", DeviceDpi));
-         CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
+            CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
          _trayIcon.ShowTooltipBalloon(new TrayIcon.BalloonText
          (
@@ -1215,10 +1228,11 @@ namespace mrHelper.App.Forms
          foreach (ICommand command in commands)
          {
             string name = command.Name;
+            SizeF rate = WinFormsHelpers.GetAutoScaleDimensionsChangeRate(this);
             var buttonSize = new System.Drawing.Size
             {
-               Width = Convert.ToInt32(72 * CurrentFontMultiplier),
-               Height = Convert.ToInt32(32 * CurrentFontMultiplier)
+               Width = Convert.ToInt32(72 * rate.Width),
+               Height = Convert.ToInt32(32 * rate.Height)
             };
             var button = new System.Windows.Forms.Button
             {

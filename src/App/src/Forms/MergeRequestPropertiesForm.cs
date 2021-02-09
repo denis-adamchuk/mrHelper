@@ -20,7 +20,7 @@ namespace mrHelper.App.Forms
          bool isAllowedToChangeSource, IEnumerable<User> users)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
-            (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
+            (float)Common.Constants.Constants.FontSizeChoices["Design"]);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
