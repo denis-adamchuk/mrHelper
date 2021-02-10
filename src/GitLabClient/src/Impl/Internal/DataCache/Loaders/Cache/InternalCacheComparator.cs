@@ -213,11 +213,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       private bool areApprovalsDifferent(MergeRequestApprovalConfiguration approvals1,
                                          MergeRequestApprovalConfiguration approvals2)
       {
-         if (approvals1 == null && approvals2 != null)
+         if (approvals1 == null && approvals2 == null)
          {
-            return true;
+            return false;
          }
-         else if (approvals1 != null && approvals2 == null)
+         else if (approvals1 == null || approvals2 == null)
          {
             return true;
          }

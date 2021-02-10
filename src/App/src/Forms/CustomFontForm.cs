@@ -25,11 +25,6 @@ namespace mrHelper.App.Forms
          this.Font = new Font(this.Font.FontFamily, (float)Constants.FontSizeChoices[font],
             this.Font.Style, GraphicsUnit.Point, this.Font.GdiCharSet, this.Font.GdiVerticalFont);
       }
-
-      public float CurrentFontMultiplier
-      {
-         get { return this.Font.Size / _originalFontSize; }
-      }
    }
 }
 

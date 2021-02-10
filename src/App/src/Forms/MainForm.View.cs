@@ -321,7 +321,7 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingStart.Enabled = enabled;
          buttonTimeTrackingCancel.Enabled = false;
 
-         if (enabled)
+         if (mrk.HasValue && enabled)
          {
             string title = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Title;
             Debug.Assert(!String.IsNullOrEmpty(title) && !mrk.Value.ProjectKey.Equals(default(ProjectKey)));
@@ -351,7 +351,7 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            User author = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Author;
+            User author = dataCache.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Author;
             string hostname = mrk.Value.ProjectKey.HostName;
             if (!TimeTrackingHelpers.IsTimeTrackingAllowed(author, hostname, getCurrentUser(hostname)))
             {
