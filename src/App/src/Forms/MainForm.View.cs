@@ -470,7 +470,7 @@ namespace mrHelper.App.Forms
          _prevWindowState = WindowState;
       }
 
-      private void onDataCacheSelectionChanged(bool isLiveDataCacheSelected)
+      private void onDataCacheSelectionChanged()
       {
          forEachListView(listView => listView.DeselectAllListViewItems());
       }

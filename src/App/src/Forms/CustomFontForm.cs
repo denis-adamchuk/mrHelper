@@ -8,13 +8,6 @@ namespace mrHelper.App.Forms
 {
    public partial class CustomFontForm : Form
    {
-      protected CustomFontForm()
-      {
-         _originalFontSize = this.Font.Size;
-      }
-
-      private float _originalFontSize;
-
       protected void applyFont(string font)
       {
          if (!Constants.FontSizeChoices.ContainsKey(font))

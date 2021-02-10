@@ -467,7 +467,7 @@ namespace mrHelper.App.Forms
 
       private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
       {
-         onDataCacheSelectionChanged(tabControlMode.SelectedTab == tabPageLive);
+         onDataCacheSelectionChanged();
       }
 
       private void tabControl_Selecting(object sender, TabControlCancelEventArgs e)

@@ -485,20 +485,54 @@ namespace mrHelper.App.Controls
             return TimeTrackingHelpers.ConvertTotalTimeToText(totalTimeCache.GetTotalTime(key), isTimeTrackingAllowed);
          }
 
-         string getRefreshed(MergeRequestKey key)
+         DateTime? getRefreshedTime(MergeRequestKey key)
          {
             IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
             if (mergeRequestCache == null)
             {
-               return String.Empty;
+               return null;
             }
 
-            DateTime refreshed = mergeRequestCache.GetMergeRequestRefreshTime(key);
-            TimeSpan span = DateTime.Now - refreshed;
-            int minutesAgo = Convert.ToInt32(Math.Floor(span.TotalMinutes));
-            // round 55+ seconds to a minute
-            minutesAgo += span.Seconds >= 55 ? 1 : 0; //-V3118
-            return String.Format("{0} minute{1} ago", minutesAgo, minutesAgo == 1 ? String.Empty : "s");
+            return mergeRequestCache.GetMergeRequestRefreshTime(key);
+         }
+
+         string getRefreshed(MergeRequestKey key, bool tooltipText)
+         {
+            var refreshedTime = getRefreshedTime(key);
+            if (tooltipText)
+            {
+               return refreshedTime?.ToLocalTime().ToString(Constants.TimeStampFormat) ?? "N/A";
+            }
+            return refreshedTime.HasValue ? TimeUtils.TimeSpanToStringAgo(DateTime.Now - refreshedTime.Value.ToLocalTime()) : "N/A";
+         }
+
+         DateTime? getLatestCommitTime(MergeRequestKey key)
+         {
+            IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
+            if (mergeRequestCache == null)
+            {
+               return null;
+            }
+
+            Commit latestCommit = mergeRequestCache
+               .GetCommits(key)?
+               .OrderByDescending(commit => commit.Created_At)
+               .FirstOrDefault();
+            return latestCommit?.Created_At;
+         }
+
+         string getActivities(MergeRequestKey key, bool tooltipText)
+         {
+            var latestCommitTime = getLatestCommitTime(key);
+            if (tooltipText)
+            {
+               return String.Format("Created: {0}\nLatest commit: {1}",
+                  mr.Created_At.ToLocalTime().ToString(Constants.TimeStampFormat),
+                  latestCommitTime?.ToLocalTime().ToString(Constants.TimeStampFormat) ?? "N/A");
+            }
+            return String.Format("Created: {0}\nLatest commit: {1}",
+               TimeUtils.TimeSpanToStringAgo(DateTime.Now - mr.Created_At.ToLocalTime()),
+               latestCommitTime.HasValue ? TimeUtils.TimeSpanToStringAgo(DateTime.Now - latestCommitTime.Value.ToLocalTime()) : "N/A");
          }
 
          string getJiraTask(MergeRequest mergeRequest) => GitLabClient.Helpers.GetJiraTask(mergeRequest);
@@ -516,7 +550,8 @@ namespace mrHelper.App.Controls
          setSubItemTag(item, "TargetBranch", new ListViewSubItemInfo(x => mr.Target_Branch, () => String.Empty));
          setSubItemTag(item, "State", new ListViewSubItemInfo(x => mr.State, () => String.Empty));
          setSubItemTag(item, "Resolved", new ListViewSubItemInfo(x => getDiscussionCount(mrk), () => String.Empty));
-         setSubItemTag(item, "RefreshTime", new ListViewSubItemInfo(x => getRefreshed(mrk), () => String.Empty));
+         setSubItemTag(item, "RefreshTime", new ListViewSubItemInfo(x => getRefreshed(mrk, x), () => String.Empty));
+         setSubItemTag(item, "Activities", new ListViewSubItemInfo(x => getActivities(mrk, x), () => String.Empty));
       }
 
       private void recalcRowHeightForMergeRequestListView()
@@ -606,6 +641,7 @@ namespace mrHelper.App.Controls
          setSubItemTag(item, "State", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
          setSubItemTag(item, "Resolved", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
          setSubItemTag(item, "RefreshTime", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
+         setSubItemTag(item, "Activities", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
       }
 
       ColumnHeader getColumnByTag(string tag)

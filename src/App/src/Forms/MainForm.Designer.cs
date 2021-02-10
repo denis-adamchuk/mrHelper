@@ -96,6 +96,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRefreshTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxDisplayFilter = new System.Windows.Forms.CheckBox();
          this.tabPageSearch = new System.Windows.Forms.TabPage();
          this.groupBoxSearchMergeRequest = new System.Windows.Forms.GroupBox();
@@ -119,6 +120,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderFoundJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.linkLabelAbortGitClone = new System.Windows.Forms.LinkLabel();
          this.buttonTimeTrackingCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonTimeTrackingStart = new System.Windows.Forms.Button();
@@ -174,6 +176,7 @@ namespace mrHelper.App.Forms
          this.columnHeaderRecentJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRecentActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxRemindAboutAvailableNewVersion = new System.Windows.Forms.CheckBox();
          this.comboBoxRecentMergeRequestsPerProjectCount = new System.Windows.Forms.ComboBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -524,7 +527,8 @@ namespace mrHelper.App.Forms
             this.columnHeaderResolved,
             this.columnHeaderSourceBranch,
             this.columnHeaderTargetBranch,
-            this.columnHeaderRefreshTime});
+            this.columnHeaderRefreshTime,
+            this.columnHeaderActivities});
          this.listViewLiveMergeRequests.FullRowSelect = true;
          this.listViewLiveMergeRequests.GridLines = true;
          this.listViewLiveMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
@@ -605,6 +609,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderRefreshTime.Tag = "RefreshTime";
          this.columnHeaderRefreshTime.Text = "Refreshed";
          this.columnHeaderRefreshTime.Width = 90;
+         // 
+         // columnHeaderActivities
+         // 
+         this.columnHeaderActivities.Tag = "Activities";
+         this.columnHeaderActivities.Text = "Activities";
+         this.columnHeaderActivities.Width = 90;
          // 
          // checkBoxDisplayFilter
          // 
@@ -791,7 +801,8 @@ namespace mrHelper.App.Forms
             this.columnHeaderFoundLabels,
             this.columnHeaderFoundJira,
             this.columnHeaderFoundSourceBranch,
-            this.columnHeaderFoundTargetBranch});
+            this.columnHeaderFoundTargetBranch,
+            this.columnHeaderFoundActivities});
          this.listViewFoundMergeRequests.FullRowSelect = true;
          this.listViewFoundMergeRequests.GridLines = true;
          this.listViewFoundMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
@@ -854,6 +865,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderFoundTargetBranch.Tag = "TargetBranch";
          this.columnHeaderFoundTargetBranch.Text = "Target Branch";
          this.columnHeaderFoundTargetBranch.Width = 100;
+         // 
+         // columnHeaderFoundActivities
+         // 
+         this.columnHeaderFoundActivities.Tag = "Activities";
+         this.columnHeaderFoundActivities.Text = "Activities";
+         this.columnHeaderFoundActivities.Width = 90;
          // 
          // linkLabelAbortGitClone
          // 
@@ -1433,7 +1450,8 @@ namespace mrHelper.App.Forms
             this.columnHeaderRecentLabels,
             this.columnHeaderRecentJira,
             this.columnHeaderRecentSourceBranch,
-            this.columnHeaderRecentTargetBranch});
+            this.columnHeaderRecentTargetBranch,
+            this.columnHeaderRecentActivities});
          this.listViewRecentMergeRequests.FullRowSelect = true;
          this.listViewRecentMergeRequests.GridLines = true;
          this.listViewRecentMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
@@ -1496,6 +1514,12 @@ namespace mrHelper.App.Forms
          this.columnHeaderRecentTargetBranch.Tag = "TargetBranch";
          this.columnHeaderRecentTargetBranch.Text = "Target Branch";
          this.columnHeaderRecentTargetBranch.Width = 100;
+         // 
+         // columnHeaderRecentActivities
+         // 
+         this.columnHeaderRecentActivities.Tag = "Activities";
+         this.columnHeaderRecentActivities.Text = "Activities";
+         this.columnHeaderRecentActivities.Width = 90;
          // 
          // checkBoxRemindAboutAvailableNewVersion
          // 
@@ -2633,6 +2657,7 @@ namespace mrHelper.App.Forms
         private System.Windows.Forms.ColumnHeader columnHeaderFoundJira;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundSourceBranch;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundTargetBranch;
+        private System.Windows.Forms.ColumnHeader columnHeaderFoundActivities;
         private System.Windows.Forms.ColumnHeader columnHeaderFoundState;
         private System.Windows.Forms.CheckBox checkBoxSearchByTargetBranch;
         private System.Windows.Forms.CheckBox checkBoxSearchByTitleAndDescription;
@@ -2714,6 +2739,7 @@ namespace mrHelper.App.Forms
       private LinkLabel linkLabelWorkflowDescription;
       private CheckBox checkBoxDisableSpellChecker;
       private ColumnHeader columnHeaderRefreshTime;
+      private ColumnHeader columnHeaderActivities;
       private CheckBox checkBoxFlatReplies;
       private GroupBox groupBoxColumnWidth;
       private RadioButton radioButtonDiscussionColumnWidthWide;
@@ -2745,6 +2771,7 @@ namespace mrHelper.App.Forms
       private ColumnHeader columnHeaderRecentJira;
       private ColumnHeader columnHeaderRecentSourceBranch;
       private ColumnHeader columnHeaderRecentTargetBranch;
+      private ColumnHeader columnHeaderRecentActivities;
       private GroupBox groupBoxRecentMergeRequest;
       private TextBox textBoxRecentMergeRequestsHint;
       private CheckBox checkBoxRemindAboutAvailableNewVersion;
