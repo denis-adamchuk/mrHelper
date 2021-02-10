@@ -389,11 +389,11 @@ namespace mrHelper.App.Forms
 
       private string getClipboardText()
       {
-         if (Clipboard.ContainsText())
+         if (Clipboard.ContainsText(TextDataFormat.Text))
          {
             try
             {
-               return Clipboard.GetText();
+               return Clipboard.GetText(TextDataFormat.Text);
             }
             catch (Exception ex)
             {
