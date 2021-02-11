@@ -122,11 +122,11 @@ namespace mrHelper.App.Forms
       {
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          DateTime? refreshTimestamp = dataCache?.MergeRequestCache?.GetListRefreshTime();
-         string refreshedAt = refreshTimestamp.HasValue
-            ? String.Format("Refreshed at {0}", TimeUtils.DateTimeToString(refreshTimestamp.Value))
+         string refreshedAgo = refreshTimestamp.HasValue
+            ? String.Format("Refreshed {0}", TimeUtils.DateTimeToStringAgo(refreshTimestamp.Value))
             : String.Empty;
          toolTip.SetToolTip(this.buttonReloadList, String.Format("{0}{1}{2}",
-            RefreshButtonTooltip, refreshedAt == String.Empty ? String.Empty : "\r\n", refreshedAt));
+            RefreshButtonTooltip, refreshedAgo == String.Empty ? String.Empty : "\r\n", refreshedAgo));
 
          // update Refreshed column
          getListView(EDataCacheType.Live).Invalidate();

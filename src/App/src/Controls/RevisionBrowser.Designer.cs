@@ -90,7 +90,7 @@
          // 
          // _timestamp
          // 
-         this._timestamp.DataPropertyName = "Timestamp";
+         this._timestamp.DataPropertyName = "TimeAgo";
          this._timestamp.IncrementalSearchEnabled = true;
          this._timestamp.LeftMargin = 3;
          this._timestamp.ParentColumn = this.treeColumn2;

@@ -653,7 +653,7 @@ namespace mrHelper.App.Controls
       string getActivities(DateTime createdAt, MergeRequestKey key, bool tooltipText)
       {
          DateTime? latestCommitTime = getLatestCommitTime(key);
-         return String.Format("Created: {0}\nLatest commit: {1}",
+         return String.Format("Created: {0}\r\nLatest commit: {1}",
             tooltipText ? TimeUtils.DateTimeToString(createdAt)
                         : TimeUtils.DateTimeToStringAgo(createdAt),
             tooltipText ? TimeUtils.DateTimeOptToString(latestCommitTime)

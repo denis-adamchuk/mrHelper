@@ -13,11 +13,19 @@ namespace mrHelper.App.Controls
 {
    internal partial class RevisionBrowser : UserControl
    {
-      private class TooltipProvider : IToolTipProvider
+      private class NameTooltipProvider : IToolTipProvider
       {
          public string GetToolTip(TreeNodeAdv node, NodeControl nodeControl)
          {
-            return (node.Tag is RevisionBrowserItem leafNode) ? leafNode.TooltipText : String.Empty;
+            return (node.Tag is RevisionBrowserItem leafNode) ? leafNode.Description : String.Empty;
+         }
+      }
+
+      private class TimeStampTooltipProvider : IToolTipProvider
+      {
+         public string GetToolTip(TreeNodeAdv node, NodeControl nodeControl)
+         {
+            return (node.Tag is RevisionBrowserItem leafNode) ? leafNode.Timestamp : String.Empty;
          }
       }
 
@@ -32,8 +40,10 @@ namespace mrHelper.App.Controls
          _treeView.SelectionChanged += (s, e) => SelectionChanged?.Invoke(s, e);
          _treeView.RowDraw += treeView_DrawRow;
 
-         _name.ToolTipProvider = new TooltipProvider();
+         _name.ToolTipProvider = new NameTooltipProvider();
          _name.DrawText += treeView_DrawNode;
+
+         _timestamp.ToolTipProvider = new TimeStampTooltipProvider();
          _timestamp.DrawText += treeView_DrawNode;
       }
 

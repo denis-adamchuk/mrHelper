@@ -607,7 +607,8 @@ namespace mrHelper.App.Controls
             return String.Empty;
          }
 
-         return String.Format("{0} at {1}", note.Author.Name, TimeUtils.DateTimeToString(note.Created_At));
+         return String.Format("{0} -- {1}",
+            note.Author.Name, TimeUtils.DateTimeToStringAgo(note.Created_At));
       }
 
       private string getNoteTooltipHtml(Control noteControl, DiscussionNote note)
