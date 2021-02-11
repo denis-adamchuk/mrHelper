@@ -690,8 +690,7 @@ namespace mrHelper.App.Forms
 
       private void addOperationRecord(string text)
       {
-         string textWithTimestamp = String.Format("{0} {1}",
-            DateTime.Now.ToLocalTime().ToString(Constants.TimeStampFormat), text);
+         string textWithTimestamp = String.Format("{0} {1}", TimeUtils.DateTimeToString(DateTime.Now), text);
          _operationRecordHistory.Add(textWithTimestamp);
          if (_operationRecordHistory.Count() > OperationRecordHistoryDepth)
          {
@@ -806,7 +805,7 @@ namespace mrHelper.App.Forms
          int elapsedSeconds = Convert.ToInt32(elapsedSecondsDouble / LostConnectionIndicationTimerInterval);
          string text = elapsedSeconds % 2 == 0 ? ConnectionLostText.ToLower() : ConnectionLostText.ToUpper();
          string tooltipText = String.Format("Connection was lost at {0}",
-            _lostConnectionInfo.Value.TimeStamp.ToLocalTime().ToString(Constants.TimeStampFormat));
+            TimeUtils.DateTimeToString(_lostConnectionInfo.Value.TimeStamp));
          applyConnectionStatus(text, Color.Red, tooltipText);
       }
 

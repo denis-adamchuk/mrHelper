@@ -5,6 +5,28 @@ namespace mrHelper.Common.Tools
 {
    public static class TimeUtils
    {
+      public static string TimeStampFormat = "d-MMM-yyyy HH:mm";
+
+      public static string DateTimeOptToString(DateTime? dateTime)
+      {
+         return dateTime.HasValue ? DateTimeToString(dateTime.Value) : "N/A";
+      }
+
+      public static string DateTimeToString(DateTime dateTime)
+      {
+         return dateTime.ToLocalTime().ToString(TimeStampFormat);
+      }
+
+      public static string DateTimeOptToStringAgo(DateTime? dateTime)
+      {
+         return dateTime.HasValue ? DateTimeToStringAgo(dateTime.Value) : "N/A";
+      }
+
+      public static string DateTimeToStringAgo(DateTime dateTime)
+      {
+         return TimeSpanToStringAgo(DateTime.Now - dateTime.ToLocalTime());
+      }
+
       public static string TimeSpanToStringAgo(TimeSpan timeSpan)
       {
          string timeSpanAsText = TimeSpanToString(timeSpan);
@@ -24,8 +46,8 @@ namespace mrHelper.Common.Tools
 
          string formatNumber(double number, string name)
          {
-            int rounded = Convert.ToInt32(Math.Floor(number));
-            return String.Format("{1} {0}{2}", name, rounded, rounded > 1 ? "s" : "");
+            int intNumber = Convert.ToInt32(Math.Floor(number));
+            return String.Format("{1} {0}{2}", name, intNumber, intNumber > 1 ? "s" : "");
          }
 
          double totalMonths = Math.Floor(timeSpan.TotalDays / 30);

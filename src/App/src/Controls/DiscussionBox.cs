@@ -607,8 +607,7 @@ namespace mrHelper.App.Controls
             return String.Empty;
          }
 
-         return String.Format("{0} at {1}",
-            note.Author.Name, note.Created_At.ToLocalTime().ToString(Constants.TimeStampFormat));
+         return String.Format("{0} at {1}", note.Author.Name, TimeUtils.DateTimeToString(note.Created_At));
       }
 
       private string getNoteTooltipHtml(Control noteControl, DiscussionNote note)
@@ -626,7 +625,7 @@ namespace mrHelper.App.Controls
             body.AppendFormat("<i style=\"color: {0}\">{1}&nbsp;&nbsp;&nbsp;</i>", color, text);
          }
          body.AppendFormat("Created by <b> {0} </b> at <span style=\"color: blue\">{1}</span>",
-            note.Author.Name, note.Created_At.ToLocalTime().ToString(Constants.TimeStampFormat));
+            note.Author.Name, TimeUtils.DateTimeToString(note.Created_At));
          body.AppendFormat("<br><br>Use context menu to view note as <b>plain text</b>.");
 
          string css = String.Format("{0} body div {{ font-size: {1}px; }}",

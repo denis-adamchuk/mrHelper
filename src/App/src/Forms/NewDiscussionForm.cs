@@ -623,7 +623,7 @@ namespace mrHelper.App.Forms
             bool areRefsEqual = note.Position.DiffPosition.Refs.Equals(NewDiscussionPosition.Refs);
             labelDifferentContextHint.Visible = !areRefsEqual;
             labelRelatedDiscussionAuthor.Text = String.Format("{0} on {1}",
-               note.Details.AuthorName, note.Details.CreatedAt.ToLocalTime().ToString(Constants.TimeStampFormat));
+               note.Details.AuthorName, TimeUtils.DateTimeToString(note.Details.CreatedAt));
             updatePreview(htmlPanelPreviewRelatedDiscussion, note.Content.Body);
             showDiscussionContext(note.Position.DiffPosition, htmlPanelRelatedDiscussionContext);
          }

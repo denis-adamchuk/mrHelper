@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using mrHelper.Common.Constants;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Helpers
 {
@@ -54,7 +54,7 @@ namespace mrHelper.App.Helpers
       {
          Name = name;
          InvertedDisplayIndex = invertedDisplayIndex;
-         Timestamp = timestamp.ToLocalTime().ToString(Constants.TimeStampFormat);
+         Timestamp = TimeUtils.DateTimeToString(timestamp);
          FullSHA = sha;
          TooltipText = tooltipText;
          IsReviewed = isReviewed;
