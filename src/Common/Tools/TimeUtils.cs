@@ -30,15 +30,15 @@ namespace mrHelper.Common.Tools
       public static string TimeSpanToStringAgo(TimeSpan timeSpan)
       {
          string timeSpanAsText = TimeSpanToString(timeSpan);
-         if (timeSpanAsText == "a day")
+         if (timeSpanAsText == DayTimeSpanText)
          {
-            return "yesterday";
+            return YesterdayText;
          }
          else if (timeSpanAsText == ZeroTimeSpanText)
          {
             return ZeroTimeSpanText;
          }
-         return timeSpanAsText + " ago";
+         return String.Format("{0} {1}", timeSpanAsText, "ago");
       }
 
       public static string TimeSpanToString(TimeSpan timeSpan)
@@ -61,8 +61,12 @@ namespace mrHelper.Common.Tools
          string formatNumber(double number, string name)
          {
             int intNumber = Convert.ToInt32(Math.Floor(number));
+            if (intNumber == 1 && name == DayText)
+            {
+               return DayTimeSpanText;
+            }
             return String.Format("{0} {1}{2}",
-               intNumber > 1 ? intNumber.ToString() : (name == "hour" ? "an" : "a"),
+               intNumber > 1 ? intNumber.ToString() : (name == HourText ? "an" : "a"),
                name,
                intNumber > 1 ? "s" : "");
          }
@@ -74,23 +78,23 @@ namespace mrHelper.Common.Tools
          double totalMinutes = Math.Floor(timeSpan.TotalMinutes);
          if (totalMonths > 0)
          {
-            return formatNumber(totalMonths, "month");
+            return formatNumber(totalMonths, MonthText);
          }
          else if (totalWeeks > 2)
          {
-            return formatNumber(totalWeeks, "week");
+            return formatNumber(totalWeeks, WeekText);
          }
          else if (totalDays > 0)
          {
-            return formatNumber(totalDays, "day");
+            return formatNumber(totalDays, DayText);
          }
          else if (totalHours > 0)
          {
-            return formatNumber(totalHours, "hour");
+            return formatNumber(totalHours, HourText);
          }
          else if (totalMinutes > 0)
          {
-            return formatNumber(totalMinutes, "minute");
+            return formatNumber(totalMinutes, MinuteText);
          }
          else
          {
@@ -98,7 +102,14 @@ namespace mrHelper.Common.Tools
          }
       }
 
+      private static readonly string YesterdayText = "yesterday";
       private static readonly string ZeroTimeSpanText = "just now";
+      private static readonly string DayTimeSpanText  = "a day";
+      private static readonly string MonthText = "month";
+      private static readonly string WeekText = "week";
+      private static readonly string DayText = "day";
+      private static readonly string HourText = "hour";
+      private static readonly string MinuteText = "minute";
 
       /*
             TimeSpanToString():
