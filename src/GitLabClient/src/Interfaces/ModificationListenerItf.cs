@@ -6,6 +6,8 @@ namespace mrHelper.GitLabClient
    {
       void OnDiscussionResolved(MergeRequestKey mergeRequestKey);
 
+      void OnDiscussionModified(MergeRequestKey mergeRequestKey);
+
       void OnTrackedTimeModified(MergeRequestKey mergeRequestKey, TimeSpan span, bool add);
    }
 }

@@ -7,8 +7,6 @@ namespace mrHelper.CommonControls.Controls
    {
       public DelayedTextBox()
       {
-         InitializeComponent();
-
          _delayedInputTimer = new System.Timers.Timer
          {
             Interval = DelayPeriod,
@@ -16,6 +14,16 @@ namespace mrHelper.CommonControls.Controls
             SynchronizingObject = this
          };
          _delayedInputTimer.Elapsed += (_, e) => base.OnTextChanged(e);
+      }
+
+      /// <summary> 
+      /// Clean up any resources being used.
+      /// </summary>
+      /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+      protected override void Dispose(bool disposing)
+      {
+         _delayedInputTimer?.Dispose();
+         base.Dispose(disposing);
       }
 
       protected override void OnTextChanged(EventArgs e)

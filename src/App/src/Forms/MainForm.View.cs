@@ -1204,7 +1204,8 @@ namespace mrHelper.App.Forms
       {
          BeginInvoke(new Action(async () =>
          {
-            IEnumerable<ICommand> commands = await loadCustomCommandsAsync();
+            string customActionFileName = await getCustomActionFileNameAsync();
+            IEnumerable<ICommand> commands = loadCustomCommands(customActionFileName, this);
             recreateCustomActionControls(commands);
             repositionCustomCommands();
 

@@ -1,13 +1,11 @@
-﻿using GitLabSharp.Entities;
-using mrHelper.Common.Constants;
-using mrHelper.Common.Tools;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using mrHelper.CommonControls.Tools;
 
-namespace mrHelper.App.Controls
+namespace mrHelper.CommonControls.Controls
 {
    public partial class TextBoxWithUserAutoComplete : UserControl
    {
@@ -20,6 +18,20 @@ namespace mrHelper.App.Controls
                hideAutoCompleteList();
                cancelDelayedHiding();
             };
+      }
+
+      private static char GitLabLabelPrefixChar = '@';
+
+      public struct User
+      {
+         public User(string name, string username)
+         {
+            Name = name;
+            Username = username;
+         }
+
+         public string Name { get; }
+         public string Username { get; }
       }
 
       public enum HidingReason
@@ -136,12 +148,12 @@ namespace mrHelper.App.Controls
 
       private string formatUser(User user)
       {
-         return String.Format("{0} ({1}{2})", user.Name, Constants.GitLabLabelPrefixChar, user.Username);
+         return String.Format("{0} ({1}{2})", user.Name, GitLabLabelPrefixChar, user.Username);
       }
 
       /// <summary>
       /// Extends functionality.
-      /// Trims result of StringUtils.GetCurrentWord():
+      /// Trims result of TextUtils.GetCurrentWord():
       /// - removes all non-letter characters before '@' character.
       /// - removes all non-letter characters after a series of letter characters (after '@')
       ///   e.g. "[@abcd]" converted to "abcd"
@@ -150,10 +162,10 @@ namespace mrHelper.App.Controls
       /// - strings with letter-characters prior to '@'
       /// - strings where there is a non-letter character next to '@'
       /// </summary>
-      private StringUtils.WordInfo getCurrentWord(RichTextBox txt)
+      private TextUtils.WordInfo getCurrentWord(RichTextBox txt)
       {
          int selectionStartPosition = txt.SelectionStart - 1;
-         StringUtils.WordInfo word = StringUtils.GetCurrentWord(txt.Text, selectionStartPosition);
+         TextUtils.WordInfo word = TextUtils.GetCurrentWord(txt.Text, selectionStartPosition);
          if (!word.IsValid)
          {
             return word;
@@ -172,7 +184,7 @@ namespace mrHelper.App.Controls
                   firstLetterPosition = iPosition;
                }
             }
-            else if (currentChar == Constants.GitLabLabelPrefixChar)
+            else if (currentChar == GitLabLabelPrefixChar)
             {
                if (!firstLabelPrefixPosition.HasValue)
                {
@@ -189,7 +201,7 @@ namespace mrHelper.App.Controls
           || !firstLabelPrefixPosition.HasValue
           ||  firstLetterPosition.Value < firstLabelPrefixPosition.Value)
          {
-            return StringUtils.WordInfo.Invalid;
+            return TextUtils.WordInfo.Invalid;
          }
 
          int firstCharAfterLabelPrefixPosition = firstLabelPrefixPosition.Value + 1;
@@ -198,24 +210,24 @@ namespace mrHelper.App.Controls
             : word.Word.Length - firstCharAfterLabelPrefixPosition;
          if (textLength == 0)
          {
-            return StringUtils.WordInfo.Invalid;
+            return TextUtils.WordInfo.Invalid;
          }
 
          int startPosition = word.Start + firstCharAfterLabelPrefixPosition;
          string trimmedWord = word.Word.Substring(firstCharAfterLabelPrefixPosition, textLength);
          if (selectionStartPosition < startPosition || selectionStartPosition >= startPosition + trimmedWord.Length)
          {
-            return StringUtils.WordInfo.Invalid;
+            return TextUtils.WordInfo.Invalid;
          }
 
-         return new StringUtils.WordInfo(startPosition, trimmedWord);
+         return new TextUtils.WordInfo(startPosition, trimmedWord);
       }
 
       private void showAutoCompleteList()
       {
          hideAutoCompleteList();
 
-         StringUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
+         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
          if (!currentWordInfo.IsValid || currentWordInfo.Word.Length < 2)
          {
             return;
@@ -246,7 +258,7 @@ namespace mrHelper.App.Controls
 
       private void showPopupWindow()
       {
-         StringUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
+         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
          if (!currentWordInfo.IsValid)
          {
             return;
@@ -342,14 +354,14 @@ namespace mrHelper.App.Controls
 
       private void applyAutoCompleteListSelection()
       {
-         StringUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
+         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
          if (_listBoxAutoComplete.SelectedItem == null || !currentWordInfo.IsValid)
          {
             return;
          }
 
          string substitutionWord = ((User)(_listBoxAutoComplete.SelectedItem)).Username;
-         textBoxAutoComplete.Text = StringUtils.ReplaceWord(textBoxAutoComplete.Text, currentWordInfo, substitutionWord);
+         textBoxAutoComplete.Text = TextUtils.ReplaceWord(textBoxAutoComplete.Text, currentWordInfo, substitutionWord);
          textBoxAutoComplete.SelectionStart = currentWordInfo.Start + substitutionWord.Length;
       }
 

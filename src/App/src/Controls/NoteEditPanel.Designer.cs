@@ -1,6 +1,6 @@
-﻿namespace mrHelper.App.Forms
+﻿namespace mrHelper.App.Controls
 {
-   partial class DiscussionNoteEditPanel
+   partial class NoteEditPanel
    {
       /// <summary> 
       /// Required designer variable.

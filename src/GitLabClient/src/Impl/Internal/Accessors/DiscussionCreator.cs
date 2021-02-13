@@ -17,12 +17,14 @@ namespace mrHelper.GitLabClient.Accessors
    public class DiscussionCreator : IDiscussionCreator, IDisposable
    {
       internal DiscussionCreator(MergeRequestKey mrk, IHostProperties hostProperties,
-         User currentUser, INetworkOperationStatusListener networkOperationStatusListener)
+         User currentUser, IModificationListener modificationListener,
+         INetworkOperationStatusListener networkOperationStatusListener)
       {
          _discussionOperator = new DiscussionOperator(
             mrk.ProjectKey.HostName, hostProperties, networkOperationStatusListener);
          _mergeRequestKey = mrk;
          _currentUser = currentUser;
+         _modificationListener = modificationListener;
       }
 
       public void Dispose()
@@ -41,6 +43,7 @@ namespace mrHelper.GitLabClient.Accessors
          try
          {
             await _discussionOperator.CreateNoteAsync(_mergeRequestKey, parameters);
+            _modificationListener.OnDiscussionModified(_mergeRequestKey);
          }
          catch (OperatorException ex)
          {
@@ -57,7 +60,9 @@ namespace mrHelper.GitLabClient.Accessors
 
          try
          {
-            return await _discussionOperator.CreateDiscussionAsync(_mergeRequestKey, parameters);
+            var result = await _discussionOperator.CreateDiscussionAsync(_mergeRequestKey, parameters);
+            _modificationListener.OnDiscussionModified(_mergeRequestKey);
+            return result;
          }
          catch (OperatorException ex)
          {
@@ -206,6 +211,7 @@ namespace mrHelper.GitLabClient.Accessors
       private DiscussionOperator _discussionOperator;
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly User _currentUser;
+      private readonly IModificationListener _modificationListener;
    }
 }
 

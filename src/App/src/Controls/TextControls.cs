@@ -6,7 +6,7 @@ using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace mrHelper.App.Controls
 {
-   internal interface ITextControl
+   public interface ITextControl
    {
       string Text { get; }
       HighlightState HighlightState { get; }
@@ -15,7 +15,12 @@ namespace mrHelper.App.Controls
       void ClearHighlight();
    }
 
-   internal class HighlightState
+   internal interface IHighlightListener
+   {
+      void OnHighlighted(Control control);
+   }
+
+   public class HighlightState
    {
       public HighlightState(int highlightStart, int highlightLength)
       {
@@ -29,28 +34,38 @@ namespace mrHelper.App.Controls
 
    internal class SearchableTextBox : TextBoxEx, ITextControl
    {
+      public SearchableTextBox(IHighlightListener highlightListener)
+      {
+         _highlightListener = highlightListener;
+      }
+
       public HighlightState HighlightState => new HighlightState(SelectionStart, SelectionLength);
 
       public void HighlightFragment(int startPosition, int length)
       {
          Select(startPosition, length);
+         _highlightListener?.OnHighlighted(this);
       }
 
       public void ClearHighlight()
       {
          DeselectAll();
       }
+
+      private readonly IHighlightListener _highlightListener;
    }
 
    internal class SearchableHtmlPanel : HtmlPanel, ITextControl
    {
-      internal SearchableHtmlPanel()
+      internal SearchableHtmlPanel(IHighlightListener highlightListener)
          : base()
       {
          /// Disable async image loading.
          /// Given feature prevents showing full-size images because their size are unknown
          /// at the moment of tooltip rendering.
          _htmlContainer.AvoidAsyncImagesLoading = true;
+
+         _highlightListener = highlightListener;
       }
 
       string ITextControl.Text => removeCodeBlocks(getOriginalNote()).Body;
@@ -69,6 +84,7 @@ namespace mrHelper.App.Controls
          DiscussionNote updatedNote = cloneNoteWithNewText(getOriginalNote(), span);
          (Parent as DiscussionBox).setDiscussionNoteText(this, updatedNote);
          HighlightState = new HighlightState(startPosition, length);
+         _highlightListener?.OnHighlighted(this);
       }
 
       public void ClearHighlight()
@@ -129,6 +145,8 @@ namespace mrHelper.App.Controls
          return new DiscussionNote(note.Id, text, note.Created_At, note.Updated_At,
             note.Author, note.Type, note.System, note.Resolvable, note.Resolved, note.Position);
       }
+
+      private readonly IHighlightListener _highlightListener;
    }
 }
 

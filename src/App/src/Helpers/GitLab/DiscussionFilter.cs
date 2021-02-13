@@ -110,10 +110,20 @@ namespace mrHelper.App.Helpers
       {
          CurrentUser = currentUser;
          MergeRequestAuthor = mergeRequestAuthor;
-         Filter = initialState;
+         _filterState = initialState;
       }
 
-      public DiscussionFilterState Filter { get; set; }
+      public event Action FilterStateChanged;
+
+      public DiscussionFilterState FilterState
+      {
+         get => _filterState;
+         set
+         {
+            _filterState = value;
+            FilterStateChanged?.Invoke();
+         }
+      }
 
       public bool DoesMatchFilter(Discussion discussion)
       {
@@ -122,17 +132,17 @@ namespace mrHelper.App.Helpers
             return false;
          }
 
-         if (!Filter.SystemNotes && discussion.Notes.First().System)
+         if (!_filterState.SystemNotes && discussion.Notes.First().System)
          {
             return false;
          }
 
-         if (Filter.ByCurrentUserOnly && discussion.Notes.First().Author.Id != CurrentUser.Id)
+         if (_filterState.ByCurrentUserOnly && discussion.Notes.First().Author.Id != CurrentUser.Id)
          {
             return false;
          }
 
-         if (!Filter.ServiceMessages && isServiceDiscussioNote(discussion.Notes.First()))
+         if (!_filterState.ServiceMessages && isServiceDiscussioNote(discussion.Notes.First()))
          {
             return false;
          }
@@ -141,8 +151,8 @@ namespace mrHelper.App.Helpers
          {
             bool isLastNoteFromMergeRequestAuthor = discussion.Notes.Last().Author.Id == MergeRequestAuthor.Id;
             bool matchByAnswers =
-                   (Filter.ByAnswers.HasFlag(FilterByAnswers.Answered) && isLastNoteFromMergeRequestAuthor)
-                || (Filter.ByAnswers.HasFlag(FilterByAnswers.Unanswered) && !isLastNoteFromMergeRequestAuthor);
+                   (_filterState.ByAnswers.HasFlag(FilterByAnswers.Answered) && isLastNoteFromMergeRequestAuthor)
+                || (_filterState.ByAnswers.HasFlag(FilterByAnswers.Unanswered) && !isLastNoteFromMergeRequestAuthor);
             if (!matchByAnswers)
             {
                return false;
@@ -151,8 +161,8 @@ namespace mrHelper.App.Helpers
 
          bool isDiscussionResolved = discussion.Notes.Cast<DiscussionNote>().All(x => (!x.Resolvable || x.Resolved));
          bool matchByResolved =
-                (Filter.ByResolution.HasFlag(FilterByResolution.Resolved) && isDiscussionResolved)
-             || (Filter.ByResolution.HasFlag(FilterByResolution.NotResolved) && !isDiscussionResolved);
+                (_filterState.ByResolution.HasFlag(FilterByResolution.Resolved) && isDiscussionResolved)
+             || (_filterState.ByResolution.HasFlag(FilterByResolution.NotResolved) && !isDiscussionResolved);
          if (!matchByResolved)
          {
             return false;
@@ -166,8 +176,9 @@ namespace mrHelper.App.Helpers
          return note.Author.Username == Program.ServiceManager.GetServiceMessageUsername();
       }
 
-      private User CurrentUser;
-      private User MergeRequestAuthor;
+      private readonly User CurrentUser;
+      private readonly User MergeRequestAuthor;
+      private DiscussionFilterState _filterState;
    }
 }
 

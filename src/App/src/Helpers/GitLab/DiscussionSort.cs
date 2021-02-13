@@ -23,10 +23,20 @@ namespace mrHelper.App.Helpers
    {
       public DiscussionSort(DiscussionSortState initialState)
       {
-         SortState = initialState;
+         _sortState = initialState;
       }
 
-      public DiscussionSortState SortState { get; set; }
+      public event Action SortStateChanged;
+
+      public DiscussionSortState SortState
+      {
+         get => _sortState;
+         set
+         {
+            _sortState = value;
+            SortStateChanged?.Invoke();
+         }
+      }
 
       public IEnumerable<T> Sort<T>(IEnumerable<T> discussions, Func<T, IEnumerable<DiscussionNote>> fnGetNotes)
       {
@@ -51,6 +61,8 @@ namespace mrHelper.App.Helpers
          Debug.Assert(false);
          return null;
       }
+
+      private DiscussionSortState _sortState;
    }
 }
 

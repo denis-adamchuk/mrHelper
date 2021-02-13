@@ -46,7 +46,7 @@
          this.textBoxAssigneeUsername = new System.Windows.Forms.TextBox();
          this.checkBoxSquash = new System.Windows.Forms.CheckBox();
          this.checkBoxDeleteSourceBranch = new System.Windows.Forms.CheckBox();
-         this.textBoxSpecialNote = new mrHelper.App.Controls.TextBoxWithUserAutoComplete();
+         this.textBoxSpecialNote = new mrHelper.CommonControls.Controls.TextBoxWithUserAutoComplete();
          this.buttonSubmit = new System.Windows.Forms.Button();
          this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.groupBoxProject = new System.Windows.Forms.GroupBox();
@@ -358,7 +358,7 @@
       protected System.Windows.Forms.ComboBox comboBoxProject;
       protected System.Windows.Forms.Label labelAssignee;
       protected System.Windows.Forms.TextBox textBoxAssigneeUsername;
-      protected mrHelper.App.Controls.TextBoxWithUserAutoComplete textBoxSpecialNote;
+      protected mrHelper.CommonControls.Controls.TextBoxWithUserAutoComplete textBoxSpecialNote;
       protected System.Windows.Forms.Label labelSpecialNotePrefix;
    }
 }

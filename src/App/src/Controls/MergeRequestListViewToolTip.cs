@@ -9,7 +9,6 @@ namespace mrHelper.App.Controls
       public MergeRequestListViewToolTip(ListView listView)
       {
          _listView = listView;
-         InitializeComponent();
 
          _toolTipTimer = new System.Timers.Timer
          {
@@ -19,6 +18,17 @@ namespace mrHelper.App.Controls
          };
 
          _toolTipTimer.Elapsed += (s, et) => onToolTipTimer();
+      }
+
+      /// <summary>
+      /// Clean up any resources being used.
+      /// </summary>
+      /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+      protected override void Dispose(bool disposing)
+      {
+         _toolTipTimer?.Stop();
+         _toolTipTimer?.Dispose();
+         base.Dispose(disposing);
       }
 
       public void UpdateOnMouseMove(Point mouseLocation)

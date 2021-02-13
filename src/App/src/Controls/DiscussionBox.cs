@@ -12,21 +12,19 @@ using mrHelper.App.Helpers;
 using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
 using mrHelper.Common.Tools;
-using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
-using mrHelper.CustomActions;
 
 namespace mrHelper.App.Controls
 {
    internal class DiscussionBox : Panel
    {
       internal DiscussionBox(
-         CustomFontForm parent,
+         Control parent,
          SingleDiscussionAccessor accessor, IGitCommandService git,
          User currentUser, ProjectKey projectKey, Discussion discussion,
          User mergeRequestAuthor,
@@ -35,10 +33,6 @@ namespace mrHelper.App.Controls
          Action<DiscussionBox> onContentChanged,
          Action<Control> onControlGotFocus,
          HtmlToolTipEx htmlTooltip,
-         Action onAddComment,
-         Action onAddThread,
-         IEnumerable<ICommand> commands,
-         Action<ICommand> onCommand,
          ConfigurationHelper.DiffContextPosition diffContextPosition,
          ConfigurationHelper.DiscussionColumnWidth discussionColumnWidth,
          bool needShiftReplies)
@@ -76,11 +70,6 @@ namespace mrHelper.App.Controls
             onContentChanged?.Invoke(this);
          };
          _onControlGotFocus = onControlGotFocus;
-
-         _onAddComment = onAddComment;
-         _onAddThread = onAddThread;
-         _commands = commands;
-         _onCommand = onCommand;
 
          _htmlTooltip = htmlTooltip;
 
@@ -319,7 +308,7 @@ namespace mrHelper.App.Controls
          string oldPath = firstNote.Position.Old_Path + " (line " + firstNote.Position.Old_Line + ")";
          string newPath = firstNote.Position.New_Path + " (line " + firstNote.Position.New_Line + ")";
 
-         Color textColor = Color.Black;
+         Color textColor;
          string result;
          if (firstNote.Position.Old_Line == null)
          {
@@ -342,7 +331,7 @@ namespace mrHelper.App.Controls
             textColor = Color.Blue;
          }
 
-         TextBox textBox = new SearchableTextBox
+         TextBox textBox = new SearchableTextBox(Parent as IHighlightListener)
          {
             ReadOnly = true,
             Text = result,
@@ -396,7 +385,7 @@ namespace mrHelper.App.Controls
 
          if (!isServiceDiscussionNote(note))
          {
-            Control noteControl = new SearchableHtmlPanel
+            Control noteControl = new SearchableHtmlPanel(Parent as IHighlightListener)
             {
                AutoScroll = false,
                BackColor = getNoteColor(note),
@@ -564,13 +553,6 @@ namespace mrHelper.App.Controls
          return menuItem;
       }
 
-      MenuItem[] getCommandItems()
-      {
-         return _commands
-            .Select(command => createMenuItem(null, command.Name, true, (s, e) => _onCommand?.Invoke(command)))
-            .ToArray();
-      }
-
       private ContextMenu createContextMenuForDiscussionNote(DiscussionNote note, Control noteControl,
          bool discussionResolved)
       {
@@ -590,12 +572,6 @@ namespace mrHelper.App.Controls
          addMenuItem("-", true, null);
          addMenuItem("View Note as plain text", true, onMenuItemViewNote, Shortcut.F6);
          addMenuItem("-", true, null);
-         addMenuItem("Add a comment", true, (s, e) => _onAddComment?.Invoke());
-         addMenuItem("Start a thread", true, (s, e) => _onAddThread?.Invoke());
-         if (_commands != null && _commands.Any())
-         {
-            contextMenu.MenuItems.Add(new MenuItem("Commands", getCommandItems()));
-         }
 
          return contextMenu;
       }
@@ -968,7 +944,7 @@ namespace mrHelper.App.Controls
          }
 
          string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
-         DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel();
+         NoteEditPanel actions = new NoteEditPanel();
          using (TextEditForm form = new TextEditForm("Edit Discussion Note", currentBody, true, true, actions, _imagePath))
          {
             Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
@@ -1013,7 +989,7 @@ namespace mrHelper.App.Controls
       {
          bool isAlreadyResolved = isDiscussionResolved();
          string resolveText = String.Format("{0} Thread", (isAlreadyResolved ? "Unresolve" : "Resolve"));
-         DiscussionNoteEditPanel actions = new DiscussionNoteEditPanel(resolveText, proposeUserToToggleResolveOnReply);
+         NoteEditPanel actions = new NoteEditPanel(resolveText, proposeUserToToggleResolveOnReply);
          using (TextEditForm form = new TextEditForm("Reply to Discussion", "", true, true, actions, _imagePath))
          {
             actions.SetTextbox(form.TextBox);
@@ -1353,10 +1329,6 @@ namespace mrHelper.App.Controls
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;
       private readonly Action<Control> _onControlGotFocus;
-      private readonly Action _onAddComment;
-      private readonly Action _onAddThread;
-      private readonly IEnumerable<ICommand> _commands;
-      private readonly Action<ICommand> _onCommand;
       private readonly HtmlToolTipEx _htmlTooltip;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }

@@ -36,7 +36,6 @@ namespace mrHelper.Common.Constants
 
       public static string AuthorLabelPrefix = "#";
       public static string GitLabLabelPrefix = "@";
-      public static char GitLabLabelPrefixChar = GitLabLabelPrefix[0];
 
       public static int CheckForUpdatesTimerInterval = 1000 * 60 * 60 * 4; // 4 hours
 

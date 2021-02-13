@@ -65,7 +65,6 @@ namespace mrHelper.App.Controls
 
       public MergeRequestListView()
       {
-         InitializeComponent();
          ListViewItemSorter = new ListViewItemComparer();
          _toolTip = new MergeRequestListViewToolTip(this);
          Tag = "DesignTimeName";
@@ -75,6 +74,16 @@ namespace mrHelper.App.Controls
       {
          setColumnWidths(ConfigurationHelper.GetColumnWidths(Program.Settings, getIdentity()));
          setColumnIndices(ConfigurationHelper.GetColumnIndices(Program.Settings, getIdentity()));
+      }
+
+      /// <summary>
+      /// Clean up any resources being used.
+      /// </summary>
+      /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+      protected override void Dispose(bool disposing)
+      {
+         _toolTip?.Dispose();
+         base.Dispose(disposing);
       }
 
       internal void SetDiffStatisticProvider(IDiffStatisticProvider diffStatisticProvider)

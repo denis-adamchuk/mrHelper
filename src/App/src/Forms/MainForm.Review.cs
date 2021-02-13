@@ -14,6 +14,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 using mrHelper.CommonControls.Tools;
 using mrHelper.CustomActions;
+using mrHelper.App.Forms.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -39,7 +40,8 @@ namespace mrHelper.App.Forms
             dataCache.DiscussionCache.RequestUpdate(mrk, PseudoTimerInterval, null);
          }
 
-         IEnumerable<ICommand> commands = await loadCustomCommandsAsync();
+
+         string customActionFileName = await getCustomActionFileNameAsync();
          if (_exiting)
          {
             return;
@@ -56,7 +58,8 @@ namespace mrHelper.App.Forms
          {
             return;
          }
-         showDiscussionForm(dataCache, storage, currentUser, mrk, discussions, title, author, webUrl, commands);
+         showDiscussionForm(dataCache, storage, currentUser, mrk, discussions, title, author, webUrl,
+            customActionFileName);
       }
 
       async private Task<bool> prepareStorageForDiscussionsForm(MergeRequestKey mrk,
@@ -84,7 +87,7 @@ namespace mrHelper.App.Forms
 
       private void showDiscussionForm(DataCache dataCache, ILocalCommitStorage storage, User currentUser,
          MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author, string webUrl,
-         IEnumerable<ICommand> commands)
+         string customActionFileName)
       {
          if (currentUser == null || discussions == null || author == null || currentUser.Id == 0)
          {
@@ -108,8 +111,7 @@ namespace mrHelper.App.Forms
          {
             IAsyncGitCommandService git = storage?.Git;
 
-            DiscussionsForm discussionsForm = new DiscussionsForm(dataCache,
-               git, currentUser, mrk, discussions, title, author, _colorScheme,
+            AsyncDiscussionLoader discussionLoader = new AsyncDiscussionLoader(mrk, dataCache,
                async (key, discussionsUpdated) =>
             {
                if (storage != null && storage.Updater != null)
@@ -130,9 +132,16 @@ namespace mrHelper.App.Forms
                   MessageBox.Show("Cannot update a storage, some context code snippets may be missing. ",
                      "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                }
-            },
-            () => dataCache?.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null),
-            webUrl, _shortcuts, commands)
+            }, this);
+
+            AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(mrk, title, currentUser, _shortcuts);
+
+            Func<ICommandCallback, IEnumerable<ICommand>> getCommands =
+               (callback) => loadCustomCommands(customActionFileName, callback);
+
+            DiscussionsForm discussionsForm = new DiscussionsForm(
+               git, currentUser, mrk, discussions, title, author, _colorScheme,
+               discussionLoader, discussionHelper, webUrl, _shortcuts, getCommands)
             {
                Tag = mrk
             };

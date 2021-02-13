@@ -9,12 +9,18 @@ namespace mrHelper.GitLabClient.Accessors
          DiscussionResolved?.Invoke(mergeRequestKey);
       }
 
+      public void OnDiscussionModified(MergeRequestKey mergeRequestKey)
+      {
+         DiscussionModified?.Invoke(mergeRequestKey);
+      }
+
       public void OnTrackedTimeModified(MergeRequestKey mergeRequestKey, TimeSpan span, bool add)
       {
          TrackedTimeModified?.Invoke(mergeRequestKey, span, add);
       }
 
       public event Action<MergeRequestKey> DiscussionResolved;
+      public event Action<MergeRequestKey> DiscussionModified;
       public event Action<MergeRequestKey, TimeSpan, bool> TrackedTimeModified;
    }
 }

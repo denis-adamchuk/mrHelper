@@ -37,8 +37,9 @@ namespace mrHelper.GitLabClient
          if (version != null)
          {
             _isApprovalStatusSupportedCached = isApprovalStatusSupported(version);
+            return _isApprovalStatusSupportedCached.Value;
          }
-         return _isApprovalStatusSupportedCached.Value;
+         return false;
       }
 
       public void Dispose()
@@ -135,7 +136,7 @@ namespace mrHelper.GitLabClient
       {
          Timer timer = new Timer
          {
-            Interval = ConnectionCheckingTimerInterval  
+            Interval = ConnectionCheckingTimerInterval
          };
          timer.Elapsed += onTimer;
          timer.SynchronizingObject = _synchronizeInvoke;

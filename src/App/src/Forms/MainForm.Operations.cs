@@ -8,6 +8,7 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
+using mrHelper.App.Helpers;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.CommonControls.Tools;
@@ -348,7 +349,10 @@ namespace mrHelper.App.Forms
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            bool res = await DiscussionHelper.AddCommentAsync(mrk, mergeRequest.Title, getCurrentUser(), _shortcuts);
+            DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
+            AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
+               mrk, mergeRequest.Title, getCurrentUser(), _shortcuts);
+            bool res = await discussionHelper.AddCommentAsync();
             addOperationRecord(res ? "New comment has been added" : "Comment has not been added");
          }));
       }
@@ -360,8 +364,10 @@ namespace mrHelper.App.Forms
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            bool res = (await DiscussionHelper.AddThreadAsync(mrk, mergeRequest.Title,
-               getCurrentUser(), getDataCache(getCurrentTabDataCacheType()), _shortcuts)) != null;
+            DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
+            AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
+               mrk, mergeRequest.Title, getCurrentUser(), _shortcuts);
+            bool res = await discussionHelper.AddThreadAsync();
             addOperationRecord(res ? "A new discussion thread has been added" : "Discussion thread has not been added");
          }));
       }

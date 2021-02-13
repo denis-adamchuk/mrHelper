@@ -6,6 +6,8 @@ namespace mrHelper.GitLabClient
    {
       event Action<MergeRequestKey> DiscussionResolved;
 
+      event Action<MergeRequestKey> DiscussionModified;
+
       event Action<MergeRequestKey, TimeSpan, bool> TrackedTimeModified;
    }
 }

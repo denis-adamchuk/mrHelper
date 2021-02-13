@@ -72,23 +72,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="src\Controls\DiscussionActionsPanel.cs">
+    <Compile Include="src\Controls\DiscussionPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="src\Controls\DiscussionActionsPanel.Designer.cs">
-      <DependentUpon>DiscussionActionsPanel.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionFilterPanel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionFilterPanel.Designer.cs">
-      <DependentUpon>DiscussionFilterPanel.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionFontSelectionPanel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="src\Controls\DiscussionFontSelectionPanel.Designer.cs">
-      <DependentUpon>DiscussionFontSelectionPanel.cs</DependentUpon>
+    <Compile Include="src\Controls\DiscussionPanel.Designer.cs">
+      <DependentUpon>DiscussionPanel.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Controls\DiscussionSearchPanel.cs">
       <SubType>UserControl</SubType>
@@ -96,11 +84,11 @@
     <Compile Include="src\Controls\DiscussionSearchPanel.Designer.cs">
       <DependentUpon>DiscussionSearchPanel.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Controls\DiscussionSortPanel.cs">
+    <Compile Include="src\Controls\DiscussionsFormMenu.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="src\Controls\DiscussionSortPanel.Designer.cs">
-      <DependentUpon>DiscussionSortPanel.cs</DependentUpon>
+    <Compile Include="src\Controls\DiscussionsFormMenu.Designer.cs">
+      <DependentUpon>DiscussionsFormMenu.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Controls\HtmlToolTipEx.cs">
       <SubType>Component</SubType>
@@ -111,29 +99,14 @@
     <Compile Include="src\Controls\MergeRequestListViewSubItemInfo.cs">
     </Compile>
     <Compile Include="src\Controls\MergeRequestListView.cs" />
-    <Compile Include="src\Controls\MergeRequestListView.Designer.cs">
-      <DependentUpon>MergeRequestListView.cs</DependentUpon>
-    </Compile>
     <Compile Include="src\Controls\MergeRequestListViewToolTip.cs">
       <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="src\Controls\MergeRequestListViewToolTip.Designer.cs">
-      <DependentUpon>MergeRequestListViewToolTip.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Controls\RevisionBrowser.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="src\Controls\PopupWindow.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="src\Controls\RevisionBrowser.Designer.cs">
       <DependentUpon>RevisionBrowser.cs</DependentUpon>
-    </Compile>
-    <Compile Include="src\Controls\TextBoxWithUserAutoComplete.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="src\Controls\TextBoxWithUserAutoComplete.designer.cs">
-      <DependentUpon>TextBoxWithUserAutoComplete.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Controls\TextControls.cs" />
     <Compile Include="src\Forms\AcceptMergeRequestForm.UI.cs">
@@ -146,11 +119,11 @@
     <Compile Include="src\Forms\AddItemForm.Designer.cs">
       <DependentUpon>AddItemForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Controls\DiscussionNoteEditPanel.cs">
+    <Compile Include="src\Controls\NoteEditPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="src\Controls\DiscussionNoteEditPanel.Designer.cs">
-      <DependentUpon>DiscussionNoteEditPanel.cs</DependentUpon>
+    <Compile Include="src\Controls\NoteEditPanel.Designer.cs">
+      <DependentUpon>NoteEditPanel.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\CheckForUpdatesForm.cs">
       <SubType>Form</SubType>
@@ -158,8 +131,10 @@
     <Compile Include="src\Forms\CheckForUpdatesForm.Designer.cs">
       <DependentUpon>CheckForUpdatesForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\Helpers\DiscussionHelper.cs" />
-    <Compile Include="src\Forms\Helpers\TimeTrackingHelpers.cs" />
+    <Compile Include="src\Forms\Helpers\DiscussionLayout.cs" />
+    <Compile Include="src\Helpers\GitLab\AsyncDiscussionHelper.cs" />
+    <Compile Include="src\Helpers\GitLab\AsyncDiscussionLoader.cs" />
+    <Compile Include="src\Helpers\GitLab\TimeTrackingHelpers.cs" />
     <Compile Include="src\Forms\NewMergeRequestForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -283,6 +258,9 @@
     <Compile Include="src\Helpers\Interprocess\ReportedDiscussionNote.cs" />
     <Compile Include="src\Helpers\PeriodicUpdateChecker.cs" />
     <Compile Include="src\Helpers\PersistentStateHelpers.cs" />
+    <Compile Include="src\Helpers\Search\SearchHelper.cs" />
+    <Compile Include="src\Helpers\Search\SearchQuery.cs" />
+    <Compile Include="src\Helpers\Search\TextSearchResult.cs" />
     <Compile Include="src\Helpers\StaticUpdateChecker.cs" />
     <Compile Include="src\Helpers\Configuration\Configuration.cs" />
     <Compile Include="src\Helpers\Configuration\ConfigurationHelper.cs" />
@@ -318,20 +296,14 @@
     <Compile Include="src\LaunchOptions.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
-    <EmbeddedResource Include="src\Controls\DiscussionActionsPanel.resx">
-      <DependentUpon>DiscussionActionsPanel.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Controls\DiscussionFilterPanel.resx">
-      <DependentUpon>DiscussionFilterPanel.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="src\Controls\DiscussionFontSelectionPanel.resx">
-      <DependentUpon>DiscussionFontSelectionPanel.cs</DependentUpon>
+    <EmbeddedResource Include="src\Controls\DiscussionPanel.resx">
+      <DependentUpon>DiscussionPanel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\DiscussionSearchPanel.resx">
       <DependentUpon>DiscussionSearchPanel.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Controls\DiscussionSortPanel.resx">
-      <DependentUpon>DiscussionSortPanel.cs</DependentUpon>
+    <EmbeddedResource Include="src\Controls\DiscussionsFormMenu.resx">
+      <DependentUpon>DiscussionsFormMenu.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\RevisionBrowser.resx">
       <DependentUpon>RevisionBrowser.cs</DependentUpon>
@@ -339,8 +311,8 @@
     <EmbeddedResource Include="src\Forms\AddItemForm.resx">
       <DependentUpon>AddItemForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Controls\DiscussionNoteEditPanel.resx">
-      <DependentUpon>DiscussionNoteEditPanel.cs</DependentUpon>
+    <EmbeddedResource Include="src\Controls\NoteEditPanel.resx">
+      <DependentUpon>NoteEditPanel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\CheckForUpdatesForm.resx">
       <DependentUpon>CheckForUpdatesForm.cs</DependentUpon>

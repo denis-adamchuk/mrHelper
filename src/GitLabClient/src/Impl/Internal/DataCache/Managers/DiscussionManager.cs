@@ -46,7 +46,8 @@ namespace mrHelper.GitLabClient.Managers
          _mergeRequestCache.MergeRequestEvent += OnMergeRequestEvent;
          _modificationNotifier = modificationNotifier;
 
-         _modificationNotifier.DiscussionResolved += onDiscussionModified;
+         _modificationNotifier.DiscussionResolved += onDiscussionResolved;
+         _modificationNotifier.DiscussionModified += onDiscussionModified;
 
          if (dataCacheContext.UpdateRules.UpdateDiscussionsPeriod.HasValue)
          {
@@ -67,7 +68,8 @@ namespace mrHelper.GitLabClient.Managers
       {
          if(_modificationNotifier != null)
          {
-            _modificationNotifier.DiscussionResolved -= onDiscussionModified;
+            _modificationNotifier.DiscussionResolved -= onDiscussionResolved;
+            _modificationNotifier.DiscussionModified -= onDiscussionModified;
             _modificationNotifier = null;
          }
 
@@ -516,7 +518,7 @@ namespace mrHelper.GitLabClient.Managers
          Debug.Assert(false);
       }
 
-      private void onDiscussionModified(MergeRequestKey mrk)
+      private void onDiscussionResolved(MergeRequestKey mrk)
       {
          // TODO It can be removed when GitLab issue is fixed, see commit message
          if (!_cachedDiscussions.ContainsKey(mrk))
@@ -529,6 +531,13 @@ namespace mrHelper.GitLabClient.Managers
             mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId.ToString()));
          _cachedDiscussions.Remove(mrk);
          GlobalCache.DeleteDiscussions(mrk);
+
+         onDiscussionModified(mrk);
+      }
+
+      private void onDiscussionModified(MergeRequestKey mrk)
+      {
+         enqueueOneShotTimer(mrk, Constants.DiscussionCheckOnNewThreadInterval, null);
       }
 
       public void OnMergeRequestEvent(UserEvents.MergeRequestEvent e)

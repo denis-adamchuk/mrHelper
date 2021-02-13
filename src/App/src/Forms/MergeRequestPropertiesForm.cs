@@ -11,6 +11,7 @@ using mrHelper.CommonControls.Tools;
 using Markdig;
 using mrHelper.App.Controls;
 using mrHelper.Common.Interfaces;
+using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.App.Forms
 {
@@ -48,7 +49,8 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            textBoxSpecialNote.SetUsers(users);
+            textBoxSpecialNote.SetUsers(users
+               .Select(user => new CommonControls.Controls.TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
          }
       }
 
@@ -73,7 +75,8 @@ namespace mrHelper.App.Forms
          {
             string projectName = getProjectName();
             IEnumerable<User> users = await _projectAccessor.GetSingleProjectAccessor(projectName).GetUsersAsync();
-            textBoxSpecialNote.SetUsers(users);
+            textBoxSpecialNote.SetUsers(users
+               .Select(user => new CommonControls.Controls.TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
          }));
       }
 

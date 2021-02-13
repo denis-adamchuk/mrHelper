@@ -28,6 +28,7 @@ namespace mrHelper.GitLabClient.Accessors
             try
             {
                await discussionOperator.ReplyAsync(_mergeRequestKey, _discussionId, body);
+               _modificationListener.OnDiscussionModified(_mergeRequestKey);
             }
             catch (OperatorException ex)
             {
@@ -44,6 +45,7 @@ namespace mrHelper.GitLabClient.Accessors
             try
             {
                await discussionOperator.ReplyAndResolveDiscussionAsync(_mergeRequestKey, _discussionId, body, resolve);
+               _modificationListener.OnDiscussionModified(_mergeRequestKey);
             }
             catch (OperatorException ex)
             {
@@ -59,7 +61,9 @@ namespace mrHelper.GitLabClient.Accessors
          {
             try
             {
-               return await discussionOperator.ModifyNoteBodyAsync(_mergeRequestKey, _discussionId, noteId, body);
+               var result = await discussionOperator.ModifyNoteBodyAsync(_mergeRequestKey, _discussionId, noteId, body);
+               _modificationListener.OnDiscussionModified(_mergeRequestKey);
+               return result;
             }
             catch (OperatorException ex)
             {
@@ -76,6 +80,7 @@ namespace mrHelper.GitLabClient.Accessors
             try
             {
                await discussionOperator.DeleteNoteAsync(_mergeRequestKey, noteId);
+               _modificationListener.OnDiscussionModified(_mergeRequestKey);
             }
             catch (OperatorException ex)
             {
@@ -92,6 +97,7 @@ namespace mrHelper.GitLabClient.Accessors
             try
             {
                await discussionOperator.ResolveNoteAsync(_mergeRequestKey, _discussionId, noteId, resolve);
+               _modificationListener.OnDiscussionModified(_mergeRequestKey);
             }
             catch (OperatorException ex)
             {
@@ -107,15 +113,13 @@ namespace mrHelper.GitLabClient.Accessors
          {
             try
             {
-               return await discussionOperator.ResolveDiscussionAsync(_mergeRequestKey, _discussionId, resolve);
+               var result = await discussionOperator.ResolveDiscussionAsync(_mergeRequestKey, _discussionId, resolve);
+               _modificationListener.OnDiscussionResolved(_mergeRequestKey);
+               return result;
             }
             catch (OperatorException ex)
             {
                throw new DiscussionEditorException("Cannot change discussion resolve state", ex);
-            }
-            finally
-            {
-               _modificationListener.OnDiscussionResolved(_mergeRequestKey);
             }
          }
       }

@@ -17,11 +17,11 @@
          {
             components.Dispose();
          }
-         unsubscribeFromSettingsChange();
-         this.FilterPanel.Dispose();
-         this.ActionsPanel.Dispose();
-         this.SearchPanel.Dispose();
-         this._htmlTooltip.Dispose();
+
+         _discussionLoader.StatusChanged -= onDiscussionLoaderStatusChanged;
+
+         Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
+
          base.Dispose(disposing);
       }
 
@@ -34,89 +34,111 @@
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
-         this.pictureBox1 = new System.Windows.Forms.PictureBox();
-         this.linkLabelGitLabURL = new System.Windows.Forms.LinkLabel();
-         this.labelHotKeyHint = new System.Windows.Forms.Label();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.discussionPanel = new mrHelper.App.Controls.DiscussionPanel();
+         this.discussionMenu = new mrHelper.App.Controls.DiscussionsFormMenu();
+         this.searchPanel = new mrHelper.App.Controls.DiscussionSearchPanel();
+         this.panelHeader = new System.Windows.Forms.Panel();
          this.linkLabelSaveAsDefaultLayout = new System.Windows.Forms.LinkLabel();
-         ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
+         this.linkLabelGitLabURL = new System.Windows.Forms.LinkLabel();
+         this.panelHeader.SuspendLayout();
          this.SuspendLayout();
          // 
-         // pictureBox1
+         // discussionPanel
          // 
-         this.pictureBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.pictureBox1.Location = new System.Drawing.Point(1133, 42);
-         this.pictureBox1.Name = "pictureBox1";
-         this.pictureBox1.Size = new System.Drawing.Size(208, 135);
-         this.pictureBox1.TabIndex = 0;
-         this.pictureBox1.TabStop = false;
-         this.pictureBox1.Visible = false;
+         this.discussionPanel.AutoScroll = true;
+         this.discussionPanel.AutoScrollMargin = new System.Drawing.Size(0, 200);
+         this.discussionPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.discussionPanel.Location = new System.Drawing.Point(0, 43);
+         this.discussionPanel.Name = "discussionPanel";
+         this.discussionPanel.Size = new System.Drawing.Size(519, 187);
+         this.discussionPanel.TabIndex = 7;
+         // 
+         // discussionMenu
+         // 
+         this.discussionMenu.BackColor = System.Drawing.SystemColors.Menu;
+         this.discussionMenu.Dock = System.Windows.Forms.DockStyle.Top;
+         this.discussionMenu.Location = new System.Drawing.Point(0, 0);
+         this.discussionMenu.Margin = new System.Windows.Forms.Padding(0);
+         this.discussionMenu.Name = "discussionMenu";
+         this.discussionMenu.Size = new System.Drawing.Size(519, 24);
+         this.discussionMenu.TabIndex = 6;
+         // 
+         // searchPanel
+         // 
+         this.searchPanel.Dock = System.Windows.Forms.DockStyle.Bottom;
+         this.searchPanel.Location = new System.Drawing.Point(0, 230);
+         this.searchPanel.Name = "searchPanel";
+         this.searchPanel.Size = new System.Drawing.Size(519, 38);
+         this.searchPanel.TabIndex = 6;
+         // 
+         // panelHeader
+         // 
+         this.panelHeader.BackColor = System.Drawing.SystemColors.ControlLight;
+         this.panelHeader.Controls.Add(this.linkLabelSaveAsDefaultLayout);
+         this.panelHeader.Controls.Add(this.linkLabelGitLabURL);
+         this.panelHeader.Dock = System.Windows.Forms.DockStyle.Top;
+         this.panelHeader.Location = new System.Drawing.Point(0, 24);
+         this.panelHeader.Margin = new System.Windows.Forms.Padding(0);
+         this.panelHeader.Name = "panelHeader";
+         this.panelHeader.Padding = new System.Windows.Forms.Padding(2);
+         this.panelHeader.Size = new System.Drawing.Size(519, 19);
+         this.panelHeader.TabIndex = 8;
+         // 
+         // linkLabelSaveAsDefaultLayout
+         // 
+         this.linkLabelSaveAsDefaultLayout.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.linkLabelSaveAsDefaultLayout.AutoSize = true;
+         this.linkLabelSaveAsDefaultLayout.Location = new System.Drawing.Point(402, 2);
+         this.linkLabelSaveAsDefaultLayout.Name = "linkLabelSaveAsDefaultLayout";
+         this.linkLabelSaveAsDefaultLayout.Size = new System.Drawing.Size(112, 13);
+         this.linkLabelSaveAsDefaultLayout.TabIndex = 4;
+         this.linkLabelSaveAsDefaultLayout.TabStop = true;
+         this.linkLabelSaveAsDefaultLayout.Text = "Save as default layout";
+         this.linkLabelSaveAsDefaultLayout.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.onSaveAsDefaultClicked);
          // 
          // linkLabelGitLabURL
          // 
          this.linkLabelGitLabURL.AutoSize = true;
-         this.linkLabelGitLabURL.Location = new System.Drawing.Point(12, 9);
+         this.linkLabelGitLabURL.Location = new System.Drawing.Point(9, 2);
+         this.linkLabelGitLabURL.Margin = new System.Windows.Forms.Padding(0);
          this.linkLabelGitLabURL.Name = "linkLabelGitLabURL";
          this.linkLabelGitLabURL.Size = new System.Drawing.Size(100, 13);
-         this.linkLabelGitLabURL.TabIndex = 1;
+         this.linkLabelGitLabURL.TabIndex = 2;
          this.linkLabelGitLabURL.TabStop = true;
          this.linkLabelGitLabURL.Text = "<merge-request-url>";
-         this.linkLabelGitLabURL.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelGitLabURL_LinkClicked);
-         // 
-         // labelHotKeyHint
-         // 
-         this.labelHotKeyHint.AutoSize = true;
-         this.labelHotKeyHint.ForeColor = System.Drawing.Color.Blue;
-         this.labelHotKeyHint.Location = new System.Drawing.Point(1185, 9);
-         this.labelHotKeyHint.Name = "labelHotKeyHint";
-         this.labelHotKeyHint.Size = new System.Drawing.Size(156, 13);
-         this.labelHotKeyHint.TabIndex = 2;
-         this.labelHotKeyHint.Text = "Hover to see available hot-keys";
-         this.toolTip.SetToolTip(this.labelHotKeyHint, "Ctrl-Arrow - Toggle layout\r\nPlus/Minus - Toggle column width\r\nF5 - Reload from se" +
-        "rver");
-         // 
-         // linkLabelSaveAsDefaultLayout
-         // 
-         this.linkLabelSaveAsDefaultLayout.AutoSize = true;
-         this.linkLabelSaveAsDefaultLayout.Location = new System.Drawing.Point(1185, 26);
-         this.linkLabelSaveAsDefaultLayout.Name = "linkLabelSaveAsDefaultLayout";
-         this.linkLabelSaveAsDefaultLayout.Size = new System.Drawing.Size(112, 13);
-         this.linkLabelSaveAsDefaultLayout.TabIndex = 3;
-         this.linkLabelSaveAsDefaultLayout.TabStop = true;
-         this.linkLabelSaveAsDefaultLayout.Text = "Save as default layout";
-         this.linkLabelSaveAsDefaultLayout.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelSaveAsDefaultLayout_LinkClicked);
+         this.linkLabelGitLabURL.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.onUrlClicked);
          // 
          // DiscussionsForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.AutoScroll = true;
-         this.AutoScrollMargin = new System.Drawing.Size(0, 250);
-         this.ClientSize = new System.Drawing.Size(1353, 456);
-         this.Controls.Add(this.linkLabelSaveAsDefaultLayout);
-         this.Controls.Add(this.labelHotKeyHint);
-         this.Controls.Add(this.linkLabelGitLabURL);
-         this.Controls.Add(this.pictureBox1);
+         this.ClientSize = new System.Drawing.Size(519, 268);
+         this.Controls.Add(this.discussionPanel);
+         this.Controls.Add(this.panelHeader);
+         this.Controls.Add(this.discussionMenu);
+         this.Controls.Add(this.searchPanel);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.KeyPreview = true;
+         this.MinimumSize = new System.Drawing.Size(535, 307);
          this.Name = "DiscussionsForm";
          this.Text = "Discussions";
          this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
-         this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.DiscussionsForm_FormClosing);
-         this.Shown += new System.EventHandler(this.DiscussionsForm_Shown);
-         this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DiscussionsForm_KeyDown);
-         ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
+         this.panelHeader.ResumeLayout(false);
+         this.panelHeader.PerformLayout();
          this.ResumeLayout(false);
-         this.PerformLayout();
 
       }
 
       #endregion
 
-      private System.Windows.Forms.PictureBox pictureBox1;
-      private System.Windows.Forms.LinkLabel linkLabelGitLabURL;
-      private System.Windows.Forms.Label labelHotKeyHint;
       private System.Windows.Forms.ToolTip toolTip;
+      private mrHelper.App.Controls.DiscussionPanel discussionPanel;
+      private mrHelper.App.Controls.DiscussionsFormMenu discussionMenu;
+      private Controls.DiscussionSearchPanel searchPanel;
+      private System.Windows.Forms.Panel panelHeader;
+      private System.Windows.Forms.LinkLabel linkLabelGitLabURL;
       private System.Windows.Forms.LinkLabel linkLabelSaveAsDefaultLayout;
    }
 }

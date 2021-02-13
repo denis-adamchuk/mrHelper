@@ -4,7 +4,7 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Constants;
 using mrHelper.GitLabClient;
 
-namespace mrHelper.App.Forms.Helpers
+namespace mrHelper.App.Helpers
 {
    internal static class TimeTrackingHelpers
    {

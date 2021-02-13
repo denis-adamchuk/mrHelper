@@ -831,15 +831,19 @@ namespace mrHelper.App.Forms
          }
       }
 
-      async private Task<IEnumerable<ICommand>> loadCustomCommandsAsync()
+      async private Task<string> getCustomActionFileNameAsync()
       {
          bool isApprovalStatusSupported = await _gitLabInstance?.IsApprovalStatusSupported();
-         CustomCommandLoader loader = new CustomCommandLoader(this);
+         return isApprovalStatusSupported
+            ? Constants.CustomActionsWithApprovalStatusSupportFileName
+            : Constants.CustomActionsFileName;
+      }
+
+      private IEnumerable<ICommand> loadCustomCommands(string filename, ICommandCallback commandCallback)
+      {
+         CustomCommandLoader loader = new CustomCommandLoader(commandCallback);
          try
          {
-            string filename = isApprovalStatusSupported
-               ? Constants.CustomActionsWithApprovalStatusSupportFileName
-               : Constants.CustomActionsFileName;
             return loader.LoadCommands(filename);
          }
          catch (CustomCommandLoaderException ex)

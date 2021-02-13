@@ -11,11 +11,10 @@ using System.Windows.Forms;
 
 namespace mrHelper.CommonControls.Controls
 {
-   public partial class ListViewEx : ListView
+   public class ListViewEx : ListView
    {
       public ListViewEx()
       {
-         InitializeComponent();
          DoubleBuffered = true;
       }
    }

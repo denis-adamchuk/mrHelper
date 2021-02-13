@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Windows.Forms;
+using mrHelper.App.Forms.Helpers;
 
-namespace mrHelper.App.Forms
+namespace mrHelper.App.Controls
 {
-   public partial class DiscussionNoteEditPanel : UserControl
+   public partial class NoteEditPanel : UserControl
    {
-      public DiscussionNoteEditPanel()
+      public NoteEditPanel()
       {
          InitializeComponent();
       }
 
-      public DiscussionNoteEditPanel(string resolveActionText, bool isResolveActionChecked)
+      public NoteEditPanel(string resolveActionText, bool isResolveActionChecked)
       {
          InitializeComponent();
          checkBoxResolveAction.Text = resolveActionText;
@@ -29,7 +30,7 @@ namespace mrHelper.App.Forms
       {
          if (_textBox != null)
          {
-            Helpers.WPFHelpers.InsertCodePlaceholderIntoTextBox(_textBox);
+            WPFHelpers.InsertCodePlaceholderIntoTextBox(_textBox);
             _textBox.Focus();
          }
       }

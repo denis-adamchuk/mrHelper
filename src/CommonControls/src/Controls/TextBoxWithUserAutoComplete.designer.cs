@@ -1,4 +1,4 @@
-﻿namespace mrHelper.App.Controls
+﻿namespace mrHelper.CommonControls.Controls
 {
    partial class TextBoxWithUserAutoComplete
    {

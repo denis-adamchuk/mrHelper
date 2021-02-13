@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace mrHelper.App.Controls
+namespace mrHelper.CommonControls.Controls
 {
    /// https://stackoverflow.com/a/282217
    /// <summary>

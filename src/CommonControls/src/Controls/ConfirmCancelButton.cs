@@ -7,7 +7,6 @@ namespace mrHelper.CommonControls.Controls
    {
       public ConfirmCancelButton()
       {
-         InitializeComponent();
       }
 
       public string ConfirmationText { get; set; } = DefaultConfirmationText;

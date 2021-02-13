@@ -17,6 +17,12 @@
          {
             components.Dispose();
          }
+
+         if (_host != null)
+         {
+            _host.ContentChanged -= onHostContentChanged;
+         }
+
          base.Dispose(disposing);
       }
 
@@ -48,16 +54,17 @@
          this.groupBox1.Controls.Add(this.textBoxSearch);
          this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBox1.Location = new System.Drawing.Point(0, 0);
+         this.groupBox1.Margin = new System.Windows.Forms.Padding(0);
          this.groupBox1.Name = "groupBox1";
-         this.groupBox1.Size = new System.Drawing.Size(344, 85);
+         this.groupBox1.Padding = new System.Windows.Forms.Padding(0);
+         this.groupBox1.Size = new System.Drawing.Size(671, 38);
          this.groupBox1.TabIndex = 0;
          this.groupBox1.TabStop = false;
-         this.groupBox1.Text = "Search";
          // 
          // checkBoxCaseSensitive
          // 
          this.checkBoxCaseSensitive.AutoSize = true;
-         this.checkBoxCaseSensitive.Location = new System.Drawing.Point(6, 45);
+         this.checkBoxCaseSensitive.Location = new System.Drawing.Point(260, 14);
          this.checkBoxCaseSensitive.Name = "checkBoxCaseSensitive";
          this.checkBoxCaseSensitive.Size = new System.Drawing.Size(94, 17);
          this.checkBoxCaseSensitive.TabIndex = 4;
@@ -68,7 +75,7 @@
          // labelFoundCount
          // 
          this.labelFoundCount.AutoSize = true;
-         this.labelFoundCount.Location = new System.Drawing.Point(3, 68);
+         this.labelFoundCount.Location = new System.Drawing.Point(538, 15);
          this.labelFoundCount.Name = "labelFoundCount";
          this.labelFoundCount.Size = new System.Drawing.Size(79, 13);
          this.labelFoundCount.TabIndex = 3;
@@ -77,7 +84,7 @@
          // 
          // buttonFindPrev
          // 
-         this.buttonFindPrev.Location = new System.Drawing.Point(263, 41);
+         this.buttonFindPrev.Location = new System.Drawing.Point(441, 10);
          this.buttonFindPrev.Name = "buttonFindPrev";
          this.buttonFindPrev.Size = new System.Drawing.Size(75, 23);
          this.buttonFindPrev.TabIndex = 2;
@@ -88,7 +95,7 @@
          // 
          // buttonFindNext
          // 
-         this.buttonFindNext.Location = new System.Drawing.Point(263, 17);
+         this.buttonFindNext.Location = new System.Drawing.Point(360, 10);
          this.buttonFindNext.Name = "buttonFindNext";
          this.buttonFindNext.Size = new System.Drawing.Size(75, 23);
          this.buttonFindNext.TabIndex = 1;
@@ -99,7 +106,7 @@
          // 
          // textBoxSearch
          // 
-         this.textBoxSearch.Location = new System.Drawing.Point(6, 19);
+         this.textBoxSearch.Location = new System.Drawing.Point(3, 12);
          this.textBoxSearch.Name = "textBoxSearch";
          this.textBoxSearch.Size = new System.Drawing.Size(251, 20);
          this.textBoxSearch.TabIndex = 0;
@@ -112,7 +119,7 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
          this.Controls.Add(this.groupBox1);
          this.Name = "DiscussionSearchPanel";
-         this.Size = new System.Drawing.Size(344, 85);
+         this.Size = new System.Drawing.Size(671, 38);
          this.groupBox1.ResumeLayout(false);
          this.groupBox1.PerformLayout();
          this.ResumeLayout(false);

@@ -27,7 +27,8 @@ namespace mrHelper.GitLabClient
 
       public DiscussionCreator GetDiscussionCreator(User user)
       {
-         return new DiscussionCreator(_mrk, _settings, user, _networkOperationStatusListener);
+         return new DiscussionCreator(_mrk, _settings, user, _modificationListener,
+            _networkOperationStatusListener);
       }
 
       public SingleDiscussionAccessor GetSingleDiscussionAccessor(string discussionId)

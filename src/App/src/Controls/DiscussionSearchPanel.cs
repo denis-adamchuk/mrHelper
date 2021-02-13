@@ -6,45 +6,53 @@ namespace mrHelper.App.Controls
 {
    public partial class DiscussionSearchPanel : UserControl
    {
-      internal DiscussionSearchPanel(Action<SearchQuery, bool> onFind, Action onTextChanged)
+      public DiscussionSearchPanel()
       {
          InitializeComponent();
-
-         _onFind = onFind;
-         _onTextChanged = onTextChanged;
          labelFoundCount.Visible = false;
          enableButtons();
       }
 
-      public void DisplayFoundCount(int? count)
+      internal void Initialize(ITextControlHost host)
       {
-         labelFoundCount.Visible = count.HasValue;
-         labelFoundCount.Text = count.HasValue ? String.Format(
-            "Found {0} results. {1}", count.Value,
-            count.Value > 0 ? "Use F3/Shift-F3 to navigate between search results." : String.Empty) : String.Empty;
+         _host = host;
+         _host.ContentChanged += onHostContentChanged;
       }
 
-      private void enableButtons()
+      internal void ProcessKeyDown(KeyEventArgs e)
       {
-         bool hasText = textBoxSearch.Text.Length > 0;
-         buttonFindNext.Enabled = hasText;
-         buttonFindPrev.Enabled = hasText;
+         if (e.KeyCode == Keys.F && e.Modifiers.HasFlag(Keys.Control))
+         {
+            Focus();
+            e.Handled = true;
+         }
+         else if (e.KeyCode == Keys.F3)
+         {
+            bool isShitPressed = e.Modifiers.HasFlag(Keys.Shift);
+            continueSearch(isShitPressed ? SearchDirection.Backward : SearchDirection.Forward);
+            e.Handled = true;
+         }
+         else if (e.KeyCode == Keys.Escape)
+         {
+            resetSearch();
+            e.Handled = true;
+         }
       }
 
       private void ButtonFind_Click(object sender, EventArgs e)
       {
-         _onFind(new SearchQuery(textBoxSearch.Text, checkBoxCaseSensitive.Checked), true);
+         onSearchButton(SearchDirection.Forward);
       }
 
       private void buttonFindPrev_Click(object sender, EventArgs e)
       {
-         _onFind(new SearchQuery(textBoxSearch.Text, checkBoxCaseSensitive.Checked), false);
+         onSearchButton(SearchDirection.Backward);
       }
 
       private void textBoxSearch_TextChanged(object sender, EventArgs e)
       {
          enableButtons();
-         _onTextChanged();
+         resetSearch();
       }
 
       private void textBoxSearch_KeyDown(object sender, KeyEventArgs e)
@@ -60,8 +68,120 @@ namespace mrHelper.App.Controls
          buttonFindNext.PerformClick();
       }
 
-      private readonly Action<SearchQuery, bool> _onFind;
-      private readonly Action _onTextChanged;
+      private void onHostContentChanged()
+      {
+         restartSearch();
+      }
+
+      private enum SearchDirection
+      {
+         Forward,
+         Backward
+      }
+
+      private void onSearchButton(SearchDirection searchDirection)
+      {
+         SearchQuery query = new SearchQuery(textBoxSearch.Text, checkBoxCaseSensitive.Checked);
+         if (query.Text == String.Empty)
+         {
+            resetSearch();
+         }
+         else if (_textSearch == null || !query.Equals(_textSearch.Query))
+         {
+            startSearch(query, true);
+         }
+         else
+         {
+            continueSearch(searchDirection);
+         }
+      }
+
+      private void displayFoundCount(int? count)
+      {
+         labelFoundCount.Visible = count.HasValue;
+         labelFoundCount.Text = count.HasValue ? String.Format(
+            "Found {0} results. {1}", count.Value,
+            count.Value > 0
+            ? "Use F3/Shift-F3 to navigate between search results." : String.Empty): String.Empty;
+      }
+
+      private void enableButtons()
+      {
+         bool hasText = textBoxSearch.Text.Length > 0;
+         buttonFindNext.Enabled = hasText;
+         buttonFindPrev.Enabled = hasText;
+      }
+
+      private void highlightSearchResult(TextSearchResult? result)
+      {
+         _textSearchResult = null;
+         if (result.HasValue && _textSearch != null)
+         {
+            result.Value.Control.HighlightFragment(result.Value.InsideControlPosition, _textSearch.Query.Text.Length);
+            _textSearchResult = result;
+         }
+      }
+
+      private void startSearch(SearchQuery query, bool highlight)
+      {
+         resetSearch();
+
+         _textSearch = new TextSearch(_host.Controls, query);
+         TextSearchResult? result = _textSearch.FindFirst(out int count);
+         displayFoundCount(count);
+
+         if (highlight)
+         {
+            highlightSearchResult(result);
+         }
+      }
+
+      private void restartSearch()
+      {
+         if (_textSearch != null)
+         {
+            startSearch(_textSearch.Query, false);
+         }
+      }
+
+      private void continueSearch(SearchDirection searchButton)
+      {
+         if (_textSearch == null)
+         {
+            return;
+         }
+
+         int startPosition = 0;
+         ITextControl control = _host.ActiveControl;
+         if (control != null && control.HighlightState != null)
+         {
+            startPosition = searchButton == SearchDirection.Forward
+               ? control.HighlightState.HighlightStart + control.HighlightState.HighlightLength
+               : control.HighlightState.HighlightStart ;
+            control.ClearHighlight();
+         }
+
+         TextSearchResult? result = searchButton == SearchDirection.Forward
+            ? _textSearch.FindNext(control, startPosition)
+            : _textSearch.FindPrev(control, startPosition);
+
+         if (result != null)
+         {
+            highlightSearchResult(result);
+         }
+      }
+
+      private void resetSearch()
+      {
+         _textSearch = null;
+         displayFoundCount(null);
+         _textSearchResult?.Control.ClearHighlight();
+         _textSearchResult = null;
+      }
+
+      private TextSearch _textSearch;
+      private TextSearchResult? _textSearchResult;
+      private ITextControlHost _host;
    }
 }
 
