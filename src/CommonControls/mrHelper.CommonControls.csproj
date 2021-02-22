@@ -55,6 +55,9 @@
     <Compile Include="src\Controls\DelayedTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\LinkLabelEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\ListViewEx.cs">
       <SubType>Component</SubType>
     </Compile>

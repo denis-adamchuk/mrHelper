@@ -19,8 +19,10 @@ namespace mrHelper.App.Controls
          ToolStripItemCollection items = Items;
          if (onDiscussions != null)
          {
-            var item = new ToolStripMenuItem("&Discussions", null, (s, e) => onDiscussions());
-            item.ShortcutKeys = Keys.F2;
+            var item = new ToolStripMenuItem("&Discussions", null, (s, e) => onDiscussions())
+            {
+               ShortcutKeys = Keys.F2
+            };
             items.Add(item);
             if (onDiscussions == onDefault)
             {
@@ -32,8 +34,10 @@ namespace mrHelper.App.Controls
             items.Add("-", null, null);
             if (onDiffDefault != null)
             {
-               var item = new ToolStripMenuItem("Diff &Tool", null, (s, e) => onDiffDefault());
-               item.ShortcutKeys = Keys.F3;
+               var item = new ToolStripMenuItem("Diff &Tool", null, (s, e) => onDiffDefault())
+               {
+                  ShortcutKeys = Keys.F3
+               };
                items.Add(item);
                if (onDiffDefault == onDefault)
                {
@@ -42,8 +46,10 @@ namespace mrHelper.App.Controls
             }
             if (onDiffToBase != null)
             {
-               var item = new ToolStripMenuItem("Diff to &Base", null, (s, e) => onDiffToBase());
-               item.ShortcutKeys = Keys.Shift | Keys.F3;
+               var item = new ToolStripMenuItem("Diff to &Base", null, (s, e) => onDiffToBase())
+               {
+                  ShortcutKeys = Keys.Shift | Keys.F3
+               };
                items.Add(item);
                if (onDiffToBase == onDefault)
                {
@@ -56,8 +62,10 @@ namespace mrHelper.App.Controls
             items.Add("-", null, null);
             if (onRefreshList != null)
             {
-               _refreshListItem = new ToolStripMenuItem("&Refresh list", null, (s, e) => onRefreshList());
-               _refreshListItem.ShortcutKeys = Keys.F5;
+               _refreshListItem = new ToolStripMenuItem("&Refresh list", null, (s, e) => onRefreshList())
+               {
+                  ShortcutKeys = Keys.F5
+               };
                items.Add(_refreshListItem);
                if (onRefreshList == onDefault)
                {
@@ -66,8 +74,10 @@ namespace mrHelper.App.Controls
             }
             if (onRefresh != null)
             {
-               var item = new ToolStripMenuItem("R&efresh selected", null, (s, e) => onRefresh());
-               item.ShortcutKeys = Keys.Shift | Keys.F5;
+               var item = new ToolStripMenuItem("R&efresh selected", null, (s, e) => onRefresh())
+               {
+                  ShortcutKeys = Keys.Shift | Keys.F5
+               };
                items.Add(item);
                if (onRefresh == onDefault)
                {

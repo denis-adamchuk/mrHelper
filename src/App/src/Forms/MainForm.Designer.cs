@@ -241,7 +241,7 @@ namespace mrHelper.App.Forms
          this.tabControlMode = new System.Windows.Forms.TabControl();
          this.splitContainer2 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectedMR = new System.Windows.Forms.GroupBox();
-         this.linkLabelConnectedTo = new System.Windows.Forms.LinkLabel();
+         this.linkLabelConnectedTo = new LinkLabelEx();
          this.richTextBoxMergeRequestDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.panelFreeSpace = new System.Windows.Forms.Panel();
          this.pictureBox2 = new System.Windows.Forms.PictureBox();
@@ -2285,7 +2285,6 @@ namespace mrHelper.App.Forms
          this.linkLabelConnectedTo.TabIndex = 4;
          this.linkLabelConnectedTo.TabStop = true;
          this.linkLabelConnectedTo.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
-         this.linkLabelConnectedTo.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelConnectedTo_LinkClicked);
          // 
          // richTextBoxMergeRequestDescription
          // 
@@ -2603,7 +2602,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.SplitContainer splitContainer2;
       private System.Windows.Forms.GroupBox groupBoxSelectedMR;
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel richTextBoxMergeRequestDescription;
-      private System.Windows.Forms.LinkLabel linkLabelConnectedTo;
+      private LinkLabelEx linkLabelConnectedTo;
       private System.Windows.Forms.GroupBox groupBoxTimeTracking;
       private System.Windows.Forms.LinkLabel linkLabelTimeTrackingMergeRequest;
       private System.Windows.Forms.Button buttonEditTime;

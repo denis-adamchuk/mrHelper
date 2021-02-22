@@ -63,6 +63,7 @@ namespace mrHelper.App.Forms
 
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);
+         linkLabelGitLabURL.SetLinkLabelClicked(UrlHelper.OpenBrowser);
 
          Text = DefaultCaption;
          MainMenuStrip = discussionMenu.MenuStrip;
@@ -156,11 +157,6 @@ namespace mrHelper.App.Forms
          ConfigurationHelper.SetDiscussionColumnWidth(Program.Settings, _discussionLayout.DiscussionColumnWidth);
          Program.Settings.NeedShiftReplies = _discussionLayout.NeedShiftReplies;
          updateSaveDefaultLayoutState();
-      }
-
-      private void onUrlClicked(object sender, LinkLabelLinkClickedEventArgs e)
-      {
-         UrlHelper.OpenBrowser((sender as LinkLabel).Text);
       }
 
       private void onDiscussionLoaderStatusChanged(string status)

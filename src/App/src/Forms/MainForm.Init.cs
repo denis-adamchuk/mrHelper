@@ -33,8 +33,9 @@ namespace mrHelper.App.Forms
          _mdPipeline =
             MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 
-         this.columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
-         this.linkLabelConnectedTo.Text = String.Empty;
+         columnHeaderName.Width = this.listViewProjects.Width - SystemInformation.VerticalScrollBarWidth - 5;
+         linkLabelConnectedTo.Text = String.Empty;
+         linkLabelConnectedTo.SetLinkLabelClicked(UrlHelper.OpenBrowser);
 
          foreach (Control control in CommonControls.Tools.WinFormsHelpers.GetAllSubControls(this))
          {

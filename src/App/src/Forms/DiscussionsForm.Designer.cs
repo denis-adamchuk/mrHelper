@@ -1,4 +1,6 @@
-﻿namespace mrHelper.App.Forms
+﻿using mrHelper.CommonControls.Controls;
+
+namespace mrHelper.App.Forms
 {
    partial class DiscussionsForm
    {
@@ -40,7 +42,7 @@
          this.searchPanel = new mrHelper.App.Controls.DiscussionSearchPanel();
          this.panelHeader = new System.Windows.Forms.Panel();
          this.linkLabelSaveAsDefaultLayout = new System.Windows.Forms.LinkLabel();
-         this.linkLabelGitLabURL = new System.Windows.Forms.LinkLabel();
+         this.linkLabelGitLabURL = new LinkLabelEx();
          this.panelHeader.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -107,7 +109,6 @@
          this.linkLabelGitLabURL.TabIndex = 2;
          this.linkLabelGitLabURL.TabStop = true;
          this.linkLabelGitLabURL.Text = "<merge-request-url>";
-         this.linkLabelGitLabURL.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.onUrlClicked);
          // 
          // DiscussionsForm
          // 
@@ -138,7 +139,7 @@
       private mrHelper.App.Controls.DiscussionsFormMenu discussionMenu;
       private Controls.DiscussionSearchPanel searchPanel;
       private System.Windows.Forms.Panel panelHeader;
-      private System.Windows.Forms.LinkLabel linkLabelGitLabURL;
+      private LinkLabelEx linkLabelGitLabURL;
       private System.Windows.Forms.LinkLabel linkLabelSaveAsDefaultLayout;
    }
 }

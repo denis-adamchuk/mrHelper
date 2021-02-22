@@ -410,11 +410,6 @@ namespace mrHelper.App.Forms
          formatUserListItem(e);
       }
 
-      private void linkLabelConnectedTo_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-      {
-         UrlHelper.OpenBrowser((sender as LinkLabel).Text);
-      }
-
       private void textBoxDisplayFilter_TextChanged(object sender, EventArgs e)
       {
          onTextBoxDisplayFilterUpdate();

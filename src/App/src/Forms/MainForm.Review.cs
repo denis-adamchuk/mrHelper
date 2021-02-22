@@ -136,8 +136,8 @@ namespace mrHelper.App.Forms
 
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(mrk, title, currentUser, _shortcuts);
 
-            Func<ICommandCallback, IEnumerable<ICommand>> getCommands =
-               (callback) => loadCustomCommands(customActionFileName, callback);
+            IEnumerable<ICommand> getCommands(ICommandCallback callback) =>
+               loadCustomCommands(customActionFileName, callback);
 
             DiscussionsForm discussionsForm = new DiscussionsForm(
                git, currentUser, mrk, discussions, title, author, _colorScheme,
