@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
@@ -16,7 +15,6 @@ using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.GitLabClient;
-using Newtonsoft.Json.Linq;
 using ListViewSubItemInfo = mrHelper.App.Controls.MergeRequestListViewSubItemInfo;
 
 namespace mrHelper.App.Controls
@@ -445,10 +443,7 @@ namespace mrHelper.App.Controls
          Debug.Assert(item.ListView == this);
          Debug.Assert(!isSummaryItem(item));
 
-         ProjectKey projectKey = fmk.ProjectKey;
          MergeRequest mr = fmk.MergeRequest;
-         MergeRequestKey mrk = new MergeRequestKey(projectKey, mr.IId);
-
          string author = String.Format("{0}\n({1}{2})", mr.Author.Name,
             Constants.AuthorLabelPrefix, mr.Author.Username);
 
@@ -460,63 +455,20 @@ namespace mrHelper.App.Controls
             [true] = StringUtils.JoinSubstrings(groupedLabels)
          };
 
-         string getSize(MergeRequestKey key)
-         {
-            if (_diffStatisticProvider == null)
-            {
-               return String.Empty;
-            }
-
-            DiffStatistic? diffStatistic = _diffStatisticProvider.GetStatistic(key, out string errMsg);
-            return diffStatistic?.ToString() ?? errMsg;
-         }
-
-         string getTotalTimeText(MergeRequestKey key)
-         {
-            ITotalTimeCache totalTimeCache = _dataCache?.TotalTimeCache;
-            if (totalTimeCache == null)
-            {
-               return String.Empty;
-            }
-
-            User currentUser = _getCurrentUser(projectKey.HostName);
-            bool isTimeTrackingAllowed = TimeTrackingHelpers.IsTimeTrackingAllowed(
-               mr.Author, projectKey.HostName, currentUser);
-            return TimeTrackingHelpers.ConvertTotalTimeToText(totalTimeCache.GetTotalTime(key), isTimeTrackingAllowed);
-         }
-
-         string getRefreshed(MergeRequestKey key)
-         {
-            IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
-            if (mergeRequestCache == null)
-            {
-               return String.Empty;
-            }
-
-            DateTime refreshed = mergeRequestCache.GetMergeRequestRefreshTime(key);
-            TimeSpan span = DateTime.Now - refreshed;
-            int minutesAgo = Convert.ToInt32(Math.Floor(span.TotalMinutes));
-            // round 55+ seconds to a minute
-            minutesAgo += span.Seconds >= 55 ? 1 : 0; //-V3118
-            return String.Format("{0} minute{1} ago", minutesAgo, minutesAgo == 1 ? String.Empty : "s");
-         }
-
-         string getJiraTask(MergeRequest mergeRequest) => GitLabClient.Helpers.GetJiraTask(mergeRequest);
-         string getJiraTaskUrl(MergeRequest mergeRequest) => GitLabClient.Helpers.GetJiraTaskUrl(
-            mergeRequest, Program.ServiceManager.GetJiraServiceUrl());
-
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, mr.IId);
          setSubItemTag(item, "IId", new ListViewSubItemInfo(x => mr.IId.ToString(), () => mr.Web_Url));
          setSubItemTag(item, "Author", new ListViewSubItemInfo(x => author, () => String.Empty));
          setSubItemTag(item, "Title", new ListViewSubItemInfo(x => mr.Title, () => String.Empty));
          setSubItemTag(item, "Labels", new ListViewSubItemInfo(x => labels[x], () => String.Empty));
          setSubItemTag(item, "Size", new ListViewSubItemInfo(x => getSize(mrk), () => String.Empty));
          setSubItemTag(item, "Jira", new ListViewSubItemInfo(x => getJiraTask(mr), () => getJiraTaskUrl(mr)));
-         setSubItemTag(item, "TotalTime", new ListViewSubItemInfo(x => getTotalTimeText(mrk), () => String.Empty));
+         setSubItemTag(item, "TotalTime", new ListViewSubItemInfo(x => getTotalTimeText(mrk, mr.Author), () => String.Empty));
          setSubItemTag(item, "SourceBranch", new ListViewSubItemInfo(x => mr.Source_Branch, () => String.Empty));
          setSubItemTag(item, "TargetBranch", new ListViewSubItemInfo(x => mr.Target_Branch, () => String.Empty));
          setSubItemTag(item, "State", new ListViewSubItemInfo(x => mr.State, () => String.Empty));
          setSubItemTag(item, "Resolved", new ListViewSubItemInfo(x => getDiscussionCount(mrk), () => String.Empty));
-         setSubItemTag(item, "RefreshTime", new ListViewSubItemInfo(x => getRefreshed(mrk), () => String.Empty));
+         setSubItemTag(item, "RefreshTime", new ListViewSubItemInfo(x => getRefreshed(mrk, x), () => String.Empty));
+         setSubItemTag(item, "Activities", new ListViewSubItemInfo(x => getActivities(mr.Created_At, mrk, x), () => String.Empty));
       }
 
       private void recalcRowHeightForMergeRequestListView()
@@ -606,6 +558,7 @@ namespace mrHelper.App.Controls
          setSubItemTag(item, "State", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
          setSubItemTag(item, "Resolved", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
          setSubItemTag(item, "RefreshTime", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
+         setSubItemTag(item, "Activities", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
       }
 
       ColumnHeader getColumnByTag(string tag)
@@ -638,6 +591,79 @@ namespace mrHelper.App.Controls
          Debug.Assert(false);
          return "N/A";
       }
+
+      string getSize(MergeRequestKey key)
+      {
+         if (_diffStatisticProvider == null)
+         {
+            return String.Empty;
+         }
+
+         DiffStatistic? diffStatistic = _diffStatisticProvider.GetStatistic(key, out string errMsg);
+         return diffStatistic?.ToString() ?? errMsg;
+      }
+
+      string getTotalTimeText(MergeRequestKey key, User author)
+      {
+         ITotalTimeCache totalTimeCache = _dataCache?.TotalTimeCache;
+         if (totalTimeCache == null)
+         {
+            return String.Empty;
+         }
+
+         User currentUser = _getCurrentUser(key.ProjectKey.HostName);
+         bool isTimeTrackingAllowed = TimeTrackingHelpers.IsTimeTrackingAllowed(
+            author, key.ProjectKey.HostName, currentUser);
+         return TimeTrackingHelpers.ConvertTotalTimeToText(totalTimeCache.GetTotalTime(key), isTimeTrackingAllowed);
+      }
+
+      DateTime? getRefreshedTime(MergeRequestKey key)
+      {
+         IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
+         if (mergeRequestCache == null)
+         {
+            return null;
+         }
+
+         return mergeRequestCache.GetMergeRequestRefreshTime(key);
+      }
+
+      string getRefreshed(MergeRequestKey key, bool tooltipText)
+      {
+         DateTime? refreshedTime = getRefreshedTime(key);
+         return tooltipText ? TimeUtils.DateTimeOptToString(refreshedTime)
+                            : TimeUtils.DateTimeOptToStringAgo(refreshedTime);
+      }
+
+      DateTime? getLatestCommitTime(MergeRequestKey key)
+      {
+         IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
+         if (mergeRequestCache == null)
+         {
+            return null;
+         }
+
+         Commit latestCommit = mergeRequestCache
+            .GetCommits(key)?
+            .OrderByDescending(commit => commit.Created_At)
+            .FirstOrDefault();
+         return latestCommit?.Created_At;
+      }
+
+      string getActivities(DateTime createdAt, MergeRequestKey key, bool tooltipText)
+      {
+         DateTime? latestCommitTime = getLatestCommitTime(key);
+         return String.Format("Created: {0}\r\nLatest commit: {1}",
+            tooltipText ? TimeUtils.DateTimeToString(createdAt)
+                        : TimeUtils.DateTimeToStringAgo(createdAt),
+            tooltipText ? TimeUtils.DateTimeOptToString(latestCommitTime)
+                        : TimeUtils.DateTimeOptToStringAgo(latestCommitTime));
+      }
+
+      string getJiraTask(MergeRequest mergeRequest) => GitLabClient.Helpers.GetJiraTask(mergeRequest);
+
+      string getJiraTaskUrl(MergeRequest mergeRequest) => GitLabClient.Helpers.GetJiraTaskUrl(
+         mergeRequest, Program.ServiceManager.GetJiraServiceUrl());
 
       public event Action<ListView> CollapsingToggled;
 

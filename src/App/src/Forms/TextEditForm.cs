@@ -12,7 +12,7 @@ namespace mrHelper.App.Forms
          Control extraActionsControl, string uploadsPrefix)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
-            (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
+            (float)Common.Constants.Constants.FontSizeChoices["Design"]);
          InitializeComponent();
          Text = caption;
          labelNoteAboutInvisibleCharacters.Text = Constants.WarningOnUnescapedMarkdown;

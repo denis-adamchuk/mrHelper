@@ -138,6 +138,17 @@ namespace mrHelper.App.Helpers
                                 mergeRequest != null ? mergeRequest.Title : e.MergeRequestKey.IId.ToString())
                );
 
+            case DiscussionEvent.Type.ApprovalStatusChange:
+               DiscussionEvent.ApprovalStatusChangeDescription asd =
+                  (DiscussionEvent.ApprovalStatusChangeDescription)e.Details;
+               return new BalloonText
+               (
+                  title,
+                  String.Format("{0} {1} merge request \"{2}\"",
+                                asd.Author.Name, asd.IsApproved ? "approved" : "unapproved",
+                                mergeRequest != null ? mergeRequest.Title : e.MergeRequestKey.IId.ToString())
+               );
+
             default:
                Debug.Assert(false);
                return new BalloonText();

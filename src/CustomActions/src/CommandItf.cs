@@ -4,15 +4,17 @@ namespace mrHelper.CustomActions
 {
    public interface ICommand
    {
-      string GetName();
+      string Name { get; }
 
-      string GetDependency();
+      string EnabledIf { get; }
 
-      bool GetStopTimer();
+      string VisibleIf { get; }
 
-      bool GetReload();
+      bool StopTimer { get; }
 
-      string GetHint();
+      bool Reload { get; }
+
+      string Hint { get; }
 
       Task Run();
    }

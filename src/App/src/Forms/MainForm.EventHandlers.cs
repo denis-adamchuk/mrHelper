@@ -467,7 +467,7 @@ namespace mrHelper.App.Forms
 
       private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
       {
-         onDataCacheSelectionChanged(tabControlMode.SelectedTab == tabPageLive);
+         onDataCacheSelectionChanged();
       }
 
       private void tabControl_Selecting(object sender, TabControlCancelEventArgs e)
@@ -491,11 +491,6 @@ namespace mrHelper.App.Forms
       private void tabControlMode_SizeChanged(object sender, EventArgs e)
       {
          placeControlNearToRightmostTab(tabControlMode, linkLabelFromClipboard, 20);
-      }
-
-      private void tabControl_SizeChanged(object sender, EventArgs e)
-      {
-         placeControlNearToRightmostTab(tabControl, panelConnectionStatus, 300);
       }
 
       private void LinkLabelFromClipboard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

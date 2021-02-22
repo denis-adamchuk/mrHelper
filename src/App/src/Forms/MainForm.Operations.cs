@@ -189,18 +189,13 @@ namespace mrHelper.App.Forms
             Debug.Assert(getMergeRequestKey(null).HasValue);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            Debug.Assert(getMergeRequest(null) != null);
-            MergeRequest mr = getMergeRequest(null);
-
-            await editTrackedTimeAsync(mrk, mr);
+            await editTrackedTimeAsync(mrk, getDataCache(getCurrentTabDataCacheType()));
          }));
       }
 
-      private async Task editTrackedTimeAsync(MergeRequestKey mrk, MergeRequest mr)
+      private async Task editTrackedTimeAsync(MergeRequestKey mrk, DataCache dataCache)
       {
-         Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
          IMergeRequestEditor editor = _shortcuts.GetMergeRequestEditor(mrk);
-         DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
          TimeSpan? oldSpanOpt = dataCache?.TotalTimeCache?.GetTotalTime(mrk).Amount;
          if (!oldSpanOpt.HasValue)
          {
@@ -233,7 +228,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               updateTotalTime(mrk, mr.Author, mrk.ProjectKey.HostName, dataCache.TotalTimeCache);
+               updateTotalTime(mrk, dataCache);
                addOperationRecord("Total spent time has been updated");
 
                Trace.TraceInformation(String.Format("[MainForm] Total time for MR {0} (project {1}) changed to {2}",
@@ -257,7 +252,7 @@ namespace mrHelper.App.Forms
          _timeTracker.Start();
 
          // Take care of controls that 'time tracking' mode shares with normal mode
-         updateTotalTime(null, null, null, null);
+         updateTotalTime(null, null);
 
          updateTrayIcon();
          updateTaskbarIcon();
@@ -268,11 +263,10 @@ namespace mrHelper.App.Forms
 
       private void stopTimeTrackingTimer()
       {
-         ITotalTimeCache totalTimeCache = getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache;
-         BeginInvoke(new Action(async () => await stopTimeTrackingTimerAsync(totalTimeCache)));
+         BeginInvoke(new Action(async () => await stopTimeTrackingTimerAsync()));
       }
 
-      async private Task stopTimeTrackingTimerAsync(ITotalTimeCache totalTimeCache)
+      async private Task stopTimeTrackingTimerAsync()
       {
          if (!isTrackingTime())
          {
@@ -287,44 +281,45 @@ namespace mrHelper.App.Forms
          _timeTracker = null;
          _timeTrackingMode = null;
 
-         // Stop stopwatch and send tracked time
-         TimeSpan span = timeTracker.Elapsed;
-         if (span.TotalSeconds > 1)
-         {
-            addOperationRecord("Sending tracked time has started");
-            string duration = String.Format("{0}h {1}m {2}s",
+         string convertSpanToText(TimeSpan span) => String.Format("{0}h {1}m {2}s",
                span.ToString("hh"), span.ToString("mm"), span.ToString("ss"));
-            string status = String.Format("Tracked time {0} sent successfully", duration);
-            try
-            {
-               await timeTracker.Stop();
-            }
-            catch (ForbiddenTimeTrackerException)
-            {
-               status = String.Format(
-                  "Cannot report tracked time ({0}).\r\n"
-                + "You don't have permissions to track time in {1} project.\r\n"
-                + "Please contact {2} administrator or SCM team.",
-                  duration, timeTracker.MergeRequest.ProjectKey.ProjectName, timeTracker.MergeRequest.ProjectKey.HostName);
-               MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               status = String.Format("Tracked time is not set. Set up permissions and report {0} manually", duration);
-            }
-            catch (TimeTrackerException ex)
-            {
-               status = String.Format("Error occurred. Tracked time {0} is not sent", duration);
-               ExceptionHandlers.Handle(status, ex);
-               MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            addOperationRecord(status);
+
+         addOperationRecord("Sending tracked time has started");
+         try
+         {
+            TimeSpan span = await timeTracker.Stop();
+            string duration = convertSpanToText(span);
+            addOperationRecord(String.Format("Tracked time {0} sent successfully", duration));
          }
-         else
+         catch (ForbiddenTimeTrackerException ex)
+         {
+            TimeSpan span = ex.TrackedTime;
+            string duration = convertSpanToText(span);
+            string status = String.Format(
+               "Cannot report tracked time ({0}).\r\n"
+             + "You don't have permissions to track time in {1} project.\r\n"
+             + "Please contact {2} administrator or SCM team.",
+               duration, timeTracker.MergeRequest.ProjectKey.ProjectName, timeTracker.MergeRequest.ProjectKey.HostName);
+            MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            addOperationRecord(String.Format("Tracked time is not set. Set up permissions and report {0} manually",
+               duration));
+         }
+         catch (TooSmallSpanTimeTrackerException)
          {
             addOperationRecord("Tracked time less than 1 second is ignored");
+         }
+         catch (TimeTrackerException ex)
+         {
+            TimeSpan span = ex.TrackedTime;
+            string duration = convertSpanToText(span);
+            string status = String.Format("Error occurred. Tracked time {0} is not sent", duration);
+            ExceptionHandlers.Handle(status, ex);
+            MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
          }
 
          if (!isTrackingTime())
          {
-            onTimerStopped(totalTimeCache);
+            onTimerStopped();
          }
       }
 
@@ -343,7 +338,7 @@ namespace mrHelper.App.Forms
          _timeTrackingMode = null;
          addOperationRecord("Time tracking cancelled");
 
-         onTimerStopped(getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache);
+         onTimerStopped();
       }
 
       private void addCommentForSelectedMergeRequest()

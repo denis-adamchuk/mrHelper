@@ -23,14 +23,15 @@ namespace mrHelper.GitLabClient.Managers
          IHostProperties hostProperties,
          SearchQueryCollection queryCollection,
          InternalCacheUpdater cacheUpdater,
-         INetworkOperationStatusListener networkOperationStatusListener)
+         INetworkOperationStatusListener networkOperationStatusListener,
+         bool isApprovalStatusSupported)
       {
          _updateOperator = new DataCacheOperator(hostname, hostProperties, networkOperationStatusListener);
-         VersionLoader versionLoader = new VersionLoader(_updateOperator, cacheUpdater);
          _mergeRequestListLoader = new MergeRequestListLoader(
-            hostname, _updateOperator, versionLoader, cacheUpdater, null, queryCollection);
+            hostname, _updateOperator, cacheUpdater, null, queryCollection,
+            isApprovalStatusSupported);
          _mergeRequestLoader = new MergeRequestLoader(_updateOperator, cacheUpdater,
-            dataCacheContext.UpdateRules.UpdateOnlyOpenedMergeRequests);
+            dataCacheContext.UpdateRules.UpdateOnlyOpenedMergeRequests, isApprovalStatusSupported);
          _extLogging = dataCacheContext.UpdateManagerExtendedLogging;
          _tagForLogging = dataCacheContext.TagForLogging;
 
@@ -140,7 +141,10 @@ namespace mrHelper.GitLabClient.Managers
          try
          {
             _updating = true;
-            await _mergeRequestLoader.LoadMergeRequest(mrk);
+            if (_mergeRequestLoader != null)
+            {
+               await _mergeRequestLoader.LoadMergeRequest(mrk);
+            }
             MergeRequestRefreshed?.Invoke(mrk);
          }
          catch (BaseLoaderException ex)
@@ -186,7 +190,10 @@ namespace mrHelper.GitLabClient.Managers
          try
          {
             _updating = true;
-            await _mergeRequestListLoader.Load();
+            if (_mergeRequestListLoader != null)
+            {
+               await _mergeRequestListLoader.Load();
+            }
             MergeRequestListRefreshed?.Invoke();
          }
          catch (BaseLoaderException ex)

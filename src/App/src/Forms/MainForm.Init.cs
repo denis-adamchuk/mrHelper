@@ -1,9 +1,7 @@
 using System;
-using System.Linq;
 using System.Diagnostics;
 using System.Windows.Forms;
 using mrHelper.App.Helpers;
-using mrHelper.CustomActions;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
@@ -24,7 +22,7 @@ namespace mrHelper.App.Forms
          _integratedInGitExtensions = integratedInGitExtensions;
          _integratedInSourceTree = integratedInSourceTree;
 
-         CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"], 96);
+         CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"]);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
@@ -59,94 +57,6 @@ namespace mrHelper.App.Forms
 
          SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
          _applicationUpdateChecker = new PeriodicUpdateChecker(this);
-      }
-
-      private void addCustomActions()
-      {
-         CustomCommandLoader loader = new CustomCommandLoader(this);
-         try
-         {
-            _customCommands = loader.LoadCommands(Constants.CustomActionsFileName);
-         }
-         catch (CustomCommandLoaderException ex)
-         {
-            // If file doesn't exist the loader throws, leaving the app in an undesirable state.
-            // Do not try to load custom actions if they don't exist.
-            ExceptionHandlers.Handle("Cannot load custom actions", ex);
-         }
-
-         _keywords = _customCommands?
-            .Where(x => x is SendNoteCommand)
-            .Select(x => (x as SendNoteCommand).GetBody()) ?? null;
-
-         if (_customCommands == null)
-         {
-            return;
-         }
-
-         int id = 0;
-         foreach (ICommand command in _customCommands)
-         {
-            string name = command.GetName();
-            var button = new System.Windows.Forms.Button
-            {
-               Name = "customAction" + id,
-               Location = new System.Drawing.Point { X = 0, Y = 19 },
-               Size = new System.Drawing.Size { Width = 72, Height = 32 },
-               MinimumSize = new System.Drawing.Size { Width = 72, Height = 0 },
-               Text = name,
-               UseVisualStyleBackColor = true,
-               TabStop = false,
-               Tag = command.GetDependency()
-            };
-            toolTip.SetToolTip(button, command.GetHint());
-            button.Click += async (x, y) =>
-            {
-               MergeRequestKey? mergeRequestKey = getMergeRequestKey(null);
-               if (!mergeRequestKey.HasValue)
-               {
-                  return;
-               }
-
-               ITotalTimeCache totalTimeCache = getDataCache(getCurrentTabDataCacheType())?.TotalTimeCache;
-
-               addOperationRecord(String.Format("Command {0} execution has started", name));
-               try
-               {
-                  await command.Run();
-               }
-               catch (Exception ex) // Whatever happened in Run()
-               {
-                  string errorMessage = "Custom action failed";
-                  ExceptionHandlers.Handle(errorMessage, ex);
-                  MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  addOperationRecord(String.Format("Command {0} failed", name));
-                  return;
-               }
-
-               string statusMessage = String.Format(
-                  "Command {0} execution has completed for merge request !{1} in project {2}",
-                  name, mergeRequestKey.Value.IId, mergeRequestKey.Value.ProjectKey.ProjectName);
-               addOperationRecord(statusMessage);
-
-               if (command.GetStopTimer())
-               {
-                  await stopTimeTrackingTimerAsync(totalTimeCache);
-               }
-
-               bool reload = command.GetReload();
-               if (reload)
-               {
-                  requestUpdates(EDataCacheType.Live, mergeRequestKey, new int[] {
-                     Program.Settings.OneShotUpdateFirstChanceDelayMs,
-                     Program.Settings.OneShotUpdateSecondChanceDelayMs });
-               }
-
-               ensureMergeRequestInRecentDataCache(mergeRequestKey.Value);
-            };
-            groupBoxActions.Controls.Add(button);
-            id++;
-         }
       }
 
       private void initializeWork()
@@ -221,10 +131,9 @@ namespace mrHelper.App.Forms
       private void prepareFormToStart()
       {
          subscribeToApplicationUpdatesAndRequestThem();
-         addCustomActions();
+         initializeKeywords();
          setControlStateFromConfiguration();
          applyAutostartSetting(Program.Settings.RunWhenWindowsStarts);
-         resetMergeRequestTabMinimumSizes();
          disableSSLVerification();
          updateCaption();
          updateTabControlSelection();
@@ -233,6 +142,21 @@ namespace mrHelper.App.Forms
          prepareControlsToStart();
          prepareSizeToStart();
          selectHost(PreferredSelection.Initial);
+      }
+
+      private void initializeKeywords()
+      {
+         if (System.IO.File.Exists(Constants.KeywordsFileName))
+         {
+            try
+            {
+               _keywords = JsonUtils.LoadFromFile<string[]>(Constants.KeywordsFileName);
+            }
+            catch (Exception ex) // whatever de-serialization exception
+            {
+               ExceptionHandlers.Handle("Cannot load keywords from file", ex);
+            }
+         }
       }
 
       private void setTooltipsForSearchOptions()
@@ -413,7 +337,7 @@ namespace mrHelper.App.Forms
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (dataCache?.MergeRequestCache != null)
          {
-            dataCache.MergeRequestCache.MergeRequestEvent += onMergeRequestEvent;
+            dataCache.MergeRequestCache.MergeRequestEvent += onLiveMergeRequestEvent;
             dataCache.MergeRequestCache.MergeRequestListRefreshed += onLiveMergeRequestListRefreshed;
             dataCache.MergeRequestCache.MergeRequestRefreshed += onMergeRequestRefreshed;
          }
@@ -444,7 +368,7 @@ namespace mrHelper.App.Forms
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (dataCache?.MergeRequestCache != null)
          {
-            dataCache.MergeRequestCache.MergeRequestEvent -= onMergeRequestEvent;
+            dataCache.MergeRequestCache.MergeRequestEvent -= onLiveMergeRequestEvent;
             dataCache.MergeRequestCache.MergeRequestListRefreshed -= onLiveMergeRequestListRefreshed;
             dataCache.MergeRequestCache.MergeRequestRefreshed -= onMergeRequestRefreshed;
          }
@@ -471,7 +395,7 @@ namespace mrHelper.App.Forms
                                                false);
 
             case EDataCacheType.Search:
-               return new DataCacheUpdateRules(null, null, false);
+               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, null, false);
 
             default:
                Debug.Assert(false);
@@ -490,6 +414,16 @@ namespace mrHelper.App.Forms
          getListView(EDataCacheType.Search).SetDataCache(_searchDataCache);
       }
 
+      private void subscribeToSearchDataCacheInternalEvents()
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Search);
+         if (dataCache?.TotalTimeCache != null)
+         {
+            dataCache.TotalTimeCache.TotalTimeLoading += onPreLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoaded += onPostLoadTrackedTime;
+         }
+      }
+
       private void subscribeToSearchDataCache()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Search);
@@ -504,6 +438,16 @@ namespace mrHelper.App.Forms
          dataCache.Disconnected -= onSearchDataCacheDisconnected;
          dataCache.Connecting -= onSearchDataCacheConnecting;
          dataCache.Connected -= onSearchDataCacheConnected;
+      }
+
+      private void unsubscribeFromSearchDataCacheInternalEvents()
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Search);
+         if (dataCache?.TotalTimeCache != null)
+         {
+            dataCache.TotalTimeCache.TotalTimeLoading -= onPreLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoaded -= onPostLoadTrackedTime;
+         }
       }
 
       private void createRecentDataCache()
@@ -521,6 +465,12 @@ namespace mrHelper.App.Forms
          if (dataCache?.MergeRequestCache != null)
          {
             dataCache.MergeRequestCache.MergeRequestEvent += onRecentMergeRequestEvent;
+         }
+
+         if (dataCache?.TotalTimeCache != null)
+         {
+            dataCache.TotalTimeCache.TotalTimeLoading += onPreLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoaded += onPostLoadTrackedTime;
          }
       }
 
@@ -546,6 +496,12 @@ namespace mrHelper.App.Forms
          if (dataCache?.MergeRequestCache != null)
          {
             dataCache.MergeRequestCache.MergeRequestEvent -= onRecentMergeRequestEvent;
+         }
+
+         if (dataCache?.TotalTimeCache != null)
+         {
+            dataCache.TotalTimeCache.TotalTimeLoading -= onPreLoadTrackedTime;
+            dataCache.TotalTimeCache.TotalTimeLoaded -= onPostLoadTrackedTime;
          }
       }
 

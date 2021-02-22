@@ -4,6 +4,7 @@ using System.Text;
 using System.Drawing;
 using System.Diagnostics;
 using System.Windows.Forms;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
@@ -16,6 +17,7 @@ using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Controls;
 using mrHelper.App.Helpers.GitLab;
 using SearchQuery = mrHelper.GitLabClient.SearchQuery;
+using mrHelper.CustomActions;
 
 namespace mrHelper.App.Forms
 {
@@ -205,24 +207,29 @@ namespace mrHelper.App.Forms
          Latest
       }
 
-      private bool isCustomActionEnabled(IEnumerable<string> labels, User author, string dependency)
+      private bool isCustomActionEnabled(IEnumerable<User> approvedBy,
+         IEnumerable<string> labels, User author, string dependency)
       {
          if (String.IsNullOrEmpty(dependency))
          {
             return true;
          }
 
-         if (labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x)))
+         string excludePrefix = "NOT ";
+         bool isExpected = !dependency.StartsWith(excludePrefix);
+         dependency = isExpected ? dependency : dependency.Substring(excludePrefix.Length);
+         if (isExpected)
          {
-            return true;
+            return labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x))
+                || StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username)
+                || approvedBy.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Approved_By:{0}}}", x.Username));
          }
-
-         if (StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username))
+         else
          {
-            return true;
+            return labels.All(x => !StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x))
+                && !StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username)
+                && approvedBy.All(x => !StringUtils.DoesMatchPattern(dependency, "{{Approved_By:{0}}}", x.Username));
          }
-
-         return false;
       }
 
       private bool isTrackingTime()
@@ -382,15 +389,18 @@ namespace mrHelper.App.Forms
 
       private string getClipboardText()
       {
-         try
+         if (Clipboard.ContainsText(TextDataFormat.Text))
          {
-            return Clipboard.GetText();
+            try
+            {
+               return Clipboard.GetText(TextDataFormat.Text);
+            }
+            catch (Exception ex)
+            {
+               Debug.Assert(ex is System.Runtime.InteropServices.ExternalException);
+            }
          }
-         catch (Exception ex)
-         {
-            Debug.Assert(ex is System.Runtime.InteropServices.ExternalException);
-            return String.Empty;
-         }
+         return String.Empty;
       }
 
       private void showDiscussionsForSelectedMergeRequest()
@@ -526,7 +536,7 @@ namespace mrHelper.App.Forms
       {
          if (isTrackingTime())
          {
-            updateTotalTime(null, null, null, null);
+            updateTotalTime(null, null);
          }
       }
 
@@ -680,8 +690,7 @@ namespace mrHelper.App.Forms
 
       private void addOperationRecord(string text)
       {
-         string textWithTimestamp = String.Format("{0} {1}",
-            DateTime.Now.ToLocalTime().ToString(Constants.TimeStampFormat), text);
+         string textWithTimestamp = String.Format("{0} {1}", TimeUtils.DateTimeToString(DateTime.Now), text);
          _operationRecordHistory.Add(textWithTimestamp);
          if (_operationRecordHistory.Count() > OperationRecordHistoryDepth)
          {
@@ -796,7 +805,7 @@ namespace mrHelper.App.Forms
          int elapsedSeconds = Convert.ToInt32(elapsedSecondsDouble / LostConnectionIndicationTimerInterval);
          string text = elapsedSeconds % 2 == 0 ? ConnectionLostText.ToLower() : ConnectionLostText.ToUpper();
          string tooltipText = String.Format("Connection was lost at {0}",
-            _lostConnectionInfo.Value.TimeStamp.ToLocalTime().ToString(Constants.TimeStampFormat));
+            TimeUtils.DateTimeToString(_lostConnectionInfo.Value.TimeStamp));
          applyConnectionStatus(text, Color.Red, tooltipText);
       }
 
@@ -821,6 +830,25 @@ namespace mrHelper.App.Forms
             _gitLabInstance = null;
          }
       }
+
+      async private Task<IEnumerable<ICommand>> loadCustomCommandsAsync()
+      {
+         bool isApprovalStatusSupported = await _gitLabInstance?.IsApprovalStatusSupported();
+         CustomCommandLoader loader = new CustomCommandLoader(this);
+         try
+         {
+            string filename = isApprovalStatusSupported
+               ? Constants.CustomActionsWithApprovalStatusSupportFileName
+               : Constants.CustomActionsFileName;
+            return loader.LoadCommands(filename);
+         }
+         catch (CustomCommandLoaderException ex)
+         {
+            // If file doesn't exist the loader throws, leaving the app in an undesirable state.
+            // Do not try to load custom actions if they don't exist.
+            ExceptionHandlers.Handle("Cannot load custom actions", ex);
+         }
+         return null;
+      }
    }
 }
-

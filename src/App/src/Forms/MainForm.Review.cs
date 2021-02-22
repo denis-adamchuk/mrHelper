@@ -13,6 +13,7 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 using mrHelper.CommonControls.Tools;
+using mrHelper.CustomActions;
 
 namespace mrHelper.App.Forms
 {
@@ -38,6 +39,12 @@ namespace mrHelper.App.Forms
             dataCache.DiscussionCache.RequestUpdate(mrk, PseudoTimerInterval, null);
          }
 
+         IEnumerable<ICommand> commands = await loadCustomCommandsAsync();
+         if (_exiting)
+         {
+            return;
+         }
+
          IEnumerable<Discussion> discussions = await loadDiscussionsAsync(dataCache, mrk);
          if (discussions == null || _exiting)
          {
@@ -49,7 +56,7 @@ namespace mrHelper.App.Forms
          {
             return;
          }
-         showDiscussionForm(dataCache, storage, currentUser, mrk, discussions, title, author, webUrl);
+         showDiscussionForm(dataCache, storage, currentUser, mrk, discussions, title, author, webUrl, commands);
       }
 
       async private Task<bool> prepareStorageForDiscussionsForm(MergeRequestKey mrk,
@@ -76,7 +83,8 @@ namespace mrHelper.App.Forms
       }
 
       private void showDiscussionForm(DataCache dataCache, ILocalCommitStorage storage, User currentUser,
-         MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author, string webUrl)
+         MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author, string webUrl,
+         IEnumerable<ICommand> commands)
       {
          if (currentUser == null || discussions == null || author == null || currentUser.Id == 0)
          {
@@ -124,7 +132,7 @@ namespace mrHelper.App.Forms
                }
             },
             () => dataCache?.DiscussionCache?.RequestUpdate(mrk, Constants.DiscussionCheckOnNewThreadInterval, null),
-            webUrl, _shortcuts)
+            webUrl, _shortcuts, commands)
             {
                Tag = mrk
             };

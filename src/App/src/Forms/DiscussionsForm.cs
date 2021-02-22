@@ -13,7 +13,6 @@ using mrHelper.StorageSupport;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
-using mrHelper.Common.Constants;
 using mrHelper.CustomActions;
 using SearchQuery = mrHelper.App.Helpers.SearchQuery;
 
@@ -29,7 +28,8 @@ namespace mrHelper.App.Forms
          IGitCommandService git, User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
          string mergeRequestTitle, User mergeRequestAuthor,
          ColorScheme colorScheme, Func<MergeRequestKey, IEnumerable<Discussion>, Task> updateGit,
-         Action onDiscussionModified, string webUrl, Shortcuts shortcuts)
+         Action onDiscussionModified, string webUrl, Shortcuts shortcuts,
+         IEnumerable<ICommand> commands)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -47,19 +47,10 @@ namespace mrHelper.App.Forms
          _discussionColumnWidth = ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings);
          _needShiftReplies = Program.Settings.NeedShiftReplies;
          _shortcuts = shortcuts;
-
-         CustomCommandLoader loader = new CustomCommandLoader(this);
-         try
-         {
-            _commands = loader.LoadCommands(Constants.CustomActionsFileName);
-         }
-         catch (CustomCommandLoaderException ex)
-         {
-            ExceptionHandlers.Handle("Cannot load custom actions", ex);
-         }
+         _commands = commands;
 
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
-            (float)Common.Constants.Constants.FontSizeChoices["Design"], 96);
+            (float)Common.Constants.Constants.FontSizeChoices["Design"]);
          InitializeComponent();
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);
@@ -195,8 +186,7 @@ namespace mrHelper.App.Forms
          DisplaySort = new DiscussionSort(DiscussionSortState.Default);
          SortPanel = new DiscussionSortPanel(DisplaySort.SortState, onSortChanged);
 
-         ActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction, _commands,
-            onCommandAction);
+         ActionsPanel = new DiscussionActionsPanel(onRefreshAction, onAddCommentAction, onAddThreadAction);
          SearchPanel = new DiscussionSearchPanel(onFind, resetSearch);
          FontSelectionPanel = new DiscussionFontSelectionPanel(font => applyFont(font));
 

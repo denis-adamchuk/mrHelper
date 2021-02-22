@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
-using mrHelper.Common.Constants;
+using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms
@@ -24,12 +24,14 @@ namespace mrHelper.App.Forms
          MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(null);
          if (currentMergeRequestKey.HasValue && currentMergeRequestKey.Value.Equals(mrk))
          {
-            MergeRequest currentMergeRequest = getMergeRequest(null);
-            if (currentMergeRequest != null)
+            foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
             {
-               // change control enabled state
-               updateTotalTime(currentMergeRequestKey,
-                  currentMergeRequest.Author, currentMergeRequestKey.Value.ProjectKey.HostName, totalTimeCache);
+               if (getDataCache(mode)?.TotalTimeCache == totalTimeCache)
+               {
+                  // change control enabled state
+                  updateTotalTime(currentMergeRequestKey, getDataCache(mode));
+                  break;
+               }
             }
          }
 
@@ -53,79 +55,51 @@ namespace mrHelper.App.Forms
          getListView(EDataCacheType.Live).Invalidate();
       }
 
-      private void onMergeRequestEvent(UserEvents.MergeRequestEvent e)
-      {
-         if (e.AddedToCache || e.Commits)
-         {
-            requestCommitStorageUpdate(e.FullMergeRequestKey.ProjectKey);
-         }
+      private void onLiveMergeRequestEvent(UserEvents.MergeRequestEvent e) =>
+         onMergeRequestEvent(e, EDataCacheType.Live);
 
+      private void onRecentMergeRequestEvent(UserEvents.MergeRequestEvent e) =>
+         onMergeRequestEvent(e, EDataCacheType.Recent);
+
+      private void onMergeRequestEvent(UserEvents.MergeRequestEvent e, EDataCacheType type)
+      {
          MergeRequestKey mrk = new MergeRequestKey(
             e.FullMergeRequestKey.ProjectKey, e.FullMergeRequestKey.MergeRequest.IId);
 
-         if (e.RemovedFromCache && isReviewedMergeRequest(mrk))
+         if (e.AddedToCache || e.Commits)
          {
-            cleanupReviewedMergeRequests(new MergeRequestKey[] { mrk });
+            requestCommitStorageUpdate(mrk.ProjectKey);
          }
 
-         updateMergeRequestList(EDataCacheType.Live);
-
-         if (e.AddedToCache)
+         if (type == EDataCacheType.Live)
          {
-            // some labels may appear within a small delay after new MR is detected
-            requestUpdates(EDataCacheType.Live, mrk, new[] {
-               Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
-               Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
+            if (e.AddedToCache)
+            {
+               // some labels may appear within a small delay after new MR is detected
+               requestUpdates(EDataCacheType.Live, mrk, new[] {
+                  Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
+                  Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
+            }
+            if (e.RemovedFromCache && isReviewedMergeRequest(mrk))
+            {
+               cleanupReviewedMergeRequests(new MergeRequestKey[] { mrk });
+            }
          }
 
-         FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
-         if (!fmk.HasValue || !fmk.Value.Equals(e.FullMergeRequestKey) || getCurrentTabDataCacheType() != EDataCacheType.Live)
+         updateMergeRequestList(type);
+
+         FullMergeRequestKey? fmk = getListView(type).GetSelectedMergeRequest();
+         if (!fmk.HasValue || !fmk.Value.Equals(e.FullMergeRequestKey) || getCurrentTabDataCacheType() != type)
          {
             return;
          }
 
-         Trace.TraceInformation("[MainForm] Updating selected Merge Request");
-
-         if (e.Details)
+         if (e.Details || e.Commits || e.Labels)
          {
             // Non-grid Details are updated here and Grid ones are updated in updateMergeRequestList() above
-            updateMergeRequestDetails(fmk.Value);
-         }
-
-         if (e.Commits)
-         {
-            onMergeRequestSelectionChanged(EDataCacheType.Live);
-         }
-      }
-
-      private void onRecentMergeRequestEvent(UserEvents.MergeRequestEvent e)
-      {
-         if (e.Commits)
-         {
-            requestCommitStorageUpdate(e.FullMergeRequestKey.ProjectKey);
-         }
-
-         updateMergeRequestList(EDataCacheType.Recent);
-
-         FullMergeRequestKey? fmk = getListView(EDataCacheType.Recent).GetSelectedMergeRequest();
-         if (!fmk.HasValue
-          || !fmk.Value.Equals(e.FullMergeRequestKey)
-          || getCurrentTabDataCacheType() != EDataCacheType.Recent)
-         {
-            return;
-         }
-
-         Trace.TraceInformation("[MainForm] Updating selected Recent Merge Request");
-
-         if (e.Details)
-         {
-            // Non-grid Details are updated here and Grid ones are updated in updateMergeRequestList() above
-            updateMergeRequestDetails(fmk.Value);
-         }
-
-         if (e.Commits)
-         {
-            onMergeRequestSelectionChanged(EDataCacheType.Recent);
+            Trace.TraceInformation("[MainForm] Updating selected Merge Request ({0})",
+               getDataCacheName(getDataCache(type)));
+            onMergeRequestSelectionChanged(type);
          }
       }
 
@@ -148,12 +122,11 @@ namespace mrHelper.App.Forms
       {
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          DateTime? refreshTimestamp = dataCache?.MergeRequestCache?.GetListRefreshTime();
-         string refreshedAt = refreshTimestamp.HasValue
-            ? String.Format("Refreshed at {0}",
-               refreshTimestamp.Value.ToLocalTime().ToString(Constants.TimeStampFormat))
+         string refreshedAgo = refreshTimestamp.HasValue
+            ? String.Format("Refreshed {0}", TimeUtils.DateTimeToStringAgo(refreshTimestamp.Value))
             : String.Empty;
          toolTip.SetToolTip(this.buttonReloadList, String.Format("{0}{1}{2}",
-            RefreshButtonTooltip, refreshedAt == String.Empty ? String.Empty : "\r\n", refreshedAt));
+            RefreshButtonTooltip, refreshedAgo == String.Empty ? String.Empty : "\r\n", refreshedAgo));
 
          // update Refreshed column
          getListView(EDataCacheType.Live).Invalidate();

@@ -50,6 +50,20 @@ namespace mrHelper.GitLabClient.Managers
                         note.Author),
                      note.Updated_At, type);
                }
+               else if (note.System && note.Body == "approved this merge request")
+               {
+                  DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent(
+                     mrk, UserEvents.DiscussionEvent.Type.ApprovalStatusChange,
+                        new UserEvents.DiscussionEvent.ApprovalStatusChangeDescription(true, note.Author)),
+                     note.Updated_At, type);
+               }
+               else if (note.System && note.Body == "unapproved this merge request")
+               {
+                  DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent(
+                     mrk, UserEvents.DiscussionEvent.Type.ApprovalStatusChange,
+                        new UserEvents.DiscussionEvent.ApprovalStatusChangeDescription(false, note.Author)),
+                     note.Updated_At, type);
+               }
                else if (Helpers.IsUserMentioned(note.Body, _currentUser))
                {
                   DiscussionEvent?.Invoke(new UserEvents.DiscussionEvent(

@@ -15,6 +15,8 @@ using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Controls;
+using mrHelper.CustomActions;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -80,28 +82,33 @@ namespace mrHelper.App.Forms
          if (_startMinimized)
          {
             _forceMaximizeOnNextRestore = Program.Settings.WasMaximizedBeforeClose;
-            _applySplitterDistanceOnNextRestore = true;
             WindowState = FormWindowState.Minimized;
          }
          else
          {
             WindowState = Program.Settings.WasMaximizedBeforeClose ? FormWindowState.Maximized : FormWindowState.Normal;
-            applySavedSplitterDistance();
          }
+         applySavedSplitterDistance();
       }
 
       private void applySavedSplitterDistance()
       {
+         if (WindowState == FormWindowState.Minimized)
+         {
+            _applySplitterDistanceOnNextRestore = true;
+            return;
+         }
+
          if (Program.Settings.MainWindowSplitterDistance != 0
-            && splitContainer1.Panel1MinSize < Program.Settings.MainWindowSplitterDistance
-            && splitContainer1.Width - splitContainer1.Panel2MinSize > Program.Settings.MainWindowSplitterDistance)
+            && splitContainer1.Panel1MinSize <= Program.Settings.MainWindowSplitterDistance
+            && splitContainer1.Width - splitContainer1.Panel2MinSize >= Program.Settings.MainWindowSplitterDistance)
          {
             splitContainer1.SplitterDistance = Program.Settings.MainWindowSplitterDistance;
          }
 
          if (Program.Settings.RightPaneSplitterDistance != 0
-            && splitContainer2.Panel1MinSize < Program.Settings.RightPaneSplitterDistance
-            && splitContainer2.Width - splitContainer2.Panel2MinSize > Program.Settings.RightPaneSplitterDistance)
+            && splitContainer2.Panel1MinSize <= Program.Settings.RightPaneSplitterDistance
+            && splitContainer2.Height - splitContainer2.Panel2MinSize >= Program.Settings.RightPaneSplitterDistance)
          {
             splitContainer2.SplitterDistance = Program.Settings.RightPaneSplitterDistance;
          }
@@ -287,32 +294,46 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(linkLabelConnectedTo, linkLabelConnectedTo.Text);
       }
 
-      private void updateTimeTrackingMergeRequestDetails(bool enabled, string title, ProjectKey projectKey, User author)
+      private void updateTimeTrackingMergeRequestDetails(MergeRequestKey? mrk, DataCache dataCache)
       {
          if (isTrackingTime())
          {
+            updateTotalTime(mrk, dataCache);
             return;
          }
 
-         if (!TimeTrackingHelpers.IsTimeTrackingAllowed(author, projectKey.HostName, getCurrentUser(projectKey.HostName)))
+         bool enabled = true;
+         if (!mrk.HasValue)
          {
             enabled = false;
+         }
+         else
+         {
+            User author = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Author;
+            string hostname = mrk.Value.ProjectKey.HostName;
+            if (!TimeTrackingHelpers.IsTimeTrackingAllowed(author, hostname, getCurrentUser(hostname)))
+            {
+               enabled = false;
+            }
          }
 
          linkLabelTimeTrackingMergeRequest.Visible = enabled;
          buttonTimeTrackingStart.Enabled = enabled;
          buttonTimeTrackingCancel.Enabled = false;
 
-         if (enabled)
+         if (mrk.HasValue && enabled)
          {
-            Debug.Assert(!String.IsNullOrEmpty(title) && !projectKey.Equals(default(ProjectKey)));
-            linkLabelTimeTrackingMergeRequest.Text = String.Format("{0}   [{1}]", title, projectKey.ProjectName);
+            string title = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Title;
+            Debug.Assert(!String.IsNullOrEmpty(title) && !mrk.Value.ProjectKey.Equals(default(ProjectKey)));
+            linkLabelTimeTrackingMergeRequest.Text = String.Format("{0}   [{1}]", title, mrk.Value.ProjectKey.ProjectName);
          }
 
          linkLabelTimeTrackingMergeRequest.Refresh();
+
+         updateTotalTime(mrk, dataCache);
       }
 
-      private void updateTotalTime(MergeRequestKey? mrk, User author, string hostname, ITotalTimeCache totalTimeCache)
+      private void updateTotalTime(MergeRequestKey? mrk, DataCache dataCache)
       {
          if (isTrackingTime())
          {
@@ -322,20 +343,28 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         if (!mrk.HasValue
-          || !TimeTrackingHelpers.IsTimeTrackingAllowed(author, hostname, getCurrentUser(hostname))
-          || totalTimeCache == null)
+         if (!mrk.HasValue || dataCache?.TotalTimeCache == null)
          {
             labelTimeTrackingTrackedLabel.Text = String.Empty;
             buttonEditTime.Enabled = false;
+            return;
          }
          else
          {
-            TrackedTime trackedTime = totalTimeCache.GetTotalTime(mrk.Value);
-            labelTimeTrackingTrackedLabel.Text = String.Format("Total Time: {0}",
-               TimeTrackingHelpers.ConvertTotalTimeToText(trackedTime, true));
-            buttonEditTime.Enabled = trackedTime.Amount.HasValue;
+            User author = dataCache.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Author;
+            string hostname = mrk.Value.ProjectKey.HostName;
+            if (!TimeTrackingHelpers.IsTimeTrackingAllowed(author, hostname, getCurrentUser(hostname)))
+            {
+               labelTimeTrackingTrackedLabel.Text = String.Empty;
+               buttonEditTime.Enabled = false;
+               return;
+            }
          }
+
+         TrackedTime trackedTime = dataCache.TotalTimeCache.GetTotalTime(mrk.Value);
+         labelTimeTrackingTrackedLabel.Text = String.Format("Total Time: {0}",
+            TimeTrackingHelpers.ConvertTotalTimeToText(trackedTime, true));
+         buttonEditTime.Enabled = trackedTime.Amount.HasValue;
 
          // Update total time column in the table
          getListView(EDataCacheType.Live).Invalidate();
@@ -360,7 +389,7 @@ namespace mrHelper.App.Forms
                string targetBranch = getMergeRequest(null)?.Target_Branch;
                if (targetBranch != null)
                {
-                  this.toolTip.SetToolTip(this.buttonDiffTool, String.Format(
+                  toolTip.SetToolTip(buttonDiffTool, String.Format(
                      "Launch diff tool to compare selected revision to {0}", targetBranch));
                }
                break;
@@ -368,7 +397,7 @@ namespace mrHelper.App.Forms
             case 2:
                buttonDiffTool.Enabled = isEnabled;
                buttonDiffTool.Text = "Diff Tool";
-               this.toolTip.SetToolTip(this.buttonDiffTool, "Launch diff tool to compare selected revisions");
+               toolTip.SetToolTip(buttonDiffTool, "Launch diff tool to compare selected revisions");
                break;
 
             case 0:
@@ -379,15 +408,19 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void enableCustomActions(bool enabled, IEnumerable<string> labels, User author)
+      private void enableCustomActions(MergeRequestKey? mrk, DataCache dataCache)
       {
-         if (!enabled)
+         if (!mrk.HasValue)
          {
             foreach (Control control in groupBoxActions.Controls) control.Enabled = false;
             return;
          }
 
-         if (author == null)
+         User author = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Author;
+         IEnumerable<string> labels = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Labels;
+         IEnumerable<User> approvedBy = dataCache?.MergeRequestCache?.GetApprovals(mrk.Value)?.Approved_By?
+            .Select(item => item.User) ?? Array.Empty<User>();
+         if (author == null || labels == null || approvedBy == null)
          {
             Debug.Assert(false);
             return;
@@ -395,26 +428,36 @@ namespace mrHelper.App.Forms
 
          foreach (Control control in groupBoxActions.Controls)
          {
-            string dependency = (string)control.Tag;
-            string resolvedDependency =
-               String.IsNullOrEmpty(dependency) ? String.Empty : _expressionResolver.Resolve(dependency);
-            control.Enabled = isCustomActionEnabled(labels, author, resolvedDependency);
+            string enabledIf = ((ICommand)control.Tag).EnabledIf;
+            string resolvedEnabledIf =
+               String.IsNullOrEmpty(enabledIf) ? String.Empty : _expressionResolver.Resolve(enabledIf);
+            control.Enabled = isCustomActionEnabled(approvedBy, labels, author, resolvedEnabledIf);
+
+            string visibleIf = ((ICommand)control.Tag).VisibleIf;
+            string resolvedVisibleIf =
+               String.IsNullOrEmpty(visibleIf) ? String.Empty : _expressionResolver.Resolve(visibleIf);
+            control.Visible = isCustomActionEnabled(approvedBy, labels, author, resolvedVisibleIf);
          }
+
+         repositionCustomCommands();
       }
 
       private void onWindowStateChanged()
       {
-         if (this.WindowState != FormWindowState.Minimized)
+         if (WindowState != FormWindowState.Minimized)
          {
             if (_prevWindowState == FormWindowState.Minimized)
             {
-               bool isRestoring = this.WindowState == FormWindowState.Normal;
+               bool isRestoring = WindowState == FormWindowState.Normal
+                               || WindowState == FormWindowState.Maximized;
                if (isRestoring && _forceMaximizeOnNextRestore)
                {
                   _forceMaximizeOnNextRestore = false;
                   _prevWindowState = FormWindowState.Maximized; // prevent re-entrance on next line
-                  this.WindowState = FormWindowState.Maximized;
+                  WindowState = FormWindowState.Maximized;
                }
+
+               initializeMergeRequestTabMinimumSizes();
 
                if (isRestoring && _applySplitterDistanceOnNextRestore)
                {
@@ -427,11 +470,9 @@ namespace mrHelper.App.Forms
          _prevWindowState = WindowState;
       }
 
-      private void onDataCacheSelectionChanged(bool isLiveDataCacheSelected)
+      private void onDataCacheSelectionChanged()
       {
          forEachListView(listView => listView.DeselectAllListViewItems());
-         labelTimeTrackingTrackedLabel.Visible = isLiveDataCacheSelected;
-         buttonEditTime.Visible = isLiveDataCacheSelected;
       }
 
       private void onMergeRequestSelectionChanged(EDataCacheType mode)
@@ -459,16 +500,13 @@ namespace mrHelper.App.Forms
             fmk.MergeRequest.IId.ToString(), getCurrentTabDataCacheType().ToString()));
 
          DataCache dataCache = getDataCache(mode);
-         enableCustomActions(true, fmk.MergeRequest.Labels, fmk.MergeRequest.Author);
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         enableCustomActions(mrk, dataCache);
          enableMergeRequestActions(true);
          updateMergeRequestDetails(fmk);
-         updateTimeTrackingMergeRequestDetails(
-            true, fmk.MergeRequest.Title, fmk.ProjectKey, fmk.MergeRequest.Author);
-         updateTotalTime(new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId),
-            fmk.MergeRequest.Author, fmk.ProjectKey.HostName, dataCache.TotalTimeCache);
+         updateTimeTrackingMergeRequestDetails(mrk, dataCache);
          updateAbortGitCloneButtonState();
 
-         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
          string status = _latestStorageUpdateStatus.TryGetValue(mrk, out string value) ? value : String.Empty;
          updateStorageStatusText(status, mrk);
          updateStorageDependentControlState(mrk);
@@ -647,215 +685,50 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private int calcHorzDistance(Control leftControl, Control rightControl, bool preventOverlap = false)
-      {
-         int res = 0;
-         if (leftControl != null && rightControl != null)
-         {
-            res = rightControl.Location.X - (leftControl.Location.X + leftControl.Size.Width);
-         }
-         else if (leftControl == null && rightControl != null)
-         {
-            res = rightControl.Location.X;
-         }
-         else if (leftControl != null && rightControl == null)
-         {
-            res = leftControl.Parent.Size.Width - (leftControl.Location.X + leftControl.Size.Width);
-         }
-
-         if (!preventOverlap && res < 0)
-         {
-            Trace.TraceWarning(
-               "calcHorzDistance() returns negative value ({0}). " +
-               "leftControl: {1} (Location: {{{2}, {3}}}, Size: {{{4}, {5}}}), " +
-               "rightControl: {6} (Location: {{{7}, {8}}}, Size: {{{9}, {10}}}), " +
-               "PreventOverlap: {11}",
-               res,
-               leftControl?.Name ?? "null",
-               leftControl?.Location.X.ToString() ?? "N/A", leftControl?.Location.Y.ToString() ?? "N/A",
-               leftControl?.Size.Width.ToString() ?? "N/A", leftControl?.Size.Height.ToString() ?? "N/A",
-               rightControl?.Name ?? "null",
-               rightControl?.Location.X.ToString() ?? "N/A", rightControl?.Location.Y.ToString() ?? "N/A",
-               rightControl?.Size.Width.ToString() ?? "N/A", rightControl?.Size.Height.ToString() ?? "N/A",
-               preventOverlap);
-            Debug.Assert(false);
-         }
-
-         return res < 0 && preventOverlap ? 10 : res;
-      }
-
-      private int calcVertDistance(Control topControl, Control bottomControl, bool preventOverlap = false)
-      {
-         int res = 0;
-         if (topControl != null && bottomControl != null)
-         {
-            res = bottomControl.Location.Y - (topControl.Location.Y + topControl.Size.Height);
-         }
-         else if (topControl == null && bottomControl != null)
-         {
-            res = bottomControl.Location.Y;
-         }
-         else if (topControl != null && bottomControl == null)
-         {
-            res = topControl.Parent.Size.Height - (topControl.Location.Y + topControl.Size.Height);
-         }
-
-         if (!preventOverlap && res < 0)
-         {
-            // This may occur on small resolutions (e.g. 1366x768)
-            Trace.TraceWarning(
-               "calcVertDistance() returns negative value ({0}). " +
-               "topControl: {1} (Location: {{{2}, {3}}}, Size: {{{4}, {5}}}), " +
-               "bottomControl: {6} (Location: {{{7}, {8}}}, Size: {{{9}, {10}}}), " +
-               "PreventOverlap: {11}",
-               res,
-               topControl?.Name ?? "null",
-               topControl?.Location.X.ToString() ?? "N/A", topControl?.Location.Y.ToString() ?? "N/A",
-               topControl?.Size.Width.ToString() ?? "N/A", topControl?.Size.Height.ToString() ?? "N/A",
-               bottomControl?.Name ?? "null",
-               bottomControl?.Location.X.ToString() ?? "N/A", bottomControl?.Location.Y.ToString() ?? "N/A",
-               bottomControl?.Size.Width.ToString() ?? "N/A", bottomControl?.Size.Height.ToString() ?? "N/A",
-               preventOverlap);
-         }
-
-         return res < 0 && preventOverlap ? 10 : res;
-      }
-
       private void resetMergeRequestTabMinimumSizes()
       {
-         int defaultSplitContainerPanelMinSize = 25;
-         splitContainer1.Panel1MinSize = defaultSplitContainerPanelMinSize;
-         splitContainer1.Panel2MinSize = defaultSplitContainerPanelMinSize;
-         splitContainer2.Panel1MinSize = defaultSplitContainerPanelMinSize;
-         splitContainer2.Panel2MinSize = defaultSplitContainerPanelMinSize;
-
-         this.MinimumSize = new System.Drawing.Size(0, 0);
-
          _initializedMinimumSizes = false;
       }
 
       private bool _initializedMinimumSizes = true;
-
-      private int getLeftPaneMinWidth()
-      {
-         int liveTabTopRowWidth =
-            calcHorzDistance(null, tabControlMode)
-          + calcHorzDistance(null, groupBoxSelectMergeRequest)
-          + calcHorzDistance(null, checkBoxDisplayFilter)
-          + checkBoxDisplayFilter.MinimumSize.Width
-          + calcHorzDistance(checkBoxDisplayFilter, textBoxDisplayFilter)
-          + 100 /* cannot use textBoxLabels.MinimumSize.Width, see 9b65d7413c */
-          + calcHorzDistance(textBoxDisplayFilter, buttonReloadList, true)
-          + buttonReloadList.Size.Width
-          + calcHorzDistance(buttonReloadList, buttonCreateNew)
-          + buttonCreateNew.Size.Width
-          + calcHorzDistance(buttonCreateNew, null) // button has Right anchor
-          + calcHorzDistance(groupBoxSelectMergeRequest, null)
-          + calcHorzDistance(tabControlMode, null);
-
-         int searchTabTopRowWidth =
-            calcHorzDistance(null, tabControlMode)
-          + calcHorzDistance(null, groupBoxSearchMergeRequest)
-          + calcHorzDistance(null, checkBoxSearchByTitleAndDescription)
-          + checkBoxSearchByTitleAndDescription.Width
-          + calcHorzDistance(checkBoxSearchByTitleAndDescription, checkBoxSearchByTargetBranch)
-          + checkBoxSearchByTargetBranch.Width
-          + calcHorzDistance(checkBoxSearchByTargetBranch, checkBoxSearchByProject)
-          + checkBoxSearchByProject.Width
-          + calcHorzDistance(checkBoxSearchByProject, checkBoxSearchByAuthor)
-          + checkBoxSearchByAuthor.Width
-          + calcHorzDistance(checkBoxSearchByAuthor, linkLabelFindMe)
-          + linkLabelFindMe.Width
-          + calcHorzDistance(linkLabelFindMe, labelSearchByState)
-          + labelSearchByState.Width
-          + 50 /* a minimum gap between State label and right border */
-          + calcHorzDistance(groupBoxSearchMergeRequest, null)
-          + calcHorzDistance(tabControlMode, null);
-
-         int searchTabBottomRowWidth =
-            calcHorzDistance(null, tabControlMode)
-          + calcHorzDistance(null, groupBoxSearchMergeRequest)
-          + calcHorzDistance(null, textBoxSearchText)
-          + textBoxSearchText.Width
-          + calcHorzDistance(textBoxSearchText, textBoxSearchTargetBranch)
-          + textBoxSearchTargetBranch.Width
-          + calcHorzDistance(textBoxSearchTargetBranch, comboBoxProjectName)
-          + comboBoxProjectName.Width
-          + calcHorzDistance(comboBoxProjectName, comboBoxUser)
-          + comboBoxUser.Width
-          + calcHorzDistance(comboBoxUser, comboBoxSearchByState)
-          + comboBoxSearchByState.Width
-          + calcHorzDistance(comboBoxSearchByState, buttonSearch)
-          + buttonSearch.Width
-          + 50 /* a minimum gap between Search button and right border */
-          + calcHorzDistance(groupBoxSearchMergeRequest, null)
-          + calcHorzDistance(tabControlMode, null);
-
-         int recentTabTopRowWidth =
-            calcHorzDistance(null, tabControlMode)
-          + calcHorzDistance(null, groupBoxRecentMergeRequest)
-          + calcHorzDistance(null, textBoxRecentMergeRequestsHint)
-          + textBoxRecentMergeRequestsHint.Width
-          + calcHorzDistance(groupBoxRecentMergeRequest, null)
-          + calcHorzDistance(tabControlMode, null);
-
-         return Math.Max(liveTabTopRowWidth,
-                  Math.Max(recentTabTopRowWidth,
-                     Math.Max(searchTabBottomRowWidth, searchTabTopRowWidth)));
-      }
 
       private int getRightPaneMinWidth()
       {
          int calcMinWidthOfControlGroup(IEnumerable<Control> controls, int minGap) =>
             controls.Cast<Control>().Sum(x => x.MinimumSize.Width) + (controls.Count() - 1) * minGap;
 
+         int calcHorzDistance(Control leftControl, Control rightControl) =>
+            rightControl.Location.X - (leftControl.Location.X + leftControl.Size.Width);
          int buttonMinDistance = calcHorzDistance(buttonAddComment, buttonNewDiscussion);
 
          int groupBoxReviewMinWidth =
             calcMinWidthOfControlGroup(groupBoxReview.Controls.Cast<Control>(), buttonMinDistance)
-            + calcHorzDistance(null, groupBoxReview)
-            + calcHorzDistance(null, buttonAddComment)
-            + calcHorzDistance(buttonDiffTool, null)
-            + calcHorzDistance(groupBoxReview, null);
+            + buttonAddComment.Left
+               * 2; // for symmetry
 
-         int groupBoxTimeTrackingMinWidth = calcMinWidthOfControlGroup(
-            new Control[] { buttonTimeTrackingStart, buttonTimeTrackingCancel, buttonEditTime }, buttonMinDistance)
-            + calcHorzDistance(null, groupBoxTimeTracking)
-            + calcHorzDistance(null, buttonTimeTrackingStart)
-            + calcHorzDistance(buttonEditTime, null)
-            + calcHorzDistance(groupBoxTimeTracking, null);
-
+         // TODO No idea how to make it more flexible, leave a fixed number so far
+         int maximumNumberOfVisibleCustomActionControl = 6;
          bool hasActions = groupBoxActions.Controls.Count > 0;
+         int defaultWidthOfCustomActionControl = hasActions ? groupBoxActions.Controls[0].Width : 0;
+
          int groupBoxActionsMinWidth =
-            calcMinWidthOfControlGroup(groupBoxActions.Controls.Cast<Control>(), buttonMinDistance)
-            + calcHorzDistance(null, groupBoxActions)
-            + calcHorzDistance(null, hasActions ? buttonAddComment : null) // First button is aligned with "Add a comment"
-            + calcHorzDistance(hasActions ? buttonDiffTool : null, null)   // Last button is aligned with "Diff Tool"
-            + calcHorzDistance(groupBoxActions, null);
+            maximumNumberOfVisibleCustomActionControl * defaultWidthOfCustomActionControl
+            + (maximumNumberOfVisibleCustomActionControl - 1) * buttonMinDistance
+            + (hasActions ? buttonAddComment.Left : 0) // First button is aligned with "Add a comment"
+               * 2; // for symmetry
 
-         bool hasPicture1 = pictureBox1.BackgroundImage != null;
-         bool hasPicture2 = pictureBox2.BackgroundImage != null;
-
-         int panelFreeSpaceMinWidth =
-            calcHorzDistance(null, panelFreeSpace)
-          + (hasPicture1 ? calcHorzDistance(null, pictureBox1) + pictureBox1.MinimumSize.Width : panelFreeSpace.MinimumSize.Width)
-          + (hasPicture2 ? pictureBox2.MinimumSize.Width + calcHorzDistance(pictureBox2, null) : panelFreeSpace.MinimumSize.Width)
-          + calcHorzDistance(panelFreeSpace, null);
-
-         return Enumerable.Max(new int[]
-            { groupBoxReviewMinWidth, groupBoxTimeTrackingMinWidth, groupBoxActionsMinWidth, panelFreeSpaceMinWidth });
+         return Enumerable.Max(new int[]{ groupBoxReviewMinWidth, groupBoxActionsMinWidth });
       }
+
+      int calcVertDistance(Control topControl, Control bottomControl) =>
+         bottomControl.Location.Y - (topControl.Location.Y + topControl.Size.Height);
 
       private int getTopRightPaneMinHeight()
       {
-         return
-            +calcVertDistance(null, groupBoxSelectedMR)
-            + calcVertDistance(null, richTextBoxMergeRequestDescription)
-            + 100 /* cannot use richTextBoxMergeRequestDescription.MinimumSize.Height, see 9b65d7413c */
-            + calcVertDistance(richTextBoxMergeRequestDescription, linkLabelConnectedTo, true)
-            + linkLabelConnectedTo.Height
-            + calcVertDistance(linkLabelConnectedTo, null)
-            + calcVertDistance(groupBoxSelectedMR, null);
+         return 100 /* cannot use richTextBoxMergeRequestDescription.MinimumSize.Height, see 9b65d7413c */
+               + calcVertDistance(richTextBoxMergeRequestDescription, linkLabelConnectedTo)
+               + linkLabelConnectedTo.Height
+               + 20;
       }
 
       private int getBottomRightPaneMinHeight()
@@ -865,17 +738,14 @@ namespace mrHelper.App.Forms
 
          int panelFreeSpaceMinHeight =
             Math.Max(
-               (hasPicture1 ?
-                  calcVertDistance(null, pictureBox1)
-                + pictureBox1.MinimumSize.Height
-                + calcVertDistance(pictureBox1, null, true) : panelFreeSpace.MinimumSize.Height),
+               (hasPicture1 ?  pictureBox1.Top * 2 // for symmetry
+                + pictureBox1.MinimumSize.Height : panelFreeSpace.MinimumSize.Height),
                (hasPicture2 ?
-                  calcVertDistance(null, pictureBox2)
-                + pictureBox2.MinimumSize.Height
-                + calcVertDistance(pictureBox2, null, true) : panelFreeSpace.MinimumSize.Height));
+                  pictureBox2.Top * 2 // for symmetry
+                + pictureBox2.MinimumSize.Height : panelFreeSpace.MinimumSize.Height));
 
          return
-              calcVertDistance(null, groupBoxSelectRevisions)
+              groupBoxSelectRevisions.Top
             + groupBoxSelectRevisions.Height
             + calcVertDistance(groupBoxSelectRevisions, groupBoxReview)
             + groupBoxReview.Height
@@ -885,96 +755,91 @@ namespace mrHelper.App.Forms
             + groupBoxActions.Height
             + calcVertDistance(groupBoxActions, panelFreeSpace)
             + panelFreeSpaceMinHeight
-            + calcVertDistance(panelFreeSpace, panelStatusBar, true)
+            + calcVertDistance(panelFreeSpace, panelStatusBar)
             + panelStatusBar.Height
             + calcVertDistance(panelStatusBar, panelBottomMenu)
-            + panelBottomMenu.Height
-            + calcVertDistance(panelBottomMenu, null);
+            + panelBottomMenu.Height;
+      }
+
+      private static void setSplitterPanelsMinSize(SplitContainer splitContainer, int panel1MinSize, int panel2MinSize)
+      {
+         splitContainer.Panel1MinSize = panel1MinSize;
+         splitContainer.Panel2MinSize = panel2MinSize;
+         int splitContainerSize = splitContainer.Orientation == Orientation.Vertical
+            ? splitContainer.Width : splitContainer.Height;
+         bool canResetToMinimum = panel1MinSize + panel2MinSize <= splitContainerSize;
+         splitContainer.SplitterDistance = canResetToMinimum ? splitContainerSize - panel2MinSize : panel1MinSize;
       }
 
       private void initializeMergeRequestTabMinimumSizes()
       {
+         if (WindowState == FormWindowState.Minimized)
+         {
+            resetMergeRequestTabMinimumSizes();
+            return;
+         }
+
          if (_initializedMinimumSizes || tabControl.SelectedTab != tabPageMR)
          {
             return;
          }
 
-         if (Program.Settings.DisableSplitterRestrictions)
-         {
-            _initializedMinimumSizes = true;
-            return;
-         }
+         _initializedMinimumSizes = true;
 
-         int leftPaneMinWidth = getLeftPaneMinWidth();
+         // KISS
+         int leftPaneMinWidth = 200;
          int rightPaneMinWidth = getRightPaneMinWidth();
          int topRightPaneMinHeight = getTopRightPaneMinHeight();
          int bottomRightPaneMinHeight = getBottomRightPaneMinHeight();
 
-         int clientAreaMinWidth =
-            calcHorzDistance(null, tabPageMR)
-          + calcHorzDistance(null, splitContainer1)
-          + leftPaneMinWidth
-          + splitContainer1.SplitterWidth
-          + rightPaneMinWidth
-          + calcHorzDistance(splitContainer1, null)
-          + calcHorzDistance(tabPageMR, null);
-         int nonClientAreaWidth = this.Size.Width - this.ClientSize.Width;
+         int clientAreaMinWidth = leftPaneMinWidth + rightPaneMinWidth;
+         int nonClientAreaWidth = 50;
+         int clientAreaMinHeight = topRightPaneMinHeight + bottomRightPaneMinHeight;
+         int nonClientAreaHeight = 150;
 
-         int clientAreaMinHeight =
-            calcVertDistance(null, tabPageMR)
-          + calcVertDistance(null, splitContainer1)
-          + calcVertDistance(null, splitContainer2)
-          + topRightPaneMinHeight
-          + splitContainer2.SplitterWidth
-          + bottomRightPaneMinHeight
-          + calcVertDistance(splitContainer2, null)
-          + calcVertDistance(splitContainer1, null)
-          + calcVertDistance(tabPageMR, null);
-         int nonClientAreaHeight = this.Size.Height - this.ClientSize.Height;
-
-         // First, apply new size to the Form because this action resizes it the Format is too small for split containers
-         this.MinimumSize = new Size(clientAreaMinWidth + nonClientAreaWidth, clientAreaMinHeight + nonClientAreaHeight);
-
-         // Validate widths
-         if (leftPaneMinWidth + rightPaneMinWidth > this.splitContainer1.Width ||
-             topRightPaneMinHeight + bottomRightPaneMinHeight > this.splitContainer2.Height)
+         int minimumWidth = clientAreaMinWidth + nonClientAreaWidth;
+         int minimumHeight = clientAreaMinHeight + nonClientAreaHeight;
+         if (Program.Settings.DisableSplitterRestrictions
+          || Screen.GetWorkingArea(this).Width < minimumWidth
+          || Screen.GetWorkingArea(this).Height < minimumHeight)
          {
-            Trace.TraceError(String.Format(
-               "[MainForm] SplitContainer size conflict. "
-             + "SplitContainer1.Width = {0}, leftPaneMinWidth = {1}, rightPaneMinWidth = {2}. "
-             + "SplitContainer2.Height = {3}, topRightPaneMinHeight = {4}, bottomRightPaneMinHeight = {5}",
-               splitContainer1.Width, leftPaneMinWidth, rightPaneMinWidth,
-               splitContainer2.Height, topRightPaneMinHeight, bottomRightPaneMinHeight));
-            Debug.Assert(false);
-            resetMergeRequestTabMinimumSizes();
-            _initializedMinimumSizes = true;
+            MinimumSize = new Size(0, 0);
+            int defaultPanelSize = 25; // from documentation
+            setSplitterPanelsMinSize(splitContainer1, defaultPanelSize, defaultPanelSize);
+            setSplitterPanelsMinSize(splitContainer2, defaultPanelSize, defaultPanelSize);
             return;
          }
 
-         // Then, apply new sizes to split containers
-         this.splitContainer1.Panel1MinSize = leftPaneMinWidth;
-         this.splitContainer1.Panel2MinSize = rightPaneMinWidth;
-         this.splitContainer2.Panel1MinSize = topRightPaneMinHeight;
-         this.splitContainer2.Panel2MinSize = bottomRightPaneMinHeight;
-
-         // Set default position for splitter
-         this.splitContainer1.SplitterDistance = this.splitContainer1.Width - this.splitContainer1.Panel2MinSize;
-         this.splitContainer2.SplitterDistance = this.splitContainer2.Height - this.splitContainer2.Panel2MinSize;
-
-         _initializedMinimumSizes = true;
+         // Setting MinimumSize here adjusts Splitter Height/Width so that it is safe to change its Panel Sizes
+         MinimumSize = new Size(minimumWidth, minimumHeight);
+         setSplitterPanelsMinSize(splitContainer1, leftPaneMinWidth, rightPaneMinWidth);
+         setSplitterPanelsMinSize(splitContainer2, topRightPaneMinHeight, bottomRightPaneMinHeight);
       }
 
       private void repositionCustomCommands()
       {
-         int getControlX(Control control, int index) =>
-             control.Width * index +
-                (groupBoxActions.Width - _customCommands.Count() * control.Width) *
-                (index + 1) / (_customCommands.Count() + 1);
+         int visibleControlCount = groupBoxActions
+            .Controls
+            .Cast<Control>()
+            .Count(control => control.Visible);
 
-         for (int id = 0; id < groupBoxActions.Controls.Count; ++id)
+         int getControlX(int controlWidth, int index) =>
+             controlWidth * index +
+                (groupBoxActions.Width - visibleControlCount * controlWidth) *
+                (index + 1) / (visibleControlCount + 1);
+
+         int getControlY(int controlHeight) =>
+            (groupBoxActions.Height - controlHeight) / 2;
+
+         int displayIndex = 0;
+         for (int controlIndex = 0; controlIndex < groupBoxActions.Controls.Count; ++controlIndex)
          {
-            Control c = groupBoxActions.Controls[id];
-            c.Location = new Point { X = getControlX(c, id), Y = c.Location.Y };
+            Control c = groupBoxActions.Controls[controlIndex];
+            if (c.Visible)
+            {
+               c.Location = new Point { X = getControlX(c.Width, displayIndex), Y = getControlY(c.Height) };
+               ++displayIndex;
+            }
          }
       }
 
@@ -1033,11 +898,10 @@ namespace mrHelper.App.Forms
 
       private void disableSelectedMergeRequestControls()
       {
-         enableCustomActions(false, null, null);
+         enableCustomActions(null, null);
          enableMergeRequestActions(false);
          updateMergeRequestDetails(null);
-         updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
-         updateTotalTime(null, null, null, null);
+         updateTimeTrackingMergeRequestDetails(null, null);
          updateAbortGitCloneButtonState();
 
          updateStorageStatusText(null, null);
@@ -1149,29 +1013,15 @@ namespace mrHelper.App.Forms
          buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Tomato;
       }
 
-      private void onTimerStopped(ITotalTimeCache totalTimeCache)
+      private void onTimerStopped()
       {
          buttonTimeTrackingStart.Text = buttonStartTimerDefaultText;
          buttonTimeTrackingStart.BackColor = System.Drawing.Color.Transparent;
          buttonTimeTrackingCancel.Enabled = false;
          buttonTimeTrackingCancel.BackColor = System.Drawing.Color.Transparent;
 
-         bool isMergeRequestSelected = getMergeRequest(null) != null && getMergeRequestKey(null).HasValue;
-         if (isMergeRequestSelected)
-         {
-            MergeRequest mergeRequest = getMergeRequest(null);
-            MergeRequestKey mrk = getMergeRequestKey(null).Value;
-
-            updateTimeTrackingMergeRequestDetails(true, mergeRequest.Title, mrk.ProjectKey, mergeRequest.Author);
-
-            // Take care of controls that 'time tracking' mode shares with normal mode
-            updateTotalTime(mrk, mergeRequest.Author, mrk.ProjectKey.HostName, totalTimeCache);
-         }
-         else
-         {
-            updateTimeTrackingMergeRequestDetails(false, null, default(ProjectKey), null);
-            updateTotalTime(null, null, null, null);
-         }
+         updateTimeTrackingMergeRequestDetails(
+            getMergeRequestKey(null), getDataCache(getCurrentTabDataCacheType()));
 
          updateTrayIcon();
          updateTaskbarIcon();
@@ -1190,12 +1040,12 @@ namespace mrHelper.App.Forms
 
       private void processFontChange()
       {
-         if (!this.Created)
+         if (!Created)
          {
             return;
          }
 
-         Trace.TraceInformation(String.Format("[MainForm] Font changed, new emSize = {0}", this.Font.Size));
+         Trace.TraceInformation(String.Format("[MainForm] Font changed, new emSize = {0}", Font.Size));
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
          // see 9b65d7413c
@@ -1222,8 +1072,8 @@ namespace mrHelper.App.Forms
 
       private void processDpiChange()
       {
-         Trace.TraceInformation(String.Format("[MainForm] DPI changed, new DPI = {0}", this.DeviceDpi));
-         CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
+         Trace.TraceInformation(String.Format("[MainForm] DPI changed, new DPI = {0}", DeviceDpi));
+            CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
          _trayIcon.ShowTooltipBalloon(new TrayIcon.BalloonText
          (
@@ -1342,6 +1192,104 @@ namespace mrHelper.App.Forms
                   Debug.Assert(false);
                   break;
             }
+         }
+      }
+
+      private void clearCustomActionControls()
+      {
+         groupBoxActions.Controls.Clear();
+      }
+
+      private void updateCustomActionControls()
+      {
+         BeginInvoke(new Action(async () =>
+         {
+            IEnumerable<ICommand> commands = await loadCustomCommandsAsync();
+            recreateCustomActionControls(commands);
+            repositionCustomCommands();
+
+            resetMergeRequestTabMinimumSizes();
+            initializeMergeRequestTabMinimumSizes();
+            applySavedSplitterDistance();
+
+            onMergeRequestSelectionChanged(getCurrentTabDataCacheType());
+         }), null);
+      }
+
+      private void recreateCustomActionControls(IEnumerable<ICommand> commands)
+      {
+         clearCustomActionControls();
+         if (commands == null)
+         {
+            return;
+         }
+
+         int id = 0;
+         foreach (ICommand command in commands)
+         {
+            string name = command.Name;
+            SizeF rate = WinFormsHelpers.GetAutoScaleDimensionsChangeRate(this);
+            var buttonSize = new System.Drawing.Size
+            {
+               Width = Convert.ToInt32(72 * rate.Width),
+               Height = Convert.ToInt32(32 * rate.Height)
+            };
+            var button = new System.Windows.Forms.Button
+            {
+               Name = "customAction" + id,
+               Location = new System.Drawing.Point { X = 0, Y = 19 },
+               Size = buttonSize,
+               MinimumSize = buttonSize,
+               Text = name,
+               UseVisualStyleBackColor = true,
+               TabStop = false,
+               Tag = command,
+            };
+            toolTip.SetToolTip(button, command.Hint);
+            button.Click += async (x, y) =>
+            {
+               MergeRequestKey? mergeRequestKey = getMergeRequestKey(null);
+               if (!mergeRequestKey.HasValue)
+               {
+                  return;
+               }
+
+               addOperationRecord(String.Format("Command {0} execution has started", name));
+               try
+               {
+                  await command.Run();
+               }
+               catch (Exception ex) // Whatever happened in Run()
+               {
+                  string errorMessage = "Custom action failed";
+                  ExceptionHandlers.Handle(errorMessage, ex);
+                  MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  addOperationRecord(String.Format("Command {0} failed", name));
+                  return;
+               }
+
+               string statusMessage = String.Format(
+                  "Command {0} execution has completed for merge request !{1} in project {2}",
+                  name, mergeRequestKey.Value.IId, mergeRequestKey.Value.ProjectKey.ProjectName);
+               addOperationRecord(statusMessage);
+
+               if (command.StopTimer)
+               {
+                  await stopTimeTrackingTimerAsync();
+               }
+
+               bool reload = command.Reload;
+               if (reload)
+               {
+                  requestUpdates(EDataCacheType.Live, mergeRequestKey, new int[] {
+                     Program.Settings.OneShotUpdateFirstChanceDelayMs,
+                     Program.Settings.OneShotUpdateSecondChanceDelayMs });
+               }
+
+               ensureMergeRequestInRecentDataCache(mergeRequestKey.Value);
+            };
+            groupBoxActions.Controls.Add(button);
+            id++;
          }
       }
    }

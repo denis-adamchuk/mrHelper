@@ -622,14 +622,16 @@ namespace mrHelper.App.Forms
             ReportedDiscussionNote note = _relatedDiscussions[_relatedDiscussionIndex.Value];
             bool areRefsEqual = note.Position.DiffPosition.Refs.Equals(NewDiscussionPosition.Refs);
             labelDifferentContextHint.Visible = !areRefsEqual;
-            labelRelatedDiscussionAuthor.Text = String.Format("{0} on {1}",
-               note.Details.AuthorName, note.Details.CreatedAt.ToLocalTime().ToString(Constants.TimeStampFormat));
+            labelRelatedDiscussionAuthor.Text = String.Format("{0} -- {1}",
+               note.Details.AuthorName, TimeUtils.DateTimeToStringAgo(note.Details.CreatedAt));
+            toolTip.SetToolTip(labelRelatedDiscussionAuthor, TimeUtils.DateTimeToString(note.Details.CreatedAt));
             updatePreview(htmlPanelPreviewRelatedDiscussion, note.Content.Body);
             showDiscussionContext(note.Position.DiffPosition, htmlPanelRelatedDiscussionContext);
          }
          else
          {
             labelRelatedDiscussionAuthor.Text = String.Empty;
+            toolTip.SetToolTip(labelRelatedDiscussionAuthor, String.Empty);
             htmlPanelPreviewRelatedDiscussion.Text = String.Empty;
             htmlPanelRelatedDiscussionContext.Text = String.Empty;
          }

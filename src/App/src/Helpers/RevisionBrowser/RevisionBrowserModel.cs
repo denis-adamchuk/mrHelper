@@ -76,9 +76,9 @@ namespace mrHelper.App.Helpers
                foreach (object item in filteredObjects)
                {
                   getItemProperties(iItem, item,
-                     out string fullSha, out string name, out DateTime timestamp, out string tooltipText);
+                     out string fullSha, out string name, out DateTime timestamp, out string description);
                   bool isReviewed = _data.ReviewedRevisions.Contains(fullSha);
-                  items.Add(new RevisionBrowserItem(name, timestamp, fullSha, parent, this, tooltipText, isReviewed, iItem));
+                  items.Add(new RevisionBrowserItem(name, timestamp, fullSha, parent, this, description, isReviewed, iItem));
                   --iItem;
                }
             }
@@ -119,7 +119,7 @@ namespace mrHelper.App.Helpers
       }
 
       private void getItemProperties(int iItem, object item,
-         out string fullSha, out string name, out DateTime timestamp, out string tooltipText)
+         out string fullSha, out string name, out DateTime timestamp, out string description)
       {
          if (item is Version version)
          {
@@ -128,7 +128,7 @@ namespace mrHelper.App.Helpers
 
             string sha = fullSha.Substring(0, Math.Min(10, fullSha.Length));
             Commit versionCommit = version.Commits?.FirstOrDefault();
-            tooltipText = versionCommit == null ? String.Empty : versionCommit.Message;
+            description = versionCommit == null ? String.Empty : versionCommit.Message;
 
             name = String.Format("Version #{0} ({1})", iItem, sha);
          }
@@ -137,7 +137,7 @@ namespace mrHelper.App.Helpers
             name = commit.Title;
             fullSha = commit.Id;
             timestamp = commit.Created_At;
-            tooltipText = commit.Message;
+            description = commit.Message;
          }
          else
          {

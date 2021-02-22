@@ -177,7 +177,7 @@ namespace mrHelper.CommonControls.Tools
          return controlList;
       }
 
-      public static void FixNonStandardDPIIssue(Control control, float designTimeFontSize, int designTimeDPI)
+      public static void FixNonStandardDPIIssue(Control control, float designTimeFontSize, int designTimeDPI = 96)
       {
          // Sometimes Windows DPI behavior is strange when changed to non-default (and even back)
          // without signing out - windows got scaled incorrectly but after signing out they work ok.
@@ -217,10 +217,21 @@ namespace mrHelper.CommonControls.Tools
 
       public static void LogScaleDimensions(ContainerControl control)
       {
-         Trace.TraceInformation(String.Format("[{0}] CurrentAutoScaleDimensions = {1}/{2}, AutoScaleDimensions = {3}/{4}",
+         Trace.TraceInformation(String.Format(
+            "[{0}] CurrentAutoScaleDimensions = {1}/{2}, AutoScaleDimensions = {3}/{4}",
             control.ToString(),
             control.CurrentAutoScaleDimensions.Width, control.CurrentAutoScaleDimensions.Height,
             control.AutoScaleDimensions.Width, control.AutoScaleDimensions.Height));
+      }
+
+      private static readonly SizeF DefaultDesignTimeDimensions = new SizeF(6F, 13F);
+
+      // Compute AutoScaleDimensions change comparing to Design-time settings
+      public static SizeF GetAutoScaleDimensionsChangeRate(ContainerControl control,
+         float designTimeDimensionWidth = 6F, float designTimeDimensionHeight = 13F)
+      {
+         return new SizeF(control.CurrentAutoScaleDimensions.Width / designTimeDimensionWidth,
+                          control.CurrentAutoScaleDimensions.Height / designTimeDimensionHeight);
       }
 
       public static bool ShowConfirmationDialog(string confirmationText)

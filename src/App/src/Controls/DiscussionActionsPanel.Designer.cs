@@ -54,8 +54,6 @@
          // 
          this.tableLayoutPanel1.ColumnCount = 1;
          this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-         this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-         this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
          this.tableLayoutPanel1.Controls.Add(this.buttonNewThread, 0, 2);
          this.tableLayoutPanel1.Controls.Add(this.buttonDiscussionsRefresh, 0, 0);
          this.tableLayoutPanel1.Controls.Add(this.buttonAddComment, 0, 1);
@@ -110,7 +108,7 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
          this.Controls.Add(this.groupBox1);
          this.Name = "DiscussionActionsPanel";
-         this.Size = new System.Drawing.Size(320, 139);
+         this.Size = new System.Drawing.Size(120, 139);
          this.groupBox1.ResumeLayout(false);
          this.tableLayoutPanel1.ResumeLayout(false);
          this.ResumeLayout(false);

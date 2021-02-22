@@ -70,7 +70,10 @@ namespace mrHelper.App.Forms
       {
          DataCache dataCache = getDataCache(mode);
          await dataCache.Disconnect();
-         await dataCache.Connect(_gitLabInstance, new DataCacheConnectionContext(queryCollection));
+         if (_gitLabInstance != null)
+         {
+            await dataCache.Connect(_gitLabInstance, new DataCacheConnectionContext(queryCollection));
+         }
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -78,6 +81,7 @@ namespace mrHelper.App.Forms
       private void onSearchDataCacheDisconnected()
       {
          disableSearchTabControls();
+         unsubscribeFromSearchDataCacheInternalEvents();
       }
 
       private void onSearchDataCacheConnecting(string hostname)
@@ -88,6 +92,7 @@ namespace mrHelper.App.Forms
 
       private void onSearchDataCacheConnected(string hostname, User user)
       {
+         subscribeToSearchDataCacheInternalEvents();
          updateMergeRequestList(EDataCacheType.Search);
          enableSearchTabControls();
 

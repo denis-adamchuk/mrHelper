@@ -43,6 +43,10 @@ namespace mrHelper.GitLabClient
 
       /// <summary>
       /// </summary>
+      GitLabSharp.Entities.MergeRequestApprovalConfiguration GetApprovals(MergeRequestKey mrk);
+
+      /// <summary>
+      /// </summary>
       void RequestUpdate(MergeRequestKey? mrk, int interval, Action onUpdateFinished);
 
       /// <summary>

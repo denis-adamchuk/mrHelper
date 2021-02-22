@@ -24,13 +24,13 @@ namespace mrHelper.Common.Constants
       public static string BashFileName = "bash.exe";
 
       public static string CustomActionsFileName = "CustomActions.xml";
+      public static string CustomActionsWithApprovalStatusSupportFileName = "CustomActionsWithApprovalStatusSupport.xml";
+      public static string KeywordsFileName = "keywords.json";
 
       public static string TimeStampLogFilenameFormat = "yyyy_MM_dd_HHmmss";
 
       public static string BugReportLogArchiveName => String.Format(
          "mrhelper.logs.{0}.zip", DateTime.Now.ToString(TimeStampLogFilenameFormat));
-
-      public static string TimeStampFormat = "d-MMM-yyyy HH:mm";
 
       public static int FullContextSize = 20000;
 
@@ -111,6 +111,12 @@ namespace mrHelper.Common.Constants
       {
          Size = 10,
          Delay = 1000
+      };
+
+      public static TaskUtils.BatchLimits ApprovalLoaderMergeRequestBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 0
       };
 
       // @{ Default properties for FileStorageUpdater (can be overridden by user in a configuration file)

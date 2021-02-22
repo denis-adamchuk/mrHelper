@@ -276,7 +276,7 @@ namespace mrHelper.Common.Tools
 
       public static bool IsWorkInProgressTitle(string title)
       {
-         return title != null && title.StartsWith(WorkInProgressPrefix);
+         return title != null && (title.StartsWith(WorkInProgressPrefix) || title.StartsWith(DraftPrefix));
       }
 
       public static string ToggleWorkInProgressTitle(string title)
@@ -286,8 +286,15 @@ namespace mrHelper.Common.Tools
             return title;
          }
 
-         return title.StartsWith(WorkInProgressPrefix)
-            ? title.Substring(WorkInProgressPrefix.Length) : WorkInProgressPrefix + title;
+         if (title.StartsWith(WorkInProgressPrefix))
+         {
+            return title.Substring(WorkInProgressPrefix.Length);
+         }
+         else if (title.StartsWith(DraftPrefix))
+         {
+            return title.Substring(DraftPrefix.Length);
+         }
+         return WorkInProgressPrefix + title;
       }
 
       public static byte[] GetBytesSafe(string value)
@@ -342,6 +349,7 @@ namespace mrHelper.Common.Tools
       }
 
       private static readonly string WorkInProgressPrefix = "WIP: ";
+      private static readonly string DraftPrefix = "Draft: ";
    }
 }
 

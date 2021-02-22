@@ -57,6 +57,7 @@
     <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestLoaderItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\ProjectListLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\VersionLoaderItf.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Loaders\ApprovalLoaderItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Managers\ProjectCache.cs" />
     <Compile Include="src\Interfaces\DiscussionCreatorItf.cs" />
     <Compile Include="src\Impl\Accessors\DiscussionAccessor.cs" />
@@ -119,6 +120,7 @@
     <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestListLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\MergeRequestLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\VersionLoader.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Loaders\ApprovalLoader.cs" />
     <Compile Include="src\Interfaces\DataCacheConnectionContext.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\BaseDataCacheLoader.cs" />
     <Compile Include="src\Impl\Internal\Operators\DataCacheOperator.cs" />

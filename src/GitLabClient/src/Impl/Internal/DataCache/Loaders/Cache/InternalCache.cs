@@ -14,6 +14,7 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          _mergeRequests = new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
          _versions = new Dictionary<MergeRequestKey, IEnumerable<Version>>();
          _commits = new Dictionary<MergeRequestKey, IEnumerable<Commit>>();
+         _approvals = new Dictionary<MergeRequestKey, MergeRequestApprovalConfiguration>();
       }
 
       private InternalCache(InternalCache details)
@@ -21,6 +22,7 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          _mergeRequests = new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
          _versions = new Dictionary<MergeRequestKey, IEnumerable<Version>>();
          _commits = new Dictionary<MergeRequestKey, IEnumerable<Commit>>();
+         _approvals = new Dictionary<MergeRequestKey, MergeRequestApprovalConfiguration>();
 
          foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in details._mergeRequests)
          {
@@ -35,6 +37,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          foreach (KeyValuePair<MergeRequestKey, IEnumerable<Commit>> kv in details._commits)
          {
             SetCommits(kv.Key, kv.Value.ToArray()); // make a copy
+         }
+
+         foreach (KeyValuePair<MergeRequestKey, MergeRequestApprovalConfiguration> kv in details._approvals)
+         {
+            SetApprovals(kv.Key, kv.Value);
          }
       }
 
@@ -116,6 +123,22 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       }
 
       /// <summary>
+      /// Return all cached approvals
+      /// </summary>
+      public MergeRequestApprovalConfiguration GetApprovals(MergeRequestKey mrk)
+      {
+         return _approvals.ContainsKey(mrk) ? _approvals[mrk] : default(MergeRequestApprovalConfiguration);
+      }
+
+      /// <summary>
+      /// Update cached approvals
+      /// </summary>
+      internal void SetApprovals(MergeRequestKey mrk, MergeRequestApprovalConfiguration approvals)
+      {
+         _approvals[mrk] = approvals;
+      }
+
+      /// <summary>
       /// Updates a merge request
       /// </summary>
       internal void UpdateMergeRequest(MergeRequestKey mrk, MergeRequest mergeRequest)
@@ -157,6 +180,9 @@ namespace mrHelper.GitLabClient.Loaders.Cache
 
       // maps Merge Request to its commits
       private readonly Dictionary<MergeRequestKey, IEnumerable<Commit>> _commits;
+
+      // maps Merge Request to its approval configuration
+      private readonly Dictionary<MergeRequestKey, MergeRequestApprovalConfiguration> _approvals;
    }
 }
 
