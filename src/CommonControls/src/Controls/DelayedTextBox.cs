@@ -35,9 +35,9 @@ namespace mrHelper.CommonControls.Controls
          _delayedInputTimer.Start();
       }
 
-      private System.Timers.Timer _delayedInputTimer;
+      private readonly System.Timers.Timer _delayedInputTimer;
 
-      private static int DelayPeriod = 250; // ms
+      private static readonly int DelayPeriod = 250; // ms
    }
 }
 

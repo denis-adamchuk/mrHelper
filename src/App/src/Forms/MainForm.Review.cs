@@ -167,12 +167,11 @@ namespace mrHelper.App.Forms
          ensureMergeRequestInRecentDataCache(mrk);
       }
 
-      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk)
+      async private Task onLaunchDiffToolAsync(MergeRequestKey mrk,
+         string leftSHA, string rightSHA, IEnumerable<string> includedSHA, RevisionType? type)
       {
          // Keep data before async/await
          DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
-         getShaForDiffTool(out string leftSHA, out string rightSHA,
-            out IEnumerable<string> includedSHA, out RevisionType? type);
          if (dataCache == null
           || String.IsNullOrWhiteSpace(leftSHA)
           || String.IsNullOrWhiteSpace(rightSHA)
@@ -213,6 +212,20 @@ namespace mrHelper.App.Forms
          {
             revisionBrowser.UpdateReviewedRevisions(reviewedRevisions, type.Value);
          }
+      }
+
+      private Task onLaunchDiffDefaultAsync(MergeRequestKey mrk)
+      {
+         getShaForDiffTool(out string leftSHA, out string rightSHA,
+            out IEnumerable<string> includedSHA, out RevisionType? type);
+         return onLaunchDiffToolAsync(mrk, leftSHA, rightSHA, includedSHA, type);
+      }
+
+      private Task onLaunchDiffWithBaseAsync(MergeRequestKey mrk)
+      {
+         getShaForDiffWithBase(out string leftSHA, out string rightSHA,
+            out IEnumerable<string> includedSHA, out RevisionType? type);
+         return onLaunchDiffToolAsync(mrk, leftSHA, rightSHA, includedSHA, type);
       }
 
       private void launchDiffTool(string leftSHA, string rightSHA, ILocalCommitStorage storage,
@@ -274,13 +287,23 @@ namespace mrHelper.App.Forms
          return await prepareCommitStorage(mrk, storage, contextProvider2, false);
       }
 
+      private void launchDiffWithBaseForSelectedMergeRequest()
+      {
+         BeginInvoke(new Action(async () =>
+         {
+            Debug.Assert(getMergeRequestKey(null).HasValue);
+            MergeRequestKey mrk = getMergeRequestKey(null).Value;
+            await onLaunchDiffWithBaseAsync(mrk);
+         }));
+      }
+
       private void launchDiffToolForSelectedMergeRequest()
       {
          BeginInvoke(new Action(async () =>
          {
             Debug.Assert(getMergeRequestKey(null).HasValue);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
-            await onLaunchDiffToolAsync(mrk);
+            await onLaunchDiffDefaultAsync(mrk);
          }));
       }
 

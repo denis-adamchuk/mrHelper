@@ -338,6 +338,23 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void getShaForDiffWithBase(out string left, out string right,
+         out IEnumerable<string> included, out RevisionType? type)
+      {
+         string[] selected = revisionBrowser.GetSelectedSha(out type);
+         if (selected.Count() == 0)
+         {
+            left = String.Empty;
+            right = String.Empty;
+            included = new List<string>();
+            return;
+         }
+
+         left = revisionBrowser.GetBaseCommitSha();
+         right = selected[0];
+         included = revisionBrowser.GetIncludedSha();
+      }
+
       private bool checkIfMergeRequestCanBeCreated()
       {
          string hostname = getHostName();

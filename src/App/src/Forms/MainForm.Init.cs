@@ -244,20 +244,26 @@ namespace mrHelper.App.Forms
       {
          getListView(EDataCacheType.Live).AssignContextMenu(new MergeRequestListViewContextMenu(
             showDiscussionsForSelectedMergeRequest,
+            () => reloadMergeRequestsByUserRequest(getDataCache(EDataCacheType.Live)),
             refreshSelectedMergeRequest,
             editSelectedMergeRequest,
             acceptSelectedMergeRequest,
             closeSelectedMergeRequest,
+            launchDiffWithBaseForSelectedMergeRequest,
+            launchDiffToolForSelectedMergeRequest,
             showDiscussionsForSelectedMergeRequest));
 
          foreach (EDataCacheType mode in new EDataCacheType[] { EDataCacheType.Recent, EDataCacheType.Search })
          {
             getListView(mode).AssignContextMenu(new MergeRequestListViewContextMenu(
                showDiscussionsForSelectedMergeRequest,
+               null,
                mode == EDataCacheType.Search ? (null as Action) : refreshSelectedMergeRequest,
                null,
                null,
                null,
+               launchDiffWithBaseForSelectedMergeRequest,
+               launchDiffToolForSelectedMergeRequest,
                showDiscussionsForSelectedMergeRequest));
          }
       }

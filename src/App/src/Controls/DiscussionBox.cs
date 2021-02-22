@@ -571,7 +571,6 @@ namespace mrHelper.App.Controls
          addMenuItem("Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread", isDiscussionResolvable(), onMenuItemReplyDone, Shortcut.ShiftF4);
          addMenuItem("-", true, null);
          addMenuItem("View Note as plain text", true, onMenuItemViewNote, Shortcut.F6);
-         addMenuItem("-", true, null);
 
          return contextMenu;
       }

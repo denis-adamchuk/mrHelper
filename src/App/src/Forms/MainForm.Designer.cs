@@ -2503,6 +2503,7 @@ namespace mrHelper.App.Forms
          this.Controls.Add(this.panelConnectionStatus);
          this.Controls.Add(this.tabControl);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
+         this.KeyPreview = true;
          this.Name = "MainForm";
          this.Text = "Merge Request Helper";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.mainForm_FormClosing);
