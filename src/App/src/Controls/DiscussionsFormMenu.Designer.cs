@@ -88,7 +88,7 @@ namespace mrHelper.App.Controls
          this.refreshToolStripMenuItem.ShortcutKeyDisplayString = "F5";
          this.refreshToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F5;
          this.refreshToolStripMenuItem.Size = new System.Drawing.Size(58, 24);
-         this.refreshToolStripMenuItem.Text = "Refresh";
+         this.refreshToolStripMenuItem.Text = "&Refresh";
          this.refreshToolStripMenuItem.Click += new System.EventHandler(this.onRefreshMenuItemClicked);
          // 
          // sortToolStripMenuItem
@@ -99,13 +99,13 @@ namespace mrHelper.App.Controls
             this.byReviewerToolStripMenuItem});
          this.sortToolStripMenuItem.Name = "sortToolStripMenuItem";
          this.sortToolStripMenuItem.Size = new System.Drawing.Size(40, 24);
-         this.sortToolStripMenuItem.Text = "Sort";
+         this.sortToolStripMenuItem.Text = "&Sort";
          // 
          // defaultToolStripMenuItem
          // 
          this.defaultToolStripMenuItem.CheckOnClick = true;
          this.defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-         this.defaultToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+         this.defaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
          this.defaultToolStripMenuItem.Text = "Default";
          this.defaultToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onSortMenuItemCheckedChanged);
          // 
@@ -113,7 +113,7 @@ namespace mrHelper.App.Controls
          // 
          this.reverseToolStripMenuItem.CheckOnClick = true;
          this.reverseToolStripMenuItem.Name = "reverseToolStripMenuItem";
-         this.reverseToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+         this.reverseToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
          this.reverseToolStripMenuItem.Text = "Reverse";
          this.reverseToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onSortMenuItemCheckedChanged);
          // 
@@ -121,7 +121,7 @@ namespace mrHelper.App.Controls
          // 
          this.byReviewerToolStripMenuItem.CheckOnClick = true;
          this.byReviewerToolStripMenuItem.Name = "byReviewerToolStripMenuItem";
-         this.byReviewerToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+         this.byReviewerToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
          this.byReviewerToolStripMenuItem.Text = "By reviewer";
          this.byReviewerToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onSortMenuItemCheckedChanged);
          // 
@@ -140,7 +140,7 @@ namespace mrHelper.App.Controls
             this.showUnansweredThreadsOnlyToolStripMenuItem});
          this.filterToolStripMenuItem.Name = "filterToolStripMenuItem";
          this.filterToolStripMenuItem.Size = new System.Drawing.Size(45, 24);
-         this.filterToolStripMenuItem.Text = "Filter";
+         this.filterToolStripMenuItem.Text = "&Filter";
          // 
          // showThreadsStartedByMeOnlyToolStripMenuItem
          // 
@@ -224,32 +224,32 @@ namespace mrHelper.App.Controls
             this.toolStripMenuItemSeparator});
          this.actionsToolStripMenuItem.Name = "actionsToolStripMenuItem";
          this.actionsToolStripMenuItem.Size = new System.Drawing.Size(59, 24);
-         this.actionsToolStripMenuItem.Text = "Actions";
+         this.actionsToolStripMenuItem.Text = "&Actions";
          // 
          // startAThreadToolStripMenuItem
          // 
          this.startAThreadToolStripMenuItem.Name = "startAThreadToolStripMenuItem";
-         this.startAThreadToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+         this.startAThreadToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
          this.startAThreadToolStripMenuItem.Text = "Start a thread";
          this.startAThreadToolStripMenuItem.Click += new System.EventHandler(this.onStartAThreadMenuItemClicked);
          // 
          // addACommentToolStripMenuItem
          // 
          this.addACommentToolStripMenuItem.Name = "addACommentToolStripMenuItem";
-         this.addACommentToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
+         this.addACommentToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
          this.addACommentToolStripMenuItem.Text = "Add a comment";
          this.addACommentToolStripMenuItem.Click += new System.EventHandler(this.onAddACommentMenuItemClicked);
          // 
          // toolStripMenuItemSeparator
          // 
          this.toolStripMenuItemSeparator.Name = "toolStripMenuItemSeparator";
-         this.toolStripMenuItemSeparator.Size = new System.Drawing.Size(157, 6);
+         this.toolStripMenuItemSeparator.Size = new System.Drawing.Size(177, 6);
          // 
          // fontSizeToolStripMenuItem
          // 
          this.fontSizeToolStripMenuItem.Name = "fontSizeToolStripMenuItem";
          this.fontSizeToolStripMenuItem.Size = new System.Drawing.Size(66, 24);
-         this.fontSizeToolStripMenuItem.Text = "Font Size";
+         this.fontSizeToolStripMenuItem.Text = "F&ont Size";
          // 
          // viewToolStripMenuItem
          // 
@@ -261,7 +261,7 @@ namespace mrHelper.App.Controls
             this.decreaseColumnWidthToolStripMenuItem});
          this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
          this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 24);
-         this.viewToolStripMenuItem.Text = "View";
+         this.viewToolStripMenuItem.Text = "&View";
          // 
          // diffContextPositionToolStripMenuItem
          // 
