@@ -20,9 +20,15 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
+         _discussionLayout.DiffContextPositionChanged += updateSaveDefaultLayoutState;
+         _discussionLayout.DiscussionColumnWidthChanged += updateSaveDefaultLayoutState;
+         _discussionLayout.NeedShiftRepliesChanged += updateSaveDefaultLayoutState;
+
          _discussionLoader.StatusChanged -= onDiscussionLoaderStatusChanged;
 
          Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
+
+         toolTip.Dispose();
 
          base.Dispose(disposing);
       }

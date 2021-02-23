@@ -18,10 +18,7 @@
             components.Dispose();
          }
 
-         if (_host != null)
-         {
-            _host.ContentChanged -= onHostContentChanged;
-         }
+         _host.ContentChanged -= onHostContentChanged;
 
          base.Dispose(disposing);
       }

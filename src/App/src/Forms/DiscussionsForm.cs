@@ -39,9 +39,9 @@ namespace mrHelper.App.Forms
             ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings),
             Program.Settings.NeedShiftReplies);
          _discussionLayout = discussionLayout;
-         discussionLayout.DiffContextPositionChanged += updateSaveDefaultLayoutState;
-         discussionLayout.DiscussionColumnWidthChanged += updateSaveDefaultLayoutState;
-         discussionLayout.NeedShiftRepliesChanged += updateSaveDefaultLayoutState;
+         _discussionLayout.DiffContextPositionChanged += updateSaveDefaultLayoutState;
+         _discussionLayout.DiscussionColumnWidthChanged += updateSaveDefaultLayoutState;
+         _discussionLayout.NeedShiftRepliesChanged += updateSaveDefaultLayoutState;
          updateSaveDefaultLayoutState();
          Program.Settings.PropertyChanged += onSettingsPropertyChanged;
 

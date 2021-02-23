@@ -60,9 +60,9 @@ namespace mrHelper.App.Controls
          _discussionLoader.Loaded += onDiscussionsLoaded;
 
          _discussionLayout = discussionLayout;
-         discussionLayout.DiffContextPositionChanged += onDiffContextPositionChanged;
-         discussionLayout.DiscussionColumnWidthChanged += onDiscussionColumnWidthChanged;
-         discussionLayout.NeedShiftRepliesChanged += onNeedShiftRepliesChanged;
+         _discussionLayout.DiffContextPositionChanged += onDiffContextPositionChanged;
+         _discussionLayout.DiscussionColumnWidthChanged += onDiscussionColumnWidthChanged;
+         _discussionLayout.NeedShiftRepliesChanged += onNeedShiftRepliesChanged;
 
          apply(discussions);
       }
