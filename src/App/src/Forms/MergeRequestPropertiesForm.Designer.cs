@@ -208,6 +208,7 @@
          // 
          // labelSpecialNotePrefix
          // 
+         this.labelSpecialNotePrefix.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.labelSpecialNotePrefix.AutoSize = true;
          this.labelSpecialNotePrefix.Location = new System.Drawing.Point(434, 47);
          this.labelSpecialNotePrefix.Name = "labelSpecialNotePrefix";
@@ -255,6 +256,7 @@
          // 
          // textBoxSpecialNote
          // 
+         this.textBoxSpecialNote.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxSpecialNote.BackColor = System.Drawing.SystemColors.Control;
          this.textBoxSpecialNote.Location = new System.Drawing.Point(471, 44);
          this.textBoxSpecialNote.Name = "textBoxSpecialNote";
