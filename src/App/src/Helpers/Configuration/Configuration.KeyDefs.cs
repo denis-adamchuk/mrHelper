@@ -85,7 +85,7 @@ namespace mrHelper.App.Helpers
       private static readonly bool   ShowWarningOnCreateMergeRequestDefaultValue = true;
 
       private static readonly string ShowWarningOnFilterMigrationKeyName      = "ShowWarningOnFilterMigration";
-      private static readonly bool   ShowWarningOnFilterMigrationDefaultValue = true;
+      private static readonly bool   ShowWarningOnFilterMigrationDefaultValue = false;
 
       private static readonly string ShowWarningOnHideToTrayKeyName      = "ShowWarningOnHideToTray";
       private static readonly bool   ShowWarningOnHideToTrayDefaultValue = true;

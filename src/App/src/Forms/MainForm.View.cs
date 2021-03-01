@@ -709,7 +709,10 @@ namespace mrHelper.App.Forms
          // TODO No idea how to make it more flexible, leave a fixed number so far
          int maximumNumberOfVisibleCustomActionControl = 6;
          bool hasActions = groupBoxActions.Controls.Count > 0;
-         int defaultWidthOfCustomActionControl = hasActions ? groupBoxActions.Controls[0].Width : 0;
+
+         // If even we don't have actions, reserve some space for them
+         int potentialWidth = getCustomActionButtonSize().Width;
+         int defaultWidthOfCustomActionControl = hasActions ? groupBoxActions.Controls[0].Width : potentialWidth;
 
          int groupBoxActionsMinWidth =
             maximumNumberOfVisibleCustomActionControl * defaultWidthOfCustomActionControl
@@ -1217,6 +1220,16 @@ namespace mrHelper.App.Forms
          }), null);
       }
 
+      private Size getCustomActionButtonSize()
+      {
+         SizeF rate = WinFormsHelpers.GetAutoScaleDimensionsChangeRate(this);
+         return new System.Drawing.Size
+         {
+            Width = Convert.ToInt32(72 * rate.Width),
+            Height = Convert.ToInt32(32 * rate.Height)
+         };
+      }
+
       private void recreateCustomActionControls(IEnumerable<ICommand> commands)
       {
          clearCustomActionControls();
@@ -1226,15 +1239,10 @@ namespace mrHelper.App.Forms
          }
 
          int id = 0;
+         Size buttonSize = getCustomActionButtonSize();
          foreach (ICommand command in commands)
          {
             string name = command.Name;
-            SizeF rate = WinFormsHelpers.GetAutoScaleDimensionsChangeRate(this);
-            var buttonSize = new System.Drawing.Size
-            {
-               Width = Convert.ToInt32(72 * rate.Width),
-               Height = Convert.ToInt32(32 * rate.Height)
-            };
             var button = new System.Windows.Forms.Button
             {
                Name = "customAction" + id,
