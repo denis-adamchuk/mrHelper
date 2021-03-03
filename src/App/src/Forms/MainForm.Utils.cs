@@ -406,16 +406,16 @@ namespace mrHelper.App.Forms
 
       private string getClipboardText()
       {
-         if (Clipboard.ContainsText(TextDataFormat.Text))
+         try
          {
-            try
+            if (Clipboard.ContainsText(TextDataFormat.Text))
             {
                return Clipboard.GetText(TextDataFormat.Text);
             }
-            catch (Exception ex)
-            {
-               Debug.Assert(ex is System.Runtime.InteropServices.ExternalException);
-            }
+         }
+         catch (Exception ex)
+         {
+            Debug.Assert(ex is System.Runtime.InteropServices.ExternalException);
          }
          return String.Empty;
       }
