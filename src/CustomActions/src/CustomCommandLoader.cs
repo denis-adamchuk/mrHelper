@@ -83,6 +83,7 @@ namespace mrHelper.CustomActions
                XmlNode stopTimer = command.Attributes.GetNamedItem("StopTimer");
                XmlNode reload = command.Attributes.GetNamedItem("Reload");
                XmlNode hint = command.Attributes.GetNamedItem("Hint");
+               XmlNode initiallyVisible = command.Attributes.GetNamedItem("InitiallyVisible");
                results.Add(new SendNoteCommand(
                   _callback,
                   name.Value,
@@ -91,7 +92,8 @@ namespace mrHelper.CustomActions
                   visibleIf?.Value ?? String.Empty,
                   (stopTimer?.Value ?? "0") == "1",
                   (reload?.Value ?? "0") == "1",
-                  hint?.Value ?? String.Empty));
+                  hint?.Value ?? String.Empty,
+                  (initiallyVisible?.Value ?? "0") == "1"));
             }
             else if (obj.Name == "MergeRequestEndPointPOST")
             {
@@ -101,6 +103,7 @@ namespace mrHelper.CustomActions
                XmlNode stopTimer = command.Attributes.GetNamedItem("StopTimer");
                XmlNode reload = command.Attributes.GetNamedItem("Reload");
                XmlNode hint = command.Attributes.GetNamedItem("Hint");
+               XmlNode initiallyVisible = command.Attributes.GetNamedItem("InitiallyVisible");
                results.Add(new MergeRequestEndPointPOSTCommand(
                   _callback,
                   name.Value,
@@ -109,7 +112,8 @@ namespace mrHelper.CustomActions
                   visibleIf?.Value ?? String.Empty,
                   (stopTimer?.Value ?? "0") == "1",
                   (reload?.Value ?? "0") == "1",
-                  hint?.Value ?? String.Empty));
+                  hint?.Value ?? String.Empty,
+                  (initiallyVisible?.Value ?? "0") == "1"));
             }
             else
             {

@@ -15,7 +15,8 @@ namespace mrHelper.CustomActions
          string visibleIf,
          bool stopTimer,
          bool reload,
-         string hint)
+         string hint,
+         bool initiallyVisible)
       {
          _callback = callback;
          Name = name;
@@ -24,6 +25,7 @@ namespace mrHelper.CustomActions
          StopTimer = stopTimer;
          Reload = reload;
          Hint = hint;
+         InitiallyVisible = initiallyVisible;
       }
 
       public string Name { get; }
@@ -37,6 +39,8 @@ namespace mrHelper.CustomActions
       public bool Reload { get; }
 
       public string Hint { get; }
+
+      public bool InitiallyVisible { get; }
 
       public abstract Task Run();
 

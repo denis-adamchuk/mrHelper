@@ -14,8 +14,9 @@ namespace mrHelper.CustomActions
          string visibleIf,
          bool stopTimer,
          bool reload,
-         string hint)
-         : base(callback, name, enabledIf, visibleIf, stopTimer, reload, hint)
+         string hint,
+         bool initiallyVisible)
+         : base(callback, name, enabledIf, visibleIf, stopTimer, reload, hint, initiallyVisible)
       {
          _endpoint = endpoint;
       }

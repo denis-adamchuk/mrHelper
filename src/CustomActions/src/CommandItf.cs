@@ -16,6 +16,8 @@ namespace mrHelper.CustomActions
 
       string Hint { get; }
 
+      bool InitiallyVisible { get; }
+
       Task Run();
    }
 }

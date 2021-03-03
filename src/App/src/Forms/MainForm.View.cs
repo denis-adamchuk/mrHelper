@@ -1253,6 +1253,7 @@ namespace mrHelper.App.Forms
                UseVisualStyleBackColor = true,
                TabStop = false,
                Tag = command,
+               Visible = command.InitiallyVisible
             };
             toolTip.SetToolTip(button, command.Hint);
             button.Click += async (x, y) =>
