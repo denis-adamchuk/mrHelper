@@ -860,23 +860,23 @@ namespace mrHelper.App.Controls
             allAuthors = new User[] { fmk.MergeRequest.Author };
          }
 
-         foreach (KeyValuePair<string, Color> color in _colorScheme)
+         foreach (ColorSchemeItem colorSchemeItem in _colorScheme.GetColors("MergeRequests"))
          {
             // by author
             foreach (User author in allAuthors)
             {
-               if (StringUtils.DoesMatchPattern(color.Key, "MergeRequests_{{Author:{0}}}", author.Username))
+               if (StringUtils.DoesMatchPattern(colorSchemeItem.Conditions, "{{Author:{0}}}", author.Username))
                {
-                  return color.Value;
+                  return colorSchemeItem.Color;
                }
             }
 
             // by labels
             foreach (string label in allLabels)
             {
-               if (StringUtils.DoesMatchPattern(color.Key, "MergeRequests_{{Label:{0}}}", label))
+               if (StringUtils.DoesMatchPattern(colorSchemeItem.Conditions, "{{Label:{0}}}", label))
                {
-                  return color.Value;
+                  return colorSchemeItem.Color;
                }
             }
          }

@@ -623,12 +623,16 @@ namespace mrHelper.App.Controls
 
       private Color getNoteColor(DiscussionNote note)
       {
-         Color defaultColor = Color.White;
+         Color getColorOrDefault(string colorName)
+         {
+            Color defaultColor = Color.White;
+            ColorSchemeItem? colorOpt = _colorScheme.GetColor(colorName);
+            return colorOpt.HasValue ? colorOpt.Value.Color : defaultColor;
+         }
 
          if (isServiceDiscussionNote(note))
          {
-            return _colorScheme.GetColorOrDefault("Discussions_ServiceMessages",
-               _colorScheme.GetColorOrDefault("Discussions_Comments", defaultColor));
+            return getColorOrDefault("Discussions_ServiceMessages");
          }
 
          if (note.Resolvable)
@@ -636,19 +640,19 @@ namespace mrHelper.App.Controls
             if (note.Author.Id == _mergeRequestAuthor.Id)
             {
                return note.Resolved
-                  ? _colorScheme.GetColorOrDefault("Discussions_Author_Notes_Resolved", defaultColor)
-                  : _colorScheme.GetColorOrDefault("Discussions_Author_Notes_Unresolved", defaultColor);
+                  ? getColorOrDefault("Discussions_Author_Notes_Resolved")
+                  : getColorOrDefault("Discussions_Author_Notes_Unresolved");
             }
             else
             {
                return note.Resolved
-                  ? _colorScheme.GetColorOrDefault("Discussions_NonAuthor_Notes_Resolved", defaultColor)
-                  : _colorScheme.GetColorOrDefault("Discussions_NonAuthor_Notes_Unresolved", defaultColor);
+                  ? getColorOrDefault("Discussions_NonAuthor_Notes_Resolved")
+                  : getColorOrDefault("Discussions_NonAuthor_Notes_Unresolved");
             }
          }
          else
          {
-            return _colorScheme.GetColorOrDefault("Discussions_Comments", defaultColor);
+            return getColorOrDefault("Discussions_Comments");
          }
       }
 
