@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
-using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.CustomActions;
@@ -31,9 +29,10 @@ namespace mrHelper.App.Forms
 
       private static readonly string DefaultColorSchemeName = "Default";
       private static readonly string ColorSchemeFileNamePrefix = "colors.json";
-      private static readonly string IconSchemeFileName = "icons.json";
-      private static readonly string BadgeSchemeFileName = "badges.json";
       private static readonly string ProjectListFileName = "projects.json";
+      private static readonly string ColorSchemeSubFolder = "colors";
+      private static readonly string IconSubFolder = "ico";
+      private static readonly string MiscSubFolder = "etc";
 
       private static readonly string openFromClipboardEnabledText = "Open from Clipboard";
       private static readonly string openFromClipboardDisabledText = "Open from Clipboard (Copy GitLab MR URL to activate)";
@@ -118,8 +117,6 @@ namespace mrHelper.App.Forms
       private string _initialHostName;
       private IEnumerable<string> _keywords;
       private ColorScheme _colorScheme;
-      private Dictionary<string, string> _iconScheme;
-      private Dictionary<string, string> _badgeScheme;
 
       private class HostComboBoxItem
       {

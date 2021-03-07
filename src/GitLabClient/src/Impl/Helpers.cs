@@ -12,6 +12,35 @@ namespace mrHelper.GitLabClient
 {
    public static class Helpers
    {
+      // Check if the passed merge request mets ALL conditions
+      public static bool CheckConditions(IEnumerable<string> conditions, MergeRequest mergeRequest)
+      {
+         foreach (var cond in conditions)
+         {
+            if (cond.Contains("Label:"))
+            {
+               if (!mergeRequest.Labels.Any(label => StringUtils.DoesMatchPattern(cond, "{{Label:{0}}}", label)))
+               {
+                  return false;
+               }
+            }
+            else if (cond.Contains("Author:"))
+            {
+               if (!StringUtils.DoesMatchPattern(cond, "{{Author:{0}}}", mergeRequest.Author.Username))
+               {
+                  return false;
+               }
+            }
+         }
+         return true;
+      }
+
+      // Check if any of the passed merge requests met ALL conditions
+      public static bool CheckConditions(IEnumerable<string> conditions, IEnumerable<MergeRequest> mergeRequests)
+      {
+         return mergeRequests.Any(mergeRequest => CheckConditions(conditions, mergeRequest));
+      }
+
       public static bool IsUserMentioned(string text, User user)
       {
          if (user == null)

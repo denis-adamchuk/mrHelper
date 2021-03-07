@@ -255,8 +255,7 @@ namespace mrHelper.App.Forms
          // Take care of controls that 'time tracking' mode shares with normal mode
          updateTotalTime(null, null);
 
-         updateTrayIcon();
-         updateTaskbarIcon();
+         updateTrayAndTaskBar();
 
          onTimerStarted();
          addOperationRecord("Time tracking has started");

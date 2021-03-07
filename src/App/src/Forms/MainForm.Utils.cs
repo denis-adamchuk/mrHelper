@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Drawing;
@@ -772,8 +773,7 @@ namespace mrHelper.App.Forms
          if (!isConnectionLost())
          {
             createLostConnectionInfo();
-            updateTrayIcon();
-            updateTaskbarIcon();
+            updateTrayAndTaskBar();
          }
       }
 
@@ -802,8 +802,7 @@ namespace mrHelper.App.Forms
                loadRecentMergeRequests();
             }
          }
-         updateTrayIcon();
-         updateTaskbarIcon();
+         updateTrayAndTaskBar();
       }
 
       private bool isConnectionLost()
@@ -851,9 +850,10 @@ namespace mrHelper.App.Forms
       async private Task<string> getCustomActionFileNameAsync()
       {
          bool isApprovalStatusSupported = await _gitLabInstance?.IsApprovalStatusSupported();
-         return isApprovalStatusSupported
+         string filename = isApprovalStatusSupported
             ? Constants.CustomActionsWithApprovalStatusSupportFileName
             : Constants.CustomActionsFileName;
+         return Path.Combine(Directory.GetCurrentDirectory(), MiscSubFolder, filename);
       }
 
       private IEnumerable<ICommand> loadCustomCommands(string filename, ICommandCallback commandCallback)

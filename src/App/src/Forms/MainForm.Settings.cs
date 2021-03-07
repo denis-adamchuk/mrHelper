@@ -364,13 +364,14 @@ namespace mrHelper.App.Forms
             Program.Settings.ColorSchemeFileName = getDefaultColorSchemeFileName();
          }
 
+         string colorSchemePath = Path.Combine(Directory.GetCurrentDirectory(), ColorSchemeSubFolder);
          string defaultFileName = getDefaultColorSchemeFileName();
-         string defaultFilePath = Path.Combine(Directory.GetCurrentDirectory(), defaultFileName);
+         string defaultFilePath = Path.Combine(colorSchemePath, defaultFileName);
 
          comboBoxColorSchemes.Items.Clear();
 
          string selectedScheme = null;
-         string[] files = Directory.GetFiles(Directory.GetCurrentDirectory());
+         string[] files = Directory.GetFiles(colorSchemePath);
          if (files.Contains(defaultFilePath))
          {
             // put Default scheme first in the list
@@ -407,9 +408,11 @@ namespace mrHelper.App.Forms
       {
          bool createColorScheme(string filename)
          {
+            string colorSchemePath = Path.Combine(Directory.GetCurrentDirectory(), ColorSchemeSubFolder);
+            string filepath = Path.Combine(colorSchemePath, filename);
             try
             {
-               _colorScheme = new ColorScheme(filename, _expressionResolver);
+               _colorScheme = new ColorScheme(filepath, _expressionResolver);
                return true;
             }
             catch (Exception ex) // whatever de-serialization exception
@@ -433,46 +436,6 @@ namespace mrHelper.App.Forms
          }
 
          forEachListView(listView => listView.SetColorScheme(_colorScheme));
-      }
-
-      private void initializeIconScheme()
-      {
-         if (!System.IO.File.Exists(IconSchemeFileName))
-         {
-            return;
-         }
-
-         try
-         {
-            _iconScheme = JsonUtils.LoadFromFile<Dictionary<string, object>>(
-               IconSchemeFileName).ToDictionary(
-                  item => item.Key,
-                  item => item.Value.ToString());
-         }
-         catch (Exception ex) // whatever de-serialization exception
-         {
-            ExceptionHandlers.Handle("Cannot load icon scheme", ex);
-         }
-      }
-
-      private void initializeBadgeScheme()
-      {
-         if (!System.IO.File.Exists(BadgeSchemeFileName))
-         {
-            return;
-         }
-
-         try
-         {
-            _badgeScheme = JsonUtils.LoadFromFile<Dictionary<string, object>>(
-               BadgeSchemeFileName).ToDictionary(
-                  item => item.Key,
-                  item => item.Value.ToString());
-         }
-         catch (Exception ex) // whatever de-serialization exception
-         {
-            ExceptionHandlers.Handle("Cannot load badge scheme", ex);
-         }
       }
 
       private string getInitialHostNameIfKnown()
@@ -595,7 +558,8 @@ namespace mrHelper.App.Forms
       private void setupDefaultProjectList()
       {
          // Check if file exists. If it does not, it is not an error.
-         if (!System.IO.File.Exists(ProjectListFileName))
+         string filepath = Path.Combine(Directory.GetCurrentDirectory(), MiscSubFolder, ProjectListFileName);
+         if (!System.IO.File.Exists(filepath))
          {
             return;
          }
@@ -603,8 +567,7 @@ namespace mrHelper.App.Forms
          try
          {
             ConfigurationHelper.InitializeSelectedProjects(JsonUtils.
-               LoadFromFile<IEnumerable<ConfigurationHelper.HostInProjectsFile>>(
-                  ProjectListFileName), Program.Settings);
+               LoadFromFile<IEnumerable<ConfigurationHelper.HostInProjectsFile>>(filepath), Program.Settings);
          }
          catch (Exception ex) // whatever de-serialization exception
          {

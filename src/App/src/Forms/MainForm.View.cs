@@ -245,8 +245,7 @@ namespace mrHelper.App.Forms
                enableMergeRequestFilterControls(true);
                listView.Enabled = true;
             }
-            updateTrayIcon();
-            updateTaskbarIcon();
+            updateTrayAndTaskBar();
             onLiveMergeRequestListRefreshed();
          }
          else if (listView.Items.Count > 0)
@@ -537,96 +536,66 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(labelConnectionStatus, tooltipText);
       }
 
-      private void updateTrayIcon()
+      void loadNotifyIconByColor(Color color)
       {
-         notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
-         if (_iconScheme == null || !_iconScheme.Any())
-         {
-            return;
-         }
-
-         void loadNotifyIconFromFile(string filename)
+         string iconFileName = String.Format("gitlab-{0}.ico", color.Name);
+         string iconFilePath = Path.Combine(Directory.GetCurrentDirectory(), IconSubFolder, iconFileName);
+         if (System.IO.File.Exists(iconFilePath))
          {
             try
             {
-               notifyIcon.Icon = new Icon(filename);
+               notifyIcon.Icon = new Icon(iconFilePath);
             }
             catch (ArgumentException ex)
             {
-               ExceptionHandlers.Handle(String.Format("Cannot create an icon from file \"{0}\"", filename), ex);
-            }
-         }
-
-         if (isConnectionLost())
-         {
-            if (_iconScheme.ContainsKey("Icon_LostConnection"))
-            {
-               loadNotifyIconFromFile(_iconScheme["Icon_LostConnection"]);
-            }
-            return;
-         }
-
-         if (isTrackingTime())
-         {
-            if (_iconScheme.ContainsKey("Icon_Tracking"))
-            {
-               loadNotifyIconFromFile(_iconScheme["Icon_Tracking"]);
-            }
-            return;
-         }
-
-         foreach (KeyValuePair<string, string> nameToFilename in _iconScheme)
-         {
-            string resolved = _expressionResolver.Resolve(nameToFilename.Key);
-            if (getListView(EDataCacheType.Live).GetMatchingFilterMergeRequests()
-               .Select(x => x.MergeRequest)
-               .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Icon_{{Label:{0}}}", y))))
-            {
-               loadNotifyIconFromFile(nameToFilename.Value);
-               break;
+               ExceptionHandlers.Handle(String.Format(
+                  "Cannot create an icon from file \"{0}\"", iconFilePath), ex);
             }
          }
       }
 
-      private void updateTaskbarIcon()
+      private void updateTrayAndTaskBar()
       {
-         CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(null);
-         if (_badgeScheme == null || !_badgeScheme.Any())
+         WinFormsHelpers.SetOverlayEllipseIcon(null);
+         notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
+         if (_colorScheme == null)
          {
             return;
          }
 
          if (isConnectionLost())
          {
-            if (_badgeScheme.ContainsKey("Badge_LostConnection"))
+            ColorSchemeItem? colorOpt = _colorScheme.GetColor("Status_LostConnection");
+            if (colorOpt.HasValue)
             {
-               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
-                  Color.FromName(_badgeScheme["Badge_LostConnection"]));
+               loadNotifyIconByColor(colorOpt.Value.Color);
+               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Value.Color);
             }
             return;
          }
 
          if (isTrackingTime())
          {
-            if (_badgeScheme.ContainsKey("Badge_Tracking"))
+            ColorSchemeItem? colorOpt = _colorScheme.GetColor("Status_Tracking");
+            if (colorOpt.HasValue)
             {
-               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
-                  Color.FromName(_badgeScheme["Badge_Tracking"]));
+               loadNotifyIconByColor(colorOpt.Value.Color);
+               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Value.Color);
             }
             return;
          }
 
-         foreach (KeyValuePair<string, string> nameToFilename in _badgeScheme)
+         var mergeRequests = getListView(EDataCacheType.Live)
+            .GetMatchingFilterMergeRequests()
+            .Select(x => x.MergeRequest);
+         var bestColorItem = _colorScheme.GetColors("MergeRequests")
+            .Select(colorSchemeItem => new ColorSchemeItem?(colorSchemeItem))
+            .FirstOrDefault(colorSchemeItem =>
+               GitLabClient.Helpers.CheckConditions(colorSchemeItem.Value.Conditions, mergeRequests));
+         if (bestColorItem != null)
          {
-            string resolved = _expressionResolver.Resolve(nameToFilename.Key);
-            if (getListView(EDataCacheType.Live).GetMatchingFilterMergeRequests()
-               .Select(x => x.MergeRequest)
-               .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Badge_{{Label:{0}}}", y))))
-            {
-               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
-                  Color.FromName(nameToFilename.Value));
-               break;
-            }
+            loadNotifyIconByColor(bestColorItem.Value.Color);
+            WinFormsHelpers.SetOverlayEllipseIcon(bestColorItem.Value.Color);
          }
       }
 
@@ -1026,8 +995,7 @@ namespace mrHelper.App.Forms
          updateTimeTrackingMergeRequestDetails(
             getMergeRequestKey(null), getDataCache(getCurrentTabDataCacheType()));
 
-         updateTrayIcon();
-         updateTaskbarIcon();
+         updateTrayAndTaskBar();
 
          Debug.Assert(!_applicationUpdateNotificationPostponedTillTimerStop
                    || !_applicationUpdateReminderPostponedTillTimerStop); // cannot have both enabled

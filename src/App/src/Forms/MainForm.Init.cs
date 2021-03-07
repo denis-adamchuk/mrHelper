@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Diagnostics;
 using System.Windows.Forms;
 using mrHelper.App.Helpers;
@@ -75,8 +76,6 @@ namespace mrHelper.App.Forms
          subscribeToRecentDataCache();
 
          initializeColorScheme();
-         initializeIconScheme();
-         initializeBadgeScheme();
 
          Trace.TraceInformation(String.Format(
             "[Mainform] Connecting to URL on startup {0}", _startUrl?.ToString() ?? "null"));
@@ -147,11 +146,13 @@ namespace mrHelper.App.Forms
 
       private void initializeKeywords()
       {
-         if (System.IO.File.Exists(Constants.KeywordsFileName))
+         string filepath = Path.Combine(
+            Directory.GetCurrentDirectory(), MiscSubFolder, Constants.KeywordsFileName);
+         if (System.IO.File.Exists(filepath))
          {
             try
             {
-               _keywords = JsonUtils.LoadFromFile<string[]>(Constants.KeywordsFileName);
+               _keywords = JsonUtils.LoadFromFile<string[]>(filepath);
             }
             catch (Exception ex) // whatever de-serialization exception
             {
