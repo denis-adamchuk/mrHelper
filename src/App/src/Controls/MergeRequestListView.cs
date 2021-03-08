@@ -852,9 +852,8 @@ namespace mrHelper.App.Controls
             : new List<MergeRequest>{ fmk.MergeRequest };
 
          return _colorScheme.GetColors("MergeRequests")
-            .Select(colorSchemeItem => new ColorSchemeItem?(colorSchemeItem))
             .FirstOrDefault(colorSchemeItem =>
-               GitLabClient.Helpers.CheckConditions(colorSchemeItem.Value.Conditions, mergeRequests))?.Color
+               GitLabClient.Helpers.CheckConditions(colorSchemeItem.Conditions, mergeRequests))?.Color
             ?? defaultColor;
       }
 

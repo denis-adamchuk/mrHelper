@@ -408,13 +408,13 @@ namespace mrHelper.App.Helpers
 
       public Dictionary<string, string> SelectedUsers
       {
-         get => getStringToStringDictionary(SelectedUsersKeyName, SelectedUsersDefaultValue);
+         get => getStringToStringDictionary(SelectedUsersKeyName, SelectedUsersDefaultValue, true);
          set => setStringToStringDictionary(SelectedUsersKeyName, value);
       }
 
       public Dictionary<string, string> SelectedProjects
       {
-         get => getStringToStringDictionary(SelectedProjectsKeyName, SelectedProjectsDefaultValue);
+         get => getStringToStringDictionary(SelectedProjectsKeyName, SelectedProjectsDefaultValue, true);
          set => setStringToStringDictionary(SelectedProjectsKeyName, value);
       }
 
@@ -422,6 +422,12 @@ namespace mrHelper.App.Helpers
       {
          get => getBoolValue(SelectedProjectsUpgradedKeyName, SelectedProjectsUpgradedDefaultValue);
          set => setBoolValue(SelectedProjectsUpgradedKeyName, value);
+      }
+
+      public Dictionary<string, string> CustomColors
+      {
+         get => getStringToStringDictionary(CustomColorsKeyName, CustomColorsDefaultValue, false);
+         set => setStringToStringDictionary(CustomColorsKeyName, value);
       }
 
       private bool AccessTokensProtected

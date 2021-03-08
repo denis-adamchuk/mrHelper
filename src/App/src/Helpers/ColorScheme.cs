@@ -7,7 +7,7 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Helpers
 {
-   internal struct ColorSchemeItem
+   internal class ColorSchemeItem
    {
       internal ColorSchemeItem(string name, string displayName, IEnumerable<string> conditions, Color color)
       {
@@ -45,9 +45,16 @@ namespace mrHelper.App.Helpers
          initializeFromFile(filename);
       }
 
-      internal ColorSchemeItem? GetColor(string name)
+      internal ColorSchemeItem GetColor(string name)
       {
-         return _colors.SelectMany(g => g.Value).FirstOrDefault(i => i.Name == name);
+         var item = _colors.SelectMany(g => g.Value).FirstOrDefault(i => i.Name == name);
+         if (item == null)
+         {
+            return null;
+         }
+
+         Color color = getCustomColor(name) ?? item.Color;
+         return new ColorSchemeItem(item.Name, item.DisplayName, item.Conditions, color);
       }
 
       internal ColorSchemeItem[] GetColors(string groupName)
@@ -61,9 +68,23 @@ namespace mrHelper.App.Helpers
             {
                IEnumerable<string> resolvedConditions = item.Conditions
                   .Select(condition => _expressionResolver.Resolve(condition));
-               return new ColorSchemeItem(item.Name, item.DisplayName, resolvedConditions, item.Color);
+               Color color = getCustomColor(item.Name) ?? item.Color;
+               return new ColorSchemeItem(item.Name, item.DisplayName, resolvedConditions, color);
             })
             .ToArray();
+      }
+
+      private Color? getCustomColor(string name)
+      {
+         if (Program.Settings.CustomColors.TryGetValue(name, out string value))
+         {
+            Color? color = readColorFromText(value);
+            if (color.HasValue)
+            {
+               return color.Value;
+            }
+         }
+         return null;
       }
 
       private void setColor(string groupName, string name, string displayName,

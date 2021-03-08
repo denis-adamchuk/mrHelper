@@ -565,22 +565,22 @@ namespace mrHelper.App.Forms
 
          if (isConnectionLost())
          {
-            ColorSchemeItem? colorOpt = _colorScheme.GetColor("Status_LostConnection");
-            if (colorOpt.HasValue)
+            ColorSchemeItem colorOpt = _colorScheme.GetColor("Status_LostConnection");
+            if (colorOpt != null)
             {
-               loadNotifyIconByColor(colorOpt.Value.Color);
-               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Value.Color);
+               loadNotifyIconByColor(colorOpt.Color);
+               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Color);
             }
             return;
          }
 
          if (isTrackingTime())
          {
-            ColorSchemeItem? colorOpt = _colorScheme.GetColor("Status_Tracking");
-            if (colorOpt.HasValue)
+            ColorSchemeItem colorOpt = _colorScheme.GetColor("Status_Tracking");
+            if (colorOpt != null)
             {
-               loadNotifyIconByColor(colorOpt.Value.Color);
-               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Value.Color);
+               loadNotifyIconByColor(colorOpt.Color);
+               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Color);
             }
             return;
          }
@@ -589,13 +589,12 @@ namespace mrHelper.App.Forms
             .GetMatchingFilterMergeRequests()
             .Select(x => x.MergeRequest);
          var bestColorItem = _colorScheme.GetColors("MergeRequests")
-            .Select(colorSchemeItem => new ColorSchemeItem?(colorSchemeItem))
             .FirstOrDefault(colorSchemeItem =>
-               GitLabClient.Helpers.CheckConditions(colorSchemeItem.Value.Conditions, mergeRequests));
+               GitLabClient.Helpers.CheckConditions(colorSchemeItem.Conditions, mergeRequests));
          if (bestColorItem != null)
          {
-            loadNotifyIconByColor(bestColorItem.Value.Color);
-            WinFormsHelpers.SetOverlayEllipseIcon(bestColorItem.Value.Color);
+            loadNotifyIconByColor(bestColorItem.Color);
+            WinFormsHelpers.SetOverlayEllipseIcon(bestColorItem.Color);
          }
       }
 
