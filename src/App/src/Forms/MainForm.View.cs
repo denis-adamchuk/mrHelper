@@ -13,7 +13,6 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
-using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Controls;
 using mrHelper.CustomActions;
 using mrHelper.CommonControls.Tools;
@@ -536,7 +535,7 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(labelConnectionStatus, tooltipText);
       }
 
-      void loadNotifyIconByColor(Color color)
+      Icon loadNotifyIconByColor(Color color)
       {
          string iconFileName = String.Format("gitlab-{0}.ico", color.Name);
          string iconFilePath = Path.Combine(Directory.GetCurrentDirectory(), IconSubFolder, iconFileName);
@@ -544,7 +543,7 @@ namespace mrHelper.App.Forms
          {
             try
             {
-               notifyIcon.Icon = new Icon(iconFilePath);
+               return new Icon(iconFilePath);
             }
             catch (ArgumentException ex)
             {
@@ -552,6 +551,17 @@ namespace mrHelper.App.Forms
                   "Cannot create an icon from file \"{0}\"", iconFilePath), ex);
             }
          }
+         return null;
+      }
+
+      private void setNotifyIconByColor(Color color)
+      {
+         Icon icon = loadNotifyIconByColor(color);
+         if (icon == null)
+         {
+            return;
+         }
+         notifyIcon.Icon = icon;
       }
 
       private void updateTrayAndTaskBar()
@@ -568,7 +578,7 @@ namespace mrHelper.App.Forms
             ColorSchemeItem colorOpt = _colorScheme.GetColor("Status_LostConnection");
             if (colorOpt != null)
             {
-               loadNotifyIconByColor(colorOpt.Color);
+               setNotifyIconByColor(colorOpt.Color);
                WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Color);
             }
             return;
@@ -579,7 +589,7 @@ namespace mrHelper.App.Forms
             ColorSchemeItem colorOpt = _colorScheme.GetColor("Status_Tracking");
             if (colorOpt != null)
             {
-               loadNotifyIconByColor(colorOpt.Color);
+               setNotifyIconByColor(colorOpt.Color);
                WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Color);
             }
             return;
@@ -593,7 +603,7 @@ namespace mrHelper.App.Forms
                GitLabClient.Helpers.CheckConditions(colorSchemeItem.Conditions, mergeRequests));
          if (bestColorItem != null)
          {
-            loadNotifyIconByColor(bestColorItem.Color);
+            setNotifyIconByColor(bestColorItem.Color);
             WinFormsHelpers.SetOverlayEllipseIcon(bestColorItem.Color);
          }
       }
@@ -1075,6 +1085,12 @@ namespace mrHelper.App.Forms
       private static void formatUserListItem(ListControlConvertEventArgs e)
       {
          e.Value = (e.ListItem as User).Name;
+      }
+
+      private void formatColorSchemeItemSelectorItem(ListControlConvertEventArgs e)
+      {
+         ColorSchemeItem colorSchemeItem = _colorScheme.GetColor(e.ListItem.ToString());
+         e.Value = colorSchemeItem == null ? e.ListItem as string : colorSchemeItem.DisplayName;
       }
 
       private void onUpdating()

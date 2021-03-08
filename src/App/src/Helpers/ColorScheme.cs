@@ -9,18 +9,21 @@ namespace mrHelper.App.Helpers
 {
    internal class ColorSchemeItem
    {
-      internal ColorSchemeItem(string name, string displayName, IEnumerable<string> conditions, Color color)
+      internal ColorSchemeItem(string name, string displayName,
+         IEnumerable<string> conditions, Color color, Color factoryColor)
       {
          Name = name;
          DisplayName = displayName;
          Conditions = conditions;
          Color = color;
+         FactoryColor = factoryColor;
       }
 
       internal string Name { get; }
       internal string DisplayName { get; }
       internal IEnumerable<string> Conditions { get; }
       internal Color Color { get; }
+      internal Color FactoryColor { get; }
    }
 
    /// <summary>
@@ -54,7 +57,7 @@ namespace mrHelper.App.Helpers
          }
 
          Color color = getCustomColor(name) ?? item.Color;
-         return new ColorSchemeItem(item.Name, item.DisplayName, item.Conditions, color);
+         return new ColorSchemeItem(item.Name, item.DisplayName, item.Conditions, color, item.Color);
       }
 
       internal ColorSchemeItem[] GetColors(string groupName)
@@ -69,7 +72,7 @@ namespace mrHelper.App.Helpers
                IEnumerable<string> resolvedConditions = item.Conditions
                   .Select(condition => _expressionResolver.Resolve(condition));
                Color color = getCustomColor(item.Name) ?? item.Color;
-               return new ColorSchemeItem(item.Name, item.DisplayName, resolvedConditions, color);
+               return new ColorSchemeItem(item.Name, item.DisplayName, resolvedConditions, color, item.Color);
             })
             .ToArray();
       }
@@ -87,10 +90,10 @@ namespace mrHelper.App.Helpers
          return null;
       }
 
-      private void setColor(string groupName, string name, string displayName,
+      private void initializeColor(string groupName, string name, string displayName,
          IEnumerable<string> conditions, Color color)
       {
-         ColorSchemeItem newItem = new ColorSchemeItem(name, displayName, conditions, color);
+         ColorSchemeItem newItem = new ColorSchemeItem(name, displayName, conditions, color, color);
          if (!_colors.ContainsKey(groupName))
          {
             _colors.Add(groupName, new List<ColorSchemeItem>());
@@ -113,7 +116,7 @@ namespace mrHelper.App.Helpers
                Color? colorOpt = readColorFromText(i.Factory);
                if (colorOpt.HasValue)
                {
-                  setColor(g.Group, i.Name, i.DisplayName, i.Conditions, colorOpt.Value);
+                  initializeColor(g.Group, i.Name, i.Display_Name, i.Conditions, colorOpt.Value);
                }
             }
          }
@@ -152,7 +155,7 @@ namespace mrHelper.App.Helpers
          public string Name { get; protected set; }
 
          [JsonProperty]
-         public string DisplayName { get; protected set; }
+         public string Display_Name { get; protected set; }
 
          [JsonProperty]
          public IEnumerable<string> Conditions { get; protected set; }

@@ -76,6 +76,7 @@ namespace mrHelper.App.Forms
          subscribeToRecentDataCache();
 
          initializeColorScheme();
+         fillColorSchemeItemList();
 
          Trace.TraceInformation(String.Format(
             "[Mainform] Connecting to URL on startup {0}", _startUrl?.ToString() ?? "null"));
@@ -138,7 +139,8 @@ namespace mrHelper.App.Forms
          updateCaption();
          updateTabControlSelection();
          updateHostsDropdownList();
-         fillColorSchemesList();
+         fillColorSchemeList();
+         fillColorList();
          prepareControlsToStart();
          prepareSizeToStart();
          selectHost(PreferredSelection.Initial);

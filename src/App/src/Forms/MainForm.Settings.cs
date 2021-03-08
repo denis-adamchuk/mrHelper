@@ -1,9 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Drawing;
+using System.Diagnostics;
 using System.Windows.Forms;
+using System.Collections.Generic;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
@@ -356,7 +357,7 @@ namespace mrHelper.App.Forms
          return String.Format("{0}.{1}", DefaultColorSchemeName, ColorSchemeFileNamePrefix);
       }
 
-      private void fillColorSchemesList()
+      private void fillColorSchemeList()
       {
          if (Program.Settings.ColorSchemeFileName == String.Empty)
          {
@@ -401,6 +402,44 @@ namespace mrHelper.App.Forms
          else if (comboBoxColorSchemes.Items.Count > 0)
          {
             comboBoxColorSchemes.SelectedIndex = 0;
+         }
+      }
+
+      private void fillColorList()
+      {
+         List<string> colors = new List<string>();
+         string iconPath = Path.Combine(Directory.GetCurrentDirectory(), IconSubFolder);
+
+         comboBoxColorSelector.Items.Clear();
+
+         string[] filePaths = Directory.GetFiles(iconPath, "*.ico");
+         foreach (string filePath in filePaths)
+         {
+            string fileName = Path.GetFileName(filePath);
+            string[] splitted = fileName.Split(new char[] { '-', '.' });
+            if (splitted.Length > 1 && Color.FromName(splitted[1]).IsKnownColor)
+            {
+               comboBoxColorSelector.Items.Add(Color.FromName(splitted[1]).Name);
+            }
+         }
+      }
+
+      private void fillColorSchemeItemList()
+      {
+         listBoxColorSchemeItemSelector.Items.Clear();
+         _colorScheme.GetColors("MergeRequests")
+            .ToList()
+            .ForEach(colorSchemeItem =>
+            {
+               if (comboBoxColorSelector.Items.Contains(colorSchemeItem.Color.Name))
+               {
+                  listBoxColorSchemeItemSelector.Items.Add(colorSchemeItem.Name);
+               }
+            });
+
+         if (listBoxColorSchemeItemSelector.Items.Count > 0)
+         {
+            listBoxColorSchemeItemSelector.SelectedIndex = 0;
          }
       }
 
@@ -902,6 +941,8 @@ namespace mrHelper.App.Forms
          {
             initializeColorScheme();
             Program.Settings.ColorSchemeFileName = colorSchemeName;
+            Program.Settings.CustomColors = new Dictionary<string, string>();
+            fillColorSchemeItemList();
          }
       }
 
@@ -987,7 +1028,116 @@ namespace mrHelper.App.Forms
       {
          Program.Settings.Update();
       }
+
+      private void onListBoxColorSelected(string colorSchemeItemName)
+      {
+         ColorSchemeItem colorSchemeItem = _colorScheme.GetColor(colorSchemeItemName);
+         if (colorSchemeItem == null)
+         {
+            return;
+         }
+         selectComboBoxColor(colorSchemeItem.Color);
+      }
+
+      private void onResetColorSchemeItemToFactoryValue()
+      {
+         string colorSchemeItemName = listBoxColorSchemeItemSelector.SelectedItem.ToString();
+         ColorSchemeItem colorSchemeItem = _colorScheme.GetColor(colorSchemeItemName);
+         if (colorSchemeItem == null)
+         {
+            return;
+         }
+         selectComboBoxColor(colorSchemeItem.FactoryColor);
+      }
+
+      private void selectComboBoxColor(Color color)
+      {
+         comboBoxColorSelector.SelectedItem = null;
+         foreach (object item in comboBoxColorSelector.Items)
+         {
+            if (item.ToString() == color.Name)
+            {
+               comboBoxColorSelector.SelectedItem = item;
+               break;
+            }
+         }
+
+         Debug.Assert(comboBoxColorSelector.SelectedItem != null);
+      }
+
+      private void onComboBoxColorSelected(string colorName)
+      {
+         string colorSchemeItemName = listBoxColorSchemeItemSelector.SelectedItem.ToString();
+         setColorForColorSchemeItem(colorSchemeItemName, colorName);
+
+         updateColorSchemeModifiedLabelVisibility();
+         updateResetToFactoryValueLinkLabelVisibility();
+         updateTrayAndTaskBar();
+      }
+
+      private void setColorForColorSchemeItem(string colorSchemeItemName, string colorName)
+      {
+         ColorSchemeItem colorSchemeItem = colorSchemeItemName != null
+            ? _colorScheme.GetColor(colorSchemeItemName) : null;
+         if (colorSchemeItem != null && colorName != colorSchemeItem.Color.Name)
+         {
+            Dictionary<string, string> dict = Program.Settings.CustomColors;
+            if (colorSchemeItem.FactoryColor.Name == colorName)
+            {
+               dict.Remove(colorSchemeItem.Name);
+            }
+            else
+            {
+               dict[colorSchemeItem.Name] = colorName;
+            }
+            Program.Settings.CustomColors = dict;
+         }
+      }
+
+      private void updateColorSchemeModifiedLabelVisibility()
+      {
+         labelColorSchemeModified.Visible = Program.Settings.CustomColors.Any();
+      }
+
+      private void updateResetToFactoryValueLinkLabelVisibility()
+      {
+         string colorSchemeItemName = listBoxColorSchemeItemSelector.SelectedItem.ToString();
+         ColorSchemeItem updatedColorSchemeItem = _colorScheme.GetColor(colorSchemeItemName);
+         if (updatedColorSchemeItem != null)
+         {
+            linkLabelResetToFactoryValue.Visible =
+               updatedColorSchemeItem.Color.Name != updatedColorSchemeItem.FactoryColor.Name;
+         }
+      }
+
+      private void onDrawComboBoxColorSelectorItem(DrawItemEventArgs e)
+      {
+         if (e.Index < 0)
+         {
+            return;
+         }
+
+         e.DrawBackground();
+         e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+         int iconMargin = 5;
+         int iconSize = e.Bounds.Height; // draw square icon
+         Color color = Color.FromName(comboBoxColorSelector.Items[e.Index].ToString());
+         Icon icon = loadNotifyIconByColor(color); // TODO_COLOR Cache
+         if (icon != null)
+         {
+            Rectangle iconRect = new Rectangle(e.Bounds.X + iconMargin, e.Bounds.Y, iconSize, iconSize);
+            e.Graphics.DrawIcon(icon, iconRect);
+         }
+
+         int iconTextMargin = 5;
+         Rectangle textRect = new Rectangle(
+            e.Bounds.X + iconMargin + iconSize + iconTextMargin, e.Bounds.Y,
+            e.Bounds.Width - iconMargin - iconSize - iconTextMargin, e.Bounds.Height);
+         bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+         Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+         e.Graphics.DrawString(color.Name, comboBoxColorSelector.Font, textBrush, textRect);
+      }
    }
 }
-
 

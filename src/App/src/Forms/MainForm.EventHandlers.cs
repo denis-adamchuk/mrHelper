@@ -296,6 +296,39 @@ namespace mrHelper.App.Forms
          applyIsFixedWidthChange((sender as CheckBox).Checked);
       }
 
+      private void listBoxColorSchemeItemSelector_Format(object sender, ListControlConvertEventArgs e)
+      {
+         formatColorSchemeItemSelectorItem(e);
+      }
+
+      private void listBoxColorSchemeItemSelector_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         object selectedItem = (sender as ListBox).SelectedItem;
+         if (selectedItem != null)
+         {
+            onListBoxColorSelected(selectedItem as string);
+         }
+      }
+
+      private void comboBoxColorSelector_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         object selectedItem = (sender as ComboBox).SelectedItem; 
+         if (selectedItem != null)
+         {
+            onComboBoxColorSelected(selectedItem as string);
+         }
+      }
+
+      private void comboBoxColorSelector_DrawItem(object sender, DrawItemEventArgs e)
+      {
+         onDrawComboBoxColorSelectorItem(e);
+      }
+
+      private void linkLabelResetToFactoyValue_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         onResetColorSchemeItemToFactoryValue();
+      }
+
       // Merge Requests
 
       private void splitContainer_SplitterMoved(object sender, SplitterEventArgs e)
