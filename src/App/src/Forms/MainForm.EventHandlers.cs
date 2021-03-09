@@ -319,6 +319,16 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void listBoxColorSchemeItemSelector_DrawItem(object sender, DrawItemEventArgs e)
+      {
+         onDrawListBoxColorSchemeItemSelectorItem(e);
+      }
+
+      private void listBoxColorSchemeItemSelector_MeasureItem(object sender, MeasureItemEventArgs e)
+      {
+         onMeasureListBoxColorSchemeItemSelectorItem(e);
+      }
+
       private void comboBoxColorSelector_DrawItem(object sender, DrawItemEventArgs e)
       {
          onDrawComboBoxColorSelectorItem(e);

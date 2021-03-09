@@ -1111,6 +1111,56 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void onDrawListBoxColorSchemeItemSelectorItem(DrawItemEventArgs e)
+      {
+         if (e.Index < 0)
+         {
+            return;
+         }
+
+         string colorSchemeItemName = listBoxColorSchemeItemSelector.Items[e.Index].ToString();
+         ColorSchemeItem colorSchemeItem = _colorScheme.GetColor(colorSchemeItemName);
+         if (colorSchemeItem == null)
+         {
+            return;
+         }
+
+         Color color = colorSchemeItem.Color;
+         bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+         WinFormsHelpers.FillRectangle(e, e.Bounds, color, isSelected);
+
+         StringFormat format =
+            new StringFormat
+            {
+               Trimming = StringTrimming.EllipsisCharacter,
+               FormatFlags = StringFormatFlags.NoWrap
+            };
+
+         string text = colorSchemeItem.DisplayName;
+         Font font = listBoxColorSchemeItemSelector.Font;
+         if (isSelected)
+         {
+            using (Brush brush = new SolidBrush(color))
+            {
+               e.Graphics.DrawString(text, font, brush, e.Bounds, format);
+            }
+         }
+         else
+         {
+            e.Graphics.DrawString(text, font, SystemBrushes.ControlText, e.Bounds, format);
+         }
+      }
+
+      private void onMeasureListBoxColorSchemeItemSelectorItem(MeasureItemEventArgs e)
+      {
+         if (e.Index < 0)
+         {
+            return;
+         }
+
+         e.ItemHeight = listBoxColorSchemeItemSelector.Font.Height + 2;
+      }
+
       private void onDrawComboBoxColorSelectorItem(DrawItemEventArgs e)
       {
          if (e.Index < 0)

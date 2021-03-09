@@ -1769,7 +1769,7 @@ namespace mrHelper.App.Forms
          this.groupBoxColors.Controls.Add(this.labelColorScheme);
          this.groupBoxColors.Location = new System.Drawing.Point(6, 112);
          this.groupBoxColors.Name = "groupBoxColors";
-         this.groupBoxColors.Size = new System.Drawing.Size(577, 144);
+         this.groupBoxColors.Size = new System.Drawing.Size(577, 210);
          this.groupBoxColors.TabIndex = 30;
          this.groupBoxColors.TabStop = false;
          this.groupBoxColors.Text = "New Discussion Dialog";
@@ -1820,11 +1820,14 @@ namespace mrHelper.App.Forms
          // 
          // listBoxColorSchemeItemSelector
          // 
+         this.listBoxColorSchemeItemSelector.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
          this.listBoxColorSchemeItemSelector.FormattingEnabled = true;
          this.listBoxColorSchemeItemSelector.Location = new System.Drawing.Point(9, 49);
          this.listBoxColorSchemeItemSelector.Name = "listBoxColorSchemeItemSelector";
-         this.listBoxColorSchemeItemSelector.Size = new System.Drawing.Size(330, 82);
+         this.listBoxColorSchemeItemSelector.Size = new System.Drawing.Size(330, 147);
          this.listBoxColorSchemeItemSelector.TabIndex = 20;
+         this.listBoxColorSchemeItemSelector.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listBoxColorSchemeItemSelector_DrawItem);
+         this.listBoxColorSchemeItemSelector.MeasureItem += new System.Windows.Forms.MeasureItemEventHandler(this.listBoxColorSchemeItemSelector_MeasureItem);
          this.listBoxColorSchemeItemSelector.SelectedIndexChanged += new System.EventHandler(this.listBoxColorSchemeItemSelector_SelectedIndexChanged);
          this.listBoxColorSchemeItemSelector.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.listBoxColorSchemeItemSelector_Format);
          // 
@@ -1850,7 +1853,7 @@ namespace mrHelper.App.Forms
          // groupBoxOtherUI
          // 
          this.groupBoxOtherUI.Controls.Add(this.checkBoxDisableSplitterRestrictions);
-         this.groupBoxOtherUI.Location = new System.Drawing.Point(6, 470);
+         this.groupBoxOtherUI.Location = new System.Drawing.Point(6, 536);
          this.groupBoxOtherUI.Name = "groupBoxOtherUI";
          this.groupBoxOtherUI.Size = new System.Drawing.Size(577, 46);
          this.groupBoxOtherUI.TabIndex = 29;
@@ -1864,7 +1867,7 @@ namespace mrHelper.App.Forms
          this.groupBoxDiscussionsView.Controls.Add(this.checkBoxFlatReplies);
          this.groupBoxDiscussionsView.Controls.Add(this.labelDepth);
          this.groupBoxDiscussionsView.Controls.Add(this.comboBoxDCDepth);
-         this.groupBoxDiscussionsView.Location = new System.Drawing.Point(6, 321);
+         this.groupBoxDiscussionsView.Location = new System.Drawing.Point(6, 387);
          this.groupBoxDiscussionsView.Name = "groupBoxDiscussionsView";
          this.groupBoxDiscussionsView.Size = new System.Drawing.Size(577, 143);
          this.groupBoxDiscussionsView.TabIndex = 28;
@@ -1910,7 +1913,7 @@ namespace mrHelper.App.Forms
          // groupBoxNewDiscussionViewUI
          // 
          this.groupBoxNewDiscussionViewUI.Controls.Add(this.checkBoxNewDiscussionIsTopMostForm);
-         this.groupBoxNewDiscussionViewUI.Location = new System.Drawing.Point(6, 262);
+         this.groupBoxNewDiscussionViewUI.Location = new System.Drawing.Point(6, 328);
          this.groupBoxNewDiscussionViewUI.Name = "groupBoxNewDiscussionViewUI";
          this.groupBoxNewDiscussionViewUI.Size = new System.Drawing.Size(577, 53);
          this.groupBoxNewDiscussionViewUI.TabIndex = 27;
