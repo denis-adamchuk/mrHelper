@@ -428,6 +428,7 @@ namespace mrHelper.App.Forms
       {
          listBoxColorSchemeItemSelector.Items.Clear();
          _colorScheme.GetColors("MergeRequests")
+            .Concat(_colorScheme.GetColors("Status"))
             .ToList()
             .ForEach(colorSchemeItem =>
             {

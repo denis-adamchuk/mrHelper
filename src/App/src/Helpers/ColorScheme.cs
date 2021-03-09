@@ -69,8 +69,8 @@ namespace mrHelper.App.Helpers
          return _colors[groupName]
             .Select(item =>
             {
-               IEnumerable<string> resolvedConditions = item.Conditions
-                  .Select(condition => _expressionResolver.Resolve(condition));
+               IEnumerable<string> resolvedConditions = item.Conditions?
+                  .Select(condition => _expressionResolver.Resolve(condition)) ?? Array.Empty<string>();
                Color color = getCustomColor(item.Name) ?? item.Color;
                return new ColorSchemeItem(item.Name, item.DisplayName, resolvedConditions, color, item.Color);
             })
