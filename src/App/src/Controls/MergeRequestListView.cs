@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
-using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;

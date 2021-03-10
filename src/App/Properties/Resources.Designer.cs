@@ -19,7 +19,7 @@ namespace mrHelper.App.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -115,6 +115,26 @@ namespace mrHelper.App.Properties {
             get {
                 object obj = ResourceManager.GetObject("DefaultAppIcon", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap gitlab_icon_stub_16x16 {
+            get {
+                object obj = ResourceManager.GetObject("gitlab_icon_stub_16x16", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap gitlab_icon_stub_16x16_border {
+            get {
+                object obj = ResourceManager.GetObject("gitlab_icon_stub_16x16_border", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

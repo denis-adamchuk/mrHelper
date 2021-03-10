@@ -45,6 +45,15 @@ namespace mrHelper.Common.Constants
       public static string[] ThemeNames = { "Default", "New Year 2020" };
       public static string DefaultThemeName = "Default";
 
+      public static string[] ColorSchemeKnownColorNames =
+         { "Brown", "Chocolate",
+           "Red", "Tomato", "Coral", "Orange",
+           "Dark Khaki", "Khaki", "Gold", "Yellow",
+           "Gray",
+           "Green", "Pale Green", "Spring Green", "Lime",
+           "Blue", "Turquoise", "Aqua", "Light Cyan", "Light Sky Blue",
+           "Violet", "Orchid" };
+
       public static string LiveListViewName = "Live";
       public static string SearchListViewName = "Search";
       public static string RecentListViewName = "Recent";

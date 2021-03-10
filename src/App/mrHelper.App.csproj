@@ -400,6 +400,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\gitlab-dummy-16x16.png" />
+    <None Include="Resources\gitlab-dummy-16x16-border.png" />
+    <None Include="Resources\gitlab-icon-stub-16x16.png" />
+    <None Include="Resources\gitlab-icon-stub-16x16-border.png" />
     <Content Include="Resources\ny2020\balls.png" />
     <Content Include="Resources\ny2020\happy_ny2002.png" />
     <Content Include="Resources\ny2020\ny2020-theme.css" />

@@ -149,7 +149,7 @@ namespace mrHelper.App.Forms
       private void initializeKeywords()
       {
          string filepath = Path.Combine(
-            Directory.GetCurrentDirectory(), MiscSubFolder, Constants.KeywordsFileName);
+            Directory.GetCurrentDirectory(), Constants.KeywordsFileName);
          if (System.IO.File.Exists(filepath))
          {
             try

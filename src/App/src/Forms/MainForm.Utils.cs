@@ -853,7 +853,7 @@ namespace mrHelper.App.Forms
          string filename = isApprovalStatusSupported
             ? Constants.CustomActionsWithApprovalStatusSupportFileName
             : Constants.CustomActionsFileName;
-         return Path.Combine(Directory.GetCurrentDirectory(), MiscSubFolder, filename);
+         return Path.Combine(Directory.GetCurrentDirectory(), filename);
       }
 
       private IEnumerable<ICommand> loadCustomCommands(string filename, ICommandCallback commandCallback)

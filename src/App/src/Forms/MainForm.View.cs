@@ -537,21 +537,8 @@ namespace mrHelper.App.Forms
 
       Icon loadNotifyIconByColor(Color color)
       {
-         string iconFileName = String.Format("gitlab-{0}.ico", color.Name);
-         string iconFilePath = Path.Combine(Directory.GetCurrentDirectory(), IconSubFolder, iconFileName);
-         if (System.IO.File.Exists(iconFilePath))
-         {
-            try
-            {
-               return new Icon(iconFilePath);
-            }
-            catch (ArgumentException ex)
-            {
-               ExceptionHandlers.Handle(String.Format(
-                  "Cannot create an icon from file \"{0}\"", iconFilePath), ex);
-            }
-         }
-         return null;
+         var useBorder = false;
+         return useBorder ? _iconCache[color].IconWithBorder : _iconCache[color].IconWithoutBorder;
       }
 
       private void setNotifyIconByColor(Color color)

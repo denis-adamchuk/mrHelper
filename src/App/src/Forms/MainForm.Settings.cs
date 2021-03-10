@@ -365,14 +365,13 @@ namespace mrHelper.App.Forms
             Program.Settings.ColorSchemeFileName = getDefaultColorSchemeFileName();
          }
 
-         string colorSchemePath = Path.Combine(Directory.GetCurrentDirectory(), ColorSchemeSubFolder);
          string defaultFileName = getDefaultColorSchemeFileName();
-         string defaultFilePath = Path.Combine(colorSchemePath, defaultFileName);
+         string defaultFilePath = Path.Combine(Directory.GetCurrentDirectory(), defaultFileName);
 
          comboBoxColorSchemes.Items.Clear();
 
          string selectedScheme = null;
-         string[] files = Directory.GetFiles(colorSchemePath);
+         string[] files = Directory.GetFiles(Directory.GetCurrentDirectory());
          if (files.Contains(defaultFilePath))
          {
             // put Default scheme first in the list
@@ -407,21 +406,82 @@ namespace mrHelper.App.Forms
 
       private void fillColorList()
       {
-         List<string> colors = new List<string>();
-         string iconPath = Path.Combine(Directory.GetCurrentDirectory(), IconSubFolder);
-
-         comboBoxColorSelector.Items.Clear();
-
-         string[] filePaths = Directory.GetFiles(iconPath, "*.ico");
-         foreach (string filePath in filePaths)
-         {
-            string fileName = Path.GetFileName(filePath);
-            string[] splitted = fileName.Split(new char[] { '-', '.' });
-            if (splitted.Length > 1 && Color.FromName(splitted[1]).IsKnownColor)
+         Constants.ColorSchemeKnownColorNames
+            .ToList()
+            .ForEach(humanFriendlyName =>
             {
-               comboBoxColorSelector.Items.Add(Color.FromName(splitted[1]).Name);
+               string colorName = humanFriendlyName.Replace(" ", "");
+               Color color = Color.FromName(colorName);
+               if (color.A != 0 || color.R != 0 || color.G != 0 || color.B != 0)
+               {
+                  addColorToList(color, humanFriendlyName);
+                  addIconToCache(color);
+               }
+               else
+               {
+                  // TODO_COLOR Log
+               }
+            });
+      }
+
+      private void addColorToList(Color color, string humanFriendlyName = null)
+      {
+         foreach (object item in comboBoxColorSelector.Items)
+         {
+            if (((ColorSelectorComboBoxItem)(item)).Color.Equals(color))
+            {
+               return;
             }
          }
+
+         if (String.IsNullOrEmpty(humanFriendlyName))
+         {
+            humanFriendlyName = color.IsNamedColor ? color.Name : "Custom";
+         }
+         comboBoxColorSelector.Items.Add(new ColorSelectorComboBoxItem(humanFriendlyName, color));
+      }
+
+      private void addIconToCache(Color color)
+      {
+         Bitmap imageWithoutBorder = WinFormsHelpers.ReplaceColorInBitmap(
+            Properties.Resources.gitlab_icon_stub_16x16, Color.Green, color);
+         Icon iconWithoutBorder = WinFormsHelpers.ConvertToIco(imageWithoutBorder, 16);
+
+         Bitmap imageWithBorder = WinFormsHelpers.ReplaceColorInBitmap(
+            Properties.Resources.gitlab_icon_stub_16x16_border, Color.Green, color);
+         Icon iconWithBorder = WinFormsHelpers.ConvertToIco(imageWithBorder, 16);
+
+         _iconCache.Add(color, new IconGroup(iconWithoutBorder, iconWithBorder));
+      }
+
+      private class ColorSelectorComboBoxItem
+      {
+         internal ColorSelectorComboBoxItem(string humanFriendlyName, Color color)
+         {
+            HumanFriendlyName = humanFriendlyName;
+            Color = color;
+         }
+
+         public override string ToString()
+         {
+            return HumanFriendlyName;
+         }
+
+         internal string HumanFriendlyName { get; }
+
+         internal Color Color { get; }
+      }
+
+      private struct IconGroup
+      {
+         internal IconGroup(Icon iconWithoutBorder, Icon iconWithBorder)
+         {
+            IconWithoutBorder = iconWithoutBorder;
+            IconWithBorder = iconWithBorder;
+         }
+
+         internal Icon IconWithoutBorder { get; }
+         internal Icon IconWithBorder { get; }
       }
 
       private void fillColorSchemeItemList()
@@ -432,10 +492,8 @@ namespace mrHelper.App.Forms
             .ToList()
             .ForEach(colorSchemeItem =>
             {
-               if (comboBoxColorSelector.Items.Contains(colorSchemeItem.Color.Name))
-               {
-                  listBoxColorSchemeItemSelector.Items.Add(colorSchemeItem.Name);
-               }
+               addColorToList(colorSchemeItem.Color);
+               listBoxColorSchemeItemSelector.Items.Add(colorSchemeItem.Name);
             });
 
          if (listBoxColorSchemeItemSelector.Items.Count > 0)
@@ -448,8 +506,7 @@ namespace mrHelper.App.Forms
       {
          bool createColorScheme(string filename)
          {
-            string colorSchemePath = Path.Combine(Directory.GetCurrentDirectory(), ColorSchemeSubFolder);
-            string filepath = Path.Combine(colorSchemePath, filename);
+            string filepath = Path.Combine(Directory.GetCurrentDirectory(), filename);
             try
             {
                _colorScheme = new ColorScheme(filepath, _expressionResolver);
@@ -598,7 +655,7 @@ namespace mrHelper.App.Forms
       private void setupDefaultProjectList()
       {
          // Check if file exists. If it does not, it is not an error.
-         string filepath = Path.Combine(Directory.GetCurrentDirectory(), MiscSubFolder, ProjectListFileName);
+         string filepath = Path.Combine(Directory.GetCurrentDirectory(), ProjectListFileName);
          if (!System.IO.File.Exists(filepath))
          {
             return;
@@ -1056,7 +1113,7 @@ namespace mrHelper.App.Forms
          comboBoxColorSelector.SelectedItem = null;
          foreach (object item in comboBoxColorSelector.Items)
          {
-            if (item.ToString() == color.Name)
+            if (((ColorSelectorComboBoxItem)(item)).Color.Equals(color))
             {
                comboBoxColorSelector.SelectedItem = item;
                break;
@@ -1066,30 +1123,32 @@ namespace mrHelper.App.Forms
          Debug.Assert(comboBoxColorSelector.SelectedItem != null);
       }
 
-      private void onComboBoxColorSelected(string colorName)
+      private void onComboBoxColorSelected(Color color)
       {
          string colorSchemeItemName = listBoxColorSchemeItemSelector.SelectedItem.ToString();
-         setColorForColorSchemeItem(colorSchemeItemName, colorName);
+         setColorForColorSchemeItem(colorSchemeItemName, color);
 
          updateColorSchemeModifiedLabelVisibility();
          updateResetToFactoryValueLinkLabelVisibility();
          updateTrayAndTaskBar();
       }
 
-      private void setColorForColorSchemeItem(string colorSchemeItemName, string colorName)
+      private void setColorForColorSchemeItem(string colorSchemeItemName, Color color)
       {
          ColorSchemeItem colorSchemeItem = colorSchemeItemName != null
             ? _colorScheme.GetColor(colorSchemeItemName) : null;
-         if (colorSchemeItem != null && colorName != colorSchemeItem.Color.Name)
+         if (colorSchemeItem != null && !color.Equals(colorSchemeItem.Color))
          {
             Dictionary<string, string> dict = Program.Settings.CustomColors;
-            if (colorSchemeItem.FactoryColor.Name == colorName)
+            if (colorSchemeItem.FactoryColor.Equals(color))
             {
                dict.Remove(colorSchemeItem.Name);
             }
             else
             {
-               dict[colorSchemeItem.Name] = colorName;
+               string colorAsText = color.IsNamedColor
+                  ? color.Name : String.Format("{0},{1},{2},{3}", color.A, color.R, color.G, color.B);
+               dict[colorSchemeItem.Name] = colorAsText;
             }
             Program.Settings.CustomColors = dict;
          }
@@ -1173,8 +1232,8 @@ namespace mrHelper.App.Forms
 
          int iconMargin = 5;
          int iconSize = e.Bounds.Height; // draw square icon
-         Color color = Color.FromName(comboBoxColorSelector.Items[e.Index].ToString());
-         Icon icon = loadNotifyIconByColor(color); // TODO_COLOR Cache
+         ColorSelectorComboBoxItem item = (ColorSelectorComboBoxItem)(comboBoxColorSelector.Items[e.Index]);
+         Icon icon = loadNotifyIconByColor(item.Color);
          if (icon != null)
          {
             Rectangle iconRect = new Rectangle(e.Bounds.X + iconMargin, e.Bounds.Y, iconSize, iconSize);
@@ -1187,7 +1246,7 @@ namespace mrHelper.App.Forms
             e.Bounds.Width - iconMargin - iconSize - iconTextMargin, e.Bounds.Height);
          bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
          Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
-         e.Graphics.DrawString(color.Name, comboBoxColorSelector.Font, textBrush, textRect);
+         e.Graphics.DrawString(item.HumanFriendlyName, comboBoxColorSelector.Font, textBrush, textRect);
       }
    }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
@@ -30,9 +31,6 @@ namespace mrHelper.App.Forms
       private static readonly string DefaultColorSchemeName = "Default";
       private static readonly string ColorSchemeFileNamePrefix = "colors.json";
       private static readonly string ProjectListFileName = "projects.json";
-      private static readonly string ColorSchemeSubFolder = "colors";
-      private static readonly string IconSubFolder = "ico";
-      private static readonly string MiscSubFolder = "etc";
 
       private static readonly string openFromClipboardEnabledText = "Open from Clipboard";
       private static readonly string openFromClipboardDisabledText = "Open from Clipboard (Copy GitLab MR URL to activate)";
@@ -56,6 +54,7 @@ namespace mrHelper.App.Forms
       private bool _applicationUpdateNotificationPostponedTillTimerStop;
       private bool _applicationUpdateReminderPostponedTillTimerStop;
 
+      private readonly Dictionary<Color, IconGroup> _iconCache = new Dictionary<Color, IconGroup>();
       private readonly PeriodicUpdateChecker _applicationUpdateChecker;
       private readonly bool _startMinimized;
       private readonly TrayIcon _trayIcon;

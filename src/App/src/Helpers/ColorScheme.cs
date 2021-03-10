@@ -143,6 +143,14 @@ namespace mrHelper.App.Helpers
          {
             return Color.FromArgb(r, g, b);
          }
+         else if (rgbs.Length == 4
+            && int.TryParse(rgbs[0], out int aa)
+            && int.TryParse(rgbs[1], out int rr)
+            && int.TryParse(rgbs[2], out int gg)
+            && int.TryParse(rgbs[3], out int bb))
+         {
+            return Color.FromArgb(aa, rr, gg, bb);
+         }
          return null;
       }
 
