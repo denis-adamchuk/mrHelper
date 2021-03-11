@@ -534,7 +534,7 @@ namespace mrHelper.App.Forms
       {
          string newTitle = StringUtils.ToggleWorkInProgressTitle(_title);
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
-            null, newTitle, null, null, null, null, null);
+            null, newTitle, null, null, null, null, null, null);
          traceInformation("[AcceptMergeRequestForm] Toggling WIP status...");
          return await applyModification(updateMergeRequestParameters);
       }
@@ -542,7 +542,7 @@ namespace mrHelper.App.Forms
       async private Task<MergeRequest> setSquashAsync(bool squash)
       {
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
-            null, null, null, null, null, null, squash);
+            null, null, null, null, null, null, squash, null);
          traceInformation(String.Format("[AcceptMergeRequestForm] Applying Squash={0}...", squash.ToString()));
          return await applyModification(updateMergeRequestParameters);
       }

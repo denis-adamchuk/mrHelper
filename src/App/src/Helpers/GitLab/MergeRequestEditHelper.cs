@@ -15,7 +15,8 @@ namespace mrHelper.App.Helpers.GitLab
    internal struct SubmitNewMergeRequestParameters
    {
       public SubmitNewMergeRequestParameters(ProjectKey projectKey, string sourceBranch, string targetBranch,
-         string title, string assigneeUserName, string description, bool deleteSourceBranch, bool squash)
+         string title, string assigneeUserName, string description, bool deleteSourceBranch, bool squash,
+         bool isHighPriority)
       {
          ProjectKey = projectKey;
          SourceBranch = sourceBranch;
@@ -25,6 +26,7 @@ namespace mrHelper.App.Helpers.GitLab
          Description = description;
          DeleteSourceBranch = deleteSourceBranch;
          Squash = squash;
+         IsHighPriority = isHighPriority;
       }
 
       internal ProjectKey ProjectKey { get; }
@@ -35,19 +37,13 @@ namespace mrHelper.App.Helpers.GitLab
       internal string Description { get; }
       internal bool DeleteSourceBranch { get; }
       internal bool Squash { get; }
+      internal bool IsHighPriority { get; }
    }
 
    internal struct ApplyMergeRequestChangesParameters
    {
-      internal string Title { get; }
-      internal string AssigneeUserName { get; }
-      internal string Description { get; }
-      internal string TargetBranch { get; }
-      internal bool DeleteSourceBranch { get; }
-      internal bool Squash { get; }
-
       public ApplyMergeRequestChangesParameters(string title, string assigneeUserName, string description,
-         string targetBranch, bool deleteSourceBranch, bool squash)
+         string targetBranch, bool deleteSourceBranch, bool squash, bool isHighPriority)
       {
          Title = title;
          AssigneeUserName = assigneeUserName;
@@ -55,7 +51,16 @@ namespace mrHelper.App.Helpers.GitLab
          TargetBranch = targetBranch;
          DeleteSourceBranch = deleteSourceBranch;
          Squash = squash;
+         IsHighPriority = isHighPriority;
       }
+
+      internal string Title { get; }
+      internal string AssigneeUserName { get; }
+      internal string Description { get; }
+      internal string TargetBranch { get; }
+      internal bool DeleteSourceBranch { get; }
+      internal bool Squash { get; }
+      internal bool IsHighPriority { get; }
    }
 
    internal static class MergeRequestEditHelper
@@ -102,10 +107,12 @@ namespace mrHelper.App.Helpers.GitLab
          User assignee = await getUserAsync(parameters.AssigneeUserName, shortcuts);
          checkFoundAssignee(parameters.ProjectKey.HostName, parameters.AssigneeUserName, assignee);
 
+         string[] labels = parameters.IsHighPriority
+            ? new string[] { Common.Constants.Constants.HighPriorityLabel } : null;
          int assigneeId = assignee?.Id ?? 0; // 0 means to not assign MR to anyone
          CreateNewMergeRequestParameters creatorParameters = new CreateNewMergeRequestParameters(
             parameters.SourceBranch, parameters.TargetBranch, parameters.Title, assigneeId,
-            parameters.Description, parameters.DeleteSourceBranch, parameters.Squash);
+            parameters.Description, parameters.DeleteSourceBranch, parameters.Squash, labels);
 
          MergeRequest mergeRequest;
          try
@@ -155,22 +162,38 @@ namespace mrHelper.App.Helpers.GitLab
             result = await addComment(mrk, currentUser, newSpecialNote, shortcuts);
          }
 
+         bool wasHighPriority = originalMergeRequest.Labels?
+            .Contains(Common.Constants.Constants.HighPriorityLabel) ?? false;
+
          bool changed =
                oldAssigneeUsername != parameters.AssigneeUserName
             || originalMergeRequest.Force_Remove_Source_Branch != parameters.DeleteSourceBranch
             || originalMergeRequest.Squash != parameters.Squash
             || originalMergeRequest.Target_Branch != parameters.TargetBranch
             || originalMergeRequest.Title != parameters.Title
-            || originalMergeRequest.Description != parameters.Description;
+            || originalMergeRequest.Description != parameters.Description
+            || wasHighPriority != parameters.IsHighPriority;
          if (!changed)
          {
             return result;
          }
 
+         string[] labels = null;
+         if (wasHighPriority && !parameters.IsHighPriority)
+         {
+            labels = originalMergeRequest.Labels
+               .Where(label => label != Common.Constants.Constants.HighPriorityLabel).ToArray();
+         }
+         else if (!wasHighPriority && parameters.IsHighPriority)
+         {
+            labels = originalMergeRequest.Labels
+               .Concat(new string[] { Common.Constants.Constants.HighPriorityLabel }).ToArray();
+         }
+
          int assigneeId = assignee?.Id ?? 0; // 0 means to unassign
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
             parameters.TargetBranch, parameters.Title, assigneeId, parameters.Description,
-            null, parameters.DeleteSourceBranch, parameters.Squash);
+            null, parameters.DeleteSourceBranch, parameters.Squash, labels);
          try
          {
             MergeRequest mergeRequest = await shortcuts
@@ -188,7 +211,7 @@ namespace mrHelper.App.Helpers.GitLab
       async internal static Task<bool> CloseMergeRequest(MergeRequestKey mrk, Shortcuts shortcuts)
       {
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
-            null, null, null, null, "close", null, null);
+            null, null, null, null, "close", null, null, null);
          try
          {
             MergeRequest mergeRequest = await shortcuts

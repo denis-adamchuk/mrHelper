@@ -216,6 +216,7 @@ namespace mrHelper.App.Forms
       {
          checkBoxSquash.Checked = _initialState.IsSquashNeeded;
          checkBoxDeleteSourceBranch.Checked = _initialState.IsBranchDeletionNeeded;
+         checkBoxHighPriority.Checked = false;
          setTitle(String.Empty);
          setDescription(String.Empty);
          setAssigneeUsername(_initialState.AssigneeUsername);

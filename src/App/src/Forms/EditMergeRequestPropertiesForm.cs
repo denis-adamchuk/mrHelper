@@ -64,6 +64,7 @@ namespace mrHelper.App.Forms
 
          checkBoxSquash.Checked = _initialMergeRequest.Squash;
          checkBoxDeleteSourceBranch.Checked = _initialMergeRequest.Force_Remove_Source_Branch;
+         checkBoxHighPriority.Checked = false;
          updateControls();
       }
 
