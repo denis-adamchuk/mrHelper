@@ -1,4 +1,5 @@
-﻿using Microsoft.WindowsAPICodePack.Taskbar;
+﻿using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Taskbar;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -360,6 +361,29 @@ namespace mrHelper.CommonControls.Tools
             }
          }
          return icon;
+      }
+
+      public static bool IsLightThemeUsed()
+      {
+         // TODO_COLOR Add exception handling
+         RegistryHive hive = RegistryHive.CurrentUser;
+         RegistryView view = RegistryView.Registry32;
+         RegistryKey hklm = RegistryKey.OpenBaseKey(hive, view);
+         RegistryKey personalizeKey = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+         if (personalizeKey != null)
+         {
+            string valueName = "SystemUsesLightTheme";
+            object value = personalizeKey.GetValue(valueName);
+            if (value != null)
+            {
+               var valueKind = personalizeKey.GetValueKind(valueName);
+               if (valueKind == RegistryValueKind.DWord)
+               {
+                  return (int)value == 1;
+               }
+            }
+         }
+         return false;
       }
    }
 }

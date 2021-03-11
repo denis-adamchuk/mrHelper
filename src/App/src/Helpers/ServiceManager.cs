@@ -13,7 +13,7 @@ namespace mrHelper.App.Helpers
       public ServiceManager()
       {
          // Check if file exists. If it does not, it is not an error.
-         string filepath = Path.Combine(Directory.GetCurrentDirectory(), MiscSubFolder, ServiceListFileName);
+         string filepath = Path.Combine(Directory.GetCurrentDirectory(), ServiceListFileName);
          if (System.IO.File.Exists(filepath))
          {
             try
@@ -198,7 +198,6 @@ namespace mrHelper.App.Helpers
 
       private readonly Service[] _services = Array.Empty<Service>();
 
-      private const string MiscSubFolder = "etc";
       private const string ServiceListFileName = "services.json";
    }
 }

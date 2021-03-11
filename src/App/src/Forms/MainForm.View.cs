@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Drawing;
+using Microsoft.Win32;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Tools;
@@ -537,7 +538,7 @@ namespace mrHelper.App.Forms
 
       Icon loadNotifyIconByColor(Color color)
       {
-         var useBorder = false;
+         bool useBorder = WinFormsHelpers.IsLightThemeUsed();
          return useBorder ? _iconCache[color].IconWithBorder : _iconCache[color].IconWithoutBorder;
       }
 
