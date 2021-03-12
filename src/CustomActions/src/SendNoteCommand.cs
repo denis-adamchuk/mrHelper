@@ -4,24 +4,15 @@ using GitLabSharp.Accessors;
 
 namespace mrHelper.CustomActions
 {
-   public class SendNoteCommand : BaseCommand
+   internal class SendNoteCommand : ISubCommand
    {
-      public SendNoteCommand(
-         ICommandCallback callback,
-         string name,
-         string body,
-         string enabledIf,
-         string visibleIf,
-         bool stopTimer,
-         bool reload,
-         string hint,
-         bool initiallyVisible)
-         : base(callback, name, enabledIf, visibleIf, stopTimer, reload, hint, initiallyVisible)
+      internal SendNoteCommand(ICommandCallback callback, string body)
       {
-         Body = body;
+         _callback = callback;
+         _body = body;
       }
 
-      async public override Task Run()
+      async public Task Run()
       {
          string hostname = _callback.GetCurrentHostName();
          string accessToken = _callback.GetCurrentAccessToken();
@@ -31,10 +22,12 @@ namespace mrHelper.CustomActions
          GitLabTaskRunner client = new GitLabTaskRunner(hostname, accessToken);
          await client.RunAsync(async (gitlab) =>
             await gitlab.Projects.Get(projectName).MergeRequests.
-               Get(iid).Notes.CreateNewTaskAsync(new CreateNewNoteParameters(Body)));
+               Get(iid).Notes.CreateNewTaskAsync(new CreateNewNoteParameters(_body)));
       }
 
-      public string Body { get; }
+      private readonly string _body;
+
+      private readonly ICommandCallback _callback;
    }
 }
 

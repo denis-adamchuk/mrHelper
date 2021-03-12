@@ -4,24 +4,15 @@ using GitLabSharp.Accessors;
 
 namespace mrHelper.CustomActions
 {
-   public class MergeRequestEndPointPOSTCommand : BaseCommand
+   internal class MergeRequestEndPointPOSTCommand : ISubCommand
    {
-      public MergeRequestEndPointPOSTCommand(
-         ICommandCallback callback,
-         string name,
-         string endpoint,
-         string enabledIf,
-         string visibleIf,
-         bool stopTimer,
-         bool reload,
-         string hint,
-         bool initiallyVisible)
-         : base(callback, name, enabledIf, visibleIf, stopTimer, reload, hint, initiallyVisible)
+      internal MergeRequestEndPointPOSTCommand(ICommandCallback callback, string endpoint)
       {
+         _callback = callback;
          _endpoint = endpoint;
       }
 
-      async public override Task Run()
+      async public Task Run()
       {
          string hostname = _callback.GetCurrentHostName();
          string accessToken = _callback.GetCurrentAccessToken();
@@ -45,6 +36,8 @@ namespace mrHelper.CustomActions
       }
 
       private readonly string _endpoint;
+
+      private readonly ICommandCallback _callback;
    }
 }
 
