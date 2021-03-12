@@ -75,18 +75,28 @@ namespace mrHelper.CustomActions
                   continue;
                }
 
+               ISubCommand subcommand = null;
                if (obj.Name == "SendNote")
                {
-                  subcommands.Add(createSendNoteCommand(xmlNodeCommand.Attributes));
+                  subcommand = createSendNoteCommand(xmlNodeCommand.Attributes);
                }
                else if (obj.Name == "MergeRequestEndPointPOST")
                {
-                  subcommands.Add(createEndPointPOSTCommand(xmlNodeCommand.Attributes));
+                  subcommand = createEndPointPOSTCommand(xmlNodeCommand.Attributes);
+               }
+               else if (obj.Name == "AddLabelToMergeRequest")
+               {
+                  subcommand = createAddLabelToMergeRequestCommand(xmlNodeCommand.Attributes);
                }
                else
                {
                   Trace.TraceInformation(
                     String.Format("Unknown action type \"{0}\" in node {1}, ignoring this command", obj.Name, child.Name));
+               }
+
+               if (subcommand != null)
+               {
+                  subcommands.Add(subcommand);
                }
             }
 
@@ -102,13 +112,31 @@ namespace mrHelper.CustomActions
       private ISubCommand createSendNoteCommand(XmlAttributeCollection attributes)
       {
          XmlNode body = attributes.GetNamedItem("Body");
+         if (body == null)
+         {
+            return null;
+         }
          return new SendNoteCommand(_callback, body.Value);
       }
 
       private ISubCommand createEndPointPOSTCommand(XmlAttributeCollection attributes)
       {
          XmlNode endpoint = attributes.GetNamedItem("EndPoint");
+         if (endpoint == null)
+         {
+            return null;
+         }
          return new MergeRequestEndPointPOSTCommand(_callback, endpoint.Value);
+      }
+
+      private ISubCommand createAddLabelToMergeRequestCommand(XmlAttributeCollection attributes)
+      {
+         XmlNode label = attributes.GetNamedItem("Label");
+         if (label == null)
+         {
+            return null;
+         }
+         return new MergeRequestEndPointPOSTCommand(_callback, label.Value);
       }
 
       private ICommand createCompositeCommand(

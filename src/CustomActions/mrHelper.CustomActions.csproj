@@ -47,6 +47,7 @@
     <Compile Include="src\CompositeCommand.cs" />
     <Compile Include="src\CustomCommandLoader.cs" />
     <Compile Include="src\CustomCommandLoaderException.cs" />
+    <Compile Include="src\AddLabelToMergeRequestCommand.cs" />
     <Compile Include="src\MergeRequestEndPointPOSTCommand.cs" />
     <Compile Include="src\SendNoteCommand.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
