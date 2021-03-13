@@ -149,6 +149,39 @@ namespace mrHelper.App.Forms
          internal DateTime TimeStamp { get; }
       }
       private LostConnectionInfo? _lostConnectionInfo;
+
+      private class ColorSelectorComboBoxItem
+      {
+         internal ColorSelectorComboBoxItem(string humanFriendlyName, Color color)
+         {
+            HumanFriendlyName = humanFriendlyName;
+            Color = color;
+         }
+
+         /// <summary>
+         /// ToString() override for ComboBox item sorting purpose
+         /// </summary>
+         public override string ToString()
+         {
+            return HumanFriendlyName;
+         }
+
+         internal string HumanFriendlyName { get; }
+
+         internal Color Color { get; }
+      }
+
+      private struct IconGroup
+      {
+         internal IconGroup(Icon iconWithoutBorder, Icon iconWithBorder)
+         {
+            IconWithoutBorder = iconWithoutBorder;
+            IconWithBorder = iconWithBorder;
+         }
+
+         internal Icon IconWithoutBorder { get; }
+         internal Icon IconWithBorder { get; }
+      }
    }
 }
 

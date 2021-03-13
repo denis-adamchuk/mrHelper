@@ -626,7 +626,7 @@ namespace mrHelper.App.Controls
          Color getColorOrDefault(string colorName)
          {
             Color defaultColor = Color.White;
-            ColorSchemeItem colorOpt = _colorScheme.GetColor(colorName);
+            ColorSchemeItem colorOpt = _colorScheme?.GetColor(colorName);
             return colorOpt != null ? colorOpt.Color : defaultColor;
          }
 

@@ -5,9 +5,9 @@ using GitLabSharp.Accessors;
 
 namespace mrHelper.CustomActions
 {
-   internal class AddLabelToMergeRequest : ISubCommand
+   internal class AddLabelToMergeRequestCommand : ISubCommand
    {
-      internal AddLabelToMergeRequest(ICommandCallback callback, string label)
+      internal AddLabelToMergeRequestCommand(ICommandCallback callback, string label)
       {
          _callback = callback;
          _label = label;

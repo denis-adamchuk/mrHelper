@@ -200,7 +200,6 @@ namespace mrHelper.App.Forms
          this.tabPageSettingsUserInterface = new System.Windows.Forms.TabPage();
          this.groupBoxColors = new System.Windows.Forms.GroupBox();
          this.linkLabelResetToFactoryValue = new System.Windows.Forms.LinkLabel();
-         this.labelColorSchemeModified = new System.Windows.Forms.Label();
          this.labelColorSelector = new System.Windows.Forms.Label();
          this.comboBoxColorSelector = new System.Windows.Forms.ComboBox();
          this.listBoxColorSchemeItemSelector = new System.Windows.Forms.ListBox();
@@ -266,6 +265,7 @@ namespace mrHelper.App.Forms
          this.panel1 = new System.Windows.Forms.Panel();
          this.panelConnectionStatus = new System.Windows.Forms.Panel();
          this.labelConnectionStatus = new System.Windows.Forms.Label();
+         this.linkLabelResetAllColors = new System.Windows.Forms.LinkLabel();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -1760,8 +1760,8 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxColors
          // 
+         this.groupBoxColors.Controls.Add(this.linkLabelResetAllColors);
          this.groupBoxColors.Controls.Add(this.linkLabelResetToFactoryValue);
-         this.groupBoxColors.Controls.Add(this.labelColorSchemeModified);
          this.groupBoxColors.Controls.Add(this.labelColorSelector);
          this.groupBoxColors.Controls.Add(this.comboBoxColorSelector);
          this.groupBoxColors.Controls.Add(this.listBoxColorSchemeItemSelector);
@@ -1779,23 +1779,13 @@ namespace mrHelper.App.Forms
          this.linkLabelResetToFactoryValue.AutoSize = true;
          this.linkLabelResetToFactoryValue.Location = new System.Drawing.Point(442, 73);
          this.linkLabelResetToFactoryValue.Name = "linkLabelResetToFactoryValue";
-         this.linkLabelResetToFactoryValue.Size = new System.Drawing.Size(35, 13);
+         this.linkLabelResetToFactoryValue.Size = new System.Drawing.Size(104, 13);
          this.linkLabelResetToFactoryValue.TabIndex = 24;
          this.linkLabelResetToFactoryValue.TabStop = true;
-         this.linkLabelResetToFactoryValue.Text = "Reset";
+         this.linkLabelResetToFactoryValue.Text = "Reset selected color";
+         this.toolTip.SetToolTip(this.linkLabelResetToFactoryValue, "Reset selected color modification");
          this.linkLabelResetToFactoryValue.Visible = false;
          this.linkLabelResetToFactoryValue.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelResetToFactoyValue_LinkClicked);
-         // 
-         // labelColorSchemeModified
-         // 
-         this.labelColorSchemeModified.AutoSize = true;
-         this.labelColorSchemeModified.ForeColor = System.Drawing.Color.Olive;
-         this.labelColorSchemeModified.Location = new System.Drawing.Point(294, 22);
-         this.labelColorSchemeModified.Name = "labelColorSchemeModified";
-         this.labelColorSchemeModified.Size = new System.Drawing.Size(46, 13);
-         this.labelColorSchemeModified.TabIndex = 23;
-         this.labelColorSchemeModified.Text = "modified";
-         this.labelColorSchemeModified.Visible = false;
          // 
          // labelColorSelector
          // 
@@ -1839,7 +1829,7 @@ namespace mrHelper.App.Forms
          this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
          this.comboBoxColorSchemes.Size = new System.Drawing.Size(182, 21);
          this.comboBoxColorSchemes.TabIndex = 18;
-         this.comboBoxColorSchemes.SelectionChangeCommitted += new System.EventHandler(this.comboBoxColorSchemes_SelectionChangeCommited);
+         this.comboBoxColorSchemes.SelectedIndexChanged += new System.EventHandler(this.comboBoxColorSchemes_SelectedIndexChanged);
          // 
          // labelColorScheme
          // 
@@ -2573,6 +2563,19 @@ namespace mrHelper.App.Forms
          this.labelConnectionStatus.TabIndex = 0;
          this.labelConnectionStatus.Text = "Not connected";
          // 
+         // linkLabelResetAllColors
+         // 
+         this.linkLabelResetAllColors.AutoSize = true;
+         this.linkLabelResetAllColors.Location = new System.Drawing.Point(346, 22);
+         this.linkLabelResetAllColors.Name = "linkLabelResetAllColors";
+         this.linkLabelResetAllColors.Size = new System.Drawing.Size(79, 13);
+         this.linkLabelResetAllColors.TabIndex = 25;
+         this.linkLabelResetAllColors.TabStop = true;
+         this.linkLabelResetAllColors.Text = "Reset all colors";
+         this.toolTip.SetToolTip(this.linkLabelResetAllColors, "Reset selected color scheme modifications");
+         this.linkLabelResetAllColors.Visible = false;
+         this.linkLabelResetAllColors.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelResetAllColors_LinkClicked);
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2866,8 +2869,8 @@ namespace mrHelper.App.Forms
       private Label labelColorSelector;
       private ComboBox comboBoxColorSelector;
       private ListBox listBoxColorSchemeItemSelector;
-      private Label labelColorSchemeModified;
       private LinkLabel linkLabelResetToFactoryValue;
+      private LinkLabel linkLabelResetAllColors;
    }
 }
 

@@ -78,15 +78,15 @@ namespace mrHelper.CustomActions
                ISubCommand subcommand = null;
                if (obj.Name == "SendNote")
                {
-                  subcommand = createSendNoteCommand(xmlNodeCommand.Attributes);
+                  subcommand = createSendNoteCommand(obj.Attributes);
                }
                else if (obj.Name == "MergeRequestEndPointPOST")
                {
-                  subcommand = createEndPointPOSTCommand(xmlNodeCommand.Attributes);
+                  subcommand = createEndPointPOSTCommand(obj.Attributes);
                }
                else if (obj.Name == "AddLabelToMergeRequest")
                {
-                  subcommand = createAddLabelToMergeRequestCommand(xmlNodeCommand.Attributes);
+                  subcommand = createAddLabelToMergeRequestCommand(obj.Attributes);
                }
                else
                {
@@ -136,7 +136,7 @@ namespace mrHelper.CustomActions
          {
             return null;
          }
-         return new MergeRequestEndPointPOSTCommand(_callback, label.Value);
+         return new AddLabelToMergeRequestCommand(_callback, label.Value);
       }
 
       private ICommand createCompositeCommand(

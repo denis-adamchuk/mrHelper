@@ -850,7 +850,7 @@ namespace mrHelper.App.Controls
             ? getMatchingFilterProjectItems(fmk.ProjectKey).Select(key => key.MergeRequest)
             : new List<MergeRequest>{ fmk.MergeRequest };
 
-         return _colorScheme.GetColors("MergeRequests")
+         return _colorScheme?.GetColors("MergeRequests")
             .FirstOrDefault(colorSchemeItem =>
                GitLabClient.Helpers.CheckConditions(colorSchemeItem.Conditions, mergeRequests))?.Color
             ?? defaultColor;

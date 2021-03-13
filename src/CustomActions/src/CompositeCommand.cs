@@ -41,7 +41,7 @@ namespace mrHelper.CustomActions
 
       async public Task Run()
       {
-         foreach (ICommand command in _commands)
+         foreach (ISubCommand command in _commands)
          {
             await command.Run();
          }

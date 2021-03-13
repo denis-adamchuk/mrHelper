@@ -211,7 +211,7 @@ namespace mrHelper.App.Forms
          launchStorageFolderChangeDialog();
       }
 
-      private void comboBoxColorSchemes_SelectionChangeCommited(object sender, EventArgs e)
+      private void comboBoxColorSchemes_SelectedIndexChanged(object sender, EventArgs e)
       {
          applyColorSchemeChange((sender as ComboBox).Text);
       }
@@ -332,6 +332,11 @@ namespace mrHelper.App.Forms
       private void comboBoxColorSelector_DrawItem(object sender, DrawItemEventArgs e)
       {
          onDrawComboBoxColorSelectorItem(e);
+      }
+
+      private void linkLabelResetAllColors_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         onResetColorSchemeToFactoryValues();
       }
 
       private void linkLabelResetToFactoyValue_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

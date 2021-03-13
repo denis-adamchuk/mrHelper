@@ -365,23 +365,31 @@ namespace mrHelper.CommonControls.Tools
 
       public static bool IsLightThemeUsed()
       {
-         // TODO_COLOR Add exception handling
-         RegistryHive hive = RegistryHive.CurrentUser;
-         RegistryView view = RegistryView.Registry32;
-         RegistryKey hklm = RegistryKey.OpenBaseKey(hive, view);
-         RegistryKey personalizeKey = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize");
-         if (personalizeKey != null)
+         try
          {
-            string valueName = "SystemUsesLightTheme";
-            object value = personalizeKey.GetValue(valueName);
-            if (value != null)
+            RegistryHive hive = RegistryHive.CurrentUser;
+            RegistryView view = RegistryView.Registry32;
+            RegistryKey hklm = RegistryKey.OpenBaseKey(hive, view);
+            RegistryKey personalizeKey = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            if (personalizeKey != null)
             {
-               var valueKind = personalizeKey.GetValueKind(valueName);
-               if (valueKind == RegistryValueKind.DWord)
+               string valueName = "SystemUsesLightTheme";
+               object value = personalizeKey.GetValue(valueName);
+               if (value != null)
                {
-                  return (int)value == 1;
+                  RegistryValueKind valueKind = personalizeKey.GetValueKind(valueName);
+                  if (valueKind == RegistryValueKind.DWord)
+                  {
+                     return (int)value == 1;
+                  }
                }
             }
+         }
+         catch (Exception ex)
+         {
+            Trace.TraceError(
+               "[WinFormsHelper.IsLightThemeUsed] An exception occurred on attempt to access the registry: {0}",
+               ex.ToString());
          }
          return false;
       }

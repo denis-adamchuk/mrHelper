@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Drawing;
-using Microsoft.Win32;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Tools;
@@ -536,15 +535,19 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(labelConnectionStatus, tooltipText);
       }
 
-      Icon loadNotifyIconByColor(Color color)
+      Icon getCachedIcon(Color color)
       {
-         bool useBorder = WinFormsHelpers.IsLightThemeUsed();
-         return useBorder ? _iconCache[color].IconWithBorder : _iconCache[color].IconWithoutBorder;
+         if (_iconCache.TryGetValue(color, out IconGroup icon))
+         {
+            bool useBorder = WinFormsHelpers.IsLightThemeUsed();
+            return useBorder ? icon.IconWithBorder : icon.IconWithoutBorder;
+         }
+         return null;
       }
 
       private void setNotifyIconByColor(Color color)
       {
-         Icon icon = loadNotifyIconByColor(color);
+         Icon icon = getCachedIcon(color);
          if (icon == null)
          {
             return;
@@ -673,7 +676,7 @@ namespace mrHelper.App.Forms
                * 2; // for symmetry
 
          // TODO No idea how to make it more flexible, leave a fixed number so far
-         int maximumNumberOfVisibleCustomActionControl = 6;
+         int maximumNumberOfVisibleCustomActionControl = 7;
          bool hasActions = groupBoxActions.Controls.Count > 0;
 
          // If even we don't have actions, reserve some space for them
@@ -797,16 +800,13 @@ namespace mrHelper.App.Forms
                 (groupBoxActions.Width - visibleControlCount * controlWidth) *
                 (index + 1) / (visibleControlCount + 1);
 
-         int getControlY(int controlHeight) =>
-            (groupBoxActions.Height - controlHeight) / 2;
-
          int displayIndex = 0;
          for (int controlIndex = 0; controlIndex < groupBoxActions.Controls.Count; ++controlIndex)
          {
             Control c = groupBoxActions.Controls[controlIndex];
             if (c.Visible)
             {
-               c.Location = new Point { X = getControlX(c.Width, displayIndex), Y = getControlY(c.Height) };
+               c.Location = new Point { X = getControlX(c.Width, displayIndex), Y = c.Location.Y };
                ++displayIndex;
             }
          }
@@ -1196,8 +1196,8 @@ namespace mrHelper.App.Forms
          SizeF rate = WinFormsHelpers.GetAutoScaleDimensionsChangeRate(this);
          return new System.Drawing.Size
          {
-            Width = Convert.ToInt32(72 * rate.Width),
-            Height = Convert.ToInt32(32 * rate.Height)
+            Width = Convert.ToInt32(64 * rate.Width),
+            Height = Convert.ToInt32(40 * rate.Height)
          };
       }
 
@@ -1217,7 +1217,7 @@ namespace mrHelper.App.Forms
             var button = new System.Windows.Forms.Button
             {
                Name = "customAction" + id,
-               Location = new System.Drawing.Point { X = 0, Y = 19 },
+               Location = new System.Drawing.Point { X = 0, Y = 14 },
                Size = buttonSize,
                MinimumSize = buttonSize,
                Text = name,

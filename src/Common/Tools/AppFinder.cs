@@ -52,19 +52,28 @@ namespace mrHelper.Common.Tools
 
       static private AppInfo findApplication(RegistryHive hive, RegistryView view, string[] applicationNames)
       {
-         RegistryKey hklm = RegistryKey.OpenBaseKey(hive, view);
-         RegistryKey uninstall = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-         foreach (string productSubKey in uninstall.GetSubKeyNames())
+         try
          {
-            RegistryKey product = uninstall.OpenSubKey(productSubKey);
-            object displayName = product.GetValue("DisplayName");
-            foreach (string appName in applicationNames)
+            RegistryKey hklm = RegistryKey.OpenBaseKey(hive, view);
+            RegistryKey uninstall = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+            foreach (string productSubKey in uninstall.GetSubKeyNames())
             {
-               if (displayName != null && displayName.ToString().Contains(appName))
+               RegistryKey product = uninstall.OpenSubKey(productSubKey);
+               object displayName = product.GetValue("DisplayName");
+               foreach (string appName in applicationNames)
                {
-                  return new AppInfo(product.GetValue("InstallLocation").ToString(), productSubKey);
+                  if (displayName != null && displayName.ToString().Contains(appName))
+                  {
+                     return new AppInfo(product.GetValue("InstallLocation").ToString(), productSubKey);
+                  }
                }
             }
+         }
+         catch (System.Exception ex)
+         {
+            Trace.TraceError(
+               "[AppFinder] An exception occurred on attempt to access the registry: {0}",
+               ex.ToString());
          }
          return null;
       }

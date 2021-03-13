@@ -75,9 +75,6 @@ namespace mrHelper.App.Forms
          createRecentDataCache();
          subscribeToRecentDataCache();
 
-         initializeColorScheme();
-         fillColorSchemeItemList();
-
          Trace.TraceInformation(String.Format(
             "[Mainform] Connecting to URL on startup {0}", _startUrl?.ToString() ?? "null"));
          reconnect(_startUrl);
@@ -139,8 +136,8 @@ namespace mrHelper.App.Forms
          updateCaption();
          updateTabControlSelection();
          updateHostsDropdownList();
-         fillColorSchemeList();
          fillColorList();
+         fillColorSchemeList();
          prepareControlsToStart();
          prepareSizeToStart();
          selectHost(PreferredSelection.Initial);
@@ -320,6 +317,8 @@ namespace mrHelper.App.Forms
 
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          _expressionResolver = new ExpressionResolver(dataCache);
+         selectColorScheme(); // requires ExpressionResolver
+
          _eventFilter = new EventFilter(Program.Settings, dataCache, _mergeRequestFilter);
          _userNotifier = new UserNotifier(dataCache, _eventFilter, _trayIcon);
       }
