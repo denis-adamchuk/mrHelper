@@ -47,12 +47,12 @@ namespace mrHelper.Common.Constants
       public static string DefaultThemeName = "Default";
 
       public static string[] ColorSchemeKnownColorNames =
-         { "Brown", "Chocolate",
+         { "Brown", "Chocolate", "Salmon",
            "Red", "Tomato", "Coral", "Orange",
            "Dark Khaki", "Khaki", "Gold", "Yellow",
-           "Gray",
+           "Dark Gray", "Gray", "Silver",
            "Green", "Pale Green", "Spring Green", "Lime",
-           "Blue", "Turquoise", "Aqua", "Light Cyan", "Light Sky Blue",
+           "Dodger Blue", "Aqua", "Light Cyan", "Light Sky Blue",
            "Violet", "Orchid" };
 
       public static string LiveListViewName = "Live";
