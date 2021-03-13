@@ -246,7 +246,7 @@ namespace mrHelper.App.Forms
                                 () =>
                                 {
                                    addOperationRecord("User list download has finished");
-                                   setSearchByAuthorEnabled(true);
+                                   setSearchByAuthorEnabled(true, hostname);
                                 });
 
          IEnumerable<MergeRequestKey> closedReviewed = gatherClosedReviewedMergeRequests(dataCache, hostname);

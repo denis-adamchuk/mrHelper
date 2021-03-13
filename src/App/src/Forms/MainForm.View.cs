@@ -848,14 +848,14 @@ namespace mrHelper.App.Forms
          getListView(EDataCacheType.Search).DisableListView();
          enableSimpleSearchControls(false);
          setSearchByProjectEnabled(false);
-         setSearchByAuthorEnabled(false);
+         setSearchByAuthorEnabled(false, getHostName());
          updateSearchButtonState();
       }
 
       private void enableSearchTabControls()
       {
          enableSimpleSearchControls(true);
-         setSearchByAuthorEnabled(getDataCache(EDataCacheType.Live)?.UserCache?.GetUsers()?.Any() ?? false);
+         setSearchByAuthorEnabled(getDataCache(EDataCacheType.Live)?.UserCache?.GetUsers()?.Any() ?? false, getHostName());
          setSearchByProjectEnabled(getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects()?.Any() ?? false);
          updateSearchButtonState();
       }

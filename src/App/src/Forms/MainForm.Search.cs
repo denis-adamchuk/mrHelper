@@ -238,7 +238,7 @@ namespace mrHelper.App.Forms
          updateSearchButtonState();
       }
 
-      private void setSearchByAuthorEnabled(bool isEnabled)
+      private void setSearchByAuthorEnabled(bool isEnabled, string hostname)
       {
          checkBoxSearchByAuthor.Enabled = isEnabled;
          linkLabelFindMe.Enabled = isEnabled;
@@ -251,11 +251,19 @@ namespace mrHelper.App.Forms
             DataCache dataCache = getDataCache(EDataCacheType.Live);
             User[] users = dataCache?.UserCache?.GetUsers()
                .OrderBy(user => user.Name).ToArray() ?? Array.Empty<User>();
-            User selectedUser = (User)comboBoxUser.SelectedItem;
-            string previousSelection = selectedUser == null ? String.Empty : selectedUser.Name;
-            string defaultUserFullName = users.SingleOrDefault(user => user.Name == previousSelection) == null
-               ? getCurrentUser().Name : previousSelection;
-            WinFormsHelpers.FillComboBox(comboBoxUser, users, user => user.Name == defaultUserFullName);
+            if (!users.Any())
+            {
+               WinFormsHelpers.FillComboBox(comboBoxUser, users, _ => false);
+            }
+            else
+            {
+               User selectedUser = (User)comboBoxUser.SelectedItem;
+               string previousSelection = selectedUser == null ? String.Empty : selectedUser.Name;
+               bool hasPreviousSelection = users.SingleOrDefault(user => user.Name == previousSelection) != null;
+               User defaultUser = getCurrentUser(hostname) ?? users.First();
+               string defaultUserFullName = hasPreviousSelection ? previousSelection : defaultUser.Name;
+               WinFormsHelpers.FillComboBox(comboBoxUser, users, user => user.Name == defaultUserFullName);
+            }
          }
 
          updateSearchButtonState();
