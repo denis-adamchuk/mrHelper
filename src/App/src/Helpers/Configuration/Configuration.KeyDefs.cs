@@ -94,7 +94,10 @@ namespace mrHelper.App.Helpers
       private static readonly bool   ShowRelatedThreadsDefaultValue = true;
 
       private static readonly string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
-      private static readonly string ColorSchemeFileNameDefaultValue = "";
+      private static readonly string ColorSchemeFileNameDefaultValue = String.Empty;
+
+      private static readonly string CustomColorsKeyName = "CustomColors";
+      private static readonly string CustomColorsDefaultValue = String.Empty;
 
       private static readonly string AutoUpdatePeriodMsKeyName      = "AutoUpdatePeriodMs";
       private static readonly int    AutoUpdatePeriodMsDefaultValue = 5 * 60 * 1000; // 5 minutes

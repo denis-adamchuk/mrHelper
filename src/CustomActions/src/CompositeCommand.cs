@@ -1,15 +1,12 @@
-﻿using System;
+﻿using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace mrHelper.CustomActions
 {
-   public abstract class BaseCommand : ICommand
+   public class CompositeCommand : ICommand
    {
-      public BaseCommand(
-         ICommandCallback callback,
+      internal CompositeCommand(
+         IEnumerable<ISubCommand> commands,
          string name,
          string enabledIf,
          string visibleIf,
@@ -18,7 +15,7 @@ namespace mrHelper.CustomActions
          string hint,
          bool initiallyVisible)
       {
-         _callback = callback;
+         _commands = commands;
          Name = name;
          EnabledIf = enabledIf;
          VisibleIf = visibleIf;
@@ -42,9 +39,15 @@ namespace mrHelper.CustomActions
 
       public bool InitiallyVisible { get; }
 
-      public abstract Task Run();
+      async public Task Run()
+      {
+         foreach (ISubCommand command in _commands)
+         {
+            await command.Run();
+         }
+      }
 
-      protected readonly ICommandCallback _callback;
+      private readonly IEnumerable<ISubCommand> _commands;
    }
 }
 

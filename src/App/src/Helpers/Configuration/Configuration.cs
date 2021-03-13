@@ -139,9 +139,11 @@ namespace mrHelper.App.Helpers
             value.ToDictionary(item => item.Key, item => item.Value.ToString())));
       }
 
-      private Dictionary<string, string> getStringToStringDictionary(string keyName, string defaultValue)
+      private Dictionary<string, string> getStringToStringDictionary(
+         string keyName, string defaultValue, bool forceLowerCase)
       {
-         return DictionaryStringHelper.DeserializeRawDictionaryString(getValue(keyName, defaultValue), true);
+         return DictionaryStringHelper.DeserializeRawDictionaryString(
+            getValue(keyName, defaultValue), forceLowerCase);
       }
 
       private void setStringToStringDictionary(string keyName, Dictionary<string, string> value)

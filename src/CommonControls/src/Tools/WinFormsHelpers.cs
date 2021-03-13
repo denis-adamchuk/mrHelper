@@ -1,8 +1,10 @@
-﻿using Microsoft.WindowsAPICodePack.Taskbar;
+﻿using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Taskbar;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -311,6 +313,85 @@ namespace mrHelper.CommonControls.Tools
             new bool[]{ delta < 0, delta > 0},
             (arg1, arg2) => new Tuple<Button, bool>(arg1, arg2));
          WinFormsHelpers.PerformClick(clickMap.ToArray());
+      }
+
+      public static Bitmap ReplaceColorInBitmap(
+         Bitmap sourceImage, Color sourceColor, Color destColor)
+      {
+         Bitmap image = (Bitmap)sourceImage.Clone();
+         for (int i = 0; i < image.Width; ++i)
+         {
+            for (int j = 0; j < image.Height; ++j)
+            {
+               var cl = image.GetPixel(i, j);
+               if (cl.R == sourceColor.R && cl.G == sourceColor.G && cl.B == sourceColor.B)
+               {
+                  image.SetPixel(i, j, destColor);
+               }
+            }
+         }
+         return image;
+      }
+
+      // taken from https://stackoverflow.com/a/57254324
+      public static Icon ConvertToIco(Image img, int size)
+      {
+         Icon icon;
+         using (var msImg = new System.IO.MemoryStream())
+         using (var msIco = new System.IO.MemoryStream())
+         {
+            img.Save(msImg, System.Drawing.Imaging.ImageFormat.Png);
+            using (var bw = new System.IO.BinaryWriter(msIco))
+            {
+               bw.Write((short)0);           //0-1 reserved
+               bw.Write((short)1);           //2-3 image type, 1 = icon, 2 = cursor
+               bw.Write((short)1);           //4-5 number of images
+               bw.Write((byte)size);         //6 image width
+               bw.Write((byte)size);         //7 image height
+               bw.Write((byte)0);            //8 number of colors
+               bw.Write((byte)0);            //9 reserved
+               bw.Write((short)0);           //10-11 color planes
+               bw.Write((short)32);          //12-13 bits per pixel
+               bw.Write((int)msImg.Length);  //14-17 size of image data
+               bw.Write(22);                 //18-21 offset of image data
+               bw.Write(msImg.ToArray());    // write image data
+               bw.Flush();
+               bw.Seek(0, SeekOrigin.Begin);
+               icon = new Icon(msIco);
+            }
+         }
+         return icon;
+      }
+
+      public static bool IsLightThemeUsed()
+      {
+         try
+         {
+            RegistryHive hive = RegistryHive.CurrentUser;
+            RegistryView view = RegistryView.Registry32;
+            RegistryKey hklm = RegistryKey.OpenBaseKey(hive, view);
+            RegistryKey personalizeKey = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            if (personalizeKey != null)
+            {
+               string valueName = "SystemUsesLightTheme";
+               object value = personalizeKey.GetValue(valueName);
+               if (value != null)
+               {
+                  RegistryValueKind valueKind = personalizeKey.GetValueKind(valueName);
+                  if (valueKind == RegistryValueKind.DWord)
+                  {
+                     return (int)value == 1;
+                  }
+               }
+            }
+         }
+         catch (Exception ex)
+         {
+            Trace.TraceError(
+               "[WinFormsHelper.IsLightThemeUsed] An exception occurred on attempt to access the registry: {0}",
+               ex.ToString());
+         }
+         return false;
       }
    }
 }

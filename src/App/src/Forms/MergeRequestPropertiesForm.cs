@@ -89,6 +89,7 @@ namespace mrHelper.App.Forms
       internal string Title => getTitle();
       internal string Description => getDescription();
       internal string SpecialNote => getSpecialNote();
+      internal bool IsHighPriority => checkBoxHighPriority.Checked;
 
       protected override void OnLoad(EventArgs e)
       {
@@ -340,6 +341,7 @@ namespace mrHelper.App.Forms
          }
          checkBoxSquash.Enabled = allDetailsLoaded;
          textBoxAssigneeUsername.Enabled = allDetailsLoaded;
+         checkBoxHighPriority.Enabled = allDetailsLoaded;
 
          buttonSubmit.Enabled = allDetailsLoaded && !String.IsNullOrEmpty(getTitle());
       }

@@ -2,6 +2,11 @@
 
 namespace mrHelper.CustomActions
 {
+   internal interface ISubCommand
+   {
+      Task Run();
+   }
+
    public interface ICommand
    {
       string Name { get; }

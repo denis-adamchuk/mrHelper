@@ -6,7 +6,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
-using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
@@ -847,40 +846,14 @@ namespace mrHelper.App.Controls
 
       private System.Drawing.Color getMergeRequestColor(FullMergeRequestKey fmk, Color defaultColor)
       {
-         IEnumerable<string> allLabels = null;
-         IEnumerable<User> allAuthors = null;
-         if (fmk.MergeRequest == null)
-         {
-            allLabels = getMatchingFilterProjectItems(fmk.ProjectKey).SelectMany(key => key.MergeRequest.Labels);
-            allAuthors = getMatchingFilterProjectItems(fmk.ProjectKey).Select(key => key.MergeRequest.Author);
-         }
-         else
-         {
-            allLabels = fmk.MergeRequest.Labels;
-            allAuthors = new User[] { fmk.MergeRequest.Author };
-         }
+         IEnumerable<MergeRequest> mergeRequests = fmk.MergeRequest == null
+            ? getMatchingFilterProjectItems(fmk.ProjectKey).Select(key => key.MergeRequest)
+            : new List<MergeRequest>{ fmk.MergeRequest };
 
-         foreach (KeyValuePair<string, Color> color in _colorScheme)
-         {
-            // by author
-            foreach (User author in allAuthors)
-            {
-               if (StringUtils.DoesMatchPattern(color.Key, "MergeRequests_{{Author:{0}}}", author.Username))
-               {
-                  return color.Value;
-               }
-            }
-
-            // by labels
-            foreach (string label in allLabels)
-            {
-               if (StringUtils.DoesMatchPattern(color.Key, "MergeRequests_{{Label:{0}}}", label))
-               {
-                  return color.Value;
-               }
-            }
-         }
-         return defaultColor;
+         return _colorScheme?.GetColors("MergeRequests")
+            .FirstOrDefault(colorSchemeItem =>
+               GitLabClient.Helpers.CheckConditions(colorSchemeItem.Conditions, mergeRequests))?.Color
+            ?? defaultColor;
       }
 
       private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)

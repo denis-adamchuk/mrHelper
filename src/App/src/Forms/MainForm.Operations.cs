@@ -143,7 +143,8 @@ namespace mrHelper.App.Forms
                ProjectKey projectKey = new ProjectKey(hostname, form.ProjectName);
                SubmitNewMergeRequestParameters parameters = new SubmitNewMergeRequestParameters(
                   projectKey, form.SourceBranch, form.TargetBranch, form.Title,
-                  form.AssigneeUsername, form.Description, form.DeleteSourceBranch, form.Squash);
+                  form.AssigneeUsername, form.Description, form.DeleteSourceBranch, form.Squash,
+                  form.IsHighPriority);
                await createNewMergeRequestAsync(parameters, form.SpecialNote);
             }));
       }
@@ -255,8 +256,7 @@ namespace mrHelper.App.Forms
          // Take care of controls that 'time tracking' mode shares with normal mode
          updateTotalTime(null, null);
 
-         updateTrayIcon();
-         updateTaskbarIcon();
+         updateTrayAndTaskBar();
 
          onTimerStarted();
          addOperationRecord("Time tracking has started");
@@ -421,7 +421,8 @@ namespace mrHelper.App.Forms
 
          ApplyMergeRequestChangesParameters parameters =
             new ApplyMergeRequestChangesParameters(form.Title, form.AssigneeUsername,
-            form.Description, form.TargetBranch, form.DeleteSourceBranch, form.Squash);
+            form.Description, form.TargetBranch, form.DeleteSourceBranch, form.Squash,
+            form.IsHighPriority);
 
          bool modified = await MergeRequestEditHelper.ApplyChangesToMergeRequest(
             item.ProjectKey, item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser,

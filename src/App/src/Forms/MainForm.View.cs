@@ -13,7 +13,6 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
-using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Controls;
 using mrHelper.CustomActions;
 using mrHelper.CommonControls.Tools;
@@ -245,8 +244,7 @@ namespace mrHelper.App.Forms
                enableMergeRequestFilterControls(true);
                listView.Enabled = true;
             }
-            updateTrayIcon();
-            updateTaskbarIcon();
+            updateTrayAndTaskBar();
             onLiveMergeRequestListRefreshed();
          }
          else if (listView.Items.Count > 0)
@@ -537,96 +535,67 @@ namespace mrHelper.App.Forms
          toolTip.SetToolTip(labelConnectionStatus, tooltipText);
       }
 
-      private void updateTrayIcon()
+      Icon getCachedIcon(Color color)
       {
-         notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
-         if (_iconScheme == null || !_iconScheme.Any())
+         if (_iconCache.TryGetValue(color, out IconGroup icon))
          {
-            return;
+            bool useBorder = WinFormsHelpers.IsLightThemeUsed();
+            return useBorder ? icon.IconWithBorder : icon.IconWithoutBorder;
          }
-
-         void loadNotifyIconFromFile(string filename)
-         {
-            try
-            {
-               notifyIcon.Icon = new Icon(filename);
-            }
-            catch (ArgumentException ex)
-            {
-               ExceptionHandlers.Handle(String.Format("Cannot create an icon from file \"{0}\"", filename), ex);
-            }
-         }
-
-         if (isConnectionLost())
-         {
-            if (_iconScheme.ContainsKey("Icon_LostConnection"))
-            {
-               loadNotifyIconFromFile(_iconScheme["Icon_LostConnection"]);
-            }
-            return;
-         }
-
-         if (isTrackingTime())
-         {
-            if (_iconScheme.ContainsKey("Icon_Tracking"))
-            {
-               loadNotifyIconFromFile(_iconScheme["Icon_Tracking"]);
-            }
-            return;
-         }
-
-         foreach (KeyValuePair<string, string> nameToFilename in _iconScheme)
-         {
-            string resolved = _expressionResolver.Resolve(nameToFilename.Key);
-            if (getListView(EDataCacheType.Live).GetMatchingFilterMergeRequests()
-               .Select(x => x.MergeRequest)
-               .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Icon_{{Label:{0}}}", y))))
-            {
-               loadNotifyIconFromFile(nameToFilename.Value);
-               break;
-            }
-         }
+         return null;
       }
 
-      private void updateTaskbarIcon()
+      private void setNotifyIconByColor(Color color)
       {
-         CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(null);
-         if (_badgeScheme == null || !_badgeScheme.Any())
+         Icon icon = getCachedIcon(color);
+         if (icon == null)
+         {
+            return;
+         }
+         notifyIcon.Icon = icon;
+      }
+
+      private void updateTrayAndTaskBar()
+      {
+         WinFormsHelpers.SetOverlayEllipseIcon(null);
+         notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
+         if (_colorScheme == null)
          {
             return;
          }
 
          if (isConnectionLost())
          {
-            if (_badgeScheme.ContainsKey("Badge_LostConnection"))
+            ColorSchemeItem colorOpt = _colorScheme.GetColor("Status_LostConnection");
+            if (colorOpt != null)
             {
-               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
-                  Color.FromName(_badgeScheme["Badge_LostConnection"]));
+               setNotifyIconByColor(colorOpt.Color);
+               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Color);
             }
             return;
          }
 
          if (isTrackingTime())
          {
-            if (_badgeScheme.ContainsKey("Badge_Tracking"))
+            ColorSchemeItem colorOpt = _colorScheme.GetColor("Status_Tracking");
+            if (colorOpt != null)
             {
-               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
-                  Color.FromName(_badgeScheme["Badge_Tracking"]));
+               setNotifyIconByColor(colorOpt.Color);
+               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Color);
             }
             return;
          }
 
-         foreach (KeyValuePair<string, string> nameToFilename in _badgeScheme)
+         var mergeRequests = getListView(EDataCacheType.Live)
+            .GetMatchingFilterMergeRequests()
+            .Select(x => x.MergeRequest);
+         var bestColorItem = _colorScheme.GetColors("MergeRequests")
+            .FirstOrDefault(colorSchemeItem =>
+               GitLabClient.Helpers.CheckConditions(colorSchemeItem.Conditions, mergeRequests));
+         if (bestColorItem != null)
          {
-            string resolved = _expressionResolver.Resolve(nameToFilename.Key);
-            if (getListView(EDataCacheType.Live).GetMatchingFilterMergeRequests()
-               .Select(x => x.MergeRequest)
-               .Any(x => x.Labels.Any(y => StringUtils.DoesMatchPattern(resolved, "Badge_{{Label:{0}}}", y))))
-            {
-               CommonControls.Tools.WinFormsHelpers.SetOverlayEllipseIcon(
-                  Color.FromName(nameToFilename.Value));
-               break;
-            }
+            setNotifyIconByColor(bestColorItem.Color);
+            WinFormsHelpers.SetOverlayEllipseIcon(bestColorItem.Color);
          }
       }
 
@@ -707,7 +676,7 @@ namespace mrHelper.App.Forms
                * 2; // for symmetry
 
          // TODO No idea how to make it more flexible, leave a fixed number so far
-         int maximumNumberOfVisibleCustomActionControl = 6;
+         int maximumNumberOfVisibleCustomActionControl = 7;
          bool hasActions = groupBoxActions.Controls.Count > 0;
 
          // If even we don't have actions, reserve some space for them
@@ -831,16 +800,13 @@ namespace mrHelper.App.Forms
                 (groupBoxActions.Width - visibleControlCount * controlWidth) *
                 (index + 1) / (visibleControlCount + 1);
 
-         int getControlY(int controlHeight) =>
-            (groupBoxActions.Height - controlHeight) / 2;
-
          int displayIndex = 0;
          for (int controlIndex = 0; controlIndex < groupBoxActions.Controls.Count; ++controlIndex)
          {
             Control c = groupBoxActions.Controls[controlIndex];
             if (c.Visible)
             {
-               c.Location = new Point { X = getControlX(c.Width, displayIndex), Y = getControlY(c.Height) };
+               c.Location = new Point { X = getControlX(c.Width, displayIndex), Y = c.Location.Y };
                ++displayIndex;
             }
          }
@@ -882,14 +848,14 @@ namespace mrHelper.App.Forms
          getListView(EDataCacheType.Search).DisableListView();
          enableSimpleSearchControls(false);
          setSearchByProjectEnabled(false);
-         setSearchByAuthorEnabled(false);
+         setSearchByAuthorEnabled(false, getHostName());
          updateSearchButtonState();
       }
 
       private void enableSearchTabControls()
       {
          enableSimpleSearchControls(true);
-         setSearchByAuthorEnabled(getDataCache(EDataCacheType.Live)?.UserCache?.GetUsers()?.Any() ?? false);
+         setSearchByAuthorEnabled(getDataCache(EDataCacheType.Live)?.UserCache?.GetUsers()?.Any() ?? false, getHostName());
          setSearchByProjectEnabled(getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects()?.Any() ?? false);
          updateSearchButtonState();
       }
@@ -1026,8 +992,7 @@ namespace mrHelper.App.Forms
          updateTimeTrackingMergeRequestDetails(
             getMergeRequestKey(null), getDataCache(getCurrentTabDataCacheType()));
 
-         updateTrayIcon();
-         updateTaskbarIcon();
+         updateTrayAndTaskBar();
 
          Debug.Assert(!_applicationUpdateNotificationPostponedTillTimerStop
                    || !_applicationUpdateReminderPostponedTillTimerStop); // cannot have both enabled
@@ -1108,6 +1073,12 @@ namespace mrHelper.App.Forms
       private static void formatUserListItem(ListControlConvertEventArgs e)
       {
          e.Value = (e.ListItem as User).Name;
+      }
+
+      private void formatColorSchemeItemSelectorItem(ListControlConvertEventArgs e)
+      {
+         ColorSchemeItem colorSchemeItem = _colorScheme.GetColor(e.ListItem.ToString());
+         e.Value = colorSchemeItem == null ? e.ListItem as string : colorSchemeItem.DisplayName;
       }
 
       private void onUpdating()
@@ -1225,8 +1196,8 @@ namespace mrHelper.App.Forms
          SizeF rate = WinFormsHelpers.GetAutoScaleDimensionsChangeRate(this);
          return new System.Drawing.Size
          {
-            Width = Convert.ToInt32(72 * rate.Width),
-            Height = Convert.ToInt32(32 * rate.Height)
+            Width = Convert.ToInt32(64 * rate.Width),
+            Height = Convert.ToInt32(40 * rate.Height)
          };
       }
 
@@ -1246,7 +1217,7 @@ namespace mrHelper.App.Forms
             var button = new System.Windows.Forms.Button
             {
                Name = "customAction" + id,
-               Location = new System.Drawing.Point { X = 0, Y = 19 },
+               Location = new System.Drawing.Point { X = 0, Y = 14 },
                Size = buttonSize,
                MinimumSize = buttonSize,
                Text = name,

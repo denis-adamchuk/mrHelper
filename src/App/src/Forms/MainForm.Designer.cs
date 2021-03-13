@@ -198,6 +198,13 @@ namespace mrHelper.App.Forms
          this.radioButtonUseGitFullClone = new System.Windows.Forms.RadioButton();
          this.labelLocalStorageFolder = new System.Windows.Forms.Label();
          this.tabPageSettingsUserInterface = new System.Windows.Forms.TabPage();
+         this.groupBoxColors = new System.Windows.Forms.GroupBox();
+         this.linkLabelResetToFactoryValue = new System.Windows.Forms.LinkLabel();
+         this.labelColorSelector = new System.Windows.Forms.Label();
+         this.comboBoxColorSelector = new System.Windows.Forms.ComboBox();
+         this.listBoxColorSchemeItemSelector = new System.Windows.Forms.ListBox();
+         this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
+         this.labelColorScheme = new System.Windows.Forms.Label();
          this.groupBoxOtherUI = new System.Windows.Forms.GroupBox();
          this.groupBoxDiscussionsView = new System.Windows.Forms.GroupBox();
          this.groupBoxColumnWidth = new System.Windows.Forms.GroupBox();
@@ -206,8 +213,6 @@ namespace mrHelper.App.Forms
          this.groupBoxNewDiscussionViewUI = new System.Windows.Forms.GroupBox();
          this.groupBoxGeneral = new System.Windows.Forms.GroupBox();
          this.labelRecentMergeRequestsPerProjectCount = new System.Windows.Forms.Label();
-         this.comboBoxColorSchemes = new System.Windows.Forms.ComboBox();
-         this.labelColorScheme = new System.Windows.Forms.Label();
          this.labelVisualTheme = new System.Windows.Forms.Label();
          this.comboBoxThemes = new System.Windows.Forms.ComboBox();
          this.comboBoxFonts = new System.Windows.Forms.ComboBox();
@@ -241,7 +246,7 @@ namespace mrHelper.App.Forms
          this.tabControlMode = new System.Windows.Forms.TabControl();
          this.splitContainer2 = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectedMR = new System.Windows.Forms.GroupBox();
-         this.linkLabelConnectedTo = new LinkLabelEx();
+         this.linkLabelConnectedTo = new mrHelper.CommonControls.Controls.LinkLabelEx();
          this.richTextBoxMergeRequestDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.panelFreeSpace = new System.Windows.Forms.Panel();
          this.pictureBox2 = new System.Windows.Forms.PictureBox();
@@ -260,6 +265,7 @@ namespace mrHelper.App.Forms
          this.panel1 = new System.Windows.Forms.Panel();
          this.panelConnectionStatus = new System.Windows.Forms.Panel();
          this.labelConnectionStatus = new System.Windows.Forms.Label();
+         this.linkLabelResetAllColors = new System.Windows.Forms.LinkLabel();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -276,6 +282,7 @@ namespace mrHelper.App.Forms
          this.groupBoxFileStorage.SuspendLayout();
          this.groupBoxFileStorageType.SuspendLayout();
          this.tabPageSettingsUserInterface.SuspendLayout();
+         this.groupBoxColors.SuspendLayout();
          this.groupBoxOtherUI.SuspendLayout();
          this.groupBoxDiscussionsView.SuspendLayout();
          this.groupBoxColumnWidth.SuspendLayout();
@@ -1738,6 +1745,7 @@ namespace mrHelper.App.Forms
          // 
          // tabPageSettingsUserInterface
          // 
+         this.tabPageSettingsUserInterface.Controls.Add(this.groupBoxColors);
          this.tabPageSettingsUserInterface.Controls.Add(this.groupBoxOtherUI);
          this.tabPageSettingsUserInterface.Controls.Add(this.groupBoxDiscussionsView);
          this.tabPageSettingsUserInterface.Controls.Add(this.groupBoxNewDiscussionViewUI);
@@ -1750,10 +1758,92 @@ namespace mrHelper.App.Forms
          this.tabPageSettingsUserInterface.Text = "User Interface";
          this.tabPageSettingsUserInterface.UseVisualStyleBackColor = true;
          // 
+         // groupBoxColors
+         // 
+         this.groupBoxColors.Controls.Add(this.linkLabelResetAllColors);
+         this.groupBoxColors.Controls.Add(this.linkLabelResetToFactoryValue);
+         this.groupBoxColors.Controls.Add(this.labelColorSelector);
+         this.groupBoxColors.Controls.Add(this.comboBoxColorSelector);
+         this.groupBoxColors.Controls.Add(this.listBoxColorSchemeItemSelector);
+         this.groupBoxColors.Controls.Add(this.comboBoxColorSchemes);
+         this.groupBoxColors.Controls.Add(this.labelColorScheme);
+         this.groupBoxColors.Location = new System.Drawing.Point(6, 112);
+         this.groupBoxColors.Name = "groupBoxColors";
+         this.groupBoxColors.Size = new System.Drawing.Size(577, 210);
+         this.groupBoxColors.TabIndex = 30;
+         this.groupBoxColors.TabStop = false;
+         this.groupBoxColors.Text = "New Discussion Dialog";
+         // 
+         // linkLabelResetToFactoryValue
+         // 
+         this.linkLabelResetToFactoryValue.AutoSize = true;
+         this.linkLabelResetToFactoryValue.Location = new System.Drawing.Point(442, 73);
+         this.linkLabelResetToFactoryValue.Name = "linkLabelResetToFactoryValue";
+         this.linkLabelResetToFactoryValue.Size = new System.Drawing.Size(104, 13);
+         this.linkLabelResetToFactoryValue.TabIndex = 24;
+         this.linkLabelResetToFactoryValue.TabStop = true;
+         this.linkLabelResetToFactoryValue.Text = "Reset selected color";
+         this.toolTip.SetToolTip(this.linkLabelResetToFactoryValue, "Reset selected color modification");
+         this.linkLabelResetToFactoryValue.Visible = false;
+         this.linkLabelResetToFactoryValue.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelResetToFactoyValue_LinkClicked);
+         // 
+         // labelColorSelector
+         // 
+         this.labelColorSelector.AutoSize = true;
+         this.labelColorSelector.Location = new System.Drawing.Point(345, 52);
+         this.labelColorSelector.Name = "labelColorSelector";
+         this.labelColorSelector.Size = new System.Drawing.Size(91, 13);
+         this.labelColorSelector.TabIndex = 22;
+         this.labelColorSelector.Text = "Background color";
+         // 
+         // comboBoxColorSelector
+         // 
+         this.comboBoxColorSelector.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+         this.comboBoxColorSelector.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxColorSelector.FormattingEnabled = true;
+         this.comboBoxColorSelector.Location = new System.Drawing.Point(445, 49);
+         this.comboBoxColorSelector.Name = "comboBoxColorSelector";
+         this.comboBoxColorSelector.Size = new System.Drawing.Size(126, 21);
+         this.comboBoxColorSelector.TabIndex = 21;
+         this.comboBoxColorSelector.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.comboBoxColorSelector_DrawItem);
+         this.comboBoxColorSelector.SelectedIndexChanged += new System.EventHandler(this.comboBoxColorSelector_SelectedIndexChanged);
+         // 
+         // listBoxColorSchemeItemSelector
+         // 
+         this.listBoxColorSchemeItemSelector.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
+         this.listBoxColorSchemeItemSelector.FormattingEnabled = true;
+         this.listBoxColorSchemeItemSelector.Location = new System.Drawing.Point(9, 49);
+         this.listBoxColorSchemeItemSelector.Name = "listBoxColorSchemeItemSelector";
+         this.listBoxColorSchemeItemSelector.Size = new System.Drawing.Size(330, 147);
+         this.listBoxColorSchemeItemSelector.TabIndex = 20;
+         this.listBoxColorSchemeItemSelector.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listBoxColorSchemeItemSelector_DrawItem);
+         this.listBoxColorSchemeItemSelector.MeasureItem += new System.Windows.Forms.MeasureItemEventHandler(this.listBoxColorSchemeItemSelector_MeasureItem);
+         this.listBoxColorSchemeItemSelector.SelectedIndexChanged += new System.EventHandler(this.listBoxColorSchemeItemSelector_SelectedIndexChanged);
+         this.listBoxColorSchemeItemSelector.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.listBoxColorSchemeItemSelector_Format);
+         // 
+         // comboBoxColorSchemes
+         // 
+         this.comboBoxColorSchemes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxColorSchemes.FormattingEnabled = true;
+         this.comboBoxColorSchemes.Location = new System.Drawing.Point(106, 19);
+         this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
+         this.comboBoxColorSchemes.Size = new System.Drawing.Size(182, 21);
+         this.comboBoxColorSchemes.TabIndex = 18;
+         this.comboBoxColorSchemes.SelectedIndexChanged += new System.EventHandler(this.comboBoxColorSchemes_SelectedIndexChanged);
+         // 
+         // labelColorScheme
+         // 
+         this.labelColorScheme.AutoSize = true;
+         this.labelColorScheme.Location = new System.Drawing.Point(6, 22);
+         this.labelColorScheme.Name = "labelColorScheme";
+         this.labelColorScheme.Size = new System.Drawing.Size(71, 13);
+         this.labelColorScheme.TabIndex = 14;
+         this.labelColorScheme.Text = "Color scheme";
+         // 
          // groupBoxOtherUI
          // 
          this.groupBoxOtherUI.Controls.Add(this.checkBoxDisableSplitterRestrictions);
-         this.groupBoxOtherUI.Location = new System.Drawing.Point(6, 320);
+         this.groupBoxOtherUI.Location = new System.Drawing.Point(6, 536);
          this.groupBoxOtherUI.Name = "groupBoxOtherUI";
          this.groupBoxOtherUI.Size = new System.Drawing.Size(577, 46);
          this.groupBoxOtherUI.TabIndex = 29;
@@ -1767,7 +1857,7 @@ namespace mrHelper.App.Forms
          this.groupBoxDiscussionsView.Controls.Add(this.checkBoxFlatReplies);
          this.groupBoxDiscussionsView.Controls.Add(this.labelDepth);
          this.groupBoxDiscussionsView.Controls.Add(this.comboBoxDCDepth);
-         this.groupBoxDiscussionsView.Location = new System.Drawing.Point(6, 171);
+         this.groupBoxDiscussionsView.Location = new System.Drawing.Point(6, 387);
          this.groupBoxDiscussionsView.Name = "groupBoxDiscussionsView";
          this.groupBoxDiscussionsView.Size = new System.Drawing.Size(577, 143);
          this.groupBoxDiscussionsView.TabIndex = 28;
@@ -1813,7 +1903,7 @@ namespace mrHelper.App.Forms
          // groupBoxNewDiscussionViewUI
          // 
          this.groupBoxNewDiscussionViewUI.Controls.Add(this.checkBoxNewDiscussionIsTopMostForm);
-         this.groupBoxNewDiscussionViewUI.Location = new System.Drawing.Point(6, 112);
+         this.groupBoxNewDiscussionViewUI.Location = new System.Drawing.Point(6, 328);
          this.groupBoxNewDiscussionViewUI.Name = "groupBoxNewDiscussionViewUI";
          this.groupBoxNewDiscussionViewUI.Size = new System.Drawing.Size(577, 53);
          this.groupBoxNewDiscussionViewUI.TabIndex = 27;
@@ -1824,8 +1914,6 @@ namespace mrHelper.App.Forms
          // 
          this.groupBoxGeneral.Controls.Add(this.comboBoxRecentMergeRequestsPerProjectCount);
          this.groupBoxGeneral.Controls.Add(this.labelRecentMergeRequestsPerProjectCount);
-         this.groupBoxGeneral.Controls.Add(this.comboBoxColorSchemes);
-         this.groupBoxGeneral.Controls.Add(this.labelColorScheme);
          this.groupBoxGeneral.Controls.Add(this.labelVisualTheme);
          this.groupBoxGeneral.Controls.Add(this.comboBoxThemes);
          this.groupBoxGeneral.Controls.Add(this.comboBoxFonts);
@@ -1845,25 +1933,6 @@ namespace mrHelper.App.Forms
          this.labelRecentMergeRequestsPerProjectCount.Size = new System.Drawing.Size(170, 13);
          this.labelRecentMergeRequestsPerProjectCount.TabIndex = 27;
          this.labelRecentMergeRequestsPerProjectCount.Text = "Recent merge requests per project";
-         // 
-         // comboBoxColorSchemes
-         // 
-         this.comboBoxColorSchemes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-         this.comboBoxColorSchemes.FormattingEnabled = true;
-         this.comboBoxColorSchemes.Location = new System.Drawing.Point(106, 68);
-         this.comboBoxColorSchemes.Name = "comboBoxColorSchemes";
-         this.comboBoxColorSchemes.Size = new System.Drawing.Size(182, 21);
-         this.comboBoxColorSchemes.TabIndex = 18;
-         this.comboBoxColorSchemes.SelectionChangeCommitted += new System.EventHandler(this.comboBoxColorSchemes_SelectionChangeCommited);
-         // 
-         // labelColorScheme
-         // 
-         this.labelColorScheme.AutoSize = true;
-         this.labelColorScheme.Location = new System.Drawing.Point(6, 71);
-         this.labelColorScheme.Name = "labelColorScheme";
-         this.labelColorScheme.Size = new System.Drawing.Size(71, 13);
-         this.labelColorScheme.TabIndex = 14;
-         this.labelColorScheme.Text = "Color scheme";
          // 
          // labelVisualTheme
          // 
@@ -2494,6 +2563,19 @@ namespace mrHelper.App.Forms
          this.labelConnectionStatus.TabIndex = 0;
          this.labelConnectionStatus.Text = "Not connected";
          // 
+         // linkLabelResetAllColors
+         // 
+         this.linkLabelResetAllColors.AutoSize = true;
+         this.linkLabelResetAllColors.Location = new System.Drawing.Point(346, 22);
+         this.linkLabelResetAllColors.Name = "linkLabelResetAllColors";
+         this.linkLabelResetAllColors.Size = new System.Drawing.Size(79, 13);
+         this.linkLabelResetAllColors.TabIndex = 25;
+         this.linkLabelResetAllColors.TabStop = true;
+         this.linkLabelResetAllColors.Text = "Reset all colors";
+         this.toolTip.SetToolTip(this.linkLabelResetAllColors, "Reset selected color scheme modifications");
+         this.linkLabelResetAllColors.Visible = false;
+         this.linkLabelResetAllColors.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelResetAllColors_LinkClicked);
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2529,6 +2611,8 @@ namespace mrHelper.App.Forms
          this.groupBoxFileStorageType.ResumeLayout(false);
          this.groupBoxFileStorageType.PerformLayout();
          this.tabPageSettingsUserInterface.ResumeLayout(false);
+         this.groupBoxColors.ResumeLayout(false);
+         this.groupBoxColors.PerformLayout();
          this.groupBoxOtherUI.ResumeLayout(false);
          this.groupBoxOtherUI.PerformLayout();
          this.groupBoxDiscussionsView.ResumeLayout(false);
@@ -2781,6 +2865,12 @@ namespace mrHelper.App.Forms
       private Label labelRecentMergeRequestsPerProjectCount;
       private Panel panelConnectionStatus;
       private Label labelConnectionStatus;
+      private GroupBox groupBoxColors;
+      private Label labelColorSelector;
+      private ComboBox comboBoxColorSelector;
+      private ListBox listBoxColorSchemeItemSelector;
+      private LinkLabel linkLabelResetToFactoryValue;
+      private LinkLabel linkLabelResetAllColors;
    }
 }
 

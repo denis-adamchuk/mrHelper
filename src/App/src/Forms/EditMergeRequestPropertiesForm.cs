@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using GitLabSharp.Entities;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 
@@ -64,6 +66,8 @@ namespace mrHelper.App.Forms
 
          checkBoxSquash.Checked = _initialMergeRequest.Squash;
          checkBoxDeleteSourceBranch.Checked = _initialMergeRequest.Force_Remove_Source_Branch;
+         checkBoxHighPriority.Checked = _initialMergeRequest.Labels
+            .Any(label => label == Constants.HighPriorityLabel);
          updateControls();
       }
 

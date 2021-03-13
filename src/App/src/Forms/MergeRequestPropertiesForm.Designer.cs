@@ -41,6 +41,7 @@
          this.buttonEditDescription = new System.Windows.Forms.Button();
          this.htmlPanelDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.groupBoxOptions = new System.Windows.Forms.GroupBox();
+         this.checkBoxHighPriority = new System.Windows.Forms.CheckBox();
          this.labelSpecialNotePrefix = new System.Windows.Forms.Label();
          this.labelAssignee = new System.Windows.Forms.Label();
          this.textBoxAssigneeUsername = new System.Windows.Forms.TextBox();
@@ -193,6 +194,7 @@
          // 
          this.groupBoxOptions.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+         this.groupBoxOptions.Controls.Add(this.checkBoxHighPriority);
          this.groupBoxOptions.Controls.Add(this.labelSpecialNotePrefix);
          this.groupBoxOptions.Controls.Add(this.labelAssignee);
          this.groupBoxOptions.Controls.Add(this.textBoxAssigneeUsername);
@@ -205,6 +207,18 @@
          this.groupBoxOptions.TabIndex = 5;
          this.groupBoxOptions.TabStop = false;
          this.groupBoxOptions.Text = "Options";
+         // 
+         // checkBoxHighPriority
+         // 
+         this.checkBoxHighPriority.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.checkBoxHighPriority.AutoSize = true;
+         this.checkBoxHighPriority.ForeColor = System.Drawing.Color.Red;
+         this.checkBoxHighPriority.Location = new System.Drawing.Point(366, 19);
+         this.checkBoxHighPriority.Name = "checkBoxHighPriority";
+         this.checkBoxHighPriority.Size = new System.Drawing.Size(102, 17);
+         this.checkBoxHighPriority.TabIndex = 12;
+         this.checkBoxHighPriority.Text = "High-Priority MR";
+         this.checkBoxHighPriority.UseVisualStyleBackColor = true;
          // 
          // labelSpecialNotePrefix
          // 
@@ -362,5 +376,6 @@
       protected System.Windows.Forms.TextBox textBoxAssigneeUsername;
       protected mrHelper.CommonControls.Controls.TextBoxWithUserAutoComplete textBoxSpecialNote;
       protected System.Windows.Forms.Label labelSpecialNotePrefix;
+      protected System.Windows.Forms.CheckBox checkBoxHighPriority;
    }
 }

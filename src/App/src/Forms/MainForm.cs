@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
-using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.CustomActions;
@@ -31,8 +30,6 @@ namespace mrHelper.App.Forms
 
       private static readonly string DefaultColorSchemeName = "Default";
       private static readonly string ColorSchemeFileNamePrefix = "colors.json";
-      private static readonly string IconSchemeFileName = "icons.json";
-      private static readonly string BadgeSchemeFileName = "badges.json";
       private static readonly string ProjectListFileName = "projects.json";
 
       private static readonly string openFromClipboardEnabledText = "Open from Clipboard";
@@ -57,6 +54,7 @@ namespace mrHelper.App.Forms
       private bool _applicationUpdateNotificationPostponedTillTimerStop;
       private bool _applicationUpdateReminderPostponedTillTimerStop;
 
+      private readonly Dictionary<Color, IconGroup> _iconCache = new Dictionary<Color, IconGroup>();
       private readonly PeriodicUpdateChecker _applicationUpdateChecker;
       private readonly bool _startMinimized;
       private readonly TrayIcon _trayIcon;
@@ -118,8 +116,6 @@ namespace mrHelper.App.Forms
       private string _initialHostName;
       private IEnumerable<string> _keywords;
       private ColorScheme _colorScheme;
-      private Dictionary<string, string> _iconScheme;
-      private Dictionary<string, string> _badgeScheme;
 
       private class HostComboBoxItem
       {
@@ -153,6 +149,39 @@ namespace mrHelper.App.Forms
          internal DateTime TimeStamp { get; }
       }
       private LostConnectionInfo? _lostConnectionInfo;
+
+      private class ColorSelectorComboBoxItem
+      {
+         internal ColorSelectorComboBoxItem(string humanFriendlyName, Color color)
+         {
+            HumanFriendlyName = humanFriendlyName;
+            Color = color;
+         }
+
+         /// <summary>
+         /// ToString() override for ComboBox item sorting purpose
+         /// </summary>
+         public override string ToString()
+         {
+            return HumanFriendlyName;
+         }
+
+         internal string HumanFriendlyName { get; }
+
+         internal Color Color { get; }
+      }
+
+      private struct IconGroup
+      {
+         internal IconGroup(Icon iconWithoutBorder, Icon iconWithBorder)
+         {
+            IconWithoutBorder = iconWithoutBorder;
+            IconWithBorder = iconWithBorder;
+         }
+
+         internal Icon IconWithoutBorder { get; }
+         internal Icon IconWithBorder { get; }
+      }
    }
 }
 

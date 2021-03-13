@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Xml;
-using mrHelper.Common.Interfaces;
-using mrHelper.Common.Exceptions;
+using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace mrHelper.CustomActions
 {
@@ -48,18 +46,18 @@ namespace mrHelper.CustomActions
 
          XmlDocument document = new XmlDocument();
          document.Load(filename);
-         XmlNode commands = document.SelectSingleNode("Commands");
-         foreach (XmlNode child in commands.ChildNodes)
+         XmlNode xmlNodeCommands = document.SelectSingleNode("Commands");
+         foreach (XmlNode child in xmlNodeCommands.ChildNodes)
          {
-            XmlNode command = child.SelectSingleNode("Command");
-            if (command == null)
+            XmlNode xmlNodeCommand = child.SelectSingleNode("Command");
+            if (xmlNodeCommand == null)
             {
                Trace.TraceInformation(String.Format("Missing \"Command\" node in node {0}, ignoring it", child.Name));
                continue;
             }
 
-            XmlNode name = command.Attributes.GetNamedItem("Name");
-            if (name == null)
+            XmlNode xmlNodeName = xmlNodeCommand.Attributes.GetNamedItem("Name");
+            if (xmlNodeName == null)
             {
                Trace.TraceInformation(
                  String.Format("Missing \"Name\" attribute in \"Command\" node of node {0}, ignoring this command",
@@ -67,62 +65,98 @@ namespace mrHelper.CustomActions
                continue;
             }
 
-            XmlNode obj = command.FirstChild;
-            if (obj == null)
+            List<ISubCommand> subcommands = new List<ISubCommand>();
+            foreach (XmlNode obj in xmlNodeCommand.ChildNodes)
             {
-               Trace.TraceInformation(
-                 String.Format("No child nodes in \"Command\" node of node {0}, ignoring this command", child.Name));
-               continue;
+               if (obj == null)
+               {
+                  Trace.TraceInformation(
+                    String.Format("No child nodes in \"Command\" node of node {0}, ignoring this command", child.Name));
+                  continue;
+               }
+
+               ISubCommand subcommand = null;
+               if (obj.Name == "SendNote")
+               {
+                  subcommand = createSendNoteCommand(obj.Attributes);
+               }
+               else if (obj.Name == "MergeRequestEndPointPOST")
+               {
+                  subcommand = createEndPointPOSTCommand(obj.Attributes);
+               }
+               else if (obj.Name == "AddLabelToMergeRequest")
+               {
+                  subcommand = createAddLabelToMergeRequestCommand(obj.Attributes);
+               }
+               else
+               {
+                  Trace.TraceInformation(
+                    String.Format("Unknown action type \"{0}\" in node {1}, ignoring this command", obj.Name, child.Name));
+               }
+
+               if (subcommand != null)
+               {
+                  subcommands.Add(subcommand);
+               }
             }
 
-            if (obj.Name == "SendNote")
+            if (subcommands.Count > 0)
             {
-               XmlNode body = obj.Attributes.GetNamedItem("Body");
-               XmlNode enabledIf = command.Attributes.GetNamedItem("EnabledIf");
-               XmlNode visibleIf = command.Attributes.GetNamedItem("VisibleIf");
-               XmlNode stopTimer = command.Attributes.GetNamedItem("StopTimer");
-               XmlNode reload = command.Attributes.GetNamedItem("Reload");
-               XmlNode hint = command.Attributes.GetNamedItem("Hint");
-               XmlNode initiallyVisible = command.Attributes.GetNamedItem("InitiallyVisible");
-               results.Add(new SendNoteCommand(
-                  _callback,
-                  name.Value,
-                  body.Value,
-                  enabledIf?.Value ?? String.Empty,
-                  visibleIf?.Value ?? String.Empty,
-                  (stopTimer?.Value ?? "0") == "1",
-                  (reload?.Value ?? "0") == "1",
-                  hint?.Value ?? String.Empty,
-                  (initiallyVisible?.Value ?? "0") == "1"));
-            }
-            else if (obj.Name == "MergeRequestEndPointPOST")
-            {
-               XmlNode endpoint = obj.Attributes.GetNamedItem("EndPoint");
-               XmlNode enabledIf = command.Attributes.GetNamedItem("EnabledIf");
-               XmlNode visibleIf = command.Attributes.GetNamedItem("VisibleIf");
-               XmlNode stopTimer = command.Attributes.GetNamedItem("StopTimer");
-               XmlNode reload = command.Attributes.GetNamedItem("Reload");
-               XmlNode hint = command.Attributes.GetNamedItem("Hint");
-               XmlNode initiallyVisible = command.Attributes.GetNamedItem("InitiallyVisible");
-               results.Add(new MergeRequestEndPointPOSTCommand(
-                  _callback,
-                  name.Value,
-                  endpoint.Value,
-                  enabledIf?.Value ?? String.Empty,
-                  visibleIf?.Value ?? String.Empty,
-                  (stopTimer?.Value ?? "0") == "1",
-                  (reload?.Value ?? "0") == "1",
-                  hint?.Value ?? String.Empty,
-                  (initiallyVisible?.Value ?? "0") == "1"));
-            }
-            else
-            {
-               Trace.TraceInformation(
-                 String.Format("Unknown action type \"{0}\" in node {1}, ignoring this command", obj.Name, child.Name));
+               results.Add(createCompositeCommand(subcommands, xmlNodeCommand.Attributes, xmlNodeName.Value));
             }
          }
 
          return results;
+      }
+
+      private ISubCommand createSendNoteCommand(XmlAttributeCollection attributes)
+      {
+         XmlNode body = attributes.GetNamedItem("Body");
+         if (body == null)
+         {
+            return null;
+         }
+         return new SendNoteCommand(_callback, body.Value);
+      }
+
+      private ISubCommand createEndPointPOSTCommand(XmlAttributeCollection attributes)
+      {
+         XmlNode endpoint = attributes.GetNamedItem("EndPoint");
+         if (endpoint == null)
+         {
+            return null;
+         }
+         return new MergeRequestEndPointPOSTCommand(_callback, endpoint.Value);
+      }
+
+      private ISubCommand createAddLabelToMergeRequestCommand(XmlAttributeCollection attributes)
+      {
+         XmlNode label = attributes.GetNamedItem("Label");
+         if (label == null)
+         {
+            return null;
+         }
+         return new AddLabelToMergeRequestCommand(_callback, label.Value);
+      }
+
+      private ICommand createCompositeCommand(
+         IEnumerable<ISubCommand> commands, XmlAttributeCollection attributes, string name)
+      {
+         XmlNode enabledIf = attributes.GetNamedItem("EnabledIf");
+         XmlNode visibleIf = attributes.GetNamedItem("VisibleIf");
+         XmlNode stopTimer = attributes.GetNamedItem("StopTimer");
+         XmlNode reload = attributes.GetNamedItem("Reload");
+         XmlNode hint = attributes.GetNamedItem("Hint");
+         XmlNode initiallyVisible = attributes.GetNamedItem("InitiallyVisible");
+         return new CompositeCommand(
+                           commands,
+                           name,
+                           enabledIf?.Value ?? String.Empty,
+                           visibleIf?.Value ?? String.Empty,
+                           (stopTimer?.Value ?? "0") == "1",
+                           (reload?.Value ?? "0") == "1",
+                           hint?.Value ?? String.Empty,
+                           (initiallyVisible?.Value ?? "0") == "1");
       }
 
       private readonly ICommandCallback _callback;

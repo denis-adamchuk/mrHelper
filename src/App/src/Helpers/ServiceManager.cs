@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Tools;
 using Newtonsoft.Json;
@@ -12,11 +13,12 @@ namespace mrHelper.App.Helpers
       public ServiceManager()
       {
          // Check if file exists. If it does not, it is not an error.
-         if (System.IO.File.Exists(ServiceListFileName))
+         string filepath = Path.Combine(Directory.GetCurrentDirectory(), ServiceListFileName);
+         if (System.IO.File.Exists(filepath))
          {
             try
             {
-               _services = JsonUtils.LoadFromFile<Service[]>(ServiceListFileName);
+               _services = JsonUtils.LoadFromFile<Service[]>(filepath);
             }
             catch (Exception ex) // whatever de-serialization exception
             {

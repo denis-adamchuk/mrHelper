@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Diagnostics;
 using System.Windows.Forms;
 using mrHelper.App.Helpers;
@@ -74,10 +75,6 @@ namespace mrHelper.App.Forms
          createRecentDataCache();
          subscribeToRecentDataCache();
 
-         initializeColorScheme();
-         initializeIconScheme();
-         initializeBadgeScheme();
-
          Trace.TraceInformation(String.Format(
             "[Mainform] Connecting to URL on startup {0}", _startUrl?.ToString() ?? "null"));
          reconnect(_startUrl);
@@ -139,7 +136,8 @@ namespace mrHelper.App.Forms
          updateCaption();
          updateTabControlSelection();
          updateHostsDropdownList();
-         fillColorSchemesList();
+         fillColorList();
+         fillColorSchemeList();
          prepareControlsToStart();
          prepareSizeToStart();
          selectHost(PreferredSelection.Initial);
@@ -147,11 +145,13 @@ namespace mrHelper.App.Forms
 
       private void initializeKeywords()
       {
-         if (System.IO.File.Exists(Constants.KeywordsFileName))
+         string filepath = Path.Combine(
+            Directory.GetCurrentDirectory(), Constants.KeywordsFileName);
+         if (System.IO.File.Exists(filepath))
          {
             try
             {
-               _keywords = JsonUtils.LoadFromFile<string[]>(Constants.KeywordsFileName);
+               _keywords = JsonUtils.LoadFromFile<string[]>(filepath);
             }
             catch (Exception ex) // whatever de-serialization exception
             {
@@ -317,6 +317,8 @@ namespace mrHelper.App.Forms
 
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          _expressionResolver = new ExpressionResolver(dataCache);
+         selectColorScheme(); // requires ExpressionResolver
+
          _eventFilter = new EventFilter(Program.Settings, dataCache, _mergeRequestFilter);
          _userNotifier = new UserNotifier(dataCache, _eventFilter, _trayIcon);
       }

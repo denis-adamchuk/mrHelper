@@ -1,15 +1,35 @@
 ﻿using System;
-using System.Collections;
+using System.Linq;
 using System.Collections.Generic;
 using System.Drawing;
+using Newtonsoft.Json;
 using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Helpers
 {
+   internal class ColorSchemeItem
+   {
+      internal ColorSchemeItem(string name, string displayName,
+         IEnumerable<string> conditions, Color color, Color factoryColor)
+      {
+         Name = name;
+         DisplayName = displayName;
+         Conditions = conditions;
+         Color = color;
+         FactoryColor = factoryColor;
+      }
+
+      internal string Name { get; }
+      internal string DisplayName { get; }
+      internal IEnumerable<string> Conditions { get; }
+      internal Color Color { get; }
+      internal Color FactoryColor { get; }
+   }
+
    /// <summary>
    /// Represents a color scheme used in the application
    /// </summary>
-   internal class ColorScheme : IEnumerable<KeyValuePair<string, Color>>
+   internal class ColorScheme
    {
       /// <summary>
       /// Create an empty scheme
@@ -21,78 +41,145 @@ namespace mrHelper.App.Helpers
       /// <summary>
       /// Read scheme from file
       /// Throws ArgumentException
-      /// Throws ArgumentNullException
-      /// Throws InvalidOperationException
       /// </summary>
       internal ColorScheme(string filename, ExpressionResolver expressionResolver)
       {
          _expressionResolver = expressionResolver;
+         initializeFromFile(filename);
+      }
 
+      internal ColorSchemeItem GetColor(string name)
+      {
+         var item = _colors.SelectMany(g => g.Value).FirstOrDefault(i => i.Name == name);
+         if (item == null)
+         {
+            return null;
+         }
+
+         Color color = getCustomColor(name) ?? item.Color;
+         return new ColorSchemeItem(item.Name, item.DisplayName, item.Conditions, color, item.Color);
+      }
+
+      internal ColorSchemeItem[] GetColors(string groupName)
+      {
+         if (!_colors.ContainsKey(groupName))
+         {
+            return Array.Empty<ColorSchemeItem>();
+         }
+         return _colors[groupName]
+            .Select(item =>
+            {
+               IEnumerable<string> resolvedConditions = item.Conditions?
+                  .Select(condition => _expressionResolver.Resolve(condition)) ?? Array.Empty<string>();
+               Color color = getCustomColor(item.Name) ?? item.Color;
+               return new ColorSchemeItem(item.Name, item.DisplayName, resolvedConditions, color, item.Color);
+            })
+            .ToArray();
+      }
+
+      private Color? getCustomColor(string name)
+      {
+         if (Program.Settings.CustomColors.TryGetValue(name, out string value))
+         {
+            Color? color = readColorFromText(value);
+            if (color.HasValue)
+            {
+               return color.Value;
+            }
+         }
+         return null;
+      }
+
+      private void initializeColor(string groupName, string name, string displayName,
+         IEnumerable<string> conditions, Color color)
+      {
+         ColorSchemeItem newItem = new ColorSchemeItem(name, displayName, conditions, color, color);
+         if (!_colors.ContainsKey(groupName))
+         {
+            _colors.Add(groupName, new List<ColorSchemeItem>());
+         }
+         _colors[groupName].Add(newItem);
+      }
+
+      private void initializeFromFile(string filename)
+      {
          if (!System.IO.File.Exists(filename))
          {
             throw new ArgumentException(String.Format("Cannot find file \"{0}\"", filename));
          }
 
-         Dictionary<string, object> colors = JsonUtils.LoadFromFile<Dictionary<string, object>>(filename);
-         foreach (KeyValuePair<string, object> record in colors)
+         ColorGroup[] groups = JsonUtils.LoadFromFile<ColorGroup[]>(filename);
+         foreach (ColorGroup g in groups)
          {
-            string[] rgbs = record.Value.ToString().Split(',');
-            if (rgbs.Length != 3)
+            foreach (ColorItem i in g.Colors)
             {
-               continue;
-            }
-
-            if (!int.TryParse(rgbs[0], out int r)
-             || !int.TryParse(rgbs[1], out int g)
-             || !int.TryParse(rgbs[2], out int b))
-            {
-               continue;
-            }
-
-            setColor(record.Key, Color.FromArgb(r, g, b));
-         }
-      }
-
-      internal Color GetColorOrDefault(string name, Color defaultColor)
-      {
-         return findColor<Color>(name, (x) => x, () => defaultColor);
-      }
-
-      public IEnumerator<KeyValuePair<string, Color>> GetEnumerator()
-      {
-         foreach (KeyValuePair<string, Color> color in _colors)
-         {
-            string resolvedKey = _expressionResolver.Resolve(color.Key);
-            KeyValuePair<string, Color> keyValuePair = new KeyValuePair<string, Color>(resolvedKey, color.Value);
-            yield return keyValuePair;
-         }
-      }
-
-      IEnumerator IEnumerable.GetEnumerator()
-      {
-         return GetEnumerator();
-      }
-
-      private T findColor<T>(string name, Func<Color, T> found, Func<T> notFound)
-      {
-         foreach (KeyValuePair<string, Color> color in _colors)
-         {
-            string resolvedKey = _expressionResolver.Resolve(color.Key);
-            if (name == resolvedKey)
-            {
-               return found(color.Value);
+               Color? colorOpt = readColorFromText(i.Factory);
+               if (colorOpt.HasValue)
+               {
+                  initializeColor(g.Group, i.Name, i.Display_Name, i.Conditions, colorOpt.Value);
+               }
             }
          }
-
-         return notFound();
       }
 
-      private void setColor(string name, Color color)
+      private Color? readColorFromText(string text)
       {
-         _colors[name] = color;
+         string[] rgbs = text.Split(',');
+         if (rgbs.Length == 1)
+         {
+            try
+            {
+               return Color.FromName(rgbs[0]);
+            }
+            catch (ArgumentException)
+            {
+               return null;
+            }
+         }
+         else if (rgbs.Length == 3
+            && int.TryParse(rgbs[0], out int r)
+            && int.TryParse(rgbs[1], out int g)
+            && int.TryParse(rgbs[2], out int b))
+         {
+            return Color.FromArgb(r, g, b);
+         }
+         else if (rgbs.Length == 4
+            && int.TryParse(rgbs[0], out int aa)
+            && int.TryParse(rgbs[1], out int rr)
+            && int.TryParse(rgbs[2], out int gg)
+            && int.TryParse(rgbs[3], out int bb))
+         {
+            return Color.FromArgb(aa, rr, gg, bb);
+         }
+         return null;
       }
 
-      private readonly Dictionary<string, Color> _colors = new Dictionary<string, Color>();
+      private readonly Dictionary<string, List<ColorSchemeItem>> _colors =
+         new Dictionary<string, List<ColorSchemeItem>>();
+
+      internal class ColorItem
+      {
+         [JsonProperty]
+         public string Name { get; protected set; }
+
+         [JsonProperty]
+         public string Display_Name { get; protected set; }
+
+         [JsonProperty]
+         public IEnumerable<string> Conditions { get; protected set; }
+
+         [JsonProperty]
+         public string Factory { get; protected set; }
+      }
+
+      private class ColorGroup
+      {
+         [JsonProperty]
+         public string Group { get; protected set; }
+
+         [JsonProperty]
+         public IEnumerable<ColorItem> Colors { get; protected set; }
+      }
 
       private readonly ExpressionResolver _expressionResolver;
    }

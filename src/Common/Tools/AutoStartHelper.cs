@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using System.Diagnostics;
+using Microsoft.Win32;
 
 namespace mrHelper.Common.Tools
 {
@@ -6,17 +7,26 @@ namespace mrHelper.Common.Tools
    {
       static public void ApplyAutostartSetting(bool enabled, string appName, string command)
       {
-         string currentCommand = getAutostartCommand(appName);
-         if (enabled)
+         try
          {
-            if (currentCommand == null || currentCommand != command)
+            string currentCommand = getAutostartCommand(appName);
+            if (enabled)
             {
-               setAutostartCommand(appName, command);
+               if (currentCommand == null || currentCommand != command)
+               {
+                  setAutostartCommand(appName, command);
+               }
+            }
+            else if (currentCommand != null)
+            {
+               delAutostartCommand(appName);
             }
          }
-         else if (currentCommand != null)
+         catch (System.Exception ex)
          {
-            delAutostartCommand(appName);
+            Trace.TraceError(
+               "[AutoStartHelper] An exception occurred on attempt to access the registry: {0}",
+               ex.ToString());
          }
       }
 
