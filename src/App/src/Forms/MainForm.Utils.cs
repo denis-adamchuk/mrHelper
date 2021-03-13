@@ -352,7 +352,7 @@ namespace mrHelper.App.Forms
          }
 
          left = revisionBrowser.GetBaseCommitSha();
-         right = selected[0];
+         right =  selected[selected.Count() - 1];
          included = revisionBrowser.GetIncludedSha();
       }
 
