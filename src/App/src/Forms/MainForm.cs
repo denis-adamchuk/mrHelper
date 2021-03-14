@@ -22,8 +22,8 @@ namespace mrHelper.App.Forms
       private static readonly int TimeTrackingTimerInterval = 1000 * 1; // 1 second
       private static readonly int ClipboardCheckingTimerInterval = 1000 * 1; // 1 second
       private static readonly int ProjectAndUserCacheCheckTimerInterval = 1000 * 1; // 1 second
-      private static readonly int ListViewRefreshTimerInterval = 1000 * 20; // 20 seconds
       private static readonly int NewVersionReminderTimerInterval = 1000 * 60 * 60 * 24; // 24 hours
+      private static readonly int RedrawTimerInterval = 1000 * 30; // 0.5 minute
 
       private static readonly string buttonStartTimerDefaultText = "Start Timer";
       private static readonly string buttonStartTimerTrackingText = "Send Spent";
@@ -72,13 +72,14 @@ namespace mrHelper.App.Forms
       {
          Interval = ClipboardCheckingTimerInterval
       };
-      private readonly Timer _listViewRefreshTimer = new Timer
-      {
-         Interval = ListViewRefreshTimerInterval
-      };
       private readonly Timer _newVersionReminderTimer = new Timer
       {
          Interval = NewVersionReminderTimerInterval
+      };
+      private readonly Timer _redrawTimer = new Timer
+      {
+         // This timer is needed to update "ago" timestamps
+         Interval = RedrawTimerInterval
       };
 
       private LocalCommitStorageFactory _storageFactory;

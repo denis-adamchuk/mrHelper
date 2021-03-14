@@ -26,6 +26,9 @@ namespace mrHelper.App.Controls
       public DiscussionPanel()
       {
          InitializeComponent();
+
+         _redrawTimer.Tick += onRedrawTimer;
+         _redrawTimer.Start();
       }
 
       internal void Initialize(
@@ -424,6 +427,13 @@ namespace mrHelper.App.Controls
          box.Visible = isAllowedToDisplay;
       }
 
+      private void onRedrawTimer(object sender, EventArgs e)
+      {
+         getAllBoxes()
+            .ToList()
+            .ForEach(box => box.RefreshTimeStamps());
+      }
+
       private User _currentUser;
       private MergeRequestKey _mergeRequestKey;
       private User _mergeRequestAuthor;
@@ -446,6 +456,14 @@ namespace mrHelper.App.Controls
          AutoPopDelay = 20000, // 20s
          InitialDelay = 300,
          // BaseStylesheet = Don't specify anything here because users' HTML <style> override it
+      };
+
+      private static readonly int RedrawTimerInterval = 1000 * 60; // 1 minute
+
+      // This timer is needed to update "ago" timestamps
+      private readonly Timer _redrawTimer = new Timer
+      {
+         Interval = RedrawTimerInterval
       };
    }
 }

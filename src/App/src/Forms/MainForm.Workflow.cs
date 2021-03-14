@@ -187,7 +187,7 @@ namespace mrHelper.App.Forms
       {
          clearCustomActionControls();
          disableLiveTabControls();
-         stopListViewRefreshTimer();
+         stopRedrawTimer();
          WinFormsHelpers.CloseAllFormsExceptOne(this);
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
@@ -226,7 +226,7 @@ namespace mrHelper.App.Forms
             _currentUser.Add(hostname, user);
          }
          Program.FeedbackReporter.SetUserEMail(user.EMail);
-         startListViewRefreshTimer();
+         startRedrawTimer();
          startEventPendingTimer(() => (dataCache?.ProjectCache?.GetProjects()?.Any() ?? false)
                                    && (dataCache?.UserCache?.GetUsers()?.Any() ?? false),
                                 ProjectAndUserCacheCheckTimerInterval,

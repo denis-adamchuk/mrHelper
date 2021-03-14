@@ -30,6 +30,10 @@
 
          _htmlTooltip.Dispose();
 
+         _redrawTimer.Tick -= onRedrawTimer;
+         _redrawTimer.Stop();
+         _redrawTimer.Dispose();
+
          base.Dispose(disposing);
       }
 

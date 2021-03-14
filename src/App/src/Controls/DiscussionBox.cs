@@ -81,6 +81,14 @@ namespace mrHelper.App.Controls
 
       internal Discussion Discussion { get; private set; }
 
+      internal void RefreshTimeStamps()
+      {
+         _noteContainers?
+            .Select(noteContainer => noteContainer?.NoteInfo)
+            .ToList()
+            .ForEach(noteInfo => noteInfo?.Refresh());
+      }
+
       async private void onMenuItemReply(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
@@ -382,6 +390,8 @@ namespace mrHelper.App.Controls
                AutoSize = true
             }
          };
+         noteContainer.NoteInfo.Invalidated += (_, __) =>
+            noteContainer.NoteInfo.Text = getNoteInformation(note);
 
          if (!isServiceDiscussionNote(note))
          {

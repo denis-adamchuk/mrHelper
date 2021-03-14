@@ -1273,6 +1273,18 @@ namespace mrHelper.App.Forms
             id++;
          }
       }
+
+      private void onRedrawTimer(object sender, EventArgs e)
+      {
+         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
+         {
+            getListView(mode).Refresh();
+         }
+
+         revisionBrowser.Refresh();
+
+         updateRefreshButtonToolTip();
+      }
    }
 }
 

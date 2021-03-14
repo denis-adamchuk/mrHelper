@@ -59,6 +59,9 @@ namespace mrHelper.App.Forms
 
          SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
          _applicationUpdateChecker = new PeriodicUpdateChecker(this);
+
+         _redrawTimer.Tick += onRedrawTimer;
+         _redrawTimer.Start();
       }
 
       private void initializeWork()
@@ -205,15 +208,16 @@ namespace mrHelper.App.Forms
          _clipboardCheckingTimer.Stop();
       }
 
-      private void startListViewRefreshTimer()
+      private void startRedrawTimer()
       {
-         _listViewRefreshTimer.Tick += (s, e) => getListView(EDataCacheType.Live).Invalidate();
-         _listViewRefreshTimer.Start();
+         _redrawTimer.Tick += onRedrawTimer;
+         _redrawTimer.Start();
       }
 
-      private void stopListViewRefreshTimer()
+      private void stopRedrawTimer()
       {
-         _listViewRefreshTimer.Stop();
+         _redrawTimer.Tick -= onRedrawTimer;
+         _redrawTimer.Stop();
       }
 
       private void subscribeToNewVersionReminderTimer()

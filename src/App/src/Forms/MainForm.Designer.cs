@@ -46,8 +46,8 @@ namespace mrHelper.App.Forms
          stopClipboardCheckTimer();
          _clipboardCheckingTimer?.Dispose();
 
-         stopListViewRefreshTimer();
-         _listViewRefreshTimer?.Dispose();
+         stopRedrawTimer();
+         _redrawTimer.Dispose();
 
          stopNewVersionReminderTimer();
          _newVersionReminderTimer?.Dispose();

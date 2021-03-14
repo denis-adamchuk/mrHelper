@@ -54,7 +54,7 @@ namespace mrHelper.App.Helpers
       {
          Name = name;
          InvertedDisplayIndex = invertedDisplayIndex;
-         TimeAgo = TimeUtils.DateTimeToStringAgo(timestamp);
+         _timestamp = timestamp;
          Timestamp = TimeUtils.DateTimeToString(timestamp);
          FullSHA = sha;
          Description = description;
@@ -62,12 +62,14 @@ namespace mrHelper.App.Helpers
       }
 
       public override string Name { get; }
-      public override string TimeAgo { get; }
+      public override string TimeAgo => TimeUtils.DateTimeToStringAgo(_timestamp);
       public int InvertedDisplayIndex { get; }
       public string FullSHA { get; }
       public string Description { get; }
       public string Timestamp { get; }
       public bool IsReviewed { get; }
+
+      private DateTime _timestamp;
    }
 }
 

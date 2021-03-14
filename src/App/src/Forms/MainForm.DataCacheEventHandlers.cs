@@ -120,6 +120,23 @@ namespace mrHelper.App.Forms
 
       private void onLiveMergeRequestListRefreshed()
       {
+         updateRefreshButtonToolTip();
+
+         // update Refreshed column
+         getListView(EDataCacheType.Live).Invalidate();
+
+         if (Program.Settings.UpdateManagerExtendedLogging)
+         {
+            DataCache dataCache = getDataCache(EDataCacheType.Live);
+            DateTime? refreshTimestamp = dataCache?.MergeRequestCache?.GetListRefreshTime();
+            Trace.TraceInformation(String.Format(
+               "[MainForm] Merge Request List refreshed at {0}",
+               refreshTimestamp.HasValue ? refreshTimestamp.Value.ToString() : "N/A"));
+         }
+      }
+
+      private void updateRefreshButtonToolTip()
+      {
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          DateTime? refreshTimestamp = dataCache?.MergeRequestCache?.GetListRefreshTime();
          string refreshedAgo = refreshTimestamp.HasValue
@@ -127,16 +144,6 @@ namespace mrHelper.App.Forms
             : String.Empty;
          toolTip.SetToolTip(this.buttonReloadList, String.Format("{0}{1}{2}",
             RefreshButtonTooltip, refreshedAgo == String.Empty ? String.Empty : "\r\n", refreshedAgo));
-
-         // update Refreshed column
-         getListView(EDataCacheType.Live).Invalidate();
-
-         if (Program.Settings.UpdateManagerExtendedLogging)
-         {
-            Trace.TraceInformation(String.Format(
-               "[MainForm] Merge Request List refreshed at {0}",
-               refreshTimestamp.HasValue ? refreshTimestamp.Value.ToString() : "N/A"));
-         }
       }
    }
 }
