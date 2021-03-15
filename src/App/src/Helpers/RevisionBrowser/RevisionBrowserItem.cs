@@ -69,7 +69,7 @@ namespace mrHelper.App.Helpers
       public string Timestamp { get; }
       public bool IsReviewed { get; }
 
-      private DateTime _timestamp;
+      private readonly DateTime _timestamp;
    }
 }
 
