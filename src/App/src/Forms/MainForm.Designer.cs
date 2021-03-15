@@ -179,6 +179,8 @@ namespace mrHelper.App.Forms
          this.columnHeaderRecentActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxRemindAboutAvailableNewVersion = new System.Windows.Forms.CheckBox();
          this.comboBoxRecentMergeRequestsPerProjectCount = new System.Windows.Forms.ComboBox();
+         this.linkLabelResetToFactoryValue = new System.Windows.Forms.LinkLabel();
+         this.linkLabelResetAllColors = new System.Windows.Forms.LinkLabel();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -199,7 +201,6 @@ namespace mrHelper.App.Forms
          this.labelLocalStorageFolder = new System.Windows.Forms.Label();
          this.tabPageSettingsUserInterface = new System.Windows.Forms.TabPage();
          this.groupBoxColors = new System.Windows.Forms.GroupBox();
-         this.linkLabelResetToFactoryValue = new System.Windows.Forms.LinkLabel();
          this.labelColorSelector = new System.Windows.Forms.Label();
          this.comboBoxColorSelector = new System.Windows.Forms.ComboBox();
          this.listBoxColorSchemeItemSelector = new System.Windows.Forms.ListBox();
@@ -265,7 +266,6 @@ namespace mrHelper.App.Forms
          this.panel1 = new System.Windows.Forms.Panel();
          this.panelConnectionStatus = new System.Windows.Forms.Panel();
          this.labelConnectionStatus = new System.Windows.Forms.Label();
-         this.linkLabelResetAllColors = new System.Windows.Forms.LinkLabel();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -1551,6 +1551,32 @@ namespace mrHelper.App.Forms
          this.toolTip.SetToolTip(this.comboBoxRecentMergeRequestsPerProjectCount, "How many recent merge requests per project to show at Recent tab");
          this.comboBoxRecentMergeRequestsPerProjectCount.SelectedIndexChanged += new System.EventHandler(this.comboBoxRecentMergeRequestsPerProjectCount_SelectedIndexChanged);
          // 
+         // linkLabelResetToFactoryValue
+         // 
+         this.linkLabelResetToFactoryValue.AutoSize = true;
+         this.linkLabelResetToFactoryValue.Location = new System.Drawing.Point(442, 73);
+         this.linkLabelResetToFactoryValue.Name = "linkLabelResetToFactoryValue";
+         this.linkLabelResetToFactoryValue.Size = new System.Drawing.Size(104, 13);
+         this.linkLabelResetToFactoryValue.TabIndex = 24;
+         this.linkLabelResetToFactoryValue.TabStop = true;
+         this.linkLabelResetToFactoryValue.Text = "Reset selected color";
+         this.toolTip.SetToolTip(this.linkLabelResetToFactoryValue, "Reset selected color modification");
+         this.linkLabelResetToFactoryValue.Visible = false;
+         this.linkLabelResetToFactoryValue.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelResetToFactoyValue_LinkClicked);
+         // 
+         // linkLabelResetAllColors
+         // 
+         this.linkLabelResetAllColors.AutoSize = true;
+         this.linkLabelResetAllColors.Location = new System.Drawing.Point(346, 22);
+         this.linkLabelResetAllColors.Name = "linkLabelResetAllColors";
+         this.linkLabelResetAllColors.Size = new System.Drawing.Size(79, 13);
+         this.linkLabelResetAllColors.TabIndex = 25;
+         this.linkLabelResetAllColors.TabStop = true;
+         this.linkLabelResetAllColors.Text = "Reset all colors";
+         this.toolTip.SetToolTip(this.linkLabelResetAllColors, "Reset selected color scheme modifications");
+         this.linkLabelResetAllColors.Visible = false;
+         this.linkLabelResetAllColors.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelResetAllColors_LinkClicked);
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1773,19 +1799,6 @@ namespace mrHelper.App.Forms
          this.groupBoxColors.TabIndex = 30;
          this.groupBoxColors.TabStop = false;
          this.groupBoxColors.Text = "New Discussion Dialog";
-         // 
-         // linkLabelResetToFactoryValue
-         // 
-         this.linkLabelResetToFactoryValue.AutoSize = true;
-         this.linkLabelResetToFactoryValue.Location = new System.Drawing.Point(442, 73);
-         this.linkLabelResetToFactoryValue.Name = "linkLabelResetToFactoryValue";
-         this.linkLabelResetToFactoryValue.Size = new System.Drawing.Size(104, 13);
-         this.linkLabelResetToFactoryValue.TabIndex = 24;
-         this.linkLabelResetToFactoryValue.TabStop = true;
-         this.linkLabelResetToFactoryValue.Text = "Reset selected color";
-         this.toolTip.SetToolTip(this.linkLabelResetToFactoryValue, "Reset selected color modification");
-         this.linkLabelResetToFactoryValue.Visible = false;
-         this.linkLabelResetToFactoryValue.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelResetToFactoyValue_LinkClicked);
          // 
          // labelColorSelector
          // 
@@ -2087,16 +2100,16 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests.AutoSize = true;
          this.checkBoxShowMergedMergeRequests.Location = new System.Drawing.Point(6, 41);
          this.checkBoxShowMergedMergeRequests.Name = "checkBoxShowMergedMergeRequests";
-         this.checkBoxShowMergedMergeRequests.Size = new System.Drawing.Size(189, 17);
+         this.checkBoxShowMergedMergeRequests.Size = new System.Drawing.Size(307, 17);
          this.checkBoxShowMergedMergeRequests.TabIndex = 19;
-         this.checkBoxShowMergedMergeRequests.Text = "Merged or closed Merge Requests";
+         this.checkBoxShowMergedMergeRequests.Text = "Merged or closed Merge Requests (project-based workflow)";
          this.checkBoxShowMergedMergeRequests.UseVisualStyleBackColor = true;
          this.checkBoxShowMergedMergeRequests.CheckedChanged += new System.EventHandler(this.checkBoxNotifications_CheckedChanged);
          // 
          // checkBoxShowServiceNotifications
          // 
          this.checkBoxShowServiceNotifications.AutoSize = true;
-         this.checkBoxShowServiceNotifications.Location = new System.Drawing.Point(231, 105);
+         this.checkBoxShowServiceNotifications.Location = new System.Drawing.Point(319, 105);
          this.checkBoxShowServiceNotifications.Name = "checkBoxShowServiceNotifications";
          this.checkBoxShowServiceNotifications.Size = new System.Drawing.Size(149, 17);
          this.checkBoxShowServiceNotifications.TabIndex = 25;
@@ -2140,7 +2153,7 @@ namespace mrHelper.App.Forms
          // checkBoxShowKeywords
          // 
          this.checkBoxShowKeywords.AutoSize = true;
-         this.checkBoxShowKeywords.Location = new System.Drawing.Point(231, 64);
+         this.checkBoxShowKeywords.Location = new System.Drawing.Point(319, 64);
          this.checkBoxShowKeywords.Name = "checkBoxShowKeywords";
          this.checkBoxShowKeywords.Size = new System.Drawing.Size(75, 17);
          this.checkBoxShowKeywords.TabIndex = 24;
@@ -2151,7 +2164,7 @@ namespace mrHelper.App.Forms
          // checkBoxShowResolvedAll
          // 
          this.checkBoxShowResolvedAll.AutoSize = true;
-         this.checkBoxShowResolvedAll.Location = new System.Drawing.Point(231, 18);
+         this.checkBoxShowResolvedAll.Location = new System.Drawing.Point(319, 18);
          this.checkBoxShowResolvedAll.Name = "checkBoxShowResolvedAll";
          this.checkBoxShowResolvedAll.Size = new System.Drawing.Size(127, 17);
          this.checkBoxShowResolvedAll.TabIndex = 22;
@@ -2162,7 +2175,7 @@ namespace mrHelper.App.Forms
          // checkBoxShowOnMention
          // 
          this.checkBoxShowOnMention.AutoSize = true;
-         this.checkBoxShowOnMention.Location = new System.Drawing.Point(231, 41);
+         this.checkBoxShowOnMention.Location = new System.Drawing.Point(319, 41);
          this.checkBoxShowOnMention.Name = "checkBoxShowOnMention";
          this.checkBoxShowOnMention.Size = new System.Drawing.Size(170, 17);
          this.checkBoxShowOnMention.TabIndex = 23;
@@ -2562,19 +2575,6 @@ namespace mrHelper.App.Forms
          this.labelConnectionStatus.Size = new System.Drawing.Size(78, 13);
          this.labelConnectionStatus.TabIndex = 0;
          this.labelConnectionStatus.Text = "Not connected";
-         // 
-         // linkLabelResetAllColors
-         // 
-         this.linkLabelResetAllColors.AutoSize = true;
-         this.linkLabelResetAllColors.Location = new System.Drawing.Point(346, 22);
-         this.linkLabelResetAllColors.Name = "linkLabelResetAllColors";
-         this.linkLabelResetAllColors.Size = new System.Drawing.Size(79, 13);
-         this.linkLabelResetAllColors.TabIndex = 25;
-         this.linkLabelResetAllColors.TabStop = true;
-         this.linkLabelResetAllColors.Text = "Reset all colors";
-         this.toolTip.SetToolTip(this.linkLabelResetAllColors, "Reset selected color scheme modifications");
-         this.linkLabelResetAllColors.Visible = false;
-         this.linkLabelResetAllColors.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelResetAllColors_LinkClicked);
          // 
          // MainForm
          // 

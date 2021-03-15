@@ -61,6 +61,8 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation("[MainForm] Configuration loaded");
          _loadingConfiguration = false;
+
+         updateRestrictionsInNotifications();
       }
 
       private void createMessageFilterFromSettings()
@@ -809,6 +811,8 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         updateRestrictionsInNotifications();
+
          if (radioButtonSelectByProjects.Checked)
          {
             ConfigurationHelper.SelectProjectBasedWorkflow(Program.Settings);
@@ -820,6 +824,12 @@ namespace mrHelper.App.Forms
 
          Trace.TraceInformation("[MainForm] Reconnecting after workflow type change");
          reconnect();
+      }
+
+      private void updateRestrictionsInNotifications()
+      {
+         checkBoxShowMergedMergeRequests.Enabled = radioButtonSelectByProjects.Checked;
+         checkBoxShowMergedMergeRequests.Checked &= radioButtonSelectByProjects.Checked;
       }
 
       private void applyGitUsageChange()
