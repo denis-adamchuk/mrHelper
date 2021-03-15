@@ -266,6 +266,7 @@ namespace mrHelper.App.Forms
          this.panel1 = new System.Windows.Forms.Panel();
          this.panelConnectionStatus = new System.Windows.Forms.Panel();
          this.labelConnectionStatus = new System.Windows.Forms.Label();
+         this.labelDiscussionsViewColorPaletteHint = new System.Windows.Forms.Label();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -1786,6 +1787,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxColors
          // 
+         this.groupBoxColors.Controls.Add(this.labelDiscussionsViewColorPaletteHint);
          this.groupBoxColors.Controls.Add(this.linkLabelResetAllColors);
          this.groupBoxColors.Controls.Add(this.linkLabelResetToFactoryValue);
          this.groupBoxColors.Controls.Add(this.labelColorSelector);
@@ -1795,10 +1797,10 @@ namespace mrHelper.App.Forms
          this.groupBoxColors.Controls.Add(this.labelColorScheme);
          this.groupBoxColors.Location = new System.Drawing.Point(6, 112);
          this.groupBoxColors.Name = "groupBoxColors";
-         this.groupBoxColors.Size = new System.Drawing.Size(577, 210);
+         this.groupBoxColors.Size = new System.Drawing.Size(577, 229);
          this.groupBoxColors.TabIndex = 30;
          this.groupBoxColors.TabStop = false;
-         this.groupBoxColors.Text = "New Discussion Dialog";
+         this.groupBoxColors.Text = "Colors";
          // 
          // labelColorSelector
          // 
@@ -1856,7 +1858,7 @@ namespace mrHelper.App.Forms
          // groupBoxOtherUI
          // 
          this.groupBoxOtherUI.Controls.Add(this.checkBoxDisableSplitterRestrictions);
-         this.groupBoxOtherUI.Location = new System.Drawing.Point(6, 536);
+         this.groupBoxOtherUI.Location = new System.Drawing.Point(6, 555);
          this.groupBoxOtherUI.Name = "groupBoxOtherUI";
          this.groupBoxOtherUI.Size = new System.Drawing.Size(577, 46);
          this.groupBoxOtherUI.TabIndex = 29;
@@ -1870,7 +1872,7 @@ namespace mrHelper.App.Forms
          this.groupBoxDiscussionsView.Controls.Add(this.checkBoxFlatReplies);
          this.groupBoxDiscussionsView.Controls.Add(this.labelDepth);
          this.groupBoxDiscussionsView.Controls.Add(this.comboBoxDCDepth);
-         this.groupBoxDiscussionsView.Location = new System.Drawing.Point(6, 387);
+         this.groupBoxDiscussionsView.Location = new System.Drawing.Point(6, 406);
          this.groupBoxDiscussionsView.Name = "groupBoxDiscussionsView";
          this.groupBoxDiscussionsView.Size = new System.Drawing.Size(577, 143);
          this.groupBoxDiscussionsView.TabIndex = 28;
@@ -1916,7 +1918,7 @@ namespace mrHelper.App.Forms
          // groupBoxNewDiscussionViewUI
          // 
          this.groupBoxNewDiscussionViewUI.Controls.Add(this.checkBoxNewDiscussionIsTopMostForm);
-         this.groupBoxNewDiscussionViewUI.Location = new System.Drawing.Point(6, 328);
+         this.groupBoxNewDiscussionViewUI.Location = new System.Drawing.Point(6, 347);
          this.groupBoxNewDiscussionViewUI.Name = "groupBoxNewDiscussionViewUI";
          this.groupBoxNewDiscussionViewUI.Size = new System.Drawing.Size(577, 53);
          this.groupBoxNewDiscussionViewUI.TabIndex = 27;
@@ -2576,6 +2578,17 @@ namespace mrHelper.App.Forms
          this.labelConnectionStatus.TabIndex = 0;
          this.labelConnectionStatus.Text = "Not connected";
          // 
+         // labelDiscussionsViewColorPaletteHint
+         // 
+         this.labelDiscussionsViewColorPaletteHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.labelDiscussionsViewColorPaletteHint.AutoSize = true;
+         this.labelDiscussionsViewColorPaletteHint.ForeColor = System.Drawing.Color.Olive;
+         this.labelDiscussionsViewColorPaletteHint.Location = new System.Drawing.Point(6, 206);
+         this.labelDiscussionsViewColorPaletteHint.Name = "labelDiscussionsViewColorPaletteHint";
+         this.labelDiscussionsViewColorPaletteHint.Size = new System.Drawing.Size(322, 13);
+         this.labelDiscussionsViewColorPaletteHint.TabIndex = 38;
+         this.labelDiscussionsViewColorPaletteHint.Text = "Discussions view color palette will be configurable in a next version";
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2871,6 +2884,7 @@ namespace mrHelper.App.Forms
       private ListBox listBoxColorSchemeItemSelector;
       private LinkLabel linkLabelResetToFactoryValue;
       private LinkLabel linkLabelResetAllColors;
+      private Label labelDiscussionsViewColorPaletteHint;
    }
 }
 
