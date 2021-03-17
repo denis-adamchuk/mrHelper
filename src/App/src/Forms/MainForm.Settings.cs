@@ -139,7 +139,7 @@ namespace mrHelper.App.Forms
          {
             // Upgrade from old versions which did not have prefix
             string host = StringUtils.GetHostWithPrefix(hosts[iKnownHost]);
-            string accessToken = Program.Settings.GetAccessToken(host);
+            string accessToken = Program.Settings.GetAccessToken(hosts[iKnownHost]);
             if (addKnownHost(host, accessToken))
             {
                newKnownHosts.Add(host);

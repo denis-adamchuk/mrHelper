@@ -38,7 +38,7 @@ namespace mrHelper.Common.Tools
          string supportedProtocolPrefix = "https://";
          string unsupportedProtocolPrefix = "http://";
 
-         host = host.ToLower();
+         host = host.ToLower().TrimEnd('/');
          if (host.StartsWith(supportedProtocolPrefix))
          {
             return host;
