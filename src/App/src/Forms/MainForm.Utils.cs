@@ -400,11 +400,6 @@ namespace mrHelper.App.Forms
          return _newMergeRequestDialogStatesByHosts.TryGetValue(hostname, out var value) ? value : factoryProperties;
       }
 
-      private bool doesClipboardContainValidUrl()
-      {
-         return UrlHelper.CheckMergeRequestUrl(getClipboardText());
-      }
-
       private string getClipboardText()
       {
          try
@@ -560,9 +555,10 @@ namespace mrHelper.App.Forms
 
       private void connectToUrlFromClipboard()
       {
-         if (doesClipboardContainValidUrl())
+         string clipboardText = getClipboardText();
+         if (UrlHelper.CheckMergeRequestUrl(clipboardText))
          {
-            string url = getClipboardText();
+            string url = clipboardText;
             Trace.TraceInformation(String.Format("[Mainform] Connecting to URL from clipboard: {0}", url.ToString()));
             reconnect(url);
          }
@@ -570,11 +566,12 @@ namespace mrHelper.App.Forms
 
       private void onClipboardCheckingTimer(object sender, EventArgs e)
       {
-         bool isValidUrl = doesClipboardContainValidUrl();
+         string clipboardText = getClipboardText();
+         bool isValidUrl = UrlHelper.CheckMergeRequestUrl(clipboardText);
          linkLabelFromClipboard.Enabled = isValidUrl;
          linkLabelFromClipboard.Text = isValidUrl ? openFromClipboardEnabledText : openFromClipboardDisabledText;
 
-         string tooltip = isValidUrl ? getClipboardText() : "N/A";
+         string tooltip = isValidUrl ? clipboardText : "N/A";
          toolTip.SetToolTip(linkLabelFromClipboard, tooltip);
       }
 

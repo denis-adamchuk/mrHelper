@@ -33,6 +33,8 @@ namespace mrHelper.App.Helpers.GitLab
          @"\?(?:Repository\=(?'Repository'.*))" +
          @"\&(?:SourceBranch\=(?'SourceBranch'[\w_\-\/]+))";
 
+      static readonly int MaxUrlLength = 512;
+
       private static readonly Regex url_re = new Regex(RegEx, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
       /// <summary>
@@ -40,6 +42,11 @@ namespace mrHelper.App.Helpers.GitLab
       /// <summary>
       public static ParsedNewMergeRequestUrl Parse(string url)
       {
+         if (url.Length > MaxUrlLength)
+         {
+            throw new UriFormatException("Too long URL");
+         }
+
          Match m = url_re.Match(url);
          if (!m.Success)
          {

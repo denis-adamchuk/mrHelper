@@ -57,7 +57,7 @@ namespace mrHelper.App.Helpers
          }
 
          string url = trimPrefix(originalUrl);
-         return UrlParser.Check(url);
+         return UrlParser.IsValidUrl(url);
       }
 
       internal static void OpenBrowser(string url)
