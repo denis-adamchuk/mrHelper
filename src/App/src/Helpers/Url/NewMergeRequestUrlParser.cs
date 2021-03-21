@@ -86,7 +86,7 @@ namespace mrHelper.App.Helpers.GitLab
       private static string getRemoteSourceBranch(string path, string sourceBranch)
       {
          IEnumerable<string> refs = GitTools.GetRemotePointsAt(path, sourceBranch);
-         return refs != null ? refs.FirstOrDefault() : null;
+         return refs?.FirstOrDefault();
       }
 
       private static IEnumerable<string> findTargetBranch(string path, string remoteSourceBranch)
@@ -110,7 +110,7 @@ namespace mrHelper.App.Helpers.GitLab
          Debug.Assert(name.StartsWith(RemoteOrigin));
          return name.Substring(RemoteOrigin.Length);
       }
-      private static string RemoteOrigin = "origin/";
+      private static readonly string RemoteOrigin = "origin/";
    }
 }
 
