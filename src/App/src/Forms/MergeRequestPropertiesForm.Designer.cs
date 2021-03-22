@@ -213,7 +213,7 @@
          this.checkBoxHighPriority.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.checkBoxHighPriority.AutoSize = true;
          this.checkBoxHighPriority.ForeColor = System.Drawing.Color.Red;
-         this.checkBoxHighPriority.Location = new System.Drawing.Point(366, 19);
+         this.checkBoxHighPriority.Location = new System.Drawing.Point(337, 21);
          this.checkBoxHighPriority.Name = "checkBoxHighPriority";
          this.checkBoxHighPriority.Size = new System.Drawing.Size(102, 17);
          this.checkBoxHighPriority.TabIndex = 12;
@@ -224,7 +224,7 @@
          // 
          this.labelSpecialNotePrefix.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.labelSpecialNotePrefix.AutoSize = true;
-         this.labelSpecialNotePrefix.Location = new System.Drawing.Point(434, 47);
+         this.labelSpecialNotePrefix.Location = new System.Drawing.Point(303, 47);
          this.labelSpecialNotePrefix.Name = "labelSpecialNotePrefix";
          this.labelSpecialNotePrefix.Size = new System.Drawing.Size(34, 13);
          this.labelSpecialNotePrefix.TabIndex = 5;
@@ -272,9 +272,9 @@
          // 
          this.textBoxSpecialNote.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxSpecialNote.BackColor = System.Drawing.SystemColors.Control;
-         this.textBoxSpecialNote.Location = new System.Drawing.Point(471, 44);
+         this.textBoxSpecialNote.Location = new System.Drawing.Point(337, 44);
          this.textBoxSpecialNote.Name = "textBoxSpecialNote";
-         this.textBoxSpecialNote.Size = new System.Drawing.Size(296, 22);
+         this.textBoxSpecialNote.Size = new System.Drawing.Size(430, 22);
          this.textBoxSpecialNote.TabIndex = 11;
          this.textBoxSpecialNote.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSpecialNote_KeyDown);
          // 
