@@ -57,8 +57,6 @@ namespace mrHelper.App.Controls
          _displayFilter = displayFilter;
          _displayFilter.FilterStateChanged += onFilterChanged;
 
-         _systemFilter = new DiscussionFilter(currentUser, mergeRequestAuthor, DiscussionFilterState.AllExceptSystem);
-
          _discussionLoader = discussionLoader;
          _discussionLoader.Loaded += onDiscussionsLoaded;
 
@@ -229,7 +227,10 @@ namespace mrHelper.App.Controls
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
             };
-            Controls.Add(box);
+            if (box.HasNotes)
+            {
+               Controls.Add(box);
+            }
          }
       }
 
@@ -317,11 +318,9 @@ namespace mrHelper.App.Controls
          DateTime getTimestamp(Discussion d) => d.Notes.Select(note => note.Updated_At).Max();
          int getNoteCount(Discussion d) => d.Notes.Count();
 
-         IEnumerable<Discussion> nonSystemDiscussions = discussions
-            .Where(discussion => _systemFilter.DoesMatchFilter(discussion));
          IEnumerable<Discussion> cachedDiscussions = getAllBoxes().Select(box => box.Discussion);
 
-         IEnumerable<Discussion> updatedDiscussions = nonSystemDiscussions
+         IEnumerable<Discussion> updatedDiscussions = discussions
             .Where(discussion =>
             {
                Discussion cachedDiscussion = cachedDiscussions.SingleOrDefault(d => d.Id == discussion.Id);
@@ -333,7 +332,7 @@ namespace mrHelper.App.Controls
             .ToArray(); // force immediate execution
 
          IEnumerable<Discussion> deletedDiscussions = cachedDiscussions
-            .Where(cachedDiscussion => nonSystemDiscussions.SingleOrDefault(d => d.Id == cachedDiscussion.Id) == null)
+            .Where(cachedDiscussion => discussions.SingleOrDefault(d => d.Id == cachedDiscussion.Id) == null)
             .ToArray(); // force immediate execution
 
          if (deletedDiscussions.Any() || updatedDiscussions.Any())
@@ -443,7 +442,6 @@ namespace mrHelper.App.Controls
 
       private DiscussionSort _discussionSort;
       private DiscussionFilter _displayFilter; // filters out discussions by user preferences
-      private DiscussionFilter _systemFilter; // filters out discussions with System notes
       private DiscussionLayout _discussionLayout;
       private AsyncDiscussionLoader _discussionLoader;
 

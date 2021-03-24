@@ -34,26 +34,14 @@ namespace mrHelper.App.Helpers
       {
          ByCurrentUserOnly = byCurrentUserOnly;
          ServiceMessages = serviceMessages;
-         SystemNotes = systemNotes;
          ByAnswers = byAnswers;
          ByResolution = byResolution;
       }
 
       public bool ByCurrentUserOnly { get; }
       public bool ServiceMessages { get; }
-      public bool SystemNotes { get; }
       public FilterByAnswers ByAnswers { get; }
       public FilterByResolution ByResolution { get; }
-
-      static public DiscussionFilterState AllExceptSystem
-      {
-         get
-         {
-            return new DiscussionFilterState(false, true, false,
-               FilterByAnswers.Answered | FilterByAnswers.Unanswered,
-               FilterByResolution.Resolved | FilterByResolution.NotResolved);
-         }
-      }
 
       static public DiscussionFilterState Default
       {
@@ -84,7 +72,6 @@ namespace mrHelper.App.Helpers
       {
          return ByCurrentUserOnly == other.ByCurrentUserOnly &&
                 ServiceMessages == other.ServiceMessages &&
-                SystemNotes == other.SystemNotes &&
                 ByAnswers == other.ByAnswers &&
                 ByResolution == other.ByResolution;
       }
@@ -94,7 +81,6 @@ namespace mrHelper.App.Helpers
          int hashCode = -858265698;
          hashCode = hashCode * -1521134295 + ByCurrentUserOnly.GetHashCode();
          hashCode = hashCode * -1521134295 + ServiceMessages.GetHashCode();
-         hashCode = hashCode * -1521134295 + SystemNotes.GetHashCode();
          hashCode = hashCode * -1521134295 + ByAnswers.GetHashCode();
          hashCode = hashCode * -1521134295 + ByResolution.GetHashCode();
          return hashCode;
@@ -128,11 +114,6 @@ namespace mrHelper.App.Helpers
       public bool DoesMatchFilter(Discussion discussion)
       {
          if (discussion.Notes.Count() == 0)
-         {
-            return false;
-         }
-
-         if (!_filterState.SystemNotes && discussion.Notes.First().System)
          {
             return false;
          }

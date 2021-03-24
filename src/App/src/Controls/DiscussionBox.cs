@@ -37,8 +37,6 @@ namespace mrHelper.App.Controls
          ConfigurationHelper.DiscussionColumnWidth discussionColumnWidth,
          bool needShiftReplies)
       {
-         Parent = parent;
-
          Discussion = discussion;
 
          _accessor = accessor;
@@ -76,14 +74,16 @@ namespace mrHelper.App.Controls
          _specialDiscussionNoteMarkdownPipeline =
             MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 
-         onCreate();
+         onCreate(parent);
       }
+
+      internal bool HasNotes => getNoteContainers().Any();
 
       internal Discussion Discussion { get; private set; }
 
       internal void RefreshTimeStamps()
       {
-         _noteContainers?
+         getNoteContainers()
             .Select(noteContainer => noteContainer?.NoteInfo)
             .ToList()
             .ForEach(noteInfo => noteInfo?.Refresh());
@@ -193,22 +193,19 @@ namespace mrHelper.App.Controls
          _onControlGotFocus(sender as Control);
       }
 
-      private void onCreate()
+      private void onCreate(Control parent)
       {
          Debug.Assert(Discussion.Notes.Any());
-
-         DiscussionNote firstNote = Discussion.Notes.First();
-         _textboxFilename = createTextboxFilename(firstNote);
-         _panelContext = createDiffContext(firstNote);
-         _noteContainers = createTextBoxes(Discussion.Notes);
-
-         Controls.Add(_textboxFilename);
-         Controls.Add(_panelContext);
-         foreach (NoteContainer noteContainer in _noteContainers)
+         if (!initializeNoteContainers(parent, Discussion.Notes))
          {
-            Controls.Add(noteContainer.NoteInfo);
-            Controls.Add(noteContainer.NoteContent);
+            return;
          }
+
+         _textboxFilename = createTextboxFilename(parent, Discussion.Notes.First());
+         Controls.Add(_textboxFilename);
+
+         _panelContext = createDiffContext(Discussion.Notes.First());
+         Controls.Add(_panelContext);
       }
 
       private Control createDiffContext(DiscussionNote firstNote)
@@ -306,7 +303,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private Control createTextboxFilename(DiscussionNote firstNote)
+      private Control createTextboxFilename(Control parent, DiscussionNote firstNote)
       {
          if (firstNote.Type != "DiffNote")
          {
@@ -339,7 +336,7 @@ namespace mrHelper.App.Controls
             textColor = Color.Blue;
          }
 
-         TextBox textBox = new SearchableTextBox(Parent as IHighlightListener)
+         TextBox textBox = new SearchableTextBox(parent as IHighlightListener)
          {
             ReadOnly = true,
             Text = result,
@@ -352,23 +349,73 @@ namespace mrHelper.App.Controls
          return textBox;
       }
 
-      private IEnumerable<NoteContainer> createTextBoxes(IEnumerable<DiscussionNote> notes)
+      private bool initializeNoteContainers(Control parent, IEnumerable<DiscussionNote> notes)
       {
-         bool discussionResolved = notes.Cast<DiscussionNote>().All(x => (!x.Resolvable || x.Resolved));
+         Debug.Assert(parent != null);
+         _noteContainers = createNoteContainers(parent, notes);
+         foreach (NoteContainer noteContainer in _noteContainers)
+         {
+            Controls.Add(noteContainer.NoteInfo);
+            Controls.Add(noteContainer.NoteContent);
+         }
+         return getNoteContainers().Any();
+      }
+
+      private void removeNoteContainers()
+      {
+         for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
+         {
+            IEnumerable<NoteContainer> noteContainers = getNoteContainers();
+            foreach (NoteContainer container in noteContainers)
+            {
+               Control control = Controls[iControl];
+               if (container.NoteContent == control || container.NoteInfo    == control)
+               {
+                  Controls.Remove(control);
+                  break;
+               }
+            }
+         }
+         _noteContainers = null;
+      }
+
+      private IEnumerable<NoteContainer> getNoteContainers()
+      {
+         return _noteContainers ?? Array.Empty<NoteContainer>();
+      }
+
+      private IEnumerable<NoteContainer> createNoteContainers(Control parent, IEnumerable<DiscussionNote> allNotes)
+      {
+         if (parent == null)
+         {
+            return null;
+         }
+
+         bool discussionResolved = allNotes
+            .Cast<DiscussionNote>()
+            .All(note => !note.Resolvable || note.Resolved);
 
          List<NoteContainer> boxes = new List<NoteContainer>();
+         IEnumerable<DiscussionNote> notes = allNotes.Where(item => shouldCreateNoteContainer(item));
          foreach (DiscussionNote note in notes)
          {
-            if (note == null || note.System)
-            {
-               // skip spam
-               continue;
-            }
-
-            NoteContainer textBox = createNoteContainer(note, discussionResolved);
-            boxes.Add(textBox);
+            boxes.Add(createNoteContainer(parent, note, discussionResolved));
          }
          return boxes;
+      }
+
+      private bool isIndividualSystem()
+      {
+         if (Discussion.Notes == null || !Discussion.Notes.Any())
+         {
+            return false;
+         }
+         return Discussion.Individual_Note && isSystemNote(Discussion.Notes.First());
+      }
+
+      private bool isSystemNote(DiscussionNote note)
+      {
+         return note != null && note.System;
       }
 
       private bool canBeModified(DiscussionNote note)
@@ -377,10 +424,31 @@ namespace mrHelper.App.Controls
          {
             return false;
          }
-         return note.Author.Id == _currentUser.Id;
+         return note.Author.Id == _currentUser.Id && !isSystemNote(note);
       }
 
-      private NoteContainer createNoteContainer(DiscussionNote note, bool discussionResolved)
+      private bool canAddNotes()
+      {
+         return !isIndividualSystem();
+      }
+
+      private bool shouldCreateNoteContainer(DiscussionNote note)
+      {
+         if (note == null)
+         {
+            return false;
+         }
+
+         if (note.System)
+         {
+            return note.Body.StartsWith("approved this merge request")
+                || note.Body.StartsWith("unapproved this merge request");
+         }
+
+         return true;
+      }
+
+      private NoteContainer createNoteContainer(Control parent, DiscussionNote note, bool discussionResolved)
       {
          NoteContainer noteContainer = new NoteContainer
          {
@@ -395,7 +463,7 @@ namespace mrHelper.App.Controls
 
          if (!isServiceDiscussionNote(note))
          {
-            Control noteControl = new SearchableHtmlPanel(Parent as IHighlightListener)
+            Control noteControl = new SearchableHtmlPanel(parent as IHighlightListener)
             {
                AutoScroll = false,
                BackColor = getNoteColor(note),
@@ -570,16 +638,28 @@ namespace mrHelper.App.Controls
 
          void addMenuItem(string text, bool isEnabled, EventHandler onClick, Shortcut shortcut = Shortcut.None) =>
             contextMenu.MenuItems.Add(createMenuItem(noteControl, text, isEnabled, onClick, shortcut));
+         void addSeparator() => addMenuItem("-", true, null);
 
-         addMenuItem((discussionResolved ? "Unresolve" : "Resolve") + " Thread", isDiscussionResolvable(), onMenuItemToggleResolveDiscussion);
-         addMenuItem((note.Resolvable && note.Resolved ? "Unresolve" : "Resolve") + " Note", note.Resolvable, onMenuItemToggleResolveNote);
-         addMenuItem("-", true, null);
+         string resolveThreadText = (discussionResolved ? "Unresolve" : "Resolve") + " Thread";
+         addMenuItem(resolveThreadText, isDiscussionResolvable(), onMenuItemToggleResolveDiscussion);
+
+         string resolveItemText = (note.Resolvable && note.Resolved ? "Unresolve" : "Resolve") + " Note";
+         addMenuItem(resolveItemText, note.Resolvable, onMenuItemToggleResolveNote);
+
+         addSeparator();
+
          addMenuItem("Delete note", canBeModified(note), onMenuItemDeleteNote);
          addMenuItem("Edit note", canBeModified(note), onMenuItemEditNote, Shortcut.F2);
-         addMenuItem("Reply", true, onMenuItemReply);
-         addMenuItem("Reply and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread", true, onMenuItemReplyAndResolve, Shortcut.F4);
-         addMenuItem("Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread", isDiscussionResolvable(), onMenuItemReplyDone, Shortcut.ShiftF4);
-         addMenuItem("-", true, null);
+         addMenuItem("Reply", canAddNotes(), onMenuItemReply);
+
+         string replyText = "Reply and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread";
+         addMenuItem(replyText, canAddNotes(), onMenuItemReplyAndResolve, Shortcut.F4);
+
+         string replyDoneText = "Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread";
+         addMenuItem(replyDoneText, canAddNotes() && isDiscussionResolvable(), onMenuItemReplyDone, Shortcut.ShiftF4);
+
+         addSeparator();
+
          addMenuItem("View Note as plain text", true, onMenuItemViewNote, Shortcut.F6);
 
          return contextMenu;
@@ -755,24 +835,21 @@ namespace mrHelper.App.Controls
 
       private void resizeBoxContent(int width)
       {
-         if (_noteContainers != null)
+         IEnumerable<Control> noteContentControls = getNoteContainers().Select(container => container.NoteContent);
+         foreach (Control noteControl in noteContentControls)
          {
-            IEnumerable<Control> noteContentControls = _noteContainers.Select(container => container.NoteContent);
-            foreach (Control noteControl in noteContentControls)
-            {
-               bool needShrinkNote = noteControl != noteContentControls.First();
-               int noteWidthDelta = needShrinkNote ? getNoteRepliesPadding(width) : 0;
+            bool needShrinkNote = noteControl != noteContentControls.First();
+            int noteWidthDelta = needShrinkNote ? getNoteRepliesPadding(width) : 0;
 
-               HtmlPanel htmlPanel = noteControl as HtmlPanel;
-               DiscussionNote note = getNoteFromControl(noteControl);
-               if (note != null && !isServiceDiscussionNote(note))
-               {
-                  resizeLimitedWidthHtmlPanel(htmlPanel, getNoteWidth(width) - noteWidthDelta);
-               }
-               else
-               {
-                  resizeFullSizeHtmlPanel(htmlPanel);
-               }
+            HtmlPanel htmlPanel = noteControl as HtmlPanel;
+            DiscussionNote note = getNoteFromControl(noteControl);
+            if (note != null && !isServiceDiscussionNote(note))
+            {
+               resizeLimitedWidthHtmlPanel(htmlPanel, getNoteWidth(width) - noteWidthDelta);
+            }
+            else
+            {
+               resizeFullSizeHtmlPanel(htmlPanel);
             }
          }
 
@@ -857,23 +934,21 @@ namespace mrHelper.App.Controls
 
       private void repositionNotes(int width, Point controlPos)
       {
-         if (_noteContainers != null)
+         IEnumerable<NoteContainer> noteContainers = getNoteContainers();
+         foreach (NoteContainer noteContainer in noteContainers)
          {
-            foreach (NoteContainer noteContainer in _noteContainers)
-            {
-               bool needOffsetNote = noteContainer != _noteContainers.First();
-               int noteHorzOffset = needOffsetNote ? getNoteRepliesPadding(width) : 0;
+            bool needOffsetNote = noteContainer != noteContainers.First();
+            int noteHorzOffset = needOffsetNote ? getNoteRepliesPadding(width) : 0;
 
-               Point noteInfoPos = controlPos;
-               noteInfoPos.Offset(noteHorzOffset, 0);
-               noteContainer.NoteInfo.Location = noteInfoPos;
-               controlPos.Offset(0, noteContainer.NoteInfo.Height + 2);
+            Point noteInfoPos = controlPos;
+            noteInfoPos.Offset(noteHorzOffset, 0);
+            noteContainer.NoteInfo.Location = noteInfoPos;
+            controlPos.Offset(0, noteContainer.NoteInfo.Height + 2);
 
-               Point noteContentPos = controlPos;
-               noteContentPos.Offset(noteHorzOffset, 0);
-               noteContainer.NoteContent.Location = noteContentPos;
-               controlPos.Offset(0, noteContainer.NoteContent.Height + 5);
-            }
+            Point noteContentPos = controlPos;
+            noteContentPos.Offset(noteHorzOffset, 0);
+            noteContainer.NoteContent.Location = noteContentPos;
+            controlPos.Offset(0, noteContainer.NoteContent.Height + 5);
          }
       }
 
@@ -899,11 +974,12 @@ namespace mrHelper.App.Controls
          int boxHeight;
          {
             int notesHeight = 0;
-            if (_noteContainers != null)
+            IEnumerable<NoteContainer> noteContainers = getNoteContainers();
+            if (noteContainers.Any())
             {
-               notesHeight = _noteContainers.Last().NoteContent.Location.Y
-                           + _noteContainers.Last().NoteContent.Height
-                           - _noteContainers.First().NoteInfo.Location.Y;
+               notesHeight = noteContainers.Last().NoteContent.Location.Y
+                           + noteContainers.Last().NoteContent.Height
+                           - noteContainers.First().NoteInfo.Location.Y;
             }
 
             int ctxHeight = 0;
@@ -930,21 +1006,26 @@ namespace mrHelper.App.Controls
          Debug.Assert(_diffContextPosition == ConfigurationHelper.DiffContextPosition.Top);
 
          int boxWidth = getNoteWidth(width);
-
          int boxHeight = 0;
-         if (_noteContainers != null && _textboxFilename != null)
+         IEnumerable<NoteContainer> noteContainers = getNoteContainers();
+         if (!noteContainers.Any())
          {
-            boxHeight = _noteContainers.Last().NoteContent.Location.Y
-                      + _noteContainers.Last().NoteContent.Height
+            Size = new Size(boxWidth, boxHeight);
+            return;
+         }
+
+         if (_textboxFilename != null)
+         {
+            boxHeight = noteContainers.Last().NoteContent.Location.Y
+                      + noteContainers.Last().NoteContent.Height
                       - _textboxFilename.Location.Y;
          }
-         else if (_noteContainers != null)
+         else
          {
-            boxHeight = _noteContainers.Last().NoteContent.Location.Y
-                      + _noteContainers.Last().NoteContent.Height
-                      - _noteContainers.First().NoteInfo.Location.Y;
+            boxHeight = noteContainers.Last().NoteContent.Location.Y
+                      + noteContainers.Last().NoteContent.Height
+                      - noteContainers.First().NoteInfo.Location.Y;
          }
-
          Size = new Size(boxWidth, boxHeight);
       }
 
@@ -1000,6 +1081,11 @@ namespace mrHelper.App.Controls
 
       async private Task onReplyToDiscussionAsync(bool proposeUserToToggleResolveOnReply)
       {
+         if (!canAddNotes())
+         {
+            return;
+         }
+
          bool isAlreadyResolved = isDiscussionResolved();
          string resolveText = String.Format("{0} Thread", (isAlreadyResolved ? "Unresolve" : "Resolve"));
          NoteEditPanel actions = new NoteEditPanel(resolveText, proposeUserToToggleResolveOnReply);
@@ -1023,6 +1109,11 @@ namespace mrHelper.App.Controls
 
       async private Task onReplyAsync(string body, bool toggleResolve)
       {
+         if (!canAddNotes())
+         {
+            return;
+         }
+
          bool wasResolved = isDiscussionResolved();
          disableAllNoteControls();
 
@@ -1167,9 +1258,10 @@ namespace mrHelper.App.Controls
             }
          }
 
-         foreach (Control textBox in _noteContainers.Select(container => container.NoteContent))
+         IEnumerable<Control> noteControls = getNoteContainers().Select(container => container.NoteContent);
+         foreach (Control noteControl in noteControls)
          {
-            disableNoteControl(textBox);
+            disableNoteControl(noteControl);
          }
       }
 
@@ -1178,29 +1270,6 @@ namespace mrHelper.App.Controls
          if (Parent == null)
          {
             return;
-         }
-
-         void prepareToRefresh()
-         {
-            // Get rid of old text boxes
-            // #227:
-            // It must be done before `await` because context menu shown for invisible control throws ArgumentException.
-            // So if we hide text boxes in _onContentChanging() and process WM_MOUSEUP in `await` below we're in a trouble.
-            for (int iControl = Controls.Count - 1; iControl >= 0; --iControl)
-            {
-               foreach (NoteContainer container in (_noteContainers ?? Array.Empty<NoteContainer>()))
-               {
-                  if (container.NoteContent == Controls[iControl] || container.NoteInfo == Controls[iControl])
-                  {
-                     Controls.Remove(Controls[iControl]);
-                     break;
-                  }
-               }
-            }
-            _noteContainers = null;
-
-            // To suspend layout and hide me
-            _onContentChanging();
          }
 
          // Load updated discussion
@@ -1214,49 +1283,50 @@ namespace mrHelper.App.Controls
             Discussion = null;
          }
 
-         if (Discussion == null || Discussion.Notes.Count() == 0 || Discussion.Notes.First().System)
+         // Get rid of old text boxes
+         // #227:
+         // It must be done before `await` because context menu shown for invisible control throws ArgumentException.
+         // So if we hide text boxes in _onContentChanging() and process WM_MOUSEUP in `await` below we're in a trouble.
+         removeNoteContainers();
+
+         // To suspend layout and hide me
+         _onContentChanging();
+
+         if (Parent == null
+          || Discussion == null
+          || Discussion.Notes.Count() == 0
+          || isIndividualSystem()
+          || !initializeNoteContainers(Parent, Discussion.Notes)) // Create new text boxes
          {
             // Possible cases:
             // - deleted note was the only discussion item
             // - deleted note was the only visible discussion item but there are System notes like 'a line changed ...'
-            prepareToRefresh();
             Parent?.Controls.Remove(this);
             _onContentChanged();
             return;
          }
 
-         prepareToRefresh();
-
-         // Create controls
-         _noteContainers = createTextBoxes(Discussion.Notes);
-         foreach (NoteContainer noteContainer  in _noteContainers)
-         {
-            Controls.Add(noteContainer.NoteInfo);
-            Controls.Add(noteContainer.NoteContent);
-         }
-
          // To reposition new controls and unhide me back
          _onContentChanged();
-         _noteContainers.First().NoteContent.Focus();
+         getNoteContainers().First().NoteContent.Focus();
       }
 
       private bool isDiscussionResolved()
       {
+         IEnumerable<Control> noteControls = getNoteContainers()
+            .Select(container => container.NoteContent)
+            .Where(noteControl => noteControl != null);
+
          bool result = true;
-         if (_noteContainers != null)
+         foreach (Control noteControl in noteControls)
          {
-            foreach (Control noteControl in _noteContainers.Select(container => container.NoteContent))
+            DiscussionNote note = getNoteFromControl(noteControl);
+            if (note != null && note.Resolvable && !note.Resolved)
             {
-               if (noteControl != null)
-               {
-                  DiscussionNote note = getNoteFromControl(noteControl);
-                  if (note != null && note.Resolvable && !note.Resolved)
-                  {
-                     result = false;
-                  }
-               }
+               result = false;
             }
          }
+
          return result;
       }
 
