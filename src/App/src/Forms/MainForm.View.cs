@@ -426,15 +426,25 @@ namespace mrHelper.App.Forms
 
          foreach (Control control in groupBoxActions.Controls)
          {
-            string enabledIf = ((ICommand)control.Tag).EnabledIf;
-            string resolvedEnabledIf =
-               String.IsNullOrEmpty(enabledIf) ? String.Empty : _expressionResolver.Resolve(enabledIf);
-            control.Enabled = isCustomActionEnabled(approvedBy, labels, author, resolvedEnabledIf);
+            string enabledIfFullString = ((ICommand)control.Tag).EnabledIf;
+            string[] enabledIfCollection = enabledIfFullString.Split(',');
+            control.Enabled = true;
+            foreach (string enabledIf in enabledIfCollection)
+            {
+               string resolvedEnabledIf =
+                  String.IsNullOrEmpty(enabledIf) ? String.Empty : _expressionResolver.Resolve(enabledIf);
+               control.Enabled &= isCustomActionEnabled(approvedBy, labels, author, resolvedEnabledIf);
+            }
 
-            string visibleIf = ((ICommand)control.Tag).VisibleIf;
-            string resolvedVisibleIf =
-               String.IsNullOrEmpty(visibleIf) ? String.Empty : _expressionResolver.Resolve(visibleIf);
-            control.Visible = isCustomActionEnabled(approvedBy, labels, author, resolvedVisibleIf);
+            string visibleIfFullString = ((ICommand)control.Tag).VisibleIf;
+            string[] visibleIfCollection = visibleIfFullString.Split(',');
+            control.Visible = true;
+            foreach (string visibleIf in visibleIfCollection)
+            {
+               string resolvedVisibleIf =
+                  String.IsNullOrEmpty(visibleIf) ? String.Empty : _expressionResolver.Resolve(visibleIf);
+               control.Visible &= isCustomActionEnabled(approvedBy, labels, author, resolvedVisibleIf);
+            }
          }
 
          repositionCustomCommands();
