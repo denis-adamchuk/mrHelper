@@ -201,6 +201,7 @@ namespace mrHelper.App.Forms
          this.labelLocalStorageFolder = new System.Windows.Forms.Label();
          this.tabPageSettingsUserInterface = new System.Windows.Forms.TabPage();
          this.groupBoxColors = new System.Windows.Forms.GroupBox();
+         this.labelDiscussionsViewColorPaletteHint = new System.Windows.Forms.Label();
          this.labelColorSelector = new System.Windows.Forms.Label();
          this.comboBoxColorSelector = new System.Windows.Forms.ComboBox();
          this.listBoxColorSchemeItemSelector = new System.Windows.Forms.ListBox();
@@ -266,7 +267,6 @@ namespace mrHelper.App.Forms
          this.panel1 = new System.Windows.Forms.Panel();
          this.panelConnectionStatus = new System.Windows.Forms.Panel();
          this.labelConnectionStatus = new System.Windows.Forms.Label();
-         this.labelDiscussionsViewColorPaletteHint = new System.Windows.Forms.Label();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -1802,6 +1802,17 @@ namespace mrHelper.App.Forms
          this.groupBoxColors.TabStop = false;
          this.groupBoxColors.Text = "Colors";
          // 
+         // labelDiscussionsViewColorPaletteHint
+         // 
+         this.labelDiscussionsViewColorPaletteHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.labelDiscussionsViewColorPaletteHint.AutoSize = true;
+         this.labelDiscussionsViewColorPaletteHint.ForeColor = System.Drawing.Color.Olive;
+         this.labelDiscussionsViewColorPaletteHint.Location = new System.Drawing.Point(6, 206);
+         this.labelDiscussionsViewColorPaletteHint.Name = "labelDiscussionsViewColorPaletteHint";
+         this.labelDiscussionsViewColorPaletteHint.Size = new System.Drawing.Size(322, 13);
+         this.labelDiscussionsViewColorPaletteHint.TabIndex = 38;
+         this.labelDiscussionsViewColorPaletteHint.Text = "Discussions view color palette will be configurable in a next version";
+         // 
          // labelColorSelector
          // 
          this.labelColorSelector.AutoSize = true;
@@ -2391,9 +2402,9 @@ namespace mrHelper.App.Forms
          this.panelFreeSpace.Controls.Add(this.pictureBox2);
          this.panelFreeSpace.Controls.Add(this.pictureBox1);
          this.panelFreeSpace.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.panelFreeSpace.Location = new System.Drawing.Point(0, 427);
+         this.panelFreeSpace.Location = new System.Drawing.Point(0, 435);
          this.panelFreeSpace.Name = "panelFreeSpace";
-         this.panelFreeSpace.Size = new System.Drawing.Size(472, 70);
+         this.panelFreeSpace.Size = new System.Drawing.Size(472, 62);
          this.panelFreeSpace.TabIndex = 9;
          // 
          // pictureBox2
@@ -2473,7 +2484,7 @@ namespace mrHelper.App.Forms
          this.groupBoxActions.Dock = System.Windows.Forms.DockStyle.Top;
          this.groupBoxActions.Location = new System.Drawing.Point(0, 364);
          this.groupBoxActions.Name = "groupBoxActions";
-         this.groupBoxActions.Size = new System.Drawing.Size(472, 63);
+         this.groupBoxActions.Size = new System.Drawing.Size(472, 70);
          this.groupBoxActions.TabIndex = 0;
          this.groupBoxActions.TabStop = false;
          this.groupBoxActions.Text = "Actions";
@@ -2577,17 +2588,6 @@ namespace mrHelper.App.Forms
          this.labelConnectionStatus.Size = new System.Drawing.Size(78, 13);
          this.labelConnectionStatus.TabIndex = 0;
          this.labelConnectionStatus.Text = "Not connected";
-         // 
-         // labelDiscussionsViewColorPaletteHint
-         // 
-         this.labelDiscussionsViewColorPaletteHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.labelDiscussionsViewColorPaletteHint.AutoSize = true;
-         this.labelDiscussionsViewColorPaletteHint.ForeColor = System.Drawing.Color.Olive;
-         this.labelDiscussionsViewColorPaletteHint.Location = new System.Drawing.Point(6, 206);
-         this.labelDiscussionsViewColorPaletteHint.Name = "labelDiscussionsViewColorPaletteHint";
-         this.labelDiscussionsViewColorPaletteHint.Size = new System.Drawing.Size(322, 13);
-         this.labelDiscussionsViewColorPaletteHint.TabIndex = 38;
-         this.labelDiscussionsViewColorPaletteHint.Text = "Discussions view color palette will be configurable in a next version";
          // 
          // MainForm
          // 

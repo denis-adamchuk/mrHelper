@@ -1227,7 +1227,7 @@ namespace mrHelper.App.Forms
             var button = new System.Windows.Forms.Button
             {
                Name = "customAction" + id,
-               Location = new System.Drawing.Point { X = 0, Y = 14 },
+               Location = new System.Drawing.Point { X = 0, Y = 19 },
                Size = buttonSize,
                MinimumSize = buttonSize,
                Text = name,
