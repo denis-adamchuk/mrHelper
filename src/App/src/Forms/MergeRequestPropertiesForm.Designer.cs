@@ -52,6 +52,7 @@
          this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.groupBoxProject = new System.Windows.Forms.GroupBox();
          this.comboBoxProject = new System.Windows.Forms.ComboBox();
+         this.labelCheckingTargetBranch = new System.Windows.Forms.Label();
          this.groupBoxSource.SuspendLayout();
          this.groupBoxTarget.SuspendLayout();
          this.groupBoxTitle.SuspendLayout();
@@ -320,12 +321,23 @@
          this.comboBoxProject.Size = new System.Drawing.Size(239, 21);
          this.comboBoxProject.TabIndex = 0;
          // 
+         // labelCheckingTargetBranch
+         // 
+         this.labelCheckingTargetBranch.AutoSize = true;
+         this.labelCheckingTargetBranch.Location = new System.Drawing.Point(93, 425);
+         this.labelCheckingTargetBranch.Name = "labelCheckingTargetBranch";
+         this.labelCheckingTargetBranch.Size = new System.Drawing.Size(127, 13);
+         this.labelCheckingTargetBranch.TabIndex = 14;
+         this.labelCheckingTargetBranch.Text = "Checking target branch...";
+         this.labelCheckingTargetBranch.Visible = false;
+         // 
          // MergeRequestPropertiesForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(797, 455);
+         this.Controls.Add(this.labelCheckingTargetBranch);
          this.Controls.Add(this.groupBoxOptions);
          this.Controls.Add(this.groupBoxProject);
          this.Controls.Add(this.buttonCancel);
@@ -349,6 +361,7 @@
          this.groupBoxOptions.PerformLayout();
          this.groupBoxProject.ResumeLayout(false);
          this.ResumeLayout(false);
+         this.PerformLayout();
 
       }
 
@@ -377,5 +390,6 @@
       protected mrHelper.CommonControls.Controls.TextBoxWithUserAutoComplete textBoxSpecialNote;
       protected System.Windows.Forms.Label labelSpecialNotePrefix;
       protected System.Windows.Forms.CheckBox checkBoxHighPriority;
+      private System.Windows.Forms.Label labelCheckingTargetBranch;
    }
 }

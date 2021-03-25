@@ -163,10 +163,19 @@ namespace mrHelper.App.Forms
 
       async private void buttonSubmit_Click(object sender, EventArgs e)
       {
-         if (await verifyInputData())
+         buttonSubmit.Enabled = false;
+         try
          {
-            Close();
-            DialogResult = DialogResult.OK;
+            if (await verifyInputData())
+            {
+               Close();
+               DialogResult = DialogResult.OK;
+               return;
+            }
+         }
+         finally
+         {
+            buttonSubmit.Enabled = true;
          }
       }
 
@@ -190,10 +199,18 @@ namespace mrHelper.App.Forms
 
          using (RepositoryAccessor repositoryAccessor = createRepositoryAccessor())
          {
-            // Trim special characters to avoid search by mask
-            string targetBranch = getTargetBranchName().TrimStart('^').TrimEnd('$');
-            IEnumerable<Branch> branches = await repositoryAccessor.GetBranches(targetBranch);
-            return branches != null && branches.Any();
+            labelCheckingTargetBranch.Visible = true;
+            try
+            {
+               // Trim special characters to avoid search by mask
+               string targetBranch = getTargetBranchName().TrimStart('^').TrimEnd('$');
+               IEnumerable<Branch> branches = await repositoryAccessor.GetBranches(targetBranch);
+               return branches != null && branches.Any();
+            }
+            finally
+            {
+               labelCheckingTargetBranch.Visible = false;
+            }
          }
       }
 
