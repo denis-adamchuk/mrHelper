@@ -39,7 +39,6 @@ namespace mrHelper.App.Forms
 
       private static readonly string ConnectionLostText = "connection is lost (trying to reconnect)";
 
-      private static readonly int NewOrClosedMergeRequestRefreshListTimerInterval = 1000 * 3; // 3 seconds
       private static readonly int PseudoTimerInterval = 100 * 1; // 0.1 second
 
       private static readonly int OperationRecordHistoryDepth = 10;

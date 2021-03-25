@@ -1263,6 +1263,8 @@ namespace mrHelper.App.Forms
                   "Command {0} execution has completed for merge request !{1} in project {2}",
                   name, mergeRequestKey.Value.IId, mergeRequestKey.Value.ProjectKey.ProjectName);
                addOperationRecord(statusMessage);
+               Trace.TraceInformation("[MainForm] EnabledIf: {0}", command.EnabledIf);
+               Trace.TraceInformation("[MainForm] VisibleIf: {0}", command.VisibleIf);
 
                if (command.StopTimer)
                {

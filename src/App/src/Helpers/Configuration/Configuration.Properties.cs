@@ -382,6 +382,12 @@ namespace mrHelper.App.Helpers
          set => setIntValue(OneShotUpdateOnNewMergeRequestSecondChanceDelayMsKeyName, value);
       }
 
+      public int NewOrClosedMergeRequestRefreshListDelayMs
+      {
+         get => getIntValue(NewOrClosedMergeRequestRefreshListDelayMsKeyName, NewOrClosedMergeRequestRefreshListDelayMsDefaultValue);
+         set => setIntValue(NewOrClosedMergeRequestRefreshListDelayMsKeyName, value);
+      }
+
       public int CacheRevisionsPeriodMs
       {
          get => getIntValue(CacheRevisionsPeriodMsKeyName, CacheRevisionsPeriodMsDefaultValue);

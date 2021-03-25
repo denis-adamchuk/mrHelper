@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using System.Collections.Generic;
 
 namespace mrHelper.CustomActions
@@ -44,8 +45,14 @@ namespace mrHelper.CustomActions
          foreach (ISubCommand command in _commands)
          {
             await command.Run();
+            if (command != _commands.Last())
+            {
+               await Task.Delay(SubCommandDelay);
+            }
          }
       }
+
+      private readonly int SubCommandDelay = 250; // 0.25s
 
       private readonly IEnumerable<ISubCommand> _commands;
    }

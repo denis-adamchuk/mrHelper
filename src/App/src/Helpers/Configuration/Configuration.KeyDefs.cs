@@ -102,11 +102,13 @@ namespace mrHelper.App.Helpers
       private static readonly string AutoUpdatePeriodMsKeyName      = "AutoUpdatePeriodMs";
       private static readonly int    AutoUpdatePeriodMsDefaultValue = 5 * 60 * 1000; // 5 minutes
 
-      private static readonly string OneShotUpdateFirstChanceDelayMsKeyName        = "OneShotUpdateFirstChanceDelayMs";
-      private static readonly int    OneShotUpdateFirstChanceDelayMsDefaultValue   = 5 * 1000; // 5 seconds
+      // replaced with "New_..." after introducing default configuration property values
+      private static readonly string OneShotUpdateFirstChanceDelayMsKeyName        = "New_OneShotUpdateFirstChanceDelayMs";
+      private static readonly int    OneShotUpdateFirstChanceDelayMsDefaultValue   = 3 * 1000; // 3 seconds
 
-      private static readonly string OneShotUpdateSecondChanceDelayMsKeyName        = "OneShotUpdateSecondChanceDelayMs";
-      private static readonly int    OneShotUpdateSecondChanceDelayMsDefaultValue   = 15 * 1000; // 15 seconds
+      // replaced with "New_..." after introducing default configuration property values
+      private static readonly string OneShotUpdateSecondChanceDelayMsKeyName        = "New_OneShotUpdateSecondChanceDelayMs";
+      private static readonly int    OneShotUpdateSecondChanceDelayMsDefaultValue   = 10 * 1000; // 10 seconds
 
       private static readonly string OneShotUpdateOnNewMergeRequestFirstChanceDelayMsKeyName        =
          "OneShotUpdateOnNewMergeRequestFirstChanceDelayMs";
@@ -117,6 +119,9 @@ namespace mrHelper.App.Helpers
          "OneShotUpdateOnNewMergeRequestSecondChanceDelayMs";
       private static readonly int    OneShotUpdateOnNewMergeRequestSecondChanceDelayMsDefaultValue   =
          60 * 1000; // 60 seconds
+
+      private static readonly string NewOrClosedMergeRequestRefreshListDelayMsKeyName        = "NewOrClosedMergeRequestRefreshListDelayMs";
+      private static readonly int    NewOrClosedMergeRequestRefreshListDelayMsDefaultValue   = 3 * 1000; // 3 seconds
 
       private static readonly string CacheRevisionsPeriodMsKeyName        = "CacheRevisionsPeriodMs";
       private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 8 * 60 * 1000; // 8 minutes
