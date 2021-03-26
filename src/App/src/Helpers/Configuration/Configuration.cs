@@ -12,7 +12,15 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Helpers
 {
-   class ChangesNotAllowedException : Exception {}
+   class CorruptedSettingsException : Exception
+   {
+      internal CorruptedSettingsException(string configFilePath)
+      {
+         ConfigFilePath = configFilePath;
+      }
+
+      public string ConfigFilePath { get; }
+   }
 
    public partial class UserDefinedSettings : INotifyPropertyChanged, IHostProperties, IFileStorageProperties
    {
@@ -35,7 +43,14 @@ namespace mrHelper.App.Helpers
             ExeConfigFilename = configFilePath
          };
 
-         _config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
+         try
+         {
+            _config = ConfigurationManager.OpenMappedExeConfiguration(configFileMap, ConfigurationUserLevel.None);
+         }
+         catch (System.Configuration.ConfigurationErrorsException)
+         {
+            throw new CorruptedSettingsException(configFilePath);
+         }
       }
 
       internal void Update()

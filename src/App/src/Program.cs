@@ -43,7 +43,7 @@ namespace mrHelper.App
          Application.Exit();
       }
 
-      internal static UserDefinedSettings Settings = new UserDefinedSettings();
+      internal static UserDefinedSettings Settings;
       internal static ServiceManager ServiceManager;
       internal static FeedbackReporter FeedbackReporter;
 
@@ -53,6 +53,19 @@ namespace mrHelper.App
       [STAThread]
       private static void Main()
       {
+         try
+         {
+            Settings = new UserDefinedSettings();
+         }
+         catch (CorruptedSettingsException ex)
+         {
+            string message = String.Format(
+               "Cannot launch mrHelper because application configuration file at \"{0}\" could not be loaded. " +
+               "It's probably corrupted. Try deleting the file or contact developers.", ex.ConfigFilePath);
+            MessageBox.Show(message, "Fatal error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+         }
+
          using (LaunchContext context = new LaunchContext())
          {
             Application.EnableVisualStyles();
