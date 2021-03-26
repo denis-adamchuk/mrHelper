@@ -641,7 +641,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void setupDefaultProjectList()
+      private void setupDefaultProjectList(string hostname)
       {
          // Check if file exists. If it does not, it is not an error.
          string filepath = Path.Combine(Directory.GetCurrentDirectory(), ProjectListFileName);
@@ -650,14 +650,26 @@ namespace mrHelper.App.Forms
             return;
          }
 
+         IEnumerable<ConfigurationHelper.HostInProjectsFile> projectGroups;
          try
          {
-            ConfigurationHelper.InitializeSelectedProjects(JsonUtils.
-               LoadFromFile<IEnumerable<ConfigurationHelper.HostInProjectsFile>>(filepath), Program.Settings);
+            projectGroups = JsonUtils.LoadFromFile<IEnumerable<ConfigurationHelper.HostInProjectsFile>>(filepath);
          }
          catch (Exception ex) // whatever de-serialization exception
          {
             ExceptionHandlers.Handle("Cannot load projects from file", ex);
+            return;
+         }
+
+         foreach (ConfigurationHelper.HostInProjectsFile projectGroup in projectGroups)
+         {
+            if (StringUtils.GetHostWithPrefix(hostname) == StringUtils.GetHostWithPrefix(projectGroup.Name))
+            {
+               IEnumerable<Tuple<string, bool>> projects = projectGroup.Projects
+                  .Select(project => new Tuple<string, bool>(project.Path_With_Namespace, true));
+               ConfigurationHelper.SetProjectsForHost(hostname, projects, Program.Settings);
+               break;
+            }
          }
       }
 

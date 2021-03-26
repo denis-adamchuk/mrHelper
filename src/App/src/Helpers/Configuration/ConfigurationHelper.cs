@@ -316,30 +316,6 @@ namespace mrHelper.App.Helpers
          public IEnumerable<Project> Projects { get; protected set; }
       }
 
-      public static void InitializeSelectedProjects(IEnumerable<HostInProjectsFile> projects,
-         UserDefinedSettings settings)
-      {
-         if (projects == null)
-         {
-            return;
-         }
-
-         projects = projects
-            .Where(x => !String.IsNullOrEmpty(x.Name) && (x.Projects?.Any() ?? false));
-         if (!projects.Any())
-         {
-            return;
-         }
-
-         Dictionary<string, string> selectedProjects = settings.SelectedProjects;
-         DictionaryStringHelper.UpdateRawDictionaryString(
-            projects.ToDictionary(
-               x => x.Name,
-               x => x.Projects.Select(y => new Tuple<string, string>(y.Path_With_Namespace, bool.TrueString))),
-            selectedProjects);
-         settings.SelectedProjects = selectedProjects;
-      }
-
       public static void SetUsersForHost(string host, IEnumerable<Tuple<string, bool>> users,
          UserDefinedSettings settings)
       {

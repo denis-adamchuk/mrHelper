@@ -284,7 +284,7 @@ namespace mrHelper.App.Forms
       {
          if (!ConfigurationHelper.GetProjectsForHost(hostname, Program.Settings).Any())
          {
-            setupDefaultProjectList();
+            setupDefaultProjectList(hostname);
             updateProjectsListView();
          }
       }
