@@ -137,17 +137,13 @@ namespace mrHelper.Core.Context
             return "<br";
          }
 
-         string trimmed = line.Text.TrimStart();
-         int leadingSpaces = line.Text.Length - trimmed.Length;
+         // replace some special symbols such as '<' or '>'
+         string encodedText = System.Net.WebUtility.HtmlEncode(line.Text);
 
-         StringBuilder result = new StringBuilder();
-         for (int i = 0; i < leadingSpaces; ++i)
-         {
-            result.Append("&nbsp;");
-         }
-
-         result.Append(System.Net.WebUtility.HtmlEncode(trimmed));
-         return result.ToString();
+         // replace spaces with &nbsp
+         return encodedText
+            .Replace("\t", "    ")   /* replace each TAB with four spaces */
+            .Replace(" ", "&nbsp;"); /* replace each SPACE with &nbsp; */
       }
    }
 }
