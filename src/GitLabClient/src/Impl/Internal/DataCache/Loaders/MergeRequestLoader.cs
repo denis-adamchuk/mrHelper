@@ -31,12 +31,11 @@ namespace mrHelper.GitLabClient.Loaders
 
          if (mergeRequest != null && (!fetchOnlyOpenMergeRequests || mergeRequest.State == "opened"))
          {
-            DateTime? oldUpdatedAt = _cacheUpdater.Cache.GetMergeRequest(mrk)?.Updated_At;
-            DateTime newUpdatedAt = mergeRequest.Updated_At;
+            MergeRequest cachedMergeRequest = _cacheUpdater.Cache.GetMergeRequest(mrk);
             _cacheUpdater.UpdateMergeRequest(mrk, mergeRequest);
 
             MergeRequestKey[] dummyArray = new MergeRequestKey[] { mrk };
-            if (!oldUpdatedAt.HasValue || oldUpdatedAt < newUpdatedAt)
+            if (Helpers.GetVersionLoaderKey(cachedMergeRequest) != Helpers.GetVersionLoaderKey(mergeRequest))
             {
                await _versionLoader.LoadVersionsAndCommits(dummyArray);
             }

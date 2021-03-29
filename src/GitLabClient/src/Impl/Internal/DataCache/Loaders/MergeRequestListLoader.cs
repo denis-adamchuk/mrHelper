@@ -50,9 +50,9 @@ namespace mrHelper.GitLabClient.Loaders
             foreach (MergeRequest mergeRequest in kv.Value)
             {
                MergeRequestKey mrk = new MergeRequestKey(projectKey, mergeRequest.IId);
-               DateTime? oldUpdatedAt = _cacheUpdater.Cache.GetMergeRequest(mrk)?.Updated_At;
-               DateTime newUpdatedAt = mergeRequest.Updated_At;
-               if (!oldUpdatedAt.HasValue || oldUpdatedAt < newUpdatedAt)
+
+               MergeRequest cachedMergeRequest = _cacheUpdater.Cache.GetMergeRequest(mrk);
+               if (Helpers.GetVersionLoaderKey(cachedMergeRequest) != Helpers.GetVersionLoaderKey(mergeRequest))
                {
                   updatedMergeRequestKeys.Add(mrk);
                }

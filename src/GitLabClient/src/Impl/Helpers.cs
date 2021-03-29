@@ -12,6 +12,11 @@ namespace mrHelper.GitLabClient
 {
    public static class Helpers
    {
+      public static string GetVersionLoaderKey(MergeRequest mergeRequest)
+      {
+         return mergeRequest == null ? null : mergeRequest.Sha + mergeRequest.Target_Branch;
+      }
+
       // Check if the passed merge request mets ALL conditions
       public static bool CheckConditions(IEnumerable<string> conditions, MergeRequest mergeRequest)
       {
