@@ -241,7 +241,10 @@ namespace mrHelper.App.Controls
 
       private void RevisionBrowser_Load(object sender, EventArgs e)
       {
-         loadColumnWidths(Program.Settings.RevisionBrowserColumnWidths);
+         if (Program.Settings != null)
+         {
+            loadColumnWidths(Program.Settings.RevisionBrowserColumnWidths);
+         }
       }
 
       private void saveColumnWidths(Action<Dictionary<string, int>> saveProperty)

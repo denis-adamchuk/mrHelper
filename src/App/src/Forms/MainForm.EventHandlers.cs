@@ -500,7 +500,12 @@ namespace mrHelper.App.Forms
 
       private void groupBoxActions_SizeChanged(object sender, EventArgs e)
       {
-         repositionCustomCommands(); // update position of custom actions
+         repositionCustomCommands();
+      }
+
+      private void groupBoxActions_VisibleChanged(object sender, EventArgs e)
+      {
+         repositionCustomCommands();
       }
 
       private void tabControl_SelectedIndexChanged(object sender, EventArgs e)

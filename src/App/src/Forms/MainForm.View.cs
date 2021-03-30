@@ -428,23 +428,25 @@ namespace mrHelper.App.Forms
          {
             string enabledIfFullString = ((ICommand)control.Tag).EnabledIf;
             string[] enabledIfCollection = enabledIfFullString.Split(',');
-            control.Enabled = true;
+            bool isControlEnabled = true;
             foreach (string enabledIf in enabledIfCollection)
             {
                string resolvedEnabledIf =
                   String.IsNullOrEmpty(enabledIf) ? String.Empty : _expressionResolver.Resolve(enabledIf);
-               control.Enabled &= isCustomActionEnabled(approvedBy, labels, author, resolvedEnabledIf);
+               isControlEnabled &= isCustomActionEnabled(approvedBy, labels, author, resolvedEnabledIf);
             }
+            control.Enabled = isControlEnabled;
 
             string visibleIfFullString = ((ICommand)control.Tag).VisibleIf;
             string[] visibleIfCollection = visibleIfFullString.Split(',');
-            control.Visible = true;
+            bool isControlVisible = true;
             foreach (string visibleIf in visibleIfCollection)
             {
                string resolvedVisibleIf =
                   String.IsNullOrEmpty(visibleIf) ? String.Empty : _expressionResolver.Resolve(visibleIf);
-               control.Visible &= isCustomActionEnabled(approvedBy, labels, author, resolvedVisibleIf);
+               isControlVisible &= isCustomActionEnabled(approvedBy, labels, author, resolvedVisibleIf);
             }
+            control.Visible = isControlVisible;
          }
 
          repositionCustomCommands();
@@ -800,25 +802,20 @@ namespace mrHelper.App.Forms
 
       private void repositionCustomCommands()
       {
-         int visibleControlCount = groupBoxActions
+         Control[] visibleControls = groupBoxActions
             .Controls
             .Cast<Control>()
-            .Count(control => control.Visible);
+            .Where(control => control.Visible)
+            .ToArray();
 
-         int getControlX(int controlWidth, int index) =>
-             controlWidth * index +
-                (groupBoxActions.Width - visibleControlCount * controlWidth) *
-                (index + 1) / (visibleControlCount + 1);
-
-         int displayIndex = 0;
-         for (int controlIndex = 0; controlIndex < groupBoxActions.Controls.Count; ++controlIndex)
+         int controlWidth = getCustomActionButtonSize().Width;
+         int totalFreeSpaceWidth = groupBoxActions.Width - visibleControls.Count() * controlWidth;
+         int controlHorzPadding = totalFreeSpaceWidth / (visibleControls.Count() + 1);
+         for (int index = 0; index < visibleControls.Count(); ++index)
          {
-            Control c = groupBoxActions.Controls[controlIndex];
-            if (c.Visible)
-            {
-               c.Location = new Point { X = getControlX(c.Width, displayIndex), Y = c.Location.Y };
-               ++displayIndex;
-            }
+            Control control = visibleControls[index];
+            int controlX = controlHorzPadding + index * (controlHorzPadding + controlWidth);
+            control.Location = new Point { X = controlX, Y = control.Location.Y };
          }
       }
 
@@ -1230,6 +1227,7 @@ namespace mrHelper.App.Forms
                Location = new System.Drawing.Point { X = 0, Y = 19 },
                Size = buttonSize,
                MinimumSize = buttonSize,
+               MaximumSize = buttonSize,
                Text = name,
                UseVisualStyleBackColor = true,
                TabStop = false,

@@ -2402,9 +2402,9 @@ namespace mrHelper.App.Forms
          this.panelFreeSpace.Controls.Add(this.pictureBox2);
          this.panelFreeSpace.Controls.Add(this.pictureBox1);
          this.panelFreeSpace.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.panelFreeSpace.Location = new System.Drawing.Point(0, 435);
+         this.panelFreeSpace.Location = new System.Drawing.Point(0, 434);
          this.panelFreeSpace.Name = "panelFreeSpace";
-         this.panelFreeSpace.Size = new System.Drawing.Size(472, 62);
+         this.panelFreeSpace.Size = new System.Drawing.Size(472, 63);
          this.panelFreeSpace.TabIndex = 9;
          // 
          // pictureBox2
@@ -2489,6 +2489,7 @@ namespace mrHelper.App.Forms
          this.groupBoxActions.TabStop = false;
          this.groupBoxActions.Text = "Actions";
          this.groupBoxActions.SizeChanged += new System.EventHandler(this.groupBoxActions_SizeChanged);
+         this.groupBoxActions.VisibleChanged += new System.EventHandler(this.groupBoxActions_VisibleChanged);
          // 
          // groupBoxTimeTracking
          // 
