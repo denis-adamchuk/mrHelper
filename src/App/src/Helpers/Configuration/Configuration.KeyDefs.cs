@@ -104,11 +104,11 @@ namespace mrHelper.App.Helpers
 
       // replaced with "New_..." after introducing default configuration property values
       private static readonly string OneShotUpdateFirstChanceDelayMsKeyName        = "New_OneShotUpdateFirstChanceDelayMs";
-      private static readonly int    OneShotUpdateFirstChanceDelayMsDefaultValue   = 3 * 1000; // 3 seconds
+      private static readonly int    OneShotUpdateFirstChanceDelayMsDefaultValue   = 5 * 1000; // 5 seconds
 
       // replaced with "New_..." after introducing default configuration property values
       private static readonly string OneShotUpdateSecondChanceDelayMsKeyName        = "New_OneShotUpdateSecondChanceDelayMs";
-      private static readonly int    OneShotUpdateSecondChanceDelayMsDefaultValue   = 10 * 1000; // 10 seconds
+      private static readonly int    OneShotUpdateSecondChanceDelayMsDefaultValue   = 20 * 1000; // 20 seconds
 
       private static readonly string OneShotUpdateOnNewMergeRequestFirstChanceDelayMsKeyName        =
          "OneShotUpdateOnNewMergeRequestFirstChanceDelayMs";
