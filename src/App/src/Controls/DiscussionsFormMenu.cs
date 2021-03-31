@@ -255,7 +255,7 @@ namespace mrHelper.App.Controls
             ToolStripMenuItem item = new ToolStripMenuItem
             {
                Name = "customAction" + id,
-               Text = command.Name
+               Text = String.Format("{0} ({1})", command.Hint, command.Name)
             };
             item.Click += (x, y) => onCommandAction(command);
             actionsToolStripMenuItem.DropDownItems.Add(item);

@@ -49,7 +49,7 @@ namespace mrHelper.App.Forms
          var discussionSort = new DiscussionSort(DiscussionSortState.Default);
 
          // Includes making some boxes visible. This does not paint them because their parent (Form) is hidden so far.
-         discussionPanel.Initialize(discussionSort, displayFilter,discussionLoader, discussions,
+         discussionPanel.Initialize(discussionSort, displayFilter, discussionLoader, discussions,
             shortcuts, git, colorScheme, mrk, mergeRequestAuthor, currentUser, discussionLayout);
          if (discussionPanel.DiscussionCount < 1)
          {
