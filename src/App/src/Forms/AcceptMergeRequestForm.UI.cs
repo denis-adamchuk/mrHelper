@@ -61,6 +61,7 @@ namespace mrHelper.App.Forms
             _isSquashNeeded.ToString(), _isRemoteBranchDeletionNeeded.ToString());
          traceInformation(traceMessage);
 
+         int attempts = 0;
          try
          {
             showMergeInProgress();
@@ -69,12 +70,32 @@ namespace mrHelper.App.Forms
             {
                return; // if a window is closed by now
             }
-            MergeRequest mergeRequest = await mergeAsync(getSquashCommitMessage(), _isRemoteBranchDeletionNeeded.Value);
+
+            MergeRequest mergeRequest;
+            try
+            {
+               attempts++;
+               mergeRequest = await mergeAsync(getSquashCommitMessage(), _isRemoteBranchDeletionNeeded.Value);
+            }
+            catch (MergeRequestEditorException ex)
+            {
+               // sometimes when conflicts found merge succeeds on 2nd attempt
+               if (areConflictsFoundAtMerge(ex))
+               {
+                  attempts++;
+                  mergeRequest = await mergeAsync(getSquashCommitMessage(), _isRemoteBranchDeletionNeeded.Value);
+               }
+               else
+               {
+                  throw;
+               }
+            }
             postProcessMerge(mergeRequest);
+            traceInformation(String.Format("attempts: {0}", attempts));
          }
          catch (MergeRequestEditorException ex)
          {
-            ExceptionHandlers.Handle("Failed to merge", ex);
+            ExceptionHandlers.Handle(String.Format("Failed to merge (attempts: {0})", attempts), ex);
             if (areConflictsFoundAtMerge(ex))
             {
                MessageBox.Show("GitLab was unable to complete the merge. Rebase branch locally and try again",

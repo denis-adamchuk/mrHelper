@@ -202,10 +202,9 @@ namespace mrHelper.App.Forms
             labelCheckingTargetBranch.Visible = true;
             try
             {
-               // Trim special characters to avoid search by mask
-               string targetBranch = getTargetBranchName().TrimStart('^').TrimEnd('$');
+               string targetBranch = getTargetBranchName();
                IEnumerable<Branch> branches = await repositoryAccessor.GetBranches(targetBranch);
-               return branches != null && branches.Any();
+               return branches != null && branches.Any(branch => branch.Name.ToLower() == targetBranch.ToLower());
             }
             finally
             {
