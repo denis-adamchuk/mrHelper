@@ -79,6 +79,12 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(UpdateManagerExtendedLoggingKeyName, value);
       }
 
+      public bool WordWrapLongRows
+      {
+         get => getBoolValue(WordWrapLongRowsKeyName, WordWrapLongRowsDefaultValue);
+         set => setBoolValue(WordWrapLongRowsKeyName, value);
+      }
+
       public bool MinimizeOnClose
       {
          get => getBoolValue(MinimizeOnCloseKeyName, MinimizeOnCloseDefaultValue);

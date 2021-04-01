@@ -181,6 +181,7 @@ namespace mrHelper.App.Forms
          this.comboBoxRecentMergeRequestsPerProjectCount = new System.Windows.Forms.ComboBox();
          this.linkLabelResetToFactoryValue = new System.Windows.Forms.LinkLabel();
          this.linkLabelResetAllColors = new System.Windows.Forms.LinkLabel();
+         this.checkBoxWordWrapLongRows = new System.Windows.Forms.CheckBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1578,6 +1579,18 @@ namespace mrHelper.App.Forms
          this.linkLabelResetAllColors.Visible = false;
          this.linkLabelResetAllColors.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelResetAllColors_LinkClicked);
          // 
+         // checkBoxWordWrapTitle
+         // 
+         this.checkBoxWordWrapLongRows.AutoSize = true;
+         this.checkBoxWordWrapLongRows.Location = new System.Drawing.Point(230, 19);
+         this.checkBoxWordWrapLongRows.Name = "checkBoxWordWrapLongRows";
+         this.checkBoxWordWrapLongRows.Size = new System.Drawing.Size(102, 17);
+         this.checkBoxWordWrapLongRows.TabIndex = 31;
+         this.checkBoxWordWrapLongRows.Text = "Wrap long rows";
+         this.toolTip.SetToolTip(this.checkBoxWordWrapLongRows, "Use word wrap mode for merge request titles, source branch names and other long rows in list views");
+         this.checkBoxWordWrapLongRows.UseVisualStyleBackColor = true;
+         this.checkBoxWordWrapLongRows.CheckedChanged += new System.EventHandler(this.checkBoxWordWrapLongRows_CheckedChanged);
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1795,7 +1808,7 @@ namespace mrHelper.App.Forms
          this.groupBoxColors.Controls.Add(this.listBoxColorSchemeItemSelector);
          this.groupBoxColors.Controls.Add(this.comboBoxColorSchemes);
          this.groupBoxColors.Controls.Add(this.labelColorScheme);
-         this.groupBoxColors.Location = new System.Drawing.Point(6, 112);
+         this.groupBoxColors.Location = new System.Drawing.Point(6, 82);
          this.groupBoxColors.Name = "groupBoxColors";
          this.groupBoxColors.Size = new System.Drawing.Size(577, 229);
          this.groupBoxColors.TabIndex = 30;
@@ -1868,8 +1881,9 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxOtherUI
          // 
+         this.groupBoxOtherUI.Controls.Add(this.checkBoxWordWrapLongRows);
          this.groupBoxOtherUI.Controls.Add(this.checkBoxDisableSplitterRestrictions);
-         this.groupBoxOtherUI.Location = new System.Drawing.Point(6, 555);
+         this.groupBoxOtherUI.Location = new System.Drawing.Point(6, 525);
          this.groupBoxOtherUI.Name = "groupBoxOtherUI";
          this.groupBoxOtherUI.Size = new System.Drawing.Size(577, 46);
          this.groupBoxOtherUI.TabIndex = 29;
@@ -1883,7 +1897,7 @@ namespace mrHelper.App.Forms
          this.groupBoxDiscussionsView.Controls.Add(this.checkBoxFlatReplies);
          this.groupBoxDiscussionsView.Controls.Add(this.labelDepth);
          this.groupBoxDiscussionsView.Controls.Add(this.comboBoxDCDepth);
-         this.groupBoxDiscussionsView.Location = new System.Drawing.Point(6, 406);
+         this.groupBoxDiscussionsView.Location = new System.Drawing.Point(6, 376);
          this.groupBoxDiscussionsView.Name = "groupBoxDiscussionsView";
          this.groupBoxDiscussionsView.Size = new System.Drawing.Size(577, 143);
          this.groupBoxDiscussionsView.TabIndex = 28;
@@ -1929,7 +1943,7 @@ namespace mrHelper.App.Forms
          // groupBoxNewDiscussionViewUI
          // 
          this.groupBoxNewDiscussionViewUI.Controls.Add(this.checkBoxNewDiscussionIsTopMostForm);
-         this.groupBoxNewDiscussionViewUI.Location = new System.Drawing.Point(6, 347);
+         this.groupBoxNewDiscussionViewUI.Location = new System.Drawing.Point(6, 317);
          this.groupBoxNewDiscussionViewUI.Name = "groupBoxNewDiscussionViewUI";
          this.groupBoxNewDiscussionViewUI.Size = new System.Drawing.Size(577, 53);
          this.groupBoxNewDiscussionViewUI.TabIndex = 27;
@@ -1946,7 +1960,7 @@ namespace mrHelper.App.Forms
          this.groupBoxGeneral.Controls.Add(this.labelFontSize);
          this.groupBoxGeneral.Location = new System.Drawing.Point(6, 6);
          this.groupBoxGeneral.Name = "groupBoxGeneral";
-         this.groupBoxGeneral.Size = new System.Drawing.Size(577, 100);
+         this.groupBoxGeneral.Size = new System.Drawing.Size(577, 70);
          this.groupBoxGeneral.TabIndex = 26;
          this.groupBoxGeneral.TabStop = false;
          this.groupBoxGeneral.Text = "General";
@@ -2886,6 +2900,7 @@ namespace mrHelper.App.Forms
       private LinkLabel linkLabelResetToFactoryValue;
       private LinkLabel linkLabelResetAllColors;
       private Label labelDiscussionsViewColorPaletteHint;
+      private CheckBox checkBoxWordWrapLongRows;
    }
 }
 

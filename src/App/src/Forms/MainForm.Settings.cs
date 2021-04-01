@@ -45,6 +45,7 @@ namespace mrHelper.App.Forms
          checkBoxShowKeywords.Checked = Program.Settings.Notifications_Keywords;
          checkBoxShowMyActivity.Checked = Program.Settings.Notifications_MyActivity;
          checkBoxShowServiceNotifications.Checked = Program.Settings.Notifications_Service;
+         checkBoxWordWrapLongRows.Checked = Program.Settings.WordWrapLongRows;
 
          setKnownHostsDropdownValue();
          setDiffContextPositionRadioValue();
@@ -1040,6 +1041,14 @@ namespace mrHelper.App.Forms
          if (!_loadingConfiguration)
          {
             Program.Settings.MinimizeOnClose = value;
+         }
+      }
+
+      private void applyWordWrapLongRows(bool value)
+      {
+         if (!_loadingConfiguration)
+         {
+            Program.Settings.WordWrapLongRows = value;
          }
       }
 

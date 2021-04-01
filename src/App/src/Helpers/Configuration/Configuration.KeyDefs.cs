@@ -42,6 +42,9 @@ namespace mrHelper.App.Helpers
       private static readonly string UpdateManagerExtendedLoggingKeyName = "UpdateManagerExtendedLogging";
       private static readonly bool   UpdateManagerExtendedLoggingDefaultValue = false;
 
+      private static readonly string WordWrapLongRowsKeyName      = "WordWrapLongRows";
+      private static readonly bool   WordWrapLongRowsDefaultValue = true;
+
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
       private static readonly string DiffContextDepthDefaultValue = "2";
 

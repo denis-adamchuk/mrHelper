@@ -773,20 +773,37 @@ namespace mrHelper.App.Controls
          string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
          bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
 
-         StringFormat format =
-            new StringFormat
-            {
-               Trimming = StringTrimming.EllipsisCharacter,
-               FormatFlags = StringFormatFlags.NoWrap
-            };
-
          int labelsColumnIndex = getColumnByTag("Labels").Index;
          int? resolvedCountColumnIndex = getColumnByTag("Resolved")?.Index;
          int? totalTimeColumnIndex = getColumnByTag("TotalTime")?.Index;
+         int? titleColumnIndex = getColumnByTag("Title")?.Index;
+         int? sourceBranchColumnIndex = getColumnByTag("SourceBranch")?.Index;
+         int? targetBranchColumnIndex = getColumnByTag("TargetBranch")?.Index;
+         int? jiraColumnIndex = getColumnByTag("Jira")?.Index;
+         int? authorColumnIndex = getColumnByTag("Author")?.Index;
 
          bool isLabelsColumnItem = e.ColumnIndex == labelsColumnIndex;
          bool isResolvedColumnItem = resolvedCountColumnIndex.HasValue && e.ColumnIndex == resolvedCountColumnIndex.Value;
          bool isTotalTimeColumnItem = totalTimeColumnIndex.HasValue && e.ColumnIndex == totalTimeColumnIndex.Value;
+         bool isTitleColumnItem = titleColumnIndex.HasValue && e.ColumnIndex == titleColumnIndex.Value;
+         bool isSourceBranchColumnItem = sourceBranchColumnIndex.HasValue && e.ColumnIndex == sourceBranchColumnIndex.Value;
+         bool isTargetBranchColumnItem = targetBranchColumnIndex.HasValue && e.ColumnIndex == targetBranchColumnIndex.Value;
+         bool isJiraColumnItem = jiraColumnIndex.HasValue && e.ColumnIndex == jiraColumnIndex.Value;
+         bool isAuthorColumnItem = authorColumnIndex.HasValue && e.ColumnIndex == authorColumnIndex.Value;
+
+         bool isWrappableColumnItem =
+               isTitleColumnItem
+            || isSourceBranchColumnItem
+            || isTargetBranchColumnItem
+            || isJiraColumnItem
+            || isAuthorColumnItem;
+         bool needWordWrap = isWrappableColumnItem && Program.Settings.WordWrapLongRows;
+         StringFormatFlags formatFlags = needWordWrap ? StringFormatFlags.LineLimit : StringFormatFlags.NoWrap;
+         StringFormat format = new StringFormat
+            {
+               Trimming = StringTrimming.EllipsisCharacter,
+               FormatFlags = formatFlags
+            };
 
          if (isClickable)
          {
@@ -796,31 +813,28 @@ namespace mrHelper.App.Controls
                e.Graphics.DrawString(text, font, brush, bounds, format);
             }
          }
-         else
+         else if (isSelected && isLabelsColumnItem)
          {
-            if (isSelected && isLabelsColumnItem)
+            using (Brush brush = new SolidBrush(getMergeRequestColor(fmk, SystemColors.Window)))
             {
-               using (Brush brush = new SolidBrush(getMergeRequestColor(fmk, SystemColors.Window)))
-               {
-                  e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
-               }
-            }
-            else if (isResolvedColumnItem)
-            {
-               using (Brush brush = new SolidBrush(getDiscussionCountColor(fmk, isSelected)))
-               {
-                  e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
-               }
-            }
-            else if (isTotalTimeColumnItem)
-            {
-               Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
                e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
             }
-            else
+         }
+         else if (isResolvedColumnItem)
+         {
+            using (Brush brush = new SolidBrush(getDiscussionCountColor(fmk, isSelected)))
             {
-               e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
+               e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
             }
+         }
+         else if (isTotalTimeColumnItem)
+         {
+            Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
+            e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
+         }
+         else
+         {
+            e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
          }
       }
 

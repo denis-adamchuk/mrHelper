@@ -246,6 +246,11 @@ namespace mrHelper.App.Forms
          applyMinimizeOnCloseChange((sender as CheckBox).Checked);
       }
 
+      private void checkBoxWordWrapLongRows_CheckedChanged(object sender, EventArgs e)
+      {
+         applyWordWrapLongRows((sender as CheckBox).Checked);
+      }
+
       private void checkBoxRemindAboutAvailableNewVersion_CheckedChanged(object sender, EventArgs e)
       {
          applyRemindAboutAvailableNewVersionChange((sender as CheckBox).Checked);
