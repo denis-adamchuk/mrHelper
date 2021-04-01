@@ -13,6 +13,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
+using mrHelper.CommonNative;
 using mrHelper.GitLabClient;
 using ListViewSubItemInfo = mrHelper.App.Controls.MergeRequestListViewSubItemInfo;
 
@@ -919,11 +920,13 @@ namespace mrHelper.App.Controls
             _collapsedProjects.Remove(projectKey);
          }
 
-         ListViewGroup group = getGroupByProjectKey(projectKey);
-         updateGroupCaption(group);
+         NativeMethods.LockWindowUpdate(Handle);
+         int vScrollPosition = Win32Tools.GetVerticalScrollPosition(Handle);
          CollapsingToggled?.Invoke(this);
+         Win32Tools.SetVerticalScrollPosition(Handle, vScrollPosition);
+         NativeMethods.LockWindowUpdate(IntPtr.Zero);
       }
-
+ 
       internal void setCollapsedProjects(IEnumerable<ProjectKey> projectKeys)
       {
          _collapsedProjects.Clear();

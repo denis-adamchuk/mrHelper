@@ -347,7 +347,7 @@ namespace mrHelper.App.Forms
          // Try selecting an item which is not hidden by filters
          foreach (EDataCacheType mode in modes)
          {
-            if (isCached(mode) && switchTabAndSelectMergeRequest(mode, mrk, true))
+            if (isCached(mode) && switchTabAndSelectMergeRequest(mode, mrk))
             {
                return SelectionResult.Selected;
             }
@@ -360,7 +360,7 @@ namespace mrHelper.App.Forms
             {
                if (unhideFilteredMergeRequest(mode, mrk))
                {
-                  if (switchTabAndSelectMergeRequest(mode, mrk, true))
+                  if (switchTabAndSelectMergeRequest(mode, mrk))
                   {
                      return SelectionResult.Selected;
                   }
@@ -446,7 +446,7 @@ namespace mrHelper.App.Forms
             }
          }
 
-         if (!switchTabAndSelectMergeRequest(EDataCacheType.Live, mrk, true) && getListView(EDataCacheType.Live).Enabled)
+         if (!switchTabAndSelectMergeRequest(EDataCacheType.Live, mrk) && getListView(EDataCacheType.Live).Enabled)
          {
             // We could not select MR, but let's check if it is cached or not.
             if (dataCache.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
@@ -463,6 +463,7 @@ namespace mrHelper.App.Forms
                   Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
                   throw new UrlConnectionException("Something went wrong. ");
                }
+               getListView(EDataCacheType.Live).EnsureSelectionVisible();
             }
             else
             {

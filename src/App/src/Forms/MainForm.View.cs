@@ -499,7 +499,6 @@ namespace mrHelper.App.Forms
          }
 
          FullMergeRequestKey fmk = fmkOpt.Value;
-         listView.EnsureSelectionVisible();
          if (fmk.MergeRequest == null)
          {
             return; // List view item with summary information for a collapsed group
@@ -1063,7 +1062,7 @@ namespace mrHelper.App.Forms
          {
             return;
          }
-         switchTabAndSelectMergeRequest(_timeTrackingMode.Value, _timeTracker.MergeRequest, true);
+         switchTabAndSelectMergeRequest(_timeTrackingMode.Value, _timeTracker.MergeRequest);
       }
 
       private void formatHostListItem(ListControlConvertEventArgs e)
@@ -1148,10 +1147,10 @@ namespace mrHelper.App.Forms
          control.Location = new System.Drawing.Point(controlLeft, controlTop);
       }
 
-      private bool switchTabAndSelectMergeRequest(EDataCacheType mode, MergeRequestKey? mrk, bool exact)
+      private bool switchTabAndSelectMergeRequest(EDataCacheType mode, MergeRequestKey? mrk)
       {
          switchMode(mode);
-         return getListView(mode).SelectMergeRequest(mrk, exact);
+         return getListView(mode).SelectMergeRequest(mrk, true);
       }
 
       private void switchMode(EDataCacheType mode)

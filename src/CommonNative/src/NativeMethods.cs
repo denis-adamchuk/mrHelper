@@ -225,6 +225,17 @@ namespace mrHelper.CommonNative
 
       // Delegate type to be used as the Handler Routine for SCCH
       public delegate Boolean ConsoleCtrlDelegate(uint CtrlType);
+
+      internal const int LVM_FIRST = 0x1000;
+      internal const int LVM_SCROLL = LVM_FIRST + 20;
+      internal const int SBS_HORZ = 0;
+      internal const int SBS_VERT = 1;
+
+      [DllImport("user32.dll")]
+      public static extern int GetScrollPos(IntPtr hWnd, int nBar);
+
+      [DllImport("user32.dll")]
+      public static extern bool LockWindowUpdate(IntPtr Handle);
    }
 }
 

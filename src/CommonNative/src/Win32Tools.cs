@@ -7,31 +7,6 @@ namespace mrHelper.CommonNative
 {
    public static class Win32Tools
    {
-      /// <summary>
-      /// Contains data to be passed to another application by the WM_COPYDATA message.
-      /// </summary>
-      [StructLayout(LayoutKind.Sequential)]
-      public struct COPYDATASTRUCT
-      {
-         /// <summary>
-         /// User defined data to be passed to the receiving application.
-         /// </summary>
-         public IntPtr dwData;
-
-         /// <summary>
-         /// The size, in bytes, of the data pointed to by the lpData member.
-         /// </summary>
-         public int cbData;
-
-         /// <summary>
-         /// The data to be passed to the receiving application. This member can be IntPtr.Zero.
-         /// </summary>
-         public IntPtr lpData;
-      }
-
-      [DllImport("user32.dll", CharSet = CharSet.Ansi)]
-      public static extern IntPtr SendMessage(IntPtr hwnd, uint msg, IntPtr wParam, IntPtr lParam);
-
       public class CopyDataAccessException : Exception
       {
          public CopyDataAccessException(string message) : base(message) { }
@@ -131,6 +106,16 @@ namespace mrHelper.CommonNative
          {
             NativeMethods.AttachThreadInput(windowThread, currentThread, 0);
          }
+      }
+
+      public static int GetVerticalScrollPosition(IntPtr hWnd)
+      {
+         return NativeMethods.GetScrollPos(hWnd, NativeMethods.SBS_VERT);
+      }
+
+      public static void SetVerticalScrollPosition(IntPtr hWnd, int position)
+      {
+         NativeMethods.SendMessage(hWnd, NativeMethods.LVM_SCROLL, IntPtr.Zero, (IntPtr)position);
       }
 
       private static void restoreWindow(IntPtr window)
