@@ -415,9 +415,14 @@ namespace mrHelper.App.Controls
          }
 
          // update a number of MR which is probably displayed
-         foreach (ListViewGroup group in Groups)
+         _suppressSelectionChange = true;
+         try
          {
-            updateGroupCaption(group);
+            Groups.Cast<ListViewGroup>().ToList().ForEach(group => updateGroupCaption(group));
+         }
+         finally
+         {
+            _suppressSelectionChange = false;
          }
 
          recalcRowHeightForMergeRequestListView();
@@ -732,6 +737,15 @@ namespace mrHelper.App.Controls
          saveColumIndices(e.OldDisplayIndex, e.NewDisplayIndex);
       }
 
+      protected override void OnItemSelectionChanged(ListViewItemSelectionChangedEventArgs e)
+      {
+         if (_suppressSelectionChange)
+         {
+            return;
+         }
+         base.OnItemSelectionChanged(e);
+      }
+
       private void saveColumIndices(int oldIndex, int newIndex)
       {
          var indices = WinFormsHelpers.GetListViewDisplayIndicesOnColumnReordered(this, oldIndex, newIndex);
@@ -959,9 +973,13 @@ namespace mrHelper.App.Controls
          }
 
          string action = isGroupCollapsed(group) ? "expand" : "collapse";
-         group.Header = String.Format(
+         string groupHeader = String.Format(
             "{0} -- click to {1} {2} item(s)",
             group.Name, action, getMatchingFilterProjectItems(getGroupProjectKey(group)).Count());
+         if (groupHeader != group.Header)
+         {
+            group.Header = groupHeader;
+         }
       }
 
       private static bool isSummaryItem(ListViewItem item)
@@ -1060,6 +1078,7 @@ namespace mrHelper.App.Controls
       private MergeRequestFilter _mergeRequestFilter;
       private ColorScheme _colorScheme;
       private PersistentStorage _persistentStorage;
+      private bool _suppressSelectionChange;
       private readonly HashSet<ProjectKey> _collapsedProjects = new HashSet<ProjectKey>();
    }
 }
