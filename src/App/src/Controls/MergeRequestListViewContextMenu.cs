@@ -6,116 +6,74 @@ namespace mrHelper.App.Controls
    public class MergeRequestListViewContextMenu : ContextMenuStrip
    {
       public MergeRequestListViewContextMenu(
-         Action onDiscussions,
-         Action onRefreshList,
-         Action onRefresh,
-         Action onEdit,
-         Action onMerge,
-         Action onClose,
-         Action onDiffToBase,
-         Action onDiffDefault,
+         Action onDiscussions, Action onRefreshList, Action onRefresh, Action onEdit,
+         Action onMerge, Action onClose, Action onDiffToBase, Action onDiffDefault,
+         Action onMuteUntilTomorrow, Action onMuteUntilMonday, Action onUnmute,
          Action onDefault)
       {
-         ToolStripItemCollection items = Items;
-         if (onDiscussions != null)
-         {
-            var item = new ToolStripMenuItem("&Discussions", null, (s, e) => onDiscussions())
-            {
-               ShortcutKeys = Keys.F2
-            };
-            items.Add(item);
-            if (onDiscussions == onDefault)
-            {
-               _defaultItem = item;
-            }
-         }
+         addItem(onDiscussions, "&Discussions", Keys.F2, onDiscussions == onDefault);
+
          if (onDiffToBase != null || onDiffDefault != null)
          {
-            items.Add("-", null, null);
-            if (onDiffDefault != null)
-            {
-               var item = new ToolStripMenuItem("Diff &Tool", null, (s, e) => onDiffDefault())
-               {
-                  ShortcutKeys = Keys.F3
-               };
-               items.Add(item);
-               if (onDiffDefault == onDefault)
-               {
-                  _defaultItem = item;
-               }
-            }
-            if (onDiffToBase != null)
-            {
-               var item = new ToolStripMenuItem("Diff to &Base", null, (s, e) => onDiffToBase())
-               {
-                  ShortcutKeys = Keys.Shift | Keys.F3
-               };
-               items.Add(item);
-               if (onDiffToBase == onDefault)
-               {
-                  _defaultItem = item;
-               }
-            }
+            addSeparator();
          }
+
+         addItem(onDiffDefault, "Diff &Tool", Keys.F3, onDiffDefault == onDefault);
+         addItem(onDiffToBase, "Diff to &Base", Keys.Shift | Keys.F3, onDiffToBase == onDefault);
+
          if (onRefreshList != null || onRefresh != null)
          {
-            items.Add("-", null, null);
-            if (onRefreshList != null)
-            {
-               _refreshListItem = new ToolStripMenuItem("&Refresh list", null, (s, e) => onRefreshList())
-               {
-                  ShortcutKeys = Keys.F5
-               };
-               items.Add(_refreshListItem);
-               if (onRefreshList == onDefault)
-               {
-                  _defaultItem = _refreshListItem;
-               }
-            }
-            if (onRefresh != null)
-            {
-               var item = new ToolStripMenuItem("R&efresh selected", null, (s, e) => onRefresh())
-               {
-                  ShortcutKeys = Keys.Shift | Keys.F5
-               };
-               items.Add(item);
-               if (onRefresh == onDefault)
-               {
-                  _defaultItem = item;
-               }
-            }
+            addSeparator();
          }
+
+         _refreshListItem = addItem(onRefreshList, "&Refresh list", Keys.F5, onRefreshList == onDefault);
+         addItem(onRefresh, "R&efresh selected", Keys.Shift | Keys.F5, onRefresh == onDefault);
+
          if (onEdit != null || onMerge != null || onClose != null)
          {
-            items.Add("-", null, null);
-            if (onEdit != null)
-            {
-               _editItem = new ToolStripMenuItem("Ed&it...", null, (s, e) => onEdit());
-               items.Add(_editItem);
-               if (onEdit == onDefault)
-               {
-                  _defaultItem = _editItem;
-               }
-            }
-            if (onMerge != null)
-            {
-               _mergeItem = new ToolStripMenuItem("&Merge...", null, (s, e) => onMerge());
-               items.Add(_mergeItem);
-               if (onEdit == onDefault)
-               {
-                  _defaultItem = _mergeItem;
-               }
-            }
-            if (onClose != null)
-            {
-               var item = new ToolStripMenuItem("&Close", null, (s, e) => onClose());
-               items.Add(item);
-               if (onClose == onDefault)
-               {
-                  _defaultItem = item;
-               }
-            }
+            addSeparator();
          }
+
+         _editItem = addItem(onEdit, "Ed&it...", Keys.None, onEdit == onDefault);
+         _mergeItem = addItem(onMerge, "&Merge...", Keys.None, onMerge == onDefault);
+         addItem(onClose, "&Close", Keys.None, onClose == onDefault);
+
+         if (onMuteUntilTomorrow != null || onMuteUntilMonday != null || onUnmute != null)
+         {
+            addSeparator();
+         }
+
+         _muteUntilTomorrowItem = addItem(onMuteUntilTomorrow,
+            "Don't &highlight until tomorrow", Keys.None, onMuteUntilTomorrow == onDefault);
+         _muteUntilMondayItem = addItem(onMuteUntilMonday,
+            "Don't &highlight until Monday", Keys.None, onMuteUntilMonday == onDefault);
+         _unmuteItem = addItem(onUnmute, "Restore high&light", Keys.None, onUnmute == onDefault);
+      }
+
+      private ToolStripMenuItem addItem(Action action, string name, Keys shortcutKeys, bool isDefault)
+      {
+         if (action == null)
+         {
+            return null;
+         }
+
+         ToolStripMenuItem item = new ToolStripMenuItem(name, null, (s, e) => action())
+         {
+            ShortcutKeys = shortcutKeys
+         };
+         Items.Add(item);
+
+         if (isDefault)
+         {
+            _defaultItem = item;
+         }
+
+         return item;
+      }
+
+      private void addSeparator()
+      {
+         Items.Add("-", null, null);
       }
 
       public void SetEditActionEnabled(bool enabled)
@@ -126,6 +84,11 @@ namespace mrHelper.App.Controls
       public void SetMergeActionEnabled(bool enabled)
       {
          _isMergeActionEnabled = enabled;
+      }
+
+      public void SetUnmuteActionEnabled(bool enabled)
+      {
+         _isUnmuteActionEnabled = enabled;
       }
 
       public void DisableAll()
@@ -164,15 +127,34 @@ namespace mrHelper.App.Controls
          {
             _mergeItem.Enabled = _isMergeActionEnabled && !_disabledAll;
          }
+
+         if (_muteUntilTomorrowItem != null)
+         {
+            _muteUntilTomorrowItem.Enabled = !_disabledAll;
+         }
+
+         if (_muteUntilMondayItem != null)
+         {
+            _muteUntilMondayItem.Enabled = !_disabledAll;
+         }
+
+         if (_unmuteItem != null)
+         {
+            _unmuteItem.Enabled = _isUnmuteActionEnabled;
+         }
       }
 
       private readonly ToolStripMenuItem _refreshListItem;
       private readonly ToolStripItem _editItem;
       private readonly ToolStripItem _mergeItem;
-      private readonly ToolStripItem _defaultItem;
+      private ToolStripItem _defaultItem;
+      private readonly ToolStripItem _muteUntilTomorrowItem;
+      private readonly ToolStripItem _muteUntilMondayItem;
+      private readonly ToolStripItem _unmuteItem;
       private bool _isEditActionEnabled;
       private bool _isMergeActionEnabled;
       private bool _disabledAll;
+      private bool _isUnmuteActionEnabled;
    }
 }
 

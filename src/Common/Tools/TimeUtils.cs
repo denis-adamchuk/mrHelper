@@ -102,6 +102,41 @@ namespace mrHelper.Common.Tools
          }
       }
 
+      public static TimeSpan GetTimeTillMorning()
+      {
+         return getTimeTillMorning(1);
+      }
+
+      public static TimeSpan GetTimeTillMonday()
+      {
+         int daysTillMonday = getDaysTillMonday();
+         return getTimeTillMorning(daysTillMonday);
+      }
+
+      private static TimeSpan getTimeTillMorning(int dayOffset)
+      {
+         int morningHour = 08;
+         DateTime nextDay = DateTime.Now.AddDays(dayOffset);
+         DateTime nextDayMorning = new DateTime(nextDay.Year, nextDay.Month, nextDay.Day, morningHour, 0, 0);
+         return nextDayMorning - DateTime.Now;
+      }
+
+      private static int getDaysTillMonday()
+      {
+         switch (DateTime.Now.DayOfWeek)
+         {
+            case DayOfWeek.Monday:    return 7;
+            case DayOfWeek.Tuesday:   return 6;
+            case DayOfWeek.Wednesday: return 5;
+            case DayOfWeek.Thursday:  return 4;
+            case DayOfWeek.Friday:    return 3;
+            case DayOfWeek.Saturday:  return 2;
+            case DayOfWeek.Sunday:    return 1;
+         }
+         Debug.Assert(false);
+         return 0;
+      }
+
       private static readonly string YesterdayText = "yesterday";
       private static readonly string ZeroTimeSpanText = "just now";
       private static readonly string DayTimeSpanText  = "a day";

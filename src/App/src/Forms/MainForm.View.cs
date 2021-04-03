@@ -556,57 +556,55 @@ namespace mrHelper.App.Forms
          return null;
       }
 
-      private void setNotifyIconByColor(Color color)
+      private void setNotifyIconByColor(Color? colorOpt)
       {
-         Icon icon = getCachedIcon(color);
-         if (icon == null)
+         if (colorOpt == null)
          {
+            notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
             return;
          }
+
+         Icon icon = getCachedIcon(colorOpt.Value);
+         if (icon == null)
+         {
+            notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
+            return;
+         }
+
          notifyIcon.Icon = icon;
       }
 
       private void updateTrayAndTaskBar()
       {
-         WinFormsHelpers.SetOverlayEllipseIcon(null);
-         notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
+         void applyColor(Color? colorOpt)
+         {
+            if (colorOpt != null)
+            {
+               setNotifyIconByColor(colorOpt.Value);
+               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Value);
+            }
+            else
+            {
+               setNotifyIconByColor(null);
+               WinFormsHelpers.SetOverlayEllipseIcon(null);
+            }
+         }
+
          if (_colorScheme == null)
          {
-            return;
+            applyColor(null);
          }
-
-         if (isConnectionLost())
+         else if (isConnectionLost())
          {
-            ColorSchemeItem colorOpt = _colorScheme.GetColor("Status_LostConnection");
-            if (colorOpt != null)
-            {
-               setNotifyIconByColor(colorOpt.Color);
-               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Color);
-            }
-            return;
+            applyColor(_colorScheme.GetColor("Status_LostConnection")?.Color);
          }
-
-         if (isTrackingTime())
+         else if (isTrackingTime())
          {
-            ColorSchemeItem colorOpt = _colorScheme.GetColor("Status_Tracking");
-            if (colorOpt != null)
-            {
-               setNotifyIconByColor(colorOpt.Color);
-               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Color);
-            }
-            return;
+            applyColor(_colorScheme.GetColor("Status_Tracking")?.Color);
          }
-
-         var mergeRequests = getListView(EDataCacheType.Live)
-            .GetMatchingFilterMergeRequests()
-            .Select(x => x.MergeRequest);
-         var bestColorItem = _colorScheme.GetColors("MergeRequests")
-            .FirstOrDefault(colorSchemeItem =>
-               GitLabClient.Helpers.CheckConditions(colorSchemeItem.Conditions, mergeRequests));
-         if (bestColorItem != null)
+         else
          {
-            setNotifyIconByColor(bestColorItem.Color);
-            WinFormsHelpers.SetOverlayEllipseIcon(bestColorItem.Color);
+            applyColor(getListView(EDataCacheType.Live).GetSummaryColor());
          }
       }
 

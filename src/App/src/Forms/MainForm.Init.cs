@@ -54,7 +54,7 @@ namespace mrHelper.App.Forms
          listViewFoundMergeRequests.Tag = Constants.SearchListViewName;
          listViewRecentMergeRequests.Tag = Constants.RecentListViewName;
 
-         forEachListView(listView => listView.CollapsingToggled += listViewMergeRequests_CollapsingToggled);
+         forEachListView(listView => listView.ContentChanged += listViewMergeRequests_ContentChanged);
          forEachListView(listView => listView.Initialize());
 
          SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
@@ -256,6 +256,9 @@ namespace mrHelper.App.Forms
             closeSelectedMergeRequest,
             launchDiffWithBaseForSelectedMergeRequest,
             launchDiffToolForSelectedMergeRequest,
+            muteSelectedMergeRequestUntilTomorrow,
+            muteSelectedMergeRequestUntilMonday,
+            unMuteSelectedMergeRequest,
             showDiscussionsForSelectedMergeRequest));
 
          foreach (EDataCacheType mode in new EDataCacheType[] { EDataCacheType.Recent, EDataCacheType.Search })
@@ -269,6 +272,9 @@ namespace mrHelper.App.Forms
                null,
                launchDiffWithBaseForSelectedMergeRequest,
                launchDiffToolForSelectedMergeRequest,
+               null,
+               null,
+               null,
                showDiscussionsForSelectedMergeRequest));
          }
       }

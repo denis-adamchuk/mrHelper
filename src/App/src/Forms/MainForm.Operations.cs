@@ -12,6 +12,7 @@ using mrHelper.App.Helpers;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.CommonControls.Tools;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Forms
 {
@@ -120,6 +121,25 @@ namespace mrHelper.App.Forms
          MergeRequestKey mrk = new MergeRequestKey(fmk.Value.ProjectKey, fmk.Value.MergeRequest.IId);
          requestUpdates(getDataCache(type), mrk, PseudoTimerInterval, () =>
             addOperationRecord(String.Format("Merge Request !{0} has been refreshed", mrk.IId)));
+      }
+
+      private void muteSelectedMergeRequestUntilTomorrow()
+      {
+         EDataCacheType type = getCurrentTabDataCacheType();
+         getListView(type).MuteSelectedMergeRequestFor(TimeUtils.GetTimeTillMorning());
+      }
+
+      private void muteSelectedMergeRequestUntilMonday()
+      {
+
+         EDataCacheType type = getCurrentTabDataCacheType();
+         getListView(type).MuteSelectedMergeRequestFor(TimeUtils.GetTimeTillMonday());
+      }
+
+      private void unMuteSelectedMergeRequest()
+      {
+         EDataCacheType type = getCurrentTabDataCacheType();
+         getListView(type).UnmuteSelectedMergeRequest();
       }
 
       private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties,

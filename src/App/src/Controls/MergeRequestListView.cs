@@ -68,6 +68,9 @@ namespace mrHelper.App.Controls
          ListViewItemSorter = new ListViewItemComparer();
          _toolTip = new MergeRequestListViewToolTip(this);
          Tag = "DesignTimeName";
+         _unmuteTimer.Tick += onUnmuteTimerTick;
+         _unmuteTimer.Start();
+         cleanUpMutedMergeRequests();
       }
 
       internal void Initialize()
@@ -82,6 +85,9 @@ namespace mrHelper.App.Controls
       /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
       protected override void Dispose(bool disposing)
       {
+         _unmuteTimer.Tick -= onUnmuteTimerTick;
+         _unmuteTimer.Stop();
+         _unmuteTimer.Dispose();
          _toolTip?.Dispose();
          base.Dispose(disposing);
       }
@@ -139,13 +145,15 @@ namespace mrHelper.App.Controls
       private void ContextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
       {
          MergeRequestListViewContextMenu contextMenu = ((MergeRequestListViewContextMenu)(sender));
-         if (GetSelectedMergeRequest() == null)
+         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
+         if (selectedMergeRequest == null)
          {
             contextMenu.DisableAll();
          }
          else
          {
             contextMenu.EnableAll();
+            contextMenu.SetUnmuteActionEnabled(isMuted(selectedMergeRequest.Value));
          }
          contextMenu.UpdateItemState();
       }
@@ -178,14 +186,28 @@ namespace mrHelper.App.Controls
          return null;
       }
 
-      internal IEnumerable<FullMergeRequestKey> GetMatchingFilterMergeRequests()
+      internal void MuteSelectedMergeRequestFor(TimeSpan timeSpan)
       {
-         List<FullMergeRequestKey> keys = new List<FullMergeRequestKey>();
-         foreach (ListViewGroup group in Groups)
+         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
+         if (selectedMergeRequest.HasValue)
          {
-            keys.AddRange(getMatchingFilterProjectItems(getGroupProjectKey(group)));
+            muteMergeRequestFor(selectedMergeRequest.Value, timeSpan);
+            ContentChanged?.Invoke(this);
          }
-         return keys;
+      }
+
+      internal void UnmuteSelectedMergeRequest()
+      {
+         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
+         if (selectedMergeRequest.HasValue && unmuteMergeRequest(selectedMergeRequest.Value))
+         {
+            ContentChanged?.Invoke(this);
+         }
+      }
+
+      internal Color? GetSummaryColor()
+      {
+         return getMergeRequestCollectionColor(getMatchingFilterMergeRequests());
       }
 
       internal void DeselectAllListViewItems()
@@ -679,7 +701,7 @@ namespace mrHelper.App.Controls
       string getJiraTaskUrl(MergeRequest mergeRequest) => GitLabClient.Helpers.GetJiraTaskUrl(
          mergeRequest, Program.ServiceManager.GetJiraServiceUrl());
 
-      public event Action<ListView> CollapsingToggled;
+      public event Action<ListView> ContentChanged;
 
       protected override void OnMouseLeave(EventArgs e)
       {
@@ -771,22 +793,7 @@ namespace mrHelper.App.Controls
             return; // is being removed
          }
 
-         Rectangle bounds = e.Bounds;
-         if (e.ColumnIndex == 0 && e.Item.ListView.Columns[0].DisplayIndex != 0)
-         {
-            bounds = WinFormsHelpers.GetFirstColumnCorrectRectangle(e.Item.ListView, e.Item);
-         }
-
-         FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
-
-         bool isSelected = e.Item.Selected;
-         WinFormsHelpers.FillRectangle(e, bounds, getMergeRequestColor(fmk, Color.Transparent), isSelected);
-
-         Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
-
-         string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
-         bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
-
+         int iidColumnIndex = getColumnByTag("IId").Index;
          int labelsColumnIndex = getColumnByTag("Labels").Index;
          int? resolvedCountColumnIndex = getColumnByTag("Resolved")?.Index;
          int? totalTimeColumnIndex = getColumnByTag("TotalTime")?.Index;
@@ -796,6 +803,7 @@ namespace mrHelper.App.Controls
          int? jiraColumnIndex = getColumnByTag("Jira")?.Index;
          int? authorColumnIndex = getColumnByTag("Author")?.Index;
 
+         bool isIIdColumnItem = e.ColumnIndex == iidColumnIndex;
          bool isLabelsColumnItem = e.ColumnIndex == labelsColumnIndex;
          bool isResolvedColumnItem = resolvedCountColumnIndex.HasValue && e.ColumnIndex == resolvedCountColumnIndex.Value;
          bool isTotalTimeColumnItem = totalTimeColumnIndex.HasValue && e.ColumnIndex == totalTimeColumnIndex.Value;
@@ -819,7 +827,31 @@ namespace mrHelper.App.Controls
                FormatFlags = formatFlags
             };
 
-         if (isClickable)
+         Rectangle bounds = e.Bounds;
+         if (e.ColumnIndex == 0 && e.Item.ListView.Columns[0].DisplayIndex != 0)
+         {
+            bounds = WinFormsHelpers.GetFirstColumnCorrectRectangle(e.Item.ListView, e.Item);
+         }
+
+         bool isSelected = e.Item.Selected;
+         FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
+         WinFormsHelpers.FillRectangle(e, bounds, getMergeRequestColor(fmk, Color.Transparent), isSelected);
+
+         string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
+         bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
+         if (isIIdColumnItem)
+         {
+            FontStyle fontStyle = isClickable ? FontStyle.Underline : FontStyle.Regular;
+            using (Font font = new Font(e.Item.ListView.Font, fontStyle))
+            {
+               e.Graphics.DrawString(text, font, Brushes.Blue, bounds, format);
+               if (isSummaryKey(fmk) ? isMutedGroup(fmk.ProjectKey) : isMuted(fmk))
+               {
+                  drawEllipseForIId(e.Graphics, format, bounds, fmk, font);
+               }
+            }
+         }
+         else if (isClickable)
          {
             using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
             {
@@ -848,7 +880,32 @@ namespace mrHelper.App.Controls
          }
          else
          {
+            Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
             e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
+         }
+      }
+
+      private void drawEllipseForIId(Graphics g, StringFormat format,
+         Rectangle bounds, FullMergeRequestKey fmk, Font font)
+      {
+         int longestIId = getMatchingFilterMergeRequests()
+            .OrderBy(mrk => mrk.MergeRequest.IId)
+            .Last().MergeRequest.IId;
+         SizeF textSize = g.MeasureString(longestIId.ToString(), font, bounds.Width, format);
+         float ellipseWidth = (float)(textSize.Height - 0.30 * textSize.Height); // 30% less
+         float ellipseHeight = ellipseWidth;
+         float ellipsePaddingX = 5;
+         float ellipseOffsetX = textSize.Width;
+         float ellipseX = ellipseOffsetX + ellipsePaddingX;
+         float ellipseY = (textSize.Height - ellipseHeight) / 2;
+         if (bounds.Width > ellipseX + ellipseWidth)
+         {
+            using (Brush ellipseBrush = new SolidBrush(getMergeRequestColor(fmk, Color.Transparent, false)))
+            {
+               RectangleF ellipseRect = new RectangleF(
+                  bounds.X + ellipseX, bounds.Y + ellipseY, ellipseWidth, ellipseHeight);
+               g.FillEllipse(ellipseBrush, ellipseRect);
+            }
          }
       }
 
@@ -873,21 +930,59 @@ namespace mrHelper.App.Controls
          Cursor = clickable ? Cursors.Hand : Cursors.Default;
       }
 
-      private System.Drawing.Color getMergeRequestColor(FullMergeRequestKey fmk, Color defaultColor)
+      private System.Drawing.Color getMergeRequestColor(FullMergeRequestKey fmk, Color defaultColor,
+         bool excludeMuted = true)
       {
-         IEnumerable<MergeRequest> mergeRequests = fmk.MergeRequest == null
-            ? getMatchingFilterProjectItems(fmk.ProjectKey).Select(key => key.MergeRequest)
-            : new List<MergeRequest>{ fmk.MergeRequest };
+         IEnumerable<FullMergeRequestKey> mergeRequests = isSummaryKey(fmk)
+            ? getMatchingFilterProjectItems(fmk.ProjectKey)
+            : new List<FullMergeRequestKey>{ fmk };
+         return getMergeRequestCollectionColor(mergeRequests, excludeMuted) ?? defaultColor;
+      }
 
-         return _colorScheme?.GetColors("MergeRequests")
+      private Color? getMergeRequestCollectionColor(IEnumerable<FullMergeRequestKey> fullMergeRequestKeys,
+         bool excludeMuted = true)
+      {
+         if (excludeMuted)
+         {
+            fullMergeRequestKeys = fullMergeRequestKeys.Where(fmk => !isMuted(fmk));
+         }
+
+         ColorSchemeItem[] colorSchemeItems = _colorScheme?.GetColors("MergeRequests");
+         return colorSchemeItems
             .FirstOrDefault(colorSchemeItem =>
-               GitLabClient.Helpers.CheckConditions(colorSchemeItem.Conditions, mergeRequests))?.Color
-            ?? defaultColor;
+            {
+               IEnumerable<string> conditions = colorSchemeItem.Conditions;
+               IEnumerable<MergeRequest> mergeRequests = fullMergeRequestKeys.Select(fmk => fmk.MergeRequest);
+               return GitLabClient.Helpers.CheckConditions(conditions, mergeRequests);
+            })?.Color;
+      }
+
+      private bool isMuted(FullMergeRequestKey fmk)
+      {
+         Debug.Assert(fmk.MergeRequest != null);
+         return _mutedMergeRequests
+            .Any(mrk => mrk.Key.IId == fmk.MergeRequest.IId
+                     && mrk.Key.ProjectKey.Equals(fmk.ProjectKey));
+      }
+
+      private bool isMutedGroup(ProjectKey projectKey)
+      {
+         return getMatchingFilterProjectItems(projectKey).Any(fmk => isMuted(fmk));
+      }
+
+      private IEnumerable<FullMergeRequestKey> getMatchingFilterMergeRequests()
+      {
+         List<FullMergeRequestKey> keys = new List<FullMergeRequestKey>();
+         foreach (ListViewGroup group in Groups)
+         {
+            keys.AddRange(getMatchingFilterProjectItems(getGroupProjectKey(group)));
+         }
+         return keys;
       }
 
       private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
       {
-         if (fmk.MergeRequest == null)
+         if (isSummaryKey(fmk))
          {
             return Color.Black;
          }
@@ -950,7 +1045,7 @@ namespace mrHelper.App.Controls
 
          NativeMethods.LockWindowUpdate(Handle);
          int vScrollPosition = Win32Tools.GetVerticalScrollPosition(Handle);
-         CollapsingToggled?.Invoke(this);
+         ContentChanged?.Invoke(this);
          Win32Tools.SetVerticalScrollPosition(Handle, vScrollPosition);
          NativeMethods.LockWindowUpdate(IntPtr.Zero);
       }
@@ -962,7 +1057,11 @@ namespace mrHelper.App.Controls
          {
             _collapsedProjects.Add(projectKey);
          }
-         UpdateItems();
+      }
+ 
+      internal void setMutedMergeRequests(Dictionary<MergeRequestKey, DateTime> mutedMergeRequests)
+      {
+         _mutedMergeRequests = mutedMergeRequests;
       }
 
       private void updateGroupCaption(ListViewGroup group)
@@ -988,17 +1087,17 @@ namespace mrHelper.App.Controls
          {
             return false;
          }
-         return ((FullMergeRequestKey)(item.Tag)).MergeRequest == null;
+         return isSummaryKey((FullMergeRequestKey)(item.Tag));
+      }
+
+      private static bool isSummaryKey(FullMergeRequestKey fmk)
+      {
+         return fmk.MergeRequest == null;
       }
 
       private ProjectKey getGroupProjectKey(ListViewGroup group)
       {
          return ((ProjectKey)group.Tag);
-      }
-
-      private ListViewGroup getGroupByProjectKey(ProjectKey key)
-      {
-         return Groups.Cast<ListViewGroup>().SingleOrDefault(group => getGroupProjectKey(group).Equals(key));
       }
 
       private IEnumerable<FullMergeRequestKey> getAllProjectItems(ProjectKey projectKey)
@@ -1026,18 +1125,40 @@ namespace mrHelper.App.Controls
 
       private void onSerialize(IPersistentStateSetter writer)
       {
-         string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
-         new PersistentStateSaveHelper(recordName, writer).Save(_collapsedProjects);
+         {
+            string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
+            new PersistentStateSaveHelper(recordName, writer).Save(_collapsedProjects);
+         }
+
+         {
+            string recordName = String.Format("MutedMergeRequests_{0}", getIdentity());
+            new PersistentStateSaveHelper(recordName, writer).Save(_mutedMergeRequests);
+         }
       }
 
       private void onDeserialize(IPersistentStateGetter reader)
       {
-         string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
-         new PersistentStateLoadHelper(recordName, reader).Load(out HashSet<ProjectKey> collapsedProjectsHashSet);
-         if (collapsedProjectsHashSet != null)
          {
-            setCollapsedProjects(collapsedProjectsHashSet);
+            string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
+            new PersistentStateLoadHelper(recordName, reader).Load(
+               out HashSet<ProjectKey> collapsedProjectsHashSet);
+            if (collapsedProjectsHashSet != null)
+            {
+               setCollapsedProjects(collapsedProjectsHashSet);
+            }
          }
+
+         {
+            string recordName = String.Format("MutedMergeRequests_{0}", getIdentity());
+            new PersistentStateLoadHelper(recordName, reader).Load(
+               out Dictionary<MergeRequestKey, DateTime> mutedMergeRequests);
+            if (mutedMergeRequests != null)
+            {
+               setMutedMergeRequests(mutedMergeRequests);
+            }
+         }
+
+         UpdateItems();
       }
 
       private void setColumnWidths(Dictionary<string, int> widths)
@@ -1066,6 +1187,56 @@ namespace mrHelper.App.Controls
          }
       }
 
+      private void muteMergeRequestFor(FullMergeRequestKey fmk, TimeSpan timeSpan)
+      {
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         _mutedMergeRequests[mrk] = DateTime.Now + timeSpan;
+      }
+
+      private bool unmuteMergeRequest(FullMergeRequestKey fmk)
+      {
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         return unmuteMergeRequest(mrk);
+      }
+
+      private bool unmuteMergeRequest(MergeRequestKey mrk)
+      {
+         if (!_mutedMergeRequests.ContainsKey(mrk))
+         {
+            return false;
+         }
+         _mutedMergeRequests.Remove(mrk);
+         return true;
+      }
+
+      private void onUnmuteTimerTick(object sender, EventArgs e)
+      {
+         if (cleanUpMutedMergeRequests())
+         {
+            ContentChanged?.Invoke(this);
+         }
+      }
+
+      private bool cleanUpMutedMergeRequests()
+      {
+         // temporary copy because original collection is changed inside the loop
+         Dictionary<MergeRequestKey, DateTime> temp =
+            _mutedMergeRequests.ToDictionary(kv => kv.Key, kv => kv.Value);
+
+         bool changed = false;
+         foreach (KeyValuePair<MergeRequestKey, DateTime> mr in temp)
+         {
+            DateTime now = DateTime.Now;
+            if (mr.Value <= now)
+            {
+               bool unmuteSucceeded = unmuteMergeRequest(mr.Key);
+               Debug.Assert(unmuteSucceeded);
+               changed |= unmuteSucceeded;
+            }
+         }
+         return changed;
+      }
+
       private string getIdentity()
       {
          return Tag.ToString();
@@ -1080,6 +1251,14 @@ namespace mrHelper.App.Controls
       private PersistentStorage _persistentStorage;
       private bool _suppressSelectionChange;
       private readonly HashSet<ProjectKey> _collapsedProjects = new HashSet<ProjectKey>();
+      private Dictionary<MergeRequestKey, DateTime> _mutedMergeRequests =
+         new Dictionary<MergeRequestKey, DateTime>();
+
+      private static readonly int UnmuteTimerInterval = 60 * 1000; // 1 minute
+      private readonly Timer _unmuteTimer = new Timer
+      {
+         Interval = UnmuteTimerInterval
+      };
    }
 }
 

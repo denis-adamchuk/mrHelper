@@ -21,6 +21,8 @@ namespace mrHelper.App.Forms
          buttonSubmit.Text = "Apply";
 
          buttonCancel.ConfirmationText = "Do you want to discard editing a merge request? Changes will be lost.";
+
+         Text = "Edit Merge Request";
       }
 
       protected override void applyInitialState()

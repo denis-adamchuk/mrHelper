@@ -402,7 +402,7 @@ namespace mrHelper.App.Forms
          editTimeOfSelectedMergeRequest();
       }
 
-      private void listViewMergeRequests_CollapsingToggled(object sender)
+      private void listViewMergeRequests_ContentChanged(object sender)
       {
          updateMergeRequestList(getListViewType(sender as Controls.MergeRequestListView));
          saveState();
