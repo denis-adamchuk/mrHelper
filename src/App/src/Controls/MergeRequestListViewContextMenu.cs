@@ -140,7 +140,7 @@ namespace mrHelper.App.Controls
 
          if (_unmuteItem != null)
          {
-            _unmuteItem.Enabled = _isUnmuteActionEnabled;
+            _unmuteItem.Enabled = _isUnmuteActionEnabled && !_disabledAll;
          }
       }
 
