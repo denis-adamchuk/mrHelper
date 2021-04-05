@@ -12,6 +12,18 @@ namespace mrHelper.CommonControls.Tools
 {
    public static class WinFormsHelpers
    {
+      public static void SetListViewRowHeight(ListView listView, int maxLineCount)
+      {
+         // It is expected to use font size in pixels here
+         int height = listView.Font.Height * maxLineCount + 2;
+
+         ImageList imgList = new ImageList
+         {
+            ImageSize = new Size(1, height)
+         };
+         listView.SmallImageList = imgList;
+      }
+
       public static void CloseAllFormsExceptOne(Form exceptionalForm)
       {
          for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)

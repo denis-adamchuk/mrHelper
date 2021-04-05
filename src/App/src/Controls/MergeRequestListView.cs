@@ -60,9 +60,6 @@ namespace mrHelper.App.Controls
 
    internal partial class MergeRequestListView : ListViewEx
    {
-      private static readonly int MaxListViewRows = 3;
-      private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
-
       internal event Action<ListView> ContentChanged;
 
       public MergeRequestListView()
@@ -373,6 +370,58 @@ namespace mrHelper.App.Controls
          EndUpdate();
       }
 
+      internal MergeRequestListViewContextMenu GetContextMenu()
+      {
+         return ContextMenuStrip as MergeRequestListViewContextMenu;
+      }
+
+      internal void EnsureSelectionVisible()
+      {
+         if (SelectedIndices.Count > 0)
+         {
+            EnsureVisible(SelectedIndices[0]);
+         }
+      }
+
+      internal void EnsureGroupIsNotCollapsed(ProjectKey projectKey)
+      {
+         setGroupCollapsing(projectKey, false);
+      }
+
+      internal FullMergeRequestKey? GetSelectedMergeRequest()
+      {
+         if (SelectedIndices.Count > 0)
+         {
+            ListViewItem item = SelectedItems[0];
+            return isSummaryItem(item) ? new FullMergeRequestKey?() : (FullMergeRequestKey)(item.Tag);
+         }
+         return null;
+      }
+
+      internal void MuteSelectedMergeRequestFor(TimeSpan timeSpan)
+      {
+         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
+         if (selectedMergeRequest.HasValue)
+         {
+            muteMergeRequestFor(selectedMergeRequest.Value, timeSpan);
+            ContentChanged?.Invoke(this);
+         }
+      }
+
+      internal void UnmuteSelectedMergeRequest()
+      {
+         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
+         if (selectedMergeRequest.HasValue && unmuteMergeRequest(selectedMergeRequest.Value))
+         {
+            ContentChanged?.Invoke(this);
+         }
+      }
+
+      internal Color? GetSummaryColor()
+      {
+         return getMergeRequestCollectionColor(excludeMuted(getMatchingFilterMergeRequests()));
+      }
+
       protected override void Dispose(bool disposing)
       {
          _unmuteTimer.Tick -= onUnmuteTimerTick;
@@ -395,7 +444,7 @@ namespace mrHelper.App.Controls
       {
          ListViewHitTestInfo hit = HitTest(e.Location);
          _toolTip.UpdateOnMouseMove(e.Location);
-         changeCursor(hit);
+         Cursor = getCursor(hit);
 
          base.OnMouseMove(e);
       }
@@ -569,58 +618,6 @@ namespace mrHelper.App.Controls
          contextMenu.UpdateItemState();
       }
 
-      internal MergeRequestListViewContextMenu GetContextMenu()
-      {
-         return ContextMenuStrip as MergeRequestListViewContextMenu;
-      }
-
-      internal void EnsureSelectionVisible()
-      {
-         if (SelectedIndices.Count > 0)
-         {
-            EnsureVisible(SelectedIndices[0]);
-         }
-      }
-
-      internal void EnsureGroupIsNotCollapsed(ProjectKey projectKey)
-      {
-         setGroupCollapsing(projectKey, false);
-      }
-
-      internal FullMergeRequestKey? GetSelectedMergeRequest()
-      {
-         if (SelectedIndices.Count > 0)
-         {
-            ListViewItem item = SelectedItems[0];
-            return isSummaryItem(item) ? new FullMergeRequestKey?() : (FullMergeRequestKey)(item.Tag);
-         }
-         return null;
-      }
-
-      internal void MuteSelectedMergeRequestFor(TimeSpan timeSpan)
-      {
-         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
-         if (selectedMergeRequest.HasValue)
-         {
-            muteMergeRequestFor(selectedMergeRequest.Value, timeSpan);
-            ContentChanged?.Invoke(this);
-         }
-      }
-
-      internal void UnmuteSelectedMergeRequest()
-      {
-         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
-         if (selectedMergeRequest.HasValue && unmuteMergeRequest(selectedMergeRequest.Value))
-         {
-            ContentChanged?.Invoke(this);
-         }
-      }
-
-      internal Color? GetSummaryColor()
-      {
-         return getMergeRequestCollectionColor(excludeMuted(getMatchingFilterMergeRequests()));
-      }
-
       private void drawEllipseForIId(Graphics g, StringFormat format,
          Rectangle bounds, FullMergeRequestKey fmk, Font font)
       {
@@ -643,21 +640,6 @@ namespace mrHelper.App.Controls
                g.FillEllipse(ellipseBrush, ellipseRect);
             }
          }
-      }
-
-      private static void onUrlClick(ListViewHitTestInfo hit)
-      {
-         bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
-         if (clickable)
-         {
-            UrlHelper.OpenBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
-         }
-      }
-
-      private void changeCursor(ListViewHitTestInfo hit)
-      {
-         bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
-         Cursor = clickable ? Cursors.Hand : Cursors.Default;
       }
 
       private Color getMergeRequestColor(FullMergeRequestKey fmk, Color defaultColor, bool ignoreMuted)
@@ -821,7 +803,7 @@ namespace mrHelper.App.Controls
          }
 
          int maxLineCount = Math.Max(getMaxRowCountInColumn("Labels"), getMaxRowCountInColumn("Author"));
-         setListViewRowHeight(this, maxLineCount);
+         WinFormsHelpers.SetListViewRowHeight(this, maxLineCount);
       }
 
       private ColumnHeader getColumnByTag(string tag)
@@ -829,28 +811,6 @@ namespace mrHelper.App.Controls
          return Columns
             .Cast<ColumnHeader>()
             .SingleOrDefault(x => x.Tag.ToString() == tag);
-      }
-
-      private static void setListViewRowHeight(ListView listView, int maxLineCount)
-      {
-         // It is expected to use font size in pixels here
-         int height = listView.Font.Height * maxLineCount + 2;
-
-         ImageList imgList = new ImageList
-         {
-            ImageSize = new Size(1, height)
-         };
-         listView.SmallImageList = imgList;
-      }
-
-      private static bool isSummaryKey(FullMergeRequestKey fmk)
-      {
-         return fmk.MergeRequest == null;
-      }
-
-      private static bool isSummaryItem(ListViewItem item)
-      {
-         return item != null && isSummaryKey((FullMergeRequestKey)(item.Tag));
       }
 
       private IEnumerable<FullMergeRequestKey> getAllProjectItems(ProjectKey projectKey)
@@ -1210,6 +1170,38 @@ namespace mrHelper.App.Controls
          return Tag.ToString();
       }
 
+      private static bool isSummaryKey(FullMergeRequestKey fmk)
+      {
+         return fmk.MergeRequest == null;
+      }
+
+      private static bool isSummaryItem(ListViewItem item)
+      {
+         return item != null && isSummaryKey((FullMergeRequestKey)(item.Tag));
+      }
+
+      private static void onUrlClick(ListViewHitTestInfo hit)
+      {
+         if (hit.SubItem != null)
+         {
+            ListViewSubItemInfo info = (ListViewSubItemInfo)(hit.SubItem.Tag);
+            if (info.Clickable)
+            {
+               UrlHelper.OpenBrowser(info.Url);
+            }
+         }
+      }
+
+      private static Cursor getCursor(ListViewHitTestInfo hit)
+      {
+         if (hit.SubItem != null)
+         {
+            ListViewSubItemInfo info = (ListViewSubItemInfo)(hit.SubItem.Tag);
+            return info.Clickable ? Cursors.Hand : Cursors.Default;
+         }
+         return Cursors.Default;
+      }
+
       private readonly MergeRequestListViewToolTip _toolTip;
       private IDiffStatisticProvider _diffStatisticProvider;
       private Func<string, User> _getCurrentUser;
@@ -1221,6 +1213,9 @@ namespace mrHelper.App.Controls
       private HashSet<ProjectKey> _collapsedProjects = new HashSet<ProjectKey>();
       private Dictionary<MergeRequestKey, DateTime> _mutedMergeRequests =
          new Dictionary<MergeRequestKey, DateTime>();
+
+      private static readonly int MaxListViewRows = 3;
+      private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
 
       private static readonly int GroupHeaderHeight = 20; // found experimentally
 
