@@ -328,7 +328,6 @@ namespace mrHelper.App.Controls
             (
                showThreadsStartedByMeOnlyToolStripMenuItem.Checked,
                showServiceMessagesToolStripMenuItem.Checked,
-               false,
                filterByAnswers,
                filterByResolution
             );

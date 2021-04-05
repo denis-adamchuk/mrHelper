@@ -29,7 +29,7 @@ namespace mrHelper.App.Helpers
    /// </summary>
    public struct DiscussionFilterState : IEquatable<DiscussionFilterState>
    {
-      public DiscussionFilterState(bool byCurrentUserOnly, bool serviceMessages, bool systemNotes,
+      public DiscussionFilterState(bool byCurrentUserOnly, bool serviceMessages,
          FilterByAnswers byAnswers, FilterByResolution byResolution)
       {
          ByCurrentUserOnly = byCurrentUserOnly;
@@ -47,7 +47,7 @@ namespace mrHelper.App.Helpers
       {
          get
          {
-            return new DiscussionFilterState(false, false, false,
+            return new DiscussionFilterState(false, false,
                FilterByAnswers.Answered | FilterByAnswers.Unanswered,
                FilterByResolution.Resolved | FilterByResolution.NotResolved);
          }
@@ -57,7 +57,7 @@ namespace mrHelper.App.Helpers
       {
          get
          {
-            return new DiscussionFilterState(true, true, false,
+            return new DiscussionFilterState(true, true,
                FilterByAnswers.Answered | FilterByAnswers.Unanswered,
                FilterByResolution.Resolved | FilterByResolution.NotResolved);
          }

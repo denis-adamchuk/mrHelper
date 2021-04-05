@@ -58,10 +58,12 @@ namespace mrHelper.App.Controls
       }
    }
 
-   public partial class MergeRequestListView : ListViewEx
+   internal partial class MergeRequestListView : ListViewEx
    {
       private static readonly int MaxListViewRows = 3;
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
+
+      internal event Action<ListView> ContentChanged;
 
       public MergeRequestListView()
       {
@@ -77,19 +79,6 @@ namespace mrHelper.App.Controls
       {
          setColumnWidths(ConfigurationHelper.GetColumnWidths(Program.Settings, getIdentity()));
          setColumnIndices(ConfigurationHelper.GetColumnIndices(Program.Settings, getIdentity()));
-      }
-
-      /// <summary>
-      /// Clean up any resources being used.
-      /// </summary>
-      /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-      protected override void Dispose(bool disposing)
-      {
-         _unmuteTimer.Tick -= onUnmuteTimerTick;
-         _unmuteTimer.Stop();
-         _unmuteTimer.Dispose();
-         _toolTip?.Dispose();
-         base.Dispose(disposing);
       }
 
       internal void SetDiffStatisticProvider(IDiffStatisticProvider diffStatisticProvider)
@@ -140,74 +129,6 @@ namespace mrHelper.App.Controls
       {
          ContextMenuStrip = contextMenu;
          ContextMenuStrip.Opening += ContextMenuStrip_Opening;
-      }
-
-      private void ContextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
-      {
-         MergeRequestListViewContextMenu contextMenu = ((MergeRequestListViewContextMenu)(sender));
-         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
-         if (selectedMergeRequest == null)
-         {
-            contextMenu.DisableAll();
-         }
-         else
-         {
-            contextMenu.EnableAll();
-            contextMenu.SetUnmuteActionEnabled(isMuted(selectedMergeRequest.Value));
-         }
-         contextMenu.UpdateItemState();
-      }
-
-      internal MergeRequestListViewContextMenu GetContextMenu()
-      {
-         return ContextMenuStrip as MergeRequestListViewContextMenu;
-      }
-
-      internal void EnsureSelectionVisible()
-      {
-         if (SelectedIndices.Count > 0)
-         {
-            EnsureVisible(SelectedIndices[0]);
-         }
-      }
-
-      internal void EnsureGroupIsNotCollapsed(ProjectKey projectKey)
-      {
-         setGroupCollapsing(projectKey, false);
-      }
-
-      internal FullMergeRequestKey? GetSelectedMergeRequest()
-      {
-         if (SelectedIndices.Count > 0)
-         {
-            ListViewItem item = SelectedItems[0];
-            return isSummaryItem(item) ? new Nullable<FullMergeRequestKey>() : (FullMergeRequestKey)(item.Tag);
-         }
-         return null;
-      }
-
-      internal void MuteSelectedMergeRequestFor(TimeSpan timeSpan)
-      {
-         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
-         if (selectedMergeRequest.HasValue)
-         {
-            muteMergeRequestFor(selectedMergeRequest.Value, timeSpan);
-            ContentChanged?.Invoke(this);
-         }
-      }
-
-      internal void UnmuteSelectedMergeRequest()
-      {
-         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
-         if (selectedMergeRequest.HasValue && unmuteMergeRequest(selectedMergeRequest.Value))
-         {
-            ContentChanged?.Invoke(this);
-         }
-      }
-
-      internal Color? GetSummaryColor()
-      {
-         return getMergeRequestCollectionColor(getMatchingFilterMergeRequests());
       }
 
       internal void DeselectAllListViewItems()
@@ -275,7 +196,7 @@ namespace mrHelper.App.Controls
          return false;
       }
 
-      public void CreateGroupForProject(ProjectKey projectKey, bool isSortNeeded)
+      internal void CreateGroupForProject(ProjectKey projectKey, bool isSortNeeded)
       {
          ListViewGroup group = new ListViewGroup(projectKey.ProjectName, projectKey.ProjectName)
          {
@@ -302,7 +223,7 @@ namespace mrHelper.App.Controls
          Groups.Insert(indexToInsert, group);
       }
 
-      public void UpdateGroups()
+      internal void UpdateGroups()
       {
          IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
          if (mergeRequestCache == null)
@@ -335,7 +256,7 @@ namespace mrHelper.App.Controls
          EndUpdate();
       }
 
-      public void UpdateItems()
+      internal void UpdateItems()
       {
          IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
          if (mergeRequestCache == null)
@@ -452,6 +373,512 @@ namespace mrHelper.App.Controls
          EndUpdate();
       }
 
+      protected override void Dispose(bool disposing)
+      {
+         _unmuteTimer.Tick -= onUnmuteTimerTick;
+         _unmuteTimer.Stop();
+         _unmuteTimer.Dispose();
+         _toolTip?.Dispose();
+         base.Dispose(disposing);
+      }
+
+      protected override void OnMouseLeave(EventArgs e)
+      {
+         // this callback is called not only when mouse leaves the list view so let's check if we need to cancel tooltip
+         ListViewHitTestInfo hit = HitTest(this.PointToClient(Cursor.Position));
+         _toolTip.CancelIfNeeded(hit);
+
+         base.OnMouseLeave(e);
+      }
+
+      protected override void OnMouseMove(MouseEventArgs e)
+      {
+         ListViewHitTestInfo hit = HitTest(e.Location);
+         _toolTip.UpdateOnMouseMove(e.Location);
+         changeCursor(hit);
+
+         base.OnMouseMove(e);
+      }
+
+      protected override void OnMouseDown(MouseEventArgs e)
+      {
+         int headerHeight = LogicalToDeviceUnits(GroupHeaderHeight);
+         ListViewHitTestInfo testAtCursor = HitTest(e.Location);
+         ListViewHitTestInfo testBelowCursor = HitTest(e.Location.X, e.Location.Y + headerHeight);
+         if (testAtCursor.Item == null && testBelowCursor.Item != null)
+         {
+            ProjectKey projectKey = getGroupProjectKey(testBelowCursor.Item.Group);
+            setGroupCollapsing(projectKey, !isGroupCollapsed(projectKey));
+            return;
+         }
+         onUrlClick(testAtCursor);
+         base.OnMouseDown(e);
+      }
+
+      protected override void OnMouseDoubleClick(MouseEventArgs e)
+      {
+         base.OnMouseDoubleClick(e);
+         if (GetSelectedMergeRequest() != null)
+         {
+            GetContextMenu()?.LaunchDefaultAction();
+         }
+      }
+
+      protected override void OnColumnWidthChanged(ColumnWidthChangedEventArgs e)
+      {
+         base.OnColumnWidthChanged(e);
+         saveColumnWidths();
+      }
+
+      protected override void OnColumnReordered(ColumnReorderedEventArgs e)
+      {
+         base.OnColumnReordered(e);
+         saveColumIndices(e.OldDisplayIndex, e.NewDisplayIndex);
+      }
+
+      protected override void OnItemSelectionChanged(ListViewItemSelectionChangedEventArgs e)
+      {
+         if (_suppressSelectionChange)
+         {
+            return;
+         }
+         base.OnItemSelectionChanged(e);
+      }
+
+      protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
+      {
+         base.OnDrawColumnHeader(e);
+         e.DrawDefault = true;
+      }
+
+      protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
+      {
+         base.OnDrawSubItem(e);
+
+         if (e.Item.ListView == null)
+         {
+            return; // is being removed
+         }
+
+         int iidColumnIndex = getColumnByTag("IId").Index;
+         int labelsColumnIndex = getColumnByTag("Labels").Index;
+         int? resolvedCountColumnIndex = getColumnByTag("Resolved")?.Index;
+         int? totalTimeColumnIndex = getColumnByTag("TotalTime")?.Index;
+         int? titleColumnIndex = getColumnByTag("Title")?.Index;
+         int? sourceBranchColumnIndex = getColumnByTag("SourceBranch")?.Index;
+         int? targetBranchColumnIndex = getColumnByTag("TargetBranch")?.Index;
+         int? jiraColumnIndex = getColumnByTag("Jira")?.Index;
+         int? authorColumnIndex = getColumnByTag("Author")?.Index;
+
+         bool isIIdColumnItem = e.ColumnIndex == iidColumnIndex;
+         bool isLabelsColumnItem = e.ColumnIndex == labelsColumnIndex;
+         bool isResolvedColumnItem = resolvedCountColumnIndex.HasValue && e.ColumnIndex == resolvedCountColumnIndex.Value;
+         bool isTotalTimeColumnItem = totalTimeColumnIndex.HasValue && e.ColumnIndex == totalTimeColumnIndex.Value;
+         bool isTitleColumnItem = titleColumnIndex.HasValue && e.ColumnIndex == titleColumnIndex.Value;
+         bool isSourceBranchColumnItem = sourceBranchColumnIndex.HasValue && e.ColumnIndex == sourceBranchColumnIndex.Value;
+         bool isTargetBranchColumnItem = targetBranchColumnIndex.HasValue && e.ColumnIndex == targetBranchColumnIndex.Value;
+         bool isJiraColumnItem = jiraColumnIndex.HasValue && e.ColumnIndex == jiraColumnIndex.Value;
+         bool isAuthorColumnItem = authorColumnIndex.HasValue && e.ColumnIndex == authorColumnIndex.Value;
+
+         bool isWrappableColumnItem =
+               isTitleColumnItem
+            || isSourceBranchColumnItem
+            || isTargetBranchColumnItem
+            || isJiraColumnItem
+            || isAuthorColumnItem;
+         bool needWordWrap = isWrappableColumnItem && Program.Settings.WordWrapLongRows;
+         StringFormatFlags formatFlags = needWordWrap ? StringFormatFlags.LineLimit : StringFormatFlags.NoWrap;
+         StringFormat format = new StringFormat
+            {
+               Trimming = StringTrimming.EllipsisCharacter,
+               FormatFlags = formatFlags
+            };
+
+         Rectangle bounds = e.Bounds;
+         if (e.ColumnIndex == 0 && e.Item.ListView.Columns[0].DisplayIndex != 0)
+         {
+            bounds = WinFormsHelpers.GetFirstColumnCorrectRectangle(e.Item.ListView, e.Item);
+         }
+
+         bool isSelected = e.Item.Selected;
+         FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
+         Color backgroundColor = getMergeRequestColor(fmk, Color.Transparent, true);
+         WinFormsHelpers.FillRectangle(e, bounds, backgroundColor, isSelected);
+
+         string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
+         bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
+         if (isIIdColumnItem)
+         {
+            FontStyle fontStyle = isClickable ? FontStyle.Underline : FontStyle.Regular;
+            using (Font font = new Font(e.Item.ListView.Font, fontStyle))
+            {
+               e.Graphics.DrawString(text, font, Brushes.Blue, bounds, format);
+               if (isMuted(fmk))
+               {
+                  drawEllipseForIId(e.Graphics, format, bounds, fmk, font);
+               }
+            }
+         }
+         else if (isClickable)
+         {
+            using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
+            {
+               Brush brush = Brushes.Blue;
+               e.Graphics.DrawString(text, font, brush, bounds, format);
+            }
+         }
+         else if (isSelected && isLabelsColumnItem)
+         {
+            using (Brush brush = new SolidBrush(getMergeRequestColor(fmk, SystemColors.Window, true)))
+            {
+               e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
+            }
+         }
+         else if (isResolvedColumnItem)
+         {
+            using (Brush brush = new SolidBrush(getDiscussionCountColor(fmk, isSelected)))
+            {
+               e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
+            }
+         }
+         else if (isTotalTimeColumnItem)
+         {
+            Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
+            e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
+         }
+         else
+         {
+            Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+            e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
+         }
+      }
+
+      private void ContextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+      {
+         MergeRequestListViewContextMenu contextMenu = ((MergeRequestListViewContextMenu)(sender));
+         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
+         if (selectedMergeRequest == null)
+         {
+            contextMenu.DisableAll();
+         }
+         else
+         {
+            contextMenu.EnableAll();
+            contextMenu.SetUnmuteActionEnabled(isMuted(selectedMergeRequest.Value));
+         }
+         contextMenu.UpdateItemState();
+      }
+
+      internal MergeRequestListViewContextMenu GetContextMenu()
+      {
+         return ContextMenuStrip as MergeRequestListViewContextMenu;
+      }
+
+      internal void EnsureSelectionVisible()
+      {
+         if (SelectedIndices.Count > 0)
+         {
+            EnsureVisible(SelectedIndices[0]);
+         }
+      }
+
+      internal void EnsureGroupIsNotCollapsed(ProjectKey projectKey)
+      {
+         setGroupCollapsing(projectKey, false);
+      }
+
+      internal FullMergeRequestKey? GetSelectedMergeRequest()
+      {
+         if (SelectedIndices.Count > 0)
+         {
+            ListViewItem item = SelectedItems[0];
+            return isSummaryItem(item) ? new FullMergeRequestKey?() : (FullMergeRequestKey)(item.Tag);
+         }
+         return null;
+      }
+
+      internal void MuteSelectedMergeRequestFor(TimeSpan timeSpan)
+      {
+         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
+         if (selectedMergeRequest.HasValue)
+         {
+            muteMergeRequestFor(selectedMergeRequest.Value, timeSpan);
+            ContentChanged?.Invoke(this);
+         }
+      }
+
+      internal void UnmuteSelectedMergeRequest()
+      {
+         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
+         if (selectedMergeRequest.HasValue && unmuteMergeRequest(selectedMergeRequest.Value))
+         {
+            ContentChanged?.Invoke(this);
+         }
+      }
+
+      internal Color? GetSummaryColor()
+      {
+         return getMergeRequestCollectionColor(excludeMuted(getMatchingFilterMergeRequests()));
+      }
+
+      private void drawEllipseForIId(Graphics g, StringFormat format,
+         Rectangle bounds, FullMergeRequestKey fmk, Font font)
+      {
+         int longestIId = getMatchingFilterMergeRequests()
+            .OrderBy(mrk => mrk.MergeRequest.IId)
+            .LastOrDefault().MergeRequest?.IId ?? 0;
+         SizeF textSize = g.MeasureString(longestIId.ToString(), font, bounds.Width, format);
+         float ellipseWidth = (float)(textSize.Height - 0.30 * textSize.Height); // 30% less
+         float ellipseHeight = ellipseWidth;
+         float ellipsePaddingX = 5;
+         float ellipseOffsetX = textSize.Width;
+         float ellipseX = ellipseOffsetX + ellipsePaddingX;
+         float ellipseY = (textSize.Height - ellipseHeight) / 2;
+         if (bounds.Width > ellipseX + ellipseWidth)
+         {
+            using (Brush ellipseBrush = new SolidBrush(getMergeRequestColor(fmk, Color.Transparent, false)))
+            {
+               RectangleF ellipseRect = new RectangleF(
+                  bounds.X + ellipseX, bounds.Y + ellipseY, ellipseWidth, ellipseHeight);
+               g.FillEllipse(ellipseBrush, ellipseRect);
+            }
+         }
+      }
+
+      private static void onUrlClick(ListViewHitTestInfo hit)
+      {
+         bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
+         if (clickable)
+         {
+            UrlHelper.OpenBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
+         }
+      }
+
+      private void changeCursor(ListViewHitTestInfo hit)
+      {
+         bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
+         Cursor = clickable ? Cursors.Hand : Cursors.Default;
+      }
+
+      private Color getMergeRequestColor(FullMergeRequestKey fmk, Color defaultColor, bool ignoreMuted)
+      {
+         IEnumerable<FullMergeRequestKey> mergeRequests = isSummaryKey(fmk)
+            ? getMatchingFilterProjectItems(fmk.ProjectKey)
+            : new List<FullMergeRequestKey>{ fmk };
+         mergeRequests = ignoreMuted ? excludeMuted(mergeRequests) : mergeRequests;
+         return getMergeRequestCollectionColor(mergeRequests) ?? defaultColor;
+      }
+
+      private Color? getMergeRequestCollectionColor(IEnumerable<FullMergeRequestKey> keys)
+      {
+         ColorSchemeItem[] colorSchemeItems = _colorScheme?.GetColors("MergeRequests");
+         return colorSchemeItems?
+            .FirstOrDefault(colorSchemeItem =>
+            {
+               IEnumerable<string> conditions = colorSchemeItem.Conditions;
+               IEnumerable<MergeRequest> mergeRequests = keys.Select(fmk => fmk.MergeRequest);
+               return GitLabClient.Helpers.CheckConditions(conditions, mergeRequests);
+            })?
+            .Color;
+      }
+
+      private Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
+      {
+         if (isSummaryKey(fmk))
+         {
+            return Color.Black;
+         }
+
+         DiscussionCount dc = _dataCache?.DiscussionCache?.GetDiscussionCount(
+            new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId)) ?? default(DiscussionCount);
+
+         if (dc.Status != DiscussionCount.EStatus.Ready || dc.Resolvable == null || dc.Resolved == null)
+         {
+            return Color.Black;
+         }
+
+         if (dc.Resolvable.Value == dc.Resolved.Value)
+         {
+            return isSelected ? Color.SpringGreen : Color.Green;
+         }
+
+         Debug.Assert(dc.Resolvable.Value > dc.Resolved.Value);
+         return isSelected ? Color.Orange : Color.Red;
+      }
+
+      private string getDiscussionCount(MergeRequestKey mrk)
+      {
+         if (_dataCache?.DiscussionCache == null)
+         {
+            return "N/A";
+         }
+
+         DiscussionCount dc = _dataCache.DiscussionCache.GetDiscussionCount(mrk);
+         switch (dc.Status)
+         {
+            case DiscussionCount.EStatus.NotAvailable:
+               return "N/A";
+
+            case DiscussionCount.EStatus.Loading:
+               return "Loading...";
+
+            case DiscussionCount.EStatus.Ready:
+               return String.Format("{0} / {1}", dc.Resolved.Value, dc.Resolvable.Value);
+         }
+
+         Debug.Assert(false);
+         return "N/A";
+      }
+
+      private string getSize(MergeRequestKey key)
+      {
+         if (_diffStatisticProvider == null)
+         {
+            return String.Empty;
+         }
+
+         DiffStatistic? diffStatistic = _diffStatisticProvider.GetStatistic(key, out string errMsg);
+         return diffStatistic?.ToString() ?? errMsg;
+      }
+
+      private string getTotalTimeText(MergeRequestKey key, User author)
+      {
+         ITotalTimeCache totalTimeCache = _dataCache?.TotalTimeCache;
+         if (totalTimeCache == null)
+         {
+            return String.Empty;
+         }
+
+         User currentUser = _getCurrentUser(key.ProjectKey.HostName);
+         bool isTimeTrackingAllowed = TimeTrackingHelpers.IsTimeTrackingAllowed(
+            author, key.ProjectKey.HostName, currentUser);
+         return TimeTrackingHelpers.ConvertTotalTimeToText(totalTimeCache.GetTotalTime(key), isTimeTrackingAllowed);
+      }
+
+      private DateTime? getRefreshedTime(MergeRequestKey key)
+      {
+         IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
+         if (mergeRequestCache == null)
+         {
+            return null;
+         }
+
+         return mergeRequestCache.GetMergeRequestRefreshTime(key);
+      }
+
+      private string getRefreshed(MergeRequestKey key, bool tooltipText)
+      {
+         DateTime? refreshedTime = getRefreshedTime(key);
+         return tooltipText ? TimeUtils.DateTimeOptToString(refreshedTime)
+                            : TimeUtils.DateTimeOptToStringAgo(refreshedTime);
+      }
+
+      private DateTime? getLatestCommitTime(MergeRequestKey key)
+      {
+         IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
+         if (mergeRequestCache == null)
+         {
+            return null;
+         }
+
+         Commit latestCommit = mergeRequestCache
+            .GetCommits(key)?
+            .OrderByDescending(commit => commit.Created_At)
+            .FirstOrDefault();
+         return latestCommit?.Created_At;
+      }
+
+      private string getActivities(DateTime createdAt, MergeRequestKey key, bool tooltipText)
+      {
+         DateTime? latestCommitTime = getLatestCommitTime(key);
+         return String.Format("Created: {0}\r\nLatest commit: {1}",
+            tooltipText ? TimeUtils.DateTimeToString(createdAt)
+                        : TimeUtils.DateTimeToStringAgo(createdAt),
+            tooltipText ? TimeUtils.DateTimeOptToString(latestCommitTime)
+                        : TimeUtils.DateTimeOptToStringAgo(latestCommitTime));
+      }
+
+      private string getJiraTask(MergeRequest mergeRequest) => GitLabClient.Helpers.GetJiraTask(mergeRequest);
+
+      private string getJiraTaskUrl(MergeRequest mergeRequest) => GitLabClient.Helpers.GetJiraTaskUrl(
+         mergeRequest, Program.ServiceManager.GetJiraServiceUrl());
+
+      private void recalcRowHeightForMergeRequestListView()
+      {
+         if (Items.Count == 0)
+         {
+            return;
+         }
+
+         int getMaxRowCountInColumn(string columnName)
+         {
+            int labelsColumnIndex = getColumnByTag(columnName).Index;
+            IEnumerable<string> rows = Items.Cast<ListViewItem>()
+               .Select(item => ((ListViewSubItemInfo)(item.SubItems[labelsColumnIndex].Tag)).Text);
+            IEnumerable<int> rowCounts = rows
+                  .Select(thing => thing.Count(y => y == '\n'));
+            return rowCounts.Max() + 1;
+         }
+
+         int maxLineCount = Math.Max(getMaxRowCountInColumn("Labels"), getMaxRowCountInColumn("Author"));
+         setListViewRowHeight(this, maxLineCount);
+      }
+
+      private ColumnHeader getColumnByTag(string tag)
+      {
+         return Columns
+            .Cast<ColumnHeader>()
+            .SingleOrDefault(x => x.Tag.ToString() == tag);
+      }
+
+      private static void setListViewRowHeight(ListView listView, int maxLineCount)
+      {
+         // It is expected to use font size in pixels here
+         int height = listView.Font.Height * maxLineCount + 2;
+
+         ImageList imgList = new ImageList
+         {
+            ImageSize = new Size(1, height)
+         };
+         listView.SmallImageList = imgList;
+      }
+
+      private static bool isSummaryKey(FullMergeRequestKey fmk)
+      {
+         return fmk.MergeRequest == null;
+      }
+
+      private static bool isSummaryItem(ListViewItem item)
+      {
+         return item != null && isSummaryKey((FullMergeRequestKey)(item.Tag));
+      }
+
+      private IEnumerable<FullMergeRequestKey> getAllProjectItems(ProjectKey projectKey)
+      {
+         return _dataCache?
+            .MergeRequestCache?
+            .GetMergeRequests(projectKey)
+            .Select(mergeRequest => new FullMergeRequestKey(projectKey, mergeRequest))
+            ?? Array.Empty<FullMergeRequestKey>();
+      }
+
+      private IEnumerable<FullMergeRequestKey> getMatchingFilterProjectItems(ProjectKey projectKey)
+      {
+         return getAllProjectItems(projectKey).Where(fmk => doesMatchFilter(fmk.MergeRequest));
+      }
+
+      private IEnumerable<FullMergeRequestKey> getMatchingFilterMergeRequests()
+      {
+         return Groups
+            .Cast<ListViewGroup>()
+            .SelectMany(group => getMatchingFilterProjectItems(getGroupProjectKey(group)));
+      }
+
+      private bool doesMatchFilter(MergeRequest mergeRequest)
+      {
+         return _mergeRequestFilter?.DoesMatchFilter(mergeRequest) ?? true;
+      }
+
       private ListViewItem createListViewMergeRequestItem(FullMergeRequestKey fmk)
       {
          ListViewGroup group = Groups[fmk.ProjectKey.ProjectName];
@@ -463,7 +890,7 @@ namespace mrHelper.App.Controls
          return item;
       }
 
-      void setSubItemTag(ListViewItem item, string columnTag, ListViewSubItemInfo subItemInfo)
+      private void setSubItemTag(ListViewItem item, string columnTag, ListViewSubItemInfo subItemInfo)
       {
          ColumnHeader columnHeader = getColumnByTag(columnTag);
          if (columnHeader == null)
@@ -505,27 +932,6 @@ namespace mrHelper.App.Controls
          setSubItemTag(item, "Resolved", new ListViewSubItemInfo(x => getDiscussionCount(mrk), () => String.Empty));
          setSubItemTag(item, "RefreshTime", new ListViewSubItemInfo(x => getRefreshed(mrk, x), () => String.Empty));
          setSubItemTag(item, "Activities", new ListViewSubItemInfo(x => getActivities(mr.Created_At, mrk, x), () => String.Empty));
-      }
-
-      private void recalcRowHeightForMergeRequestListView()
-      {
-         if (Items.Count == 0)
-         {
-            return;
-         }
-
-         int getMaxRowCountInColumn(string columnName)
-         {
-            int labelsColumnIndex = getColumnByTag(columnName).Index;
-            IEnumerable<string> rows = Items.Cast<ListViewItem>()
-               .Select(item => ((ListViewSubItemInfo)(item.SubItems[labelsColumnIndex].Tag)).Text);
-            IEnumerable<int> rowCounts = rows
-                  .Select(thing => thing.Count(y => y == '\n'));
-            return rowCounts.Max() + 1;
-         }
-
-         int maxLineCount = Math.Max(getMaxRowCountInColumn("Labels"), getMaxRowCountInColumn("Author"));
-         setListViewRowHeight(this, maxLineCount);
       }
 
       private void setListViewSubItemsTagsForSummary(ListViewItem item)
@@ -597,175 +1003,68 @@ namespace mrHelper.App.Controls
          setSubItemTag(item, "Activities", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
       }
 
-      ColumnHeader getColumnByTag(string tag)
+      private void onSerialize(IPersistentStateSetter writer)
       {
-         return Columns
-            .Cast<ColumnHeader>()
-            .SingleOrDefault(x => x.Tag.ToString() == tag);
-      }
-
-      private string getDiscussionCount(MergeRequestKey mrk)
-      {
-         if (_dataCache?.DiscussionCache == null)
          {
-            return "N/A";
+            string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
+            new PersistentStateSaveHelper(recordName, writer).Save(_collapsedProjects);
          }
 
-         DiscussionCount dc = _dataCache.DiscussionCache.GetDiscussionCount(mrk);
-         switch (dc.Status)
          {
-            case DiscussionCount.EStatus.NotAvailable:
-               return "N/A";
-
-            case DiscussionCount.EStatus.Loading:
-               return "Loading...";
-
-            case DiscussionCount.EStatus.Ready:
-               return String.Format("{0} / {1}", dc.Resolved.Value, dc.Resolvable.Value);
-         }
-
-         Debug.Assert(false);
-         return "N/A";
-      }
-
-      string getSize(MergeRequestKey key)
-      {
-         if (_diffStatisticProvider == null)
-         {
-            return String.Empty;
-         }
-
-         DiffStatistic? diffStatistic = _diffStatisticProvider.GetStatistic(key, out string errMsg);
-         return diffStatistic?.ToString() ?? errMsg;
-      }
-
-      string getTotalTimeText(MergeRequestKey key, User author)
-      {
-         ITotalTimeCache totalTimeCache = _dataCache?.TotalTimeCache;
-         if (totalTimeCache == null)
-         {
-            return String.Empty;
-         }
-
-         User currentUser = _getCurrentUser(key.ProjectKey.HostName);
-         bool isTimeTrackingAllowed = TimeTrackingHelpers.IsTimeTrackingAllowed(
-            author, key.ProjectKey.HostName, currentUser);
-         return TimeTrackingHelpers.ConvertTotalTimeToText(totalTimeCache.GetTotalTime(key), isTimeTrackingAllowed);
-      }
-
-      DateTime? getRefreshedTime(MergeRequestKey key)
-      {
-         IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
-         if (mergeRequestCache == null)
-         {
-            return null;
-         }
-
-         return mergeRequestCache.GetMergeRequestRefreshTime(key);
-      }
-
-      string getRefreshed(MergeRequestKey key, bool tooltipText)
-      {
-         DateTime? refreshedTime = getRefreshedTime(key);
-         return tooltipText ? TimeUtils.DateTimeOptToString(refreshedTime)
-                            : TimeUtils.DateTimeOptToStringAgo(refreshedTime);
-      }
-
-      DateTime? getLatestCommitTime(MergeRequestKey key)
-      {
-         IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
-         if (mergeRequestCache == null)
-         {
-            return null;
-         }
-
-         Commit latestCommit = mergeRequestCache
-            .GetCommits(key)?
-            .OrderByDescending(commit => commit.Created_At)
-            .FirstOrDefault();
-         return latestCommit?.Created_At;
-      }
-
-      string getActivities(DateTime createdAt, MergeRequestKey key, bool tooltipText)
-      {
-         DateTime? latestCommitTime = getLatestCommitTime(key);
-         return String.Format("Created: {0}\r\nLatest commit: {1}",
-            tooltipText ? TimeUtils.DateTimeToString(createdAt)
-                        : TimeUtils.DateTimeToStringAgo(createdAt),
-            tooltipText ? TimeUtils.DateTimeOptToString(latestCommitTime)
-                        : TimeUtils.DateTimeOptToStringAgo(latestCommitTime));
-      }
-
-      string getJiraTask(MergeRequest mergeRequest) => GitLabClient.Helpers.GetJiraTask(mergeRequest);
-
-      string getJiraTaskUrl(MergeRequest mergeRequest) => GitLabClient.Helpers.GetJiraTaskUrl(
-         mergeRequest, Program.ServiceManager.GetJiraServiceUrl());
-
-      public event Action<ListView> ContentChanged;
-
-      protected override void OnMouseLeave(EventArgs e)
-      {
-         // this callback is called not only when mouse leaves the list view so let's check if we need to cancel tooltip
-         ListViewHitTestInfo hit = HitTest(this.PointToClient(Cursor.Position));
-         _toolTip.CancelIfNeeded(hit);
-
-         base.OnMouseLeave(e);
-      }
-
-      protected override void OnMouseMove(MouseEventArgs e)
-      {
-         ListViewHitTestInfo hit = HitTest(e.Location);
-         _toolTip.UpdateOnMouseMove(e.Location);
-         changeCursor(hit);
-
-         base.OnMouseMove(e);
-      }
-
-      static readonly int GroupHeaderHeight = 20; // found experimentally
-
-      protected override void OnMouseDown(MouseEventArgs e)
-      {
-         int headerHeight = LogicalToDeviceUnits(GroupHeaderHeight);
-         ListViewHitTestInfo testAtCursor = HitTest(e.Location);
-         ListViewHitTestInfo testBelowCursor = HitTest(e.Location.X, e.Location.Y + headerHeight);
-         if (testAtCursor.Item == null && testBelowCursor.Item != null)
-         {
-            ProjectKey projectKey = getGroupProjectKey(testBelowCursor.Item.Group);
-            setGroupCollapsing(projectKey, !isGroupCollapsed(projectKey));
-            return;
-         }
-         onUrlClick(testAtCursor);
-         base.OnMouseDown(e);
-      }
-
-      protected override void OnMouseDoubleClick(MouseEventArgs e)
-      {
-         base.OnMouseDoubleClick(e);
-         if (GetSelectedMergeRequest() != null)
-         {
-            GetContextMenu()?.LaunchDefaultAction();
+            string recordName = String.Format("MutedMergeRequests_{0}", getIdentity());
+            new PersistentStateSaveHelper(recordName, writer).Save(_mutedMergeRequests);
          }
       }
 
-      protected override void OnColumnWidthChanged(ColumnWidthChangedEventArgs e)
+      private void onDeserialize(IPersistentStateGetter reader)
       {
-         base.OnColumnWidthChanged(e);
-         saveColumnWidths();
-      }
-
-      protected override void OnColumnReordered(ColumnReorderedEventArgs e)
-      {
-         base.OnColumnReordered(e);
-         saveColumIndices(e.OldDisplayIndex, e.NewDisplayIndex);
-      }
-
-      protected override void OnItemSelectionChanged(ListViewItemSelectionChangedEventArgs e)
-      {
-         if (_suppressSelectionChange)
          {
-            return;
+            string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
+            new PersistentStateLoadHelper(recordName, reader).Load(
+               out HashSet<ProjectKey> collapsedProjectsHashSet);
+            if (collapsedProjectsHashSet != null)
+            {
+               _collapsedProjects = collapsedProjectsHashSet;
+            }
          }
-         base.OnItemSelectionChanged(e);
+
+         {
+            string recordName = String.Format("MutedMergeRequests_{0}", getIdentity());
+            new PersistentStateLoadHelper(recordName, reader).Load(
+               out Dictionary<MergeRequestKey, DateTime> mutedMergeRequests);
+            if (mutedMergeRequests != null)
+            {
+               _mutedMergeRequests = mutedMergeRequests;
+            }
+         }
+
+         UpdateItems();
+      }
+
+      private void setColumnWidths(Dictionary<string, int> widths)
+      {
+         foreach (ColumnHeader column in Columns)
+         {
+            string columnName = (string)column.Tag;
+            if (widths.ContainsKey(columnName))
+            {
+               column.Width = widths[columnName];
+            }
+         }
+      }
+
+      private void setColumnIndices(Dictionary<string, int> indices)
+      {
+         try
+         {
+            WinFormsHelpers.ReorderListViewColumns(this, indices);
+         }
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle("[MainForm] Cannot restore list view column display indices", ex);
+            ConfigurationHelper.SetColumnIndices(Program.Settings,
+               WinFormsHelpers.GetListViewDisplayIndices(this), getIdentity());
+         }
       }
 
       private void saveColumIndices(int oldIndex, int newIndex)
@@ -784,236 +1083,9 @@ namespace mrHelper.App.Controls
          ConfigurationHelper.SetColumnWidths(Program.Settings, columnWidths, getIdentity());
       }
 
-      protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
+      private ProjectKey getGroupProjectKey(ListViewGroup group)
       {
-         base.OnDrawSubItem(e);
-
-         if (e.Item.ListView == null)
-         {
-            return; // is being removed
-         }
-
-         int iidColumnIndex = getColumnByTag("IId").Index;
-         int labelsColumnIndex = getColumnByTag("Labels").Index;
-         int? resolvedCountColumnIndex = getColumnByTag("Resolved")?.Index;
-         int? totalTimeColumnIndex = getColumnByTag("TotalTime")?.Index;
-         int? titleColumnIndex = getColumnByTag("Title")?.Index;
-         int? sourceBranchColumnIndex = getColumnByTag("SourceBranch")?.Index;
-         int? targetBranchColumnIndex = getColumnByTag("TargetBranch")?.Index;
-         int? jiraColumnIndex = getColumnByTag("Jira")?.Index;
-         int? authorColumnIndex = getColumnByTag("Author")?.Index;
-
-         bool isIIdColumnItem = e.ColumnIndex == iidColumnIndex;
-         bool isLabelsColumnItem = e.ColumnIndex == labelsColumnIndex;
-         bool isResolvedColumnItem = resolvedCountColumnIndex.HasValue && e.ColumnIndex == resolvedCountColumnIndex.Value;
-         bool isTotalTimeColumnItem = totalTimeColumnIndex.HasValue && e.ColumnIndex == totalTimeColumnIndex.Value;
-         bool isTitleColumnItem = titleColumnIndex.HasValue && e.ColumnIndex == titleColumnIndex.Value;
-         bool isSourceBranchColumnItem = sourceBranchColumnIndex.HasValue && e.ColumnIndex == sourceBranchColumnIndex.Value;
-         bool isTargetBranchColumnItem = targetBranchColumnIndex.HasValue && e.ColumnIndex == targetBranchColumnIndex.Value;
-         bool isJiraColumnItem = jiraColumnIndex.HasValue && e.ColumnIndex == jiraColumnIndex.Value;
-         bool isAuthorColumnItem = authorColumnIndex.HasValue && e.ColumnIndex == authorColumnIndex.Value;
-
-         bool isWrappableColumnItem =
-               isTitleColumnItem
-            || isSourceBranchColumnItem
-            || isTargetBranchColumnItem
-            || isJiraColumnItem
-            || isAuthorColumnItem;
-         bool needWordWrap = isWrappableColumnItem && Program.Settings.WordWrapLongRows;
-         StringFormatFlags formatFlags = needWordWrap ? StringFormatFlags.LineLimit : StringFormatFlags.NoWrap;
-         StringFormat format = new StringFormat
-            {
-               Trimming = StringTrimming.EllipsisCharacter,
-               FormatFlags = formatFlags
-            };
-
-         Rectangle bounds = e.Bounds;
-         if (e.ColumnIndex == 0 && e.Item.ListView.Columns[0].DisplayIndex != 0)
-         {
-            bounds = WinFormsHelpers.GetFirstColumnCorrectRectangle(e.Item.ListView, e.Item);
-         }
-
-         bool isSelected = e.Item.Selected;
-         FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
-         WinFormsHelpers.FillRectangle(e, bounds, getMergeRequestColor(fmk, Color.Transparent), isSelected);
-
-         string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
-         bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
-         if (isIIdColumnItem)
-         {
-            FontStyle fontStyle = isClickable ? FontStyle.Underline : FontStyle.Regular;
-            using (Font font = new Font(e.Item.ListView.Font, fontStyle))
-            {
-               e.Graphics.DrawString(text, font, Brushes.Blue, bounds, format);
-               if (isSummaryKey(fmk) ? isMutedGroup(fmk.ProjectKey) : isMuted(fmk))
-               {
-                  drawEllipseForIId(e.Graphics, format, bounds, fmk, font);
-               }
-            }
-         }
-         else if (isClickable)
-         {
-            using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
-            {
-               Brush brush = Brushes.Blue;
-               e.Graphics.DrawString(text, font, brush, bounds, format);
-            }
-         }
-         else if (isSelected && isLabelsColumnItem)
-         {
-            using (Brush brush = new SolidBrush(getMergeRequestColor(fmk, SystemColors.Window)))
-            {
-               e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
-            }
-         }
-         else if (isResolvedColumnItem)
-         {
-            using (Brush brush = new SolidBrush(getDiscussionCountColor(fmk, isSelected)))
-            {
-               e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
-            }
-         }
-         else if (isTotalTimeColumnItem)
-         {
-            Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
-            e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
-         }
-         else
-         {
-            Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
-            e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
-         }
-      }
-
-      private void drawEllipseForIId(Graphics g, StringFormat format,
-         Rectangle bounds, FullMergeRequestKey fmk, Font font)
-      {
-         int longestIId = getMatchingFilterMergeRequests()
-            .OrderBy(mrk => mrk.MergeRequest.IId)
-            .Last().MergeRequest.IId;
-         SizeF textSize = g.MeasureString(longestIId.ToString(), font, bounds.Width, format);
-         float ellipseWidth = (float)(textSize.Height - 0.30 * textSize.Height); // 30% less
-         float ellipseHeight = ellipseWidth;
-         float ellipsePaddingX = 5;
-         float ellipseOffsetX = textSize.Width;
-         float ellipseX = ellipseOffsetX + ellipsePaddingX;
-         float ellipseY = (textSize.Height - ellipseHeight) / 2;
-         if (bounds.Width > ellipseX + ellipseWidth)
-         {
-            using (Brush ellipseBrush = new SolidBrush(getMergeRequestColor(fmk, Color.Transparent, false)))
-            {
-               RectangleF ellipseRect = new RectangleF(
-                  bounds.X + ellipseX, bounds.Y + ellipseY, ellipseWidth, ellipseHeight);
-               g.FillEllipse(ellipseBrush, ellipseRect);
-            }
-         }
-      }
-
-      protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
-      {
-         base.OnDrawColumnHeader(e);
-         e.DrawDefault = true;
-      }
-
-      private static void onUrlClick(ListViewHitTestInfo hit)
-      {
-         bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
-         if (clickable)
-         {
-            UrlHelper.OpenBrowser(((ListViewSubItemInfo)(hit.SubItem.Tag)).Url);
-         }
-      }
-
-      private void changeCursor(ListViewHitTestInfo hit)
-      {
-         bool clickable = hit.SubItem != null && ((ListViewSubItemInfo)(hit.SubItem.Tag)).Clickable;
-         Cursor = clickable ? Cursors.Hand : Cursors.Default;
-      }
-
-      private System.Drawing.Color getMergeRequestColor(FullMergeRequestKey fmk, Color defaultColor,
-         bool excludeMuted = true)
-      {
-         IEnumerable<FullMergeRequestKey> mergeRequests = isSummaryKey(fmk)
-            ? getMatchingFilterProjectItems(fmk.ProjectKey)
-            : new List<FullMergeRequestKey>{ fmk };
-         return getMergeRequestCollectionColor(mergeRequests, excludeMuted) ?? defaultColor;
-      }
-
-      private Color? getMergeRequestCollectionColor(IEnumerable<FullMergeRequestKey> fullMergeRequestKeys,
-         bool excludeMuted = true)
-      {
-         if (excludeMuted)
-         {
-            fullMergeRequestKeys = fullMergeRequestKeys.Where(fmk => !isMuted(fmk));
-         }
-
-         ColorSchemeItem[] colorSchemeItems = _colorScheme?.GetColors("MergeRequests");
-         return colorSchemeItems
-            .FirstOrDefault(colorSchemeItem =>
-            {
-               IEnumerable<string> conditions = colorSchemeItem.Conditions;
-               IEnumerable<MergeRequest> mergeRequests = fullMergeRequestKeys.Select(fmk => fmk.MergeRequest);
-               return GitLabClient.Helpers.CheckConditions(conditions, mergeRequests);
-            })?.Color;
-      }
-
-      private bool isMuted(FullMergeRequestKey fmk)
-      {
-         Debug.Assert(fmk.MergeRequest != null);
-         return _mutedMergeRequests
-            .Any(mrk => mrk.Key.IId == fmk.MergeRequest.IId
-                     && mrk.Key.ProjectKey.Equals(fmk.ProjectKey));
-      }
-
-      private bool isMutedGroup(ProjectKey projectKey)
-      {
-         return getMatchingFilterProjectItems(projectKey).Any(fmk => isMuted(fmk));
-      }
-
-      private IEnumerable<FullMergeRequestKey> getMatchingFilterMergeRequests()
-      {
-         List<FullMergeRequestKey> keys = new List<FullMergeRequestKey>();
-         foreach (ListViewGroup group in Groups)
-         {
-            keys.AddRange(getMatchingFilterProjectItems(getGroupProjectKey(group)));
-         }
-         return keys;
-      }
-
-      private System.Drawing.Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
-      {
-         if (isSummaryKey(fmk))
-         {
-            return Color.Black;
-         }
-
-         DiscussionCount dc = _dataCache?.DiscussionCache?.GetDiscussionCount(
-            new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId)) ?? default(DiscussionCount);
-
-         if (dc.Status != DiscussionCount.EStatus.Ready || dc.Resolvable == null || dc.Resolved == null)
-         {
-            return Color.Black;
-         }
-
-         if (dc.Resolvable.Value == dc.Resolved.Value)
-         {
-            return isSelected ? Color.SpringGreen : Color.Green;
-         }
-
-         Debug.Assert(dc.Resolvable.Value > dc.Resolved.Value);
-         return isSelected ? Color.Orange : Color.Red;
-      }
-
-      private static void setListViewRowHeight(ListView listView, int maxLineCount)
-      {
-         // It is expected to use font size in pixels here
-         int height = listView.Font.Height * maxLineCount + 2;
-
-         ImageList imgList = new ImageList
-         {
-            ImageSize = new Size(1, height)
-         };
-         listView.SmallImageList = imgList;
+         return ((ProjectKey)group.Tag);
       }
 
       private bool isGroupCollapsed(ProjectKey projectKey)
@@ -1049,20 +1121,6 @@ namespace mrHelper.App.Controls
          Win32Tools.SetVerticalScrollPosition(Handle, vScrollPosition);
          NativeMethods.LockWindowUpdate(IntPtr.Zero);
       }
- 
-      internal void setCollapsedProjects(IEnumerable<ProjectKey> projectKeys)
-      {
-         _collapsedProjects.Clear();
-         foreach (ProjectKey projectKey in projectKeys)
-         {
-            _collapsedProjects.Add(projectKey);
-         }
-      }
- 
-      internal void setMutedMergeRequests(Dictionary<MergeRequestKey, DateTime> mutedMergeRequests)
-      {
-         _mutedMergeRequests = mutedMergeRequests;
-      }
 
       private void updateGroupCaption(ListViewGroup group)
       {
@@ -1078,112 +1136,6 @@ namespace mrHelper.App.Controls
          if (groupHeader != group.Header)
          {
             group.Header = groupHeader;
-         }
-      }
-
-      private static bool isSummaryItem(ListViewItem item)
-      {
-         if (item == null)
-         {
-            return false;
-         }
-         return isSummaryKey((FullMergeRequestKey)(item.Tag));
-      }
-
-      private static bool isSummaryKey(FullMergeRequestKey fmk)
-      {
-         return fmk.MergeRequest == null;
-      }
-
-      private ProjectKey getGroupProjectKey(ListViewGroup group)
-      {
-         return ((ProjectKey)group.Tag);
-      }
-
-      private IEnumerable<FullMergeRequestKey> getAllProjectItems(ProjectKey projectKey)
-      {
-         IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
-         if (mergeRequestCache == null)
-         {
-            return Array.Empty<FullMergeRequestKey>();
-         }
-
-         return mergeRequestCache
-            .GetMergeRequests(projectKey)
-            .Select(mergeRequest => new FullMergeRequestKey(projectKey, mergeRequest));
-      }
-
-      private IEnumerable<FullMergeRequestKey> getMatchingFilterProjectItems(ProjectKey projectKey)
-      {
-         return getAllProjectItems(projectKey).Where(fmk => doesMatchFilter(fmk.MergeRequest));
-      }
-
-      bool doesMatchFilter(MergeRequest mergeRequest)
-      {
-         return _mergeRequestFilter?.DoesMatchFilter(mergeRequest) ?? true;
-      }
-
-      private void onSerialize(IPersistentStateSetter writer)
-      {
-         {
-            string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
-            new PersistentStateSaveHelper(recordName, writer).Save(_collapsedProjects);
-         }
-
-         {
-            string recordName = String.Format("MutedMergeRequests_{0}", getIdentity());
-            new PersistentStateSaveHelper(recordName, writer).Save(_mutedMergeRequests);
-         }
-      }
-
-      private void onDeserialize(IPersistentStateGetter reader)
-      {
-         {
-            string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
-            new PersistentStateLoadHelper(recordName, reader).Load(
-               out HashSet<ProjectKey> collapsedProjectsHashSet);
-            if (collapsedProjectsHashSet != null)
-            {
-               setCollapsedProjects(collapsedProjectsHashSet);
-            }
-         }
-
-         {
-            string recordName = String.Format("MutedMergeRequests_{0}", getIdentity());
-            new PersistentStateLoadHelper(recordName, reader).Load(
-               out Dictionary<MergeRequestKey, DateTime> mutedMergeRequests);
-            if (mutedMergeRequests != null)
-            {
-               setMutedMergeRequests(mutedMergeRequests);
-            }
-         }
-
-         UpdateItems();
-      }
-
-      private void setColumnWidths(Dictionary<string, int> widths)
-      {
-         foreach (ColumnHeader column in Columns)
-         {
-            string columnName = (string)column.Tag;
-            if (widths.ContainsKey(columnName))
-            {
-               column.Width = widths[columnName];
-            }
-         }
-      }
-
-      private void setColumnIndices(Dictionary<string, int> indices)
-      {
-         try
-         {
-            WinFormsHelpers.ReorderListViewColumns(this, indices);
-         }
-         catch (ArgumentException ex)
-         {
-            ExceptionHandlers.Handle("[MainForm] Cannot restore list view column display indices", ex);
-            ConfigurationHelper.SetColumnIndices(Program.Settings,
-               WinFormsHelpers.GetListViewDisplayIndices(this), getIdentity());
          }
       }
 
@@ -1207,6 +1159,22 @@ namespace mrHelper.App.Controls
          }
          _mutedMergeRequests.Remove(mrk);
          return true;
+      }
+
+      private IEnumerable<FullMergeRequestKey> excludeMuted(IEnumerable<FullMergeRequestKey> keys)
+      {
+         return keys.Where(fmk => !isMuted(fmk));
+      }
+
+      private bool isMuted(FullMergeRequestKey fmk)
+      {
+         if (isSummaryKey(fmk))
+         {
+            return getMatchingFilterProjectItems(fmk.ProjectKey).Any(key => isMuted(key));
+         }
+         return _mutedMergeRequests
+            .Any(mrk => mrk.Key.IId == fmk.MergeRequest.IId
+                     && mrk.Key.ProjectKey.Equals(fmk.ProjectKey));
       }
 
       private void onUnmuteTimerTick(object sender, EventArgs e)
@@ -1250,9 +1218,11 @@ namespace mrHelper.App.Controls
       private ColorScheme _colorScheme;
       private PersistentStorage _persistentStorage;
       private bool _suppressSelectionChange;
-      private readonly HashSet<ProjectKey> _collapsedProjects = new HashSet<ProjectKey>();
+      private HashSet<ProjectKey> _collapsedProjects = new HashSet<ProjectKey>();
       private Dictionary<MergeRequestKey, DateTime> _mutedMergeRequests =
          new Dictionary<MergeRequestKey, DateTime>();
+
+      private static readonly int GroupHeaderHeight = 20; // found experimentally
 
       private static readonly int UnmuteTimerInterval = 60 * 1000; // 1 minute
       private readonly Timer _unmuteTimer = new Timer
