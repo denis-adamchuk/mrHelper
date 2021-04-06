@@ -10,7 +10,6 @@ using mrHelper.App.Forms.Helpers;
 using mrHelper.GitLabClient;
 using mrHelper.Common.Exceptions;
 using static mrHelper.GitLabClient.Helpers;
-using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -150,7 +149,7 @@ namespace mrHelper.App.Forms
          {
             setTitle(commit.Title);
             setDescription(trimTitleFromCommitMessage(commit));
-            toggleWIP(); // switch on WIP by default
+            toggleDraft(); // switch on Draft by default
          }
 
          _isLoadingCommit = false;

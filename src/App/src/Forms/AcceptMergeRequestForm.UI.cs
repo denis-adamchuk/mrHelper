@@ -24,13 +24,13 @@ namespace mrHelper.App.Forms
          BeginInvoke(new Action(async () => await _onOpenDiscussions?.Invoke(_mergeRequestKey, _title, _author, _webUrl)));
       }
 
-      async private void buttonToggleWIP_Click(object sender, EventArgs e)
+      async private void buttonToggleDraft_Click(object sender, EventArgs e)
       {
-         traceInformation("Changing WIP by user request");
+         traceInformation("Changing Draft by user request");
          try
          {
-            buttonToggleWIP.Enabled = false;
-            MergeRequest mergeRequest = await toggleWipAsync();
+            buttonToggleDraft.Enabled = false;
+            MergeRequest mergeRequest = await toggleDraftAsync();
             applyMergeRequest(mergeRequest);
          }
          catch (MergeRequestEditorException ex)
@@ -254,7 +254,7 @@ namespace mrHelper.App.Forms
       {
          labelWIPStatus.Text = isWIP ? "This is a Work in Progress" : "This is not a Work in Progress";
          labelWIPStatus.ForeColor = isWIP ? Color.Red : Color.Green;
-         buttonToggleWIP.Enabled = isWIP;
+         buttonToggleDraft.Enabled = isWIP;
       }
 
       private void updateDiscussionControls(bool areUnresolvedDiscussions)

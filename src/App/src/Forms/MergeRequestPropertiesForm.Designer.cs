@@ -34,7 +34,7 @@
          this.groupBoxTarget = new System.Windows.Forms.GroupBox();
          this.comboBoxTargetBranch = new System.Windows.Forms.ComboBox();
          this.groupBoxTitle = new System.Windows.Forms.GroupBox();
-         this.buttonToggleWIP = new System.Windows.Forms.Button();
+         this.buttonToggleDraft = new System.Windows.Forms.Button();
          this.buttonEditTitle = new System.Windows.Forms.Button();
          this.htmlPanelTitle = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.groupBoxDescription = new System.Windows.Forms.GroupBox();
@@ -106,7 +106,7 @@
          // 
          this.groupBoxTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBoxTitle.Controls.Add(this.buttonToggleWIP);
+         this.groupBoxTitle.Controls.Add(this.buttonToggleDraft);
          this.groupBoxTitle.Controls.Add(this.buttonEditTitle);
          this.groupBoxTitle.Controls.Add(this.htmlPanelTitle);
          this.groupBoxTitle.Location = new System.Drawing.Point(12, 74);
@@ -116,16 +116,16 @@
          this.groupBoxTitle.TabStop = false;
          this.groupBoxTitle.Text = "Title";
          // 
-         // buttonToggleWIP
+         // buttonToggleDraft
          // 
-         this.buttonToggleWIP.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-         this.buttonToggleWIP.Location = new System.Drawing.Point(6, 45);
-         this.buttonToggleWIP.Name = "buttonToggleWIP";
-         this.buttonToggleWIP.Size = new System.Drawing.Size(110, 23);
-         this.buttonToggleWIP.TabIndex = 4;
-         this.buttonToggleWIP.Text = "Toggle WIP status";
-         this.buttonToggleWIP.UseVisualStyleBackColor = true;
-         this.buttonToggleWIP.Click += new System.EventHandler(this.buttonToggleWIP_Click);
+         this.buttonToggleDraft.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+         this.buttonToggleDraft.Location = new System.Drawing.Point(6, 45);
+         this.buttonToggleDraft.Name = "buttonToggleDraft";
+         this.buttonToggleDraft.Size = new System.Drawing.Size(110, 23);
+         this.buttonToggleDraft.TabIndex = 4;
+         this.buttonToggleDraft.Text = "Toggle Draft status";
+         this.buttonToggleDraft.UseVisualStyleBackColor = true;
+         this.buttonToggleDraft.Click += new System.EventHandler(this.buttonToggleDraft_Click);
          // 
          // buttonEditTitle
          // 
@@ -370,7 +370,7 @@
       protected System.Windows.Forms.GroupBox groupBoxSource;
       protected System.Windows.Forms.GroupBox groupBoxTarget;
       protected System.Windows.Forms.GroupBox groupBoxTitle;
-      protected System.Windows.Forms.Button buttonToggleWIP;
+      protected System.Windows.Forms.Button buttonToggleDraft;
       protected System.Windows.Forms.Button buttonEditTitle;
       protected TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelTitle;
       protected System.Windows.Forms.GroupBox groupBoxDescription;

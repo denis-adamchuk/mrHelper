@@ -530,12 +530,12 @@ namespace mrHelper.App.Forms
          Debug.Assert(mergeRequest.Squash == _isSquashNeeded.Value);
       }
 
-      async private Task<MergeRequest> toggleWipAsync()
+      async private Task<MergeRequest> toggleDraftAsync()
       {
-         string newTitle = StringUtils.ToggleWorkInProgressTitle(_title);
+         string newTitle = StringUtils.ToggleDraftTitle(_title);
          UpdateMergeRequestParameters updateMergeRequestParameters = new UpdateMergeRequestParameters(
             null, newTitle, null, null, null, null, null, null);
-         traceInformation("[AcceptMergeRequestForm] Toggling WIP status...");
+         traceInformation("[AcceptMergeRequestForm] Toggling Draft status...");
          return await applyModification(updateMergeRequestParameters);
       }
 

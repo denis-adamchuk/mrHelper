@@ -240,7 +240,7 @@ namespace mrHelper.Common.Tools
          return title != null && (title.StartsWith(WorkInProgressPrefix) || title.StartsWith(DraftPrefix));
       }
 
-      public static string ToggleWorkInProgressTitle(string title)
+      public static string ToggleDraftTitle(string title)
       {
          if (title == null)
          {
@@ -255,7 +255,7 @@ namespace mrHelper.Common.Tools
          {
             return title.Substring(DraftPrefix.Length);
          }
-         return WorkInProgressPrefix + title;
+         return DraftPrefix + title;
       }
 
       public static byte[] GetBytesSafe(string value)

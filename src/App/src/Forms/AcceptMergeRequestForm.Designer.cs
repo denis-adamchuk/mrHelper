@@ -57,7 +57,7 @@
          this.labelTargetBranchLabel = new System.Windows.Forms.Label();
          this.labelSourceBranchLabel = new System.Windows.Forms.Label();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-         this.buttonToggleWIP = new System.Windows.Forms.Button();
+         this.buttonToggleDraft = new System.Windows.Forms.Button();
          this.buttonDiscussions = new System.Windows.Forms.Button();
          this.buttonRebase = new System.Windows.Forms.Button();
          this.linkLabelOpenAtGitLab = new System.Windows.Forms.LinkLabel();
@@ -355,16 +355,16 @@
          this.labelSourceBranchLabel.TabIndex = 2;
          this.labelSourceBranchLabel.Text = "Source Branch:";
          // 
-         // buttonToggleWIP
+         // buttonToggleDraft
          // 
-         this.buttonToggleWIP.Location = new System.Drawing.Point(6, 44);
-         this.buttonToggleWIP.Name = "buttonToggleWIP";
-         this.buttonToggleWIP.Size = new System.Drawing.Size(129, 32);
-         this.buttonToggleWIP.TabIndex = 2;
-         this.buttonToggleWIP.Text = "Toggle WIP Status";
-         this.toolTip.SetToolTip(this.buttonToggleWIP, "Set or reset WIP state");
-         this.buttonToggleWIP.UseVisualStyleBackColor = true;
-         this.buttonToggleWIP.Click += new System.EventHandler(this.buttonToggleWIP_Click);
+         this.buttonToggleDraft.Location = new System.Drawing.Point(6, 44);
+         this.buttonToggleDraft.Name = "buttonToggleDraft";
+         this.buttonToggleDraft.Size = new System.Drawing.Size(129, 32);
+         this.buttonToggleDraft.TabIndex = 2;
+         this.buttonToggleDraft.Text = "Toggle Draft Status";
+         this.toolTip.SetToolTip(this.buttonToggleDraft, "Set or reset Draft state");
+         this.buttonToggleDraft.UseVisualStyleBackColor = true;
+         this.buttonToggleDraft.Click += new System.EventHandler(this.buttonToggleDraft_Click);
          // 
          // buttonDiscussions
          // 
@@ -467,7 +467,7 @@
          // 
          // groupBoxWorkInProgress
          // 
-         this.groupBoxWorkInProgress.Controls.Add(this.buttonToggleWIP);
+         this.groupBoxWorkInProgress.Controls.Add(this.buttonToggleDraft);
          this.groupBoxWorkInProgress.Controls.Add(this.labelWIPStatus);
          this.groupBoxWorkInProgress.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxWorkInProgress.Location = new System.Drawing.Point(3, 3);
@@ -482,10 +482,10 @@
          this.labelWIPStatus.AutoSize = true;
          this.labelWIPStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.labelWIPStatus.Location = new System.Drawing.Point(8, 20);
-         this.labelWIPStatus.Name = "labelWIPStatus";
+         this.labelWIPStatus.Name = "labelDraftStatus";
          this.labelWIPStatus.Size = new System.Drawing.Size(112, 13);
          this.labelWIPStatus.TabIndex = 0;
-         this.labelWIPStatus.Text = "<WIP status here>";
+         this.labelWIPStatus.Text = "<Draft status here>";
          // 
          // AcceptMergeRequestForm
          // 
@@ -561,7 +561,7 @@
       private System.Windows.Forms.Button buttonDiscussions;
       private System.Windows.Forms.Label labelDiscussionStatus;
       private System.Windows.Forms.GroupBox groupBoxWorkInProgress;
-      private System.Windows.Forms.Button buttonToggleWIP;
+      private System.Windows.Forms.Button buttonToggleDraft;
       private System.Windows.Forms.Label labelWIPStatus;
    }
 }

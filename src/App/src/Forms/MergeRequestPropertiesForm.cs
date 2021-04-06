@@ -4,12 +4,11 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Markdig;
 using GitLabSharp.Entities;
 using mrHelper.GitLabClient;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
-using Markdig;
-using mrHelper.App.Controls;
 using mrHelper.Common.Interfaces;
 using mrHelper.CommonControls.Controls;
 
@@ -98,9 +97,9 @@ namespace mrHelper.App.Forms
          applyInitialState();
       }
 
-      private void buttonToggleWIP_Click(object sender, EventArgs e)
+      private void buttonToggleDraft_Click(object sender, EventArgs e)
       {
-         toggleWIP();
+         toggleDraft();
       }
 
       private void buttonEditTitle_Click(object sender, EventArgs e)
@@ -304,9 +303,9 @@ namespace mrHelper.App.Forms
          }
       }
 
-      protected void toggleWIP()
+      protected void toggleDraft()
       {
-         setTitle(StringUtils.ToggleWorkInProgressTitle(getTitle()));
+         setTitle(StringUtils.ToggleDraftTitle(getTitle()));
       }
 
       protected void fillProjectListAndSelect(IEnumerable<string> projects, string defaultProjectName)
@@ -348,7 +347,7 @@ namespace mrHelper.App.Forms
          bool allDetailsLoaded = isProjectSelected && isSourceBranchSelected && isTargetBranchSelected && !isLoadingCommit();
          buttonEditDescription.Enabled = allDetailsLoaded;
          buttonEditTitle.Enabled = allDetailsLoaded;
-         buttonToggleWIP.Enabled = allDetailsLoaded;
+         buttonToggleDraft.Enabled = allDetailsLoaded;
          checkBoxDeleteSourceBranch.Enabled = allDetailsLoaded;
          if (getSourceBranchName() == "master")
          {
