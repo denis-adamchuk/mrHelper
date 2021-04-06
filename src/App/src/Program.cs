@@ -50,6 +50,7 @@ namespace mrHelper.App
       /// <summary>
       /// The main entry point for the application.
       /// </summary>
+      [System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
       [STAThread]
       private static void Main()
       {
