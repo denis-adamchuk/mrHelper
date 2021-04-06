@@ -405,6 +405,12 @@ namespace mrHelper.App.Controls
          {
             muteMergeRequestFor(selectedMergeRequest.Value, timeSpan);
             ContentChanged?.Invoke(this);
+            Trace.TraceInformation(
+               "[MergeRequestListView] Muted MR with IId {0} (project {1}) in LV \"{2}\" for {3}",
+               selectedMergeRequest.Value.MergeRequest.IId,
+               selectedMergeRequest.Value.ProjectKey.ProjectName,
+               getIdentity(),
+               timeSpan.ToString());
          }
       }
 
@@ -414,6 +420,11 @@ namespace mrHelper.App.Controls
          if (selectedMergeRequest.HasValue && unmuteMergeRequest(selectedMergeRequest.Value))
          {
             ContentChanged?.Invoke(this);
+            Trace.TraceInformation(
+               "[MergeRequestListView] Unmuted MR with IId {0} (project {1}) in LV \"{2}\"",
+               selectedMergeRequest.Value.MergeRequest.IId,
+               selectedMergeRequest.Value.ProjectKey.ProjectName,
+               getIdentity());
          }
       }
 
