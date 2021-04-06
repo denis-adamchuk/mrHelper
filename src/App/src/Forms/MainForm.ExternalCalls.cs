@@ -457,13 +457,12 @@ namespace mrHelper.App.Forms
                   return false; // user decided to not un-hide merge request
                }
 
-               if (!getListView(EDataCacheType.Live).SelectMergeRequest(mrk, true))
+               if (!switchTabAndSelectMergeRequest(EDataCacheType.Live, mrk))
                {
                   Debug.Assert(false);
                   Trace.TraceError(String.Format("[MainForm] Cannot open URL {0}, although MR is cached", url));
                   throw new UrlConnectionException("Something went wrong. ");
                }
-               getListView(EDataCacheType.Live).EnsureSelectionVisible();
             }
             else
             {
@@ -482,7 +481,6 @@ namespace mrHelper.App.Forms
 
       async private Task openUrlAtSearchTabAsync(MergeRequestKey mrk)
       {
-         switchMode(EDataCacheType.Search);
          await searchMergeRequestsSafeAsync(
             new SearchQueryCollection(new SearchQuery
             {
@@ -493,7 +491,7 @@ namespace mrHelper.App.Forms
             EDataCacheType.Search,
             new Func<Exception, bool>(x =>
                throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
-         getListView(EDataCacheType.Search).EnsureGroupIsNotCollapsed(mrk.ProjectKey);
+         switchTabAndSelectMergeRequest(EDataCacheType.Search, mrk);
       }
 
       private bool unhideFilteredMergeRequest(EDataCacheType dataCacheType, MergeRequestKey mrk)
@@ -512,7 +510,6 @@ namespace mrHelper.App.Forms
          {
             checkBoxDisplayFilter.Checked = false;
          }
-         getListView(dataCacheType).EnsureGroupIsNotCollapsed(mrk.ProjectKey);
          return true;
       }
 

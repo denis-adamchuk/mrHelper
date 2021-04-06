@@ -146,7 +146,13 @@ namespace mrHelper.App.Controls
             }
 
             Items[0].Selected = true;
+            ensureSelectionIsVisible();
             return true;
+         }
+
+         if (isGroupCollapsed(mrk.Value.ProjectKey))
+         {
+            setGroupCollapsing(mrk.Value.ProjectKey, false);
          }
 
          foreach (ListViewItem item in Items)
@@ -161,6 +167,7 @@ namespace mrHelper.App.Controls
              && mrk.Value.IId == key.MergeRequest.IId)
             {
                item.Selected = true;
+               ensureSelectionIsVisible();
                return true;
             }
          }
@@ -176,6 +183,7 @@ namespace mrHelper.App.Controls
             if (mrk.Value.ProjectKey.MatchProject(group.Name) && group.Items.Count > 0)
             {
                group.Items[0].Selected = true;
+               ensureSelectionIsVisible();
                return true;
             }
          }
@@ -186,6 +194,7 @@ namespace mrHelper.App.Controls
             if (group.Items.Count > 0)
             {
                group.Items[0].Selected = true;
+               ensureSelectionIsVisible();
                return true;
             }
          }
@@ -373,19 +382,6 @@ namespace mrHelper.App.Controls
       internal MergeRequestListViewContextMenu GetContextMenu()
       {
          return ContextMenuStrip as MergeRequestListViewContextMenu;
-      }
-
-      internal void EnsureSelectionVisible()
-      {
-         if (SelectedIndices.Count > 0)
-         {
-            EnsureVisible(SelectedIndices[0]);
-         }
-      }
-
-      internal void EnsureGroupIsNotCollapsed(ProjectKey projectKey)
-      {
-         setGroupCollapsing(projectKey, false);
       }
 
       internal FullMergeRequestKey? GetSelectedMergeRequest()
@@ -610,6 +606,14 @@ namespace mrHelper.App.Controls
          {
             Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
             e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
+         }
+      }
+
+      private void ensureSelectionIsVisible()
+      {
+         if (SelectedIndices.Count > 0)
+         {
+            EnsureVisible(SelectedIndices[0]);
          }
       }
 

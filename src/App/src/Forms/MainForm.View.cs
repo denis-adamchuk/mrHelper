@@ -1145,13 +1145,17 @@ namespace mrHelper.App.Forms
          control.Location = new System.Drawing.Point(controlLeft, controlTop);
       }
 
-      private bool switchTabAndSelectMergeRequest(EDataCacheType mode, MergeRequestKey? mrk)
+      private void switchTabAndSelectMergeRequestOrAnythingElse(EDataCacheType mode, MergeRequestKey? mrk)
       {
-         switchMode(mode);
-         return getListView(mode).SelectMergeRequest(mrk, true);
+         switchMode(mode).SelectMergeRequest(mrk, false);
       }
 
-      private void switchMode(EDataCacheType mode)
+      private bool switchTabAndSelectMergeRequest(EDataCacheType mode, MergeRequestKey? mrk)
+      {
+         return switchMode(mode).SelectMergeRequest(mrk, true);
+      }
+
+      private MergeRequestListView switchMode(EDataCacheType mode)
       {
          if (mode != getCurrentTabDataCacheType())
          {
@@ -1159,18 +1163,22 @@ namespace mrHelper.App.Forms
             {
                case EDataCacheType.Live:
                   tabControlMode.SelectedTab = tabPageLive;
-                  break;
+                  return listViewLiveMergeRequests;
+
                case EDataCacheType.Search:
                   tabControlMode.SelectedTab = tabPageSearch;
-                  break;
+                  return listViewFoundMergeRequests;
+
                case EDataCacheType.Recent:
                   tabControlMode.SelectedTab = tabPageRecent;
-                  break;
+                  return listViewRecentMergeRequests;
+
                default:
                   Debug.Assert(false);
                   break;
             }
          }
+         return getListView(getCurrentTabDataCacheType());
       }
 
       private void clearCustomActionControls()

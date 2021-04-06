@@ -274,8 +274,7 @@ namespace mrHelper.App.Forms
             int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostname].IId : 0;
 
             MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostname, projectname), iid);
-            getListView(EDataCacheType.Live).SelectMergeRequest(mrk, false);
-            getListView(EDataCacheType.Live).EnsureSelectionVisible();
+            switchTabAndSelectMergeRequestOrAnythingElse(EDataCacheType.Live, mrk);
          }
       }
 
