@@ -296,6 +296,11 @@ namespace mrHelper.App.Forms
          applyNeedShiftRepliesChange(!(sender as CheckBox).Checked);
       }
 
+      private void checkBoxEmulateNativeLineBreaks_CheckedChanged(object sender, EventArgs e)
+      {
+         applyEmulateNativeLineBreaks((sender as CheckBox).Checked);
+      }
+
       private void checkBoxDiscussionColumnFixedWidth_CheckedChanged(object sender, EventArgs e)
       {
          applyIsFixedWidthChange((sender as CheckBox).Checked);

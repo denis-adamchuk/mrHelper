@@ -46,6 +46,7 @@ namespace mrHelper.App.Forms
          checkBoxShowMyActivity.Checked = Program.Settings.Notifications_MyActivity;
          checkBoxShowServiceNotifications.Checked = Program.Settings.Notifications_Service;
          checkBoxWordWrapLongRows.Checked = Program.Settings.WordWrapLongRows;
+         checkBoxEmulateNativeLineBreaks.Checked = Program.Settings.EmulateNativeLineBreaksInDiscussions;
 
          setKnownHostsDropdownValue();
          setDiffContextPositionRadioValue();
@@ -749,6 +750,14 @@ namespace mrHelper.App.Forms
          if (!_loadingConfiguration)
          {
             Program.Settings.NeedShiftReplies = value;
+         }
+      }
+
+      private void applyEmulateNativeLineBreaks(bool value)
+      {
+         if (!_loadingConfiguration)
+         {
+            Program.Settings.EmulateNativeLineBreaksInDiscussions = value;
          }
       }
 

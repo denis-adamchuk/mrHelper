@@ -60,6 +60,9 @@ namespace mrHelper.App.Helpers
       private static readonly string NeedShiftRepliesKeyName = "NeedShiftReplies";
       private static readonly bool   NeedShiftRepliesDefaultValue = true;
 
+      private static readonly string EmulateNativeLineBreaksInDiscussionsKeyName      = "EmulateNativeLineBreaksInDiscussions";
+      private static readonly bool   EmulateNativeLineBreaksInDiscussionsDefaultValue = false;
+
       private static readonly string MinimizeOnCloseKeyName = "MinimizeOnClose";
       private static readonly bool   MinimizeOnCloseDefaultValue = false;
 

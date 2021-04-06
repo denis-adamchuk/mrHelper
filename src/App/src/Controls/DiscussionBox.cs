@@ -543,6 +543,15 @@ namespace mrHelper.App.Controls
          Debug.Assert(noteControl is HtmlPanel);
 
          string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
+         if (Program.Settings.EmulateNativeLineBreaksInDiscussions)
+         {
+            body = body
+               .TrimEnd('\n')
+               .Replace("\n", "<br>")
+               .Replace("</li><br>", "</li>")
+               .Replace("<br><ul>", "<ul>")
+               .Replace("<br><ol>", "<ol>");
+         }
          noteControl.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
 
          if (noteControl.Visible)

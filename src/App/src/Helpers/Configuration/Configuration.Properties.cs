@@ -181,6 +181,12 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(NeedShiftRepliesKeyName, value);
       }
 
+      public bool EmulateNativeLineBreaksInDiscussions
+      {
+         get => getBoolValue(EmulateNativeLineBreaksInDiscussionsKeyName, EmulateNativeLineBreaksInDiscussionsDefaultValue);
+         set => setBoolValue(EmulateNativeLineBreaksInDiscussionsKeyName, value);
+      }
+
       public bool IsDiscussionColumnWidthFixed
       {
          get => getBoolValue(IsDiscussionColumnWidthFixedKeyName, IsDiscussionColumnWidthFixedDefaultValue);

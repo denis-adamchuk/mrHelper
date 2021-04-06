@@ -268,6 +268,7 @@ namespace mrHelper.App.Forms
          this.panel1 = new System.Windows.Forms.Panel();
          this.panelConnectionStatus = new System.Windows.Forms.Panel();
          this.labelConnectionStatus = new System.Windows.Forms.Label();
+         this.checkBoxEmulateNativeLineBreaks = new System.Windows.Forms.CheckBox();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -1579,15 +1580,16 @@ namespace mrHelper.App.Forms
          this.linkLabelResetAllColors.Visible = false;
          this.linkLabelResetAllColors.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelResetAllColors_LinkClicked);
          // 
-         // checkBoxWordWrapTitle
+         // checkBoxWordWrapLongRows
          // 
          this.checkBoxWordWrapLongRows.AutoSize = true;
          this.checkBoxWordWrapLongRows.Location = new System.Drawing.Point(230, 19);
          this.checkBoxWordWrapLongRows.Name = "checkBoxWordWrapLongRows";
-         this.checkBoxWordWrapLongRows.Size = new System.Drawing.Size(102, 17);
+         this.checkBoxWordWrapLongRows.Size = new System.Drawing.Size(100, 17);
          this.checkBoxWordWrapLongRows.TabIndex = 31;
          this.checkBoxWordWrapLongRows.Text = "Wrap long rows";
-         this.toolTip.SetToolTip(this.checkBoxWordWrapLongRows, "Use word wrap mode for merge request titles, source branch names and other long rows in list views");
+         this.toolTip.SetToolTip(this.checkBoxWordWrapLongRows, "Use word wrap mode for merge request titles, source branch names and other long r" +
+        "ows in list views");
          this.checkBoxWordWrapLongRows.UseVisualStyleBackColor = true;
          this.checkBoxWordWrapLongRows.CheckedChanged += new System.EventHandler(this.checkBoxWordWrapLongRows_CheckedChanged);
          // 
@@ -1892,6 +1894,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxDiscussionsView
          // 
+         this.groupBoxDiscussionsView.Controls.Add(this.checkBoxEmulateNativeLineBreaks);
          this.groupBoxDiscussionsView.Controls.Add(this.groupBoxColumnWidth);
          this.groupBoxDiscussionsView.Controls.Add(this.groupBoxDiffContext);
          this.groupBoxDiscussionsView.Controls.Add(this.checkBoxFlatReplies);
@@ -2604,6 +2607,18 @@ namespace mrHelper.App.Forms
          this.labelConnectionStatus.TabIndex = 0;
          this.labelConnectionStatus.Text = "Not connected";
          // 
+         // checkBoxEmulateNativeLineBreaks
+         // 
+         this.checkBoxEmulateNativeLineBreaks.AutoSize = true;
+         this.checkBoxEmulateNativeLineBreaks.Location = new System.Drawing.Point(349, 21);
+         this.checkBoxEmulateNativeLineBreaks.Name = "checkBoxEmulateNativeLineBreaks";
+         this.checkBoxEmulateNativeLineBreaks.Size = new System.Drawing.Size(150, 17);
+         this.checkBoxEmulateNativeLineBreaks.TabIndex = 36;
+         this.checkBoxEmulateNativeLineBreaks.Text = "Emulate native line breaks";
+         this.toolTip.SetToolTip(this.checkBoxEmulateNativeLineBreaks, "Split lines on single line break");
+         this.checkBoxEmulateNativeLineBreaks.UseVisualStyleBackColor = true;
+         this.checkBoxEmulateNativeLineBreaks.CheckedChanged += new System.EventHandler(this.checkBoxEmulateNativeLineBreaks_CheckedChanged);
+         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2901,6 +2916,7 @@ namespace mrHelper.App.Forms
       private LinkLabel linkLabelResetAllColors;
       private Label labelDiscussionsViewColorPaletteHint;
       private CheckBox checkBoxWordWrapLongRows;
+      private CheckBox checkBoxEmulateNativeLineBreaks;
    }
 }
 
