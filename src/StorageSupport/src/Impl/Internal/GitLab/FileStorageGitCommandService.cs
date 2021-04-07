@@ -39,15 +39,16 @@ namespace mrHelper.StorageSupport
       {
          FileRevision fileRevision = new FileRevision(arguments.Filename, arguments.Sha);
          string fileRevisionPath = _fileCache.GetFileRevisionPath(fileRevision);
+         string content;
          try
          {
-            string content = System.IO.File.ReadAllText(fileRevisionPath);
-            return StringUtils.ConvertNewlineWindowsToUnix(content).Split('\n');
+            content = System.IO.File.ReadAllText(fileRevisionPath);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from System.IO.File.ReadAllText()
          {
             throw new GitCommandServiceInternalException(ex);
          }
+         return StringUtils.ConvertNewlineWindowsToUnix(content).Split('\n');
       }
 
       protected override object runCommand(DiffToolArguments arguments)

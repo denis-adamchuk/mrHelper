@@ -58,10 +58,17 @@ namespace mrHelper.GitLabClient.Operators
          {
             return await func();
          }
-         catch (Exception ex)
+         catch (GitLabTaskRunnerCancelled ex)
          {
-            handleException(ex);
-            throw;
+            throw new OperatorException(ex);
+         }
+         catch (GitLabSharpException ex)
+         {
+            throw new OperatorException(ex);
+         }
+         catch (GitLabRequestException ex)
+         {
+            throw new OperatorException(ex);
          }
       }
 
@@ -71,16 +78,15 @@ namespace mrHelper.GitLabClient.Operators
          {
             await func();
          }
-         catch (Exception ex)
+         catch (GitLabTaskRunnerCancelled ex)
          {
-            handleException(ex);
-            throw;
+            throw new OperatorException(ex);
          }
-      }
-
-      private static void handleException(Exception ex)
-      {
-         if (ex is GitLabTaskRunnerCancelled || ex is GitLabSharpException || ex is GitLabRequestException)
+         catch (GitLabSharpException ex)
+         {
+            throw new OperatorException(ex);
+         }
+         catch (GitLabRequestException ex)
          {
             throw new OperatorException(ex);
          }

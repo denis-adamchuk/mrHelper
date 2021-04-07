@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Diagnostics;
 using mrHelper.Common.Exceptions;
 
@@ -10,10 +11,10 @@ namespace mrHelper.Common.Tools
       {
          try
          {
-            string directory = System.IO.Path.GetDirectoryName(filename);
-            System.IO.Directory.CreateDirectory(directory);
+            string directory = Path.GetDirectoryName(filename);
+            Directory.CreateDirectory(directory);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from Path.GetDirectoryName() or Directory.CreateDirectory()
          {
             throw new ArgumentException("Bad filename", ex);
          }

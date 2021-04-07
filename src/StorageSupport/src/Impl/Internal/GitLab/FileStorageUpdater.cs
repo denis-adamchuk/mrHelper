@@ -114,9 +114,12 @@ namespace mrHelper.StorageSupport
                   await doUpdate(false, contextProvider?.GetContext(), null);
                   onFinished?.Invoke();
                }
-               catch (Exception ex)
+               catch (RepositoryAccessorException ex)
                {
-                  Debug.Assert(ex is RepositoryAccessorException || ex is LocalCommitStorageUpdaterLimitException);
+                  ExceptionHandlers.Handle("Silent update failed", ex);
+               }
+               catch (LocalCommitStorageUpdaterLimitException ex)
+               {
                   ExceptionHandlers.Handle("Silent update failed", ex);
                }
                finally
@@ -172,7 +175,7 @@ namespace mrHelper.StorageSupport
             {
                throwOnBadComparison(comparison);
             }
-            catch (Exception ex)
+            catch (LocalCommitStorageUpdaterLimitException ex)
             {
                if (baseToHeadInfo.Files?.Any() ?? false)
                {

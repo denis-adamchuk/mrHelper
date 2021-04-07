@@ -33,7 +33,7 @@ namespace mrHelper.StorageSupport
             {
                Directory.CreateDirectory(parentFolder);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from Directory.CreateDirectory()
             {
                throw new ArgumentException(String.Format("Cannot create folder \"{0}\"", parentFolder), ex);
             }

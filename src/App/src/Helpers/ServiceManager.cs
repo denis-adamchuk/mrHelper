@@ -20,7 +20,7 @@ namespace mrHelper.App.Helpers
             {
                _services = JsonUtils.LoadFromFile<Service[]>(filepath);
             }
-            catch (Exception ex) // whatever de-serialization exception
+            catch (Exception ex) // Any exception from JsonUtils.LoadFromFile()
             {
                ExceptionHandlers.Handle("Cannot load services from file", ex);
             }
@@ -177,7 +177,7 @@ namespace mrHelper.App.Helpers
          {
             return Newtonsoft.Json.JsonConvert.DeserializeObject<LatestVersionInformation>(json);
          }
-         catch (Exception ex) // whatever de-serialization exception
+         catch (Exception ex) // Any exception from DeserializeObject()
          {
             ExceptionHandlers.Handle("Cannot deserialize JSON ", ex);
          }

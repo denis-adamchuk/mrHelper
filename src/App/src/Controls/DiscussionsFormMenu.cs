@@ -231,7 +231,7 @@ namespace mrHelper.App.Controls
             {
                await command.Run();
             }
-            catch (Exception ex) // Whatever happened in Run()
+            catch (Exception ex) // Exception type does not matter
             {
                string errorMessage = "Custom action failed";
                ExceptionHandlers.Handle(errorMessage, ex);

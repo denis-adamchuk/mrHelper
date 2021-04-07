@@ -34,7 +34,7 @@ namespace mrHelper.App.Forms
          {
             await searchMergeRequestsAsync(getHostName(), queryCollection, mode);
          }
-         catch (Exception ex)
+         catch (Exception ex) // rethrow in case of unexpected exceptions
          {
             enableSearchTabControls();
             if (exceptionHandler == null)

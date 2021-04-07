@@ -70,7 +70,7 @@ namespace mrHelper.StorageSupport
                Directory.CreateDirectory(fileRevisionDirName);
             }
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exceptio Path.GetDirectoryName() or Directory.CreateDirectory()
          {
             throw new FileStorageRevisionCacheException(String.Format(
                "Cannot create a directory for revision {0}", fileRevisionPath), ex);
@@ -90,7 +90,7 @@ namespace mrHelper.StorageSupport
                File.WriteAllText(fileRevisionPath, contentAsString);
             }
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from File or System.Text.Encoding.UTF8.GetString() or I/O operations
          {
             throw new FileStorageRevisionCacheException(String.Format(
                "Cannot write a file revision at {0}", fileRevisionPath), ex);
@@ -127,7 +127,7 @@ namespace mrHelper.StorageSupport
          {
             allSubdirectories = Directory.GetDirectories(Path, "*", SearchOption.TopDirectoryOnly);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from Directory.GetDirectories()
          {
             ExceptionHandlers.Handle(String.Format("Cannot obtain a list of subdirectories at {0}", Path), ex);
             return;
@@ -155,7 +155,7 @@ namespace mrHelper.StorageSupport
          {
             allSubdirectories = Directory.GetDirectories(Path, "*", SearchOption.TopDirectoryOnly);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from Directory.GetDirectories()
          {
             ExceptionHandlers.Handle(String.Format("Cannot obtain a list of subdirectories at {0}", Path), ex);
             return;
@@ -167,14 +167,14 @@ namespace mrHelper.StorageSupport
             try
             {
                oldRevisionDirName = System.IO.Path.GetFileName(oldPath);
-               if (oldRevisionDirName.Length != FileStorageUtils.FullShaLength)
-               {
-                  continue;
-               }
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                ExceptionHandlers.Handle(String.Format("Cannot obtain directory name from path {0}", oldPath), ex);
+               continue;
+            }
+            if (oldRevisionDirName.Length != FileStorageUtils.FullShaLength)
+            {
                continue;
             }
 

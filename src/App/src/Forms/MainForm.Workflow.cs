@@ -61,7 +61,7 @@ namespace mrHelper.App.Forms
          {
             await startWorkflowAsync(getHostName());
          }
-         catch (Exception ex)
+         catch (Exception ex) // rethrow in case of unexpected exceptions
          {
             await dropCacheConnectionsAsync();
             if (exceptionHandler == null)

@@ -12,7 +12,7 @@ namespace mrHelper.Common.Tools
             {
                return Convert.FromBase64String(base64String);
             }
-            catch (Exception ex)
+            catch (FormatException ex)
             {
                Exceptions.ExceptionHandlers.Handle("Cannot decode base64 string", ex);
             }
@@ -22,18 +22,7 @@ namespace mrHelper.Common.Tools
 
       public static string ToBase64StringSafe(byte[] bytes)
       {
-         if (bytes != null)
-         {
-            try
-            {
-               return Convert.ToBase64String(bytes);
-            }
-            catch (Exception ex)
-            {
-               Exceptions.ExceptionHandlers.Handle("Cannot encode base64 string", ex);
-            }
-         }
-         return null;
+         return bytes == null ? null : Convert.ToBase64String(bytes);
       }
    }
 }

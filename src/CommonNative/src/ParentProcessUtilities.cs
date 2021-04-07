@@ -57,11 +57,9 @@ public struct ParentProcessUtilities
       {
          return Process.GetProcessById(pbi.InheritedFromUniqueProcessId.ToInt32());
       }
-      catch (Exception)
-      {
-         // not found
-         return null;
-      }
+      catch (ArgumentException) { }
+      catch (InvalidOperationException) { }
+      return null;
    }
 }
 

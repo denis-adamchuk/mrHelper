@@ -493,7 +493,7 @@ namespace mrHelper.App.Forms
                _colorScheme = new ColorScheme(filepath, _expressionResolver);
                return true;
             }
-            catch (Exception ex) // whatever de-serialization exception
+            catch (ArgumentException ex)
             {
                ExceptionHandlers.Handle("Cannot create a color scheme", ex);
             }
@@ -657,7 +657,7 @@ namespace mrHelper.App.Forms
          {
             projectGroups = JsonUtils.LoadFromFile<IEnumerable<ConfigurationHelper.HostInProjectsFile>>(filepath);
          }
-         catch (Exception ex) // whatever de-serialization exception
+         catch (Exception ex) // Any exception from JsonUtils.LoadFromFile()
          {
             ExceptionHandlers.Handle("Cannot load projects from file", ex);
             return;

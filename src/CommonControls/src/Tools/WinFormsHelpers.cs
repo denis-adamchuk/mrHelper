@@ -405,7 +405,7 @@ namespace mrHelper.CommonControls.Tools
                }
             }
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from Registry API
          {
             Trace.TraceError(
                "[WinFormsHelper.IsLightThemeUsed] An exception occurred on attempt to access the registry: {0}",

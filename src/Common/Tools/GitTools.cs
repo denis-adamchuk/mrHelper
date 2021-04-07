@@ -27,13 +27,9 @@ namespace mrHelper.Common.Tools
             ExternalProcess.Result result = ExternalProcess.Start("git", config, true, path);
             return result.StdOut;
          }
-         catch (Exception ex)
+         catch (ExternalProcessException)
          {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               return Array.Empty<string>();
-            }
-            throw;
+            return Array.Empty<string>();
          }
       }
 
@@ -43,13 +39,9 @@ namespace mrHelper.Common.Tools
          {
             setConfigKeyValueUnsafe(scope, key, value, path);
          }
-         catch (Exception ex)
+         catch (ExternalProcessException)
          {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               return;
-            }
-            throw;
+            return;
          }
       }
 
@@ -67,13 +59,9 @@ namespace mrHelper.Common.Tools
          {
             setConfigKeyValueUnsafe(ConfigScope.Global, "http.sslVerify", "false", String.Empty);
          }
-         catch (Exception ex)
+         catch (ExternalProcessException ex)
          {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               throw new SSLVerificationDisableException(ex);
-            }
-            throw;
+            throw new SSLVerificationDisableException(ex);
          }
       }
 
@@ -121,13 +109,9 @@ namespace mrHelper.Common.Tools
 
                return new Version(major, minor, build);
             }
-            catch (Exception ex)
+            catch (ExternalProcessException ex)
             {
-               if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-               {
-                  throw new UnknownVersionException(ex);
-               }
-               throw;
+               throw new UnknownVersionException(ex);
             }
          }
 
@@ -193,12 +177,9 @@ namespace mrHelper.Common.Tools
                }
             }
          }
-         catch (Exception ex)
+         catch (ExternalProcessException ex)
          {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               ExceptionHandlers.Handle("Cannot trace git configuration", ex);
-            }
+            ExceptionHandlers.Handle("Cannot trace git configuration", ex);
          }
       }
 
@@ -218,7 +199,7 @@ namespace mrHelper.Common.Tools
             await operationManager.Wait(descriptor);
             return descriptor.StdErr.Count() == 0;
          }
-         catch (Exception)
+         catch (Exception) // Exception type does not matter
          {
             return false;
          }
@@ -272,13 +253,9 @@ namespace mrHelper.Common.Tools
             string arguments = String.Format("branch --format=%(refname:short) --remote --points-at \"{0}\"", sha);
             return ExternalProcess.Start("git", arguments, true, path).StdOut;
          }
-         catch (Exception ex)
+         catch (ExternalProcessException)
          {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               return Array.Empty<string>();
-            }
-            throw;
+            return Array.Empty<string>();
          }
       }
 
@@ -298,16 +275,9 @@ namespace mrHelper.Common.Tools
                ExternalProcess.Start("git", "config --get remote.origin.url", true, path).StdOut;
             return stdOut.Any() ? stdOut.First() : null;
          }
-         catch (Exception ex)
+         catch (ExternalProcessException)
          {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               return null;
-            }
-            else
-            {
-               throw;
-            }
+            return null;
          }
       }
 

@@ -12,6 +12,8 @@ namespace mrHelper.RevertMSI
    {
       private static readonly string logfilename = "mrHelper.revertMSI.log";
 
+      [System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
+      [STAThread]
       static void Main()
       {
          Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
@@ -36,7 +38,7 @@ namespace mrHelper.RevertMSI
          {
             revert();
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any unhandled exception, including CSE
          {
             HandleUnhandledException(ex);
          }
@@ -102,7 +104,7 @@ namespace mrHelper.RevertMSI
             }
             System.IO.Directory.Delete(installLocation);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from System.IO.Directory.Delete()
          {
             Trace.TraceError(String.Format(
                "Could not delete clean-up installation folder. Exception message: {0}\nCallstack:\n{1}",
@@ -121,7 +123,7 @@ namespace mrHelper.RevertMSI
          {
             System.IO.File.Delete(shortcutFilePath);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from System.IO.Directory.Delete()
          {
             Trace.TraceError(String.Format(
                "Could not delete shortcut. Exception message: {0}\nCallstack:\n{1}",

@@ -214,32 +214,36 @@ namespace mrHelper.App.Forms
                () => onStorageUpdateStateChange());
             return true;
          }
-         catch (Exception ex)
+         catch (LocalCommitStorageUpdaterCancelledException)
          {
-            if (ex is LocalCommitStorageUpdaterCancelledException)
+            MessageBox.Show("Cannot perform requested action without up-to-date storage", "Warning",
+               MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            addOperationRecord("Storage update cancelled by user");
+            return false;
+         }
+         catch (LocalCommitStorageUpdaterFailedException fex)
+         {
+            ExceptionHandlers.Handle(fex.Message, fex);
+            MessageBox.Show(fex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            addOperationRecord("Failed to update storage");
+            return false;
+         }
+         catch (LocalCommitStorageUpdaterLimitException mex)
+         {
+            ExceptionHandlers.Handle(mex.Message, mex);
+            if (!isLimitExceptionFatal)
             {
-               MessageBox.Show("Cannot perform requested action without up-to-date storage", "Warning",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               addOperationRecord("Storage update cancelled by user");
+               return true;
             }
-            else if (ex is LocalCommitStorageUpdaterFailedException fex)
-            {
-               ExceptionHandlers.Handle(ex.Message, ex);
-               MessageBox.Show(fex.OriginalMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               addOperationRecord("Failed to update storage");
-            }
-            else if (ex is LocalCommitStorageUpdaterLimitException mex)
-            {
-               ExceptionHandlers.Handle(ex.Message, mex);
-               if (!isLimitExceptionFatal)
-               {
-                  return true;
-               }
-               string extraMessage = "If there are multiple revisions try selecting two other ones";
-               MessageBox.Show(mex.OriginalMessage + ". " + extraMessage, "Error",
-                  MessageBoxButtons.OK, MessageBoxIcon.Error);
-               addOperationRecord("Failed to update storage");
-            }
+            string extraMessage = "If there are multiple revisions try selecting two other ones";
+            MessageBox.Show(mex.OriginalMessage + ". " + extraMessage, "Error",
+               MessageBoxButtons.OK, MessageBoxIcon.Error);
+            addOperationRecord("Failed to update storage");
+            return false;
+         }
+         catch (Exception) // just in case
+         {
+            Debug.Assert(false);
             return false;
          }
          finally

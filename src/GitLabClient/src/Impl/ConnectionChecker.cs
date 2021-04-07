@@ -23,7 +23,7 @@ namespace mrHelper.GitLabClient
                await client.RunAsync(async (gl) => await gl.CurrentUser.LoadTaskAsync());
                return ConnectionCheckStatus.OK;
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from GitLabSharp API
             {
                if (ex.InnerException is GitLabRequestException rx)
                {

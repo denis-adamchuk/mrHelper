@@ -29,7 +29,7 @@ namespace mrHelper.CustomActions
          {
             throw new CustomCommandLoaderException("Cannot load commands", ex);
          }
-         catch (Exception ex) // whatever XML exception
+         catch (Exception ex) // Any exception from XML parsing code
          {
             throw new CustomCommandLoaderException("Unknown error", ex);
          }

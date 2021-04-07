@@ -15,7 +15,7 @@ namespace mrHelper.Common.Tools
                // only by the same current user.
                return ProtectedData.Protect(data, null, DataProtectionScope.CurrentUser);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from ProtectedData.Protect()
             {
                Exceptions.ExceptionHandlers.Handle("Cannot encrypt data", ex);
             }
@@ -32,7 +32,7 @@ namespace mrHelper.Common.Tools
                //Decrypt the data using DataProtectionScope.CurrentUser.
                return ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from ProtectedData.Unprotect()
             {
                Exceptions.ExceptionHandlers.Handle("Cannot decrypt data", ex);
             }

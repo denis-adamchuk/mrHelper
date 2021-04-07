@@ -27,15 +27,8 @@ namespace mrHelper.Common.Tools
       public void Serialize()
       {
          PersistentState state = new PersistentState();
-         try
-         {
-            OnSerialize?.Invoke(state);
-            saveToFile(state);
-         }
-         catch (Exception ex)
-         {
-            throw new PersistenceStateSerializationException("Cannot serialize state", ex);
-         }
+         OnSerialize?.Invoke(state);
+         saveToFile(state);
       }
 
       /// <summary>
@@ -43,20 +36,20 @@ namespace mrHelper.Common.Tools
       /// </summary>
       public void Deserialize()
       {
-         try
-         {
-            PersistentState state = loadFromFile();
-            OnDeserialize?.Invoke(state);
-         }
-         catch (Exception ex)
-         {
-            throw new PersistenceStateDeserializationException("Cannot deserialize state", ex);
-         }
+         PersistentState state = loadFromFile();
+         OnDeserialize?.Invoke(state);
       }
 
       private void saveToFile(PersistentState state)
       {
-         System.IO.File.WriteAllText(getFilePath(), state.ToJson());
+         try
+         {
+            System.IO.File.WriteAllText(getFilePath(), state.ToJson());
+         }
+         catch (Exception ex) // Any exception from System.IO.File.WriteAllText()
+         {
+            throw new PersistenceStateSerializationException("Cannot serialize state", ex);
+         }
       }
 
       private PersistentState loadFromFile()
@@ -67,7 +60,15 @@ namespace mrHelper.Common.Tools
             return new PersistentState();
          }
 
-         string json = System.IO.File.ReadAllText(filePath);
+         string json;
+         try
+         {
+            json = System.IO.File.ReadAllText(filePath);
+         }
+         catch (Exception ex) // Any exception from System.IO.File.ReadAllText()
+         {
+            throw new PersistenceStateDeserializationException("Cannot deserialize state", ex);
+         }
          return new PersistentState(json);
       }
 

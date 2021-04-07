@@ -28,7 +28,7 @@ namespace mrHelper.StorageSupport
             {
                return JsonUtils.LoadFromFile<Comparison>(comparisonCacheFilepath);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from JsonUtils.LoadFromFile()
             {
                ExceptionHandlers.Handle("Cannot read serialized Comparison object", ex);
             }
@@ -49,7 +49,7 @@ namespace mrHelper.StorageSupport
          {
             JsonUtils.SaveToFile(comparisonCacheFilepath, comparison);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from JsonUtils.SaveToFile()
          {
             ExceptionHandlers.Handle("Cannot serialize Comparison object", ex);
          }
@@ -68,12 +68,12 @@ namespace mrHelper.StorageSupport
             return;
          }
 
-         IEnumerable<string> allFiles = null;
+         IEnumerable<string> allFiles;
          try
          {
             allFiles = Directory.GetFiles(_path);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from Directory.GetFiles()
          {
             ExceptionHandlers.Handle(String.Format("Cannot obtain a list of comparisons at {0}", _path), ex);
             return;
@@ -89,7 +89,7 @@ namespace mrHelper.StorageSupport
             {
                System.IO.File.Delete(file);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from System.IO.File.Delete()
             {
                ExceptionHandlers.Handle(String.Format("Cannot delete old comparison {0}", file), ex);
             }

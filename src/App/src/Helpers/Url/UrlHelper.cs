@@ -29,7 +29,7 @@ namespace mrHelper.App.Helpers
                StringUtils.GetHostWithPrefix(originalParsed.Host), originalParsed.Project, originalParsed.IId);
             return mergeRequestUrl;
          }
-         catch (Exception ex)
+         catch (UriFormatException ex)
          {
             // ok, let's try another parser
             exceptions.Add(ex);
@@ -39,7 +39,7 @@ namespace mrHelper.App.Helpers
          {
             return NewMergeRequestUrlParser.Parse(url);
          }
-         catch (Exception ex)
+         catch (UriFormatException ex)
          {
             // ok, input string cannot be parsed
             exceptions.Add(ex);
@@ -68,7 +68,7 @@ namespace mrHelper.App.Helpers
          {
             Process.Start(url);
          }
-         catch (Exception ex) // see Process.Start exception list
+         catch (Exception ex) // Any exception from Process.Start()
          {
             string errorMessage = "Cannot open URL";
             ExceptionHandlers.Handle(errorMessage, ex);

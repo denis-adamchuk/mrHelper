@@ -41,12 +41,13 @@ namespace mrHelper.Integration.DiffTool
                string key = String.Format("difftool.{0}.cmd", Constants.GitDiffToolName);
                GitTools.SetConfigKeyValue(GitTools.ConfigScope.Global, key, null, String.Empty);
             }
-            catch (Exception ex)
+            catch (ExternalProcessSystemException)
             {
-               if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-               {
-                  Trace.TraceError(String.Format("Cannot remove \"{0}\" from git config", Constants.GitDiffToolName));
-               }
+               Trace.TraceError(String.Format("Cannot remove \"{0}\" from git config", Constants.GitDiffToolName));
+            }
+            catch (ExternalProcessFailureException)
+            {
+               Trace.TraceError(String.Format("Cannot remove \"{0}\" from git config", Constants.GitDiffToolName));
             }
 
             throw;
@@ -66,7 +67,7 @@ namespace mrHelper.Integration.DiffTool
          {
             throw;
          }
-         catch (Exception ex) // whatever XML exception
+         catch (Exception ex) // Any exception from XML parsing code
          {
             throw new DiffToolIntegrationException("Unknown error", ex);
          }

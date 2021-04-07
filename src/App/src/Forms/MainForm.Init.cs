@@ -158,7 +158,7 @@ namespace mrHelper.App.Forms
             {
                _keywords = JsonUtils.LoadFromFile<string[]>(filepath);
             }
-            catch (Exception ex) // whatever de-serialization exception
+            catch (Exception ex) // Any exception from JsonUtils.LoadFromFile()
             {
                ExceptionHandlers.Handle("Cannot load keywords from file", ex);
             }

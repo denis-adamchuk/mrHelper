@@ -270,21 +270,21 @@ namespace mrHelper.App.Controls
             return "<html><body>Cannot access file storage and render diff context</body></html>";
          }
 
+         string errorMessage = "Cannot render HTML context.";
          try
          {
             DiffContext context = getContext(contextMaker, position, depth);
             return DiffContextFormatter.GetHtml(context, fontSizePx, rowsVPaddingPx, fullWidth);
          }
-         catch (Exception ex)
+         catch (ArgumentException ex)
          {
-            if (ex is ArgumentException || ex is ContextMakingException)
-            {
-               string errorMessage = "Cannot render HTML context.";
-               ExceptionHandlers.Handle(errorMessage, ex);
-               return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
-            }
-            throw;
+            ExceptionHandlers.Handle(errorMessage, ex);
          }
+         catch (ContextMakingException ex)
+         {
+            ExceptionHandlers.Handle(errorMessage, ex);
+         }
+         return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
       }
 
       private DiffContext getContext(IContextMaker contextMaker, DiffPosition position, ContextDepth depth)
@@ -293,13 +293,9 @@ namespace mrHelper.App.Controls
          {
             return contextMaker.GetContext(position, depth, UnchangedLinePolicy.TakeFromRight);
          }
-         catch (Exception ex)
+         catch (ContextMakingException) // fallback
          {
-            if (ex is ContextMakingException)
-            {
-               return _simpleContextMaker.GetContext(position, depth, UnchangedLinePolicy.TakeFromRight);
-            }
-            throw;
+            return _simpleContextMaker.GetContext(position, depth, UnchangedLinePolicy.TakeFromRight);
          }
       }
 

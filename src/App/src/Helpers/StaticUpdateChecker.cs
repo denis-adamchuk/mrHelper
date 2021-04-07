@@ -113,19 +113,19 @@ namespace mrHelper.App.Helpers
 
          Debug.Assert(!System.IO.File.Exists(destFilePath));
 
+         Trace.TraceInformation(String.Format(
+            "[StaticUpdateChecker] Copying from \"{0}\" to \"{1}\"...", info.InstallerFilePath, destFilePath));
          try
          {
-            Trace.TraceInformation(String.Format(
-               "[StaticUpdateChecker] Copying from \"{0}\" to \"{1}\"...", info.InstallerFilePath, destFilePath));
             System.IO.File.Copy(info.InstallerFilePath, destFilePath);
-            Trace.TraceInformation("[StaticUpdateChecker] File copied");
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from System.IO.File.Copy()
          {
             ExceptionHandlers.Handle("Cannot download a new version", ex);
             return;
          }
 
+         Trace.TraceInformation("[StaticUpdateChecker] File copied");
          onNewVersionCopiedFromServer(destFilePath, info.VersionNumber);
       }
 

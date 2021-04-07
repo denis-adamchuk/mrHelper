@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using GitLabSharp;
+using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
@@ -162,9 +163,16 @@ namespace mrHelper.GitLabClient
             {
                return (GitLabVersion)(await client.RunAsync(async (gl) => await gl.Version.LoadTaskAsync()));
             }
-            catch (Exception ex)
+            catch (GitLabSharpException ex)
             {
                ExceptionHandlers.Handle("Cannot obtain GitLab server version", ex);
+            }
+            catch (GitLabRequestException ex)
+            {
+               ExceptionHandlers.Handle("Cannot obtain GitLab server version", ex);
+            }
+            catch (GitLabTaskRunnerCancelled)
+            {
             }
             return null;
          }

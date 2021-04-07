@@ -115,7 +115,7 @@ namespace mrHelper.StorageSupport
          {
             Directory.Move(tempDiffFolderPath, diffFolderPath);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from Directory.Move()
          {
             throw new FileStorageDiffCacheException(String.Format(
                "Cannot rename a temp folder {0} to {1}", tempDiffFolderPath, diffFolderPath), ex);
@@ -133,7 +133,7 @@ namespace mrHelper.StorageSupport
             Directory.CreateDirectory(tempDiffLeftSubFolderPath);
             Directory.CreateDirectory(tempDiffRightSubFolderPath);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from Directory.CreateDirectory()
          {
             throw new FileStorageDiffCacheException(String.Format(
                "Cannot create a temp folder {0} or one of its subfolders", tempDiffFolderPath), ex);
@@ -164,7 +164,9 @@ namespace mrHelper.StorageSupport
                }
                System.IO.File.Copy(sourceFilePath, destFilePath, true);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from System.IO.Path.GetDirectoryName()
+                                 // or System.IO.Directory.CreateDirectory()
+                                 // or System.IO.File.Copy() exception
             {
                throw new FileStorageDiffCacheException(String.Format(
                   "Cannot copy file revision {0} to {1}", sourceFilePath, destFilePath), ex);

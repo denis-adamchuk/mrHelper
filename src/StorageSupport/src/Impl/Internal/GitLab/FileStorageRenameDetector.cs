@@ -24,7 +24,7 @@ namespace mrHelper.StorageSupport
          {
             return isRenamed(leftcommit, rightcommit, filename, leftsidename, out moved, comparison);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from I/O operations
          {
             throw new FileRenameDetectorException(String.Format(
                "Cannot process Comparison object for {0} vs {1}", leftcommit, rightcommit), ex);

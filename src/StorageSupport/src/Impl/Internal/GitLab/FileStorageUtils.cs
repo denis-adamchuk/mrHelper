@@ -34,7 +34,7 @@ namespace mrHelper.StorageSupport
             {
                System.IO.Directory.CreateDirectory(path);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from System.IO.Directory.CreateDirectory()
             {
                throw new ArgumentException(String.Format("Cannot create a file storage at {0}", path), ex);
             }
@@ -50,7 +50,7 @@ namespace mrHelper.StorageSupport
          {
             JsonUtils.SaveToFile(descriptionFilepath, fileStorageDescription);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from JsonUtils.SaveToFile()
          {
             throw new ArgumentException(String.Format("Cannot initialize a file storage at {0}", path), ex);
          }
@@ -66,7 +66,7 @@ namespace mrHelper.StorageSupport
                FileStorageDescription x = JsonUtils.LoadFromFile<FileStorageDescription>(descriptionFilename);
                return new ProjectKey(x.HostName, x.ProjectName);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from JsonUtils.LoadFromFile()
             {
                ExceptionHandlers.Handle("Cannot read serialized FileStorageDescription object", ex);
             }
@@ -103,7 +103,7 @@ namespace mrHelper.StorageSupport
             {
                Directory.Move(oldPath, newPath);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from Directory.Move()
             {
                ExceptionHandlers.Handle(String.Format("Cannot rename directory at path {0}", oldPath), ex);
                DeleteDirectoryIfExists(oldPath);
@@ -122,7 +122,7 @@ namespace mrHelper.StorageSupport
          {
             Directory.Delete(path, true);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from System.IO.Directory.Delete()
          {
             ExceptionHandlers.Handle(String.Format("Cannot delete directory at path {0}", path), ex);
          }

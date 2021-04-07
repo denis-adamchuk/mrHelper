@@ -108,7 +108,16 @@ namespace mrHelper.App.Helpers
             throw new ArgumentException(String.Format("Cannot find file \"{0}\"", filename));
          }
 
-         ColorGroup[] groups = JsonUtils.LoadFromFile<ColorGroup[]>(filename);
+         ColorGroup[] groups;
+         try
+         {
+            groups = JsonUtils.LoadFromFile<ColorGroup[]>(filename);
+         }
+         catch (Exception) // Any exception from JsonUtils.LoadFromFile()
+         {
+            throw new ArgumentException(String.Format("Cannot parse file \"{0}\"", filename));
+         }
+
          foreach (ColorGroup g in groups)
          {
             foreach (ColorItem i in g.Colors)

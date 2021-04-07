@@ -326,7 +326,7 @@ namespace mrHelper.App.Forms
          {
             serializer.SerializeToDisk(snapshot, pid);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from serialization code
          {
             ExceptionHandlers.Handle("Cannot serialize Snapshot object", ex);
          }

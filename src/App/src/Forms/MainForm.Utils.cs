@@ -409,9 +409,10 @@ namespace mrHelper.App.Forms
                return Clipboard.GetText(TextDataFormat.Text);
             }
          }
-         catch (Exception ex)
+         catch (System.Runtime.InteropServices.ExternalException) { }
+         catch (Exception) // just in case
          {
-            Debug.Assert(ex is System.Runtime.InteropServices.ExternalException);
+            Debug.Assert(false);
          }
          return String.Empty;
       }

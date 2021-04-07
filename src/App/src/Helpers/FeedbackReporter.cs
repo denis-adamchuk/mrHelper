@@ -47,7 +47,7 @@ namespace mrHelper.App.Helpers
          {
             createLogArchive(logarchivepath);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from ZipFile.CreateFromDirectory()
          {
             throw new LogCollectException(ex);
          }
@@ -56,7 +56,7 @@ namespace mrHelper.App.Helpers
          {
             EMailSender.Send(logarchivepath, _email, recipient, body, subject);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from external API
          {
             throw new SendEMailException(ex);
          }

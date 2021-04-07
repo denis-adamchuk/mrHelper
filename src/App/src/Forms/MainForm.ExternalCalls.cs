@@ -70,7 +70,7 @@ namespace mrHelper.App.Forms
             {
                snapshot = serializer.DeserializeFromDisk(diffRequest.GitPID);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from de-serialization code
             {
                ExceptionHandlers.Handle("Cannot read serialized Snapshot object", ex);
                MessageBox.Show(

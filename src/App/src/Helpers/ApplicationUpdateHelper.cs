@@ -57,7 +57,7 @@ namespace mrHelper.App.Helpers
          {
             Process.Start(Constants.MsiExecName, msiExecArguments);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from Process.Start()
          {
             ExceptionHandlers.Handle("[ApplicationUpdateHelper] Cannot launch installer", ex);
          }

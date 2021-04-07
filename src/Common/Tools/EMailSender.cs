@@ -71,7 +71,7 @@ namespace mrHelper.Common.Tools
 
             message.Display();
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception from Outlook API code
          {
             throw new EMailSenderException("Cannot connect to Outlook", ex);
          }

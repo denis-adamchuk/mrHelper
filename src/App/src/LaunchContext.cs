@@ -38,14 +38,12 @@ namespace mrHelper.App
             {
                handles = Win32Tools.EnumerateProcessWindowHandles(process.Id);
             }
-            catch (Exception ex)
+            catch (ArgumentException)
             {
-               // Check if we could not obtain windows from a process
-               if (!((ex is ArgumentException) || (ex is InvalidOperationException)))
-               {
-                  throw;
-               }
-
+               continue;
+            }
+            catch (InvalidOperationException)
+            {
                continue;
             }
 

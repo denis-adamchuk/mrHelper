@@ -155,13 +155,13 @@ namespace mrHelper.StorageSupport
          {
             return ExternalProcess.Start(appName, arguments, wait, path, successcodes);
          }
-         catch (Exception ex)
+         catch (ExternalProcessFailureException ex)
          {
-            if (ex is ExternalProcessFailureException || ex is ExternalProcessSystemException)
-            {
-               throw new GitCommandServiceInternalException(ex);
-            }
-            throw;
+            throw new GitCommandServiceInternalException(ex);
+         }
+         catch (ExternalProcessSystemException ex)
+         {
+            throw new GitCommandServiceInternalException(ex);
          }
       }
 
@@ -175,17 +175,17 @@ namespace mrHelper.StorageSupport
             await _processManager.Wait(d);
             return d;
          }
-         catch (Exception ex)
+         catch (OperationCancelledException)
          {
-            if (ex is OperationCancelledException)
-            {
-               return null;
-            }
-            if (ex is SystemException || ex is GitCallFailedException)
-            {
-               throw new GitCommandServiceInternalException(ex);
-            }
-            throw;
+            return null;
+         }
+         catch (SystemException ex)
+         {
+            throw new GitCommandServiceInternalException(ex);
+         }
+         catch (GitCallFailedException ex)
+         {
+            throw new GitCommandServiceInternalException(ex);
          }
       }
 

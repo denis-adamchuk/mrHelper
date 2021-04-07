@@ -266,7 +266,7 @@ namespace mrHelper.Common.Tools
             {
                return Encoding.ASCII.GetBytes(value);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from Encoding.ASCII.GetBytes()
             {
                Exceptions.ExceptionHandlers.Handle("Cannot get bytes from string", ex);
             }
@@ -282,7 +282,7 @@ namespace mrHelper.Common.Tools
             {
                return Encoding.ASCII.GetString(value);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from Encoding.ASCII.GetString()
             {
                Exceptions.ExceptionHandlers.Handle("Cannot get string from bytes", ex);
             }

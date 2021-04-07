@@ -172,6 +172,7 @@ namespace mrHelper.App.Interprocess
          string originalLeftFileName, string originalRightFileName, bool isLeftSideLine,
          out string leftFileName, out string rightFileName)
       {
+         leftFileName = rightFileName = null;
          FileNameMatcher fileNameMatcher = getFileNameMatcher(_git, mrk);
          try
          {
@@ -180,41 +181,38 @@ namespace mrHelper.App.Interprocess
             {
                return MatchResult.Cancelled;
             }
+            return MatchResult.Success;
          }
-         catch (Exception ex)
+         catch (ArgumentException ex)
          {
-            if (ex is ArgumentException || ex is MatchingException)
-            {
-               leftFileName = null;
-               rightFileName = null;
-               ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
-               return MatchResult.Error;
-            }
-            throw;
+            ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
          }
-         return MatchResult.Success;
+         catch (MatchingException ex)
+         {
+            ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
+         }
+         return MatchResult.Error;
       }
 
       private MatchResult matchLineNumber(string leftPath, string rightPath, Core.Matching.DiffRefs refs,
          int lineNumber, bool isLeftSideLine, out string leftLineNumber, out string rightLineNumber)
       {
+         leftLineNumber = rightLineNumber = null;
          LineNumberMatcher matcher = new LineNumberMatcher(_git);
          try
          {
             matcher.Match(refs, leftPath, rightPath, lineNumber, isLeftSideLine, out leftLineNumber, out rightLineNumber);
+            return MatchResult.Success;
          }
-         catch (Exception ex)
+         catch (ArgumentException ex)
          {
-            if (ex is ArgumentException || ex is MatchingException)
-            {
-               leftLineNumber = null;
-               rightLineNumber = null;
-               ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
-               return MatchResult.Error;
-            }
-            throw;
+            ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
          }
-         return MatchResult.Success;
+         catch (MatchingException ex)
+         {
+            ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
+         }
+         return MatchResult.Error;
       }
 
       private DiffContext getDiffContext<T>(DiffPosition position, UnchangedLinePolicy policy) where T : IContextMaker
@@ -229,14 +227,15 @@ namespace mrHelper.App.Interprocess
             T maker = (T)Activator.CreateInstance(typeof(T), _git);
             return maker.GetContext(position, DiffContextDepth, policy);
          }
-         catch (Exception ex)
+         catch (ArgumentException ex)
          {
-            if (ex is ArgumentException || ex is ContextMakingException)
-            {
-               ExceptionHandlers.Handle("Failed to obtain DiffContext", ex);
-               return DiffContext.InvalidContext;
-            }
-            throw;
+            ExceptionHandlers.Handle("Failed to obtain DiffContext", ex);
+            return DiffContext.InvalidContext;
+         }
+         catch (ContextMakingException ex)
+         {
+            ExceptionHandlers.Handle("Failed to obtain DiffContext", ex);
+            return DiffContext.InvalidContext;
          }
       }
 
@@ -405,18 +404,26 @@ namespace mrHelper.App.Interprocess
 
       async private Task actOnGitLab(string actionName, Func<Task> action)
       {
-         try
+         void handleException(Exception ex)
          {
-            await action();
-         }
-         catch (Exception ex)
-         {
-            Debug.Assert(ex is DiscussionEditorException || ex is DiscussionCreatorException);
             string message = String.Format("Cannot {0} a discussion at GitLab", actionName);
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(String.Format("{0}. Check your connection and try again.", message),
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
                MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+         }
+
+         try
+         {
+            await action();
+         }
+         catch (DiscussionEditorException ex)
+         {
+            handleException(ex);
+         }
+         catch (DiscussionCreatorException ex)
+         {
+            handleException(ex);
          }
       }
 

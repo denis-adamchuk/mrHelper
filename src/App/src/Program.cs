@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using System.Windows.Forms;
+using System.ComponentModel;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Tools;
@@ -47,9 +48,6 @@ namespace mrHelper.App
       internal static ServiceManager ServiceManager;
       internal static FeedbackReporter FeedbackReporter;
 
-      /// <summary>
-      /// The main entry point for the application.
-      /// </summary>
       [System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
       [STAThread]
       private static void Main()
@@ -91,7 +89,7 @@ namespace mrHelper.App
 
                launchFromContext(context);
             }
-            catch (Exception ex) // whatever unhandled exception
+            catch (Exception ex) // Any unhandled exception, including CSE
             {
                HandleUnhandledException(ex);
             }
@@ -176,7 +174,7 @@ namespace mrHelper.App
                   listener = new CustomTraceListener(currentLogFileName, null);
                   Trace.Listeners.Add(listener);
                }
-               catch (Exception)
+               catch (ArgumentException)
                {
                   // Cannot do anything good here
                }
@@ -265,7 +263,11 @@ namespace mrHelper.App
             string toolProcessName = type == StorageSupport.LocalCommitStorageType.FileStorage ? diffToolName : "git";
             parentToolPID = getParentProcessId(context.CurrentProcess, toolProcessName);
          }
-         catch (Exception ex)
+         catch (ArgumentException ex)
+         {
+            ExceptionHandlers.Handle("Cannot obtain diff tool file name", ex);
+         }
+         catch (Win32Exception ex)
          {
             ExceptionHandlers.Handle("Cannot find parent diff tool process", ex);
          }
@@ -326,22 +328,20 @@ namespace mrHelper.App
          {
             integration.Integrate(diffTool, applicationFullPath);
          }
-         catch (Exception ex)
+         catch (DiffToolNotInstalledException)
          {
-            if (ex is DiffToolNotInstalledException)
-            {
-               string message = String.Format(
-                  "{0} is not installed. It must be installed at least for the current user. Application cannot start",
-                  diffTool.GetToolName());
-               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            else
-            {
-               string message = String.Format("{0} integration failed. Application cannot start. See logs for details",
-                  diffTool.GetToolName());
-               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               ExceptionHandlers.Handle(String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()), ex);
-            }
+            string message = String.Format(
+               "{0} is not installed. It must be installed at least for the current user. Application cannot start",
+               diffTool.GetToolName());
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+         }
+         catch (DiffToolIntegrationException ex)
+         {
+            string message = String.Format("{0} integration failed. Application cannot start. See logs for details",
+               diffTool.GetToolName());
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()), ex);
             return false;
          }
          finally
@@ -468,7 +468,7 @@ namespace mrHelper.App
             {
                System.IO.File.Delete(f);
             }
-            catch (Exception ex)
+            catch (Exception ex) // Any exception from System.IO.File.Delete()
             {
                ExceptionHandlers.Handle(String.Format("Cannot delete file \"{0}\"", f), ex);
             }
@@ -481,7 +481,7 @@ namespace mrHelper.App
          {
             cleanupLogFiles(Settings);
          }
-         catch (Exception ex)
+         catch (Exception ex) // Any exception on I/O operations
          {
             ExceptionHandlers.Handle("Failed to clean-up log files", ex);
          }

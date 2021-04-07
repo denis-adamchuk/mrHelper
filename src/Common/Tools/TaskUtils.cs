@@ -68,7 +68,7 @@ namespace mrHelper.Common.Tools
             {
                await aggregateTask;
             }
-            catch (Exception)
+            catch (Exception) // Exception type does not matter
             {
                if (aggregateTask.IsFaulted)
                {
