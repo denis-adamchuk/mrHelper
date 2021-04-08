@@ -51,10 +51,21 @@ namespace mrHelper.App.Forms
       {
          if (textBox.Text != String.Empty)
          {
-            // if even extraHeight is negative, it will not cause the Form to be smaller than MinimumSize
-            int actualHeight = textBoxHost.Height - textBoxHost.Margin.Bottom - textBoxHost.Margin.Top;
-            int extraHeight = textBoxHost.PreferredSize.Height - actualHeight;
-            this.Height += extraHeight;
+            // 1. Obtain full preferred height for text box
+            int preferredHeight = textBoxHost.PreferredSize.Height;
+
+            // 2. Force text box to measure its size basing on the host size
+            textBoxHost.GetPreferredSize(textBoxHost.Size);
+
+            // 3. Compute extra pixels to stretch out form if needed
+            int extraHeight = preferredHeight - textBoxHost.Height;
+
+            // 4. Stretch out the form
+            if (extraHeight > 0)
+            {
+               extraHeight += 10; // some extra space for better look
+               this.Height += extraHeight;
+            }
          }
       }
 
