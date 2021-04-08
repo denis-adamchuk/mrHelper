@@ -73,7 +73,7 @@ namespace mrHelper.App.Helpers
       private static readonly bool   DisableSpellCheckerDefaultValue = false;
 
       private static readonly string WPFSoftwareOnlyRenderModeKeyName      = "WPFSoftwareOnlyRenderMode";
-      private static readonly bool   WPFSoftwareOnlyRenderModeDefaultValue = true;
+      private static readonly bool   WPFSoftwareOnlyRenderModeDefaultValue = false;
 
       private static readonly string WasMaximizedBeforeCloseKeyName       = "WasMaximizedBeforeClose";
       private static readonly bool   WasMaximizedBeforeCloseDefaultValue  = true;
