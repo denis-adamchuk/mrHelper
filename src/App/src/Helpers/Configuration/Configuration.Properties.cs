@@ -103,6 +103,12 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(DisableSpellCheckerKeyName, value);
       }
 
+      public bool WPFSoftwareOnlyRenderMode
+      {
+         get => getBoolValue(WPFSoftwareOnlyRenderModeKeyName, WPFSoftwareOnlyRenderModeDefaultValue);
+         set => setBoolValue(WPFSoftwareOnlyRenderModeKeyName, value);
+      }
+
       public bool WasMaximizedBeforeClose
       {
          get => getBoolValue(WasMaximizedBeforeCloseKeyName, WasMaximizedBeforeCloseDefaultValue);

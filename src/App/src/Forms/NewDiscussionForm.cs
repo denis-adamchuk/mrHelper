@@ -648,7 +648,8 @@ namespace mrHelper.App.Forms
       private void createWPFTextBox()
       {
          textBoxDiscussionBody = Helpers.WPFHelpers.CreateWPFTextBox(textBoxDiscussionBodyHost,
-            false, String.Empty, true, !Program.Settings.DisableSpellChecker);
+            false, String.Empty, true, !Program.Settings.DisableSpellChecker,
+            Program.Settings.WPFSoftwareOnlyRenderMode);
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
          textBoxDiscussionBody.TextChanged += textBoxDiscussionBody_TextChanged;
       }
