@@ -573,6 +573,8 @@ namespace mrHelper.App.Forms
 
          string tooltip = isValidUrl ? clipboardText : "N/A";
          toolTip.SetToolTip(linkLabelFromClipboard, tooltip);
+
+         openFromClipboardToolStripMenuItem.Enabled = isValidUrl;
       }
 
       private static void sendFeedback()

@@ -182,6 +182,7 @@ namespace mrHelper.App.Forms
          this.linkLabelResetToFactoryValue = new System.Windows.Forms.LinkLabel();
          this.linkLabelResetAllColors = new System.Windows.Forms.LinkLabel();
          this.checkBoxWordWrapLongRows = new System.Windows.Forms.CheckBox();
+         this.checkBoxEmulateNativeLineBreaks = new System.Windows.Forms.CheckBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -268,7 +269,7 @@ namespace mrHelper.App.Forms
          this.panel1 = new System.Windows.Forms.Panel();
          this.panelConnectionStatus = new System.Windows.Forms.Panel();
          this.labelConnectionStatus = new System.Windows.Forms.Label();
-         this.checkBoxEmulateNativeLineBreaks = new System.Windows.Forms.CheckBox();
+         this.openFromClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -1593,25 +1594,38 @@ namespace mrHelper.App.Forms
          this.checkBoxWordWrapLongRows.UseVisualStyleBackColor = true;
          this.checkBoxWordWrapLongRows.CheckedChanged += new System.EventHandler(this.checkBoxWordWrapLongRows_CheckedChanged);
          // 
+         // checkBoxEmulateNativeLineBreaks
+         // 
+         this.checkBoxEmulateNativeLineBreaks.AutoSize = true;
+         this.checkBoxEmulateNativeLineBreaks.Location = new System.Drawing.Point(349, 21);
+         this.checkBoxEmulateNativeLineBreaks.Name = "checkBoxEmulateNativeLineBreaks";
+         this.checkBoxEmulateNativeLineBreaks.Size = new System.Drawing.Size(150, 17);
+         this.checkBoxEmulateNativeLineBreaks.TabIndex = 36;
+         this.checkBoxEmulateNativeLineBreaks.Text = "Emulate native line breaks";
+         this.toolTip.SetToolTip(this.checkBoxEmulateNativeLineBreaks, "Split lines on single line break");
+         this.checkBoxEmulateNativeLineBreaks.UseVisualStyleBackColor = true;
+         this.checkBoxEmulateNativeLineBreaks.CheckedChanged += new System.EventHandler(this.checkBoxEmulateNativeLineBreaks_CheckedChanged);
+         // 
          // contextMenuStrip
          // 
          this.contextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openFromClipboardToolStripMenuItem,
             this.restoreToolStripMenuItem,
             this.exitToolStripMenuItem});
          this.contextMenuStrip.Name = "contextMenuStrip1";
-         this.contextMenuStrip.Size = new System.Drawing.Size(114, 48);
+         this.contextMenuStrip.Size = new System.Drawing.Size(209, 92);
          // 
          // restoreToolStripMenuItem
          // 
          this.restoreToolStripMenuItem.Name = "restoreToolStripMenuItem";
-         this.restoreToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
+         this.restoreToolStripMenuItem.Size = new System.Drawing.Size(208, 22);
          this.restoreToolStripMenuItem.Text = "Restore";
          this.restoreToolStripMenuItem.Click += new System.EventHandler(this.notifyIcon_DoubleClick);
          // 
          // exitToolStripMenuItem
          // 
          this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-         this.exitToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
+         this.exitToolStripMenuItem.Size = new System.Drawing.Size(208, 22);
          this.exitToolStripMenuItem.Text = "Exit";
          this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
          // 
@@ -2607,17 +2621,13 @@ namespace mrHelper.App.Forms
          this.labelConnectionStatus.TabIndex = 0;
          this.labelConnectionStatus.Text = "Not connected";
          // 
-         // checkBoxEmulateNativeLineBreaks
+         // openFromClipboardToolStripMenuItem
          // 
-         this.checkBoxEmulateNativeLineBreaks.AutoSize = true;
-         this.checkBoxEmulateNativeLineBreaks.Location = new System.Drawing.Point(349, 21);
-         this.checkBoxEmulateNativeLineBreaks.Name = "checkBoxEmulateNativeLineBreaks";
-         this.checkBoxEmulateNativeLineBreaks.Size = new System.Drawing.Size(150, 17);
-         this.checkBoxEmulateNativeLineBreaks.TabIndex = 36;
-         this.checkBoxEmulateNativeLineBreaks.Text = "Emulate native line breaks";
-         this.toolTip.SetToolTip(this.checkBoxEmulateNativeLineBreaks, "Split lines on single line break");
-         this.checkBoxEmulateNativeLineBreaks.UseVisualStyleBackColor = true;
-         this.checkBoxEmulateNativeLineBreaks.CheckedChanged += new System.EventHandler(this.checkBoxEmulateNativeLineBreaks_CheckedChanged);
+         this.openFromClipboardToolStripMenuItem.Enabled = false;
+         this.openFromClipboardToolStripMenuItem.Name = "openFromClipboardToolStripMenuItem";
+         this.openFromClipboardToolStripMenuItem.Size = new System.Drawing.Size(208, 22);
+         this.openFromClipboardToolStripMenuItem.Text = "Open MR from Clipboard";
+         this.openFromClipboardToolStripMenuItem.Click += new System.EventHandler(this.openFromClipboardMenuItem_Click);
          // 
          // MainForm
          // 
@@ -2917,6 +2927,7 @@ namespace mrHelper.App.Forms
       private Label labelDiscussionsViewColorPaletteHint;
       private CheckBox checkBoxWordWrapLongRows;
       private CheckBox checkBoxEmulateNativeLineBreaks;
+      private ToolStripMenuItem openFromClipboardToolStripMenuItem;
    }
 }
 

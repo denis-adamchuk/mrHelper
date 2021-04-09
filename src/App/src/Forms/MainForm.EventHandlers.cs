@@ -69,6 +69,12 @@ namespace mrHelper.App.Forms
          doClose();
       }
 
+      private void openFromClipboardMenuItem_Click(object sender, EventArgs e)
+      {
+         Win32Tools.ForceWindowIntoForeground(this.Handle);
+         connectToUrlFromClipboard();
+      }
+
       private void linkLabelNewVersion_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          upgradeApplicationByUserRequest();
