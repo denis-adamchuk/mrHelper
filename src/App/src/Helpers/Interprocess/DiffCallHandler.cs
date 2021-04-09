@@ -246,6 +246,7 @@ namespace mrHelper.App.Interprocess
             _currentUser, null, DiscussionFilterState.CurrentUserOnly);
          return _getDiscussions(mrk)
             .Where(discussion => discussionFilter.DoesMatchFilter(discussion))
+            .Where(discussion => !discussion.Notes.First().System)
             .Select(discussion =>
             {
                DiscussionNote firstNote = discussion.Notes.First();
