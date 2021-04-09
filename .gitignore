@@ -12,3 +12,4 @@
 /src/RevertMSI/obj/*
 /build/set-env.bat
 
+/bug/*
