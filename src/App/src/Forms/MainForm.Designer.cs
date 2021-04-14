@@ -1,5 +1,4 @@
 ﻿using mrHelper.CommonControls.Controls;
-using System;
 using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
@@ -21,6 +20,9 @@ namespace mrHelper.App.Forms
          {
             components.Dispose();
          }
+
+         Microsoft.Win32.SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
+         Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;
 
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
@@ -184,6 +186,7 @@ namespace mrHelper.App.Forms
          this.checkBoxWordWrapLongRows = new System.Windows.Forms.CheckBox();
          this.checkBoxEmulateNativeLineBreaks = new System.Windows.Forms.CheckBox();
          this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+         this.openFromClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
@@ -269,7 +272,6 @@ namespace mrHelper.App.Forms
          this.panel1 = new System.Windows.Forms.Panel();
          this.panelConnectionStatus = new System.Windows.Forms.Panel();
          this.labelConnectionStatus = new System.Windows.Forms.Label();
-         this.openFromClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.tabPageLive.SuspendLayout();
          this.groupBoxSelectMergeRequest.SuspendLayout();
          this.tabPageSearch.SuspendLayout();
@@ -493,6 +495,11 @@ namespace mrHelper.App.Forms
          this.tabPageLive.Text = "Live";
          this.toolTip.SetToolTip(this.tabPageLive, "List of open merge requests (updates automatically)");
          this.tabPageLive.UseVisualStyleBackColor = true;
+         this.tabPageLive.VisibleChanged += new System.EventHandler(this.tabPageLive_VisibleChanged);
+         this.tabPageLive.ControlAdded += new System.Windows.Forms.ControlEventHandler(this.tabPageLive_ControlAdded);
+         this.tabPageLive.ControlRemoved += new System.Windows.Forms.ControlEventHandler(this.tabPageLive_ControlRemoved);
+         this.tabPageLive.HandleCreated += new System.EventHandler(this.tabPageLive_HandleCreated);
+         this.tabPageLive.HandleDestroyed += new System.EventHandler(this.tabPageLive_HandleDestroyed);
          // 
          // groupBoxSelectMergeRequest
          // 
@@ -508,6 +515,12 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectMergeRequest.TabIndex = 1;
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
+         this.groupBoxSelectMergeRequest.VisibleChanged += new System.EventHandler(this.groupBoxSelectMergeRequest_VisibleChanged);
+         this.groupBoxSelectMergeRequest.ControlAdded += new System.Windows.Forms.ControlEventHandler(this.groupBoxSelectMergeRequest_ControlAdded);
+         this.groupBoxSelectMergeRequest.ControlRemoved += new System.Windows.Forms.ControlEventHandler(this.groupBoxSelectMergeRequest_ControlRemoved);
+         this.groupBoxSelectMergeRequest.HandleCreated += new System.EventHandler(this.groupBoxSelectMergeRequest_HandleCreated);
+         this.groupBoxSelectMergeRequest.HandleDestroyed += new System.EventHandler(this.groupBoxSelectMergeRequest_HandleDestroyed);
+         this.groupBoxSelectMergeRequest.ParentChanged += new System.EventHandler(this.groupBoxSelectMergeRequest_ParentChanged);
          // 
          // buttonCreateNew
          // 
@@ -651,6 +664,11 @@ namespace mrHelper.App.Forms
          this.tabPageSearch.Text = "Search";
          this.toolTip.SetToolTip(this.tabPageSearch, "Use this mode to search closed merge requests");
          this.tabPageSearch.UseVisualStyleBackColor = true;
+         this.tabPageSearch.VisibleChanged += new System.EventHandler(this.tabPageSearch_VisibleChanged);
+         this.tabPageSearch.ControlAdded += new System.Windows.Forms.ControlEventHandler(this.tabPageSearch_ControlAdded);
+         this.tabPageSearch.ControlRemoved += new System.Windows.Forms.ControlEventHandler(this.tabPageSearch_ControlRemoved);
+         this.tabPageSearch.HandleCreated += new System.EventHandler(this.tabPageSearch_HandleCreated);
+         this.tabPageSearch.HandleDestroyed += new System.EventHandler(this.tabPageSearch_HandleDestroyed);
          // 
          // groupBoxSearchMergeRequest
          // 
@@ -674,6 +692,12 @@ namespace mrHelper.App.Forms
          this.groupBoxSearchMergeRequest.TabIndex = 2;
          this.groupBoxSearchMergeRequest.TabStop = false;
          this.groupBoxSearchMergeRequest.Text = "Search Merge Request";
+         this.groupBoxSearchMergeRequest.VisibleChanged += new System.EventHandler(this.groupBoxSearchMergeRequest_VisibleChanged);
+         this.groupBoxSearchMergeRequest.ControlAdded += new System.Windows.Forms.ControlEventHandler(this.groupBoxSearchMergeRequest_ControlAdded);
+         this.groupBoxSearchMergeRequest.ControlRemoved += new System.Windows.Forms.ControlEventHandler(this.groupBoxSearchMergeRequest_ControlRemoved);
+         this.groupBoxSearchMergeRequest.HandleCreated += new System.EventHandler(this.groupBoxSearchMergeRequest_HandleCreated);
+         this.groupBoxSearchMergeRequest.HandleDestroyed += new System.EventHandler(this.groupBoxSearchMergeRequest_HandleDestroyed);
+         this.groupBoxSearchMergeRequest.ParentChanged += new System.EventHandler(this.groupBoxSearchMergeRequest_ParentChanged);
          // 
          // labelSearchByState
          // 
@@ -1422,6 +1446,11 @@ namespace mrHelper.App.Forms
          this.tabPageRecent.Text = "Recent";
          this.toolTip.SetToolTip(this.tabPageRecent, "Recently reviewed merge requests");
          this.tabPageRecent.UseVisualStyleBackColor = true;
+         this.tabPageRecent.VisibleChanged += new System.EventHandler(this.tabPageRecent_VisibleChanged);
+         this.tabPageRecent.ControlAdded += new System.Windows.Forms.ControlEventHandler(this.tabPageRecent_ControlAdded);
+         this.tabPageRecent.ControlRemoved += new System.Windows.Forms.ControlEventHandler(this.tabPageRecent_ControlRemoved);
+         this.tabPageRecent.HandleCreated += new System.EventHandler(this.tabPageRecent_HandleCreated);
+         this.tabPageRecent.HandleDestroyed += new System.EventHandler(this.tabPageRecent_HandleDestroyed);
          // 
          // groupBoxRecentMergeRequest
          // 
@@ -1434,6 +1463,12 @@ namespace mrHelper.App.Forms
          this.groupBoxRecentMergeRequest.TabIndex = 5;
          this.groupBoxRecentMergeRequest.TabStop = false;
          this.groupBoxRecentMergeRequest.Text = "Recent Merge Requests";
+         this.groupBoxRecentMergeRequest.VisibleChanged += new System.EventHandler(this.groupBoxRecentMergeRequest_VisibleChanged);
+         this.groupBoxRecentMergeRequest.ControlAdded += new System.Windows.Forms.ControlEventHandler(this.groupBoxRecentMergeRequest_ControlAdded);
+         this.groupBoxRecentMergeRequest.ControlRemoved += new System.Windows.Forms.ControlEventHandler(this.groupBoxRecentMergeRequest_ControlRemoved);
+         this.groupBoxRecentMergeRequest.HandleCreated += new System.EventHandler(this.groupBoxRecentMergeRequest_HandleCreated);
+         this.groupBoxRecentMergeRequest.HandleDestroyed += new System.EventHandler(this.groupBoxRecentMergeRequest_HandleDestroyed);
+         this.groupBoxRecentMergeRequest.ParentChanged += new System.EventHandler(this.groupBoxRecentMergeRequest_ParentChanged);
          // 
          // textBoxRecentMergeRequestsHint
          // 
@@ -1613,7 +1648,15 @@ namespace mrHelper.App.Forms
             this.restoreToolStripMenuItem,
             this.exitToolStripMenuItem});
          this.contextMenuStrip.Name = "contextMenuStrip1";
-         this.contextMenuStrip.Size = new System.Drawing.Size(209, 92);
+         this.contextMenuStrip.Size = new System.Drawing.Size(209, 70);
+         // 
+         // openFromClipboardToolStripMenuItem
+         // 
+         this.openFromClipboardToolStripMenuItem.Enabled = false;
+         this.openFromClipboardToolStripMenuItem.Name = "openFromClipboardToolStripMenuItem";
+         this.openFromClipboardToolStripMenuItem.Size = new System.Drawing.Size(208, 22);
+         this.openFromClipboardToolStripMenuItem.Text = "Open MR from Clipboard";
+         this.openFromClipboardToolStripMenuItem.Click += new System.EventHandler(this.openFromClipboardMenuItem_Click);
          // 
          // restoreToolStripMenuItem
          // 
@@ -1655,7 +1698,6 @@ namespace mrHelper.App.Forms
          this.tabControl.Size = new System.Drawing.Size(1284, 890);
          this.tabControl.TabIndex = 0;
          this.tabControl.SelectedIndexChanged += new System.EventHandler(this.tabControl_SelectedIndexChanged);
-         this.tabControl.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
          // 
          // tabPageSettings
          // 
@@ -2305,6 +2347,11 @@ namespace mrHelper.App.Forms
          this.tabPageMR.TabIndex = 1;
          this.tabPageMR.Text = "Merge Requests";
          this.tabPageMR.UseVisualStyleBackColor = true;
+         this.tabPageMR.VisibleChanged += new System.EventHandler(this.tabPageMR_VisibleChanged);
+         this.tabPageMR.ControlAdded += new System.Windows.Forms.ControlEventHandler(this.tabPageMR_ControlAdded);
+         this.tabPageMR.ControlRemoved += new System.Windows.Forms.ControlEventHandler(this.tabPageMR_ControlRemoved);
+         this.tabPageMR.HandleCreated += new System.EventHandler(this.tabPageMR_HandleCreated);
+         this.tabPageMR.HandleDestroyed += new System.EventHandler(this.tabPageMR_HandleDestroyed);
          // 
          // splitContainer1
          // 
@@ -2355,8 +2402,8 @@ namespace mrHelper.App.Forms
          this.tabControlMode.Size = new System.Drawing.Size(790, 858);
          this.tabControlMode.TabIndex = 0;
          this.tabControlMode.SelectedIndexChanged += new System.EventHandler(this.tabControlMode_SelectedIndexChanged);
-         this.tabControlMode.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl_Selecting);
          this.tabControlMode.SizeChanged += new System.EventHandler(this.tabControlMode_SizeChanged);
+         this.tabControlMode.VisibleChanged += new System.EventHandler(this.tabControlMode_VisibleChanged);
          // 
          // splitContainer2
          // 
@@ -2621,14 +2668,6 @@ namespace mrHelper.App.Forms
          this.labelConnectionStatus.TabIndex = 0;
          this.labelConnectionStatus.Text = "Not connected";
          // 
-         // openFromClipboardToolStripMenuItem
-         // 
-         this.openFromClipboardToolStripMenuItem.Enabled = false;
-         this.openFromClipboardToolStripMenuItem.Name = "openFromClipboardToolStripMenuItem";
-         this.openFromClipboardToolStripMenuItem.Size = new System.Drawing.Size(208, 22);
-         this.openFromClipboardToolStripMenuItem.Text = "Open MR from Clipboard";
-         this.openFromClipboardToolStripMenuItem.Click += new System.EventHandler(this.openFromClipboardMenuItem_Click);
-         // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2642,6 +2681,7 @@ namespace mrHelper.App.Forms
          this.Text = "Merge Request Helper";
          this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.mainForm_FormClosing);
          this.Load += new System.EventHandler(this.mainForm_Load);
+         this.VisibleChanged += new System.EventHandler(this.mainForm_VisibleChanged);
          this.Resize += new System.EventHandler(this.mainForm_Resize);
          this.tabPageLive.ResumeLayout(false);
          this.groupBoxSelectMergeRequest.ResumeLayout(false);

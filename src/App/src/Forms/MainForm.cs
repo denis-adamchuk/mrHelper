@@ -58,7 +58,6 @@ namespace mrHelper.App.Forms
       private readonly bool _startMinimized;
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mdPipeline;
-      private readonly bool _canSwitchTab = true;
       private readonly bool _allowAutoStartApplication = false;
       private readonly string _startUrl;
       private readonly bool _integratedInGitExtensions;

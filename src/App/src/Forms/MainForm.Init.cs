@@ -26,6 +26,7 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"]);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
+         CommonControls.Tools.WinFormsHelpers.LogScreenResolution(this);
 
          _allowAutoStartApplication = runningAsUwp;
          checkBoxRunWhenWindowsStarts.Enabled = !_allowAutoStartApplication;
@@ -58,6 +59,7 @@ namespace mrHelper.App.Forms
          forEachListView(listView => listView.Initialize());
 
          SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
+         SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
          _applicationUpdateChecker = new PeriodicUpdateChecker(this);
 
          _redrawTimer.Tick += onRedrawTimer;

@@ -208,8 +208,11 @@ namespace mrHelper.App
 
          bool integratedInGitExtensions = integrateInGitExtensions();
          bool integratedInSourceTree = integrateInSourceTree();
-         Version currentVersion = Environment.OSVersion.Version;
-         Trace.TraceInformation(String.Format("OS Version is {0}", currentVersion.ToString()));
+         Version osVersion = Environment.OSVersion.Version;
+         Trace.TraceInformation(String.Format("OS version is {0}", osVersion.ToString()));
+         Version clrVersion = Environment.Version;
+         Trace.TraceInformation(String.Format("CLR version is {0}", clrVersion.ToString()));
+         Trace.TraceInformation(String.Format(".NET Framework version is {0}", typeof(string).Assembly.ImageRuntimeVersion));
 
          LaunchOptions.NormalModeOptions normalOptions = options.SpecialOptions as LaunchOptions.NormalModeOptions;
          Application.Run(new MainForm(normalOptions.StartMinimized, runningAsUwp, normalOptions.StartUrl,

@@ -454,6 +454,9 @@ namespace mrHelper.App.Forms
 
       private void onWindowStateChanged()
       {
+         Trace.TraceInformation("[MainForm] Window state changed from {0} to {1}",
+            _prevWindowState.ToString(), WindowState.ToString());
+
          if (WindowState != FormWindowState.Minimized)
          {
             if (_prevWindowState == FormWindowState.Minimized)

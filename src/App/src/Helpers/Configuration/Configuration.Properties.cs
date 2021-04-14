@@ -91,6 +91,18 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(MinimizeOnCloseKeyName, value);
       }
 
+      public bool ExtraLoggingForTabs
+      {
+         get => getBoolValue(ExtraLoggingForTabsKeyName, ExtraLoggingForTabsDefaultValue);
+         set => setBoolValue(ExtraLoggingForTabsKeyName, value);
+      }
+
+      public bool ForceCreateHandlesOnTabChange
+      {
+         get => getBoolValue(ForceCreateHandlesOnTabChangeKeyName, ForceCreateHandlesOnTabChangeDefaultValue);
+         set => setBoolValue(ForceCreateHandlesOnTabChangeKeyName, value);
+      }
+
       public bool RunWhenWindowsStarts
       {
          get => getBoolValue(RunWhenWindowsStartsKeyName, RunWhenWindowsStartsDefaultValue);

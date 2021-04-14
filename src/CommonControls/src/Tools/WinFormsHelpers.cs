@@ -238,6 +238,14 @@ namespace mrHelper.CommonControls.Tools
             control.AutoScaleDimensions.Width, control.AutoScaleDimensions.Height));
       }
 
+      public static void LogScreenResolution(Control control)
+      {
+         Trace.TraceInformation(String.Format(
+            "[{0}] Screen resolution: {1}x{2}",
+            control.ToString(),
+            Screen.GetWorkingArea(control).Width, Screen.GetWorkingArea(control).Height));
+      }
+
       private static readonly SizeF DefaultDesignTimeDimensions = new SizeF(6F, 13F);
 
       // Compute AutoScaleDimensions change comparing to Design-time settings
