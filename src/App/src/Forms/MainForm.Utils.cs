@@ -493,6 +493,16 @@ namespace mrHelper.App.Forms
          Hide();
       }
 
+      private void onRestoreFromTray()
+      {
+         if (!Visible)
+         {
+            Show();
+            updateTrayAndTaskBar();
+         }
+         CommonNative.Win32Tools.ForceWindowIntoForeground(this.Handle);
+      }
+
       private void onPersistentStorageSerialize(IPersistentStateSetter writer)
       {
          new PersistentStateSaveHelper("SelectedHost", writer).Save(getHostName());

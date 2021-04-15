@@ -60,7 +60,7 @@ namespace mrHelper.App.Forms
 
       private void notifyIcon_DoubleClick(object sender, EventArgs e)
       {
-         Win32Tools.ForceWindowIntoForeground(this.Handle);
+         onRestoreFromTray();
       }
 
       private void exitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -71,7 +71,7 @@ namespace mrHelper.App.Forms
 
       private void openFromClipboardMenuItem_Click(object sender, EventArgs e)
       {
-         Win32Tools.ForceWindowIntoForeground(this.Handle);
+         onRestoreFromTray();
          connectToUrlFromClipboard();
       }
 
@@ -586,22 +586,25 @@ namespace mrHelper.App.Forms
          if (rMessage.Msg == NativeMethods.WM_COPYDATA)
          {
             string argumentString = Win32Tools.ConvertMessageToText(rMessage.LParam);
-
-            string[] arguments = argumentString.Split('|');
-            if (arguments.Length < 2)
+            if (String.IsNullOrEmpty(argumentString))
             {
                Debug.Assert(false);
                Trace.TraceError(String.Format("Invalid WM_COPYDATA message content: {0}", argumentString));
                return;
             }
 
-            if (arguments[1] == "diff")
+            string[] arguments = argumentString.Split('|');
+            if (arguments[0] == "show")
+            {
+               onRestoreFromTray();
+            }
+            else if (arguments[0] == "diff")
             {
                onDiffCommand(argumentString);
             }
-            else
+            else if (App.Helpers.UrlHelper.Parse(arguments[0]) != null)
             {
-               onOpenCommand(argumentString);
+               onOpenCommand(arguments[0]);
             }
          }
 

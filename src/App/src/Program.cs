@@ -226,27 +226,16 @@ namespace mrHelper.App
          {
             if (context.Arguments.Length > 1)
             {
-               string message = String.Join("|", context.Arguments);
+               string message = String.Join("|", context.Arguments.Skip(1));
                Win32Tools.SendMessageToWindow(mainWindow, message);
             }
-            Win32Tools.ForceWindowIntoForeground(mainWindow);
+            string showWindowMessage = "show";
+            Win32Tools.SendMessageToWindow(mainWindow, showWindowMessage);
          }
          else
          {
-            // This may happen if a custom protocol link is quickly clicked more than once in a row
-
-            Trace.TraceInformation(String.Format("Cannot find Main Window"));
-
-            // bring to front any window
-            IntPtr window = context.GetWindowByCaption(String.Empty, true);
-            if (window != IntPtr.Zero)
-            {
-               Win32Tools.ForceWindowIntoForeground(window);
-            }
-            else
-            {
-               Trace.TraceInformation(String.Format("Cannot find application windows"));
-            }
+            // This may happen if a custom protocol link is quickly clicked more than once in a row.
+            // In the scope of #453 decided that it is simpler to not handle this case at all.
          }
       }
 
@@ -295,12 +284,11 @@ namespace mrHelper.App
          Array.Copy(context.Arguments, 0, argumentsEx, 0, context.Arguments.Length);
          argumentsEx[argumentsEx.Length - 1] = parentToolPID.ToString();
 
-         string message = String.Join("|", argumentsEx);
+         string message = String.Join("|", argumentsEx.Skip(1));
          IntPtr mainWindow = context.GetWindowByCaption(Constants.MainWindowCaption, true);
          if (mainWindow == IntPtr.Zero)
          {
             Debug.Assert(false);
-
             Trace.TraceWarning("Cannot find Main Window");
             return;
          }

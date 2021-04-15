@@ -1140,7 +1140,7 @@ namespace mrHelper.App.Forms
 
          Rectangle tabRect = tabControl.GetTabRect(tabCount - 1);
 
-         int controlTopRelativeToTabRect = tabRect.Height / 2 - linkLabelFromClipboard.Height / 2;
+         int controlTopRelativeToTabRect = tabRect.Height / 2 - control.Height / 2;
          int controlTop = tabRect.Top + controlTopRelativeToTabRect;
 
          int controlLeft = tabRect.X + tabRect.Width + horzOffset;

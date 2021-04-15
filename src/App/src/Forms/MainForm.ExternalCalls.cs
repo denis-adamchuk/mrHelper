@@ -151,11 +151,8 @@ namespace mrHelper.App.Forms
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void onOpenCommand(string argumentsString)
+      private void onOpenCommand(string url)
       {
-         string[] arguments = argumentsString.Split('|');
-         string url = arguments[1];
-
          Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
          reconnect(url);
       }
