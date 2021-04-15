@@ -66,12 +66,6 @@ namespace mrHelper.App.Helpers
       private static readonly string MinimizeOnCloseKeyName = "MinimizeOnClose";
       private static readonly bool   MinimizeOnCloseDefaultValue = false;
 
-      private static readonly string ExtraLoggingForTabsKeyName      = "ExtraLoggingForTabs";
-      private static readonly bool   ExtraLoggingForTabsDefaultValue = false;
-
-      private static readonly string ForceCreateHandlesOnTabChangeKeyName      = "ForceCreateHandlesOnTabChange";
-      private static readonly bool   ForceCreateHandlesOnTabChangeDefaultValue = false;
-
       private static readonly string RunWhenWindowsStartsKeyName        = "RunWhenWindowsStarts";
       private static readonly bool   RunWhenWindowsStartsDefaultValue   = false;
 
