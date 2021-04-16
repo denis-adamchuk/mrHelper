@@ -77,7 +77,7 @@ namespace mrHelper.StorageSupport
 
       private FileStorageDiffCacheFolder getDiffFolder(string baseSha, string headSha)
       {
-         FileStorageDiffCacheFolder diffFolder = null;
+         FileStorageDiffCacheFolder diffFolder;
          try
          {
             diffFolder = _fileStorage.DiffCache.GetDiffFolder(baseSha, headSha);

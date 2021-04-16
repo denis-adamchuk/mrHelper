@@ -82,9 +82,8 @@ namespace mrHelper.CommonNative
          int currentThread = NativeMethods.GetCurrentThreadId();
 
          IntPtr activeWindow = NativeMethods.GetForegroundWindow();
-         int activeThread = NativeMethods.GetWindowThreadProcessId(activeWindow, out IntPtr activeProcess);
-
-         int windowThread = NativeMethods.GetWindowThreadProcessId(window, out IntPtr windowProcess);
+         int activeThread = NativeMethods.GetWindowThreadProcessId(activeWindow, out _);
+         int windowThread = NativeMethods.GetWindowThreadProcessId(window, out _);
 
          if (currentThread != activeThread)
          {

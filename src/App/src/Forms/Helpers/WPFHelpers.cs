@@ -22,8 +22,7 @@ namespace mrHelper.App.Forms.Helpers
             textbox.Loaded += (s, e) =>
             {
                var source = System.Windows.PresentationSource.FromVisual(textbox);
-               var hwndTarget = source.CompositionTarget as System.Windows.Interop.HwndTarget;
-               if (hwndTarget != null)
+               if (source.CompositionTarget is System.Windows.Interop.HwndTarget hwndTarget)
                {
                   hwndTarget.RenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
                }

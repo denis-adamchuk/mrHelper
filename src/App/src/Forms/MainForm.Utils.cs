@@ -479,12 +479,13 @@ namespace mrHelper.App.Forms
 
       private void setExitingFlag()
       {
-         Trace.TraceInformation(String.Format("[MainForm] Set _exiting flag"));
+         Trace.TraceInformation("[MainForm] Set _exiting flag");
          _exiting = true;
       }
 
       private void onHideToTray()
       {
+         Trace.TraceInformation("[MainForm] onHideToTray()");
          if (Program.Settings.ShowWarningOnHideToTray)
          {
             _trayIcon.ShowTooltipBalloon(new TrayIcon.BalloonText("Information", "I will now live in your tray"));
@@ -495,6 +496,7 @@ namespace mrHelper.App.Forms
 
       private void onRestoreFromTray()
       {
+         Trace.TraceInformation("[MainForm] onRestoreFromTray(), Visible = {0}", Visible.ToString());
          if (!Visible)
          {
             Show();

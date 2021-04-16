@@ -16,7 +16,7 @@ namespace mrHelper.StorageSupport
          _fileCache = fileStorage.FileCache;
          _path = path;
          _argumentConverter = new FileStorageArgumentConverter(fileStorage);
-         RenameDetector = new FileStorageRenameDetector(this, fileStorage);
+         RenameDetector = new FileStorageRenameDetector(fileStorage);
       }
 
       public override IFileRenameDetector RenameDetector { get; }

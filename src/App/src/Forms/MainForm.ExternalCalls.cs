@@ -153,7 +153,7 @@ namespace mrHelper.App.Forms
 
       private void onOpenCommand(string url)
       {
-         Trace.TraceInformation(String.Format("[Mainform] External request: connecting to URL {0}", url));
+         Trace.TraceInformation("[Mainform] External request: connecting to URL {0}", url);
          reconnect(url);
       }
 
@@ -355,7 +355,7 @@ namespace mrHelper.App.Forms
          {
             if (isCached(mode))
             {
-               if (unhideFilteredMergeRequest(mode, mrk))
+               if (unhideFilteredMergeRequest(mode))
                {
                   if (switchTabAndSelectMergeRequest(mode, mrk))
                   {
@@ -449,7 +449,7 @@ namespace mrHelper.App.Forms
             if (dataCache.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
             {
                // If it is cached, it is probably hidden by filters and user might want to un-hide it.
-               if (!unhideFilteredMergeRequest(EDataCacheType.Live, mrk))
+               if (!unhideFilteredMergeRequest(EDataCacheType.Live))
                {
                   return false; // user decided to not un-hide merge request
                }
@@ -491,7 +491,7 @@ namespace mrHelper.App.Forms
          switchTabAndSelectMergeRequest(EDataCacheType.Search, mrk);
       }
 
-      private bool unhideFilteredMergeRequest(EDataCacheType dataCacheType, MergeRequestKey mrk)
+      private bool unhideFilteredMergeRequest(EDataCacheType dataCacheType)
       {
          Trace.TraceInformation("[MainForm] Notify user that MR is hidden");
 

@@ -226,11 +226,10 @@ namespace mrHelper.App
          {
             if (context.Arguments.Length > 1)
             {
-               string message = String.Join("|", context.Arguments.Skip(1));
+               string message = String.Join("|", context.Arguments.Skip(1)); // skip executable path
                Win32Tools.SendMessageToWindow(mainWindow, message);
             }
-            string showWindowMessage = "show";
-            Win32Tools.SendMessageToWindow(mainWindow, showWindowMessage);
+            Win32Tools.SendMessageToWindow(mainWindow, "show");
          }
          else
          {
@@ -284,7 +283,7 @@ namespace mrHelper.App
          Array.Copy(context.Arguments, 0, argumentsEx, 0, context.Arguments.Length);
          argumentsEx[argumentsEx.Length - 1] = parentToolPID.ToString();
 
-         string message = String.Join("|", argumentsEx.Skip(1));
+         string message = String.Join("|", argumentsEx.Skip(1)); // skip executable path
          IntPtr mainWindow = context.GetWindowByCaption(Constants.MainWindowCaption, true);
          if (mainWindow == IntPtr.Zero)
          {

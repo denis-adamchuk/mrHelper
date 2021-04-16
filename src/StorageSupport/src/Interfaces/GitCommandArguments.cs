@@ -260,7 +260,7 @@ namespace mrHelper.StorageSupport
 
       public override bool Equals(object obj)
       {
-         return obj is DiffToolArguments && Equals((DiffToolArguments)obj);
+         return obj is DiffToolArguments arguments && Equals(arguments);
       }
 
       public bool Equals(DiffToolArguments other)

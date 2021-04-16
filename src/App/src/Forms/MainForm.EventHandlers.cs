@@ -333,8 +333,7 @@ namespace mrHelper.App.Forms
 
       private void comboBoxColorSelector_SelectedIndexChanged(object sender, EventArgs e)
       {
-         ColorSelectorComboBoxItem selectedItem = ((sender as ComboBox).SelectedItem) as ColorSelectorComboBoxItem; 
-         if (selectedItem != null)
+         if ((sender as ComboBox).SelectedItem is ColorSelectorComboBoxItem selectedItem)
          {
             onComboBoxColorSelected(selectedItem.Color);
          }

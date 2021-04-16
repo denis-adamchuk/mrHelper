@@ -72,7 +72,7 @@ namespace mrHelper.Integration.GitUI
          IntegrationHelper.DeleteElements(scripts, "CustomAction", "Caption", new string[] { name });
 
          // add element
-         XElement[] elements = new XElement[] { getCreateMergeRequestElement(name, scriptPath, gitbash) };
+         XElement[] elements = new XElement[] { getCreateMergeRequestElement(scriptPath, gitbash) };
          if (!IntegrationHelper.AddElements(scripts, "ArrayOfCustomAction", elements))
          {
             throw new SourceTreeIntegrationHelperException("Unexpected format of Source Tree configuration file");
@@ -82,7 +82,7 @@ namespace mrHelper.Integration.GitUI
          scripts.Save(configFilePath);
       }
 
-      private static XElement getCreateMergeRequestElement(string name, string scriptPath, string gitBashFilePath)
+      private static XElement getCreateMergeRequestElement(string scriptPath, string gitBashFilePath)
       {
          string scriptFilePath = Path.Combine(scriptPath, Constants.CreateMergeRequestBashScriptName);
          if (!File.Exists(scriptFilePath))

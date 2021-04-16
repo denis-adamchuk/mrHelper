@@ -20,13 +20,13 @@ namespace mrHelper.GitLabClient
             "IId: {0}, Project: {1}, TargetBranch: {2}, Text: {3}, Author: {4}, " +
             "Label: {5}, MaxResults: {6}, State: {7}",
             IId.HasValue ? IId.Value.ToString() : "N/A",
-            ProjectName != null ? ProjectName : "N/A",
-            TargetBranchName != null ? TargetBranchName : "N/A",
-            Text != null ? Text : "N/A",
-            AuthorUserName != null ? AuthorUserName : "N/A",
+            ProjectName ?? "N/A",
+            TargetBranchName ?? "N/A",
+            Text ?? "N/A",
+            AuthorUserName ?? "N/A",
             Labels != null ? String.Join(",", Labels) : "N/A",
             MaxResults.HasValue ? MaxResults.Value.ToString() : "N/A",
-            State != null ? State : "N/A");
+            State ?? "N/A");
       }
    }
 

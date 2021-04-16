@@ -4,9 +4,8 @@ namespace mrHelper.StorageSupport
 {
    internal class FileStorageRenameDetector : IFileRenameDetector
    {
-      internal FileStorageRenameDetector(IGitCommandService commandService, IFileStorage fileStorage)
+      internal FileStorageRenameDetector(IFileStorage fileStorage)
       {
-         _commandService = commandService;
          _comparisonCache = fileStorage.ComparisonCache;
          _fileCache = fileStorage.FileCache;
       }
@@ -65,7 +64,6 @@ namespace mrHelper.StorageSupport
          return filename;
       }
 
-      private readonly IGitCommandService _commandService;
       private readonly FileStorageComparisonCache _comparisonCache;
       private readonly FileStorageRevisionCache _fileCache;
    }

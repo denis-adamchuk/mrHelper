@@ -76,7 +76,7 @@ namespace mrHelper.StorageSupport
             traceInformation(String.Format("StartUpdate() called with context of type {0}",
                contextProvider?.GetContext()?.GetType().ToString() ?? "null"));
             registerCallbacks(onProgressChange, onUpdateStateChange);
-            await doUpdate(true, contextProvider?.GetContext(), onProgressChange, onUpdateStateChange);
+            await doUpdate(true, contextProvider?.GetContext(), onProgressChange);
          }
          catch (GitCommandException ex)
          {
@@ -106,7 +106,7 @@ namespace mrHelper.StorageSupport
                   traceInformation(String.Format("RequestUpdate() called with context of type {0}",
                      contextProvider?.GetContext()?.GetType().ToString() ?? "null"));
 
-                  await doUpdate(false, contextProvider?.GetContext(), null, null);
+                  await doUpdate(false, contextProvider?.GetContext(), null);
                   onFinished?.Invoke();
                }
                catch (GitCommandException ex)
@@ -121,7 +121,7 @@ namespace mrHelper.StorageSupport
       }
 
       async public Task doUpdate(bool isAwaitedUpdate, CommitStorageUpdateContext context,
-         Action<string> onProgressChange, Action onUpdateStateChange)
+         Action<string> onProgressChange)
       {
          if (context == null || context.BaseToHeads.Data == null || _isDisposed)
          {
@@ -146,7 +146,7 @@ namespace mrHelper.StorageSupport
          foreach (InternalUpdateContext internalContext in internalContexts)
          {
             await fetchCommitsAsync(isAwaitedUpdate, totalShaCount, fetchedShaCount, internalContext.Sha,
-               onProgressChange, onUpdateStateChange);
+               onProgressChange);
             fetchedShaCount += internalContext.Sha.Count();
             await suspendProcessingOfNonAwaitedUpdate(isAwaitedUpdate, fetchedShaCount < totalShaCount);
          }
@@ -263,7 +263,7 @@ namespace mrHelper.StorageSupport
       }
 
       async private Task fetchCommitsAsync(bool isAwaitedUpdate, int totalMissingShaCount, int fetchedShaCount,
-         IEnumerable<string> shas, Action<string> onProgressChange, Action onUpdateStateChange)
+         IEnumerable<string> shas, Action<string> onProgressChange)
       {
          traceDebug(String.Format("Pending per-commit fetch. Already locked = {0}. Is awaited update = {1}",
             _currentUpdateType.HasValue.ToString(), isAwaitedUpdate.ToString()));
@@ -536,11 +536,11 @@ namespace mrHelper.StorageSupport
       private readonly List<Action<string>> _onProgressChangeCallbacks = new List<Action<string>>();
       private readonly List<Action> _onUpdateStateChangeCallbacks = new List<Action>();
 
-      private static int MaxShaInChunk = 1;
-      private static int RequestCheckIntervalMs = 50;
+      private static readonly int MaxShaInChunk = 1;
+      private static readonly int RequestCheckIntervalMs = 50;
 
       // suspend delay shall be big enough to allow other to check for a lock and acquire it
-      private static int FetchSuspendDelayMs = RequestCheckIntervalMs * 4;
+      private static readonly int FetchSuspendDelayMs = RequestCheckIntervalMs * 4;
    }
 }
 

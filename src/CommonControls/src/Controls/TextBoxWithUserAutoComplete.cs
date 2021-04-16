@@ -20,7 +20,7 @@ namespace mrHelper.CommonControls.Controls
             };
       }
 
-      private static char GitLabLabelPrefixChar = '@';
+      private static readonly char GitLabLabelPrefixChar = '@';
 
       public struct User
       {
@@ -375,7 +375,7 @@ namespace mrHelper.CommonControls.Controls
          _delayedHidingTimer.Start();
       }
 
-      private System.Windows.Forms.Timer _delayedHidingTimer = new System.Windows.Forms.Timer
+      private readonly System.Windows.Forms.Timer _delayedHidingTimer = new System.Windows.Forms.Timer
       {
          Interval = 250
       };
