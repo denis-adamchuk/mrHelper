@@ -83,6 +83,11 @@ namespace mrHelper.App.Controls
             return;
          }
 
+         Cancel();
+      }
+
+      public void Cancel()
+      {
          if (isTooltipScheduled())
          {
             stopToolTipTimer();

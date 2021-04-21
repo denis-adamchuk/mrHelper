@@ -631,6 +631,8 @@ namespace mrHelper.App.Controls
             contextMenu.SetUnmuteActionEnabled(isMuted(selectedMergeRequest.Value));
          }
          contextMenu.UpdateItemState();
+
+         _toolTip.Cancel();
       }
 
       private void drawEllipseForIId(Graphics g, StringFormat format,
