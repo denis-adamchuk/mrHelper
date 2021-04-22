@@ -5,6 +5,7 @@ using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Helpers
 {
+   // TODO Should not be bound to exact DataCache
    public class ExpressionResolver : IDisposable
    {
       public ExpressionResolver(DataCache dataCache)

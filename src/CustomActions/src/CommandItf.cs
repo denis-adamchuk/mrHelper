@@ -4,7 +4,7 @@ namespace mrHelper.CustomActions
 {
    internal interface ISubCommand
    {
-      Task Run();
+      Task Run(ICommandCallback callback);
    }
 
    public interface ICommand
@@ -23,6 +23,7 @@ namespace mrHelper.CustomActions
 
       bool InitiallyVisible { get; }
 
-      Task Run();
+      Task Run(ICommandCallback callback);
    }
 }
+

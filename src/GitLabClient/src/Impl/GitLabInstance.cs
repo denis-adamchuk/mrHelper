@@ -27,7 +27,7 @@ namespace mrHelper.GitLabClient
          _synchronizeInvoke = synchronizeInvoke;
       }
 
-      async public Task<bool> IsApprovalStatusSupported()
+      async public Task<bool?> IsApprovalStatusSupported()
       {
          if (_isApprovalStatusSupportedCached.HasValue)
          {
@@ -40,7 +40,7 @@ namespace mrHelper.GitLabClient
             _isApprovalStatusSupportedCached = isApprovalStatusSupported(version);
             return _isApprovalStatusSupportedCached.Value;
          }
-         return false;
+         return null;
       }
 
       public void Dispose()
@@ -154,6 +154,7 @@ namespace mrHelper.GitLabClient
          _timer = null;
       }
 
+      // TODO_MF Implement this using RawDataAccessor to trace connection loss
       async private Task<GitLabVersion> getVersionAsync()
       {
          string token = HostProperties.GetAccessToken(HostName);

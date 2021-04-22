@@ -4,9 +4,9 @@ using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Helpers.GitLab
 {
-   internal class Shortcuts
+   public class Shortcuts
    {
-      internal Shortcuts(GitLabInstance gitLabIntance)
+      public Shortcuts(GitLabInstance gitLabIntance)
       {
          _gitLabInstance = gitLabIntance;
       }

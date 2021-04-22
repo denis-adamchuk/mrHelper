@@ -98,7 +98,8 @@ namespace mrHelper.App
 
       private static void initializeGitLabSharpLibrary()
       {
-         GitLabSharp.LibraryContext context = new GitLabSharp.LibraryContext(Settings.ServicePointConnectionLimit);
+         GitLabSharp.LibraryContext context = new GitLabSharp.LibraryContext(
+            Settings.ServicePointConnectionLimit, Settings.AsyncOperationTimeOutSeconds);
          GitLabSharp.GitLabSharp.Initialize(context);
       }
 
@@ -459,9 +460,13 @@ namespace mrHelper.App
          }
       }
 
-      private static void cleanUpTempFolder(string template)
+      private static void cleanUpTempFolder(string tempFolder, string template)
       {
-         string tempFolder = Environment.GetEnvironmentVariable("TEMP");
+         if (!System.IO.Directory.Exists(tempFolder))
+         {
+            return;
+         }
+
          foreach (string f in System.IO.Directory.EnumerateFiles(tempFolder, template))
          {
             try
@@ -486,9 +491,9 @@ namespace mrHelper.App
             ExceptionHandlers.Handle("Failed to clean-up log files", ex);
          }
 
-         cleanUpTempFolder("mrHelper.*.msi");
-         cleanUpTempFolder("mrHelper.*.msix");
-         cleanUpTempFolder("mrHelper.logs.*.zip");
+         cleanUpTempFolder(PathFinder.InstallerStorage, "mrHelper.*.msi");
+         cleanUpTempFolder(PathFinder.InstallerStorage, "mrHelper.*.msix");
+         cleanUpTempFolder(PathFinder.LogArchiveStorage, "mrHelper.logs.*.zip");
       }
 
       static private bool registerCustomProtocol()

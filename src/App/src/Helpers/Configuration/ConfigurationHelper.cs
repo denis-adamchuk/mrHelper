@@ -1,23 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
-using GitLabSharp.Entities;
+using System.Windows.Forms;
 using mrHelper.Common.Constants;
 using mrHelper.StorageSupport;
-using Newtonsoft.Json;
 
 namespace mrHelper.App.Helpers
 {
-   public static class ConfigurationHelper
+   internal static class ConfigurationHelper
    {
-      public static void SetAuthInfo(IEnumerable<Tuple<string, string>> hostToken, UserDefinedSettings settings)
+      internal static void SetAuthInfo(IEnumerable<Tuple<string, string>> hostToken, UserDefinedSettings settings)
       {
          settings.KnownHosts = hostToken.Select(tuple => tuple.Item1).ToArray();
          settings.KnownAccessTokens = hostToken.Select(tuple => tuple.Item2).ToArray();
       }
 
-      public enum DiscussionColumnWidth
+      internal enum DiscussionColumnWidth
       {
          Narrow,
          NarrowPlus,
@@ -26,7 +26,7 @@ namespace mrHelper.App.Helpers
          Wide
       }
 
-      public static DiscussionColumnWidth GetNextColumnWidth(DiscussionColumnWidth value)
+      internal static DiscussionColumnWidth GetNextColumnWidth(DiscussionColumnWidth value)
       {
          switch (value)
          {
@@ -39,7 +39,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static DiscussionColumnWidth GetPrevColumnWidth(DiscussionColumnWidth value)
+      internal static DiscussionColumnWidth GetPrevColumnWidth(DiscussionColumnWidth value)
       {
          switch (value)
          {
@@ -52,7 +52,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static DiscussionColumnWidth GetDiscussionColumnWidth(UserDefinedSettings settings)
+      internal static DiscussionColumnWidth GetDiscussionColumnWidth(UserDefinedSettings settings)
       {
          if (settings.DiscussionColumnWidth == "narrow")
          {
@@ -76,7 +76,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static void SetDiscussionColumnWidth(UserDefinedSettings settings, DiscussionColumnWidth width)
+      internal static void SetDiscussionColumnWidth(UserDefinedSettings settings, DiscussionColumnWidth width)
       {
          switch (width)
          {
@@ -102,14 +102,77 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public enum DiffContextPosition
+      internal enum DiffContextPosition
       {
          Top,
          Left,
          Right
       }
 
-      public static DiffContextPosition GetDiffContextPosition(UserDefinedSettings settings)
+      internal static void SaveToolStripLocation(string name, Point location,
+         ToolStripLayoutStyle style, UserDefinedSettings settings)
+      {
+         Dictionary<string, Point> locations = settings.ToolStripLocations;
+         locations[name] = location;
+         settings.ToolStripLocations = locations;
+
+         Dictionary<string, string> styles = settings.ToolStripLayoutStyles;
+         if (style == ToolStripLayoutStyle.Flow)
+         {
+            styles[name]  = "Flow";
+         }
+         else if (style == ToolStripLayoutStyle.Table)
+         {
+            styles[name]  = "Table";
+         }
+         else if (style == ToolStripLayoutStyle.HorizontalStackWithOverflow)
+         {
+            styles[name]  = "HorizontalStackWithOverflow";
+         }
+         else if (style == ToolStripLayoutStyle.VerticalStackWithOverflow)
+         {
+            styles[name]  = "VerticalStackWithOverflow";
+         }
+         else if (style == ToolStripLayoutStyle.StackWithOverflow)
+         {
+            styles[name]  = "StackWithOverflow";
+         }
+         settings.ToolStripLayoutStyles = styles;
+      }
+
+      internal static void GetToolStripLocation(string name, UserDefinedSettings settings,
+         out Point location, out ToolStripLayoutStyle style)
+      {
+         location = settings.ToolStripLocations[name];
+         string layoutStyle = settings.ToolStripLayoutStyles[name];
+         if (layoutStyle == "Flow")
+         {
+            style = ToolStripLayoutStyle.Flow;
+         }
+         else if (layoutStyle == "Table")
+         {
+            style = ToolStripLayoutStyle.Table;
+         }
+         else if (layoutStyle == "HorizontalStackWithOverflow")
+         {
+            style = ToolStripLayoutStyle.HorizontalStackWithOverflow;
+         }
+         else if (layoutStyle == "VerticalStackWithOverflow")
+         {
+            style = ToolStripLayoutStyle.VerticalStackWithOverflow;
+         }
+         else if (layoutStyle == "StackWithOverflow")
+         {
+            style = ToolStripLayoutStyle.StackWithOverflow;
+         }
+         else
+         {
+            Debug.Assert(false);
+            style = ToolStripLayoutStyle.HorizontalStackWithOverflow;
+         }
+      }
+
+      internal static DiffContextPosition GetDiffContextPosition(UserDefinedSettings settings)
       {
          if (settings.DiffContextPosition == "top")
          {
@@ -125,7 +188,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static void SetDiffContextPosition(UserDefinedSettings settings, DiffContextPosition position)
+      internal static void SetDiffContextPosition(UserDefinedSettings settings, DiffContextPosition position)
       {
          switch (position)
          {
@@ -143,19 +206,14 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static int GetDiffContextDepth(UserDefinedSettings settings)
-      {
-         return int.TryParse(settings.DiffContextDepth, out int result) ? result : 2;
-      }
-
-      public enum ShowWarningsOnFileMismatchMode
+      internal enum ShowWarningsOnFileMismatchMode
       {
          Always,
          UntilUserIgnoresFile,
          Never
       }
 
-      public static ShowWarningsOnFileMismatchMode GetShowWarningsOnFileMismatchMode(UserDefinedSettings settings)
+      internal static ShowWarningsOnFileMismatchMode GetShowWarningsOnFileMismatchMode(UserDefinedSettings settings)
       {
          if (settings.ShowWarningsOnFileMismatchMode == "always")
          {
@@ -172,7 +230,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static void SetShowWarningsOnFileMismatchMode(
+      internal static void SetShowWarningsOnFileMismatchMode(
          UserDefinedSettings settings, ShowWarningsOnFileMismatchMode mode)
       {
          switch (mode)
@@ -191,14 +249,14 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public enum RevisionAutoSelectionMode
+      internal enum RevisionAutoSelectionMode
       {
          LastVsNext,
          LastVsLatest,
          BaseVsLatest
       }
 
-      public static RevisionAutoSelectionMode GetRevisionAutoSelectionMode(UserDefinedSettings settings)
+      internal static RevisionAutoSelectionMode GetRevisionAutoSelectionMode(UserDefinedSettings settings)
       {
          if (settings.AutoSelectionMode == "LastVsNext")
          {
@@ -215,7 +273,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static void SelectAutoSelectionMode(UserDefinedSettings settings, RevisionAutoSelectionMode mode)
+      internal static void SelectAutoSelectionMode(UserDefinedSettings settings, RevisionAutoSelectionMode mode)
       {
          switch (mode)
          {
@@ -233,7 +291,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static LocalCommitStorageType GetPreferredStorageType(UserDefinedSettings settings)
+      internal static LocalCommitStorageType GetPreferredStorageType(UserDefinedSettings settings)
       {
          if (settings.GitUsageForStorage == "UseGitWithFullClone")
          {
@@ -250,7 +308,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static void SelectPreferredStorageType(UserDefinedSettings settings, LocalCommitStorageType type)
+      internal static void SelectPreferredStorageType(UserDefinedSettings settings, LocalCommitStorageType type)
       {
          switch (type)
          {
@@ -266,7 +324,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static RevisionType GetDefaultRevisionType(UserDefinedSettings settings)
+      internal static RevisionType GetDefaultRevisionType(UserDefinedSettings settings)
       {
          if (settings.RevisionType == "Commit")
          {
@@ -279,7 +337,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static void SelectRevisionType(UserDefinedSettings settings, RevisionType type)
+      internal static void SelectRevisionType(UserDefinedSettings settings, RevisionType type)
       {
          switch (type)
          {
@@ -293,7 +351,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static string[] GetDisplayFilterKeywords(UserDefinedSettings settings)
+      internal static string[] GetDisplayFilterKeywords(UserDefinedSettings settings)
       {
          return settings.DisplayFilter
             .Split(',')
@@ -301,26 +359,23 @@ namespace mrHelper.App.Helpers
             .ToArray();
       }
 
-      public class HostInProjectsFile
+      internal class StringToBooleanCollection : List<Tuple<string, bool>>
       {
-         public HostInProjectsFile(string hostname, IEnumerable<Project> projects)
+         internal StringToBooleanCollection()
+            : base(new List<Tuple<string, bool>>())
          {
-            Name = hostname;
-            Projects = projects;
          }
 
-         [JsonProperty]
-         public string Name { get; protected set; }
-
-         [JsonProperty]
-         public IEnumerable<Project> Projects { get; protected set; }
+         internal StringToBooleanCollection(IEnumerable<Tuple<string, bool>> collection) : base(collection)
+         {
+         }
       }
 
-      public static void SetUsersForHost(string host, IEnumerable<Tuple<string, bool>> users,
+      internal static void SetUsersForHost(string host, StringToBooleanCollection users,
          UserDefinedSettings settings)
       {
          Dictionary<string, string> selectedUsers = settings.SelectedUsers;
-         DictionaryStringHelper.UpdateRawDictionaryString(
+         HostStringHelper.UpdateRawDictionaryString(
             new Dictionary<string, IEnumerable<Tuple<string, string>>>
             {
                { host, users.Select(y => new Tuple<string, string>(y.Item1, y.Item2.ToString())) }
@@ -329,11 +384,11 @@ namespace mrHelper.App.Helpers
          settings.SelectedUsers = selectedUsers;
       }
 
-      public static void SetProjectsForHost(string host, IEnumerable<Tuple<string, bool>> projects,
+      internal static void SetProjectsForHost(string host, StringToBooleanCollection projects,
          UserDefinedSettings settings)
       {
          Dictionary<string, string> selectedProjects = settings.SelectedProjects;
-         DictionaryStringHelper.UpdateRawDictionaryString(
+         HostStringHelper.UpdateRawDictionaryString(
             new Dictionary<string, IEnumerable<Tuple<string, string>>>
             {
                { host, projects.Select(y => new Tuple<string, string>(y.Item1, y.Item2.ToString())) }
@@ -342,39 +397,39 @@ namespace mrHelper.App.Helpers
          settings.SelectedProjects = selectedProjects;
       }
 
-      public static IEnumerable<Tuple<string, bool>> GetUsersForHost(string host, UserDefinedSettings settings)
+      internal static StringToBooleanCollection GetUsersForHost(string host, UserDefinedSettings settings)
       {
-         return DictionaryStringHelper.GetDictionaryStringValue(host, settings.SelectedUsers)
-            .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) && result));
+         return new StringToBooleanCollection(HostStringHelper.GetDictionaryStringValue(host, settings.SelectedUsers)
+            .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) && result)));
       }
 
-      public static IEnumerable<Tuple<string, bool>> GetProjectsForHost(string host, UserDefinedSettings settings)
+      internal static StringToBooleanCollection GetProjectsForHost(string host, UserDefinedSettings settings)
       {
-         return DictionaryStringHelper.GetDictionaryStringValue(host, settings.SelectedProjects)
-            .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) && result));
+         return new StringToBooleanCollection(HostStringHelper.GetDictionaryStringValue(host, settings.SelectedProjects)
+            .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) && result)));
       }
 
-      public static IEnumerable<string> GetEnabledProjectNames(string hostname, UserDefinedSettings settings)
+      internal static IEnumerable<string> GetEnabledProjectNames(string hostname, UserDefinedSettings settings)
       {
          return GetProjectsForHost(hostname, settings)
             .Where(x => x.Item2).Select(x => x.Item1);
       }
 
-      public static IEnumerable<string> GetEnabledUsers(string hostname, UserDefinedSettings settings)
+      internal static IEnumerable<string> GetEnabledUsers(string hostname, UserDefinedSettings settings)
       {
          return GetUsersForHost(hostname, settings).Where(x => x.Item2)?.Select(x => x.Item1);
       }
 
-      public static void SelectProjectBasedWorkflow(UserDefinedSettings settings)
+      internal static void SelectProjectBasedWorkflow(UserDefinedSettings settings)
          => settings.WorkflowType = "Projects";
 
-      public static void SelectUserBasedWorkflow(UserDefinedSettings settings)
+      internal static void SelectUserBasedWorkflow(UserDefinedSettings settings)
          => settings.WorkflowType = "Users";
 
-      public static bool IsProjectBasedWorkflowSelected(UserDefinedSettings settings)
+      internal static bool IsProjectBasedWorkflowSelected(UserDefinedSettings settings)
          => settings.WorkflowType == "Projects";
 
-      public static Dictionary<string, int> GetColumnWidths(UserDefinedSettings settings, string listViewName)
+      internal static Dictionary<string, int> GetColumnWidths(UserDefinedSettings settings, string listViewName)
       {
          if (listViewName == Constants.LiveListViewName)
          {
@@ -388,11 +443,10 @@ namespace mrHelper.App.Helpers
          {
             return settings.ListViewRecentMergeRequestsColumnWidths;
          }
-         Debug.Assert(false);
          return null;
       }
 
-      public static void SetColumnWidths(UserDefinedSettings settings, Dictionary<string, int> widths, string listViewName)
+      internal static void SetColumnWidths(UserDefinedSettings settings, Dictionary<string, int> widths, string listViewName)
       {
          if (listViewName == Constants.LiveListViewName)
          {
@@ -408,7 +462,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static Dictionary<string, int> GetColumnIndices(UserDefinedSettings settings, string listViewName)
+      internal static Dictionary<string, int> GetColumnIndices(UserDefinedSettings settings, string listViewName)
       {
          if (listViewName == Constants.LiveListViewName)
          {
@@ -422,11 +476,10 @@ namespace mrHelper.App.Helpers
          {
             return settings.ListViewRecentMergeRequestsDisplayIndices;
          }
-         Debug.Assert(false);
          return null;
       }
 
-      public static void SetColumnIndices(UserDefinedSettings settings, Dictionary<string, int> indices, string listViewName)
+      internal static void SetColumnIndices(UserDefinedSettings settings, Dictionary<string, int> indices, string listViewName)
       {
          if (listViewName == Constants.LiveListViewName)
          {
@@ -439,6 +492,40 @@ namespace mrHelper.App.Helpers
          else if (listViewName == Constants.RecentListViewName)
          {
             settings.ListViewRecentMergeRequestsDisplayIndices = indices;
+         }
+      }
+
+      internal enum MainWindowLayout
+      {
+         Horizontal,
+         Vertical
+      }
+
+      internal static MainWindowLayout GetMainWindowLayout(UserDefinedSettings settings)
+      {
+         if (settings.MainWindowLayout == "Horizontal")
+         {
+            return MainWindowLayout.Horizontal;
+         }
+         else if (settings.MainWindowLayout == "Vertical")
+         {
+            return MainWindowLayout.Vertical;
+         }
+         Debug.Assert(false);
+         return MainWindowLayout.Horizontal;
+      }
+
+      internal static void SetMainWindowLayout(UserDefinedSettings settings, MainWindowLayout mainWindowLayout)
+      {
+         switch (mainWindowLayout)
+         {
+            case MainWindowLayout.Horizontal:
+               settings.MainWindowLayout = "Horizontal";
+               break;
+
+            case MainWindowLayout.Vertical:
+               settings.MainWindowLayout = "Vertical";
+               break;
          }
       }
    }

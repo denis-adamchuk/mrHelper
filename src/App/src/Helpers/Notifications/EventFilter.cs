@@ -45,7 +45,13 @@ namespace mrHelper.App.Helpers
             || (e.EventType == MergeRequestEvent.Type.AddedMergeRequest      && !_settings.Notifications_NewMergeRequests)
             || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest    && !_settings.Notifications_UpdatedMergeRequests)
             || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest    && !((MergeRequestEvent.UpdateScope)e.Scope).Commits)
-            || (e.EventType == MergeRequestEvent.Type.RemovedMergeRequest    && !_settings.Notifications_MergedMergeRequests));
+            || (e.EventType == MergeRequestEvent.Type.RemovedMergeRequest    && !areEnabledNotificationsForMergedMergeRequests()));
+      }
+
+      private bool areEnabledNotificationsForMergedMergeRequests()
+      {
+         return Program.Settings.Notifications_MergedMergeRequests
+             && ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings);
       }
 
       internal bool NeedSuppressEvent(DiscussionEvent e)

@@ -72,6 +72,7 @@
     <Compile Include="Tools\AppFinder.cs" />
     <Compile Include="Tools\AutoStartHelper.cs" />
     <Compile Include="Tools\Base64Helper.cs" />
+    <Compile Include="Tools\CollectionWrapper.cs" />
     <Compile Include="Tools\CryptoHelper.cs" />
     <Compile Include="Tools\CustomTraceListener.cs" />
     <Compile Include="Tools\EMailSender.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="Tools\ExternalProcessManager.cs" />
     <Compile Include="Tools\GitTools.cs" />
     <Compile Include="Tools\JsonUtils.cs" />
+    <Compile Include="Tools\PathFinder.cs" />
     <Compile Include="Tools\Persistence\PersistentState.cs" />
     <Compile Include="Tools\Persistence\PersistentStateItf.cs" />
     <Compile Include="Tools\Persistence\PersistentStorage.cs" />

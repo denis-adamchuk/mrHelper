@@ -12,44 +12,9 @@ namespace mrHelper.App.Helpers
    /// <summary>
    /// Supports working with configuration strings in format {Host}|{Property}:{Value},{Property:Value},...
    /// </summary>
-   public static class DictionaryStringHelper
+   internal static class HostStringHelper
    {
-      public static RawDictionaryString DeserializeRawDictionaryString(string value, bool forceKeyLowerCase)
-      {
-         RawDictionaryString result = new RawDictionaryString();
-
-         string[] splitted = value.Split(';');
-         foreach (string splittedItem in splitted)
-         {
-            if (!splittedItem.Contains("|"))
-            {
-               Debug.Assert(splittedItem == String.Empty);
-               continue;
-            }
-
-            string[] subsplitted = splittedItem.Split('|');
-            if (subsplitted.Length != 2)
-            {
-               Debug.Assert(false);
-               continue;
-            }
-            result.Add(forceKeyLowerCase ? subsplitted[0].ToLower() : subsplitted[0], subsplitted[1]);
-         }
-
-         return result;
-      }
-
-      public static string SerializeRawDictionaryString(RawDictionaryString value)
-      {
-         List<string> result = new List<string>();
-         foreach (KeyValuePair<string, string> pair in value)
-         {
-            result.Add(pair.Key + "|" + pair.Value);
-         }
-         return String.Join(";", result);
-      }
-
-      public static void UpdateRawDictionaryString(
+      internal static void UpdateRawDictionaryString(
          Dictionary<DictionaryStringKey, DictionaryStringValue> newValues,
          RawDictionaryString dictionaryString)
       {
@@ -69,7 +34,7 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      public static DictionaryStringValue GetDictionaryStringValue(
+      internal static DictionaryStringValue GetDictionaryStringValue(
          DictionaryStringKey key, RawDictionaryString dictionaryString)
       {
          if (String.IsNullOrEmpty(key) || !dictionaryString.ContainsKey(key))

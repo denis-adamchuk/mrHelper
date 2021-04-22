@@ -6,23 +6,23 @@ namespace mrHelper.CustomActions
 {
    internal class MergeRequestEndPointPOSTCommand : ISubCommand
    {
-      internal MergeRequestEndPointPOSTCommand(ICommandCallback callback, string endpoint)
+      internal MergeRequestEndPointPOSTCommand(string endpoint)
       {
-         _callback = callback;
          _endpoint = endpoint;
       }
 
-      async public Task Run()
+      async public Task Run(ICommandCallback callback)
       {
-         string hostname = _callback.GetCurrentHostName();
-         string accessToken = _callback.GetCurrentAccessToken();
-         string projectName = _callback.GetCurrentProjectName();
-         int iid = _callback.GetCurrentMergeRequestIId();
+         string hostname = callback.GetCurrentHostName();
+         string accessToken = callback.GetCurrentAccessToken();
+         string projectName = callback.GetCurrentProjectName();
+         int iid = callback.GetCurrentMergeRequestIId();
 
          GitLabTaskRunner client = new GitLabTaskRunner(hostname, accessToken);
          await client.RunAsync(async (gitlab) =>
          {
             SingleMergeRequestAccessor accessor = gitlab.Projects.Get(projectName).MergeRequests.Get(iid);
+            accessor.TraceRequests = true;
             if (_endpoint == "approve")
             {
                return await accessor.ApproveTaskAsync();
@@ -36,8 +36,6 @@ namespace mrHelper.CustomActions
       }
 
       private readonly string _endpoint;
-
-      private readonly ICommandCallback _callback;
    }
 }
 

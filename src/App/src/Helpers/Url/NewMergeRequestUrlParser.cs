@@ -7,7 +7,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 
-namespace mrHelper.App.Helpers.GitLab
+namespace mrHelper.App.Helpers
 {
    public struct ParsedNewMergeRequestUrl
    {

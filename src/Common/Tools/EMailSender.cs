@@ -88,8 +88,7 @@ namespace mrHelper.Common.Tools
          }
          message.Headers.Add("X-Unsent", "1");
 
-         string tempDirectory = Environment.GetEnvironmentVariable("TEMP");
-         string emailDirectory = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
+         string emailDirectory = PathFinder.NewEMailDirectory;
          Directory.CreateDirectory(emailDirectory);
 
          try

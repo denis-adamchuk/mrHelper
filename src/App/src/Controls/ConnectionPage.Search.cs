@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
-using mrHelper.CommonControls.Tools;
 using mrHelper.GitLabClient;
 
-namespace mrHelper.App.Forms
+namespace mrHelper.App.Controls
 {
-   internal partial class MainForm
+   internal partial class ConnectionPage
    {
       private void searchMergeRequests(SearchQueryCollection queryCollection)
       {
@@ -21,8 +20,8 @@ namespace mrHelper.App.Forms
 
       private void loadRecentMergeRequests()
       {
-         Trace.TraceInformation("[MainForm.Search] Loading recent merge requests from {0}", getHostName());
-         IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(getHostName());
+         Trace.TraceInformation("[MainForm.Search] Loading recent merge requests from {0}", HostName);
+         IEnumerable<SearchQuery> queries = convertRecentMergeRequestsToSearchQueries(HostName);
          BeginInvoke(new Action(async () =>
             await searchMergeRequestsSafeAsync(new SearchQueryCollection(queries), EDataCacheType.Recent, null)), null);
       }
@@ -32,7 +31,7 @@ namespace mrHelper.App.Forms
       {
          try
          {
-            await searchMergeRequestsAsync(getHostName(), queryCollection, mode);
+            await searchMergeRequestsAsync(HostName, queryCollection, mode);
          }
          catch (Exception ex) // rethrow in case of unexpected exceptions
          {
@@ -116,7 +115,7 @@ namespace mrHelper.App.Forms
       {
          getListView(EDataCacheType.Recent).Items.Clear();
          addOperationRecord("Loading a list of recently reviewed merge requests has started");
-         setConnectionStatus(EConnectionState.ConnectingRecent);
+         setConnectionStatus(EConnectionStateInternal.ConnectingRecent);
       }
 
       private void onRecentDataCacheConnected(string hostname, User user)
@@ -132,7 +131,7 @@ namespace mrHelper.App.Forms
             getListView(EDataCacheType.Recent).SelectMergeRequest(new MergeRequestKey?(), false);
          }
 
-         setConnectionStatus(EConnectionState.Connected);
+         setConnectionStatus(EConnectionStateInternal.Connected);
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +139,7 @@ namespace mrHelper.App.Forms
       private void ensureMergeRequestInRecentDataCache(MergeRequestKey mrk)
       {
          DateTime currentTime = DateTime.Now;
-         if (_recentMergeRequests.ContainsKey(mrk))
+         if (_recentMergeRequests.Data.ContainsKey(mrk))
          {
             _recentMergeRequests[mrk] = currentTime;
             return;
@@ -149,7 +148,6 @@ namespace mrHelper.App.Forms
          _recentMergeRequests.Add(mrk, currentTime);
 
          bool needUpdateFullList = cleanupOldRecentMergeRequests(mrk.ProjectKey.HostName);
-         saveState();
 
          updateRecentDataCacheQueryColletion(mrk.ProjectKey.HostName);
          MergeRequestKey? keyForUpdate = needUpdateFullList ? new Nullable<MergeRequestKey>() : mrk;
@@ -164,7 +162,7 @@ namespace mrHelper.App.Forms
 
       private IEnumerable<SearchQuery> convertRecentMergeRequestsToSearchQueries(string hostname)
       {
-         return _recentMergeRequests
+         return _recentMergeRequests.Data
             .Where(key => key.Key.ProjectKey.HostName == hostname)
             .Select(key => new GitLabClient.SearchQuery
             {
@@ -188,7 +186,7 @@ namespace mrHelper.App.Forms
 
          bool changed = false;
          IEnumerable<IGrouping<ProjectKey, KeyValuePair<MergeRequestKey, DateTime>>> groups =
-            _recentMergeRequests
+            _recentMergeRequests.Data
             .Where(key => key.Key.ProjectKey.HostName == hostname)
             .GroupBy(key => key.Key.ProjectKey);
          foreach (IGrouping<ProjectKey, KeyValuePair<MergeRequestKey, DateTime>> group in groups)
@@ -211,63 +209,5 @@ namespace mrHelper.App.Forms
          return changed;
       }
 
-      ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-      private void setSearchByProjectEnabled(bool isEnabled)
-      {
-         checkBoxSearchByProject.Enabled = isEnabled;
-
-         bool wasEnabled = comboBoxProjectName.Enabled;
-         comboBoxProjectName.Enabled = isEnabled;
-
-         if (!wasEnabled && isEnabled)
-         {
-            DataCache dataCache = getDataCache(EDataCacheType.Live);
-            string[] projectNames = dataCache?.ProjectCache?.GetProjects()
-               .OrderBy(project => project.Path_With_Namespace)
-               .Select(project => project.Path_With_Namespace)
-               .ToArray() ?? Array.Empty<string>();
-            string selectedProject = (string)comboBoxProjectName.SelectedItem;
-            string previousSelection = selectedProject ?? String.Empty;
-            string defaultProjectName = projectNames.SingleOrDefault(name => name == previousSelection) == null
-               ? getDefaultProjectName() : previousSelection;
-            WinFormsHelpers.FillComboBox(comboBoxProjectName, projectNames,
-               projectName => projectName == defaultProjectName);
-         }
-
-         updateSearchButtonState();
-      }
-
-      private void setSearchByAuthorEnabled(bool isEnabled, string hostname)
-      {
-         checkBoxSearchByAuthor.Enabled = isEnabled;
-         linkLabelFindMe.Enabled = isEnabled;
-
-         bool wasEnabled = comboBoxUser.Enabled;
-         comboBoxUser.Enabled = isEnabled;
-
-         if (!wasEnabled && isEnabled)
-         {
-            DataCache dataCache = getDataCache(EDataCacheType.Live);
-            User[] users = dataCache?.UserCache?.GetUsers()
-               .OrderBy(user => user.Name).ToArray() ?? Array.Empty<User>();
-            if (!users.Any())
-            {
-               WinFormsHelpers.FillComboBox(comboBoxUser, users, _ => false);
-            }
-            else
-            {
-               User selectedUser = (User)comboBoxUser.SelectedItem;
-               string previousSelection = selectedUser == null ? String.Empty : selectedUser.Name;
-               bool hasPreviousSelection = users.SingleOrDefault(user => user.Name == previousSelection) != null;
-               User defaultUser = getCurrentUser(hostname) ?? users.First();
-               string defaultUserFullName = hasPreviousSelection ? previousSelection : defaultUser.Name;
-               WinFormsHelpers.FillComboBox(comboBoxUser, users, user => user.Name == defaultUserFullName);
-            }
-         }
-
-         updateSearchButtonState();
-      }
    }
 }
-

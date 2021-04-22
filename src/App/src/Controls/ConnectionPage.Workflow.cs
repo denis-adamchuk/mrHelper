@@ -1,38 +1,47 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static mrHelper.App.Helpers.ConfigurationHelper;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
-using mrHelper.Common.Constants;
-using mrHelper.GitLabClient;
-using mrHelper.CommonControls.Tools;
-using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 using mrHelper.Common.Tools;
+using mrHelper.CommonControls.Tools;
+using mrHelper.GitLabClient;
 
-namespace mrHelper.App.Forms
+namespace mrHelper.App.Controls
 {
-   internal class UnknownHostException : Exception
+   internal partial class ConnectionPage
    {
-      internal UnknownHostException(string hostname): base(
-         String.Format("Cannot find access token for host {0}", hostname)) {}
-   }
+      internal class UnknownHostException : Exception
+      {
+         internal UnknownHostException(string hostname): base(
+            String.Format("Cannot find access token for host {0}", hostname)) {}
+      }
 
-   internal class NoProjectsException : Exception
-   {
-      internal NoProjectsException(string hostname): base(
-         String.Format("Project list for hostname {0} is empty", hostname)) {}
-   }
+      internal class NoProjectsException : Exception
+      {
+         internal NoProjectsException(string hostname): base(
+            String.Format("Project list for hostname {0} is empty", hostname)) {}
+      }
 
-   internal partial class MainForm
-   {
+      internal class CannotLoadCurentUserException : Exception
+      {
+         internal CannotLoadCurentUserException(string hostname): base(
+            String.Format("Cannot load current user for host {0}", hostname)) {}
+      }
+
       private bool startWorkflowDefaultExceptionHandler(Exception ex)
       {
-         if (ex is DataCacheException || ex is UnknownHostException || ex is NoProjectsException)
+         if (ex is DataCacheException
+          || ex is UnknownHostException
+          || ex is NoProjectsException
+          || ex is CannotLoadCurentUserException)
          {
             if (!(ex is DataCacheConnectionCancelledException))
             {
@@ -51,15 +60,14 @@ namespace mrHelper.App.Forms
          return false;
       }
 
-      async private Task switchHostToSelectedAsync(Func<Exception, bool> exceptionHandler)
+      async private Task connect(Func<Exception, bool> exceptionHandler)
       {
          await dropCacheConnectionsAsync();
-         initializeGitLabInstance(getHostName());
-         updateTabControlSelection();
+         await initializeGitLabInstanceOnceAsync();
 
          try
          {
-            await startWorkflowAsync(getHostName());
+            await startWorkflowAsync();
          }
          catch (Exception ex) // rethrow in case of unexpected exceptions
          {
@@ -91,42 +99,55 @@ namespace mrHelper.App.Forms
 
       // Everything reconnects inside startWorkflowAsync(). If there are some things at gitlab that user
       // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
-      // we will miss them. It might be ok when host changes, but if this method used to "refresh"
+      // we will miss them. It might be ok in some cases, but if this method used to "refresh"
       // things, missed events are not desirable.
       // This is why "Refresh List" button implemented not by means of startWorkflowAsync().
-      async private Task startWorkflowAsync(string hostname)
+      async private Task startWorkflowAsync()
       {
          Trace.TraceInformation("[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
-            hostname, Program.Settings.WorkflowType);
+            HostName, Program.Settings.WorkflowType);
 
-         if (String.IsNullOrWhiteSpace(hostname) || getDataCache(EDataCacheType.Live) == null)
+         if (String.IsNullOrWhiteSpace(HostName) || getDataCache(EDataCacheType.Live) == null)
          {
             return;
          }
 
-         addOperationRecord(String.Format("Connecting to {0}...", hostname));
-         if (Program.Settings.GetAccessToken(hostname) == String.Empty)
+         addOperationRecord(String.Format("Connecting to {0}...", HostName));
+         if (Program.Settings.GetAccessToken(HostName) == String.Empty)
          {
-            throw new UnknownHostException(hostname);
+            throw new UnknownHostException(HostName);
          }
 
+         await loadCurrentUserAsync();
          if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {
-            initializeProjectListIfEmpty(hostname);
-            await upgradeProjectListFromOldVersion(hostname);
-            await startProjectBasedWorkflowAsync(hostname);
+            initializeProjectListIfEmpty();
+            await upgradeProjectListFromOldVersion();
+            await startProjectBasedWorkflowAsync();
          }
          else
          {
-            await initializeLabelListIfEmpty(hostname);
+            await initializeLabelListIfEmpty();
             await startUserBasedWorkflowAsync();
          }
-         addOperationRecord(String.Format("Connection to {0} is established", hostname));
+         addOperationRecord(String.Format("Connection to {0} is established", HostName));
       }
 
-      private async Task startProjectBasedWorkflowAsync(string hostname)
+      async private Task loadCurrentUserAsync()
       {
-         IEnumerable<ProjectKey> projects = getEnabledProjects(hostname);
+         if (CurrentUser == null)
+         {
+            CurrentUser = await _shortcuts.GetUserAccessor().GetCurrentUserAsync();
+         }
+         if (CurrentUser == null)
+         {
+            throw new CannotLoadCurentUserException(HostName);
+         }
+      }
+
+      private async Task startProjectBasedWorkflowAsync()
+      {
+         IEnumerable<ProjectKey> projects = getEnabledProjects(HostName);
          SearchQueryCollection queryCollection = getCustomDataForProjectBasedWorkflow(projects);
          await connectLiveDataCacheAsync(queryCollection);
       }
@@ -145,7 +166,7 @@ namespace mrHelper.App.Forms
 
       private async Task startUserBasedWorkflowAsync()
       {
-         IEnumerable<string> usernames = listViewUsers.Items.Cast<ListViewItem>().Select(item => item.Text);
+         IEnumerable<string> usernames = ConfigurationHelper.GetEnabledUsers(HostName, Program.Settings);
          SearchQueryCollection queryCollection = getCustomDataForUserBasedWorkflow(usernames);
          await connectLiveDataCacheAsync(queryCollection);
       }
@@ -185,13 +206,14 @@ namespace mrHelper.App.Forms
 
       private void onLiveDataCacheDisconnected()
       {
-         clearCustomActionControls();
          disableLiveTabControls();
          stopRedrawTimer();
-         WinFormsHelpers.CloseAllFormsExceptOne(this);
+         WinFormsHelpers.CloseAllFormsExceptOne("MainForm");
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
          unsubscribeFromLiveDataCacheInternalEvents();
+         disableSelectedMergeRequestControls();
+         setConnectionStatus(null);
       }
 
       private void onLiveDataCacheConnecting(string hostname)
@@ -212,7 +234,7 @@ namespace mrHelper.App.Forms
             addOperationRecord(String.Format("Loading merge requests from {0} has started", hostname));
          }
 
-         setConnectionStatus(EConnectionState.ConnectingLive);
+         setConnectionStatus(EConnectionStateInternal.ConnectingLive);
       }
 
       private void onLiveDataCacheConnected(string hostname, User user)
@@ -221,43 +243,18 @@ namespace mrHelper.App.Forms
          subscribeToLiveDataCacheInternalEvents();
          createGitHelpers(dataCache, getCommitStorageFactory(false));
 
-         if (!_currentUser.ContainsKey(hostname))
-         {
-            _currentUser.Add(hostname, user);
-         }
          Program.FeedbackReporter.SetUserEMail(user.EMail);
          startRedrawTimer();
-         startEventPendingTimer(() => (dataCache?.ProjectCache?.GetProjects()?.Any() ?? false)
-                                   && (dataCache?.UserCache?.GetUsers()?.Any() ?? false),
-                                ProjectAndUserCacheCheckTimerInterval,
-                                () => setMergeRequestEditEnabled(true));
-         addOperationRecord("Project list download has started");
-         startEventPendingTimer(() => (dataCache?.ProjectCache?.GetProjects()?.Any() ?? false),
-                                ProjectAndUserCacheCheckTimerInterval,
-                                () =>
-                                {
-                                   addOperationRecord("Project list download has finished. " +
-                                                      "It is possible to create/edit and accept merge requests");
-                                   setSearchByProjectEnabled(true);
-                                });
-         addOperationRecord("User list download has started");
-         startEventPendingTimer(() => (dataCache?.UserCache?.GetUsers()?.Any() ?? false),
-                                ProjectAndUserCacheCheckTimerInterval,
-                                () =>
-                                {
-                                   addOperationRecord("User list download has finished");
-                                   setSearchByAuthorEnabled(true, hostname);
-                                });
+         startEventPendingTimer(() => areLongCachesReady(dataCache), ProjectAndUserCacheCheckTimerInterval,
+            () => onLongCachesReady());
 
          IEnumerable<MergeRequestKey> closedReviewed = gatherClosedReviewedMergeRequests(dataCache, hostname);
          cleanupReviewedMergeRequests(closedReviewed);
          loadRecentMergeRequests();
 
          updateMergeRequestList(EDataCacheType.Live);
-         enableMergeRequestListControls(true);
-         enableSimpleSearchControls(true);
+         CanReloadAllChanged?.Invoke(this);
          addOperationRecord("Loading merge requests has completed");
-         updateCustomActionControls();
 
          IEnumerable<ProjectKey> projects = getDataCache(EDataCacheType.Live).MergeRequestCache.GetProjects();
          foreach (ProjectKey projectKey in projects)
@@ -266,30 +263,35 @@ namespace mrHelper.App.Forms
          }
 
          // current mode may have changed during 'await'
-         if (getCurrentTabDataCacheType() == EDataCacheType.Live)
+         if (getCurrentTabDataCacheType() == EDataCacheType.Live && _isActivePage)
          {
-            bool shouldUseLastSelection = _lastMergeRequestsByHosts.ContainsKey(hostname);
+            bool shouldUseLastSelection = _lastMergeRequestsByHosts.Data.ContainsKey(hostname);
             string projectname = shouldUseLastSelection ?
                _lastMergeRequestsByHosts[hostname].ProjectKey.ProjectName : String.Empty;
             int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostname].IId : 0;
 
             MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostname, projectname), iid);
-            switchTabAndSelectMergeRequestOrAnythingElse(EDataCacheType.Live, mrk);
+            getListView(EDataCacheType.Live).SelectMergeRequest(mrk, false);
          }
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void initializeProjectListIfEmpty(string hostname)
+      private void initializeProjectListIfEmpty()
       {
-         if (!ConfigurationHelper.GetProjectsForHost(hostname, Program.Settings).Any())
+         if (!ConfigurationHelper.GetProjectsForHost(HostName, Program.Settings).Any())
          {
-            setupDefaultProjectList(hostname);
-            updateProjectsListView();
+            setupDefaultProjectList(HostName);
          }
       }
 
-      async private Task upgradeProjectListFromOldVersion(string hostname)
+      private void setupDefaultProjectList(string hostname)
+      {
+         StringToBooleanCollection projects = DefaultWorkflowLoader.GetDefaultProjectsForHost(hostname);
+         ConfigurationHelper.SetProjectsForHost(hostname, projects, Program.Settings);
+      }
+
+      async private Task upgradeProjectListFromOldVersion()
       {
          if (Program.Settings.SelectedProjectsUpgraded)
          {
@@ -299,9 +301,9 @@ namespace mrHelper.App.Forms
          GitLabClient.ProjectAccessor projectAccessor = _shortcuts.GetProjectAccessor();
 
          addOperationRecord("Preparing workflow to the first launch has started");
-         IEnumerable<Tuple<string, bool>> projects = ConfigurationHelper.GetProjectsForHost(
-            hostname, Program.Settings);
-         List<Tuple<string, bool>> upgraded = new List<Tuple<string, bool>>();
+         StringToBooleanCollection projects = ConfigurationHelper.GetProjectsForHost(
+            HostName, Program.Settings);
+         StringToBooleanCollection upgraded = new StringToBooleanCollection();
          foreach (var project in projects)
          {
             Project p = await projectAccessor.SearchProjectAsync(project.Item1);
@@ -313,96 +315,37 @@ namespace mrHelper.App.Forms
                }
             }
          }
-         ConfigurationHelper.SetProjectsForHost(hostname, upgraded, Program.Settings);
-         updateProjectsListView();
+         ConfigurationHelper.SetProjectsForHost(HostName, upgraded, Program.Settings);
          Program.Settings.SelectedProjectsUpgraded = true;
          addOperationRecord("Workflow has been prepared to the first launch");
       }
 
-      async private Task initializeLabelListIfEmpty(string hostname)
+      async private Task initializeLabelListIfEmpty()
       {
-         if (ConfigurationHelper.GetUsersForHost(hostname, Program.Settings).Any())
+         if (ConfigurationHelper.GetUsersForHost(HostName, Program.Settings).Any())
          {
             return;
          }
 
-         GitLabClient.UserAccessor userAccessor = _shortcuts.GetUserAccessor();
-
-         bool migratedLabels = false;
          addOperationRecord("Preparing workflow to the first launch has started");
-         List<Tuple<string, bool>> labels = new List<Tuple<string, bool>>();
-         MergeRequestFilterState filter = _mergeRequestFilter.Filter;
-         if (filter.Enabled)
-         {
-            foreach (string keyword in filter.Keywords)
-            {
-               string adjustedKeyword = keyword;
-               if (keyword.StartsWith(Constants.GitLabLabelPrefix) || keyword.StartsWith(Constants.AuthorLabelPrefix))
-               {
-                  adjustedKeyword = keyword.Substring(1);
-               }
-               User user = await userAccessor.SearchUserByUsernameAsync(adjustedKeyword);
-               if (user != null)
-               {
-                  if (!labels.Any(x => x.Item1 == user.Username))
-                  {
-                     labels.Add(new Tuple<string, bool>(user.Username, true));
-                     migratedLabels |= true;
-                  }
-               }
-            }
-         }
-
-         User currentUser = await userAccessor.GetCurrentUserAsync();
-         if (currentUser != null)
-         {
-            if (!labels.Any(x => x.Item1 == currentUser.Username))
-            {
-               labels.Add(new Tuple<string, bool>(currentUser.Username, true));
-            }
-         }
-         ConfigurationHelper.SetUsersForHost(hostname, labels, Program.Settings);
-         updateUsersListView();
+         StringToBooleanCollection labels =
+            await DefaultWorkflowLoader.GetDefaultUsersForHost(_gitLabInstance, CurrentUser);
+         ConfigurationHelper.SetUsersForHost(HostName, labels, Program.Settings);
          addOperationRecord("Workflow has been prepared to the first launch");
-
-         if (Program.Settings.ShowWarningOnFilterMigration)
-         {
-            if (migratedLabels)
-            {
-               MessageBox.Show(
-                  "By default, new versions of mrHelper select user-based workflow. "
-                + "Some of your filters are moved to Settings and only merge requests that match them are loaded from GitLab. "
-                + "You don't need to specify projects manually.\n"
-                + "Note that old Filter entry still works as additional filtering of loaded merge requests.",
-                  "Important news",
-                  MessageBoxButtons.OK, MessageBoxIcon.Information);
-               checkBoxDisplayFilter.Checked = false;
-            }
-            else if (currentUser != null)
-            {
-               MessageBox.Show(
-                  "By default, new versions of mrHelper select user-based workflow. "
-                + "Only merge requests that authored by you OR expected to be reviewed by you are loaded from GitLab.\n"
-                + "If you want to track merge requests of other users, specify them in Settings. ",
-                  "Important news",
-                  MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            Program.Settings.ShowWarningOnFilterMigration = false;
-         }
       }
 
       private SearchQueryCollection getCustomDataForUserBasedWorkflow(IEnumerable<string> usernames)
       {
-         SearchQuery[] queries = usernames
-            .SelectMany(username => new SearchQuery[]
+         GitLabClient.SearchQuery[] queries = usernames
+            .SelectMany(username => new GitLabClient.SearchQuery[]
                {
-                  new SearchQuery
+                  new GitLabClient.SearchQuery
                   {
                      Labels = new string[]{ Constants.GitLabLabelPrefix + username.ToLower() },
                      State = "opened"
                   },
                   // OR
-                  new SearchQuery
+                  new GitLabClient.SearchQuery
                   {
                      AuthorUserName = username,
                      State = "opened"
@@ -414,8 +357,8 @@ namespace mrHelper.App.Forms
 
       private SearchQueryCollection getCustomDataForProjectBasedWorkflow(IEnumerable<ProjectKey> enabledProjects)
       {
-         SearchQuery[] queries = enabledProjects
-            .Select(project => new SearchQuery
+         GitLabClient.SearchQuery[] queries = enabledProjects
+            .Select(project => new GitLabClient.SearchQuery
                {
                   ProjectName = project.ProjectName,
                   State = "opened"
@@ -478,21 +421,7 @@ namespace mrHelper.App.Forms
          bool updateReceived = false;
          bool updatingWholeList = !mrk.HasValue;
 
-         string oldButtonText = buttonReloadList.Text;
-         if (updatingWholeList)
-         {
-            onUpdating();
-         }
-         requestUpdates(dataCache, mrk, PseudoTimerInterval,
-            () =>
-            {
-               updateReceived = true;
-               if (updatingWholeList)
-               {
-                  onUpdated(oldButtonText);
-               }
-            },
-            kind);
+         requestUpdates(dataCache, mrk, PseudoTimerInterval, () => updateReceived = true, kind);
          await TaskUtils.WhileAsync(() => !updateReceived);
       }
 
@@ -500,19 +429,34 @@ namespace mrHelper.App.Forms
       {
          showWarningOnReloadList();
 
-         if (getHostName() != String.Empty)
+         if (HostName != String.Empty)
          {
             addOperationRecord("List refresh has started");
 
-            string oldButtonText = buttonReloadList.Text;
-            onUpdating();
-
             requestUpdates(dataCache, null, PseudoTimerInterval,
-               () =>
-               {
-                  onUpdated(oldButtonText);
-                  addOperationRecord("List refresh has completed");
-               });
+               () => addOperationRecord("List refresh has completed"));
+         }
+      }
+
+      private static void showWarningOnReloadList()
+      {
+         if (Program.Settings.ShowWarningOnReloadList)
+         {
+            int autoUpdateMs = Program.Settings.AutoUpdatePeriodMs;
+            double oneMinuteMs = 60000;
+            double autoUpdateMinutes = autoUpdateMs / oneMinuteMs;
+
+            string periodicity = autoUpdateMs > oneMinuteMs
+               ? (autoUpdateMs % Convert.ToInt32(oneMinuteMs) == 0
+                  ? String.Format("{0} minutes", autoUpdateMinutes)
+                  : String.Format("{0:F1} minutes", autoUpdateMinutes))
+               : String.Format("{0} seconds", autoUpdateMs / 1000);
+
+            string message = String.Format(
+               "Merge Request list updates each {0} and you don't usually need to update it manually", periodicity);
+            MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            Program.Settings.ShowWarningOnReloadList = false;
          }
       }
    }

@@ -64,6 +64,8 @@ namespace mrHelper.App.Controls
          _discussionLayout.DiffContextPositionChanged += onDiffContextPositionChanged;
          _discussionLayout.DiscussionColumnWidthChanged += onDiscussionColumnWidthChanged;
          _discussionLayout.NeedShiftRepliesChanged += onNeedShiftRepliesChanged;
+         _discussionLayout.DiffContextDepthChanged += onDiffContextDepthChanged;
+         _discussionLayout.ShowTooltipsForCodeChanged += onShowTooltipsForCodeChanged;
 
          apply(discussions);
       }
@@ -144,21 +146,6 @@ namespace mrHelper.App.Controls
          }
       }
 
-      internal void ApplyTheme(string theme)
-      {
-         if (theme == "New Year 2020")
-         {
-            pictureBox1.BackgroundImage = mrHelper.App.Properties.Resources.HappyNY2020;
-            pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            pictureBox1.Visible = true;
-            pictureBox1.SendToBack();
-         }
-         else
-         {
-            pictureBox1.Visible = false;
-         }
-      }
-
       private void onDiscussionsLoaded(IEnumerable<Discussion> discussions)
       {
          apply(discussions);
@@ -167,6 +154,24 @@ namespace mrHelper.App.Controls
       private void onLayout(object sender, LayoutEventArgs e)
       {
          repositionControls();
+      }
+
+      private void onDiffContextDepthChanged()
+      {
+         foreach (var box in getAllBoxes())
+         {
+            box.SetDiffContextDepth(_discussionLayout.DiffContextDepth);
+         }
+         PerformLayout();
+      }
+
+      private void onShowTooltipsForCodeChanged()
+      {
+         foreach (var box in getAllBoxes())
+         {
+            box.SetShowTooltipsForCode(_discussionLayout.ShowTooltipsForCode);
+         }
+         PerformLayout();
       }
 
       private void onNeedShiftRepliesChanged()
@@ -222,7 +227,9 @@ namespace mrHelper.App.Controls
                sender => _mostRecentFocusedDiscussionControl = sender, _htmlTooltip,
                _discussionLayout.DiffContextPosition,
                _discussionLayout.DiscussionColumnWidth,
-               _discussionLayout.NeedShiftReplies)
+               _discussionLayout.NeedShiftReplies,
+               _discussionLayout.DiffContextDepth,
+               _discussionLayout.ShowTooltipsForCode)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false

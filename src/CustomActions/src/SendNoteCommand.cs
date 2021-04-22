@@ -6,28 +6,28 @@ namespace mrHelper.CustomActions
 {
    internal class SendNoteCommand : ISubCommand
    {
-      internal SendNoteCommand(ICommandCallback callback, string body)
+      internal SendNoteCommand(string body)
       {
-         _callback = callback;
          _body = body;
       }
 
-      async public Task Run()
+      async public Task Run(ICommandCallback callback)
       {
-         string hostname = _callback.GetCurrentHostName();
-         string accessToken = _callback.GetCurrentAccessToken();
-         string projectName = _callback.GetCurrentProjectName();
-         int iid = _callback.GetCurrentMergeRequestIId();
+         string hostname = callback.GetCurrentHostName();
+         string accessToken = callback.GetCurrentAccessToken();
+         string projectName = callback.GetCurrentProjectName();
+         int iid = callback.GetCurrentMergeRequestIId();
 
          GitLabTaskRunner client = new GitLabTaskRunner(hostname, accessToken);
          await client.RunAsync(async (gitlab) =>
-            await gitlab.Projects.Get(projectName).MergeRequests.
-               Get(iid).Notes.CreateNewTaskAsync(new CreateNewNoteParameters(_body)));
+         {
+            NoteAccessor accessor = gitlab.Projects.Get(projectName).MergeRequests.Get(iid).Notes;
+            accessor.TraceRequests = true;
+            return await accessor.CreateNewTaskAsync(new CreateNewNoteParameters(_body));
+         });
       }
 
       private readonly string _body;
-
-      private readonly ICommandCallback _callback;
    }
 }
 

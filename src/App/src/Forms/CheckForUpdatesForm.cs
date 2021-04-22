@@ -4,9 +4,9 @@ using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Forms
 {
-   public partial class CheckForUpdatesForm : Form
+   internal partial class CheckForUpdatesForm : Form
    {
-      public CheckForUpdatesForm()
+      internal CheckForUpdatesForm()
       {
          InitializeComponent();
          this.Text = "mrHelper - Checking for updates";
@@ -35,9 +35,9 @@ namespace mrHelper.App.Forms
       }
    }
 
-   public class RemindAboutUpdateForm : CheckForUpdatesForm
+   internal class RemindAboutUpdateForm : CheckForUpdatesForm
    {
-      public RemindAboutUpdateForm()
+      internal RemindAboutUpdateForm()
          : base()
       {
          Text = "mrHelper - Reminder about available update";

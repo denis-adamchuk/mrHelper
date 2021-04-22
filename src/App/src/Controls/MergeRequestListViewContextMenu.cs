@@ -3,40 +3,49 @@ using System.Windows.Forms;
 
 namespace mrHelper.App.Controls
 {
+   public interface IOperationController
+   {
+      bool CanDiscussions();
+      bool CanDiffTool();
+      bool CanEdit();
+      bool CanMerge();
+   }
+
    public class MergeRequestListViewContextMenu : ContextMenuStrip
    {
       public MergeRequestListViewContextMenu(
+         IOperationController operationController,
          Action onDiscussions, Action onRefreshList, Action onRefresh, Action onEdit,
          Action onMerge, Action onClose, Action onDiffToBase, Action onDiffDefault,
          Action onMuteUntilTomorrow, Action onMuteUntilMonday, Action onUnmute,
          Action onDefault)
       {
-         addItem(onDiscussions, "&Discussions", Keys.F2, onDiscussions == onDefault);
+         _discussionsItem = addItem(onDiscussions, "&Discussions", onDiscussions == onDefault);
 
          if (onDiffToBase != null || onDiffDefault != null)
          {
             addSeparator();
          }
 
-         addItem(onDiffDefault, "Diff &Tool", Keys.F3, onDiffDefault == onDefault);
-         addItem(onDiffToBase, "Diff to &Base", Keys.Shift | Keys.F3, onDiffToBase == onDefault);
+         _diffToolItem = addItem(onDiffDefault, "Diff &Tool", onDiffDefault == onDefault);
+         _diffToBaseItem = addItem(onDiffToBase, "Diff to &Base", onDiffToBase == onDefault);
 
          if (onRefreshList != null || onRefresh != null)
          {
             addSeparator();
          }
 
-         _refreshListItem = addItem(onRefreshList, "&Refresh list", Keys.F5, onRefreshList == onDefault);
-         addItem(onRefresh, "R&efresh selected", Keys.Shift | Keys.F5, onRefresh == onDefault);
+         _refreshListItem = addItem(onRefreshList, "&Refresh list", onRefreshList == onDefault);
+         addItem(onRefresh, "R&efresh selected", onRefresh == onDefault);
 
          if (onEdit != null || onMerge != null || onClose != null)
          {
             addSeparator();
          }
 
-         _editItem = addItem(onEdit, "Ed&it...", Keys.None, onEdit == onDefault);
-         _mergeItem = addItem(onMerge, "&Merge...", Keys.None, onMerge == onDefault);
-         addItem(onClose, "&Close", Keys.None, onClose == onDefault);
+         _editItem = addItem(onEdit, "Ed&it...", onEdit == onDefault);
+         _mergeItem = addItem(onMerge, "&Merge...", onMerge == onDefault);
+         addItem(onClose, "&Close", onClose == onDefault);
 
          if (onMuteUntilTomorrow != null || onMuteUntilMonday != null || onUnmute != null)
          {
@@ -44,13 +53,15 @@ namespace mrHelper.App.Controls
          }
 
          _muteUntilTomorrowItem = addItem(onMuteUntilTomorrow,
-            "Don't &highlight until tomorrow", Keys.None, onMuteUntilTomorrow == onDefault);
+            "Don't &highlight until tomorrow", onMuteUntilTomorrow == onDefault);
          _muteUntilMondayItem = addItem(onMuteUntilMonday,
-            "Don't &highlight until Monday", Keys.None, onMuteUntilMonday == onDefault);
-         _unmuteItem = addItem(onUnmute, "Restore high&light", Keys.None, onUnmute == onDefault);
+            "Don't &highlight until Monday", onMuteUntilMonday == onDefault);
+         _unmuteItem = addItem(onUnmute, "Restore high&light", onUnmute == onDefault);
+
+         _operationController = operationController;
       }
 
-      private ToolStripMenuItem addItem(Action action, string name, Keys shortcutKeys, bool isDefault)
+      private ToolStripMenuItem addItem(Action action, string name, bool isDefault)
       {
          if (action == null)
          {
@@ -59,7 +70,7 @@ namespace mrHelper.App.Controls
 
          ToolStripMenuItem item = new ToolStripMenuItem(name, null, (s, e) => action())
          {
-            ShortcutKeys = shortcutKeys
+            //ShortcutKeys = shortcutKeys
          };
          Items.Add(item);
 
@@ -74,16 +85,6 @@ namespace mrHelper.App.Controls
       private void addSeparator()
       {
          Items.Add("-", null, null);
-      }
-
-      public void SetEditActionEnabled(bool enabled)
-      {
-         _isEditActionEnabled = enabled;
-      }
-
-      public void SetMergeActionEnabled(bool enabled)
-      {
-         _isMergeActionEnabled = enabled;
       }
 
       public void SetUnmuteActionEnabled(bool enabled)
@@ -113,6 +114,21 @@ namespace mrHelper.App.Controls
             item.Enabled = !_disabledAll;
          }
 
+         if (_discussionsItem != null)
+         {
+            _discussionsItem.Enabled = _operationController.CanDiscussions() && !_disabledAll;
+         }
+
+         if (_diffToolItem != null)
+         {
+            _diffToolItem.Enabled = _operationController.CanDiffTool() && !_disabledAll;
+         }
+
+         if (_diffToBaseItem != null)
+         {
+            _diffToBaseItem.Enabled = _operationController.CanDiffTool() && !_disabledAll;
+         }
+
          if (_refreshListItem != null)
          {
             _refreshListItem.Enabled = true;
@@ -120,12 +136,12 @@ namespace mrHelper.App.Controls
 
          if (_editItem != null)
          {
-            _editItem.Enabled = _isEditActionEnabled && !_disabledAll;
+            _editItem.Enabled = _operationController.CanEdit() && !_disabledAll;
          }
 
          if (_mergeItem != null)
          {
-            _mergeItem.Enabled = _isMergeActionEnabled && !_disabledAll;
+            _mergeItem.Enabled = _operationController.CanMerge() && !_disabledAll;
          }
 
          if (_muteUntilTomorrowItem != null)
@@ -144,6 +160,8 @@ namespace mrHelper.App.Controls
          }
       }
 
+      private readonly IOperationController _operationController;
+
       private readonly ToolStripMenuItem _refreshListItem;
       private readonly ToolStripItem _editItem;
       private readonly ToolStripItem _mergeItem;
@@ -151,8 +169,9 @@ namespace mrHelper.App.Controls
       private readonly ToolStripItem _muteUntilTomorrowItem;
       private readonly ToolStripItem _muteUntilMondayItem;
       private readonly ToolStripItem _unmuteItem;
-      private bool _isEditActionEnabled;
-      private bool _isMergeActionEnabled;
+      private readonly ToolStripMenuItem _diffToolItem;
+      private readonly ToolStripMenuItem _diffToBaseItem;
+      private readonly ToolStripMenuItem _discussionsItem;
       private bool _disabledAll;
       private bool _isUnmuteActionEnabled;
    }

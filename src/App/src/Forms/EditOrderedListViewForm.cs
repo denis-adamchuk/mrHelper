@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static mrHelper.App.Helpers.ConfigurationHelper;
 
 namespace mrHelper.App.Forms
 {
@@ -13,11 +14,11 @@ namespace mrHelper.App.Forms
       Task<string> CanAddItem(string item, IEnumerable<string> currentItems);
    }
 
-   public partial class EditOrderedListViewForm : CustomFontForm
+   internal partial class EditOrderedListViewForm : CustomFontForm
    {
       public EditOrderedListViewForm(
          string caption, string addItemCaption, string addItemHint,
-         IEnumerable<Tuple<string, bool>> initialItems,
+         StringToBooleanCollection initialItems,
          IEditOrderedListViewCallback callback,
          bool allowReorder)
       {
@@ -43,18 +44,18 @@ namespace mrHelper.App.Forms
          buttonCancel.ConfirmationCondition = () => !Enumerable.SequenceEqual(initialItems, Items);
       }
 
-      public IEnumerable<Tuple<string, bool>> Items
+      public StringToBooleanCollection Items
       {
          get
          {
-            return listView.Items
+            return new StringToBooleanCollection(listView.Items
                .Cast<ListViewItem>()
                .Select(x => x.Tag)
-               .Cast<Tuple<string, bool>>();
+               .Cast<Tuple<string, bool>>());
          }
       }
 
-      private void updateListView(IEnumerable<Tuple<string, bool>> items)
+      private void updateListView(StringToBooleanCollection items)
       {
          listView.Items.Clear();
 

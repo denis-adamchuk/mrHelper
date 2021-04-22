@@ -2,7 +2,7 @@
 
 namespace mrHelper.App.Forms.Helpers
 {
-   internal struct NewMergeRequestProperties
+   public struct NewMergeRequestProperties
    {
       public NewMergeRequestProperties(string defaultProject, string sourceBranch,
          IEnumerable<string> targetBranchCandidates, string assigneeUsername,

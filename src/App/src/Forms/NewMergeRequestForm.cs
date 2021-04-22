@@ -234,7 +234,7 @@ namespace mrHelper.App.Forms
                string message = String.Format(
                   "A merge request for the source branch {0} already exists", _initialState.SourceBranch);
                MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               Trace.TraceWarning("[MainForm] Cannot create MR: {0}", message);
+               Trace.TraceWarning("[NewMergeRequestForm] Cannot create MR: {0}", message);
                DialogResult = DialogResult.Cancel;
                Close();
                return;

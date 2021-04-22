@@ -25,15 +25,12 @@ namespace mrHelper.GitLabClient
             }
             catch (Exception ex) // Any exception from GitLabSharp API
             {
-               if (ex.InnerException is GitLabRequestException rx)
+               if (ex.InnerException is System.Net.WebException wx)
                {
-                  if (rx.InnerException is System.Net.WebException wx)
+                  if (wx.Response is System.Net.HttpWebResponse response
+                   && response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                   {
-                     if (wx.Response is System.Net.HttpWebResponse response
-                      && response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                     {
-                        return ConnectionCheckStatus.BadAccessToken;
-                     }
+                     return ConnectionCheckStatus.BadAccessToken;
                   }
                }
             }

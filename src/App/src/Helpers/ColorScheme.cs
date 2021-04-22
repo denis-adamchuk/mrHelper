@@ -29,7 +29,7 @@ namespace mrHelper.App.Helpers
    /// <summary>
    /// Represents a color scheme used in the application
    /// </summary>
-   internal class ColorScheme
+   public class ColorScheme
    {
       /// <summary>
       /// Create an empty scheme
@@ -42,9 +42,8 @@ namespace mrHelper.App.Helpers
       /// Read scheme from file
       /// Throws ArgumentException
       /// </summary>
-      internal ColorScheme(string filename, ExpressionResolver expressionResolver)
+      internal ColorScheme(string filename)
       {
-         _expressionResolver = expressionResolver;
          initializeFromFile(filename);
       }
 
@@ -69,10 +68,8 @@ namespace mrHelper.App.Helpers
          return _colors[groupName]
             .Select(item =>
             {
-               IEnumerable<string> resolvedConditions = item.Conditions?
-                  .Select(condition => _expressionResolver.Resolve(condition)) ?? Array.Empty<string>();
                Color color = getCustomColor(item.Name) ?? item.Color;
-               return new ColorSchemeItem(item.Name, item.DisplayName, resolvedConditions, color, item.Color);
+               return new ColorSchemeItem(item.Name, item.DisplayName, item.Conditions, color, item.Color);
             })
             .ToArray();
       }
@@ -189,8 +186,6 @@ namespace mrHelper.App.Helpers
          [JsonProperty]
          public IEnumerable<ColorItem> Colors { get; protected set; }
       }
-
-      private readonly ExpressionResolver _expressionResolver;
    }
 }
 

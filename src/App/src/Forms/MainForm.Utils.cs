@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Drawing;
@@ -7,235 +6,275 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
-using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Controls;
-using mrHelper.App.Helpers.GitLab;
-using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 using mrHelper.CustomActions;
+using mrHelper.CommonControls.Tools;
+using mrHelper.App.Interprocess;
 
 namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      public string GetCurrentHostName()
-      {
-         return getHostName();
-      }
-
-      public string GetCurrentAccessToken()
-      {
-         return Program.Settings.GetAccessToken(getHostName());
-      }
-
-      public string GetCurrentProjectName()
-      {
-         return getMergeRequestKey(null)?.ProjectKey.ProjectName ?? String.Empty;
-      }
-
-      public int GetCurrentMergeRequestIId()
-      {
-         return getMergeRequestKey(null)?.IId ?? 0;
-      }
-
-      private User getCurrentUser()
-      {
-         return getCurrentUser(getHostName());
-      }
-
-      private User getCurrentUser(string hostname)
-      {
-         bool isValidHostname = !String.IsNullOrWhiteSpace(hostname);
-         return isValidHostname && _currentUser.TryGetValue(hostname, out User value) ? value : null;
-      }
-
-      private enum EDataCacheType
-      {
-         Live,
-         Search,
-         Recent
-      }
-
-      private EDataCacheType getCurrentTabDataCacheType()
-      {
-         if (tabControlMode.SelectedTab == tabPageSearch)
-         {
-            return EDataCacheType.Search;
-         }
-         else if (tabControlMode.SelectedTab == tabPageRecent)
-         {
-            return EDataCacheType.Recent;
-         }
-
-         Debug.Assert(tabControlMode.SelectedTab == tabPageLive);
-         return EDataCacheType.Live;
-      }
-
-      private EDataCacheType getListViewType(MergeRequestListView listView)
-      {
-         if (listView == listViewLiveMergeRequests)
-         {
-            return EDataCacheType.Live;
-         }
-         else if (listView == listViewFoundMergeRequests)
-         {
-            return EDataCacheType.Search;
-         }
-         else if (listView == listViewRecentMergeRequests)
-         {
-            return EDataCacheType.Recent;
-         }
-
-         Debug.Assert(false);
-         return EDataCacheType.Live;
-      }
-
-      private MergeRequestListView getListView(EDataCacheType mode)
-      {
-         switch (mode)
-         {
-            case EDataCacheType.Live:
-               return listViewLiveMergeRequests;
-
-            case EDataCacheType.Search:
-               return listViewFoundMergeRequests;
-
-            case EDataCacheType.Recent:
-               return listViewRecentMergeRequests;
-         }
-
-         Debug.Assert(false);
-         return null;
-      }
-
-      private bool doesRequireFixedGroupCollection(EDataCacheType mode)
-      {
-         return ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings) && mode == EDataCacheType.Live;
-      }
-
-      private MergeRequest getMergeRequest(MergeRequestListView proposedListView)
-      {
-         MergeRequestListView listView = proposedListView ?? getListView(getCurrentTabDataCacheType());
-         FullMergeRequestKey? fmk = listView.GetSelectedMergeRequest();
-         return fmk.HasValue ? fmk.Value.MergeRequest : null;
-      }
-
-      private MergeRequestKey? getMergeRequestKey(MergeRequestListView proposedListView)
-      {
-         MergeRequestListView listView = proposedListView ?? getListView(getCurrentTabDataCacheType());
-         FullMergeRequestKey? fmk = listView.GetSelectedMergeRequest();
-         return fmk.HasValue && fmk.Value.MergeRequest != null
-            ? new MergeRequestKey(fmk.Value.ProjectKey, fmk.Value.MergeRequest.IId)
-            : new Nullable<MergeRequestKey>();
-      }
-
-      private string getDefaultProjectName()
-      {
-         MergeRequestListView listView = getListView(EDataCacheType.Live);
-         MergeRequestKey? currentMergeRequestKey = getMergeRequestKey(listView);
-         if (currentMergeRequestKey.HasValue)
-         {
-            return currentMergeRequestKey.Value.ProjectKey.ProjectName;
-         }
-
-         if (listView.Groups.Count > 0)
-         {
-            return listView.Groups[0].Name;
-         }
-
-         ProjectKey? project = getDataCache(EDataCacheType.Live)?.MergeRequestCache?.GetProjects()?.FirstOrDefault();
-         if (project.HasValue)
-         {
-            return project.Value.ProjectName;
-         }
-
-         return String.Empty;
-      }
-
-      private DataCache getDataCache(EDataCacheType mode)
-      {
-         switch (mode)
-         {
-            case EDataCacheType.Live:
-               return _liveDataCache;
-
-            case EDataCacheType.Search:
-               return _searchDataCache;
-
-            case EDataCacheType.Recent:
-               return _recentDataCache;
-         }
-
-         Debug.Assert(false);
-         return null;
-      }
-
-      private DataCache getDataCacheByName(string name)
-      {
-         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
-         {
-            if (name == mode.ToString())
-            {
-               return getDataCache(mode);
-            }
-         }
-         Debug.Assert(false);
-         return null;
-      }
-
-      private string getDataCacheName(DataCache dataCache)
-      {
-         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
-         {
-            if (getDataCache(mode) == dataCache)
-            {
-               return mode.ToString();
-            }
-         }
-         Debug.Assert(false);
-         return String.Empty;
-      }
-
-      private enum PreferredSelection
-      {
-         Initial,
-         Latest
-      }
-
-      private bool isCustomActionEnabled(IEnumerable<User> approvedBy,
-         IEnumerable<string> labels, User author, string dependency)
-      {
-         if (String.IsNullOrEmpty(dependency))
-         {
-            return true;
-         }
-
-         string excludePrefix = "NOT ";
-         bool isExpected = !dependency.StartsWith(excludePrefix);
-         dependency = isExpected ? dependency : dependency.Substring(excludePrefix.Length);
-         if (isExpected)
-         {
-            return labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x))
-                || StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username)
-                || approvedBy.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Approved_By:{0}}}", x.Username));
-         }
-         else
-         {
-            return labels.All(x => !StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x))
-                && !StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username)
-                && approvedBy.All(x => !StringUtils.DoesMatchPattern(dependency, "{{Approved_By:{0}}}", x.Username));
-         }
-      }
+      // Time Tracking
 
       private bool isTrackingTime()
       {
          return _timeTracker != null;
+      }
+
+      private void startTimeTrackingTimer()
+      {
+         Debug.Assert(!isTrackingTime());
+
+         // Start timer
+         _timeTrackingTimer.Start();
+
+         // Reset and start stopwatch
+         _timeTracker = getTimeTracker();
+         if (_timeTracker == null)
+         {
+            return;
+         }
+
+         _timeTracker.Start();
+
+         onTimerStarted();
+      }
+
+      private ITimeTracker getTimeTracker()
+      {
+         return getCurrentConnectionPage()?.GetTimeTracker();
+      }
+
+      private void onTimeTrackingTimer(object sender, EventArgs e)
+      {
+         if (isTrackingTime())
+         {
+            toolStripTextBoxTrackedTime.Text = _timeTracker.Elapsed.ToString(@"hh\:mm\:ss");
+            toolStripTextBoxTrackedTime.Invalidate();
+         }
+      }
+
+      private void stopTimeTrackingTimer()
+      {
+         BeginInvoke(new Action(async () => await stopTimeTrackingTimerAsync()));
+      }
+
+      async private Task stopTimeTrackingTimerAsync()
+      {
+         if (!isTrackingTime())
+         {
+            return;
+         }
+
+         // Stop timer
+         _timeTrackingTimer.Stop();
+
+         // Reset member right now to not send tracked time again on re-entrance
+         ITimeTracker timeTracker = _timeTracker;
+         _timeTracker = null;
+
+         string convertSpanToText(TimeSpan span) => String.Format("{0}h {1}m {2}s",
+               span.ToString("hh"), span.ToString("mm"), span.ToString("ss"));
+
+         addOperationRecord("Sending tracked time has started");
+         try
+         {
+            TimeSpan span = await timeTracker.Stop();
+            string duration = convertSpanToText(span);
+            addOperationRecord(String.Format("Tracked time {0} sent successfully", duration));
+         }
+         catch (ForbiddenTimeTrackerException ex)
+         {
+            TimeSpan span = ex.TrackedTime;
+            string duration = convertSpanToText(span);
+            string status = String.Format(
+               "Cannot report tracked time ({0}).\r\n"
+             + "You don't have permissions to track time in {1} project.\r\n"
+             + "Please contact {2} administrator or SCM team.",
+               duration, timeTracker.MergeRequest.ProjectKey.ProjectName, timeTracker.MergeRequest.ProjectKey.HostName);
+            MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            addOperationRecord(String.Format("Tracked time is not set. Set up permissions and report {0} manually",
+               duration));
+         }
+         catch (TooSmallSpanTimeTrackerException)
+         {
+            addOperationRecord("Tracked time less than 1 second is ignored");
+         }
+         catch (TimeTrackerException ex)
+         {
+            TimeSpan span = ex.TrackedTime;
+            string duration = convertSpanToText(span);
+            string status = String.Format("Error occurred. Tracked time {0} is not sent", duration);
+            ExceptionHandlers.Handle(status, ex);
+            MessageBox.Show(status, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+         }
+
+         if (!isTrackingTime())
+         {
+            onTimerStopped();
+         }
+      }
+
+      private void cancelTimeTrackingTimer()
+      {
+         if (!isTrackingTime())
+         {
+            return;
+         }
+
+         // Stop timer
+         _timeTrackingTimer.Stop();
+
+         _timeTracker.Cancel();
+         _timeTracker = null;
+         addOperationRecord("Time tracking cancelled");
+
+         onTimerStopped();
+      }
+
+      private void onTimerStarted()
+      {
+         _timeTrackingHost = GetCurrentHostName();
+         toolStripButtonGoToTimeTracking.Enabled = true;
+         toolStripButtonEditTrackedTime.Enabled = false;
+         toolStripButtonCancelTimer.Enabled = true;
+         toolStripTextBoxTrackedTime.Text = DefaultTimeTrackingTextBoxText;
+         toolStripButtonStartStopTimer.Image = Properties.Resources.stop_24x24;
+
+         updateTrayAndTaskBar();
+         addOperationRecord("Time tracking has started");
+      }
+
+      private void onTimerStopped()
+      {
+         _timeTrackingHost = null;
+         ConnectionPage connectionPage = getCurrentConnectionPage();
+         toolStripButtonGoToTimeTracking.Enabled = false;
+         toolStripButtonEditTrackedTime.Enabled = connectionPage != null && connectionPage.CanTrackTime();
+         toolStripButtonCancelTimer.Enabled = false;
+         toolStripTextBoxTrackedTime.Text = connectionPage?.GetTrackedTimeAsText() ?? DefaultTimeTrackingTextBoxText;
+         toolStripButtonStartStopTimer.Image = Properties.Resources.play_24x24;
+
+         updateTrayAndTaskBar();
+
+         Debug.Assert(!_applicationUpdateNotificationPostponedTillTimerStop
+                   || !_applicationUpdateReminderPostponedTillTimerStop); // cannot have both enabled
+         if (_applicationUpdateNotificationPostponedTillTimerStop)
+         {
+            notifyAboutNewVersion();
+         }
+         else if (_applicationUpdateReminderPostponedTillTimerStop)
+         {
+            remindAboutNewVersion();
+         }
+      }
+
+      private void gotoTimeTrackingMergeRequest()
+      {
+         ConnectionPage connectionPage = getCurrentConnectionPage();
+         if (_timeTracker == null || _timeTrackingHost == null || connectionPage == null)
+         {
+            return;
+         }
+         emulateClickOnHostToolbarButton(_timeTrackingHost);
+         connectionPage.FindMergeRequest(_timeTracker.MergeRequest);
+      }
+
+      // Diff Tool
+
+      private void onDiffCommand(string argumentString)
+      {
+         string[] argumentsEx = argumentString.Split('|');
+         int gitPID = int.Parse(argumentsEx[argumentsEx.Length - 1]);
+
+         string[] arguments = new string[argumentsEx.Length - 1];
+         Array.Copy(argumentsEx, 0, arguments, 0, argumentsEx.Length - 1);
+
+         enqueueDiffRequest(new DiffRequest(gitPID, arguments));
+      }
+
+      struct DiffRequest
+      {
+         internal int GitPID { get; }
+         internal string[] DiffArguments { get; }
+
+         internal DiffRequest(int gitPID, string[] diffArguments)
+         {
+            GitPID = gitPID;
+            DiffArguments = diffArguments;
+         }
+      }
+
+      readonly Queue<DiffRequest> _requestedDiff = new Queue<DiffRequest>();
+      private void enqueueDiffRequest(DiffRequest diffRequest)
+      {
+         _requestedDiff.Enqueue(diffRequest);
+         if (_requestedDiff.Count == 1)
+         {
+            BeginInvoke(new Action(() => processDiffQueue()));
+         }
+      }
+
+      private void processDiffQueue()
+      {
+         if (!_requestedDiff.Any())
+         {
+            return;
+         }
+
+         DiffRequest diffRequest = _requestedDiff.Peek();
+         try
+         {
+            SnapshotSerializer serializer = new SnapshotSerializer();
+            Snapshot snapshot;
+            try
+            {
+               snapshot = serializer.DeserializeFromDisk(diffRequest.GitPID);
+            }
+            catch (Exception ex) // Any exception from de-serialization code
+            {
+               ExceptionHandlers.Handle("Cannot read serialized Snapshot object", ex);
+               MessageBox.Show(
+                  "Make sure that diff tool was launched from Merge Request Helper which is still running",
+                  "Cannot create a discussion",
+                  MessageBoxButtons.OK, MessageBoxIcon.Error,
+                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+               return;
+            }
+
+            getCurrentConnectionPage()?.ProcessDiffToolRequest(snapshot, diffRequest.DiffArguments);
+         }
+         finally
+         {
+            if (_requestedDiff.Any())
+            {
+               _requestedDiff.Dequeue();
+               BeginInvoke(new Action(() => processDiffQueue()));
+            }
+         }
+      }
+
+      // New Version
+
+      private void onNewVersionAvailable()
+      {
+         Debug.Assert(StaticUpdateChecker.NewVersionInformation != null);
+         updateNewVersionStatus();
+
+         // when a new version appears in the middle of work, re-schedule a reminder to trigger in 24 hours
+         stopNewVersionReminderTimer();
+         if (!notifyAboutNewVersion())
+         {
+            Trace.TraceInformation("[MainForm] Reminder timer restarted");
+            startNewVersionReminderTimer();
+         }
       }
 
       private bool notifyAboutNewVersion()
@@ -294,110 +333,340 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void changeProjectEnabledState(ProjectKey projectKey, bool state)
+      private void updateNewVersionStatus()
       {
-         Dictionary<string, bool> projects = ConfigurationHelper.GetProjectsForHost(
-            projectKey.HostName, Program.Settings).ToDictionary(item => item.Item1, item => item.Item2);
-         Debug.Assert(projects.ContainsKey(projectKey.ProjectName));
-         projects[projectKey.ProjectName] = state;
-
-         ConfigurationHelper.SetProjectsForHost(projectKey.HostName,
-            Enumerable.Zip(projects.Keys, projects.Values, (x, y) => new Tuple<string, bool>(x, y)), Program.Settings);
-         updateProjectsListView();
+         updateToolStripMenuItem.Enabled = StaticUpdateChecker.NewVersionInformation != null;
+         updateCaption();
       }
 
-      private void getShaForDiffTool(out string left, out string right,
-         out IEnumerable<string> included, out RevisionType? type)
+      // Status
+
+      private void addOperationRecord(string text)
       {
-         string[] selected = revisionBrowser.GetSelectedSha(out type);
-         switch (selected.Count())
+         string textWithTimestamp = String.Format("{0} {1}", TimeUtils.DateTimeToString(DateTime.Now), text);
+         _operationRecordHistory.Add(textWithTimestamp);
+         if (_operationRecordHistory.Count() > OperationRecordHistoryDepth)
          {
-            case 0:
-               left = String.Empty;
-               right = String.Empty;
-               included = new List<string>();
-               break;
+            _operationRecordHistory.RemoveAt(0);
+         }
 
-            case 1:
-               left = revisionBrowser.GetBaseCommitSha();
-               right = selected[0];
-               included = revisionBrowser.GetIncludedSha();
-               break;
+         labelOperationStatus.Text = text;
+         Trace.TraceInformation("[MainForm] {0}", text);
 
-            case 2:
-               left = selected[0];
-               right = selected[1];
-               included = revisionBrowser.GetIncludedSha();
-               break;
-
-            default:
-               Debug.Assert(false);
-               left = String.Empty;
-               right = String.Empty;
-               included = new List<string>();
-               break;
+         if (!_exiting)
+         {
+            StringBuilder builder = new StringBuilder(OperationRecordHistoryDepth);
+            foreach (string record in _operationRecordHistory)
+            {
+               builder.AppendLine(record);
+            }
+            labelOperationStatus.ToolTipText = builder.ToString();
          }
       }
 
-      private void getShaForDiffWithBase(out string left, out string right,
-         out IEnumerable<string> included, out RevisionType? type)
+      private void updateStorageStatusLabel(string text)
       {
-         string[] selected = revisionBrowser.GetSelectedSha(out type);
-         if (selected.Count() == 0)
+         labelStorageStatus.Text = text;
+      }
+
+      private void processConnectionStatusChange(ConnectionPage.EConnectionState state, string details)
+      {
+         updateConnectionStatusLabel(state, details);
+         if (state == ConnectionPage.EConnectionState.ConnectionLost)
          {
-            left = String.Empty;
-            right = String.Empty;
-            included = new List<string>();
+            startConnectionLossBlinkingTimer();
+         }
+         else
+         {
+            stopConnectionLossBlinkingTimer();
+         }
+      }
+
+      private void updateConnectionStatusLabel(ConnectionPage.EConnectionState state, string details)
+      {
+         if (state == ConnectionPage.EConnectionState.ConnectionLost)
+         {
+            updateConnectionStatusLabelOnConnectionLoss();
+            labelConnectionStatus.ToolTipText = details;
             return;
          }
 
-         left = revisionBrowser.GetBaseCommitSha();
-         right =  selected[selected.Count() - 1];
-         included = revisionBrowser.GetIncludedSha();
-      }
-
-      private bool checkIfMergeRequestCanBeCreated()
-      {
-         string hostname = getHostName();
-         User currentUser = getCurrentUser();
-         if (hostname == String.Empty || currentUser == null || _expressionResolver == null)
+         Color foreColor = Color.Black;
+         string labelText = String.Empty;
+         switch (state)
          {
-            Debug.Assert(false);
-            MessageBox.Show("Cannot create a merge request", "Internal error",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Trace.TraceError("Unexpected application state." +
-               "hostname is empty string={0}, currentUser is null={1}, _expressionResolver is null={2}",
-               hostname == String.Empty, currentUser == null, _expressionResolver == null);
-            return false;
+            case ConnectionPage.EConnectionState.Connected:
+               foreColor = Color.Green;
+               labelText = "Connected";
+               break;
+
+            case ConnectionPage.EConnectionState.Connecting:
+               foreColor = Color.Black;
+               labelText = "Connecting...";
+               break;
+
+            case ConnectionPage.EConnectionState.NotConnected:
+               foreColor = Color.Black;
+               labelText = "Not connected";
+               break;
          }
-         return true;
+
+         labelConnectionStatus.ForeColor = foreColor;
+         labelConnectionStatus.Text = labelText;
+         labelConnectionStatus.ToolTipText = details;
       }
 
-      private bool checkIfMergeRequestCanBeEdited()
+      private void updateConnectionStatusLabelOnConnectionLoss()
       {
-         string hostname = getHostName();
-         User currentUser = getCurrentUser();
-         FullMergeRequestKey item = getListView(EDataCacheType.Live).GetSelectedMergeRequest().Value;
-         if (hostname == String.Empty || currentUser == null || item.MergeRequest == null)
+         string labelText = "Connection is lost. Reconnecting...";
+         if (_connectionLossBlinkingPhase == BlinkingPhase.Second)
          {
-            Debug.Assert(false);
-            MessageBox.Show("Cannot modify a merge request", "Internal error",
-               MessageBoxButtons.OK, MessageBoxIcon.Error);
-            Trace.TraceError("Unexpected application state." +
-               "hostname is empty string={0}, currentUser is null={1}, item.MergeRequest is null={2}",
-               hostname == String.Empty, currentUser == null, item.MergeRequest == null);
-            return false;
+            labelText = labelText.ToUpper();
          }
-         return true;
+         labelConnectionStatus.ForeColor = Color.Red;
+         labelConnectionStatus.Text = labelText;
       }
 
-      private NewMergeRequestProperties getDefaultNewMergeRequestProperties(string hostname,
-         User currentUser, string projectName)
+      private void updateCaption()
       {
-         // This state is expected to be used only once, next times 'persistent storage' is used
-         NewMergeRequestProperties factoryProperties = new NewMergeRequestProperties(
-            projectName, null, null, currentUser.Username, true, true);
-         return _newMergeRequestDialogStatesByHosts.TryGetValue(hostname, out var value) ? value : factoryProperties;
+         string mainCaption = Constants.MainWindowCaption;
+         string currentVersion = " (" + Application.ProductVersion + ")";
+         string newVersion = StaticUpdateChecker.NewVersionInformation != null
+              ? String.Format("   New version {0} is available!", StaticUpdateChecker.NewVersionInformation.VersionNumber)
+              : String.Empty;
+         Text = String.Format("{0} {1} {2}", mainCaption, currentVersion, newVersion);
+      }
+
+      private void setNotifyIconByColor(Color? colorOpt)
+      {
+         if (colorOpt == null)
+         {
+            notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
+            return;
+         }
+
+         Icon icon = _iconCache.Get(colorOpt.Value);
+         if (icon == null)
+         {
+            notifyIcon.Icon = Properties.Resources.DefaultAppIcon;
+            return;
+         }
+
+         notifyIcon.Icon = icon;
+      }
+
+      private void updateTrayAndTaskBar()
+      {
+         void applyColor(Color? colorOpt)
+         {
+            if (_currentTrayColor == colorOpt)
+            {
+               return;
+            }
+            if (colorOpt != null)
+            {
+               setNotifyIconByColor(colorOpt.Value);
+               WinFormsHelpers.SetOverlayEllipseIcon(colorOpt.Value);
+            }
+            else
+            {
+               setNotifyIconByColor(null);
+               WinFormsHelpers.SetOverlayEllipseIcon(null);
+            }
+            _currentTrayColor = colorOpt;
+         }
+
+         if (_colorScheme == null)
+         {
+            applyColor(null);
+         }
+         else if (isConnectionLost())
+         {
+            applyColor(_colorScheme.GetColor("Status_LostConnection")?.Color);
+         }
+         else if (isTrackingTime())
+         {
+            applyColor(_colorScheme.GetColor("Status_Tracking")?.Color);
+         }
+         else
+         {
+            applyColor(getConsolidatedColor());
+         }
+      }
+
+      private void updateToolbarHostIcon(string hostname)
+      {
+         HostToolbarItem toolbarButton = getHostToolbarButtons()
+            .SingleOrDefault(item => item.HostName == hostname);
+         if (toolbarButton == null)
+         {
+            return;
+         }
+
+         Color? summaryColor = getConnectionPage(hostname)?.GetSummaryColor();
+         toolbarButton.UpdateIcon(summaryColor);
+      }
+
+      private bool isConnectionLost()
+      {
+         return getConnectionPages().Any(connectionPage =>
+            connectionPage.GetConnectionState(out var _) == ConnectionPage.EConnectionState.ConnectionLost);
+      }
+
+      private Color? getConsolidatedColor()
+      {
+         IEnumerable<Color?> summaryColors = getConnectionPages()
+            .Select(connectionPage => connectionPage.GetSummaryColor());
+         ColorSchemeItem[] colorSchemeItems = _colorScheme?.GetColors("MergeRequests");
+         return colorSchemeItems?
+            .FirstOrDefault(colorSchemeItem =>
+               summaryColors.Any(color => color.HasValue && color.Value == colorSchemeItem.Color))?
+            .Color;
+      }
+
+      private void startConnectionLossBlinkingTimer()
+      {
+         if (!_connectionLossBlinkingTimer.Enabled)
+         {
+            _connectionLossBlinkingTimer.Start();
+         }
+      }
+
+      private void stopConnectionLossBlinkingTimer()
+      {
+         if (_connectionLossBlinkingTimer.Enabled)
+         {
+            _connectionLossBlinkingTimer.Stop();
+         }
+      }
+
+      private void onConnectionLossBlinkingTimer(object sender, EventArgs e)
+      {
+         switch (_connectionLossBlinkingPhase)
+         {
+            case BlinkingPhase.First: _connectionLossBlinkingPhase = BlinkingPhase.Second; break;
+            case BlinkingPhase.Second: _connectionLossBlinkingPhase = BlinkingPhase.First; break;
+         }
+         updateConnectionStatusLabelOnConnectionLoss();
+      }
+
+      // Custom Actions
+
+      private void clearCustomActionControls()
+      {
+         toolStripCustomActions.SuspendLayout();
+         getCustomActionMenuItems().ToList().ForEach(item => item.Dispose());
+         getCustomActionMenuItems().ToList().ForEach(item => toolStripCustomActions.Items.Remove(item));
+         toolStripCustomActions.ResumeLayout();
+      }
+
+      private void createCustomActionControls(IEnumerable<ICommand> commands)
+      {
+         if (commands == null)
+         {
+            return;
+         }
+
+         int id = 0;
+         foreach (ICommand command in commands)
+         {
+            string name = command.Name;
+            var menuItem = new CustomActionToolbarItem
+            {
+               Name = "customAction" + id,
+               Margin = toolStripButtonLive.Margin,
+               Text = name,
+               Tag = command,
+               ToolTipText = command.Hint,
+               Enabled = false,
+               Visible = command.InitiallyVisible,
+               Image = new Bitmap(24, 24),
+               DisplayStyle = ToolStripItemDisplayStyle.ImageAndText,
+               ImageScaling = ToolStripItemImageScaling.None,
+               TextImageRelation = TextImageRelation.Overlay
+            };
+            menuItem.Click += async (x, y) =>
+            {
+               ConnectionPage connectionPage = getCurrentConnectionPage();
+               if (connectionPage == null)
+               {
+                  return;
+               }
+
+               MergeRequestKey mergeRequestKey = new MergeRequestKey(new ProjectKey(
+                  GetCurrentHostName(), GetCurrentProjectName()), GetCurrentMergeRequestIId());
+
+               addOperationRecord(String.Format("Command {0} execution has started", name));
+               try
+               {
+                  await command.Run(this);
+               }
+               catch (Exception ex) // Exception type does not matter
+               {
+                  string errorMessage = "Custom action failed";
+                  ExceptionHandlers.Handle(errorMessage, ex);
+                  MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  addOperationRecord(String.Format("Command {0} failed", name));
+                  return;
+               }
+
+               string statusMessage = String.Format(
+                  "Command {0} execution has completed for merge request !{1} in project {2}",
+                  name, mergeRequestKey.IId, mergeRequestKey.ProjectKey.ProjectName);
+               addOperationRecord(statusMessage);
+               Trace.TraceInformation("[MainForm] EnabledIf: {0}", command.EnabledIf);
+               Trace.TraceInformation("[MainForm] VisibleIf: {0}", command.VisibleIf);
+
+               if (command.StopTimer)
+               {
+                  await stopTimeTrackingTimerAsync();
+               }
+
+               // TODO_MF Test switching host while awaiting
+               bool reload = command.Reload;
+               if (reload)
+               {
+                  connectionPage.ReloadOne(mergeRequestKey, new int[] {
+                     Program.Settings.OneShotUpdateFirstChanceDelayMs,
+                     Program.Settings.OneShotUpdateSecondChanceDelayMs });
+               }
+            };
+            toolStripCustomActions.Items.Add(menuItem);
+            id++;
+         }
+      }
+
+      private IEnumerable<CustomActionToolbarItem> getCustomActionMenuItems()
+      {
+         return toolStripCustomActions.Items
+            .Cast<ToolStripItem>()
+            .Where(item => item is CustomActionToolbarItem)
+            .Select(item => item as CustomActionToolbarItem);
+      }
+
+      // Misc
+
+      private static void removeToolbarButtons(ToolStrip toolbar)
+      {
+         toolbar.SuspendLayout();
+         toolbar.Items.Cast<ToolStripItem>().ToList().ForEach(item => item.Dispose());
+         toolbar.Items.Cast<ToolStripItem>().ToList().ForEach(item => toolbar.Items.Remove(item));
+         toolbar.ResumeLayout();
+      }
+
+      private void onClipboardCheckingTimer(object sender, EventArgs e)
+      {
+         string clipboardText = getClipboardText();
+         bool isValidUrl = UrlHelper.CheckMergeRequestUrl(clipboardText);
+         bool canOpenFromClipboard = isValidUrl && getCurrentConnectionPage() != null;
+
+         toolStripButtonOpenFromClipboard.Enabled = canOpenFromClipboard;
+         toolStripButtonOpenFromClipboard.ToolTipText =
+            canOpenFromClipboard ? clipboardText : openFromClipboardDisabledText;
+
+         openFromClipboardToolStripMenuItem.Enabled = canOpenFromClipboard;
+         openFromClipboardToolStripMenuItem.ToolTipText =
+            canOpenFromClipboard ? clipboardText : openFromClipboardDisabledText;
       }
 
       private string getClipboardText()
@@ -417,55 +686,6 @@ namespace mrHelper.App.Forms
          return String.Empty;
       }
 
-      private void showDiscussionsForSelectedMergeRequest()
-      {
-         BeginInvoke(new Action(async () =>
-         {
-            if (getMergeRequest(null) == null || !getMergeRequestKey(null).HasValue)
-            {
-               Debug.Assert(false);
-               return;
-            }
-
-            MergeRequest mergeRequest = getMergeRequest(null);
-            MergeRequestKey mrk = getMergeRequestKey(null).Value;
-
-            await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.Web_Url);
-         }));
-      }
-
-      private void onStartSearch()
-      {
-         SearchQuery query = new SearchQuery
-         {
-            MaxResults = Constants.MaxSearchResults
-         };
-
-         if (checkBoxSearchByTargetBranch.Checked && !String.IsNullOrWhiteSpace(textBoxSearchTargetBranch.Text))
-         {
-            query.TargetBranchName = textBoxSearchTargetBranch.Text;
-         }
-         if (checkBoxSearchByTitleAndDescription.Checked && !String.IsNullOrWhiteSpace(textBoxSearchText.Text))
-         {
-            query.Text = textBoxSearchText.Text;
-         }
-         if (checkBoxSearchByProject.Checked && comboBoxProjectName.SelectedItem != null)
-         {
-            query.ProjectName = comboBoxProjectName.Text;
-         }
-         if (checkBoxSearchByAuthor.Checked && comboBoxUser.SelectedItem != null)
-         {
-            query.AuthorUserName = (comboBoxUser.SelectedItem as User).Username;
-         }
-
-         string stateToSearch = comboBoxSearchByState.SelectedItem.ToString();
-         bool unspecifiedState = stateToSearch == "any";
-         query.State = unspecifiedState ? null : stateToSearch;
-
-         Debug.Assert(query != null);
-         searchMergeRequests(new SearchQueryCollection(query));
-      }
-
       private void doClose()
       {
          setExitingFlag();
@@ -482,6 +702,7 @@ namespace mrHelper.App.Forms
       {
          Trace.TraceInformation("[MainForm] Set _exiting flag");
          _exiting = true;
+         getConnectionPages()?.ToList().ForEach(connectionPage => connectionPage.SetExiting());
       }
 
       private void onHideToTray()
@@ -504,90 +725,6 @@ namespace mrHelper.App.Forms
             updateTrayAndTaskBar();
          }
          CommonNative.Win32Tools.ForceWindowIntoForeground(this.Handle);
-      }
-
-      private void onPersistentStorageSerialize(IPersistentStateSetter writer)
-      {
-         new PersistentStateSaveHelper("SelectedHost", writer).Save(getHostName());
-         new PersistentStateSaveHelper("ReviewedCommits", writer).Save(_reviewedRevisions);
-         new PersistentStateSaveHelper("RecentMergeRequestsWithDateTime", writer).Save(_recentMergeRequests);
-         new PersistentStateSaveHelper("MergeRequestsByHosts", writer).Save(_lastMergeRequestsByHosts);
-         new PersistentStateSaveHelper("NewMergeRequestDialogStatesByHosts", writer).Save(_newMergeRequestDialogStatesByHosts);
-      }
-
-      private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
-      {
-         new PersistentStateLoadHelper("SelectedHost", reader).Load(out string hostname);
-         if (hostname != null)
-         {
-            setInitialHostName(StringUtils.GetHostWithPrefix(hostname));
-         }
-
-         new PersistentStateLoadHelper("ReviewedCommits", reader).Load(
-            out Dictionary<MergeRequestKey, HashSet<string>> revisions);
-         if (revisions != null)
-         {
-            _reviewedRevisions = revisions;
-         }
-
-         new PersistentStateLoadHelper("RecentMergeRequests", reader).Load(out HashSet<MergeRequestKey> mergeRequests);
-         new PersistentStateLoadHelper("RecentMergeRequestsWithDateTime", reader).Load(
-            out Dictionary<MergeRequestKey, DateTime> mergeRequestsWithDateTime);
-         if (mergeRequestsWithDateTime != null)
-         {
-            _recentMergeRequests = mergeRequestsWithDateTime;
-         }
-         else if (mergeRequests != null)
-         {
-            // deprecated format
-            _recentMergeRequests = mergeRequests.ToDictionary(item => item, item => DateTime.Now);
-         }
-
-         new PersistentStateLoadHelper("MergeRequestsByHosts", reader).
-            Load(out Dictionary<string, MergeRequestKey> mergeRequestsByHosts);
-         if (mergeRequestsByHosts != null)
-         {
-            _lastMergeRequestsByHosts = mergeRequestsByHosts;
-         }
-
-         new PersistentStateLoadHelper("NewMergeRequestDialogStatesByHosts", reader).Load(
-            out Dictionary<string, NewMergeRequestProperties> properties);
-         if (properties != null)
-         {
-            _newMergeRequestDialogStatesByHosts = properties;
-         }
-      }
-
-      private void onTimeTrackingTimer(object sender, EventArgs e)
-      {
-         if (isTrackingTime())
-         {
-            updateTotalTime(null, null);
-         }
-      }
-
-      private void connectToUrlFromClipboard()
-      {
-         string clipboardText = getClipboardText();
-         if (UrlHelper.CheckMergeRequestUrl(clipboardText))
-         {
-            string url = clipboardText;
-            Trace.TraceInformation(String.Format("[Mainform] Connecting to URL from clipboard: {0}", url.ToString()));
-            reconnect(url);
-         }
-      }
-
-      private void onClipboardCheckingTimer(object sender, EventArgs e)
-      {
-         string clipboardText = getClipboardText();
-         bool isValidUrl = UrlHelper.CheckMergeRequestUrl(clipboardText);
-         linkLabelFromClipboard.Enabled = isValidUrl;
-         linkLabelFromClipboard.Text = isValidUrl ? openFromClipboardEnabledText : openFromClipboardDisabledText;
-
-         string tooltip = isValidUrl ? clipboardText : "N/A";
-         toolTip.SetToolTip(linkLabelFromClipboard, tooltip);
-
-         openFromClipboardToolStripMenuItem.Enabled = isValidUrl;
       }
 
       private static void sendFeedback()
@@ -619,269 +756,87 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void applyHostChange(string hostname)
+      private IEnumerable<string> getHostList()
       {
-         Trace.TraceInformation(String.Format("[MainForm] User requested to change host to {0}", hostname));
-         updateProjectsListView();
-         updateUsersListView();
-         reconnect();
-         saveState();
+         return Program.Settings.KnownHosts;
       }
 
-      private void reconnect(string url = null)
+      private void saveSizeAndLocation()
       {
-         string suffix = String.IsNullOrEmpty(url) ? String.Empty : String.Format(" ({0})", url);
-         addOperationRecord(String.Format("Reconnection request has been queued {0}", suffix));
-         enqueueUrl(url);
-      }
-
-      private void requestUpdates(EDataCacheType mode, MergeRequestKey? mrk, int[] intervals)
-      {
-         DataCache dataCache = getDataCache(mode);
-         dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals);
-         dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
-      }
-
-      private static void showWarningOnReloadList()
-      {
-         if (Program.Settings.ShowWarningOnReloadList)
+         if (WindowState == FormWindowState.Maximized)
          {
-            int autoUpdateMs = Program.Settings.AutoUpdatePeriodMs;
-            double oneMinuteMs = 60000;
-            double autoUpdateMinutes = autoUpdateMs / oneMinuteMs;
-
-            string periodicity = autoUpdateMs > oneMinuteMs
-               ? (autoUpdateMs % Convert.ToInt32(oneMinuteMs) == 0
-                  ? String.Format("{0} minutes", autoUpdateMinutes)
-                  : String.Format("{0:F1} minutes", autoUpdateMinutes))
-               : String.Format("{0} seconds", autoUpdateMs / 1000);
-
-            string message = String.Format(
-               "Merge Request list updates each {0} and you don't usually need to update it manually", periodicity);
-            MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            Program.Settings.ShowWarningOnReloadList = false;
+            Program.Settings.WidthBeforeClose = RestoreBounds.Size.Width;
+            Program.Settings.HeightBeforeClose = RestoreBounds.Size.Height;
+            Program.Settings.LeftBeforeClose = RestoreBounds.Location.X;
+            Program.Settings.TopBeforeClose = RestoreBounds.Location.Y;
+            Program.Settings.WasMaximizedBeforeClose = true;
+            Program.Settings.WasMinimizedBeforeClose = false;
          }
-      }
-
-      private void showWarningAboutIntegrationWithGitUI()
-      {
-         if (Program.Settings.ShowWarningOnCreateMergeRequest && (_integratedInGitExtensions || _integratedInSourceTree))
+         else if (WindowState == FormWindowState.Normal)
          {
-            string tools = "Git Extensions or Source Tree";
-            if (_integratedInSourceTree && !_integratedInGitExtensions)
-            {
-               tools = "Source Tree";
-            }
-            else if (_integratedInGitExtensions && !_integratedInSourceTree)
-            {
-               tools = "Git Extensions";
-            }
-
-            string message = String.Format(
-               "Note: It is much easier to create a new merge request using integration of mrHelper with {0}. " +
-               "Just select a commit of a remote branch in {0} and press Create Merge Request in menu.", tools);
-            MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            Program.Settings.ShowWarningOnCreateMergeRequest = false;
+            Program.Settings.WidthBeforeClose = Size.Width;
+            Program.Settings.HeightBeforeClose = Size.Height;
+            Program.Settings.LeftBeforeClose = Location.X;
+            Program.Settings.TopBeforeClose = Location.Y;
+            Program.Settings.WasMaximizedBeforeClose = false;
+            Program.Settings.WasMinimizedBeforeClose = false;
          }
-      }
-
-      private void onWorkstationLocked()
-      {
-         if (isTrackingTime())
+         else
          {
-            stopTimeTrackingTimer();
-            MessageBox.Show("mrHelper stopped time tracking because workstation was locked", "Warning",
-               MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            Trace.TraceInformation("[MainForm] Time tracking stopped because workstation was locked");
+            Program.Settings.WidthBeforeClose = RestoreBounds.Size.Width;
+            Program.Settings.HeightBeforeClose = RestoreBounds.Size.Height;
+            Program.Settings.LeftBeforeClose = RestoreBounds.Location.X;
+            Program.Settings.TopBeforeClose = RestoreBounds.Location.Y;
+            Program.Settings.WasMaximizedBeforeClose = false;
+            Program.Settings.WasMinimizedBeforeClose = true;
          }
+         Properties.Settings.Default.Save();
       }
 
-      private void updateNewVersionStatus()
+      bool _inRestoringSize = false;
+      private void onWindowStateChanged()
       {
-         linkLabelNewVersion.Visible = StaticUpdateChecker.NewVersionInformation != null;
-         updateCaption();
-      }
-
-      private void onNewVersionAvailable()
-      {
-         Debug.Assert(StaticUpdateChecker.NewVersionInformation != null);
-         updateNewVersionStatus();
-
-         // when a new version appears in the middle of work, re-schedule a reminder to trigger in 24 hours
-         stopNewVersionReminderTimer();
-         if (!notifyAboutNewVersion())
-         {
-            Trace.TraceInformation("[MainForm] Reminder timer restarted");
-            startNewVersionReminderTimer();
-         }
-      }
-
-      private void addOperationRecord(string text)
-      {
-         string textWithTimestamp = String.Format("{0} {1}", TimeUtils.DateTimeToString(DateTime.Now), text);
-         _operationRecordHistory.Add(textWithTimestamp);
-         if (_operationRecordHistory.Count() > OperationRecordHistoryDepth)
-         {
-            _operationRecordHistory.RemoveAt(0);
-         }
-
-         labelOperationStatus.Text = text;
-         Trace.TraceInformation("[MainForm] {0}", text);
-
-         if (!_exiting)
-         {
-            StringBuilder builder = new StringBuilder(OperationRecordHistoryDepth);
-            foreach (string record in _operationRecordHistory)
-            {
-               builder.AppendLine(record);
-            }
-            toolTip.SetToolTip(labelOperationStatus, builder.ToString());
-         }
-      }
-
-      private void setConnectionStatus(EConnectionState status)
-      {
-         Trace.TraceInformation(
-            "[MainForm] Set connection status to {0}. Current status is {1}. Lost connection info has value: {2}.",
-            status.ToString(), _connectionStatus.ToString(), isConnectionLost().ToString());
-         Debug.Assert(!isConnectionLost() || status == EConnectionState.ConnectingLive);
-         resetLostConnectionInfo();
-
-         switch (status)
-         {
-            case EConnectionState.ConnectingLive:
-            case EConnectionState.ConnectingRecent:
-               applyConnectionStatus(String.Format("Connecting to {0}", getHostName()), Color.Black, null);
-               break;
-
-            case EConnectionState.Connected:
-               applyConnectionStatus(String.Format("Connected to {0}", getHostName()), Color.Green, null);
-               break;
-         }
-
-         _connectionStatus = status;
-      }
-
-      private void createLostConnectionInfo()
-      {
-         Timer timer = new Timer
-         {
-            Interval = LostConnectionIndicationTimerInterval
-         };
-         _lostConnectionInfo = new LostConnectionInfo(timer, DateTime.Now);
-         startLostConnectionIndicatorTimer();
-      }
-
-      private void resetLostConnectionInfo()
-      {
-         stopAndDisposeLostConnectionIndicatorTimer();
-         _lostConnectionInfo = null;
-      }
-
-      private void onConnectionLost()
-      {
-         if (!isConnectionLost())
-         {
-            createLostConnectionInfo();
-            updateTrayAndTaskBar();
-         }
-      }
-
-      private void onConnectionRestored()
-      {
-         if (!isConnectionLost())
+         if (_inRestoringSize)
          {
             return;
          }
 
-         resetLostConnectionInfo();
-         if (_connectionStatus.HasValue)
+         Trace.TraceInformation("[MainForm] Window state changed from {0} to {1}",
+            _prevWindowState.ToString(), WindowState.ToString());
+
+         if (WindowState != FormWindowState.Minimized)
          {
-            if (_connectionStatus.Value == EConnectionState.Connected)
+            if (_restoreSizeOnNextRestore)
             {
-               setConnectionStatus(_connectionStatus.Value);
-               requestUpdates(EDataCacheType.Live, null, new int[] { PseudoTimerInterval });
-               requestUpdates(EDataCacheType.Recent, null, new int[] { PseudoTimerInterval });
+               _restoreSizeOnNextRestore = false;
+               _inRestoringSize = true;
+               try
+               {
+                  restoreSize();
+               }
+               finally
+               {
+                  _inRestoringSize = false;
+               }
             }
-            else if (_connectionStatus.Value == EConnectionState.ConnectingLive)
-            {
-               reconnect();
-            }
-            else if (_connectionStatus.Value == EConnectionState.ConnectingRecent)
-            {
-               loadRecentMergeRequests();
-            }
-         }
-         updateTrayAndTaskBar();
-      }
 
-      private bool isConnectionLost()
-      {
-         return _lostConnectionInfo.HasValue;
-      }
-
-      private void onLostConnectionIndicatorTimer(object sender, EventArgs e)
-      {
-         if (!isConnectionLost())
-         {
-            return;
+            getCurrentConnectionPage()?.ApplySavedSplitterDistance();
          }
 
-         double elapsedSecondsDouble = (DateTime.Now - _lostConnectionInfo.Value.TimeStamp).TotalMilliseconds;
-         int elapsedSeconds = Convert.ToInt32(elapsedSecondsDouble / LostConnectionIndicationTimerInterval);
-         string text = elapsedSeconds % 2 == 0 ? ConnectionLostText.ToLower() : ConnectionLostText.ToUpper();
-         string tooltipText = String.Format("Connection was lost at {0}",
-            TimeUtils.DateTimeToString(_lostConnectionInfo.Value.TimeStamp));
-         applyConnectionStatus(text, Color.Red, tooltipText);
+         _prevWindowState = WindowState;
       }
 
-      private void initializeGitLabInstance(string hostname)
+      private void processDpiChange()
       {
-         Trace.TraceInformation("[MainForm] Initializing GitLabInstance for {0}", hostname);
-         disposeGitLabInstance();
-         _gitLabInstance = new GitLabInstance(hostname, Program.Settings, this);
-         _gitLabInstance.ConnectionLost += onConnectionLost;
-         _gitLabInstance.ConnectionRestored += onConnectionRestored;
-         _shortcuts = new Shortcuts(_gitLabInstance);
-         applyConnectionStatus("Not connected", System.Drawing.Color.Black, null);
-      }
+         Trace.TraceInformation(String.Format("[MainForm] DPI changed, new DPI = {0}", DeviceDpi));
+            CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
-      private void disposeGitLabInstance()
-      {
-         if (_gitLabInstance != null)
-         {
-            _gitLabInstance.ConnectionLost -= onConnectionLost;
-            _gitLabInstance.ConnectionRestored -= onConnectionRestored;
-            _gitLabInstance.Dispose();
-            _gitLabInstance = null;
-         }
-      }
-
-      async private Task<string> getCustomActionFileNameAsync()
-      {
-         bool isApprovalStatusSupported = await _gitLabInstance?.IsApprovalStatusSupported();
-         string filename = isApprovalStatusSupported
-            ? Constants.CustomActionsWithApprovalStatusSupportFileName
-            : Constants.CustomActionsFileName;
-         return Path.Combine(Directory.GetCurrentDirectory(), filename);
-      }
-
-      private IEnumerable<ICommand> loadCustomCommands(string filename, ICommandCallback commandCallback)
-      {
-         CustomCommandLoader loader = new CustomCommandLoader(commandCallback);
-         try
-         {
-            return loader.LoadCommands(filename);
-         }
-         catch (CustomCommandLoaderException ex)
-         {
-            // If file doesn't exist the loader throws, leaving the app in an undesirable state.
-            // Do not try to load custom actions if they don't exist.
-            ExceptionHandlers.Handle("Cannot load custom actions", ex);
-         }
-         return null;
+         _trayIcon.ShowTooltipBalloon(new TrayIcon.BalloonText
+         (
+            "System DPI has changed",
+            "It is recommended to restart application to update layout"
+         ));
       }
    }
 }
+

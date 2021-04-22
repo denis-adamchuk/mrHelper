@@ -12,9 +12,9 @@ using System.Collections.Generic;
 
 namespace mrHelper.App.Forms
 {
-   public partial class AcceptMergeRequestForm : CustomFontForm
+   internal partial class AcceptMergeRequestForm : CustomFontForm
    {
-      internal AcceptMergeRequestForm(
+      public AcceptMergeRequestForm(
          MergeRequestKey mrk,
          string repositoryPath,
          Action onMerged,

@@ -9,6 +9,7 @@ using mrHelper.App.Helpers.GitLab;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.CustomActions;
+using mrHelper.Core.Context;
 
 namespace mrHelper.App.Forms
 {
@@ -19,7 +20,7 @@ namespace mrHelper.App.Forms
          string mergeRequestTitle, User mergeRequestAuthor,
          ColorScheme colorScheme, AsyncDiscussionLoader discussionLoader, AsyncDiscussionHelper discussionHelper,
          string webUrl, Shortcuts shortcuts,
-         Func<ICommandCallback, IEnumerable<ICommand>> getCommands)
+         IEnumerable<ICommand> commands)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -32,12 +33,13 @@ namespace mrHelper.App.Forms
          InitializeComponent();
 
          applyFont(Program.Settings.MainWindowFontSizeName);
-         applyTheme(Program.Settings.VisualThemeName);
 
          var discussionLayout = new DiscussionLayout(
             ConfigurationHelper.GetDiffContextPosition(Program.Settings),
             ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings),
-            Program.Settings.NeedShiftReplies);
+            Program.Settings.NeedShiftReplies,
+            new ContextDepth(0, Program.Settings.DiffContextDepth),
+            Program.Settings.ShowTooltipsForCode);
          _discussionLayout = discussionLayout;
          _discussionLayout.DiffContextPositionChanged += updateSaveDefaultLayoutState;
          _discussionLayout.DiscussionColumnWidthChanged += updateSaveDefaultLayoutState;
@@ -59,7 +61,7 @@ namespace mrHelper.App.Forms
          searchPanel.Initialize(discussionPanel);
 
          discussionMenu.Initialize(discussionSort, displayFilter, discussionLayout,
-            discussionLoader, discussionHelper, getCommands(this), applyFont);
+            discussionLoader, discussionHelper, commands, this, applyFont);
 
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);
@@ -148,6 +150,7 @@ namespace mrHelper.App.Forms
 
       private void onSettingsPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
       {
+         // TODO_MF Is still needed?
          updateSaveDefaultLayoutState();
       }
 
@@ -164,11 +167,6 @@ namespace mrHelper.App.Forms
          Text = String.IsNullOrEmpty(status)
             ? DefaultCaption
             : String.Format("{0}   ({1})", DefaultCaption, status);
-      }
-
-      private void applyTheme(string theme)
-      {
-         discussionPanel.ApplyTheme(theme);
       }
 
       private void updateSaveDefaultLayoutState()

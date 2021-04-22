@@ -35,7 +35,9 @@ namespace mrHelper.App.Controls
          HtmlToolTipEx htmlTooltip,
          ConfigurationHelper.DiffContextPosition diffContextPosition,
          ConfigurationHelper.DiscussionColumnWidth discussionColumnWidth,
-         bool needShiftReplies)
+         bool needShiftReplies,
+         ContextDepth diffContextDepth,
+         bool showTooltipsForCode)
       {
          Discussion = discussion;
 
@@ -45,7 +47,7 @@ namespace mrHelper.App.Controls
          _currentUser = currentUser;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
 
-         _diffContextDepth = new ContextDepth(0, ConfigurationHelper.GetDiffContextDepth(Program.Settings));
+         _diffContextDepth = diffContextDepth;
          _tooltipContextDepth = new ContextDepth(5, 5);
          if (git != null)
          {
@@ -57,6 +59,7 @@ namespace mrHelper.App.Controls
          _diffContextPosition = diffContextPosition;
          _discussionColumnWidth = discussionColumnWidth;
          _needShiftReplies = needShiftReplies;
+         _showTooltipsForCode = showTooltipsForCode;
 
          _onContentChanging = () =>
          {
@@ -258,7 +261,8 @@ namespace mrHelper.App.Controls
             resizeLimitedWidthHtmlPanel(htmlPanel, prevWidth);
          }
 
-         string tooltipHtml = getFormattedHtml(_tooltipContextMaker, position, _tooltipContextDepth, fontSizePx, 2, false);
+         string tooltipHtml = _showTooltipsForCode ? getFormattedHtml(_tooltipContextMaker, position,
+            _tooltipContextDepth, fontSizePx, 2, false) : null;
          _htmlTooltip.SetToolTip(htmlPanel, tooltipHtml);
       }
 
@@ -786,6 +790,25 @@ namespace mrHelper.App.Controls
       {
          _needShiftReplies = value;
          _previousWidth = null;
+      }
+
+      internal void SetDiffContextDepth(ContextDepth contextDepth)
+      {
+         _diffContextDepth = contextDepth;
+         _previousWidth = null;
+         if (_panelContext != null)
+         {
+            setDiffContextText(_panelContext);
+         }
+      }
+
+      internal void SetShowTooltipsForCode(bool value)
+      {
+         _showTooltipsForCode = value;
+         if (_panelContext != null)
+         {
+            setDiffContextText(_panelContext);
+         }
       }
 
       private int getColumnInterval(int width)
@@ -1401,7 +1424,7 @@ namespace mrHelper.App.Controls
       private readonly User _currentUser;
       private readonly string _imagePath;
 
-      private readonly ContextDepth _diffContextDepth;
+      private ContextDepth _diffContextDepth;
       private readonly ContextDepth _tooltipContextDepth;
       private readonly IContextMaker _panelContextMaker;
       private readonly IContextMaker _tooltipContextMaker;
@@ -1412,7 +1435,7 @@ namespace mrHelper.App.Controls
       private ConfigurationHelper.DiffContextPosition _diffContextPosition;
       private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
       private bool _needShiftReplies;
-
+      private bool _showTooltipsForCode;
       private readonly ColorScheme _colorScheme;
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;

@@ -7,18 +7,17 @@ namespace mrHelper.CustomActions
 {
    internal class AddLabelToMergeRequestCommand : ISubCommand
    {
-      internal AddLabelToMergeRequestCommand(ICommandCallback callback, string label)
+      internal AddLabelToMergeRequestCommand(string label)
       {
-         _callback = callback;
          _label = label;
       }
 
-      async public Task Run()
+      async public Task Run(ICommandCallback callback)
       {
-         string hostname = _callback.GetCurrentHostName();
-         string accessToken = _callback.GetCurrentAccessToken();
-         string projectName = _callback.GetCurrentProjectName();
-         int iid = _callback.GetCurrentMergeRequestIId();
+         string hostname = callback.GetCurrentHostName();
+         string accessToken = callback.GetCurrentAccessToken();
+         string projectName = callback.GetCurrentProjectName();
+         int iid = callback.GetCurrentMergeRequestIId();
 
          GitLabTaskRunner client = new GitLabTaskRunner(hostname, accessToken);
          await client.RunAsync(async (gitlab) =>
@@ -26,6 +25,7 @@ namespace mrHelper.CustomActions
             if (_label == Common.Constants.Constants.HighPriorityLabel)
             {
                SingleMergeRequestAccessor accessor = gitlab.Projects.Get(projectName).MergeRequests.Get(iid);
+               accessor.TraceRequests = true;
                GitLabSharp.Entities.MergeRequest mergeRequest = await accessor.LoadTaskAsync(); 
                bool wasHighPriority = mergeRequest.Labels?
                   .Contains(Common.Constants.Constants.HighPriorityLabel) ?? false;
@@ -43,8 +43,6 @@ namespace mrHelper.CustomActions
       }
 
       private readonly string _label;
-
-      private readonly ICommandCallback _callback;
    }
 }
 

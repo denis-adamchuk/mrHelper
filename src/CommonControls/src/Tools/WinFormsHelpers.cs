@@ -24,12 +24,12 @@ namespace mrHelper.CommonControls.Tools
          listView.SmallImageList = imgList;
       }
 
-      public static void CloseAllFormsExceptOne(Form exceptionalForm)
+      public static void CloseAllFormsExceptOne(string exceptionalFormName)
       {
          for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
          {
             Form form = Application.OpenForms[iForm];
-            if (form != exceptionalForm)
+            if (form.Name != exceptionalFormName)
             {
                form.Close();
             }
@@ -81,6 +81,36 @@ namespace mrHelper.CommonControls.Tools
                }
             }
             comboBox.SelectedIndex = selectedIndex;
+         }
+      }
+
+      public static void UncheckAllExceptOne(ToolStripMenuItem[] checkBoxGroup, ToolStripMenuItem checkBox)
+      {
+         if (checkBoxGroup.Contains(checkBox))
+         {
+            foreach (ToolStripMenuItem cb in checkBoxGroup)
+            {
+               if (cb != checkBox)
+               {
+                  cb.Checked = false;
+                  cb.CheckOnClick = true;
+               }
+            }
+         }
+      }
+
+      public static void UncheckAllExceptOne(ToolStripButton[] buttonGroup, ToolStripButton button)
+      {
+         if (buttonGroup.Contains(button))
+         {
+            foreach (ToolStripButton btn in buttonGroup)
+            {
+               if (btn != button)
+               {
+                  btn.Checked = false;
+                  btn.CheckOnClick = true;
+               }
+            }
          }
       }
 
@@ -295,24 +325,29 @@ namespace mrHelper.CommonControls.Tools
             const int imgDim = 32;
             const int dotDim = 24;
             const int pad = 2;
-            using (Bitmap bmp = new Bitmap(imgDim, imgDim))
+            using (Bitmap bmp = DrawEllipse(imgDim, dotDim, pad, color.Value))
             {
-               using (Graphics g = Graphics.FromImage(bmp))
-               {
-                  g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                  g.Clear(Color.Transparent);
-                  using (SolidBrush brush = new SolidBrush(color.Value))
-                  {
-                     g.FillEllipse(brush, new Rectangle(imgDim - dotDim - pad, imgDim - dotDim - pad, dotDim, dotDim));
-                  }
-               }
-
                using (Icon overlay = Icon.FromHandle(bmp.GetHicon()))
                {
                   TaskbarManager.Instance.SetOverlayIcon(overlay, String.Empty);
                }
             }
          }
+      }
+
+      public static Bitmap DrawEllipse(int imgDim, int dotDim, int pad, Color c)
+      {
+         Bitmap bitmap = new Bitmap(imgDim, imgDim);
+         using (Graphics g = Graphics.FromImage(bitmap))
+         {
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.Clear(Color.Transparent);
+            using (SolidBrush brush = new SolidBrush(c))
+            {
+               g.FillEllipse(brush, new Rectangle(imgDim - dotDim - pad, imgDim - dotDim - pad, dotDim, dotDim));
+            }
+         }
+         return bitmap;
       }
 
       public static void PerformClick(Tuple<Button, bool>[] buttonsToClick)

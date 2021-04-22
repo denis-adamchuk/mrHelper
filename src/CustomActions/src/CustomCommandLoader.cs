@@ -2,17 +2,36 @@
 using System.Xml;
 using System.Diagnostics;
 using System.Collections.Generic;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.CustomActions
 {
+   public static class CommandLoadHelper
+   {
+      public static IEnumerable<ICommand> LoadSafe(string filename)
+      {
+         CustomCommandLoader loader = new CustomCommandLoader();
+         try
+         {
+            return loader.LoadCommands(filename);
+         }
+         catch (CustomCommandLoaderException ex)
+         {
+            // If file doesn't exist the loader throws, leaving the app in an undesirable state.
+            // Do not try to load custom actions if they don't exist.
+            ExceptionHandlers.Handle("Cannot load custom actions", ex);
+         }
+         return null;
+      }
+   }
+
    /// <summary>
    /// Loads custom actions from XML file
    /// </summary>
    public class CustomCommandLoader
    {
-      public CustomCommandLoader(ICommandCallback callback)
+      public CustomCommandLoader()
       {
-         _callback = callback;
       }
 
       /// <summary>
@@ -116,7 +135,7 @@ namespace mrHelper.CustomActions
          {
             return null;
          }
-         return new SendNoteCommand(_callback, body.Value);
+         return new SendNoteCommand(body.Value);
       }
 
       private ISubCommand createEndPointPOSTCommand(XmlAttributeCollection attributes)
@@ -126,7 +145,7 @@ namespace mrHelper.CustomActions
          {
             return null;
          }
-         return new MergeRequestEndPointPOSTCommand(_callback, endpoint.Value);
+         return new MergeRequestEndPointPOSTCommand(endpoint.Value);
       }
 
       private ISubCommand createAddLabelToMergeRequestCommand(XmlAttributeCollection attributes)
@@ -136,7 +155,7 @@ namespace mrHelper.CustomActions
          {
             return null;
          }
-         return new AddLabelToMergeRequestCommand(_callback, label.Value);
+         return new AddLabelToMergeRequestCommand(label.Value);
       }
 
       private ICommand createCompositeCommand(
@@ -158,8 +177,6 @@ namespace mrHelper.CustomActions
                            hint?.Value ?? String.Empty,
                            (initiallyVisible?.Value ?? "0") == "1");
       }
-
-      private readonly ICommandCallback _callback;
    }
 }
 

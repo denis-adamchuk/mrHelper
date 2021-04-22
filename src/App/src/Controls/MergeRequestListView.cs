@@ -72,10 +72,28 @@ namespace mrHelper.App.Controls
          cleanUpMutedMergeRequests();
       }
 
-      internal void Initialize()
+      internal void RestoreColumns()
       {
-         setColumnWidths(ConfigurationHelper.GetColumnWidths(Program.Settings, getIdentity()));
-         setColumnIndices(ConfigurationHelper.GetColumnIndices(Program.Settings, getIdentity()));
+         var widths = ConfigurationHelper.GetColumnWidths(Program.Settings, getIdentity());
+         if (widths != null)
+         {
+            setColumnWidths(widths);
+         }
+
+         var indices = ConfigurationHelper.GetColumnIndices(Program.Settings, getIdentity());
+         if (indices != null)
+         {
+            setColumnIndices(indices);
+         }
+      }
+
+      protected override void OnVisibleChanged(EventArgs e)
+      {
+         base.OnVisibleChanged(e);
+         if (Visible)
+         {
+            RestoreColumns();
+         }
       }
 
       internal void SetDiffStatisticProvider(IDiffStatisticProvider diffStatisticProvider)
@@ -83,7 +101,7 @@ namespace mrHelper.App.Controls
          _diffStatisticProvider = diffStatisticProvider;
       }
 
-      internal void SetCurrentUserGetter(Func<string, User> funcGetter)
+      internal void SetCurrentUserGetter(Func<User> funcGetter)
       {
          _getCurrentUser = funcGetter;
       }
@@ -96,8 +114,11 @@ namespace mrHelper.App.Controls
             _persistentStorage.OnSerialize -= onSerialize;
          }
          _persistentStorage = persistentStorage;
-         _persistentStorage.OnDeserialize += onDeserialize;
-         _persistentStorage.OnSerialize += onSerialize;
+         if (_persistentStorage != null)
+         {
+            _persistentStorage.OnDeserialize += onDeserialize;
+            _persistentStorage.OnSerialize += onSerialize;
+         }
       }
 
       internal void SetDataCache(DataCache dataCache)
@@ -113,6 +134,11 @@ namespace mrHelper.App.Controls
       internal void SetColorScheme(ColorScheme colorScheme)
       {
          _colorScheme = colorScheme;
+      }
+
+      internal void SetExpressionResolver(ExpressionResolver expressionResolver)
+      {
+         _expressionResolver = expressionResolver;
       }
 
       internal void DisableListView()
@@ -400,7 +426,7 @@ namespace mrHelper.App.Controls
          if (selectedMergeRequest.HasValue)
          {
             muteMergeRequestFor(selectedMergeRequest.Value, timeSpan);
-            ContentChanged?.Invoke(this);
+            onContentChanged();
             Trace.TraceInformation(
                "[MergeRequestListView] Muted MR with IId {0} (project {1}) in LV \"{2}\" for {3}",
                selectedMergeRequest.Value.MergeRequest.IId,
@@ -415,7 +441,7 @@ namespace mrHelper.App.Controls
          FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
          if (selectedMergeRequest.HasValue && unmuteMergeRequest(selectedMergeRequest.Value))
          {
-            ContentChanged?.Invoke(this);
+            onContentChanged();
             Trace.TraceInformation(
                "[MergeRequestListView] Unmuted MR with IId {0} (project {1}) in LV \"{2}\"",
                selectedMergeRequest.Value.MergeRequest.IId,
@@ -435,6 +461,7 @@ namespace mrHelper.App.Controls
          _unmuteTimer.Stop();
          _unmuteTimer.Dispose();
          _toolTip?.Dispose();
+         SetPersistentStorage(null);
          base.Dispose(disposing);
       }
 
@@ -675,8 +702,10 @@ namespace mrHelper.App.Controls
             .FirstOrDefault(colorSchemeItem =>
             {
                IEnumerable<string> conditions = colorSchemeItem.Conditions;
+               IEnumerable<string> resolvedConditions = conditions?
+                  .Select(condition => _expressionResolver.Resolve(condition)) ?? Array.Empty<string>();
                IEnumerable<MergeRequest> mergeRequests = keys.Select(fmk => fmk.MergeRequest);
-               return GitLabClient.Helpers.CheckConditions(conditions, mergeRequests);
+               return GitLabClient.Helpers.CheckConditions(resolvedConditions, mergeRequests);
             })?
             .Color;
       }
@@ -748,7 +777,7 @@ namespace mrHelper.App.Controls
             return String.Empty;
          }
 
-         User currentUser = _getCurrentUser(key.ProjectKey.HostName);
+         User currentUser = _getCurrentUser();
          bool isTimeTrackingAllowed = TimeTrackingHelpers.IsTimeTrackingAllowed(
             author, key.ProjectKey.HostName, currentUser);
          return TimeTrackingHelpers.ConvertTotalTimeToText(totalTimeCache.GetTotalTime(key), isTimeTrackingAllowed);
@@ -888,7 +917,7 @@ namespace mrHelper.App.Controls
             Constants.AuthorLabelPrefix, mr.Author.Username);
 
          IEnumerable<string> groupedLabels = GitLabClient.Helpers.GroupLabels(fmk,
-            Program.ServiceManager.GetUnimportantSuffices(), _getCurrentUser(fmk.ProjectKey.HostName));
+            Program.ServiceManager.GetUnimportantSuffices(), _getCurrentUser());
          Dictionary<bool, string> labels = new Dictionary<bool, string>
          {
             [false] = StringUtils.JoinSubstringsLimited(groupedLabels, MaxListViewRows, MoreListViewRowsHint),
@@ -917,8 +946,8 @@ namespace mrHelper.App.Controls
 
          IEnumerable<FullMergeRequestKey> fullKeys = getMatchingFilterProjectItems(getGroupProjectKey(item.Group));
 
-         User currentUser = fullKeys.Any() ? _getCurrentUser(fullKeys.First().ProjectKey.HostName) : null;
-         Debug.Assert(fullKeys.All(key => _getCurrentUser(key.ProjectKey.HostName).Id == (currentUser?.Id ?? 0)));
+         User currentUser = fullKeys.Any() ? _getCurrentUser() : null;
+         Debug.Assert(fullKeys.All(key => _getCurrentUser().Id == (currentUser?.Id ?? 0)));
          IEnumerable<string> groupedLabels = GitLabClient.Helpers.GroupLabels(fullKeys,
             Program.ServiceManager.GetUnimportantSuffices(), currentUser);
          Dictionary<bool, string> labels = new Dictionary<bool, string>
@@ -1038,7 +1067,7 @@ namespace mrHelper.App.Controls
          }
          catch (ArgumentException ex)
          {
-            ExceptionHandlers.Handle("[MainForm] Cannot restore list view column display indices", ex);
+            ExceptionHandlers.Handle("[MergeRequestListView] Cannot restore list view column display indices", ex);
             ConfigurationHelper.SetColumnIndices(Program.Settings,
                WinFormsHelpers.GetListViewDisplayIndices(this), getIdentity());
          }
@@ -1094,7 +1123,7 @@ namespace mrHelper.App.Controls
 
          NativeMethods.LockWindowUpdate(Handle);
          int vScrollPosition = Win32Tools.GetVerticalScrollPosition(Handle);
-         ContentChanged?.Invoke(this);
+         onContentChanged();
          Win32Tools.SetVerticalScrollPosition(Handle, vScrollPosition);
          NativeMethods.LockWindowUpdate(IntPtr.Zero);
       }
@@ -1158,7 +1187,7 @@ namespace mrHelper.App.Controls
       {
          if (cleanUpMutedMergeRequests())
          {
-            ContentChanged?.Invoke(this);
+            onContentChanged();
          }
       }
 
@@ -1180,6 +1209,24 @@ namespace mrHelper.App.Controls
             }
          }
          return changed;
+      }
+
+      private void onContentChanged()
+      {
+         ContentChanged?.Invoke(this);
+         saveState();
+      }
+
+      private void saveState()
+      {
+         try
+         {
+            _persistentStorage?.Serialize();
+         }
+         catch (PersistenceStateSerializationException ex)
+         {
+            ExceptionHandlers.Handle("Cannot serialize the state", ex);
+         }
       }
 
       private string getIdentity()
@@ -1221,7 +1268,7 @@ namespace mrHelper.App.Controls
 
       private readonly MergeRequestListViewToolTip _toolTip;
       private IDiffStatisticProvider _diffStatisticProvider;
-      private Func<string, User> _getCurrentUser;
+      private Func<User> _getCurrentUser;
       private DataCache _dataCache;
       private MergeRequestFilter _mergeRequestFilter;
       private ColorScheme _colorScheme;
@@ -1230,7 +1277,7 @@ namespace mrHelper.App.Controls
       private HashSet<ProjectKey> _collapsedProjects = new HashSet<ProjectKey>();
       private Dictionary<MergeRequestKey, DateTime> _mutedMergeRequests =
          new Dictionary<MergeRequestKey, DateTime>();
-
+      private ExpressionResolver _expressionResolver;
       private static readonly int MaxListViewRows = 3;
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
 

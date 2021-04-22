@@ -37,7 +37,7 @@ namespace mrHelper.GitLabClient
             Connecting?.Invoke(hostname);
 
             InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
-            bool isApprovalStatusSupported = await gitLabInstance.IsApprovalStatusSupported();
+            bool isApprovalStatusSupported = await gitLabInstance.IsApprovalStatusSupported() ?? false;
             IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
                hostname, _operator, cacheUpdater,
                _cacheContext.Callbacks, connectionContext.QueryCollection,
@@ -158,13 +158,14 @@ namespace mrHelper.GitLabClient
             IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
             projectCache = new ProjectCache(loader, _cacheContext, hostname);
          }
-         UserCache userCache = null; 
+         UserCache userCache = null;
          if (_cacheContext.SupportUserCache)
          {
             IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
             userCache = new UserCache(userListLoader, _cacheContext, hostname);
          }
-         return new DataCacheInternal(mergeRequestManager, discussionManager, timeTrackingManager, projectCache, userCache);
+         return new DataCacheInternal(mergeRequestManager, discussionManager,
+            timeTrackingManager, projectCache, userCache);
       }
 
       private bool _isConnecting;
