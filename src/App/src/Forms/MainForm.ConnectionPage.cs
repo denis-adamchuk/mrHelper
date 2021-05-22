@@ -212,6 +212,7 @@ namespace mrHelper.App.Forms
          onCanReloadAllChanged(connectionPage);
          onStorageStatusChanged(connectionPage);
          onConnectionStatusChanged(connectionPage);
+         onEnabledCustomActionsChanged(connectionPage);
       }
 
       private void onCanTrackTimeChanged(ConnectionPage connectionPage)

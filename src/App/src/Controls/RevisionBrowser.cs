@@ -189,7 +189,7 @@ namespace mrHelper.App.Controls
 
       private void onTreeViewColumnWidthChanged(object sender, TreeColumnEventArgs e)
       {
-         if (!_initializing)
+         if (!_loadingColumnWidth && !_initializing)
          {
             saveColumnWidths(x => Program.Settings.RevisionBrowserColumnWidths = x);
          }
@@ -323,15 +323,24 @@ namespace mrHelper.App.Controls
          saveProperty(columnWidths);
       }
 
+      private bool _loadingColumnWidth = false;
       private void loadColumnWidths(Dictionary<string, int> storedWidths)
       {
-         foreach (TreeColumn column in _treeView.Columns)
+         _loadingColumnWidth = true;
+         try
          {
-            string columnName = (string)column.Header;
-            if (storedWidths.ContainsKey(columnName))
+            foreach (TreeColumn column in _treeView.Columns)
             {
-               column.Width = storedWidths[columnName];
+               string columnName = (string)column.Header;
+               if (storedWidths.ContainsKey(columnName))
+               {
+                  column.Width = storedWidths[columnName];
+               }
             }
+         }
+         finally
+         {
+            _loadingColumnWidth = false;
          }
       }
 

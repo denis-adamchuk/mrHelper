@@ -40,6 +40,7 @@ namespace mrHelper.App.Controls
       internal void Deactivate()
       {
          _isActivePage = false;
+         switchMode(EDataCacheType.Live); // Switch tab on a page being deactivated back to the default one
       }
 
       internal Task Connect(Func<Exception, bool> exceptionHandler)
