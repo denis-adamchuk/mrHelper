@@ -407,7 +407,24 @@ namespace mrHelper.App.Forms
 
       private void toolStripButtonDiffTool_Click(object sender, System.EventArgs e)
       {
-         getCurrentConnectionPage()?.DiffTool(ConnectionPage.DiffToolMode.DiffBetweenSelected);
+         ConnectionPage connectionPage = getCurrentConnectionPage();
+         if (connectionPage == null)
+         {
+            return;
+         }
+
+         if (connectionPage.CanDiffTool(DiffToolMode.DiffBetweenSelected))
+         {
+            connectionPage.DiffTool(DiffToolMode.DiffBetweenSelected);
+         }
+         else if (connectionPage.CanDiffTool(DiffToolMode.DiffSelectedToBase))
+         {
+            connectionPage.DiffTool(DiffToolMode.DiffSelectedToBase);
+         }
+         else
+         {
+            Debug.Assert(false); // toolbar button shall be grayed out
+         }
       }
 
       private void toolStripButtonDiscussions_Click(object sender, System.EventArgs e)
@@ -472,7 +489,15 @@ namespace mrHelper.App.Forms
 
       private void diffToBaseToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         getCurrentConnectionPage()?.DiffTool(ConnectionPage.DiffToolMode.DiffSelectedToBase);
+         ConnectionPage connectionPage = getCurrentConnectionPage();
+         if (connectionPage == null)
+         {
+            return;
+         }
+
+         // menu item shall be grayed out if diff selected to base is not available
+         Debug.Assert(connectionPage.CanDiffTool(DiffToolMode.DiffSelectedToBase));
+         connectionPage.DiffTool(DiffToolMode.DiffSelectedToBase);
       }
 
       private void refreshSelectedToolStripMenuItem_Click(object sender, EventArgs e)

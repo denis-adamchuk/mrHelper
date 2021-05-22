@@ -41,7 +41,6 @@ namespace mrHelper.App.Controls
          onMergeRequestSelectionChanged(getListViewType(sender as Controls.MergeRequestListView));
       }
 
-      // TODO_MF Add context menu to Revision Browser
       private void revisionBrowser_SelectionChanged(object sender, EventArgs e)
       {
          CanDiffToolChanged?.Invoke(this);

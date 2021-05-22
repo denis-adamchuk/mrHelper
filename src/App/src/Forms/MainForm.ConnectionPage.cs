@@ -240,7 +240,21 @@ namespace mrHelper.App.Forms
       {
          if (connectionPage == getCurrentConnectionPage())
          {
-            toolStripButtonDiffTool.Enabled = connectionPage != null && connectionPage.CanDiffTool();
+            if (connectionPage == null)
+            {
+               toolStripButtonDiffTool.Enabled = false;
+               diffToolToolStripMenuItem.Enabled = false;
+               diffToBaseToolStripMenuItem.Enabled = false;
+            }
+            else
+            {
+               toolStripButtonDiffTool.Enabled =
+                     connectionPage.CanDiffTool(DiffToolMode.DiffBetweenSelected)
+                  || connectionPage.CanDiffTool(DiffToolMode.DiffSelectedToBase);
+               diffToolToolStripMenuItem.Enabled = toolStripButtonDiffTool.Enabled;
+               diffToBaseToolStripMenuItem.Enabled =
+                  connectionPage.CanDiffTool(DiffToolMode.DiffSelectedToBase);
+            }
          }
       }
 

@@ -163,6 +163,9 @@
     <Compile Include="src\Controls\RevisionBrowser.Designer.cs">
       <DependentUpon>RevisionBrowser.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\RevisionBrowserContextMenu.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\TextControls.cs" />
     <Compile Include="src\Forms\AcceptMergeRequestForm.UI.cs">
       <DependentUpon>AcceptMergeRequestForm.cs</DependentUpon>

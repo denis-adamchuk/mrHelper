@@ -287,60 +287,40 @@ namespace mrHelper.App.Controls
          revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
       }
 
-      private bool canShowDiffForSelectedRevisions()
-      {
-         int selectedRevisions = revisionBrowser.GetSelectedSha(out _).Count();
-         return selectedRevisions == 1 || selectedRevisions == 2;
-      }
-
-      private void getShaForDiffTool(out string left, out string right,
+      private void getShaForDiffBetweenSelected(out string left, out string right,
          out IEnumerable<string> included, out RevisionType? type)
       {
          string[] selected = revisionBrowser.GetSelectedSha(out type);
-         switch (selected.Count())
+         if (selected.Count() != 2)
          {
-            case 0:
-               left = String.Empty;
-               right = String.Empty;
-               included = new List<string>();
-               break;
-
-            case 1:
-               left = revisionBrowser.GetBaseCommitSha();
-               right = selected[0];
-               included = revisionBrowser.GetIncludedSha();
-               break;
-
-            case 2:
-               left = selected[0];
-               right = selected[1];
-               included = revisionBrowser.GetIncludedSha();
-               break;
-
-            default:
-               Debug.Assert(false);
-               left = String.Empty;
-               right = String.Empty;
-               included = new List<string>();
-               break;
+            left = String.Empty;
+            right = String.Empty;
+            included = new List<string>();
+            Debug.Assert(false); // shall be not available
+            return;
          }
+
+         left = selected[0];
+         right = selected[1];
+         included = revisionBrowser.GetIncludedBySelectedSha();
       }
 
       private void getShaForDiffWithBase(out string left, out string right,
          out IEnumerable<string> included, out RevisionType? type)
       {
          string[] selected = revisionBrowser.GetSelectedSha(out type);
-         if (selected.Count() == 0)
+         if (selected.Count() != 1)
          {
             left = String.Empty;
             right = String.Empty;
             included = new List<string>();
+            Debug.Assert(false); // shall be not available
             return;
          }
 
          left = revisionBrowser.GetBaseCommitSha();
-         right =  selected[selected.Count() - 1];
-         included = revisionBrowser.GetIncludedSha();
+         right =  selected[0];
+         included = revisionBrowser.GetIncludedBySelectedSha();
       }
 
       private bool checkIfMergeRequestCanBeCreated()

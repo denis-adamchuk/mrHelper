@@ -62,7 +62,7 @@
          this._treeView.Size = new System.Drawing.Size(100, 100);
          this._treeView.TabIndex = 0;
          this._treeView.UseColumns = true;
-         this._treeView.ColumnWidthChanged += new System.EventHandler<Aga.Controls.Tree.TreeColumnEventArgs>(this.treeView_ColumnWidthChanged);
+         this._treeView.ColumnWidthChanged += new System.EventHandler<Aga.Controls.Tree.TreeColumnEventArgs>(this.onTreeViewColumnWidthChanged);
          // 
          // treeColumn1
          // 
@@ -102,7 +102,6 @@
          this.Controls.Add(this._treeView);
          this.Name = "RevisionBrowser";
          this.Size = new System.Drawing.Size(100, 100);
-         this.Load += new System.EventHandler(this.RevisionBrowser_Load);
          this.ResumeLayout(false);
 
       }

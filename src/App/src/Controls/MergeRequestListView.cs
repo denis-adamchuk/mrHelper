@@ -72,30 +72,6 @@ namespace mrHelper.App.Controls
          cleanUpMutedMergeRequests();
       }
 
-      internal void RestoreColumns()
-      {
-         var widths = ConfigurationHelper.GetColumnWidths(Program.Settings, getIdentity());
-         if (widths != null)
-         {
-            setColumnWidths(widths);
-         }
-
-         var indices = ConfigurationHelper.GetColumnIndices(Program.Settings, getIdentity());
-         if (indices != null)
-         {
-            setColumnIndices(indices);
-         }
-      }
-
-      protected override void OnVisibleChanged(EventArgs e)
-      {
-         base.OnVisibleChanged(e);
-         if (Visible)
-         {
-            RestoreColumns();
-         }
-      }
-
       internal void SetDiffStatisticProvider(IDiffStatisticProvider diffStatisticProvider)
       {
          _diffStatisticProvider = diffStatisticProvider;
@@ -465,6 +441,30 @@ namespace mrHelper.App.Controls
          base.Dispose(disposing);
       }
 
+      private bool _processingHandleCreated = false;
+      protected override void OnHandleCreated(EventArgs e)
+      {
+         _processingHandleCreated = true;
+         try
+         {
+            base.OnHandleCreated(e);
+         }
+         finally
+         {
+            _processingHandleCreated = false;
+         }
+         restoreColumns();
+      }
+
+      protected override void OnVisibleChanged(EventArgs e)
+      {
+         base.OnVisibleChanged(e);
+         if (Visible)
+         {
+            restoreColumns();
+         }
+      }
+
       protected override void OnMouseLeave(EventArgs e)
       {
          // this callback is called not only when mouse leaves the list view so let's check if we need to cancel tooltip
@@ -510,13 +510,19 @@ namespace mrHelper.App.Controls
       protected override void OnColumnWidthChanged(ColumnWidthChangedEventArgs e)
       {
          base.OnColumnWidthChanged(e);
-         saveColumnWidths();
+         if (!_restoringColumns && ! _processingHandleCreated)
+         {
+            saveColumnWidths();
+         }
       }
 
       protected override void OnColumnReordered(ColumnReorderedEventArgs e)
       {
          base.OnColumnReordered(e);
-         saveColumIndices(e.OldDisplayIndex, e.NewDisplayIndex);
+         if (!_restoringColumns && ! _processingHandleCreated)
+         {
+            saveColumIndices(e.OldDisplayIndex, e.NewDisplayIndex);
+         }
       }
 
       protected override void OnItemSelectionChanged(ListViewItemSelectionChangedEventArgs e)
@@ -633,6 +639,32 @@ namespace mrHelper.App.Controls
          {
             Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
             e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
+         }
+      }
+
+      bool _restoringColumns = false;
+      private void restoreColumns()
+      {
+         _restoringColumns = true;
+         try
+         {
+            Dictionary<string, int> widths = Program.Settings == null
+               ? null : ConfigurationHelper.GetColumnWidths(Program.Settings, getIdentity());
+            if (widths != null)
+            {
+               setColumnWidths(widths);
+            }
+
+            Dictionary<string, int> indices = Program.Settings == null
+               ? null : ConfigurationHelper.GetColumnIndices(Program.Settings, getIdentity());
+            if (indices != null)
+            {
+               setColumnIndices(indices);
+            }
+         }
+         finally
+         {
+            _restoringColumns = false;
          }
       }
 

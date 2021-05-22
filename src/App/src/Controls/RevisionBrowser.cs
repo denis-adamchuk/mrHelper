@@ -37,14 +37,21 @@ namespace mrHelper.App.Controls
          _initializing = false;
 
          _treeView.Model = new RevisionBrowserModel();
-         _treeView.SelectionChanged += (s, e) => SelectionChanged?.Invoke(s, e);
-         _treeView.RowDraw += treeView_DrawRow;
+         _treeView.SelectionChanged += onTreeViewSelectionChanged;
+         _treeView.NodeMouseDoubleClick += onTreeViewNodeMouseDoubleClick;
+         _treeView.RowDraw += onTreeViewDrawRow;
 
          _name.ToolTipProvider = new NameTooltipProvider();
-         _name.DrawText += treeView_DrawNode;
+         _name.DrawText += onTreeViewDrawNode;
 
          _timestamp.ToolTipProvider = new TimeStampTooltipProvider();
-         _timestamp.DrawText += treeView_DrawNode;
+         _timestamp.DrawText += onTreeViewDrawNode;
+      }
+
+      internal void AssignContextMenu(RevisionBrowserContextMenu contextMenu)
+      {
+         ContextMenuStrip = contextMenu;
+         ContextMenuStrip.Opening += onContextMenuStripOpening;
       }
 
       internal string GetBaseCommitSha()
@@ -52,18 +59,37 @@ namespace mrHelper.App.Controls
          return getModel().Data.BaseSha;
       }
 
-      internal string[] GetSelectedSha(out RevisionType? type)
+      internal string GetHeadSha(RevisionType revisionType)
       {
-         type = new RevisionType?();
-         IEnumerable<RevisionBrowserItem> leaves = getSelectedLeafNodes(out type);
+         TreeNodeAdv revisionTypeNode = getRevisionTypeNode(revisionType);
+         IEnumerable<RevisionBrowserItem> sortedChildren = getSortedChildrenCasted(revisionTypeNode);
+         return sortedChildren?.FirstOrDefault()?.FullSHA;
+      }
+
+      internal string[] GetIncludedSha(RevisionType revisionType)
+      {
+         TreeNodeAdv revisionTypeNode = getRevisionTypeNode(revisionType);
+         IEnumerable<RevisionBrowserItem> sortedChildren = getSortedChildrenCasted(revisionTypeNode);
+         return sortedChildren?.Select(item => item.FullSHA).ToArray();
+      }
+
+      internal string[] GetSelectedSha(out RevisionType? revisionType)
+      {
+         revisionType = new RevisionType?();
+         IEnumerable<RevisionBrowserItem> leaves = getSelectedLeafNodes(out revisionType);
          return leaves.OrderBy(x => x.InvertedDisplayIndex).Select(x => x.FullSHA).ToArray();
       }
 
-      internal string[] GetIncludedSha()
+      internal string[] GetIncludedBySelectedSha()
       {
-         IEnumerable<RevisionBrowserItem> leaves = getSelectedLeafNodes(out RevisionType? type);
+         IEnumerable<RevisionBrowserItem> leaves = getSelectedLeafNodes(out RevisionType? revisionType);
          RevisionBrowserItem latestSelected = leaves.OrderByDescending(x => x.InvertedDisplayIndex).FirstOrDefault();
-         return getEarlierLeafNodes(latestSelected).Select(x => x.FullSHA).ToArray();
+         return getEarlierLeafNodes(latestSelected, revisionType).Select(x => x.FullSHA).ToArray();
+      }
+
+      internal string GetParentShaForSelected()
+      {
+         return GetIncludedBySelectedSha()?.Skip(1)?.FirstOrDefault();
       }
 
       internal void SetData(RevisionBrowserModelData data, RevisionType defaultRevisionType)
@@ -108,13 +134,84 @@ namespace mrHelper.App.Controls
          }
       }
 
-      public event EventHandler SelectionChanged;
+      internal event EventHandler SelectionChanged;
+
+      protected override void OnLoad(EventArgs e)
+      {
+         base.OnLoad(e);
+         if (Program.Settings != null)
+         {
+            loadColumnWidths(Program.Settings.RevisionBrowserColumnWidths);
+         }
+      }
+
+      protected override void OnVisibleChanged(EventArgs e)
+      {
+         base.OnVisibleChanged(e);
+         if (Visible && Program.Settings != null)
+         {
+            loadColumnWidths(Program.Settings.RevisionBrowserColumnWidths);
+         }
+      }
 
       protected override void OnFontChanged(EventArgs eventArgs)
       {
          base.OnFontChanged(eventArgs);
-
          _treeView.Font = this.Font;
+      }
+
+      private void onTreeViewDrawRow(object sender, TreeViewRowDrawEventArgs e)
+      {
+         if (e.Node.IsSelected)
+         {
+            Rectangle focusRect = new Rectangle(
+               _treeView.OffsetX, e.RowRect.Y, _treeView.ClientRectangle.Width, e.RowRect.Height);
+            e.Graphics.FillRectangle(SystemBrushes.Highlight, focusRect);
+         }
+      }
+
+      private void onTreeViewDrawNode(object sender, DrawEventArgs e)
+      {
+         e.BackgroundBrush = null;
+         if (e.Node.Tag is RevisionBrowserItem leafNode && leafNode.IsReviewed)
+         {
+            e.TextColor = Color.LightGray;
+         }
+         else if (e.Node.IsSelected)
+         {
+            e.TextColor = SystemColors.HighlightText;
+         }
+         else
+         {
+            e.TextColor = SystemColors.ControlText;
+         }
+      }
+
+      private void onTreeViewColumnWidthChanged(object sender, TreeColumnEventArgs e)
+      {
+         if (!_initializing)
+         {
+            saveColumnWidths(x => Program.Settings.RevisionBrowserColumnWidths = x);
+         }
+      }
+
+      private void onTreeViewSelectionChanged(object sender, EventArgs e)
+      {
+         SelectionChanged?.Invoke(sender, e);
+      }
+
+      private void onTreeViewNodeMouseDoubleClick(object sender, TreeNodeAdvMouseEventArgs e)
+      {
+         SelectionChanged?.Invoke(sender, e);
+
+         RevisionBrowserContextMenu contextMenu = (RevisionBrowserContextMenu)ContextMenuStrip;
+         contextMenu?.LaunchDefaultAction();
+      }
+
+      private void onContextMenuStripOpening(object sender, System.ComponentModel.CancelEventArgs e)
+      {
+         RevisionBrowserContextMenu contextMenu = (RevisionBrowserContextMenu)sender;
+         contextMenu.UpdateItemState();
       }
 
       private IEnumerable<RevisionBrowserItem> getSelectedLeafNodes(out RevisionType? type)
@@ -134,19 +231,33 @@ namespace mrHelper.App.Controls
          return _treeView.SelectedNodes.Select(x => x.Tag).Cast<RevisionBrowserItem>();
       }
 
-      private IEnumerable<RevisionBrowserItem> getEarlierLeafNodes(RevisionBrowserItem item)
+      private IEnumerable<RevisionBrowserItem> getEarlierLeafNodes(
+         RevisionBrowserItem item, RevisionType? revisionType)
       {
-         if (item == null)
+         if (item == null || !revisionType.HasValue)
          {
             return Array.Empty<RevisionBrowserItem>();
          }
 
-         return _treeView.AllNodes
+         TreeNodeAdv revisionTypeNode = getRevisionTypeNode(revisionType.Value);
+         return getSortedChildrenCasted(revisionTypeNode)
+            .Where(x => x.InvertedDisplayIndex <= item.InvertedDisplayIndex);
+      }
+
+      private IEnumerable<TreeNodeAdv> getSortedChildren(TreeNodeAdv revisionTypeNode)
+      {
+         return revisionTypeNode?.Children
+            .Where(x => x.Tag is RevisionBrowserItem)
+            .OrderByDescending(x => (x.Tag as RevisionBrowserItem).InvertedDisplayIndex);
+      }
+
+      private IEnumerable<RevisionBrowserItem> getSortedChildrenCasted(TreeNodeAdv revisionTypeNode)
+      {
+         return revisionTypeNode?.Children
             .Where(x => x.Tag is RevisionBrowserItem)
             .Select(x => x.Tag)
             .Cast<RevisionBrowserItem>()
-            .OrderByDescending(x => x.InvertedDisplayIndex)
-            .Where(x => x.InvertedDisplayIndex <= item.InvertedDisplayIndex);
+            .OrderByDescending(x => x.InvertedDisplayIndex);
       }
 
       private void autoSelectRevision(TreeNodeAdv revisionTypeNode)
@@ -154,9 +265,7 @@ namespace mrHelper.App.Controls
          _treeView.ClearSelection();
          revisionTypeNode?.Expand();
 
-         IEnumerable<TreeNodeAdv> sortedChildren = revisionTypeNode?.Children
-            .Where(x => x.Tag is RevisionBrowserItem)
-            .OrderByDescending(x => (x.Tag as RevisionBrowserItem).InvertedDisplayIndex);
+         IEnumerable<TreeNodeAdv> sortedChildren = getSortedChildren(revisionTypeNode);
          if (sortedChildren == null || !sortedChildren.Any())
          {
             return;
@@ -202,49 +311,6 @@ namespace mrHelper.App.Controls
       private RevisionBrowserModel getModel()
       {
          return _treeView.Model as RevisionBrowserModel;
-      }
-
-      private void treeView_DrawRow(object sender, TreeViewRowDrawEventArgs e)
-      {
-         if (e.Node.IsSelected)
-         {
-            Rectangle focusRect = new Rectangle(
-               _treeView.OffsetX, e.RowRect.Y, _treeView.ClientRectangle.Width, e.RowRect.Height);
-            e.Graphics.FillRectangle(SystemBrushes.Highlight, focusRect);
-         }
-      }
-
-      private void treeView_DrawNode(object sender, DrawEventArgs e)
-      {
-         e.BackgroundBrush = null;
-         if (e.Node.Tag is RevisionBrowserItem leafNode && leafNode.IsReviewed)
-         {
-            e.TextColor = Color.LightGray;
-         }
-         else if (e.Node.IsSelected)
-         {
-            e.TextColor = SystemColors.HighlightText;
-         }
-         else
-         {
-            e.TextColor = SystemColors.ControlText;
-         }
-      }
-
-      private void treeView_ColumnWidthChanged(object sender, TreeColumnEventArgs e)
-      {
-         if (!_initializing)
-         {
-            saveColumnWidths(x => Program.Settings.RevisionBrowserColumnWidths = x);
-         }
-      }
-
-      private void RevisionBrowser_Load(object sender, EventArgs e)
-      {
-         if (Program.Settings != null)
-         {
-            loadColumnWidths(Program.Settings.RevisionBrowserColumnWidths);
-         }
       }
 
       private void saveColumnWidths(Action<Dictionary<string, int>> saveProperty)

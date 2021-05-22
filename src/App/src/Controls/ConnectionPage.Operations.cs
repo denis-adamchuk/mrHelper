@@ -550,20 +550,6 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private Task onLaunchDiffDefaultAsync(MergeRequestKey mrk)
-      {
-         getShaForDiffTool(out string leftSHA, out string rightSHA,
-            out IEnumerable<string> includedSHA, out RevisionType? type);
-         return onLaunchDiffToolAsync(mrk, leftSHA, rightSHA, includedSHA, type);
-      }
-
-      private Task onLaunchDiffWithBaseAsync(MergeRequestKey mrk)
-      {
-         getShaForDiffWithBase(out string leftSHA, out string rightSHA,
-            out IEnumerable<string> includedSHA, out RevisionType? type);
-         return onLaunchDiffToolAsync(mrk, leftSHA, rightSHA, includedSHA, type);
-      }
-
       private void launchDiffTool(string leftSHA, string rightSHA, ILocalCommitStorage storage,
          MergeRequestKey mrk, DataCache dataCache)
       {
@@ -623,24 +609,70 @@ namespace mrHelper.App.Controls
          return await prepareCommitStorage(mrk, storage, contextProvider2, false);
       }
 
+      private void launchDiffTool(DiffToolMode mode)
+      {
+         MergeRequestKey? mrkOpt = getMergeRequestKey(null);
+         if (!mrkOpt.HasValue || !CanDiffTool(mode))
+         {
+            Debug.Assert(false);
+            return;
+         }
+
+         string leftSHA;
+         string rightSHA;
+         string[] includedSHA = revisionBrowser.GetIncludedBySelectedSha();
+         string[] selected = revisionBrowser.GetSelectedSha(out RevisionType? type);
+         switch (mode)
+         {
+            case DiffToolMode.DiffBetweenSelected:
+               leftSHA = selected[0];
+               rightSHA = selected[1];
+               break;
+
+            case DiffToolMode.DiffSelectedToBase:
+               leftSHA = revisionBrowser.GetBaseCommitSha();
+               rightSHA = selected[0];
+               break;
+
+            case DiffToolMode.DiffSelectedToParent:
+               leftSHA = revisionBrowser.GetParentShaForSelected();
+               rightSHA = selected[0];
+               break;
+
+            case DiffToolMode.DiffLatestToBase:
+               type = ConfigurationHelper.GetDefaultRevisionType(Program.Settings);
+               includedSHA = revisionBrowser.GetIncludedSha(type.Value);
+               leftSHA = revisionBrowser.GetBaseCommitSha();
+               rightSHA = revisionBrowser.GetHeadSha(type.Value);
+               break;
+
+            default:
+               Debug.Assert(false);
+               return;
+         }
+
+         BeginInvoke(new Action(async () =>
+            await onLaunchDiffToolAsync(mrkOpt.Value, leftSHA, rightSHA, includedSHA, type)));
+      }
+
       private void launchDiffWithBaseForSelectedMergeRequest()
       {
-         BeginInvoke(new Action(async () =>
+         if (CanDiffTool(DiffToolMode.DiffSelectedToBase))
          {
-            Debug.Assert(getMergeRequestKey(null).HasValue);
-            MergeRequestKey mrk = getMergeRequestKey(null).Value;
-            await onLaunchDiffWithBaseAsync(mrk);
-         }));
+            launchDiffTool(DiffToolMode.DiffSelectedToBase);
+         }
       }
 
       private void launchDiffToolForSelectedMergeRequest()
       {
-         BeginInvoke(new Action(async () =>
+         if (CanDiffTool(DiffToolMode.DiffBetweenSelected))
          {
-            Debug.Assert(getMergeRequestKey(null).HasValue);
-            MergeRequestKey mrk = getMergeRequestKey(null).Value;
-            await onLaunchDiffDefaultAsync(mrk);
-         }));
+            launchDiffTool(DiffToolMode.DiffBetweenSelected);
+         }
+         else
+         {
+            launchDiffWithBaseForSelectedMergeRequest();
+         }
       }
 
       private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA, MergeRequestKey mrk,

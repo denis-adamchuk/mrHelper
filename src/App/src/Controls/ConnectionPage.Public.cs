@@ -21,6 +21,14 @@ using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Controls
 {
+   internal enum DiffToolMode
+   {
+      DiffBetweenSelected,
+      DiffSelectedToBase,
+      DiffSelectedToParent,
+      DiffLatestToBase
+   }
+
    internal partial class ConnectionPage : IOperationController
    {
       internal void Activate()
@@ -187,24 +195,9 @@ namespace mrHelper.App.Controls
          return CommandLoadHelper.LoadSafe(filepath);
       }
 
-      internal enum DiffToolMode
-      {
-         DiffBetweenSelected,
-         DiffSelectedToBase
-      }
-
       internal void DiffTool(DiffToolMode mode)
       {
-         switch (mode)
-         {
-            case DiffToolMode.DiffBetweenSelected:
-               launchDiffToolForSelectedMergeRequest();
-               break;
-
-            case DiffToolMode.DiffSelectedToBase:
-               launchDiffWithBaseForSelectedMergeRequest();
-               break;
-         }
+         launchDiffTool(mode);
       }
 
       internal void Discussions()
@@ -412,12 +405,36 @@ namespace mrHelper.App.Controls
          handler.Handle(matchInfo, snapshot);
       }
 
-      public bool CanDiffTool()
+      public bool CanDiffTool(DiffToolMode mode)
       {
          MergeRequestKey? mrkOpt = getMergeRequestKey(null);
-         return mrkOpt.HasValue
-             && canUpdateStorageForMergeRequest(mrkOpt.Value)
-             && canShowDiffForSelectedRevisions();
+         if (!mrkOpt.HasValue || !canUpdateStorageForMergeRequest(mrkOpt.Value))
+         {
+            return false;
+         }
+
+         int selectedRevisions = revisionBrowser.GetSelectedSha(out _).Count();
+         switch (mode)
+         {
+            case DiffToolMode.DiffBetweenSelected:
+               return selectedRevisions == 2;
+
+            case DiffToolMode.DiffSelectedToBase:
+               return selectedRevisions == 1;
+
+            case DiffToolMode.DiffSelectedToParent:
+               bool hasParent = revisionBrowser.GetParentShaForSelected() != null;
+               return selectedRevisions == 1 && hasParent;
+
+            case DiffToolMode.DiffLatestToBase:
+               return true;
+
+            default:
+               Debug.Assert(false);
+               break;
+         }
+
+         return false;
       }
 
       public bool CanDiscussions()

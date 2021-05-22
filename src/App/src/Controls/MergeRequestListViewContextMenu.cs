@@ -3,15 +3,15 @@ using System.Windows.Forms;
 
 namespace mrHelper.App.Controls
 {
-   public interface IOperationController
+   internal interface IOperationController
    {
       bool CanDiscussions();
-      bool CanDiffTool();
+      bool CanDiffTool(DiffToolMode mode);
       bool CanEdit();
       bool CanMerge();
    }
 
-   public class MergeRequestListViewContextMenu : ContextMenuStrip
+   internal class MergeRequestListViewContextMenu : ContextMenuStrip
    {
       public MergeRequestListViewContextMenu(
          IOperationController operationController,
@@ -68,10 +68,7 @@ namespace mrHelper.App.Controls
             return null;
          }
 
-         ToolStripMenuItem item = new ToolStripMenuItem(name, null, (s, e) => action())
-         {
-            //ShortcutKeys = shortcutKeys
-         };
+         ToolStripMenuItem item = new ToolStripMenuItem(name, null, (s, e) => action());
          Items.Add(item);
 
          if (isDefault)
@@ -121,12 +118,16 @@ namespace mrHelper.App.Controls
 
          if (_diffToolItem != null)
          {
-            _diffToolItem.Enabled = _operationController.CanDiffTool() && !_disabledAll;
+            bool canLaunchDefaultDiff =
+               _operationController.CanDiffTool(DiffToolMode.DiffBetweenSelected)
+            || _operationController.CanDiffTool(DiffToolMode.DiffSelectedToBase);
+            _diffToolItem.Enabled = canLaunchDefaultDiff && !_disabledAll;
          }
 
          if (_diffToBaseItem != null)
          {
-            _diffToBaseItem.Enabled = _operationController.CanDiffTool() && !_disabledAll;
+            bool canLaunchDiffToBase = _operationController.CanDiffTool(DiffToolMode.DiffSelectedToBase);
+            _diffToBaseItem.Enabled = canLaunchDiffToBase && !_disabledAll;
          }
 
          if (_refreshListItem != null)

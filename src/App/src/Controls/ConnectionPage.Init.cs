@@ -97,10 +97,10 @@ namespace mrHelper.App.Controls
          listViewRecentMergeRequests.Tag = Constants.RecentListViewName;
 
          createListViewContextMenu();
+         createRevisionBrowserContextMenu();
 
          forEachListView(listView => listView.SetCurrentUserGetter(() => CurrentUser));
          forEachListView(listView => listView.ContentChanged += listViewMergeRequests_ContentChanged);
-         forEachListView(listView => listView.RestoreColumns());
 
          linkLabelConnectedTo.Text = String.Empty;
          linkLabelConnectedTo.SetLinkLabelClicked(UrlHelper.OpenBrowser);
@@ -167,6 +167,18 @@ namespace mrHelper.App.Controls
                null,
                showDiscussionsForSelectedMergeRequest));
          }
+      }
+
+      private void createRevisionBrowserContextMenu()
+      {
+         Action defaultAction = () => launchDiffTool(DiffToolMode.DiffSelectedToBase);
+         revisionBrowser.AssignContextMenu(new RevisionBrowserContextMenu(
+            this,
+            () => launchDiffTool(DiffToolMode.DiffBetweenSelected),
+            defaultAction,
+            () => launchDiffTool(DiffToolMode.DiffSelectedToParent),
+            () => launchDiffTool(DiffToolMode.DiffLatestToBase),
+            defaultAction));
       }
 
       private void startEventPendingTimer(Func<bool> onCheck, int checkInterval, Action onEvent)

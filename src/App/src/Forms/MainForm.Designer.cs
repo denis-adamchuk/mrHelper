@@ -589,7 +589,7 @@ namespace mrHelper.App.Forms
          // 
          this.sendFeedbackToolStripMenuItem.Name = "sendFeedbackToolStripMenuItem";
          this.sendFeedbackToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
-         this.sendFeedbackToolStripMenuItem.Text = "Send feedback";
+         this.sendFeedbackToolStripMenuItem.Text = "Send logs/feedback";
          this.sendFeedbackToolStripMenuItem.Click += new System.EventHandler(this.sendFeedbackToolStripMenuItem_Click);
          // 
          // showHelpToolStripMenuItem
