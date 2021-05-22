@@ -506,10 +506,16 @@ namespace mrHelper.App.Controls
          forEachListView(listView => listView.SetColorScheme(_colorScheme));
       }
 
-      internal void ApplySavedSplitterDistance()
+      internal void RestoreSplitterDistance()
       {
          resetSplitterDistance(splitContainerPrimary, ResetSplitterDistanceMode.UserDefined);
          resetSplitterDistance(splitContainerSecondary, ResetSplitterDistanceMode.UserDefined);
+      }
+
+      internal void StoreSplitterDistance()
+      {
+         saveSplitterDistanceToConfig(splitContainerPrimary);
+         saveSplitterDistanceToConfig(splitContainerSecondary);
       }
 
       internal Color? GetSummaryColor()

@@ -358,7 +358,7 @@ namespace mrHelper.App.Controls
             if (!value)
             {
                // move is finished, store the value
-               Program.Settings.PrimarySplitContainerDistance = splitter.SplitterDistance;
+               saveSplitterDistanceToConfig(splitContainerPrimary);
             }
             _userIsMovingSplitter1 = value;
          }
@@ -367,7 +367,7 @@ namespace mrHelper.App.Controls
             if (!value)
             {
                // move is finished, store the value
-               Program.Settings.SecondarySplitContainerDistance = splitter.SplitterDistance;
+               saveSplitterDistanceToConfig(splitContainerSecondary);
             }
             _userIsMovingSplitter2 = value;
          }
@@ -418,15 +418,15 @@ namespace mrHelper.App.Controls
          return 0;
       }
 
-      private void saveSplitterDistanceToConfig(SplitContainer splitContainer, int value)
+      private void saveSplitterDistanceToConfig(SplitContainer splitContainer)
       {
          if (splitContainer == splitContainerPrimary)
          {
-            Program.Settings.PrimarySplitContainerDistance = value;
+            Program.Settings.PrimarySplitContainerDistance = splitContainer.SplitterDistance;
          }
          else if (splitContainer == splitContainerSecondary)
          {
-            Program.Settings.SecondarySplitContainerDistance = value;
+            Program.Settings.SecondarySplitContainerDistance = splitContainer.SplitterDistance;
          }
          else
          {
@@ -461,7 +461,7 @@ namespace mrHelper.App.Controls
          }
          if (setSplitterDistanceSafe(splitContainer, splitterDistance))
          {
-            saveSplitterDistanceToConfig(splitContainer, splitterDistance);
+            saveSplitterDistanceToConfig(splitContainer);
             return true;
          }
          return false;

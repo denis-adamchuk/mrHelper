@@ -820,7 +820,7 @@ namespace mrHelper.App.Forms
                }
             }
 
-            getCurrentConnectionPage()?.ApplySavedSplitterDistance();
+            getCurrentConnectionPage()?.StoreSplitterDistance();
          }
 
          _prevWindowState = WindowState;

@@ -11,11 +11,6 @@ namespace mrHelper.App.Controls
 {
    internal partial class ConnectionPage
    {
-      private void ConnectionPage_Load(object sender, EventArgs e)
-      {
-         initializeWork();
-      }
-
       private void textBoxDisplayFilter_TextChanged(object sender, EventArgs e)
       {
          onTextBoxDisplayFilterUpdate();
@@ -98,6 +93,12 @@ namespace mrHelper.App.Controls
       private void tabControlMode_SelectedIndexChanged(object sender, EventArgs e)
       {
          onDataCacheSelectionChanged();
+      }
+
+      protected override void OnLoad(EventArgs e)
+      {
+         base.OnLoad(e);
+         initializeWork();
       }
 
       protected override void OnFontChanged(EventArgs e)

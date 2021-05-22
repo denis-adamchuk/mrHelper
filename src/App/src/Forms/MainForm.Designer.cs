@@ -919,9 +919,6 @@ namespace mrHelper.App.Forms
          this.MainMenuStrip = this.menuStrip1;
          this.Name = "MainForm";
          this.Text = "Merge Request Helper";
-         this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.mainForm_FormClosing);
-         this.Load += new System.EventHandler(this.mainForm_Load);
-         this.Resize += new System.EventHandler(this.mainForm_Resize);
          this.contextMenuStrip.ResumeLayout(false);
          this.toolStripContainer1.BottomToolStripPanel.ResumeLayout(false);
          this.toolStripContainer1.BottomToolStripPanel.PerformLayout();

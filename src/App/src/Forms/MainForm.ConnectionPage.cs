@@ -174,9 +174,13 @@ namespace mrHelper.App.Forms
 
       private void onHostToolbarButtonClicked(object sender, EventArgs e)
       {
-         getCurrentConnectionPage()?.Deactivate();
-
          HostToolbarItem button = sender as HostToolbarItem;
+         if (getCurrentConnectionPage()?.GetCurrentHostName() == button.HostName)
+         {
+            return;
+         }
+
+         getCurrentConnectionPage()?.Deactivate();
 
          ConnectionTabPage tab = tabControlHost.TabPages
             .Cast<ConnectionTabPage>()
@@ -190,7 +194,7 @@ namespace mrHelper.App.Forms
          _defaultHostName = button.HostName;
 
          getCurrentConnectionPage()?.Activate();
-         getCurrentConnectionPage()?.ApplySavedSplitterDistance();
+         getCurrentConnectionPage()?.RestoreSplitterDistance();
       }
 
       private void onHostTabSelected()

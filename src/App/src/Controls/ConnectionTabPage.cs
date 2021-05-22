@@ -9,7 +9,6 @@ namespace mrHelper.App.Controls
          HostName = hostname;
          ConnectionPage = connectionPage;
          Controls.Add(connectionPage);
-         connectionPage.Dock = DockStyle.Fill;
       }
 
       internal string HostName { get; }

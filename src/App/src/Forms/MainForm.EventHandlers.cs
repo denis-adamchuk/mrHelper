@@ -12,17 +12,17 @@ namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
-      /// <summary>
-      /// All exceptions thrown within this method are fatal errors, just pass them to upper level handler
-      /// </summary>
-      private void mainForm_Load(object sender, EventArgs e)
+      protected override void OnLoad(EventArgs e)
       {
+         base.OnLoad(e);
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
          initializeWork();
       }
 
-      private void mainForm_FormClosing(object sender, FormClosingEventArgs e)
+      protected override void OnFormClosing(FormClosingEventArgs e)
       {
+         base.OnFormClosing(e);
+
          Trace.TraceInformation(String.Format("[MainForm] Requested to close the Main Form. Reason: {0}",
             e.CloseReason.ToString()));
 
@@ -48,14 +48,19 @@ namespace mrHelper.App.Forms
          finalizeWork();
       }
 
-      private void mainForm_Resize(object sender, EventArgs e)
+      protected override void OnResize(EventArgs e)
       {
-         if (this.WindowState == _prevWindowState)
+         base.OnResize(e);
+         if (this.WindowState != _prevWindowState)
          {
-            return;
+            onWindowStateChanged();
          }
+      }
 
-         onWindowStateChanged();
+      protected override void OnResizeEnd(EventArgs e)
+      {
+         base.OnResizeEnd(e);
+         getCurrentConnectionPage()?.StoreSplitterDistance();
       }
 
       private void notifyIcon_DoubleClick(object sender, EventArgs e)

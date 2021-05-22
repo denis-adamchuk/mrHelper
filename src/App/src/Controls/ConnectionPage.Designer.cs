@@ -127,6 +127,7 @@ namespace mrHelper.App.Controls
          // 
          this.splitContainerPrimary.BackColor = System.Drawing.Color.Transparent;
          this.splitContainerPrimary.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.splitContainerPrimary.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
          this.splitContainerPrimary.Location = new System.Drawing.Point(0, 0);
          this.splitContainerPrimary.Name = "splitContainerPrimary";
          // 
@@ -560,6 +561,7 @@ namespace mrHelper.App.Controls
          // splitContainer2
          // 
          this.splitContainerSecondary.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.splitContainerSecondary.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
          this.splitContainerSecondary.Location = new System.Drawing.Point(0, 0);
          this.splitContainerSecondary.Name = "splitContainerSecondary";
          this.splitContainerSecondary.Orientation = System.Windows.Forms.Orientation.Horizontal;
@@ -644,9 +646,9 @@ namespace mrHelper.App.Controls
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.Controls.Add(this.splitContainerPrimary);
+         this.Dock = System.Windows.Forms.DockStyle.Fill;
          this.Name = "ConnectionPage";
          this.Size = new System.Drawing.Size(866, 422);
-         this.Load += new System.EventHandler(this.ConnectionPage_Load);
          this.splitContainerPrimary.Panel1.ResumeLayout(false);
          this.splitContainerPrimary.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainerPrimary)).EndInit();
