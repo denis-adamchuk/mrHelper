@@ -289,6 +289,7 @@ namespace mrHelper.App.Forms
          this.MinimizeBox = false;
          this.Name = "ConfigureHostsForm";
          this.Text = "Configure Hosts";
+         this.Load += configureHostsForm_Load;
          this.groupBoxSelectWorkflow.ResumeLayout(false);
          this.groupBoxSelectWorkflow.PerformLayout();
          this.groupBoxConfigureProjectBasedWorkflow.ResumeLayout(false);

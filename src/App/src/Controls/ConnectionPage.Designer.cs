@@ -561,7 +561,7 @@ namespace mrHelper.App.Controls
          // splitContainer2
          // 
          this.splitContainerSecondary.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.splitContainerSecondary.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
+         this.splitContainerSecondary.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
          this.splitContainerSecondary.Location = new System.Drawing.Point(0, 0);
          this.splitContainerSecondary.Name = "splitContainerSecondary";
          this.splitContainerSecondary.Orientation = System.Windows.Forms.Orientation.Horizontal;

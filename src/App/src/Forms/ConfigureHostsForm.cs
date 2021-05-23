@@ -24,17 +24,22 @@ namespace mrHelper.App.Forms
          applyFont(Program.Settings.MainWindowFontSizeName);
 
          checkHelpAvailability();
-
-         loadKnownHosts();
-         loadWorkflowType();
-         updateHostsListView();
       }
 
       internal bool Changed { get; private set; }
 
-      protected override void OnLoad(EventArgs e)
+      async private void configureHostsForm_Load(object sender, System.EventArgs e)
       {
-         base.OnLoad(e);
+         loadKnownHosts();
+         loadWorkflowType();
+
+         foreach (KeyValuePair<string, string> kv in _hosts)
+         {
+            await loadUsersForHost(kv.Key);
+            loadProjectsForHost(kv.Key);
+         }
+
+         updateHostsListView();
       }
 
       private void listViewKnownHosts_SelectedIndexChanged(object sender, EventArgs e)
@@ -74,9 +79,9 @@ namespace mrHelper.App.Forms
          updateConfigureWorkflowListState();
       }
 
-      private async void buttonEditUsers_Click(object sender, EventArgs e)
+      private void buttonEditUsers_Click(object sender, EventArgs e)
       {
-         await launchEditUserListDialog();
+         launchEditUserListDialog();
       }
 
       private void buttonEditProjects_Click(object sender, EventArgs e)
@@ -200,7 +205,8 @@ namespace mrHelper.App.Forms
       {
          if (!_projects.ContainsKey(hostname))
          {
-            loadProjectsForHost(hostname);
+            Debug.Assert(false);
+            return new StringToBooleanCollection();
          }
          return _projects[hostname];
       }
@@ -229,11 +235,12 @@ namespace mrHelper.App.Forms
          setUsersForHost(hostname, users);
       }
 
-      private async Task<StringToBooleanCollection> getUsersForHost(string hostname)
+      private StringToBooleanCollection getUsersForHost(string hostname)
       {
          if (!_usernames.ContainsKey(hostname))
          {
-            await loadUsersForHost(hostname);
+            Debug.Assert(false);
+            return new StringToBooleanCollection();
          }
          return _usernames[hostname];
       }
@@ -280,14 +287,14 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private async Task updateUsersListView()
+      private void updateUsersListView()
       {
          listViewUsers.Items.Clear();
 
          string hostname = getSelectedHostName();
          if (hostname != null)
          {
-            StringToBooleanCollection users = await getUsersForHost(hostname);
+            StringToBooleanCollection users = getUsersForHost(hostname);
             users
                .Where(item => item.Item2)
                .ToList()
@@ -341,6 +348,8 @@ namespace mrHelper.App.Forms
                return;
             }
 
+            await loadUsersForHost(hostname);
+            loadProjectsForHost(hostname);
             updateHostsListView();
          }));
       }
@@ -423,7 +432,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private async Task launchEditUserListDialog()
+      private void launchEditUserListDialog()
       {
          string hostname = getSelectedHostName();
          if (hostname == null)
@@ -431,7 +440,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         StringToBooleanCollection users = await getUsersForHost(hostname);
+         StringToBooleanCollection users = getUsersForHost(hostname);
          Debug.Assert(users != null);
 
          GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings, this);
@@ -443,7 +452,7 @@ namespace mrHelper.App.Forms
             if (form.ShowDialog() == DialogResult.OK && !Enumerable.SequenceEqual(users, form.Items))
             {
                setUsersForHost(hostname, form.Items);
-               await updateUsersListView();
+               updateUsersListView();
             }
          }
       }
@@ -456,13 +465,10 @@ namespace mrHelper.App.Forms
 
       private void onKnownHostSelectionChanged()
       {
-         BeginInvoke(new Action(async () =>
-         {
-            updateAddRemoveButtonState();
-            updateEnablementsOfWorkflowSelectors();
-            updateProjectsListView();
-            await updateUsersListView();
-         }), null);
+         updateAddRemoveButtonState();
+         updateEnablementsOfWorkflowSelectors();
+         updateProjectsListView();
+         updateUsersListView();
       }
 
       public string GetAccessToken(string host)
