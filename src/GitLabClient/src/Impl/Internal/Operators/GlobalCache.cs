@@ -32,6 +32,16 @@ namespace mrHelper.GitLabClient.Operators
          _authenticatedUsers[new AuthenticatedUserKey(hostname, accessToken)] = user;
       }
 
+      static internal GitLabVersion GetGitLabVersion(string hostname)
+      {
+         return _gitLabVersions.TryGetValue(hostname, out GitLabVersion gitLabVersion) ? gitLabVersion : null;
+      }
+
+      static internal void SetGitLabVersion(string hostname, GitLabVersion version)
+      {
+         _gitLabVersions[hostname] = version;
+      }
+
       static internal User GetUser(string hostname, string username)
       {
          if (_usersByNames.TryGetValue(hostname, out HashSet<User> users))
@@ -269,6 +279,8 @@ namespace mrHelper.GitLabClient.Operators
          }
       }
 
+      static private readonly Dictionary<string, GitLabVersion> _gitLabVersions =
+         new Dictionary<string, GitLabVersion>();
       static private readonly Dictionary<AuthenticatedUserKey, User> _authenticatedUsers =
          new Dictionary<AuthenticatedUserKey, User>();
       static private readonly Dictionary<string, HashSet<User>> _usersByNames =

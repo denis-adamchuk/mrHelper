@@ -482,7 +482,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private async Task initializeGitLabInstanceOnceAsync()
+      private void initializeGitLabInstance()
       {
          if (_gitLabInstance == null)
          {
@@ -491,16 +491,6 @@ namespace mrHelper.App.Controls
             _gitLabInstance.ConnectionLost += onConnectionLost;
             _gitLabInstance.ConnectionRestored += onConnectionRestored;
             _shortcuts = new Shortcuts(_gitLabInstance);
-         }
-
-         if (!_isApprovalStatusSupported.HasValue)
-         {
-            bool? approvalStatusSupported = await _gitLabInstance.IsApprovalStatusSupported();
-            if (approvalStatusSupported.HasValue)
-            {
-               _isApprovalStatusSupported = approvalStatusSupported;
-               CustomActionListChanged?.Invoke(this);
-            }
          }
       }
 

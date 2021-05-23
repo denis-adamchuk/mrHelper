@@ -783,8 +783,6 @@ namespace mrHelper.App.Controls
          return _reviewedRevisions.Data.ContainsKey(mrk);
       }
 
-      User CurrentUser { get; set; }
-
       private bool checkIfMergeRequestCanBeEdited()
       {
          string hostname = HostName;

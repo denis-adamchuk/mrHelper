@@ -30,10 +30,16 @@ namespace mrHelper.App.Controls
             String.Format("Project list for hostname {0} is empty", hostname)) {}
       }
 
+      internal class CannotLoadGitLabVersionException : Exception
+      {
+         internal CannotLoadGitLabVersionException(string hostname): base(
+            String.Format("Cannot load GitLab version from host {0}. Check network connection.", hostname)) {}
+      }
+
       internal class CannotLoadCurentUserException : Exception
       {
          internal CannotLoadCurentUserException(string hostname): base(
-            String.Format("Cannot load current user for host {0}", hostname)) {}
+            String.Format("Cannot load current user from host {0}. Check network connection.", hostname)) {}
       }
 
       private bool startWorkflowDefaultExceptionHandler(Exception ex)
@@ -41,6 +47,7 @@ namespace mrHelper.App.Controls
          if (ex is DataCacheException
           || ex is UnknownHostException
           || ex is NoProjectsException
+          || ex is CannotLoadGitLabVersionException
           || ex is CannotLoadCurentUserException)
          {
             if (!(ex is DataCacheConnectionCancelledException))
@@ -63,10 +70,11 @@ namespace mrHelper.App.Controls
       async private Task connect(Func<Exception, bool> exceptionHandler)
       {
          await dropCacheConnectionsAsync();
-         await initializeGitLabInstanceOnceAsync();
+         initializeGitLabInstance();
 
          try
          {
+            await preStartWorkflowAsync();
             await startWorkflowAsync();
          }
          catch (Exception ex) // rethrow in case of unexpected exceptions
@@ -97,12 +105,7 @@ namespace mrHelper.App.Controls
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      // Everything reconnects inside startWorkflowAsync(). If there are some things at gitlab that user
-      // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
-      // we will miss them. It might be ok in some cases, but if this method used to "refresh"
-      // things, missed events are not desirable.
-      // This is why "Refresh List" button implemented not by means of startWorkflowAsync().
-      async private Task startWorkflowAsync()
+      async private Task preStartWorkflowAsync()
       {
          Trace.TraceInformation("[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
             HostName, Program.Settings.WorkflowType);
@@ -118,19 +121,49 @@ namespace mrHelper.App.Controls
             throw new UnknownHostException(HostName);
          }
 
+         await loadGitlabVersion();
          await loadCurrentUserAsync();
+         checkApprovalSupport();
+
          if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
          {
             initializeProjectListIfEmpty();
             await upgradeProjectListFromOldVersion();
-            await startProjectBasedWorkflowAsync();
          }
          else
          {
             await initializeLabelListIfEmpty();
+         }
+      }
+
+      // Everything reconnects inside startWorkflowAsync(). If there are some things at gitlab that user
+      // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
+      // we will miss them. It might be ok in some cases, but if this method used to "refresh"
+      // things, missed events are not desirable.
+      // This is why "Refresh List" button implemented not by means of startWorkflowAsync().
+      async private Task startWorkflowAsync()
+      {
+         if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
+         {
+            await startProjectBasedWorkflowAsync();
+         }
+         else
+         {
             await startUserBasedWorkflowAsync();
          }
          addOperationRecord(String.Format("Connection to {0} is established", HostName));
+      }
+
+      async private Task loadGitlabVersion()
+      {
+         if (GitLabVersion == null)
+         {
+            GitLabVersion = await _shortcuts.GetGitLabVersionAccessor().GetGitLabVersionAsync();
+         }
+         if (GitLabVersion == null)
+         {
+            throw new CannotLoadGitLabVersionException(HostName);
+         }
       }
 
       async private Task loadCurrentUserAsync()
@@ -143,6 +176,17 @@ namespace mrHelper.App.Controls
          {
             throw new CannotLoadCurentUserException(HostName);
          }
+      }
+
+      private void checkApprovalSupport()
+      {
+         if (GitLabVersion == null || _isApprovalStatusSupported.HasValue)
+         {
+            return;
+         }
+
+         _isApprovalStatusSupported = GitLabClient.Helpers.DoesGitLabVersionSupportApprovals(GitLabVersion);
+         CustomActionListChanged?.Invoke(this);
       }
 
       private async Task startProjectBasedWorkflowAsync()

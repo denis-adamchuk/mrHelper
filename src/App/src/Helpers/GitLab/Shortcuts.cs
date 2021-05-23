@@ -1,6 +1,7 @@
 ﻿using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
+using System;
 
 namespace mrHelper.App.Helpers.GitLab
 {
@@ -11,10 +12,16 @@ namespace mrHelper.App.Helpers.GitLab
          _gitLabInstance = gitLabIntance;
       }
 
+      internal GitLabVersionAccessor GetGitLabVersionAccessor()
+      {
+         return new RawDataAccessor(_gitLabInstance)
+            .VersionAccessor;
+      }
+
       internal ProjectAccessor GetProjectAccessor()
       {
          return new RawDataAccessor(_gitLabInstance)
-            .GetProjectAccessor();
+            .ProjectAccessor;
       }
 
       internal UserAccessor GetUserAccessor()

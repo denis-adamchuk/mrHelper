@@ -43,11 +43,13 @@
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="src\Impl\Accessors\GitLabVersionAccessor.cs" />
     <Compile Include="src\Impl\ConnectionChecker.cs" />
     <Compile Include="src\Impl\Helpers.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\UserListLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\UserListLoaderItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Managers\UserCache.cs" />
+    <Compile Include="src\Impl\Internal\Operators\GitLabVersionOperator.cs" />
     <Compile Include="src\Interfaces\NetworkOperationStatusListenerItf.cs" />
     <Compile Include="src\Interfaces\ModificationListenerItf.cs" />
     <Compile Include="src\Impl\Accessors\SingleDiscussionAccessor.cs" />

@@ -37,7 +37,7 @@ namespace mrHelper.GitLabClient
             Connecting?.Invoke(hostname);
 
             InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
-            bool isApprovalStatusSupported = await gitLabInstance.IsApprovalStatusSupported() ?? false;
+            bool isApprovalStatusSupported = await checkIsApprovalSupportedAsync(gitLabInstance);
             IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
                hostname, _operator, cacheUpdater,
                _cacheContext.Callbacks, connectionContext.QueryCollection,
@@ -71,6 +71,18 @@ namespace mrHelper.GitLabClient
          {
             _isConnecting = false;
          }
+      }
+
+      async private static Task<bool> checkIsApprovalSupportedAsync(GitLabInstance gitLabInstance)
+      {
+         RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
+         GitLabVersion gitLabVersion = await rawDataAccessor.VersionAccessor.GetGitLabVersionAsync();
+         if (gitLabVersion == null)
+         {
+            Debug.Assert(false);
+            return false;
+         }
+         return Helpers.DoesGitLabVersionSupportApprovals(gitLabVersion);
       }
 
       private void assertNotConnected()

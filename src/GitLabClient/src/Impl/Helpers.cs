@@ -12,6 +12,31 @@ namespace mrHelper.GitLabClient
 {
    public static class Helpers
    {
+      private static readonly Regex GitLabVersionRegex = new Regex(
+         @"(?'major_version'\d*)\.(?'minor_version'\d*)\.", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+      private static System.Version EarliestGitLabVersionWithApprovalsSupport = new System.Version(13, 6);
+
+      /// <summary>
+      /// This is a VERY simplified way of functionality checking because GitLab has complicated editions and plans.
+      /// TODO: Make approval status support check better.
+      /// </summary>
+      public static bool DoesGitLabVersionSupportApprovals(GitLabVersion version)
+      {
+         Debug.Assert(version != null);
+
+         Match m = GitLabVersionRegex.Match(version.Version);
+         if (m.Success
+          && m.Groups["major_version"].Success
+          && int.TryParse(m.Groups["major_version"].Value, out int major_version)
+          && m.Groups["minor_version"].Success
+          && int.TryParse(m.Groups["minor_version"].Value, out int minor_version))
+         {
+            System.Version gitLabVersion = new System.Version(major_version, minor_version);
+            return gitLabVersion >= EarliestGitLabVersionWithApprovalsSupport;
+         }
+         return false;
+      }
+
       public static string GetVersionLoaderKey(MergeRequest mergeRequest)
       {
          return mergeRequest == null ? null : mergeRequest.Sha + mergeRequest.Target_Branch;

@@ -38,8 +38,6 @@ namespace mrHelper.App.Controls
          return getMergeRequestKey(null)?.IId ?? 0;
       }
 
-      private string HostName { get; }
-
       // Helpers
 
       private DataCache getDataCacheByName(string name)

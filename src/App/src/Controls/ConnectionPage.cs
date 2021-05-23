@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
 using mrHelper.App.Helpers.GitLab;
@@ -56,6 +57,9 @@ namespace mrHelper.App.Controls
       private DataCache _liveDataCache;
       private DataCache _searchDataCache;
       private DataCache _recentDataCache;
+      private string HostName { get; }
+      private User CurrentUser { get; set; }
+      private GitLabVersion GitLabVersion { get; set; }
       private bool? _isApprovalStatusSupported;
 
       private enum EConnectionStateInternal
