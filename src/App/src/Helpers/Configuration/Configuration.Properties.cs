@@ -1,12 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Drawing;
 using System.Collections.Generic;
 using System.ComponentModel;
 using mrHelper.Common.Interfaces;
-using System.Drawing;
 
 namespace mrHelper.App.Helpers
 {
-   public partial class UserDefinedSettings : INotifyPropertyChanged, IHostProperties
+   public partial class UserDefinedSettings : IHostProperties
    {
       public string[] KnownHosts
       {
@@ -85,6 +86,7 @@ namespace mrHelper.App.Helpers
          get => getBoolValue(WordWrapLongRowsKeyName, WordWrapLongRowsDefaultValue);
          set => setBoolValue(WordWrapLongRowsKeyName, value);
       }
+      public event Action WordWrapLongRowsChanged;
 
       public bool MinimizeOnClose
       {
@@ -199,18 +201,21 @@ namespace mrHelper.App.Helpers
          get => getValue(DiffContextPositionKeyName, DiffContextPositionDefaultValue);
          set => setValue(DiffContextPositionKeyName, value);
       }
+      public event Action DiffContextPositionChanged;
 
       public string DiscussionColumnWidth
       {
          get => getValue(DiscussionColumnWidthKeyName, DiscussionColumnWidthDefaultValue);
          set => setValue(DiscussionColumnWidthKeyName, value);
       }
+      public event Action DiscussionColumnWidthChanged;
 
       public bool NeedShiftReplies
       {
          get => getBoolValue(NeedShiftRepliesKeyName, NeedShiftRepliesDefaultValue);
          set => setBoolValue(NeedShiftRepliesKeyName, value);
       }
+      public event Action NeedShiftRepliesChanged;
 
       public bool EmulateNativeLineBreaksInDiscussions
       {
@@ -253,6 +258,7 @@ namespace mrHelper.App.Helpers
          get => getValue(MainWindowLayoutKeyName, MainWindowLayoutDefaultValue);
          set => setValue(MainWindowLayoutKeyName, value);
       }
+      public event Action MainWindowLayoutChanged;
 
       public int ServicePointConnectionLimit
       {

@@ -50,7 +50,8 @@ namespace mrHelper.App.Controls
 
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 
-         Program.Settings.PropertyChanged += onPropertyChanged;
+         Program.Settings.MainWindowLayoutChanged += onMainWindowLayoutChanged;
+         Program.Settings.WordWrapLongRowsChanged += onWrapLongRowsChanged;
       }
 
       private void initializeWork()
@@ -81,7 +82,6 @@ namespace mrHelper.App.Controls
       {
          preparePageControlsToStart();
          createMessageFilterFromSettings();
-         applyTheme();
       }
 
       private void preparePageControlsToStart()
@@ -104,6 +104,16 @@ namespace mrHelper.App.Controls
 
          linkLabelConnectedTo.Text = String.Empty;
          linkLabelConnectedTo.SetLinkLabelClicked(UrlHelper.OpenBrowser);
+
+         setFontSizeInMergeRequestDescriptionBox();
+      }
+
+      private void setFontSizeInMergeRequestDescriptionBox()
+      {
+         string cssEx = String.Format("body div {{ font-size: {0}px; }}",
+            CommonControls.Tools.WinFormsHelpers.GetFontSizeInPixels(richTextBoxMergeRequestDescription));
+         richTextBoxMergeRequestDescription.BaseStylesheet =
+            String.Format("{0}{1}", mrHelper.App.Properties.Resources.Common_CSS, cssEx);
       }
 
       private void startRedrawTimer()

@@ -23,15 +23,12 @@ namespace mrHelper.App.Helpers
       public string ConfigFilePath { get; }
    }
 
-   public partial class UserDefinedSettings : INotifyPropertyChanged, IHostProperties, IFileStorageProperties
+   public partial class UserDefinedSettings : IHostProperties, IFileStorageProperties
    {
       private static readonly string DefaultValuePrefix = ":";
 
       private static readonly string BadValueSaved  = "bad-value-saved";
       private static readonly string BadValueLoaded = "bad-value-loaded";
-
-      // TODO_MF Is still needed?
-      public event PropertyChangedEventHandler PropertyChanged;
 
       internal UserDefinedSettings()
       {
@@ -323,7 +320,7 @@ namespace mrHelper.App.Helpers
       private void onPropertyChanged(string keyName)
       {
          update();
-         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(keyName));
+         fireEventOnPropertyChange(keyName);
       }
 
       private void update()
@@ -339,6 +336,29 @@ namespace mrHelper.App.Helpers
          ConfigurationManager.RefreshSection("appSettings");
       }
 
+      private void fireEventOnPropertyChange(string keyName)
+      {
+         if (keyName == WordWrapLongRowsKeyName)
+         {
+            WordWrapLongRowsChanged?.Invoke();
+         }
+         else if (keyName == MainWindowLayout)
+         {
+            MainWindowLayoutChanged?.Invoke();
+         }
+         else if (keyName == DiffContextPositionKeyName)
+         {
+            DiffContextPositionChanged?.Invoke();
+         }
+         else if (keyName == DiscussionColumnWidthKeyName)
+         {
+            DiscussionColumnWidthChanged?.Invoke();
+         }
+         else if (keyName == NeedShiftRepliesKeyName)
+         {
+            NeedShiftRepliesChanged?.Invoke();
+         }
+      }
 
       private readonly Configuration _config;
    }

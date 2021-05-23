@@ -45,7 +45,10 @@ namespace mrHelper.App.Forms
          _discussionLayout.DiscussionColumnWidthChanged += updateSaveDefaultLayoutState;
          _discussionLayout.NeedShiftRepliesChanged += updateSaveDefaultLayoutState;
          updateSaveDefaultLayoutState();
-         Program.Settings.PropertyChanged += onSettingsPropertyChanged;
+
+         Program.Settings.DiffContextPositionChanged += updateSaveDefaultLayoutState;
+         Program.Settings.DiscussionColumnWidthChanged += updateSaveDefaultLayoutState;
+         Program.Settings.NeedShiftRepliesChanged += updateSaveDefaultLayoutState;
 
          var displayFilter = new DiscussionFilter(currentUser, mergeRequestAuthor, DiscussionFilterState.Default);
          var discussionSort = new DiscussionSort(DiscussionSortState.Default);
@@ -146,12 +149,6 @@ namespace mrHelper.App.Forms
          {
             _previousState = this.WindowState;
          }
-      }
-
-      private void onSettingsPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-      {
-         // TODO_MF Is still needed?
-         updateSaveDefaultLayoutState();
       }
 
       private void onSaveAsDefaultClicked(object sender, LinkLabelLinkClickedEventArgs e)

@@ -622,7 +622,6 @@ namespace mrHelper.App.Forms
                   await stopTimeTrackingTimerAsync();
                }
 
-               // TODO_MF Test switching host while awaiting
                bool reload = command.Reload;
                if (reload)
                {
@@ -790,7 +789,6 @@ namespace mrHelper.App.Forms
             Program.Settings.WasMaximizedBeforeClose = false;
             Program.Settings.WasMinimizedBeforeClose = true;
          }
-         Properties.Settings.Default.Save();
       }
 
       bool _inRestoringSize = false;

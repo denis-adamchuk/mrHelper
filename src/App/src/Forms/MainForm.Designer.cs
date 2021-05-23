@@ -674,8 +674,6 @@ namespace mrHelper.App.Forms
          this.toolStripHosts.Name = "toolStripHosts";
          this.toolStripHosts.Size = new System.Drawing.Size(111, 25);
          this.toolStripHosts.TabIndex = 5;
-         this.toolStripHosts.LayoutStyleChanged += new System.EventHandler(this.toolStrip_LayoutStyleChanged);
-         this.toolStripHosts.LocationChanged += new System.EventHandler(this.toolStrip_LocationChanged);
          // 
          // toolStripActions
          // 
@@ -706,8 +704,6 @@ namespace mrHelper.App.Forms
          this.toolStripActions.Name = "toolStripActions";
          this.toolStripActions.Size = new System.Drawing.Size(564, 31);
          this.toolStripActions.TabIndex = 3;
-         this.toolStripActions.LayoutStyleChanged += new System.EventHandler(this.toolStrip_LayoutStyleChanged);
-         this.toolStripActions.LocationChanged += new System.EventHandler(this.toolStrip_LocationChanged);
          // 
          // toolStripHostsSeparator
          // 
@@ -905,8 +901,6 @@ namespace mrHelper.App.Forms
          this.toolStripCustomActions.Name = "toolStripCustomActions";
          this.toolStripCustomActions.Size = new System.Drawing.Size(111, 25);
          this.toolStripCustomActions.TabIndex = 4;
-         this.toolStripCustomActions.LayoutStyleChanged += new System.EventHandler(this.toolStrip_LayoutStyleChanged);
-         this.toolStripCustomActions.LocationChanged += new System.EventHandler(this.toolStrip_LocationChanged);
          // 
          // MainForm
          // 

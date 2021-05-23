@@ -136,7 +136,7 @@ namespace mrHelper.App.Controls
 
          updateMergeRequestList(EDataCacheType.Live); // update row height of List View
          updateMergeRequestList(EDataCacheType.Search); // update row height of List View
-         applyTheme(); // update CSS in MR Description
+         setFontSizeInMergeRequestDescriptionBox();
       }
    }
 }

@@ -510,16 +510,6 @@ namespace mrHelper.App.Forms
          getCurrentConnectionPage()?.ReloadSelected();
       }
 
-      private void toolStrip_LocationChanged(object sender, EventArgs e)
-      {
-         saveToolStripLocation(sender as ToolStrip);
-      }
-
-      private void toolStrip_LayoutStyleChanged(object sender, EventArgs e)
-      {
-         saveToolStripLocation(sender as ToolStrip);
-      }
-
       protected override void WndProc(ref Message rMessage)
       {
          if (rMessage.Msg == NativeMethods.WM_COPYDATA)

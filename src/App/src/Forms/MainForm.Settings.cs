@@ -32,7 +32,6 @@ namespace mrHelper.App.Forms
          setAutoSelectionModeChangeRadioValue();
          setShowWarningOnFileMismatchRadioValue();
          setDefaultRevisionTypeRadioValue();
-         setThemeFromSettings();
          setMainWindowLayoutRadioValue();
          addFontSizes();
          initializeColorScheme();
@@ -76,26 +75,6 @@ namespace mrHelper.App.Forms
          }
          ConfigurationHelper.SetAuthInfo(Enumerable.Zip(newKnownHosts, newAccessTokens,
             (a, b) => new Tuple<string, string>(a, b)), Program.Settings);
-      }
-
-      private void setToolStripLocations()
-      {
-         loadToolStripLocation(toolStripCustomActions,
-            new Point(810, menuStrip1.Height),
-            ToolStripLayoutStyle.HorizontalStackWithOverflow);
-         loadToolStripLocation(toolStripHosts,
-            new Point(3, menuStrip1.Height),
-            ToolStripLayoutStyle.HorizontalStackWithOverflow);
-         loadToolStripLocation(toolStripActions,
-            new Point(240, menuStrip1.Height),
-            ToolStripLayoutStyle.HorizontalStackWithOverflow);
-      }
-
-      private void setThemeFromSettings()
-      {
-         // TODO_MF
-         //WinFormsHelpers.FillComboBox(comboBoxThemes,
-         //   Constants.ThemeNames, name => name == Program.Settings.VisualThemeName);
       }
 
       private void setAutoSelectionModeChangeRadioValue()
@@ -165,13 +144,6 @@ namespace mrHelper.App.Forms
                showWarningsUntilIgnoredByUserToolStripMenuItem.Checked = true;
                break;
          }
-      }
-
-      private void applyThemeChange()
-      {
-         // TODO_MF
-         //string theme = comboBoxThemes.SelectedItem.ToString();
-         //Program.Settings.VisualThemeName = theme;
       }
 
       private void applyAutoSelectionModeChange()
@@ -401,29 +373,6 @@ namespace mrHelper.App.Forms
                new DictionaryWrapper<string, NewMergeRequestProperties>(properties, saveState);
          }
       }
-
-      private void loadToolStripLocation(ToolStrip toolStrip, Point defaultLocation, ToolStripLayoutStyle defaultLayoutStyle)
-      {
-         //ConfigurationHelper.GetToolStripLocation(toolStrip.Name, Program.Settings,
-         //   out Point location, out ToolStripLayoutStyle style);
-         Point location = new Point(0, 0);
-         toolStrip.Location = location.X == 0 && location.Y == 0 ? defaultLocation : location;
-         toolStrip.LayoutStyle = defaultLayoutStyle;
-      }
-
-      private void saveToolStripLocation(ToolStrip toolStrip)
-      {
-         // TODO_MF
-         //if (toolStrip == null || _loadingConfiguration || _exiting)
-         //{
-         //   return;
-         //}
-         //string name = toolStrip.Name;
-         //Point location = toolStrip.Location;
-         //ToolStripLayoutStyle style = toolStrip.LayoutStyle;
-         //ConfigurationHelper.SaveToolStripLocation(name, location, style, Program.Settings);
-      }
-
    }
 }
 

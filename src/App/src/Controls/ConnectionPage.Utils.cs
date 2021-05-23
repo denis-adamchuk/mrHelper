@@ -725,18 +725,6 @@ namespace mrHelper.App.Controls
 
       // Properties
 
-      private void onPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-      {
-         if (e.PropertyName == UserDefinedSettings.MainWindowLayoutKeyName)
-         {
-            onMainWindowLayoutChanged();
-         }
-         else if (e.PropertyName == UserDefinedSettings.WordWrapLongRowsKeyName)
-         {
-            onWrapLongRowsChanged();
-         }
-      }
-
       private void onWrapLongRowsChanged()
       {
          updateMergeRequestList(getCurrentTabDataCacheType());
@@ -795,46 +783,6 @@ namespace mrHelper.App.Controls
          CanAbortCloneChanged?.Invoke(this);
          CanTrackTimeChanged?.Invoke(this);
          EnabledCustomActionsChanged?.Invoke(this);
-      }
-
-      private void applyTheme()
-      {
-         string theme = Program.Settings.VisualThemeName;
-         string cssEx = String.Format("body div {{ font-size: {0}px; }}",
-            CommonControls.Tools.WinFormsHelpers.GetFontSizeInPixels(richTextBoxMergeRequestDescription));
-
-         if (theme == "New Year 2020")
-         {
-            // TODO_MF
-            /*
-            pictureBox1.BackgroundImage = mrHelper.App.Properties.Resources.PleaseInspect;
-            pictureBox1.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            pictureBox1.Visible = true;
-            pictureBox2.BackgroundImage = mrHelper.App.Properties.Resources.Tree;
-            pictureBox2.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            pictureBox2.Visible = true;
-            */
-            forEachListView(listView => listView.BackgroundImage = mrHelper.App.Properties.Resources.SnowflakeBg);
-            forEachListView(listView => listView.BackgroundImageTiled = true);
-            richTextBoxMergeRequestDescription.BaseStylesheet =
-               String.Format("{0}{1}{2}", mrHelper.App.Properties.Resources.NewYear2020_CSS,
-                  mrHelper.App.Properties.Resources.Common_CSS, cssEx);
-         }
-         else
-         {
-            // TODO_MF
-            /*
-            pictureBox1.BackgroundImage = null;
-            pictureBox1.Visible = false;
-            pictureBox2.BackgroundImage = null;
-            pictureBox2.Visible = false;
-            */
-            forEachListView(listView => listView.BackgroundImage = null);
-            richTextBoxMergeRequestDescription.BaseStylesheet =
-               String.Format("{0}{1}", mrHelper.App.Properties.Resources.Common_CSS, cssEx);
-         }
-
-         Program.Settings.VisualThemeName = theme;
       }
 
       private string getDefaultProjectName()

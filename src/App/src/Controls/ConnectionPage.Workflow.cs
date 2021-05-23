@@ -175,7 +175,7 @@ namespace mrHelper.App.Controls
       {
          DataCacheConnectionContext connectionContext = new DataCacheConnectionContext(queryCollection);
          DataCache dataCache = getDataCache(EDataCacheType.Live);
-         await dataCache.Connect(_gitLabInstance, connectionContext);
+         await dataCache?.Connect(_gitLabInstance, connectionContext);
       }
 
       private void onForbiddenProject(ProjectKey projectKey)

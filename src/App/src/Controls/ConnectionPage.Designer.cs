@@ -19,7 +19,8 @@ namespace mrHelper.App.Controls
             components.Dispose();
          }
 
-         Program.Settings.PropertyChanged += onPropertyChanged;
+         Program.Settings.MainWindowLayoutChanged -= onMainWindowLayoutChanged;
+         Program.Settings.WordWrapLongRowsChanged -= onWrapLongRowsChanged;
 
          finalizeWork();
 

@@ -6,7 +6,7 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Helpers
 {
-   public partial class UserDefinedSettings : INotifyPropertyChanged, IHostProperties
+   public partial class UserDefinedSettings : IHostProperties
    {
       private static readonly string KnownHostsKeyName = "KnownHosts";
       private static readonly string[] KnownHostsDefaultValue = Array.Empty<string>();
@@ -43,8 +43,7 @@ namespace mrHelper.App.Helpers
       private static readonly string UpdateManagerExtendedLoggingKeyName = "UpdateManagerExtendedLogging";
       private static readonly bool   UpdateManagerExtendedLoggingDefaultValue = false;
 
-      // TODO_MF Create attributes instead of public key names
-      public static readonly string WordWrapLongRowsKeyName      = "WordWrapLongRows";
+      private static readonly string WordWrapLongRowsKeyName      = "WordWrapLongRows";
       private static readonly bool   WordWrapLongRowsDefaultValue = true;
 
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
@@ -257,7 +256,7 @@ namespace mrHelper.App.Helpers
       private static readonly string MainWindowFontSizeNameKeyName       = "MWFontSize";
       private static readonly string MainWindowFontSizeNameDefaultValue  = Constants.DefaultMainWindowFontSizeChoice;
 
-      public static readonly string MainWindowLayoutKeyName      = "MWLayout";
+      private static readonly string MainWindowLayoutKeyName      = "MWLayout";
       private static readonly string MainWindowLayoutDefaultValue = "Horizontal";
 
       private static readonly string AccessTokensProtectedKeyName      = "AccessTokensProtected";
