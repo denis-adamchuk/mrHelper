@@ -15,6 +15,8 @@ namespace mrHelper.Common.Tools
 
       public static string LogArchiveStorage => Path.Combine(TempDirectory, LogArchivePrefix);
 
+      public static string DumpStorage => Path.Combine(TempDirectory, DumpStoragePrefix);
+
       private static string EMailDirectoryPrefix => "mrh_email";
 
       private static string StoragePrefix => "mrh_db";
@@ -24,6 +26,8 @@ namespace mrHelper.Common.Tools
       private static string LogArchivePrefix => "mrh_logs";
 
       private static string InstallerStoragePrefix => "mrh_msi";
+
+      private static string DumpStoragePrefix => "mrh_dumps";
 
       private static string TempDirectory => Environment.GetEnvironmentVariable("TEMP");
    }

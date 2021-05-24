@@ -4,7 +4,7 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Controls
 {
-   internal class CustomActionToolbarItem : ToolStripMenuItem
+   internal class CustomActionToolbarItem : ToolStripButton
    {
    }
 }

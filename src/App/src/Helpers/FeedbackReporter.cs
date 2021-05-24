@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.IO.Compression;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
@@ -26,11 +27,13 @@ namespace mrHelper.App.Helpers
 
    public class FeedbackReporter
    {
-      public FeedbackReporter(Action preCollectLogFiles, Action postCollectLogFiles, string logPath)
+      public FeedbackReporter(Action preCollectLogFiles, Action postCollectLogFiles,
+         string logPath, string dumpPath)
       {
          _preCollectLogFiles = preCollectLogFiles;
          _postCollectLogFiles = postCollectLogFiles;
          _logPath = logPath;
+         _dumpPath = dumpPath;
       }
 
       public void SetUserEMail(string email)
@@ -38,7 +41,32 @@ namespace mrHelper.App.Helpers
          _email = email;
       }
 
-      public void SendEMail(string subject, string body, string recipient, string logarchivename)
+      public void SendEMail(string subject, string body, string recipient,
+         string logarchivename, string dumparchivename)
+      {
+         createLogArchiveStorage();
+
+         string logarchivepath = createLogArchive(logarchivename);
+         string dumparchivepath = createDumpArchive(dumparchivename);
+
+         sendEMail(subject, body, recipient, logarchivepath, dumparchivepath);
+
+         cleanupDumps();
+      }
+
+      private void sendEMail(string subject, string body, string recipient, string logarchivepath, string dumparchivepath)
+      {
+         try
+         {
+            EMailSender.Send(logarchivepath, dumparchivepath, _email, recipient, body, subject);
+         }
+         catch (Exception ex) // Any exception from external API
+         {
+            throw new SendEMailException(ex);
+         }
+      }
+
+      private static void createLogArchiveStorage()
       {
          if (!Directory.Exists(PathFinder.LogArchiveStorage))
          {
@@ -51,47 +79,68 @@ namespace mrHelper.App.Helpers
                throw new LogCollectException(ex);
             }
          }
+      }
 
+      private string createLogArchive(string logarchivename)
+      {
          string logarchivepath = String.IsNullOrEmpty(logarchivename) ?
             String.Empty : Path.Combine(PathFinder.LogArchiveStorage, logarchivename);
-
-         try
+         if (logarchivepath != String.Empty)
          {
-            createLogArchive(logarchivepath);
+            try
+            {
+               _preCollectLogFiles?.Invoke();
+               try
+               {
+                  ZipFile.CreateFromDirectory(_logPath, logarchivepath);
+               }
+               finally
+               {
+                  _postCollectLogFiles?.Invoke();
+               }
+            }
+            catch (Exception ex) // Any exception from ZipFile.CreateFromDirectory()
+            {
+               throw new LogCollectException(ex);
+            }
          }
-         catch (Exception ex) // Any exception from ZipFile.CreateFromDirectory()
-         {
-            throw new LogCollectException(ex);
-         }
-
-         try
-         {
-            EMailSender.Send(logarchivepath, _email, recipient, body, subject);
-         }
-         catch (Exception ex) // Any exception from external API
-         {
-            throw new SendEMailException(ex);
-         }
+         return logarchivepath;
       }
 
-      private void createLogArchive(string logarchivepath)
+      private string createDumpArchive(string dumparchivename)
       {
-         if (logarchivepath == String.Empty)
+         bool hasDumps = Directory.Exists(_dumpPath) && Directory.EnumerateFiles(_dumpPath).Any();
+         string dumparchivepath = !hasDumps || String.IsNullOrEmpty(dumparchivename) ?
+            String.Empty : Path.Combine(PathFinder.LogArchiveStorage, dumparchivename);
+         if (dumparchivepath != String.Empty)
          {
-            return;
+            try
+            {
+               ZipFile.CreateFromDirectory(_dumpPath, dumparchivepath);
+            }
+            catch (Exception ex) // Any exception from ZipFile.CreateFromDirectory()
+            {
+               throw new LogCollectException(ex);
+            }
          }
+         return dumparchivepath;
+      }
 
-         _preCollectLogFiles?.Invoke();
-         try
+      private void cleanupDumps()
+      {
+         if (Directory.Exists(_dumpPath))
          {
-            ZipFile.CreateFromDirectory(_logPath, logarchivepath);
-         }
-         finally
-         {
-            _postCollectLogFiles?.Invoke();
+            try
+            {
+               Directory.Delete(_dumpPath, true);
+            }
+            catch (Exception) //Any exception from Directory.Delete()
+            {
+            }
          }
       }
 
+      private readonly string _dumpPath;
       private readonly string _logPath;
       private readonly Action _preCollectLogFiles;
       private readonly Action _postCollectLogFiles;

@@ -33,7 +33,9 @@ namespace mrHelper.App
                {
                   Program.FeedbackReporter.SendEMail("Merge Request Helper error report",
                      "Please provide some details about the problem here",
-                     Program.ServiceManager.GetBugReportEmail(), Constants.BugReportLogArchiveName);
+                     Program.ServiceManager.GetBugReportEmail(),
+                     Constants.BugReportLogArchiveName,
+                     Constants.BugReportDumpArchiveName);
                }
                catch (FeedbackReporterException ex2)
                {
@@ -180,7 +182,8 @@ namespace mrHelper.App
                   // Cannot do anything good here
                }
             },
-         getApplicationDataPath());
+         getApplicationDataPath(),
+         PathFinder.DumpStorage);
       }
 
       private static void onLaunchMainInstance(LaunchOptions options)

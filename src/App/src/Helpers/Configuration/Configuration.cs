@@ -342,7 +342,7 @@ namespace mrHelper.App.Helpers
          {
             WordWrapLongRowsChanged?.Invoke();
          }
-         else if (keyName == MainWindowLayout)
+         else if (keyName == MainWindowLayoutKeyName)
          {
             MainWindowLayoutChanged?.Invoke();
          }

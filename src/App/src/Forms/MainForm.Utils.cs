@@ -734,7 +734,7 @@ namespace mrHelper.App.Forms
             {
                Program.FeedbackReporter.SendEMail("Merge Request Helper Feedback Report",
                   "Please provide your feedback here", Program.ServiceManager.GetBugReportEmail(),
-                  Constants.BugReportLogArchiveName);
+                  Constants.BugReportLogArchiveName, Constants.BugReportDumpArchiveName);
             }
          }
          catch (FeedbackReporterException ex)

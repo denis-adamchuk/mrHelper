@@ -33,6 +33,9 @@ namespace mrHelper.Common.Constants
       public static string BugReportLogArchiveName => String.Format(
          "mrhelper.logs.{0}.zip", DateTime.Now.ToString(TimeStampLogFilenameFormat));
 
+      public static string BugReportDumpArchiveName => String.Format(
+         "mrhelper.dumps.{0}.zip", DateTime.Now.ToString(TimeStampLogFilenameFormat));
+
       public static int FullContextSize = 20000;
 
       public static string AuthorLabelPrefix = "#";
