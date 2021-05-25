@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -12,24 +11,42 @@ using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Forms
 {
+   internal enum DefaultCategory
+   {
+      General,
+      Discussions
+   }
+
    internal partial class ConfigureColorsForm : CustomFontForm
    {
-      public ConfigureColorsForm(IconCache iconCache,
-         Action updateTrayAndTaskBar,
-         Action<ColorScheme> onColorSchemeChange)
+      public ConfigureColorsForm(DefaultCategory defaultCategory, ColorScheme colorScheme)
       {
-         _iconCache = iconCache;
-         _updateTrayAndTaskBar = updateTrayAndTaskBar;
-         _onColorSchemeChange = onColorSchemeChange;
+         _defaultCategory = defaultCategory;
+         _colorScheme = colorScheme;
 
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);
          InitializeComponent();
          applyFont(Program.Settings.MainWindowFontSizeName);
+      }
 
+      protected override void OnLoad(EventArgs e)
+      {
+         base.OnLoad(e);
          fillColorList();
          fillColorSchemeList();
          selectCurrentColorScheme();
+
+         switch (_defaultCategory)
+         {
+            case DefaultCategory.General:
+               tabControl.SelectedTab = tabPageGeneral;
+               break;
+
+            case DefaultCategory.Discussions:
+               tabControl.SelectedTab = tabPageDiscussions;
+               break;
+         }
       }
 
       private void comboBoxColorSchemes_SelectedIndexChanged(object sender, EventArgs e)
@@ -51,6 +68,15 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void listBoxDiscussionColorSchemeItemSelector_SelectedIndexChanged(object sender, EventArgs e)
+      {
+         object selectedItem = (sender as ListBox).SelectedItem;
+         bool isItemSelected = selectedItem != null;
+         linkLabelChangeDiscussionColor.Enabled = isItemSelected;
+         linkLabelResetDiscussionColorToFactoryValue.Enabled = isItemSelected;
+         updateResetDiscussionColorToFactoryValueLinkLabelVisibility();
+      }
+
       private void comboBoxColorSelector_SelectedIndexChanged(object sender, EventArgs e)
       {
          if ((sender as ComboBox).SelectedItem is ColorSelectorComboBoxItem selectedItem)
@@ -61,12 +87,12 @@ namespace mrHelper.App.Forms
 
       private void listBoxColorSchemeItemSelector_DrawItem(object sender, DrawItemEventArgs e)
       {
-         onDrawListBoxColorSchemeItemSelectorItem(e);
+         onDrawListBoxColorSchemeItemSelectorItem(sender as ListBox, e);
       }
 
       private void listBoxColorSchemeItemSelector_MeasureItem(object sender, MeasureItemEventArgs e)
       {
-         onMeasureListBoxColorSchemeItemSelectorItem(e);
+         onMeasureListBoxColorSchemeItemSelectorItem(sender as ListBox, e);
       }
 
       private void comboBoxColorSelector_DrawItem(object sender, DrawItemEventArgs e)
@@ -83,6 +109,16 @@ namespace mrHelper.App.Forms
       private void linkLabelResetToFactoryValue_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          onResetColorSchemeItemToFactoryValue();
+      }
+
+      private void linkLabelChangeDiscussionColor_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         onChangeDiscussionColor();
+      }
+
+      private void linkLabelResetDiscussionColorToFactoryValue_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         onResetDiscussionColorSchemeItemToFactoryValue();
       }
 
       private void applyColorSchemeChange(string colorSchemeName)
@@ -160,6 +196,19 @@ namespace mrHelper.App.Forms
          {
             listBoxColorSchemeItemSelector.SelectedIndex = 0;
          }
+
+         listBoxDiscussionColorSchemeItemSelector.Items.Clear();
+         _colorScheme.GetColors("Discussions")
+            .ToList()
+            .ForEach(colorSchemeItem =>
+            {
+               listBoxDiscussionColorSchemeItemSelector.Items.Add(colorSchemeItem.Name);
+            });
+
+         if (listBoxDiscussionColorSchemeItemSelector.Items.Count > 0)
+         {
+            listBoxDiscussionColorSchemeItemSelector.SelectedIndex = 0;
+         }
       }
 
       private void addColorToList(Color color, string humanFriendlyName = null)
@@ -180,7 +229,7 @@ namespace mrHelper.App.Forms
 
       private void addIconToCache(Color color)
       {
-         if (_iconCache.ContainsKey(color))
+         if (IconCache.ContainsKey(color))
          {
             return;
          }
@@ -193,7 +242,7 @@ namespace mrHelper.App.Forms
             Properties.Resources.gitlab_icon_stub_16x16_border, Color.Green, color);
          Icon iconWithBorder = WinFormsHelpers.ConvertToIco(imageWithBorder, 16);
 
-         _iconCache.Add(color, new IconCache.IconGroup(iconWithoutBorder, iconWithBorder));
+         IconCache.Add(color, new IconCache.IconGroup(iconWithoutBorder, iconWithBorder));
       }
 
       private void selectCurrentColorScheme()
@@ -211,12 +260,12 @@ namespace mrHelper.App.Forms
          }
       }
 
-      bool createColorScheme(string filename)
+      bool loadColorScheme(string filename)
       {
          string filepath = Path.Combine(Directory.GetCurrentDirectory(), filename);
          try
          {
-            _colorScheme = new ColorScheme(filepath);
+            _colorScheme.LoadFromFile(filepath);
             return true;
          }
          catch (ArgumentException ex)
@@ -228,27 +277,15 @@ namespace mrHelper.App.Forms
 
       private void initializeColorScheme()
       {
-         if (comboBoxColorSchemes.SelectedIndex < 0 || comboBoxColorSchemes.Items.Count < 1)
-         {
-            // nothing is selected or list is empty, create an empty scheme
-            _colorScheme = new ColorScheme();
-         }
-
          // try to create a scheme for the selected item
-         else if (!createColorScheme(comboBoxColorSchemes.Text))
+         if (!loadColorScheme(comboBoxColorSchemes.Text))
          {
             Trace.TraceError("[ConfigureColorsForm] Cannot initialize color scheme {0}", comboBoxColorSchemes.Text);
-            if (comboBoxColorSchemes.SelectedIndex > 0)
+            if (comboBoxColorSchemes.SelectedIndex > 0 && comboBoxColorSchemes.SelectedIndex != 0)
             {
                comboBoxColorSchemes.SelectedIndex = 0;
             }
-            else
-            {
-               _colorScheme = new ColorScheme();
-            }
          }
-
-         _onColorSchemeChange?.Invoke(_colorScheme);
       }
 
       private void onListBoxColorSelected(string colorSchemeItemName)
@@ -266,12 +303,13 @@ namespace mrHelper.App.Forms
 
       private void onResetColorSchemeToFactoryValues()
       {
-         Program.Settings.CustomColors = new Dictionary<string, string>();
+         _colorScheme.ResetToDefault();
 
          listBoxColorSchemeItemSelector.Refresh();
+         listBoxDiscussionColorSchemeItemSelector.Refresh();
          updateResetSchemeToFactoryValuesLinkLabelVisibility();
          updateResetToFactoryValueLinkLabelVisibility();
-         _updateTrayAndTaskBar?.Invoke();
+         updateResetDiscussionColorToFactoryValueLinkLabelVisibility();
       }
 
       private void onResetColorSchemeItemToFactoryValue()
@@ -286,6 +324,46 @@ namespace mrHelper.App.Forms
             return;
          }
          selectComboBoxColor(colorSchemeItem.FactoryColor);
+      }
+
+      private void onResetDiscussionColorSchemeItemToFactoryValue()
+      {
+         string colorSchemeItemName = listBoxDiscussionColorSchemeItemSelector.SelectedItem.ToString();
+         ColorSchemeItem colorSchemeItem = _colorScheme.GetColor(colorSchemeItemName);
+         if (colorSchemeItem == null)
+         {
+            Trace.TraceError(
+               "[ConfigureColorsForm] Cannot find color scheme item {0} in the color scheme",
+               colorSchemeItemName);
+            return;
+         }
+
+         onDiscussionColorSelectedInDialog(colorSchemeItem.FactoryColor);
+      }
+
+      private void onChangeDiscussionColor()
+      {
+         object selectedItem = listBoxDiscussionColorSchemeItemSelector.SelectedItem;
+         if (selectedItem == null)
+         {
+            return;
+         }
+
+         string colorSchemeItemName = selectedItem as string;
+         ColorSchemeItem colorSchemeItem = _colorScheme.GetColor(colorSchemeItemName);
+         if (colorSchemeItem == null)
+         {
+            Trace.TraceError(
+               "[ConfigureColorsForm] Cannot find color scheme item {0} in the color scheme",
+               colorSchemeItemName);
+            return;
+         }
+
+         colorDialog.Color = colorSchemeItem.Color;
+         if (colorDialog.ShowDialog() == DialogResult.OK)
+         {
+            onDiscussionColorSelectedInDialog(colorDialog.Color);
+         }
       }
 
       private void selectComboBoxColor(Color color)
@@ -319,33 +397,37 @@ namespace mrHelper.App.Forms
          listBoxColorSchemeItemSelector.Refresh();
          updateResetSchemeToFactoryValuesLinkLabelVisibility();
          updateResetToFactoryValueLinkLabelVisibility();
-         _updateTrayAndTaskBar?.Invoke();
+      }
+
+      private void onDiscussionColorSelectedInDialog(Color color)
+      {
+         object selectedItem = listBoxDiscussionColorSchemeItemSelector.SelectedItem;
+         if (selectedItem == null)
+         {
+            return;
+         }
+
+         string colorSchemeItemName = selectedItem.ToString();
+         setColorForColorSchemeItem(colorSchemeItemName, color);
+
+         listBoxDiscussionColorSchemeItemSelector.Refresh();
+         updateResetSchemeToFactoryValuesLinkLabelVisibility();
+         updateResetDiscussionColorToFactoryValueLinkLabelVisibility();
       }
 
       private void setColorForColorSchemeItem(string colorSchemeItemName, Color color)
       {
-         ColorSchemeItem colorSchemeItem = colorSchemeItemName != null
-            ? _colorScheme.GetColor(colorSchemeItemName) : null;
-         if (colorSchemeItem != null && !color.Equals(colorSchemeItem.Color))
-         {
-            Dictionary<string, string> dict = Program.Settings.CustomColors;
-            if (colorSchemeItem.FactoryColor.Equals(color))
-            {
-               dict.Remove(colorSchemeItem.Name);
-            }
-            else
-            {
-               string colorAsText = color.IsNamedColor
-                  ? color.Name : String.Format("{0},{1},{2},{3}", color.A, color.R, color.G, color.B);
-               dict[colorSchemeItem.Name] = colorAsText;
-            }
-            Program.Settings.CustomColors = dict;
-         }
+         _colorScheme.SetColor(colorSchemeItemName, color);
       }
 
       private void updateResetSchemeToFactoryValuesLinkLabelVisibility()
       {
-         linkLabelResetAllColors.Visible = listBoxColorSchemeItemSelector.Items
+         linkLabelResetAllColors.Visible =
+            listBoxColorSchemeItemSelector.Items
+            .Cast<string>()
+            .Any(itemName => !isColorSchemeItemHasFactoryValue(itemName))
+         ||
+            listBoxDiscussionColorSchemeItemSelector.Items
             .Cast<string>()
             .Any(itemName => !isColorSchemeItemHasFactoryValue(itemName));
       }
@@ -360,6 +442,16 @@ namespace mrHelper.App.Forms
          linkLabelResetToFactoryValue.Visible = !isColorSchemeItemHasFactoryValue(selectedItem.ToString());
       }
 
+      private void updateResetDiscussionColorToFactoryValueLinkLabelVisibility()
+      {
+         object selectedItem = listBoxDiscussionColorSchemeItemSelector.SelectedItem;
+         if (selectedItem == null)
+         {
+            return;
+         }
+         linkLabelResetDiscussionColorToFactoryValue.Visible = !isColorSchemeItemHasFactoryValue(selectedItem.ToString());
+      }
+
       private bool isColorSchemeItemHasFactoryValue(string colorSchemeItemName)
       {
          ColorSchemeItem updatedColorSchemeItem = _colorScheme.GetColor(colorSchemeItemName);
@@ -367,14 +459,14 @@ namespace mrHelper.App.Forms
              || updatedColorSchemeItem.Color.Name == updatedColorSchemeItem.FactoryColor.Name;
       }
 
-      private void onDrawListBoxColorSchemeItemSelectorItem(DrawItemEventArgs e)
+      private void onDrawListBoxColorSchemeItemSelectorItem(ListBox listBox, DrawItemEventArgs e)
       {
          if (e.Index < 0)
          {
             return;
          }
 
-         string colorSchemeItemName = listBoxColorSchemeItemSelector.Items[e.Index].ToString();
+         string colorSchemeItemName = listBox.Items[e.Index].ToString();
          ColorSchemeItem colorSchemeItem = _colorScheme.GetColor(colorSchemeItemName);
          if (colorSchemeItem == null)
          {
@@ -393,7 +485,7 @@ namespace mrHelper.App.Forms
             };
 
          string text = colorSchemeItem.DisplayName;
-         Font font = listBoxColorSchemeItemSelector.Font;
+         Font font = listBox.Font;
          if (isSelected)
          {
             using (Brush brush = new SolidBrush(color))
@@ -407,11 +499,11 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void onMeasureListBoxColorSchemeItemSelectorItem(MeasureItemEventArgs e)
+      private void onMeasureListBoxColorSchemeItemSelectorItem(ListBox listBox, MeasureItemEventArgs e)
       {
          if (e.Index >= 0)
          {
-            e.ItemHeight = listBoxColorSchemeItemSelector.Font.Height + 2;
+            e.ItemHeight = listBox.Font.Height + 2;
          }
       }
 
@@ -428,7 +520,7 @@ namespace mrHelper.App.Forms
          int iconMargin = 5;
          int iconSize = e.Bounds.Height; // draw square icon
          ColorSelectorComboBoxItem item = (ColorSelectorComboBoxItem)(comboBoxColorSelector.Items[e.Index]);
-         Icon icon = _iconCache.Get(item.Color);
+         Icon icon = IconCache.Get(item.Color);
          if (icon != null)
          {
             Rectangle iconRect = new Rectangle(e.Bounds.X + iconMargin, e.Bounds.Y, iconSize, iconSize);
@@ -450,9 +542,7 @@ namespace mrHelper.App.Forms
          e.Value = colorSchemeItem == null ? e.ListItem as string : colorSchemeItem.DisplayName;
       }
 
-      private readonly IconCache _iconCache;
-      private readonly Action _updateTrayAndTaskBar;
-      private readonly Action<ColorScheme> _onColorSchemeChange;
+      private readonly DefaultCategory _defaultCategory;
 
       private class ColorSelectorComboBoxItem
       {
@@ -475,6 +565,6 @@ namespace mrHelper.App.Forms
          internal Color Color { get; }
       }
 
-      private ColorScheme _colorScheme;
+      private readonly ColorScheme _colorScheme;
    }
 }

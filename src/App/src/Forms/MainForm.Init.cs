@@ -40,6 +40,9 @@ namespace mrHelper.App.Forms
          SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
          SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
          _applicationUpdateChecker = new PeriodicUpdateChecker(this);
+
+         _colorScheme = new ColorScheme();
+         _colorScheme.Changed += onColorSchemeChanged;
       }
 
       private void createSharedCollections()
@@ -291,6 +294,13 @@ namespace mrHelper.App.Forms
       private void unsubscribeFromApplicationUpdates()
       {
          _applicationUpdateChecker.NewVersionAvailable -= onNewVersionAvailable;
+      }
+
+      private void onColorSchemeChanged()
+      {
+         getConnectionPages()?
+            .ToList()
+            .ForEach(connectionPage => onSummaryColorChanged(connectionPage));
       }
    }
 }

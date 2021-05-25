@@ -22,6 +22,8 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
+         _colorScheme.Changed -= onColorSchemeChanged;
+
          foreach (ToolStrip toolStrip in new ToolStrip[] { toolStripHosts, toolStripActions, toolStripCustomActions })
          {
             removeToolbarButtons(toolStrip);

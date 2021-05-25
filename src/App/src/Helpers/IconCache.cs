@@ -1,26 +1,22 @@
-﻿using mrHelper.CommonControls.Tools;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Helpers
 {
-   public class IconCache
+   internal static class IconCache
    {
-      internal bool ContainsKey(Color color)
+      internal static bool ContainsKey(Color color)
       {
          return _iconCache.ContainsKey(color);
       }
 
-      internal void Add(Color color, IconGroup iconGroup)
+      internal static void Add(Color color, IconGroup iconGroup)
       {
          _iconCache.Add(color, iconGroup);
       }
 
-      internal Icon Get(Color color)
+      internal static Icon Get(Color color)
       {
          if (_iconCache.TryGetValue(color, out IconGroup icon))
          {
@@ -42,6 +38,7 @@ namespace mrHelper.App.Helpers
          internal Icon IconWithBorder { get; }
       }
 
-      private readonly Dictionary<Color, IconGroup> _iconCache = new Dictionary<Color, IconGroup>();
+      private static readonly Dictionary<Color, IconGroup> _iconCache = new Dictionary<Color, IconGroup>();
    }
 }
+

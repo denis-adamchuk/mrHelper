@@ -503,6 +503,11 @@ namespace mrHelper.App.Controls
          ensureMergeRequestInRecentDataCache(mrk);
       }
 
+      private void onColorSchemeChanged()
+      {
+         getListView(getCurrentTabDataCacheType())?.Invalidate();
+      }
+
       async private Task onLaunchDiffToolAsync(MergeRequestKey mrk,
          string leftSHA, string rightSHA, IEnumerable<string> includedSHA, RevisionType? type)
       {

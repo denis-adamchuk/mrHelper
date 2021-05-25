@@ -50,7 +50,6 @@ namespace mrHelper.App.Controls
          this.startAThreadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.addACommentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripMenuItemSeparator = new System.Windows.Forms.ToolStripSeparator();
-         this.fontSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.diffContextPositionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.topToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -61,7 +60,6 @@ namespace mrHelper.App.Controls
          this.increaseColumnWidthToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.decreaseColumnWidthToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
-         this.emulateNativeLineBreaksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.diffContextDepthToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripMenuItemDiffContextDepth0 = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripMenuItemDiffContextDepth1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -69,6 +67,10 @@ namespace mrHelper.App.Controls
          this.toolStripMenuItemDiffContextDepth3 = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripMenuItemDiffContextDepth4 = new System.Windows.Forms.ToolStripMenuItem();
          this.showTooltipsForCodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.emulateNativeLineBreaksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+         this.fontSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.configureColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.menuStrip.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -82,7 +84,6 @@ namespace mrHelper.App.Controls
             this.sortToolStripMenuItem,
             this.filterToolStripMenuItem,
             this.actionsToolStripMenuItem,
-            this.fontSizeToolStripMenuItem,
             this.viewToolStripMenuItem});
          this.menuStrip.Location = new System.Drawing.Point(0, 0);
          this.menuStrip.Name = "menuStrip";
@@ -254,12 +255,6 @@ namespace mrHelper.App.Controls
          this.toolStripMenuItemSeparator.Name = "toolStripMenuItemSeparator";
          this.toolStripMenuItemSeparator.Size = new System.Drawing.Size(157, 6);
          // 
-         // fontSizeToolStripMenuItem
-         // 
-         this.fontSizeToolStripMenuItem.Name = "fontSizeToolStripMenuItem";
-         this.fontSizeToolStripMenuItem.Size = new System.Drawing.Size(66, 24);
-         this.fontSizeToolStripMenuItem.Text = "F&ont Size";
-         // 
          // viewToolStripMenuItem
          // 
          this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -271,7 +266,10 @@ namespace mrHelper.App.Controls
             this.toolStripSeparator3,
             this.diffContextDepthToolStripMenuItem,
             this.showTooltipsForCodeToolStripMenuItem,
-            this.emulateNativeLineBreaksToolStripMenuItem});
+            this.emulateNativeLineBreaksToolStripMenuItem,
+            this.toolStripSeparator4,
+            this.fontSizeToolStripMenuItem,
+            this.configureColorsToolStripMenuItem});
          this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
          this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 24);
          this.viewToolStripMenuItem.Text = "&View";
@@ -345,14 +343,6 @@ namespace mrHelper.App.Controls
          this.toolStripSeparator3.Name = "toolStripSeparator3";
          this.toolStripSeparator3.Size = new System.Drawing.Size(273, 6);
          // 
-         // emulateNativeLineBreaksToolStripMenuItem
-         // 
-         this.emulateNativeLineBreaksToolStripMenuItem.CheckOnClick = true;
-         this.emulateNativeLineBreaksToolStripMenuItem.Name = "emulateNativeLineBreaksToolStripMenuItem";
-         this.emulateNativeLineBreaksToolStripMenuItem.Size = new System.Drawing.Size(276, 22);
-         this.emulateNativeLineBreaksToolStripMenuItem.Text = "Emulate native line breaks";
-         this.emulateNativeLineBreaksToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onEmulateNativeLineBreaksCheckedChanged);
-         // 
          // diffContextDepthToolStripMenuItem
          // 
          this.diffContextDepthToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -413,6 +403,32 @@ namespace mrHelper.App.Controls
          this.showTooltipsForCodeToolStripMenuItem.Text = "Show tooltips for code";
          this.showTooltipsForCodeToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onShowTooltipsForCodeCheckedChanged);
          // 
+         // emulateNativeLineBreaksToolStripMenuItem
+         // 
+         this.emulateNativeLineBreaksToolStripMenuItem.CheckOnClick = true;
+         this.emulateNativeLineBreaksToolStripMenuItem.Name = "emulateNativeLineBreaksToolStripMenuItem";
+         this.emulateNativeLineBreaksToolStripMenuItem.Size = new System.Drawing.Size(276, 22);
+         this.emulateNativeLineBreaksToolStripMenuItem.Text = "Emulate native line breaks";
+         this.emulateNativeLineBreaksToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onEmulateNativeLineBreaksCheckedChanged);
+         // 
+         // toolStripSeparator4
+         // 
+         this.toolStripSeparator4.Name = "toolStripSeparator4";
+         this.toolStripSeparator4.Size = new System.Drawing.Size(273, 6);
+         // 
+         // fontSizeToolStripMenuItem
+         // 
+         this.fontSizeToolStripMenuItem.Name = "fontSizeToolStripMenuItem";
+         this.fontSizeToolStripMenuItem.Size = new System.Drawing.Size(276, 22);
+         this.fontSizeToolStripMenuItem.Text = "Font Size";
+         // 
+         // configureColorsToolStripMenuItem
+         // 
+         this.configureColorsToolStripMenuItem.Name = "configureColorsToolStripMenuItem";
+         this.configureColorsToolStripMenuItem.Size = new System.Drawing.Size(276, 22);
+         this.configureColorsToolStripMenuItem.Text = "Configure colors...";
+         this.configureColorsToolStripMenuItem.Click += new System.EventHandler(this.onConfigureColorsClicked);
+         // 
          // DiscussionsFormMenu
          // 
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
@@ -449,7 +465,6 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ToolStripMenuItem startAThreadToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem addACommentToolStripMenuItem;
       private System.Windows.Forms.ToolStripSeparator toolStripMenuItemSeparator;
-      private System.Windows.Forms.ToolStripMenuItem fontSizeToolStripMenuItem;
       private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
       private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
       private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
@@ -470,5 +485,8 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDiffContextDepth3;
       private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDiffContextDepth4;
       private System.Windows.Forms.ToolStripMenuItem showTooltipsForCodeToolStripMenuItem;
+      private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+      private System.Windows.Forms.ToolStripMenuItem fontSizeToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem configureColorsToolStripMenuItem;
    }
 }

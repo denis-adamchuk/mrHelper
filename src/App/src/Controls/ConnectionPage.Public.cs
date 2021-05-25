@@ -501,12 +501,6 @@ namespace mrHelper.App.Controls
          return areLongCachesReady(getDataCache(EDataCacheType.Live));
       }
 
-      internal void SetColorScheme(ColorScheme colorScheme)
-      {
-         _colorScheme = colorScheme;
-         forEachListView(listView => listView.SetColorScheme(_colorScheme));
-      }
-
       internal void RestoreSplitterDistance()
       {
          resetSplitterDistance(splitContainerPrimary, ResetSplitterDistanceMode.UserDefined);

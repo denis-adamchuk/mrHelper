@@ -19,6 +19,8 @@ namespace mrHelper.App.Controls
             components.Dispose();
          }
 
+         _colorScheme.Changed -= onColorSchemeChanged;
+
          Program.Settings.MainWindowLayoutChanged -= onMainWindowLayoutChanged;
          Program.Settings.WordWrapLongRowsChanged -= onWrapLongRowsChanged;
 

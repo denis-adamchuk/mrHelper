@@ -120,8 +120,7 @@ namespace mrHelper.App.Forms
             ConnectionPage connectionPage = new ConnectionPage(hostname, _persistentStorage,
                _recentMergeRequests, _reviewedRevisions, _lastMergeRequestsByHosts,
                _newMergeRequestDialogStatesByHosts, _keywords, _trayIcon,
-               toolTip, _integratedInGitExtensions, _integratedInSourceTree);
-            connectionPage.SetColorScheme(_colorScheme);
+               toolTip, _integratedInGitExtensions, _integratedInSourceTree, _colorScheme);
             subscribeToConnectionPage(connectionPage);
             ConnectionTabPage tabPage = new ConnectionTabPage(hostname, connectionPage);
             tabControlHost.TabPages.Add(tabPage);
@@ -351,7 +350,10 @@ namespace mrHelper.App.Forms
       private void onSummaryColorChanged(ConnectionPage connectionPage)
       {
          updateTrayAndTaskBar();
-         updateToolbarHostIcon(connectionPage?.GetCurrentHostName());
+         if (connectionPage != null)
+         {
+            updateToolbarHostIcon(connectionPage.GetCurrentHostName());
+         }
       }
 
       private void onCustomActionListChanged(ConnectionPage connectionPage)

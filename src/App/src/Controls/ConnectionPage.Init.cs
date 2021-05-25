@@ -26,7 +26,8 @@ namespace mrHelper.App.Controls
          TrayIcon trayIcon,
          ToolTip toolTip,
          bool integratedInGitExtensions,
-         bool integratedInSourceTree)
+         bool integratedInSourceTree,
+         ColorScheme colorScheme)
       {
          HostName = hostname;
          _keywords = keywords;
@@ -52,6 +53,10 @@ namespace mrHelper.App.Controls
 
          Program.Settings.MainWindowLayoutChanged += onMainWindowLayoutChanged;
          Program.Settings.WordWrapLongRowsChanged += onWrapLongRowsChanged;
+
+         _colorScheme = colorScheme;
+         _colorScheme.Changed += onColorSchemeChanged;
+         forEachListView(listView => listView.SetColorScheme(_colorScheme));
       }
 
       private void initializeWork()

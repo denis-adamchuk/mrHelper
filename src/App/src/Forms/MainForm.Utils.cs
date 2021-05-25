@@ -445,7 +445,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Icon icon = _iconCache.Get(colorOpt.Value);
+         Icon icon = IconCache.Get(colorOpt.Value);
          if (icon == null)
          {
             notifyIcon.Icon = Properties.Resources.DefaultAppIcon;

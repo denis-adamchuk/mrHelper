@@ -35,7 +35,6 @@ namespace mrHelper.App.Forms
       private bool _applicationUpdateNotificationPostponedTillTimerStop;
       private bool _applicationUpdateReminderPostponedTillTimerStop;
 
-      private readonly IconCache _iconCache = new IconCache();
       private readonly PeriodicUpdateChecker _applicationUpdateChecker;
       private readonly bool _startMinimized;
       private readonly TrayIcon _trayIcon;

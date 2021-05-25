@@ -56,6 +56,8 @@ namespace mrHelper.App.Controls
             _simpleContextMaker = new SimpleContextMaker(git);
          }
          _colorScheme = colorScheme;
+         _colorScheme.Changed += onColorSchemeChanged;
+
          _diffContextPosition = diffContextPosition;
          _discussionColumnWidth = discussionColumnWidth;
          _needShiftReplies = needShiftReplies;
@@ -78,6 +80,12 @@ namespace mrHelper.App.Controls
             MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 
          onCreate(parent);
+      }
+
+      protected override void Dispose(bool disposing)
+      {
+         base.Dispose(disposing);
+         _colorScheme.Changed -= onColorSchemeChanged;
       }
 
       internal bool HasNotes => getNoteContainers().Any();
@@ -809,6 +817,15 @@ namespace mrHelper.App.Controls
          {
             setDiffContextText(_panelContext);
          }
+      }
+
+      private void onColorSchemeChanged()
+      {
+         getNoteContainers()?
+            .ToList()
+            .ForEach(noteContainer =>
+               noteContainer.NoteContent.BackColor =
+                  getNoteColor(noteContainer.NoteContent.Tag as DiscussionNote));
       }
 
       private int getColumnInterval(int width)

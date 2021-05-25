@@ -143,21 +143,7 @@ namespace mrHelper.App.Forms
 
       private void configureColorsToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         void onColorSchemeChanged(ColorScheme colorScheme)
-         {
-            _colorScheme = colorScheme;
-            getConnectionPages()?
-               .ToList()
-               .ForEach(connectionPage => connectionPage.SetColorScheme(_colorScheme));
-         };
-
-         ConfigureColorsForm form = new ConfigureColorsForm(_iconCache,
-            () =>
-            {
-               updateTrayAndTaskBar();
-               getConnectionPages().ToList().ForEach(page => updateToolbarHostIcon(page.GetCurrentHostName()));
-            },
-            onColorSchemeChanged);
+         ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.General, _colorScheme);
          form.ShowDialog();
       }
 

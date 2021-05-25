@@ -32,7 +32,7 @@ namespace mrHelper.App.Controls
       private readonly bool _integratedInSourceTree;
 
       private readonly IEnumerable<string> _keywords;
-      private ColorScheme _colorScheme;
+      private readonly ColorScheme _colorScheme;
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mdPipeline;
       private LocalCommitStorageFactory _storageFactory;

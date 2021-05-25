@@ -47,13 +47,19 @@ namespace mrHelper.App.Forms
             // Upgrade from old versions which did not have a separate file for Default color scheme
             Program.Settings.ColorSchemeFileName = Constants.DefaultColorSchemeFileName;
          }
+
          try
          {
-            _colorScheme = new ColorScheme(Program.Settings.ColorSchemeFileName);
+            _colorScheme.LoadFromFile(Program.Settings.ColorSchemeFileName);
          }
          catch (ArgumentException ex)
          {
             ExceptionHandlers.Handle("Cannot create a color scheme", ex);
+            if (Program.Settings.ColorSchemeFileName != Constants.DefaultColorSchemeFileName)
+            {
+               Program.Settings.ColorSchemeFileName = String.Empty;
+               initializeColorScheme();
+            }
          }
       }
 

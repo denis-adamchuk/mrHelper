@@ -64,7 +64,7 @@ namespace mrHelper.App.Forms
          searchPanel.Initialize(discussionPanel);
 
          discussionMenu.Initialize(discussionSort, displayFilter, discussionLayout,
-            discussionLoader, discussionHelper, commands, this, applyFont);
+            discussionLoader, discussionHelper, commands, this, applyFont, colorScheme);
 
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);
