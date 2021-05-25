@@ -21,6 +21,7 @@ namespace mrHelper.App
    {
       private static void HandleUnhandledException(Exception ex)
       {
+         AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
          Debug.Assert(false);
          Trace.TraceError("Unhandled exception: [{0}] {1}\nCallstack:\n{2}",
             ex.GetType().ToString(), ex.Message, ex.StackTrace);
@@ -43,7 +44,6 @@ namespace mrHelper.App
                }
             }
          }
-         Application.Exit();
       }
 
       internal static UserDefinedSettings Settings;
@@ -71,7 +71,12 @@ namespace mrHelper.App
          {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
+
+            // This should redirect exceptions from UI events to the global try/catch
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
+
+            // Handle exceptions from MainForm.OnLoad() etc (not events)
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             try
             {
@@ -94,8 +99,17 @@ namespace mrHelper.App
             catch (Exception ex) // Any unhandled exception, including CSE
             {
                HandleUnhandledException(ex);
+               throw; // pass exception to WER to have a dump
             }
          }
+      }
+
+      [System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
+      private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+      {
+         HandleUnhandledException((Exception)e.ExceptionObject);
+
+         // and then - exception is caught by WER and we have a dump
       }
 
       private static void initializeGitLabSharpLibrary()
