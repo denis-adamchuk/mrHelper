@@ -269,11 +269,6 @@ namespace mrHelper.App.Forms
          onCanAbortCloneChanged(connectionPage);
       }
 
-      private void ConnectionPage_CanSearchChanged(ConnectionPage connectionPage)
-      {
-         onCanSearchChanged(connectionPage);
-      }
-
       private void ConnectionPage_CanDiffToolChanged(ConnectionPage connectionPage)
       {
          onCanDiffToolChanged(connectionPage);

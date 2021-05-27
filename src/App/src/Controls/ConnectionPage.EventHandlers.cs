@@ -60,20 +60,17 @@ namespace mrHelper.App.Controls
          DataCache dataCache = getDataCache(EDataCacheType.Live);
 
          IEnumerable<Project> fullProjectList = dataCache?.ProjectCache?.GetProjects();
-         if (fullProjectList == null || !fullProjectList.Any())
+         if (fullProjectList == null)
          {
-            Debug.Assert(false);
-            return;
+            fullProjectList = Array.Empty<Project>();
          }
 
          IEnumerable<string> projectNames = fullProjectList
             .Select(project => project.Path_With_Namespace);
          IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
-         bool isUserListReady = fullUserList?.Any() ?? false;
-         if (!isUserListReady)
+         if (fullUserList == null)
          {
-            Debug.Assert(false);
-            return;
+            fullUserList = Array.Empty<User>();
          }
 
          if (_prevSearchQuery == null)

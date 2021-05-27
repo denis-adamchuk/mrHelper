@@ -496,11 +496,6 @@ namespace mrHelper.App.Controls
          return areLongCachesReady(getDataCache(EDataCacheType.Live));
       }
 
-      internal bool CanSearch()
-      {
-         return areLongCachesReady(getDataCache(EDataCacheType.Live));
-      }
-
       internal void RestoreSplitterDistance()
       {
          resetSplitterDistance(splitContainerPrimary, ResetSplitterDistanceMode.UserDefined);
@@ -537,7 +532,6 @@ namespace mrHelper.App.Controls
       internal event Action<ConnectionPage> CanCreateNewChanged;
       internal event Action<ConnectionPage> CanEditChanged;
       internal event Action<ConnectionPage> CanMergeChanged;
-      internal event Action<ConnectionPage> CanSearchChanged;
       internal event Action<ConnectionPage> CanDiffToolChanged;
       internal event Action<ConnectionPage> CanDiscussionsChanged;
       internal event Action<ConnectionPage> CanReloadAllChanged;

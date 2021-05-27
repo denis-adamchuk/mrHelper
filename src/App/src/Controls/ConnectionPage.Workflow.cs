@@ -306,6 +306,8 @@ namespace mrHelper.App.Controls
             requestCommitStorageUpdate(projectKey);
          }
 
+         enableSearchTabControls();
+
          // current mode may have changed during 'await'
          if (getCurrentTabDataCacheType() == EDataCacheType.Live && _isActivePage)
          {

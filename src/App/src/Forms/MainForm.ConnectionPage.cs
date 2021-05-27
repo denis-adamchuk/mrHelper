@@ -74,7 +74,6 @@ namespace mrHelper.App.Forms
          connectionPage.CanNewThreadChanged += ConnectionPage_CanNewThreadChanged;
          connectionPage.CanDiscussionsChanged += ConnectionPage_CanDiscussionsChanged;
          connectionPage.CanDiffToolChanged += ConnectionPage_CanDiffToolChanged;
-         connectionPage.CanSearchChanged += ConnectionPage_CanSearchChanged;
          connectionPage.CanAbortCloneChanged += ConnectionPage_CanAbortCloneChanged;
          connectionPage.CanTrackTimeChanged += ConnectionPage_CanTrackTimeChanged;
          connectionPage.StatusChanged += ConnectionPage_StatusChange;
@@ -97,7 +96,6 @@ namespace mrHelper.App.Forms
          connectionPage.CanNewThreadChanged -= ConnectionPage_CanNewThreadChanged;
          connectionPage.CanDiscussionsChanged -= ConnectionPage_CanDiscussionsChanged;
          connectionPage.CanDiffToolChanged -= ConnectionPage_CanDiffToolChanged;
-         connectionPage.CanSearchChanged -= ConnectionPage_CanSearchChanged;
          connectionPage.CanAbortCloneChanged -= ConnectionPage_CanAbortCloneChanged;
          connectionPage.CanTrackTimeChanged -= ConnectionPage_CanTrackTimeChanged;
          connectionPage.StatusChanged -= ConnectionPage_StatusChange;
@@ -202,7 +200,6 @@ namespace mrHelper.App.Forms
          onCustomActionListChanged(connectionPage);
          onCanTrackTimeChanged(connectionPage);
          onCanAbortCloneChanged(connectionPage);
-         onCanSearchChanged(connectionPage);
          onCanDiffToolChanged(connectionPage);
          onCanDiscussionsChanged(connectionPage);
          onCanNewThreadChanged(connectionPage);
@@ -229,14 +226,6 @@ namespace mrHelper.App.Forms
          if (connectionPage == getCurrentConnectionPage())
          {
             linkLabelAbortGitClone.Visible = connectionPage != null && connectionPage.CanAbortClone();
-         }
-      }
-
-      private void onCanSearchChanged(ConnectionPage connectionPage)
-      {
-         if (connectionPage == getCurrentConnectionPage())
-         {
-            toolStripButtonSearch.Enabled = connectionPage != null && connectionPage.CanSearch();
          }
       }
 

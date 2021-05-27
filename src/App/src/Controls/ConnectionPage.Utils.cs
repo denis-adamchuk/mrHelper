@@ -870,8 +870,6 @@ namespace mrHelper.App.Controls
          CanEditChanged?.Invoke(this);
          CanMergeChanged?.Invoke(this);
          CanCreateNewChanged?.Invoke(this);
-         CanSearchChanged?.Invoke(this);
-         enableSearchTabControls();
       }
    }
 }

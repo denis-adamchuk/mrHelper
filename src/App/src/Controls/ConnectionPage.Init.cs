@@ -413,17 +413,23 @@ namespace mrHelper.App.Controls
       private void subscribeToRecentDataCache()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Recent);
-         dataCache.Disconnected += onRecentDataCacheDisconnected;
-         dataCache.Connecting += onRecentDataCacheConnecting;
-         dataCache.Connected += onRecentDataCacheConnected;
+         if (dataCache != null)
+         {
+            dataCache.Disconnected += onRecentDataCacheDisconnected;
+            dataCache.Connecting += onRecentDataCacheConnecting;
+            dataCache.Connected += onRecentDataCacheConnected;
+         }
       }
 
       private void unsubscribeFromRecentDataCache()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Recent);
-         dataCache.Disconnected -= onRecentDataCacheDisconnected;
-         dataCache.Connecting -= onRecentDataCacheConnecting;
-         dataCache.Connected -= onRecentDataCacheConnected;
+         if (dataCache != null)
+         {
+            dataCache.Disconnected -= onRecentDataCacheDisconnected;
+            dataCache.Connecting -= onRecentDataCacheConnecting;
+            dataCache.Connected -= onRecentDataCacheConnected;
+         }
       }
 
       private void unsubscribeFromRecentDataCacheInternalEvents()

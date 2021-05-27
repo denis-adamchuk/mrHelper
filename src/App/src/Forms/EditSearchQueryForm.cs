@@ -197,6 +197,8 @@ namespace mrHelper.App.Forms
          if (!projectNames.Any())
          {
             comboBoxProjectName.Enabled = false;
+            comboBoxProjectName.DropDownStyle = ComboBoxStyle.DropDown; // allows custom text
+            comboBoxProjectName.Text = "Project list is not loaded yet";
             checkBoxSearchByProject.Enabled = false;
          }
          else
@@ -211,6 +213,8 @@ namespace mrHelper.App.Forms
          if (!users.Any())
          {
             comboBoxUser.Enabled = false;
+            comboBoxUser.DropDownStyle = ComboBoxStyle.DropDown; // allows custom text
+            comboBoxUser.Text = "User list is not loaded yet";
             checkBoxSearchByAuthor.Enabled = false;
          }
          else
