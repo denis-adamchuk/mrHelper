@@ -170,7 +170,6 @@ namespace mrHelper.App.Forms
                if (color.A != 0 || color.R != 0 || color.G != 0 || color.B != 0)
                {
                   addColorToList(color, humanFriendlyName);
-                  addIconToCache(color);
                }
                else
                {
@@ -188,7 +187,6 @@ namespace mrHelper.App.Forms
             .ForEach(colorSchemeItem =>
             {
                addColorToList(colorSchemeItem.Color);
-               addIconToCache(colorSchemeItem.Color);
                listBoxColorSchemeItemSelector.Items.Add(colorSchemeItem.Name);
             });
 
@@ -225,24 +223,6 @@ namespace mrHelper.App.Forms
             ? color.IsNamedColor ? color.Name : "Custom"
             : humanFriendlyName;
          comboBoxColorSelector.Items.Add(new ColorSelectorComboBoxItem(colorName, color));
-      }
-
-      private void addIconToCache(Color color)
-      {
-         if (IconCache.ContainsKey(color))
-         {
-            return;
-         }
-
-         Bitmap imageWithoutBorder = WinFormsHelpers.ReplaceColorInBitmap(
-            Properties.Resources.gitlab_icon_stub_16x16, Color.Green, color);
-         Icon iconWithoutBorder = WinFormsHelpers.ConvertToIco(imageWithoutBorder, 16);
-
-         Bitmap imageWithBorder = WinFormsHelpers.ReplaceColorInBitmap(
-            Properties.Resources.gitlab_icon_stub_16x16_border, Color.Green, color);
-         Icon iconWithBorder = WinFormsHelpers.ConvertToIco(imageWithBorder, 16);
-
-         IconCache.Add(color, new IconCache.IconGroup(iconWithoutBorder, iconWithBorder));
       }
 
       private void selectCurrentColorScheme()

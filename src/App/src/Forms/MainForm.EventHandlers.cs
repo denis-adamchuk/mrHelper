@@ -51,9 +51,16 @@ namespace mrHelper.App.Forms
       protected override void OnResize(EventArgs e)
       {
          base.OnResize(e);
-         if (this.WindowState != _prevWindowState)
+         if (WindowState != _prevWindowState)
          {
             onWindowStateChanged();
+         }
+
+         // Doing this outside of onWindowStateChanged() because sometimes we receive
+         // more than once Resize event on Maximize and/or Restore actions
+         if (WindowState != FormWindowState.Minimized && !_loadingConfiguration && !_inRestoringSize)
+         {
+            getCurrentConnectionPage()?.StoreSplitterDistance();
          }
       }
 

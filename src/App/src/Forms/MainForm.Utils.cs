@@ -822,10 +822,6 @@ namespace mrHelper.App.Forms
             {
                getCurrentConnectionPage()?.RestoreSplitterDistance();
             }
-            else
-            {
-               getCurrentConnectionPage()?.StoreSplitterDistance();
-            }
          }
 
          _prevWindowState = WindowState;

@@ -134,7 +134,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      internal event EventHandler SelectionChanged;
+      public event EventHandler SelectionChanged;
 
       protected override void OnLoad(EventArgs e)
       {

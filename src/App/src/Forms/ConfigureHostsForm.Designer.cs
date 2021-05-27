@@ -276,7 +276,7 @@ namespace mrHelper.App.Forms
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(679, 438);
+         this.ClientSize = new System.Drawing.Size(687, 438);
          this.Controls.Add(this.groupBoxKnownHosts);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.buttonOK);
@@ -289,7 +289,7 @@ namespace mrHelper.App.Forms
          this.MinimizeBox = false;
          this.Name = "ConfigureHostsForm";
          this.Text = "Configure Hosts";
-         this.Load += configureHostsForm_Load;
+         this.Load += new System.EventHandler(this.configureHostsForm_Load);
          this.groupBoxSelectWorkflow.ResumeLayout(false);
          this.groupBoxSelectWorkflow.PerformLayout();
          this.groupBoxConfigureProjectBasedWorkflow.ResumeLayout(false);

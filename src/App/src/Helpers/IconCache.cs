@@ -6,27 +6,17 @@ namespace mrHelper.App.Helpers
 {
    internal static class IconCache
    {
-      internal static bool ContainsKey(Color color)
-      {
-         return _iconCache.ContainsKey(color);
-      }
-
-      internal static void Add(Color color, IconGroup iconGroup)
-      {
-         _iconCache.Add(color, iconGroup);
-      }
-
       internal static Icon Get(Color color)
       {
-         if (_iconCache.TryGetValue(color, out IconGroup icon))
+         if (!_iconCache.TryGetValue(color, out IconGroup icon))
          {
-            bool useBorder = WinFormsHelpers.IsLightThemeUsed();
-            return useBorder ? icon.IconWithBorder : icon.IconWithoutBorder;
+            icon = addIconToCache(color);
          }
-         return null;
+         bool useBorder = WinFormsHelpers.IsLightThemeUsed();
+         return useBorder ? icon.IconWithBorder : icon.IconWithoutBorder;
       }
 
-      internal struct IconGroup
+      private struct IconGroup
       {
          internal IconGroup(Icon iconWithoutBorder, Icon iconWithBorder)
          {
@@ -36,6 +26,21 @@ namespace mrHelper.App.Helpers
 
          internal Icon IconWithoutBorder { get; }
          internal Icon IconWithBorder { get; }
+      }
+
+      private static IconGroup addIconToCache(Color color)
+      {
+         Bitmap imageWithoutBorder = WinFormsHelpers.ReplaceColorInBitmap(
+            Properties.Resources.gitlab_icon_stub_16x16, Color.Green, color);
+         Icon iconWithoutBorder = WinFormsHelpers.ConvertToIco(imageWithoutBorder, 16);
+
+         Bitmap imageWithBorder = WinFormsHelpers.ReplaceColorInBitmap(
+            Properties.Resources.gitlab_icon_stub_16x16_border, Color.Green, color);
+         Icon iconWithBorder = WinFormsHelpers.ConvertToIco(imageWithBorder, 16);
+
+         IconGroup icon = new IconGroup(iconWithoutBorder, iconWithBorder);
+         _iconCache[color] = icon;
+         return icon;
       }
 
       private static readonly Dictionary<Color, IconGroup> _iconCache = new Dictionary<Color, IconGroup>();

@@ -119,6 +119,7 @@ namespace mrHelper.App.Forms
 
       private void prepareControlsToStart()
       {
+         prepareToolBar();
          prepareStatusBarControls();
          startClipboardCheckTimer();
          startNewVersionReminderTimer();
@@ -127,6 +128,24 @@ namespace mrHelper.App.Forms
          updateNewVersionStatus();
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimeTrackingTimer);
+      }
+
+      private void prepareToolBar()
+      {
+         // This positions menu strip at the top and toolbars
+         // at the next row in the following order: Hosts - Actions - Custom Actions
+         toolStripCustomActions.Location = new System.Drawing.Point(0, 0);
+         toolStripActions.Location = new System.Drawing.Point(0, 0);
+         toolStripHosts.Location = new System.Drawing.Point(0, 0);
+         menuStrip1.Location = new System.Drawing.Point(0, 0);
+
+         // Minimize gaps between controls
+         toolStripActions.Location = new Point(
+            toolStripHosts.Location.X + toolStripHosts.Width + 5,
+            toolStripActions.Location.Y);
+         toolStripCustomActions.Location = new Point(
+            toolStripActions.Location.X + toolStripActions.Width + 5,
+            toolStripCustomActions.Location.Y);
       }
 
       private void prepareStatusBarControls()
@@ -168,7 +187,6 @@ namespace mrHelper.App.Forms
          {
             Size = new Size(Program.Settings.WidthBeforeClose, Program.Settings.HeightBeforeClose);
          }
-         //loadToolStripLocations();
       }
 
       private static void disableSSLVerification()

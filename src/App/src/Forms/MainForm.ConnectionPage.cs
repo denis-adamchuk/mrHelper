@@ -191,7 +191,10 @@ namespace mrHelper.App.Forms
          _defaultHostName = button.HostName;
 
          getCurrentConnectionPage()?.Activate();
-         getCurrentConnectionPage()?.RestoreSplitterDistance();
+         if (WindowState != FormWindowState.Minimized)
+         {
+            getCurrentConnectionPage()?.RestoreSplitterDistance();
+         }
       }
 
       private void onHostTabSelected()
@@ -463,7 +466,7 @@ namespace mrHelper.App.Forms
             await processNonEmptyUrl(url);
          }
       }
-      
+
       private async Task processNonEmptyUrl(string url)
       {
          try

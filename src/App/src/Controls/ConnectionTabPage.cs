@@ -8,6 +8,7 @@ namespace mrHelper.App.Controls
       {
          HostName = hostname;
          ConnectionPage = connectionPage;
+         connectionPage.Dock = DockStyle.Fill;
          Controls.Add(connectionPage);
       }
 

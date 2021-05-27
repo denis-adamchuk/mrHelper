@@ -57,7 +57,7 @@ namespace mrHelper.App.Controls
       {
          this.components = new System.ComponentModel.Container();
          this.splitContainerPrimary = new System.Windows.Forms.SplitContainer();
-         this.tabControlMode = new PlainTabControl();
+         this.tabControlMode = new mrHelper.App.Controls.PlainTabControl();
          this.tabPageLive = new System.Windows.Forms.TabPage();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
          this.textBoxDisplayFilter = new mrHelper.CommonControls.Controls.DelayedTextBox();
@@ -126,7 +126,7 @@ namespace mrHelper.App.Controls
          this.groupBoxSelectRevisions.SuspendLayout();
          this.SuspendLayout();
          // 
-         // splitContainer1
+         // splitContainerPrimary
          // 
          this.splitContainerPrimary.BackColor = System.Drawing.Color.Transparent;
          this.splitContainerPrimary.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -134,17 +134,17 @@ namespace mrHelper.App.Controls
          this.splitContainerPrimary.Location = new System.Drawing.Point(0, 0);
          this.splitContainerPrimary.Name = "splitContainerPrimary";
          // 
-         // splitContainer1.Panel1
+         // splitContainerPrimary.Panel1
          // 
          this.splitContainerPrimary.Panel1.AutoScroll = true;
          this.splitContainerPrimary.Panel1.Controls.Add(this.tabControlMode);
          // 
-         // splitContainer1.Panel2
+         // splitContainerPrimary.Panel2
          // 
          this.splitContainerPrimary.Panel2.AutoScroll = true;
          this.splitContainerPrimary.Panel2.Controls.Add(this.splitContainerSecondary);
-         this.splitContainerPrimary.Size = new System.Drawing.Size(866, 422);
-         this.splitContainerPrimary.SplitterDistance = 538;
+         this.splitContainerPrimary.Size = new System.Drawing.Size(1185, 631);
+         this.splitContainerPrimary.SplitterDistance = 853;
          this.splitContainerPrimary.SplitterWidth = 8;
          this.splitContainerPrimary.TabIndex = 5;
          this.splitContainerPrimary.TabStop = false;
@@ -153,6 +153,7 @@ namespace mrHelper.App.Controls
          // 
          // tabControlMode
          // 
+         this.tabControlMode.Appearance = System.Windows.Forms.TabAppearance.FlatButtons;
          this.tabControlMode.Controls.Add(this.tabPageLive);
          this.tabControlMode.Controls.Add(this.tabPageSearch);
          this.tabControlMode.Controls.Add(this.tabPageRecent);
@@ -161,7 +162,8 @@ namespace mrHelper.App.Controls
          this.tabControlMode.Location = new System.Drawing.Point(0, 0);
          this.tabControlMode.Name = "tabControlMode";
          this.tabControlMode.SelectedIndex = 0;
-         this.tabControlMode.Size = new System.Drawing.Size(538, 422);
+         this.tabControlMode.Size = new System.Drawing.Size(853, 631);
+         this.tabControlMode.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
          this.tabControlMode.TabIndex = 0;
          this.tabControlMode.SelectedIndexChanged += new System.EventHandler(this.tabControlMode_SelectedIndexChanged);
          // 
@@ -172,7 +174,7 @@ namespace mrHelper.App.Controls
          this.tabPageLive.Location = new System.Drawing.Point(4, 5);
          this.tabPageLive.Name = "tabPageLive";
          this.tabPageLive.Padding = new System.Windows.Forms.Padding(3);
-         this.tabPageLive.Size = new System.Drawing.Size(530, 413);
+         this.tabPageLive.Size = new System.Drawing.Size(845, 622);
          this.tabPageLive.TabIndex = 0;
          this.tabPageLive.Text = "Live";
          this.tabPageLive.UseVisualStyleBackColor = true;
@@ -185,7 +187,7 @@ namespace mrHelper.App.Controls
          this.groupBoxSelectMergeRequest.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(3, 3);
          this.groupBoxSelectMergeRequest.Name = "groupBoxSelectMergeRequest";
-         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(524, 407);
+         this.groupBoxSelectMergeRequest.Size = new System.Drawing.Size(839, 616);
          this.groupBoxSelectMergeRequest.TabIndex = 1;
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
@@ -196,7 +198,7 @@ namespace mrHelper.App.Controls
             | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxDisplayFilter.Location = new System.Drawing.Point(60, 17);
          this.textBoxDisplayFilter.Name = "textBoxDisplayFilter";
-         this.textBoxDisplayFilter.Size = new System.Drawing.Size(461, 20);
+         this.textBoxDisplayFilter.Size = new System.Drawing.Size(776, 20);
          this.textBoxDisplayFilter.TabIndex = 1;
          this.textBoxDisplayFilter.TextChanged += new System.EventHandler(this.textBoxDisplayFilter_TextChanged);
          this.textBoxDisplayFilter.Leave += new System.EventHandler(this.textBoxDisplayFilter_Leave);
@@ -228,7 +230,7 @@ namespace mrHelper.App.Controls
          this.listViewLiveMergeRequests.MultiSelect = false;
          this.listViewLiveMergeRequests.Name = "listViewLiveMergeRequests";
          this.listViewLiveMergeRequests.OwnerDraw = true;
-         this.listViewLiveMergeRequests.Size = new System.Drawing.Size(518, 358);
+         this.listViewLiveMergeRequests.Size = new System.Drawing.Size(833, 567);
          this.listViewLiveMergeRequests.TabIndex = 3;
          this.listViewLiveMergeRequests.Tag = "DesignTimeName";
          this.listViewLiveMergeRequests.UseCompatibleStateImageBehavior = false;
@@ -561,30 +563,30 @@ namespace mrHelper.App.Controls
          this.columnHeaderRecentActivities.Text = "Activities";
          this.columnHeaderRecentActivities.Width = 90;
          // 
-         // splitContainer2
+         // splitContainerSecondary
          // 
          this.splitContainerSecondary.Dock = System.Windows.Forms.DockStyle.Fill;
          this.splitContainerSecondary.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
          this.splitContainerSecondary.Location = new System.Drawing.Point(0, 0);
          this.splitContainerSecondary.Name = "splitContainerSecondary";
          this.splitContainerSecondary.Orientation = System.Windows.Forms.Orientation.Horizontal;
-         this.splitContainerSecondary.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
-         this.splitContainerSecondary.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
          // 
-         // splitContainer2.Panel1
+         // splitContainerSecondary.Panel1
          // 
          this.splitContainerSecondary.Panel1.AutoScroll = true;
          this.splitContainerSecondary.Panel1.Controls.Add(this.groupBoxSelectedMR);
          // 
-         // splitContainer2.Panel2
+         // splitContainerSecondary.Panel2
          // 
          this.splitContainerSecondary.Panel2.AutoScroll = true;
          this.splitContainerSecondary.Panel2.Controls.Add(this.groupBoxSelectRevisions);
-         this.splitContainerSecondary.Size = new System.Drawing.Size(320, 422);
-         this.splitContainerSecondary.SplitterDistance = 130;
+         this.splitContainerSecondary.Size = new System.Drawing.Size(324, 631);
+         this.splitContainerSecondary.SplitterDistance = 335;
          this.splitContainerSecondary.SplitterWidth = 8;
          this.splitContainerSecondary.TabIndex = 7;
          this.splitContainerSecondary.TabStop = false;
+         this.splitContainerSecondary.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
+         this.splitContainerSecondary.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
          // 
          // groupBoxSelectedMR
          // 
@@ -593,7 +595,7 @@ namespace mrHelper.App.Controls
          this.groupBoxSelectedMR.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSelectedMR.Location = new System.Drawing.Point(0, 0);
          this.groupBoxSelectedMR.Name = "groupBoxSelectedMR";
-         this.groupBoxSelectedMR.Size = new System.Drawing.Size(320, 130);
+         this.groupBoxSelectedMR.Size = new System.Drawing.Size(324, 335);
          this.groupBoxSelectedMR.TabIndex = 1;
          this.groupBoxSelectedMR.TabStop = false;
          this.groupBoxSelectedMR.Text = "Merge Request";
@@ -607,7 +609,7 @@ namespace mrHelper.App.Controls
          this.richTextBoxMergeRequestDescription.Dock = System.Windows.Forms.DockStyle.Fill;
          this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(3, 16);
          this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
-         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(314, 93);
+         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(318, 293);
          this.richTextBoxMergeRequestDescription.TabIndex = 2;
          this.richTextBoxMergeRequestDescription.TabStop = false;
          this.richTextBoxMergeRequestDescription.Text = null;
@@ -616,13 +618,14 @@ namespace mrHelper.App.Controls
          // 
          this.linkLabelConnectedTo.AutoEllipsis = true;
          this.linkLabelConnectedTo.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.linkLabelConnectedTo.Location = new System.Drawing.Point(3, 109);
+         this.linkLabelConnectedTo.Location = new System.Drawing.Point(3, 309);
          this.linkLabelConnectedTo.Name = "linkLabelConnectedTo";
          this.linkLabelConnectedTo.Padding = new System.Windows.Forms.Padding(0, 2, 0, 0);
-         this.linkLabelConnectedTo.Size = new System.Drawing.Size(314, 18);
+         this.linkLabelConnectedTo.Size = new System.Drawing.Size(318, 23);
          this.linkLabelConnectedTo.TabIndex = 5;
          this.linkLabelConnectedTo.TabStop = true;
          this.linkLabelConnectedTo.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
+         this.linkLabelConnectedTo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
          // 
          // groupBoxSelectRevisions
          // 
@@ -630,7 +633,7 @@ namespace mrHelper.App.Controls
          this.groupBoxSelectRevisions.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSelectRevisions.Location = new System.Drawing.Point(0, 0);
          this.groupBoxSelectRevisions.Name = "groupBoxSelectRevisions";
-         this.groupBoxSelectRevisions.Size = new System.Drawing.Size(320, 284);
+         this.groupBoxSelectRevisions.Size = new System.Drawing.Size(324, 288);
          this.groupBoxSelectRevisions.TabIndex = 4;
          this.groupBoxSelectRevisions.TabStop = false;
          this.groupBoxSelectRevisions.Text = "Select revisions for comparison";
@@ -640,18 +643,16 @@ namespace mrHelper.App.Controls
          this.revisionBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
          this.revisionBrowser.Location = new System.Drawing.Point(3, 16);
          this.revisionBrowser.Name = "revisionBrowser";
-         this.revisionBrowser.Size = new System.Drawing.Size(314, 265);
+         this.revisionBrowser.Size = new System.Drawing.Size(318, 269);
          this.revisionBrowser.TabIndex = 0;
          this.revisionBrowser.SelectionChanged += new System.EventHandler(this.revisionBrowser_SelectionChanged);
          // 
          // ConnectionPage
          // 
-         this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.Controls.Add(this.splitContainerPrimary);
-         this.Dock = System.Windows.Forms.DockStyle.Fill;
          this.Name = "ConnectionPage";
-         this.Size = new System.Drawing.Size(866, 422);
+         this.Size = new System.Drawing.Size(1185, 631);
          this.splitContainerPrimary.Panel1.ResumeLayout(false);
          this.splitContainerPrimary.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainerPrimary)).EndInit();
