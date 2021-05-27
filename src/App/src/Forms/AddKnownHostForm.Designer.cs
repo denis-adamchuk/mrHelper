@@ -30,12 +30,14 @@ namespace mrHelper.App.Forms
       /// </summary>
       private void InitializeComponent()
       {
+         this.components = new System.ComponentModel.Container();
          this.label1 = new System.Windows.Forms.Label();
          this.label2 = new System.Windows.Forms.Label();
          this.textBoxHost = new System.Windows.Forms.TextBox();
          this.textBoxAccessToken = new System.Windows.Forms.TextBox();
          this.buttonCancel = new System.Windows.Forms.Button();
          this.buttonOK = new System.Windows.Forms.Button();
+         this.linkLabelCreateAccessToken = new mrHelper.CommonControls.Controls.LinkLabelEx();
          this.SuspendLayout();
          // 
          // label1
@@ -62,6 +64,7 @@ namespace mrHelper.App.Forms
          this.textBoxHost.Name = "textBoxHost";
          this.textBoxHost.Size = new System.Drawing.Size(193, 20);
          this.textBoxHost.TabIndex = 0;
+         this.textBoxHost.TextChanged += new System.EventHandler(this.textBoxHost_TextChanged);
          this.textBoxHost.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
          // 
          // textBoxAccessToken
@@ -74,8 +77,9 @@ namespace mrHelper.App.Forms
          // 
          // buttonCancel
          // 
+         this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonCancel.Location = new System.Drawing.Point(343, 59);
+         this.buttonCancel.Location = new System.Drawing.Point(343, 67);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
          this.buttonCancel.TabIndex = 3;
@@ -84,13 +88,24 @@ namespace mrHelper.App.Forms
          // 
          // buttonOK
          // 
+         this.buttonOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonOK.Location = new System.Drawing.Point(248, 59);
+         this.buttonOK.Location = new System.Drawing.Point(251, 67);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
          this.buttonOK.TabIndex = 2;
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
+         // 
+         // linkLabelCreateAccessToken
+         // 
+         this.linkLabelCreateAccessToken.AutoSize = true;
+         this.linkLabelCreateAccessToken.Location = new System.Drawing.Point(12, 50);
+         this.linkLabelCreateAccessToken.Name = "linkLabelCreateAccessToken";
+         this.linkLabelCreateAccessToken.Size = new System.Drawing.Size(105, 13);
+         this.linkLabelCreateAccessToken.TabIndex = 4;
+         this.linkLabelCreateAccessToken.TabStop = true;
+         this.linkLabelCreateAccessToken.Text = "Create access token";
          // 
          // AddKnownHostForm
          // 
@@ -98,7 +113,8 @@ namespace mrHelper.App.Forms
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(430, 94);
+         this.ClientSize = new System.Drawing.Size(440, 102);
+         this.Controls.Add(this.linkLabelCreateAccessToken);
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.textBoxAccessToken);
@@ -123,5 +139,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.TextBox textBoxAccessToken;
       private System.Windows.Forms.Button buttonCancel;
       private System.Windows.Forms.Button buttonOK;
+      private CommonControls.Controls.LinkLabelEx linkLabelCreateAccessToken;
    }
 }
