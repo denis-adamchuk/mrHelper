@@ -30,6 +30,9 @@ namespace mrHelper.Common.Constants
 
       public static string TimeStampLogFilenameFormat = "yyyy_MM_dd_HHmmss";
 
+      public static string ConfigurationBadValueSaved  = "bad-value-saved";
+      public static string ConfigurationBadValueLoaded = "bad-value-loaded";
+
       public static string BugReportLogArchiveName => String.Format(
          "mrhelper.logs.{0}.zip", DateTime.Now.ToString(TimeStampLogFilenameFormat));
 

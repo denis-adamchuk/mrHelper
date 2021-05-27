@@ -148,6 +148,8 @@ namespace mrHelper.App.Forms
          this.toolStripButtonEditTrackedTime = new System.Windows.Forms.ToolStripButton();
          this.toolStripTimeTrackingSeparator = new System.Windows.Forms.ToolStripSeparator();
          this.toolStripCustomActions = new System.Windows.Forms.ToolStrip();
+         this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+         this.exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
          this.contextMenuStrip.SuspendLayout();
          this.toolStripContainer1.BottomToolStripPanel.SuspendLayout();
          this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -212,7 +214,7 @@ namespace mrHelper.App.Forms
          this.tabControlHost.Location = new System.Drawing.Point(0, 0);
          this.tabControlHost.Name = "tabControlHost";
          this.tabControlHost.SelectedIndex = 0;
-         this.tabControlHost.Size = new System.Drawing.Size(839, 294);
+         this.tabControlHost.Size = new System.Drawing.Size(1050, 402);
          this.tabControlHost.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
          this.tabControlHost.TabIndex = 0;
          this.tabControlHost.SelectedIndexChanged += new System.EventHandler(this.tabControlHost_SelectedIndexChanged);
@@ -228,11 +230,11 @@ namespace mrHelper.App.Forms
          // 
          this.toolStripContainer1.ContentPanel.AutoScroll = true;
          this.toolStripContainer1.ContentPanel.Controls.Add(this.tabControlHost);
-         this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(839, 294);
+         this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(1050, 402);
          this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.toolStripContainer1.Location = new System.Drawing.Point(0, 0);
          this.toolStripContainer1.Name = "toolStripContainer1";
-         this.toolStripContainer1.Size = new System.Drawing.Size(839, 373);
+         this.toolStripContainer1.Size = new System.Drawing.Size(1050, 481);
          this.toolStripContainer1.TabIndex = 2;
          this.toolStripContainer1.Text = "toolStripContainer1";
          // 
@@ -254,7 +256,7 @@ namespace mrHelper.App.Forms
          this.statusStrip1.Location = new System.Drawing.Point(0, 0);
          this.statusStrip1.Name = "statusStrip1";
          this.statusStrip1.ShowItemToolTips = true;
-         this.statusStrip1.Size = new System.Drawing.Size(839, 24);
+         this.statusStrip1.Size = new System.Drawing.Size(1050, 24);
          this.statusStrip1.TabIndex = 0;
          // 
          // labelConnectionStatus
@@ -271,7 +273,7 @@ namespace mrHelper.App.Forms
          this.labelOperationStatus.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
          this.labelOperationStatus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.labelOperationStatus.Name = "labelOperationStatus";
-         this.labelOperationStatus.Size = new System.Drawing.Size(294, 19);
+         this.labelOperationStatus.Size = new System.Drawing.Size(382, 19);
          this.labelOperationStatus.Spring = true;
          this.labelOperationStatus.Text = "labelOperationStatus";
          this.labelOperationStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -282,7 +284,7 @@ namespace mrHelper.App.Forms
          this.labelStorageStatus.BorderStyle = System.Windows.Forms.Border3DStyle.Etched;
          this.labelStorageStatus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.labelStorageStatus.Name = "labelStorageStatus";
-         this.labelStorageStatus.Size = new System.Drawing.Size(294, 19);
+         this.labelStorageStatus.Size = new System.Drawing.Size(382, 19);
          this.labelStorageStatus.Spring = true;
          this.labelStorageStatus.Text = "labelStorageStatus";
          this.labelStorageStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -307,7 +309,7 @@ namespace mrHelper.App.Forms
             this.hiddenToolStripMenuItem});
          this.menuStrip1.Location = new System.Drawing.Point(0, 0);
          this.menuStrip1.Name = "menuStrip1";
-         this.menuStrip1.Size = new System.Drawing.Size(839, 24);
+         this.menuStrip1.Size = new System.Drawing.Size(1050, 24);
          this.menuStrip1.TabIndex = 2;
          this.menuStrip1.Text = "menuStrip1";
          // 
@@ -315,22 +317,24 @@ namespace mrHelper.App.Forms
          // 
          this.gitLabToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.configureHostsToolStripMenuItem,
-            this.configureStorageToolStripMenuItem});
+            this.configureStorageToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.exitToolStripMenuItem1});
          this.gitLabToolStripMenuItem.Name = "gitLabToolStripMenuItem";
-         this.gitLabToolStripMenuItem.Size = new System.Drawing.Size(53, 20);
-         this.gitLabToolStripMenuItem.Text = "GitLab";
+         this.gitLabToolStripMenuItem.Size = new System.Drawing.Size(57, 20);
+         this.gitLabToolStripMenuItem.Text = "System";
          // 
          // configureHostsToolStripMenuItem
          // 
          this.configureHostsToolStripMenuItem.Name = "configureHostsToolStripMenuItem";
-         this.configureHostsToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
+         this.configureHostsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
          this.configureHostsToolStripMenuItem.Text = "Configure hosts...";
          this.configureHostsToolStripMenuItem.Click += new System.EventHandler(this.configureHostsToolStripMenuItem_Click);
          // 
          // configureStorageToolStripMenuItem
          // 
          this.configureStorageToolStripMenuItem.Name = "configureStorageToolStripMenuItem";
-         this.configureStorageToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
+         this.configureStorageToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
          this.configureStorageToolStripMenuItem.Text = "Configure storage...";
          this.configureStorageToolStripMenuItem.Click += new System.EventHandler(this.configureStorageToolStripMenuItem_Click);
          // 
@@ -590,7 +594,7 @@ namespace mrHelper.App.Forms
          // sendFeedbackToolStripMenuItem
          // 
          this.sendFeedbackToolStripMenuItem.Name = "sendFeedbackToolStripMenuItem";
-         this.sendFeedbackToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+         this.sendFeedbackToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
          this.sendFeedbackToolStripMenuItem.Text = "Send logs/feedback";
          this.sendFeedbackToolStripMenuItem.Click += new System.EventHandler(this.sendFeedbackToolStripMenuItem_Click);
          // 
@@ -598,20 +602,20 @@ namespace mrHelper.App.Forms
          // 
          this.showHelpToolStripMenuItem.Name = "showHelpToolStripMenuItem";
          this.showHelpToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F1;
-         this.showHelpToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+         this.showHelpToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
          this.showHelpToolStripMenuItem.Text = "Help";
          this.showHelpToolStripMenuItem.Click += new System.EventHandler(this.showHelpToolStripMenuItem_Click);
          // 
          // toolStripSeparator8
          // 
          this.toolStripSeparator8.Name = "toolStripSeparator8";
-         this.toolStripSeparator8.Size = new System.Drawing.Size(148, 6);
+         this.toolStripSeparator8.Size = new System.Drawing.Size(175, 6);
          // 
          // updateToolStripMenuItem
          // 
          this.updateToolStripMenuItem.Enabled = false;
          this.updateToolStripMenuItem.Name = "updateToolStripMenuItem";
-         this.updateToolStripMenuItem.Size = new System.Drawing.Size(151, 22);
+         this.updateToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
          this.updateToolStripMenuItem.Text = "Update";
          this.updateToolStripMenuItem.Click += new System.EventHandler(this.updateToolStripMenuItem_Click);
          // 
@@ -704,7 +708,7 @@ namespace mrHelper.App.Forms
             this.toolStripTimeTrackingSeparator});
          this.toolStripActions.Location = new System.Drawing.Point(114, 24);
          this.toolStripActions.Name = "toolStripActions";
-         this.toolStripActions.Size = new System.Drawing.Size(564, 31);
+         this.toolStripActions.Size = new System.Drawing.Size(577, 31);
          this.toolStripActions.TabIndex = 3;
          // 
          // toolStripHostsSeparator
@@ -815,7 +819,7 @@ namespace mrHelper.App.Forms
          this.toolStripButtonAddComment.Image = global::mrHelper.App.Properties.Resources.add_comment_24x24;
          this.toolStripButtonAddComment.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonAddComment.Name = "toolStripButtonAddComment";
-         this.toolStripButtonAddComment.Size = new System.Drawing.Size(23, 28);
+         this.toolStripButtonAddComment.Size = new System.Drawing.Size(28, 28);
          this.toolStripButtonAddComment.Text = "toolStripButtonAddComment";
          this.toolStripButtonAddComment.ToolTipText = "Add a new comment";
          this.toolStripButtonAddComment.Click += new System.EventHandler(this.toolStripButtonAddComment_Click);
@@ -854,7 +858,7 @@ namespace mrHelper.App.Forms
          this.toolStripButtonCancelTimer.Image = global::mrHelper.App.Properties.Resources.cancel_24x24;
          this.toolStripButtonCancelTimer.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonCancelTimer.Name = "toolStripButtonCancelTimer";
-         this.toolStripButtonCancelTimer.Size = new System.Drawing.Size(24, 28);
+         this.toolStripButtonCancelTimer.Size = new System.Drawing.Size(28, 28);
          this.toolStripButtonCancelTimer.Text = "toolStripButtonCancelTimer";
          this.toolStripButtonCancelTimer.ToolTipText = "Cancel timer";
          this.toolStripButtonCancelTimer.Click += new System.EventHandler(this.toolStripButtonCancelTimer_Click);
@@ -885,7 +889,7 @@ namespace mrHelper.App.Forms
          this.toolStripButtonEditTrackedTime.Image = global::mrHelper.App.Properties.Resources.edit_24x24;
          this.toolStripButtonEditTrackedTime.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonEditTrackedTime.Name = "toolStripButtonEditTrackedTime";
-         this.toolStripButtonEditTrackedTime.Size = new System.Drawing.Size(24, 28);
+         this.toolStripButtonEditTrackedTime.Size = new System.Drawing.Size(28, 28);
          this.toolStripButtonEditTrackedTime.Text = "toolStripButtonEditTrackedTime";
          this.toolStripButtonEditTrackedTime.ToolTipText = "Edit tracked time";
          this.toolStripButtonEditTrackedTime.Click += new System.EventHandler(this.toolStripButtonEditTrackedTime_Click);
@@ -899,16 +903,28 @@ namespace mrHelper.App.Forms
          // 
          this.toolStripCustomActions.Dock = System.Windows.Forms.DockStyle.None;
          this.toolStripCustomActions.ImageScalingSize = new System.Drawing.Size(24, 24);
-         this.toolStripCustomActions.Location = new System.Drawing.Point(678, 24);
+         this.toolStripCustomActions.Location = new System.Drawing.Point(693, 24);
          this.toolStripCustomActions.Name = "toolStripCustomActions";
          this.toolStripCustomActions.Size = new System.Drawing.Size(111, 25);
          this.toolStripCustomActions.TabIndex = 4;
+         // 
+         // toolStripSeparator1
+         // 
+         this.toolStripSeparator1.Name = "toolStripSeparator1";
+         this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
+         // 
+         // exitToolStripMenuItem1
+         // 
+         this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
+         this.exitToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
+         this.exitToolStripMenuItem1.Text = "Exit";
+         this.exitToolStripMenuItem1.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
          // 
          // MainForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(839, 373);
+         this.ClientSize = new System.Drawing.Size(1050, 481);
          this.Controls.Add(this.toolStripContainer1);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.KeyPreview = true;
@@ -1015,6 +1031,8 @@ namespace mrHelper.App.Forms
       private ToolStripMenuItem verticalToolStripMenuItem;
       private ToolStrip toolStripCustomActions;
       private ToolStrip toolStripHosts;
+      private ToolStripSeparator toolStripSeparator1;
+      private ToolStripMenuItem exitToolStripMenuItem1;
    }
 }
 

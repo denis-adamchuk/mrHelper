@@ -242,7 +242,7 @@ namespace mrHelper.App.Forms
          this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
          this.buttonOK.Location = new System.Drawing.Point(595, 31);
          this.buttonOK.Name = "buttonOK";
-         this.buttonOK.Size = new System.Drawing.Size(75, 23);
+         this.buttonOK.Size = new System.Drawing.Size(83, 27);
          this.buttonOK.TabIndex = 32;
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
@@ -253,7 +253,7 @@ namespace mrHelper.App.Forms
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
          this.buttonCancel.Location = new System.Drawing.Point(595, 114);
          this.buttonCancel.Name = "buttonCancel";
-         this.buttonCancel.Size = new System.Drawing.Size(75, 23);
+         this.buttonCancel.Size = new System.Drawing.Size(83, 27);
          this.buttonCancel.TabIndex = 33;
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;

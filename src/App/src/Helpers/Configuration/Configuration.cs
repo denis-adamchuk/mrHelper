@@ -27,9 +27,6 @@ namespace mrHelper.App.Helpers
    {
       private static readonly string DefaultValuePrefix = ":";
 
-      private static readonly string BadValueSaved  = "bad-value-saved";
-      private static readonly string BadValueLoaded = "bad-value-loaded";
-
       internal UserDefinedSettings()
       {
          string configFileName = Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName) + ".config";
@@ -291,7 +288,7 @@ namespace mrHelper.App.Helpers
             byte[] protectedBytes = Base64Helper.FromBase64StringSafe(protectedValue);
             byte[] rawBytes = CryptoHelper.UnprotectSafe(protectedBytes);
             string rawValue = StringUtils.GetStringSafe(rawBytes);
-            rawValues.Add(rawValue ?? BadValueLoaded);
+            rawValues.Add(rawValue ?? Constants.ConfigurationBadValueLoaded);
          }
          return rawValues;
       }
@@ -307,7 +304,7 @@ namespace mrHelper.App.Helpers
             byte[] rawBytes = StringUtils.GetBytesSafe(rawValue);
             byte[] protectedBytes = CryptoHelper.ProtectSafe(rawBytes);
             string protectedString = Base64Helper.ToBase64StringSafe(protectedBytes);
-            protectedStrings.Add(protectedString ?? BadValueSaved);
+            protectedStrings.Add(protectedString ?? Constants.ConfigurationBadValueSaved);
          }
          setValues(key, protectedStrings.ToArray());
       }

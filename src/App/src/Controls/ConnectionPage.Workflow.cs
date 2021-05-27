@@ -33,13 +33,13 @@ namespace mrHelper.App.Controls
       internal class CannotLoadGitLabVersionException : Exception
       {
          internal CannotLoadGitLabVersionException(string hostname): base(
-            String.Format("Cannot load GitLab version from host {0}. Check network connection.", hostname)) {}
+            String.Format("Cannot load GitLab version from host {0}. Check access token and network connection.", hostname)) {}
       }
 
       internal class CannotLoadCurentUserException : Exception
       {
          internal CannotLoadCurentUserException(string hostname): base(
-            String.Format("Cannot load current user from host {0}. Check network connection.", hostname)) {}
+            String.Format("Cannot load current user from host {0}. Check access token and network connection.", hostname)) {}
       }
 
       private bool startWorkflowDefaultExceptionHandler(Exception ex)

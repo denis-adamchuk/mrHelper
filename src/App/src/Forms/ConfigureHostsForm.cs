@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
+using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
@@ -132,12 +133,21 @@ namespace mrHelper.App.Forms
 
       private void loadKnownHosts()
       {
+         bool hasBadValues = false;
          string[] hosts = Program.Settings.KnownHosts.ToArray();
          for (int iKnownHost = 0; iKnownHost < hosts.Length; ++iKnownHost)
          {
             string host = StringUtils.GetHostWithPrefix(hosts[iKnownHost]);
             string accessToken = Program.Settings.GetAccessToken(hosts[iKnownHost]);
+            hasBadValues |= accessToken == Constants.ConfigurationBadValueLoaded;
             addKnownHost(host, accessToken);
+         }
+         if (hasBadValues)
+         {
+            MessageBox.Show("For security reasons access tokens are kept in " +
+               "encrypted format and cannot be used at multiple PC at once. " +
+               "Please replace current access tokens with new ones.", "Bad access token",
+               MessageBoxButtons.OK, MessageBoxIcon.Information);
          }
       }
 
