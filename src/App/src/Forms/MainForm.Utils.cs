@@ -818,7 +818,14 @@ namespace mrHelper.App.Forms
                }
             }
 
-            getCurrentConnectionPage()?.StoreSplitterDistance();
+            if (_prevWindowState == FormWindowState.Minimized)
+            {
+               getCurrentConnectionPage()?.RestoreSplitterDistance();
+            }
+            else
+            {
+               getCurrentConnectionPage()?.StoreSplitterDistance();
+            }
          }
 
          _prevWindowState = WindowState;

@@ -226,7 +226,7 @@ namespace mrHelper.CommonControls.Tools
          // Sometimes Windows DPI behavior is strange when changed to non-default (and even back)
          // without signing out - windows got scaled incorrectly but after signing out they work ok.
          // There is a workaround for it.
-         // Component positions are defined at design-time with DPI 96 and when ResumeLauout occurs within
+         // Component positions are defined at design-time with DPI 96 and when ResumeLayout occurs within
          // InitializeComponent(), .NET checks CurrentAutoScaleDimensions to figure out a scale factor.
          // CurrentAutoScaleDimensions depends on the current font and we need to set it explicitly in advance.
          // This font has to be scaled in accordance with current DPI what gives a proper scale factor for
