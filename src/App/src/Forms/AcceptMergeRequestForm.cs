@@ -63,7 +63,9 @@ namespace mrHelper.App.Forms
          }
 
          traceWarning(warningMessage);
+         disableProcessingTimer();
          MessageBox.Show(warningMessage, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+         enableProcessingTimer();
       }
 
       private void refreshCommits(IMergeRequestCache mergeRequestCache)
@@ -88,7 +90,9 @@ namespace mrHelper.App.Forms
             traceError(String.Format("Unsupported merge method {0} detected in project {1}",
                selectedProject.Merge_Method, selectedProject.Path_With_Namespace));
             string message = "Current version supports projects with Fast Forward merge method only";
+            disableProcessingTimer();
             MessageBox.Show(message, "Unsupported project merge method", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            enableProcessingTimer();
             Close();
          }
       }
@@ -143,7 +147,9 @@ namespace mrHelper.App.Forms
             traceWarning(String.Format("Unexpected merge request state {0}", mergeRequest.State.ToString()));
 
             string message = "Only Open Merge Requests can be merged";
+            disableProcessingTimer();
             MessageBox.Show(message, "Unexpected Merge Request state", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            enableProcessingTimer();
             Close();
             return;
          }
@@ -319,13 +325,10 @@ namespace mrHelper.App.Forms
             {
                _mergeStatus = MergeStatus.CannotBeMerged;
             }
-            else if (mergeRequest.Merge_Status == "unchecked")
+            else if (mergeRequest.Merge_Status == "unchecked"
+                  || mergeRequest.Merge_Status == "checking")
             {
                _mergeStatus = MergeStatus.Unchecked;
-            }
-            else if (mergeRequest.Merge_Status == "checking")
-            {
-               _mergeStatus = MergeStatus.NotAvailable;
             }
             else
             {
@@ -581,7 +584,9 @@ namespace mrHelper.App.Forms
          void showDialogAndLogError(string message = "Unknown")
          {
             string defaultMessage = "GitLab could not perform a requested operation. Reason: ";
+            disableProcessingTimer();
             MessageBox.Show(defaultMessage + message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            enableProcessingTimer();
             traceError(defaultMessage + message);
          };
 

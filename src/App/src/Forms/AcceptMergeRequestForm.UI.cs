@@ -98,8 +98,10 @@ namespace mrHelper.App.Forms
             ExceptionHandlers.Handle(String.Format("Failed to merge (attempts: {0})", attempts), ex);
             if (areConflictsFoundAtMerge(ex))
             {
+               disableProcessingTimer();
                MessageBox.Show("GitLab was unable to complete the merge. Rebase branch locally and try again",
                   "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               enableProcessingTimer();
                return;
             }
             reportErrorToUser(ex);
