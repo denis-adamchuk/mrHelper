@@ -171,10 +171,24 @@ namespace mrHelper.App.Forms
 
       private void restoreSize()
       {
+         if (Program.Settings.WidthBeforeClose != 0 && Program.Settings.HeightBeforeClose != 0)
+         {
+            Size = new Size(Program.Settings.WidthBeforeClose, Program.Settings.HeightBeforeClose);
+            Size = new Size(Program.Settings.WidthBeforeClose, Program.Settings.HeightBeforeClose);
+         }
+
          if (Program.Settings.LeftBeforeClose != 0 && Program.Settings.TopBeforeClose != 0)
          {
-            Location = new Point(Program.Settings.LeftBeforeClose, Program.Settings.TopBeforeClose);
+            int screenWidth = Screen.GetWorkingArea(this).Width;
+            int screenHeight = Screen.GetWorkingArea(this).Height;
+            double minAllowedVisibleAreaPx = 0.20; // 20%
+            int maxX = screenWidth - Convert.ToInt32(screenWidth * minAllowedVisibleAreaPx);
+            int maxY = screenHeight - Convert.ToInt32(screenHeight * minAllowedVisibleAreaPx);
+            int newX = Math.Max(0, Math.Min(maxX, Program.Settings.LeftBeforeClose));
+            int newY = Math.Max(0, Math.Min(maxY, Program.Settings.TopBeforeClose));
+            Location = new Point(newX, newY);
          }
+
          if (Program.Settings.WasMaximizedBeforeClose)
          {
             WindowState = FormWindowState.Maximized;
@@ -182,10 +196,6 @@ namespace mrHelper.App.Forms
          else if (Program.Settings.WasMinimizedBeforeClose)
          {
             WindowState = FormWindowState.Minimized;
-         }
-         if (Program.Settings.WidthBeforeClose != 0 && Program.Settings.HeightBeforeClose != 0)
-         {
-            Size = new Size(Program.Settings.WidthBeforeClose, Program.Settings.HeightBeforeClose);
          }
       }
 
