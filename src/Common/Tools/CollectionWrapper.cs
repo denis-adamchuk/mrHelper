@@ -58,6 +58,11 @@ namespace mrHelper.Common.Tools
          }
       }
 
+      public bool TryGetValue(TKey key, out TValue value)
+      {
+         return _data.TryGetValue(key, out value);
+      }
+
       public void Remove(TKey key)
       {
          if (_data.Remove(key))

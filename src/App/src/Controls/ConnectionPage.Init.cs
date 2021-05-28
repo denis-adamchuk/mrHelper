@@ -44,6 +44,9 @@ namespace mrHelper.App.Controls
          InitializeComponent();
          updateSplitterOrientation();
 
+         listViewLiveMergeRequests.Tag = Constants.LiveListViewName;
+         listViewFoundMergeRequests.Tag = Constants.SearchListViewName;
+         listViewRecentMergeRequests.Tag = Constants.RecentListViewName;
          forEachListView(listView => listView.SetPersistentStorage(persistentStorage));
 
          _redrawTimer.Tick += onRedrawTimer;
@@ -96,10 +99,6 @@ namespace mrHelper.App.Controls
          disableRecentTabControls();
          disableSelectedMergeRequestControls();
          setConnectionStatus(null);
-
-         listViewLiveMergeRequests.Tag = Constants.LiveListViewName;
-         listViewFoundMergeRequests.Tag = Constants.SearchListViewName;
-         listViewRecentMergeRequests.Tag = Constants.RecentListViewName;
 
          createListViewContextMenu();
          createRevisionBrowserContextMenu();

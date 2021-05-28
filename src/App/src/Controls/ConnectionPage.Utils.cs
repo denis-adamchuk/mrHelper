@@ -194,6 +194,7 @@ namespace mrHelper.App.Controls
             Trace.TraceInformation(String.Format(
                "[ConnectionPage] User deselected merge request. Mode={0}",
                getCurrentTabDataCacheType().ToString()));
+            cleanUpLastMergeRequestByHost(listView);
             disableSelectedMergeRequestControls();
             return;
          }
@@ -217,10 +218,33 @@ namespace mrHelper.App.Controls
          StorageStatusChanged?.Invoke(this);
          onMergeRequestActionsEnabled();
 
-         if (mode == EDataCacheType.Live)
+         setLastMergeRequestByHost(mrk);
+      }
+
+      private void cleanUpLastMergeRequestByHost(MergeRequestListView listView)
+      {
+         if (getCurrentTabDataCacheType() != EDataCacheType.Live)
          {
-            _lastMergeRequestsByHosts[fmk.ProjectKey.HostName] = mrk;
+            return;
          }
+
+         if (_lastMergeRequestsByHosts.TryGetValue(HostName, out MergeRequestKey lastMrk))
+         {
+            if (listView.IsGroupCollapsed(lastMrk.ProjectKey))
+            {
+               _lastMergeRequestsByHosts.Remove(HostName);
+            }
+         }
+      }
+
+      private void setLastMergeRequestByHost(MergeRequestKey mrk)
+      {
+         if (getCurrentTabDataCacheType() != EDataCacheType.Live)
+         {
+            return;
+         }
+
+         _lastMergeRequestsByHosts[HostName] = mrk;
       }
 
       private void updateMergeRequestList(EDataCacheType mode)

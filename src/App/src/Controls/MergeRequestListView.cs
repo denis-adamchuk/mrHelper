@@ -94,6 +94,7 @@ namespace mrHelper.App.Controls
          {
             _persistentStorage.OnDeserialize += onDeserialize;
             _persistentStorage.OnSerialize += onSerialize;
+            persistentStorage.Deserialize();
          }
       }
 
@@ -262,6 +263,11 @@ namespace mrHelper.App.Controls
          }
 
          EndUpdate();
+      }
+
+      internal bool IsGroupCollapsed(ProjectKey projectKey)
+      {
+         return isGroupCollapsed(projectKey);
       }
 
       internal void UpdateItems()
