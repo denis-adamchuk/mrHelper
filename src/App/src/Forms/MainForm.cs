@@ -72,7 +72,6 @@ namespace mrHelper.App.Forms
 
       private IEnumerable<string> _keywords;
       private ColorScheme _colorScheme;
-      private Color? _currentTrayColor;
 
       private PersistentStorage _persistentStorage;
 

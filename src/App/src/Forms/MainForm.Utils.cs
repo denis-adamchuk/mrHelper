@@ -459,10 +459,6 @@ namespace mrHelper.App.Forms
       {
          void applyColor(Color? colorOpt)
          {
-            if (_currentTrayColor == colorOpt)
-            {
-               return;
-            }
             if (colorOpt != null)
             {
                setNotifyIconByColor(colorOpt.Value);
@@ -473,7 +469,6 @@ namespace mrHelper.App.Forms
                setNotifyIconByColor(null);
                WinFormsHelpers.SetOverlayEllipseIcon(null);
             }
-            _currentTrayColor = colorOpt;
          }
 
          if (_colorScheme == null)
