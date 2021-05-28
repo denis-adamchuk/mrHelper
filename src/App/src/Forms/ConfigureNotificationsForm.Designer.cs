@@ -66,7 +66,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests.Location = new System.Drawing.Point(6, 41);
          this.checkBoxShowMergedMergeRequests.Name = "checkBoxShowMergedMergeRequests";
          this.checkBoxShowMergedMergeRequests.Size = new System.Drawing.Size(307, 17);
-         this.checkBoxShowMergedMergeRequests.TabIndex = 2;
+         this.checkBoxShowMergedMergeRequests.TabIndex = 1;
          this.checkBoxShowMergedMergeRequests.Text = "Merged or closed Merge Requests (project-based workflow)";
          this.checkBoxShowMergedMergeRequests.UseVisualStyleBackColor = true;
          // 
@@ -106,7 +106,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowUpdatedMergeRequests.Location = new System.Drawing.Point(6, 64);
          this.checkBoxShowUpdatedMergeRequests.Name = "checkBoxShowUpdatedMergeRequests";
          this.checkBoxShowUpdatedMergeRequests.Size = new System.Drawing.Size(181, 17);
-         this.checkBoxShowUpdatedMergeRequests.TabIndex = 4;
+         this.checkBoxShowUpdatedMergeRequests.TabIndex = 2;
          this.checkBoxShowUpdatedMergeRequests.Text = "New commits in Merge Requests";
          this.checkBoxShowUpdatedMergeRequests.UseVisualStyleBackColor = true;
          // 
@@ -126,7 +126,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowResolvedAll.Location = new System.Drawing.Point(319, 18);
          this.checkBoxShowResolvedAll.Name = "checkBoxShowResolvedAll";
          this.checkBoxShowResolvedAll.Size = new System.Drawing.Size(127, 17);
-         this.checkBoxShowResolvedAll.TabIndex = 1;
+         this.checkBoxShowResolvedAll.TabIndex = 3;
          this.checkBoxShowResolvedAll.Text = "Resolved All Threads";
          this.checkBoxShowResolvedAll.UseVisualStyleBackColor = true;
          // 
@@ -136,7 +136,7 @@ namespace mrHelper.App.Forms
          this.checkBoxShowOnMention.Location = new System.Drawing.Point(319, 41);
          this.checkBoxShowOnMention.Name = "checkBoxShowOnMention";
          this.checkBoxShowOnMention.Size = new System.Drawing.Size(170, 17);
-         this.checkBoxShowOnMention.TabIndex = 3;
+         this.checkBoxShowOnMention.TabIndex = 4;
          this.checkBoxShowOnMention.Text = "When someone mentioned me";
          this.checkBoxShowOnMention.UseVisualStyleBackColor = true;
          // 

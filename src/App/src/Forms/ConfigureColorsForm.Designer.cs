@@ -77,7 +77,7 @@ namespace mrHelper.App.Forms
          this.tabControl.Name = "tabControl";
          this.tabControl.SelectedIndex = 0;
          this.tabControl.Size = new System.Drawing.Size(488, 144);
-         this.tabControl.TabIndex = 9;
+         this.tabControl.TabIndex = 4;
          // 
          // tabPageGeneral
          // 
@@ -99,7 +99,7 @@ namespace mrHelper.App.Forms
          this.labelColorSelector.Location = new System.Drawing.Point(345, 6);
          this.labelColorSelector.Name = "labelColorSelector";
          this.labelColorSelector.Size = new System.Drawing.Size(91, 13);
-         this.labelColorSelector.TabIndex = 4;
+         this.labelColorSelector.TabIndex = 1;
          this.labelColorSelector.Text = "Background color";
          // 
          // linkLabelResetToFactoryValue
@@ -108,7 +108,7 @@ namespace mrHelper.App.Forms
          this.linkLabelResetToFactoryValue.Location = new System.Drawing.Point(345, 97);
          this.linkLabelResetToFactoryValue.Name = "linkLabelResetToFactoryValue";
          this.linkLabelResetToFactoryValue.Size = new System.Drawing.Size(104, 13);
-         this.linkLabelResetToFactoryValue.TabIndex = 6;
+         this.linkLabelResetToFactoryValue.TabIndex = 3;
          this.linkLabelResetToFactoryValue.TabStop = true;
          this.linkLabelResetToFactoryValue.Text = "Reset selected color";
          this.linkLabelResetToFactoryValue.Visible = false;
@@ -122,7 +122,7 @@ namespace mrHelper.App.Forms
          this.comboBoxColorSelector.Location = new System.Drawing.Point(348, 22);
          this.comboBoxColorSelector.Name = "comboBoxColorSelector";
          this.comboBoxColorSelector.Size = new System.Drawing.Size(126, 21);
-         this.comboBoxColorSelector.TabIndex = 5;
+         this.comboBoxColorSelector.TabIndex = 2;
          this.comboBoxColorSelector.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.comboBoxColorSelector_DrawItem);
          this.comboBoxColorSelector.SelectedIndexChanged += new System.EventHandler(this.comboBoxColorSelector_SelectedIndexChanged);
          // 
@@ -135,7 +135,7 @@ namespace mrHelper.App.Forms
          this.listBoxColorSchemeItemSelector.Location = new System.Drawing.Point(6, 6);
          this.listBoxColorSchemeItemSelector.Name = "listBoxColorSchemeItemSelector";
          this.listBoxColorSchemeItemSelector.Size = new System.Drawing.Size(330, 104);
-         this.listBoxColorSchemeItemSelector.TabIndex = 3;
+         this.listBoxColorSchemeItemSelector.TabIndex = 0;
          this.listBoxColorSchemeItemSelector.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listBoxColorSchemeItemSelector_DrawItem);
          this.listBoxColorSchemeItemSelector.MeasureItem += new System.Windows.Forms.MeasureItemEventHandler(this.listBoxColorSchemeItemSelector_MeasureItem);
          this.listBoxColorSchemeItemSelector.SelectedIndexChanged += new System.EventHandler(this.listBoxColorSchemeItemSelector_SelectedIndexChanged);
@@ -160,7 +160,7 @@ namespace mrHelper.App.Forms
          this.linkLabelChangeDiscussionColor.Location = new System.Drawing.Point(345, 8);
          this.linkLabelChangeDiscussionColor.Name = "linkLabelChangeDiscussionColor";
          this.linkLabelChangeDiscussionColor.Size = new System.Drawing.Size(130, 13);
-         this.linkLabelChangeDiscussionColor.TabIndex = 8;
+         this.linkLabelChangeDiscussionColor.TabIndex = 1;
          this.linkLabelChangeDiscussionColor.TabStop = true;
          this.linkLabelChangeDiscussionColor.Text = "Change background color";
          this.linkLabelChangeDiscussionColor.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelChangeDiscussionColor_LinkClicked);
@@ -171,7 +171,7 @@ namespace mrHelper.App.Forms
          this.linkLabelResetDiscussionColorToFactoryValue.Location = new System.Drawing.Point(345, 97);
          this.linkLabelResetDiscussionColorToFactoryValue.Name = "linkLabelResetDiscussionColorToFactoryValue";
          this.linkLabelResetDiscussionColorToFactoryValue.Size = new System.Drawing.Size(104, 13);
-         this.linkLabelResetDiscussionColorToFactoryValue.TabIndex = 7;
+         this.linkLabelResetDiscussionColorToFactoryValue.TabIndex = 2;
          this.linkLabelResetDiscussionColorToFactoryValue.TabStop = true;
          this.linkLabelResetDiscussionColorToFactoryValue.Text = "Reset selected color";
          this.linkLabelResetDiscussionColorToFactoryValue.Visible = false;
@@ -186,7 +186,7 @@ namespace mrHelper.App.Forms
          this.listBoxDiscussionColorSchemeItemSelector.Location = new System.Drawing.Point(6, 6);
          this.listBoxDiscussionColorSchemeItemSelector.Name = "listBoxDiscussionColorSchemeItemSelector";
          this.listBoxDiscussionColorSchemeItemSelector.Size = new System.Drawing.Size(330, 104);
-         this.listBoxDiscussionColorSchemeItemSelector.TabIndex = 4;
+         this.listBoxDiscussionColorSchemeItemSelector.TabIndex = 0;
          this.listBoxDiscussionColorSchemeItemSelector.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listBoxColorSchemeItemSelector_DrawItem);
          this.listBoxDiscussionColorSchemeItemSelector.MeasureItem += new System.Windows.Forms.MeasureItemEventHandler(this.listBoxColorSchemeItemSelector_MeasureItem);
          this.listBoxDiscussionColorSchemeItemSelector.SelectedIndexChanged += new System.EventHandler(this.listBoxDiscussionColorSchemeItemSelector_SelectedIndexChanged);
@@ -230,7 +230,7 @@ namespace mrHelper.App.Forms
          this.buttonClose.Location = new System.Drawing.Point(418, 17);
          this.buttonClose.Name = "buttonClose";
          this.buttonClose.Size = new System.Drawing.Size(75, 23);
-         this.buttonClose.TabIndex = 8;
+         this.buttonClose.TabIndex = 4;
          this.buttonClose.Text = "Close";
          this.buttonClose.UseVisualStyleBackColor = true;
          // 

@@ -55,7 +55,7 @@ namespace mrHelper.App.Forms
          this.label2.Location = new System.Drawing.Point(222, 9);
          this.label2.Name = "label2";
          this.label2.Size = new System.Drawing.Size(76, 13);
-         this.label2.TabIndex = 1;
+         this.label2.TabIndex = 3;
          this.label2.Text = "Access Token";
          // 
          // textBoxHost
@@ -63,7 +63,7 @@ namespace mrHelper.App.Forms
          this.textBoxHost.Location = new System.Drawing.Point(12, 27);
          this.textBoxHost.Name = "textBoxHost";
          this.textBoxHost.Size = new System.Drawing.Size(193, 20);
-         this.textBoxHost.TabIndex = 0;
+         this.textBoxHost.TabIndex = 1;
          this.textBoxHost.TextChanged += new System.EventHandler(this.textBoxHost_TextChanged);
          this.textBoxHost.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
          // 
@@ -72,7 +72,7 @@ namespace mrHelper.App.Forms
          this.textBoxAccessToken.Location = new System.Drawing.Point(225, 27);
          this.textBoxAccessToken.Name = "textBoxAccessToken";
          this.textBoxAccessToken.Size = new System.Drawing.Size(193, 20);
-         this.textBoxAccessToken.TabIndex = 1;
+         this.textBoxAccessToken.TabIndex = 4;
          this.textBoxAccessToken.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBox_KeyDown);
          // 
          // buttonCancel
@@ -82,7 +82,7 @@ namespace mrHelper.App.Forms
          this.buttonCancel.Location = new System.Drawing.Point(343, 67);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
-         this.buttonCancel.TabIndex = 3;
+         this.buttonCancel.TabIndex = 6;
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;
          // 
@@ -93,7 +93,7 @@ namespace mrHelper.App.Forms
          this.buttonOK.Location = new System.Drawing.Point(251, 67);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(75, 23);
-         this.buttonOK.TabIndex = 2;
+         this.buttonOK.TabIndex = 5;
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
          // 
@@ -103,7 +103,7 @@ namespace mrHelper.App.Forms
          this.linkLabelCreateAccessToken.Location = new System.Drawing.Point(12, 50);
          this.linkLabelCreateAccessToken.Name = "linkLabelCreateAccessToken";
          this.linkLabelCreateAccessToken.Size = new System.Drawing.Size(105, 13);
-         this.linkLabelCreateAccessToken.TabIndex = 4;
+         this.linkLabelCreateAccessToken.TabIndex = 2;
          this.linkLabelCreateAccessToken.TabStop = true;
          this.linkLabelCreateAccessToken.Text = "Create access token";
          // 

@@ -68,7 +68,7 @@
          this.groupBoxSource.Location = new System.Drawing.Point(277, 12);
          this.groupBoxSource.Name = "groupBoxSource";
          this.groupBoxSource.Size = new System.Drawing.Size(251, 56);
-         this.groupBoxSource.TabIndex = 0;
+         this.groupBoxSource.TabIndex = 1;
          this.groupBoxSource.TabStop = false;
          this.groupBoxSource.Text = "Source Branch";
          // 
@@ -79,7 +79,7 @@
          this.comboBoxSourceBranch.Location = new System.Drawing.Point(6, 19);
          this.comboBoxSourceBranch.Name = "comboBoxSourceBranch";
          this.comboBoxSourceBranch.Size = new System.Drawing.Size(239, 21);
-         this.comboBoxSourceBranch.TabIndex = 1;
+         this.comboBoxSourceBranch.TabIndex = 0;
          this.comboBoxSourceBranch.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.comboBoxSourceBranch_Format);
          // 
          // groupBoxTarget
@@ -89,7 +89,7 @@
          this.groupBoxTarget.Location = new System.Drawing.Point(534, 12);
          this.groupBoxTarget.Name = "groupBoxTarget";
          this.groupBoxTarget.Size = new System.Drawing.Size(251, 56);
-         this.groupBoxTarget.TabIndex = 1;
+         this.groupBoxTarget.TabIndex = 2;
          this.groupBoxTarget.TabStop = false;
          this.groupBoxTarget.Text = "Target Branch";
          // 
@@ -99,7 +99,7 @@
          this.comboBoxTargetBranch.Location = new System.Drawing.Point(6, 19);
          this.comboBoxTargetBranch.Name = "comboBoxTargetBranch";
          this.comboBoxTargetBranch.Size = new System.Drawing.Size(239, 21);
-         this.comboBoxTargetBranch.TabIndex = 2;
+         this.comboBoxTargetBranch.TabIndex = 0;
          this.comboBoxTargetBranch.TextChanged += new System.EventHandler(this.comboBoxTargetBranch_TextChanged);
          // 
          // groupBoxTitle
@@ -122,7 +122,7 @@
          this.buttonToggleDraft.Location = new System.Drawing.Point(6, 45);
          this.buttonToggleDraft.Name = "buttonToggleDraft";
          this.buttonToggleDraft.Size = new System.Drawing.Size(110, 23);
-         this.buttonToggleDraft.TabIndex = 4;
+         this.buttonToggleDraft.TabIndex = 1;
          this.buttonToggleDraft.Text = "Toggle Draft status";
          this.buttonToggleDraft.UseVisualStyleBackColor = true;
          this.buttonToggleDraft.Click += new System.EventHandler(this.buttonToggleDraft_Click);
@@ -133,7 +133,7 @@
          this.buttonEditTitle.Location = new System.Drawing.Point(692, 45);
          this.buttonEditTitle.Name = "buttonEditTitle";
          this.buttonEditTitle.Size = new System.Drawing.Size(75, 23);
-         this.buttonEditTitle.TabIndex = 5;
+         this.buttonEditTitle.TabIndex = 2;
          this.buttonEditTitle.Text = "Edit...";
          this.buttonEditTitle.UseVisualStyleBackColor = true;
          this.buttonEditTitle.Click += new System.EventHandler(this.buttonEditTitle_Click);
@@ -148,7 +148,7 @@
          this.htmlPanelTitle.Location = new System.Drawing.Point(3, 16);
          this.htmlPanelTitle.Name = "htmlPanelTitle";
          this.htmlPanelTitle.Size = new System.Drawing.Size(767, 23);
-         this.htmlPanelTitle.TabIndex = 3;
+         this.htmlPanelTitle.TabIndex = 0;
          this.htmlPanelTitle.Text = null;
          // 
          // groupBoxDescription
@@ -171,7 +171,7 @@
          this.buttonEditDescription.Location = new System.Drawing.Point(692, 140);
          this.buttonEditDescription.Name = "buttonEditDescription";
          this.buttonEditDescription.Size = new System.Drawing.Size(75, 23);
-         this.buttonEditDescription.TabIndex = 7;
+         this.buttonEditDescription.TabIndex = 1;
          this.buttonEditDescription.Text = "Edit...";
          this.buttonEditDescription.UseVisualStyleBackColor = true;
          this.buttonEditDescription.Click += new System.EventHandler(this.buttonEditDescription_Click);
@@ -188,7 +188,7 @@
          this.htmlPanelDescription.Location = new System.Drawing.Point(6, 19);
          this.htmlPanelDescription.Name = "htmlPanelDescription";
          this.htmlPanelDescription.Size = new System.Drawing.Size(761, 115);
-         this.htmlPanelDescription.TabIndex = 6;
+         this.htmlPanelDescription.TabIndex = 0;
          this.htmlPanelDescription.Text = null;
          // 
          // groupBoxOptions
@@ -217,7 +217,7 @@
          this.checkBoxHighPriority.Location = new System.Drawing.Point(337, 21);
          this.checkBoxHighPriority.Name = "checkBoxHighPriority";
          this.checkBoxHighPriority.Size = new System.Drawing.Size(102, 17);
-         this.checkBoxHighPriority.TabIndex = 12;
+         this.checkBoxHighPriority.TabIndex = 1;
          this.checkBoxHighPriority.Text = "High-Priority MR";
          this.checkBoxHighPriority.UseVisualStyleBackColor = true;
          // 
@@ -245,7 +245,7 @@
          this.textBoxAssigneeUsername.Location = new System.Drawing.Point(114, 44);
          this.textBoxAssigneeUsername.Name = "textBoxAssigneeUsername";
          this.textBoxAssigneeUsername.Size = new System.Drawing.Size(131, 20);
-         this.textBoxAssigneeUsername.TabIndex = 10;
+         this.textBoxAssigneeUsername.TabIndex = 4;
          this.textBoxAssigneeUsername.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxAssigneeUsername_KeyDown);
          // 
          // checkBoxSquash
@@ -255,7 +255,7 @@
          this.checkBoxSquash.Location = new System.Drawing.Point(507, 19);
          this.checkBoxSquash.Name = "checkBoxSquash";
          this.checkBoxSquash.Size = new System.Drawing.Size(260, 17);
-         this.checkBoxSquash.TabIndex = 9;
+         this.checkBoxSquash.TabIndex = 2;
          this.checkBoxSquash.Text = "Squash commits when merge request is accepted";
          this.checkBoxSquash.UseVisualStyleBackColor = true;
          // 
@@ -265,7 +265,7 @@
          this.checkBoxDeleteSourceBranch.Location = new System.Drawing.Point(6, 19);
          this.checkBoxDeleteSourceBranch.Name = "checkBoxDeleteSourceBranch";
          this.checkBoxDeleteSourceBranch.Size = new System.Drawing.Size(285, 17);
-         this.checkBoxDeleteSourceBranch.TabIndex = 8;
+         this.checkBoxDeleteSourceBranch.TabIndex = 0;
          this.checkBoxDeleteSourceBranch.Text = "Delete source branch when merge request is accepted";
          this.checkBoxDeleteSourceBranch.UseVisualStyleBackColor = true;
          // 
@@ -276,7 +276,7 @@
          this.textBoxSpecialNote.Location = new System.Drawing.Point(337, 44);
          this.textBoxSpecialNote.Name = "textBoxSpecialNote";
          this.textBoxSpecialNote.Size = new System.Drawing.Size(430, 22);
-         this.textBoxSpecialNote.TabIndex = 11;
+         this.textBoxSpecialNote.TabIndex = 6;
          this.textBoxSpecialNote.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxSpecialNote_KeyDown);
          // 
          // buttonSubmit
@@ -285,7 +285,7 @@
          this.buttonSubmit.Location = new System.Drawing.Point(12, 420);
          this.buttonSubmit.Name = "buttonSubmit";
          this.buttonSubmit.Size = new System.Drawing.Size(75, 23);
-         this.buttonSubmit.TabIndex = 12;
+         this.buttonSubmit.TabIndex = 6;
          this.buttonSubmit.Text = "Submit";
          this.buttonSubmit.UseVisualStyleBackColor = true;
          this.buttonSubmit.Click += new System.EventHandler(this.buttonSubmit_Click);
@@ -298,7 +298,7 @@
          this.buttonCancel.Location = new System.Drawing.Point(710, 420);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(75, 23);
-         this.buttonCancel.TabIndex = 13;
+         this.buttonCancel.TabIndex = 8;
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;
          // 
@@ -308,7 +308,7 @@
          this.groupBoxProject.Location = new System.Drawing.Point(12, 12);
          this.groupBoxProject.Name = "groupBoxProject";
          this.groupBoxProject.Size = new System.Drawing.Size(251, 56);
-         this.groupBoxProject.TabIndex = 1;
+         this.groupBoxProject.TabIndex = 0;
          this.groupBoxProject.TabStop = false;
          this.groupBoxProject.Text = "Project";
          // 
@@ -327,7 +327,7 @@
          this.labelCheckingTargetBranch.Location = new System.Drawing.Point(93, 425);
          this.labelCheckingTargetBranch.Name = "labelCheckingTargetBranch";
          this.labelCheckingTargetBranch.Size = new System.Drawing.Size(127, 13);
-         this.labelCheckingTargetBranch.TabIndex = 14;
+         this.labelCheckingTargetBranch.TabIndex = 7;
          this.labelCheckingTargetBranch.Text = "Checking target branch...";
          this.labelCheckingTargetBranch.Visible = false;
          // 

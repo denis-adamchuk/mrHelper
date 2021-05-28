@@ -323,6 +323,10 @@ namespace mrHelper.App.Forms
             {
                _mergeStatus = MergeStatus.Unchecked;
             }
+            else if (mergeRequest.Merge_Status == "checking")
+            {
+               _mergeStatus = MergeStatus.NotAvailable;
+            }
             else
             {
                Debug.Assert(false); // unknown Merge_Status

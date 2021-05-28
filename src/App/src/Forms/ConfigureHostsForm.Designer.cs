@@ -50,8 +50,8 @@ namespace mrHelper.App.Forms
          this.buttonOK = new System.Windows.Forms.Button();
          this.buttonCancel = new System.Windows.Forms.Button();
          this.groupBoxKnownHosts = new System.Windows.Forms.GroupBox();
-         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.linkLabelCreateAccessToken = new mrHelper.CommonControls.Controls.LinkLabelEx();
+         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.groupBoxSelectWorkflow.SuspendLayout();
          this.groupBoxConfigureProjectBasedWorkflow.SuspendLayout();
          this.groupBoxConfigureUserBasedWorkflow.SuspendLayout();
@@ -66,7 +66,7 @@ namespace mrHelper.App.Forms
          this.groupBoxSelectWorkflow.Location = new System.Drawing.Point(12, 156);
          this.groupBoxSelectWorkflow.Name = "groupBoxSelectWorkflow";
          this.groupBoxSelectWorkflow.Size = new System.Drawing.Size(577, 52);
-         this.groupBoxSelectWorkflow.TabIndex = 28;
+         this.groupBoxSelectWorkflow.TabIndex = 2;
          this.groupBoxSelectWorkflow.TabStop = false;
          this.groupBoxSelectWorkflow.Text = "Select Workflow";
          // 
@@ -76,7 +76,7 @@ namespace mrHelper.App.Forms
          this.linkLabelWorkflowDescription.Location = new System.Drawing.Point(441, 21);
          this.linkLabelWorkflowDescription.Name = "linkLabelWorkflowDescription";
          this.linkLabelWorkflowDescription.Size = new System.Drawing.Size(128, 13);
-         this.linkLabelWorkflowDescription.TabIndex = 31;
+         this.linkLabelWorkflowDescription.TabIndex = 2;
          this.linkLabelWorkflowDescription.TabStop = true;
          this.linkLabelWorkflowDescription.Text = "Show detailed description";
          this.linkLabelWorkflowDescription.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelWorkflowDescription_LinkClicked_1);
@@ -87,7 +87,7 @@ namespace mrHelper.App.Forms
          this.radioButtonSelectByProjects.Location = new System.Drawing.Point(182, 19);
          this.radioButtonSelectByProjects.Name = "radioButtonSelectByProjects";
          this.radioButtonSelectByProjects.Size = new System.Drawing.Size(135, 17);
-         this.radioButtonSelectByProjects.TabIndex = 22;
+         this.radioButtonSelectByProjects.TabIndex = 1;
          this.radioButtonSelectByProjects.TabStop = true;
          this.radioButtonSelectByProjects.Text = "Project-based workflow";
          this.radioButtonSelectByProjects.UseVisualStyleBackColor = true;
@@ -99,7 +99,7 @@ namespace mrHelper.App.Forms
          this.radioButtonSelectByUsernames.Location = new System.Drawing.Point(6, 19);
          this.radioButtonSelectByUsernames.Name = "radioButtonSelectByUsernames";
          this.radioButtonSelectByUsernames.Size = new System.Drawing.Size(124, 17);
-         this.radioButtonSelectByUsernames.TabIndex = 19;
+         this.radioButtonSelectByUsernames.TabIndex = 0;
          this.radioButtonSelectByUsernames.TabStop = true;
          this.radioButtonSelectByUsernames.Text = "User-based workflow";
          this.radioButtonSelectByUsernames.UseVisualStyleBackColor = true;
@@ -112,7 +112,7 @@ namespace mrHelper.App.Forms
          this.groupBoxConfigureProjectBasedWorkflow.Location = new System.Drawing.Point(316, 212);
          this.groupBoxConfigureProjectBasedWorkflow.Name = "groupBoxConfigureProjectBasedWorkflow";
          this.groupBoxConfigureProjectBasedWorkflow.Size = new System.Drawing.Size(273, 219);
-         this.groupBoxConfigureProjectBasedWorkflow.TabIndex = 27;
+         this.groupBoxConfigureProjectBasedWorkflow.TabIndex = 4;
          this.groupBoxConfigureProjectBasedWorkflow.TabStop = false;
          this.groupBoxConfigureProjectBasedWorkflow.Text = "Configure Project-based workflow";
          // 
@@ -122,7 +122,7 @@ namespace mrHelper.App.Forms
          this.buttonEditProjects.Location = new System.Drawing.Point(182, 182);
          this.buttonEditProjects.Name = "buttonEditProjects";
          this.buttonEditProjects.Size = new System.Drawing.Size(83, 27);
-         this.buttonEditProjects.TabIndex = 18;
+         this.buttonEditProjects.TabIndex = 1;
          this.buttonEditProjects.Text = "Edit...";
          this.buttonEditProjects.UseVisualStyleBackColor = true;
          this.buttonEditProjects.Click += new System.EventHandler(this.buttonEditProjects_Click);
@@ -139,7 +139,7 @@ namespace mrHelper.App.Forms
          this.listViewProjects.Name = "listViewProjects";
          this.listViewProjects.ShowGroups = false;
          this.listViewProjects.Size = new System.Drawing.Size(259, 157);
-         this.listViewProjects.TabIndex = 17;
+         this.listViewProjects.TabIndex = 0;
          this.listViewProjects.UseCompatibleStateImageBehavior = false;
          this.listViewProjects.View = System.Windows.Forms.View.Details;
          // 
@@ -155,7 +155,7 @@ namespace mrHelper.App.Forms
          this.groupBoxConfigureUserBasedWorkflow.Location = new System.Drawing.Point(12, 212);
          this.groupBoxConfigureUserBasedWorkflow.Name = "groupBoxConfigureUserBasedWorkflow";
          this.groupBoxConfigureUserBasedWorkflow.Size = new System.Drawing.Size(273, 219);
-         this.groupBoxConfigureUserBasedWorkflow.TabIndex = 26;
+         this.groupBoxConfigureUserBasedWorkflow.TabIndex = 3;
          this.groupBoxConfigureUserBasedWorkflow.TabStop = false;
          this.groupBoxConfigureUserBasedWorkflow.Text = "Configure User-based workflow";
          // 
@@ -171,7 +171,7 @@ namespace mrHelper.App.Forms
          this.listViewUsers.Name = "listViewUsers";
          this.listViewUsers.ShowGroups = false;
          this.listViewUsers.Size = new System.Drawing.Size(259, 157);
-         this.listViewUsers.TabIndex = 20;
+         this.listViewUsers.TabIndex = 0;
          this.listViewUsers.UseCompatibleStateImageBehavior = false;
          this.listViewUsers.View = System.Windows.Forms.View.Details;
          // 
@@ -186,7 +186,7 @@ namespace mrHelper.App.Forms
          this.buttonEditUsers.Location = new System.Drawing.Point(182, 182);
          this.buttonEditUsers.Name = "buttonEditUsers";
          this.buttonEditUsers.Size = new System.Drawing.Size(83, 27);
-         this.buttonEditUsers.TabIndex = 21;
+         this.buttonEditUsers.TabIndex = 1;
          this.buttonEditUsers.Text = "Edit...";
          this.buttonEditUsers.UseVisualStyleBackColor = true;
          this.buttonEditUsers.Click += new System.EventHandler(this.buttonEditUsers_Click);
@@ -197,7 +197,7 @@ namespace mrHelper.App.Forms
          this.buttonRemoveKnownHost.Location = new System.Drawing.Point(486, 102);
          this.buttonRemoveKnownHost.Name = "buttonRemoveKnownHost";
          this.buttonRemoveKnownHost.Size = new System.Drawing.Size(83, 27);
-         this.buttonRemoveKnownHost.TabIndex = 31;
+         this.buttonRemoveKnownHost.TabIndex = 2;
          this.buttonRemoveKnownHost.Text = "Remove";
          this.buttonRemoveKnownHost.UseVisualStyleBackColor = true;
          this.buttonRemoveKnownHost.Click += new System.EventHandler(this.buttonRemoveKnownHost_Click);
@@ -207,7 +207,7 @@ namespace mrHelper.App.Forms
          this.buttonAddKnownHost.Location = new System.Drawing.Point(488, 19);
          this.buttonAddKnownHost.Name = "buttonAddKnownHost";
          this.buttonAddKnownHost.Size = new System.Drawing.Size(83, 27);
-         this.buttonAddKnownHost.TabIndex = 30;
+         this.buttonAddKnownHost.TabIndex = 1;
          this.buttonAddKnownHost.Text = "Add...";
          this.buttonAddKnownHost.UseVisualStyleBackColor = true;
          this.buttonAddKnownHost.Click += new System.EventHandler(this.buttonAddKnownHost_Click);
@@ -223,7 +223,7 @@ namespace mrHelper.App.Forms
          this.listViewKnownHosts.MultiSelect = false;
          this.listViewKnownHosts.Name = "listViewKnownHosts";
          this.listViewKnownHosts.Size = new System.Drawing.Size(474, 94);
-         this.listViewKnownHosts.TabIndex = 29;
+         this.listViewKnownHosts.TabIndex = 0;
          this.listViewKnownHosts.UseCompatibleStateImageBehavior = false;
          this.listViewKnownHosts.View = System.Windows.Forms.View.Details;
          this.listViewKnownHosts.SelectedIndexChanged += new System.EventHandler(this.listViewKnownHosts_SelectedIndexChanged);
@@ -244,7 +244,7 @@ namespace mrHelper.App.Forms
          this.buttonOK.Location = new System.Drawing.Point(595, 31);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(83, 27);
-         this.buttonOK.TabIndex = 32;
+         this.buttonOK.TabIndex = 5;
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
          this.buttonOK.Click += new System.EventHandler(this.buttonOK_Click);
@@ -255,7 +255,7 @@ namespace mrHelper.App.Forms
          this.buttonCancel.Location = new System.Drawing.Point(595, 114);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(83, 27);
-         this.buttonCancel.TabIndex = 33;
+         this.buttonCancel.TabIndex = 0;
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;
          // 
@@ -268,7 +268,7 @@ namespace mrHelper.App.Forms
          this.groupBoxKnownHosts.Location = new System.Drawing.Point(12, 12);
          this.groupBoxKnownHosts.Name = "groupBoxKnownHosts";
          this.groupBoxKnownHosts.Size = new System.Drawing.Size(577, 138);
-         this.groupBoxKnownHosts.TabIndex = 34;
+         this.groupBoxKnownHosts.TabIndex = 1;
          this.groupBoxKnownHosts.TabStop = false;
          this.groupBoxKnownHosts.Text = "Known Hosts";
          // 

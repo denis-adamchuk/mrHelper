@@ -213,10 +213,13 @@
     <Compile Include="src\Forms\ConfigureStorageForm.Designer.cs">
       <DependentUpon>ConfigureStorageForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\EditSearchQueryForm.cs" />
+    <Compile Include="src\Forms\EditSearchQueryForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="src\Forms\EditSearchQueryForm.Designer.cs">
       <DependentUpon>EditSearchQueryForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Forms\EditSearchQueryFormState.cs" />
     <Compile Include="src\Forms\Helpers\DiscussionLayout.cs" />
     <Compile Include="src\Helpers\Configuration\DefaultWorkflowLoader.cs" />
     <Compile Include="src\Helpers\Configuration\RawDictionaryStringHelper.cs" />
