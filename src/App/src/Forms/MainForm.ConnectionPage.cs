@@ -172,7 +172,12 @@ namespace mrHelper.App.Forms
       private void onHostToolbarButtonClicked(object sender, EventArgs e)
       {
          HostToolbarItem button = sender as HostToolbarItem;
-         if (getCurrentConnectionPage()?.GetCurrentHostName() == button.HostName)
+         string hostname = button.HostName;
+         string currentHostName = getCurrentConnectionPage()?.GetCurrentHostName() ?? String.Empty;
+         Trace.TraceInformation(
+            "[MainForm] onHostToolbarButtonClicked(), hostname={0}, currentHostName={1}", hostname, currentHostName);
+
+         if (currentHostName == hostname)
          {
             return;
          }
@@ -182,13 +187,13 @@ namespace mrHelper.App.Forms
          ConnectionTabPage tab = tabControlHost.TabPages
             .Cast<ConnectionTabPage>()
             .ToList()
-            .SingleOrDefault(item => item.HostName == button.HostName);
+            .SingleOrDefault(item => item.HostName == hostname);
          tabControlHost.SelectedTab = tab;
 
          getHostToolbarButtons().ToList().ForEach(item => item.Checked = false);
          button.Checked = true;
 
-         _defaultHostName = button.HostName;
+         _defaultHostName = hostname;
 
          getCurrentConnectionPage()?.Activate();
          if (WindowState != FormWindowState.Minimized)
@@ -296,6 +301,9 @@ namespace mrHelper.App.Forms
 
       private void onConnectionStatusChanged(ConnectionPage connectionPage)
       {
+         Trace.TraceInformation("[MainForm] onConnectionStatusChanged({0})",
+            connectionPage?.GetCurrentHostName() ?? "null");
+
          if (connectionPage == getCurrentConnectionPage())
          {
             if (connectionPage != null)
@@ -511,7 +519,8 @@ namespace mrHelper.App.Forms
          if (Program.Settings.GetAccessToken(hostname) == String.Empty)
          {
             throw new UrlConnectionException(String.Format(
-               "Cannot connect to {0} because it is not in the list of known hosts. ", hostname));
+               "Cannot connect to {0} because it is missing in the list of known hosts. " +
+               "Add this host and access token for it in Settings and try again.", hostname));
          }
       }
 
@@ -522,6 +531,15 @@ namespace mrHelper.App.Forms
          if (getCurrentConnectionPage()?.GetCurrentHostName() == hostname)
          {
             getCurrentConnectionPage()?.CreateFromUrl(parsedNewMergeRequestUrl);
+         }
+         else
+         {
+            string message = String.Format(
+               "{0} is missing in the list of known hosts and cannot be used to create a merge request. " +
+               "Add this host and access token for it in Settings and try again.", hostname);
+            Trace.TraceWarning("[MainForm] Cannot create merge request at unknown host {0}", hostname);
+            MessageBox.Show(message, "Cannot create a merge request", MessageBoxButtons.OK,
+               MessageBoxIcon.Information);
          }
       }
 

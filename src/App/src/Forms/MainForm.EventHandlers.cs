@@ -50,16 +50,37 @@ namespace mrHelper.App.Forms
 
       protected override void OnResize(EventArgs e)
       {
+         bool hideBeforeSizeRestored = 
+            WindowState != FormWindowState.Minimized
+            && _prevWindowState == FormWindowState.Minimized
+            && !_loadingConfiguration
+            && !_inRestoringSize
+            && _restoreSizeOnNextRestore;
+         if (hideBeforeSizeRestored)
+         {
+            Trace.TraceInformation("[MainForm] Hide() before size restored");
+            Hide();
+         }
+
          base.OnResize(e);
          if (WindowState != _prevWindowState)
          {
             onWindowStateChanged();
          }
 
+         if (hideBeforeSizeRestored)
+         {
+            Trace.TraceInformation("[MainForm] Show() after size restored");
+            Show();
+         }
+
          // Doing this outside of onWindowStateChanged() because sometimes we receive
          // more than once Resize event on Maximize and/or Restore actions
-         if (WindowState != FormWindowState.Minimized && !_loadingConfiguration && !_inRestoringSize)
+         if (WindowState != FormWindowState.Minimized
+            && !_loadingConfiguration
+            && !_inRestoringSize)
          {
+            Trace.TraceInformation("[MainForm] OnResize() calling StoreSplitterDistance()");
             getCurrentConnectionPage()?.StoreSplitterDistance();
          }
       }
@@ -67,6 +88,9 @@ namespace mrHelper.App.Forms
       protected override void OnResizeEnd(EventArgs e)
       {
          base.OnResizeEnd(e);
+
+         Trace.TraceInformation("[MainForm] OnResizeEnd() Size={0}x{1}, Location={2}x{3}",
+            Width, Height, Location.X, Location.Y);
          getCurrentConnectionPage()?.StoreSplitterDistance();
       }
 

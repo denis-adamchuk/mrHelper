@@ -158,6 +158,8 @@ namespace mrHelper.App.Forms
 
       private void prepareSizeToStart()
       {
+         Trace.TraceInformation("[MainForm] prepareSizeToStart() _startMinimized={0}", _startMinimized);
+
          if (_startMinimized)
          {
             WindowState = FormWindowState.Minimized;
@@ -197,6 +199,10 @@ namespace mrHelper.App.Forms
          {
             WindowState = FormWindowState.Minimized;
          }
+
+         Trace.TraceInformation(
+            "[MainForm] restoreSize(), New Size = {0}x{1}, New Location = {2}x{3}, WindowState={4}",
+            Size.Width, Size.Height, Location.X, Location.Y, WindowState.ToString());
       }
 
       private static void disableSSLVerification()

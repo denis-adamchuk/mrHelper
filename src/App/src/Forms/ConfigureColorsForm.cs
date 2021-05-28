@@ -261,7 +261,7 @@ namespace mrHelper.App.Forms
          if (!loadColorScheme(comboBoxColorSchemes.Text))
          {
             Trace.TraceError("[ConfigureColorsForm] Cannot initialize color scheme {0}", comboBoxColorSchemes.Text);
-            if (comboBoxColorSchemes.SelectedIndex > 0 && comboBoxColorSchemes.SelectedIndex != 0)
+            if (comboBoxColorSchemes.SelectedIndex > 0)
             {
                comboBoxColorSchemes.SelectedIndex = 0;
             }

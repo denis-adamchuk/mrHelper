@@ -498,12 +498,18 @@ namespace mrHelper.App.Controls
 
       internal void RestoreSplitterDistance()
       {
+         Trace.TraceInformation(
+            "[ConnectionPage] RestoreSplitterDistance(), me={0}", HostName);
+
          resetSplitterDistance(splitContainerPrimary, ResetSplitterDistanceMode.UserDefined);
          resetSplitterDistance(splitContainerSecondary, ResetSplitterDistanceMode.UserDefined);
       }
 
       internal void StoreSplitterDistance()
       {
+         Trace.TraceInformation(
+            "[ConnectionPage] StoreSplitterDistance(), me={0}", HostName);
+
          saveSplitterDistanceToConfig(splitContainerPrimary);
          saveSplitterDistanceToConfig(splitContainerSecondary);
       }

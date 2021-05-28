@@ -371,6 +371,9 @@ namespace mrHelper.App.Forms
 
       private void processConnectionStatusChange(ConnectionPage.EConnectionState state, string details)
       {
+         Trace.TraceInformation("[MainForm] processConnectionStatusChange({0}, {1})",
+            state.ToString(), details == null ? "null" : details);
+
          updateConnectionStatusLabel(state, details);
          if (state == ConnectionPage.EConnectionState.ConnectionLost)
          {
@@ -408,6 +411,10 @@ namespace mrHelper.App.Forms
             case ConnectionPage.EConnectionState.NotConnected:
                foreColor = Color.Black;
                labelText = "Not connected";
+               break;
+
+            case ConnectionPage.EConnectionState.ConnectionLost:
+               Debug.Assert(false); // handled above
                break;
          }
 
@@ -789,6 +796,12 @@ namespace mrHelper.App.Forms
       bool _inRestoringSize = false;
       private void onWindowStateChanged()
       {
+         Trace.TraceInformation(
+            "[MainForm] onWindowStateChanged(), _isRestoringSize={0}, " +
+            "_prevWindowState={1}, WindowState={2}, _restoreSizeOnNextRestore={3}",
+            _inRestoringSize, _prevWindowState.ToString(), WindowState.ToString(),
+            _restoreSizeOnNextRestore);
+
          if (_inRestoringSize)
          {
             return;

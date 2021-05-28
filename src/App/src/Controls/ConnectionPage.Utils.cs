@@ -375,11 +375,15 @@ namespace mrHelper.App.Controls
       {
          Debug.Assert(splitter == splitContainerPrimary || splitter == splitContainerSecondary);
 
+         if (!value) // move is finished
+         {
+            Trace.TraceInformation("[ConnectionPage] onUserIsMovingSplitter({0}, false)", splitter.Name);
+         }
+
          if (splitter == splitContainerPrimary)
          {
             if (!value)
             {
-               // move is finished, store the value
                saveSplitterDistanceToConfig(splitContainerPrimary);
             }
             _userIsMovingSplitter1 = value;
@@ -388,7 +392,6 @@ namespace mrHelper.App.Controls
          {
             if (!value)
             {
-               // move is finished, store the value
                saveSplitterDistanceToConfig(splitContainerSecondary);
             }
             _userIsMovingSplitter2 = value;
@@ -397,26 +400,35 @@ namespace mrHelper.App.Controls
 
       private bool setSplitterDistanceSafe(SplitContainer splitContainer, int distance)
       {
+         bool ok = false;
          switch (splitContainer.Orientation)
          {
             case Orientation.Vertical:
                if (distance >= splitContainer.Panel1MinSize
                 && distance <= splitContainer.Width - splitContainer.Panel2MinSize)
                {
-                  splitContainer.SplitterDistance = distance;
-                  return true;
+                  ok = true;
                }
                break;
+
             case Orientation.Horizontal:
                if (distance >= splitContainer.Panel1MinSize
                 && distance <= splitContainer.Height - splitContainer.Panel2MinSize)
                {
-                  splitContainer.SplitterDistance = distance;
-                  return true;
+                  ok = true;
                }
                break;
          }
-         return false;
+
+         Trace.TraceInformation(
+            "[ConnectionPage] setSplitterDistanceSafe({0}, {1}): {2}",
+            splitContainer.Name, distance, ok.ToString());
+
+         if (ok)
+         {
+            splitContainer.SplitterDistance = distance;
+         }
+         return ok;
       }
 
       enum ResetSplitterDistanceMode
@@ -428,20 +440,33 @@ namespace mrHelper.App.Controls
 
       private int readSplitterDistanceFromConfig(SplitContainer splitContainer)
       {
+         int result = 0;
          if (splitContainer == splitContainerPrimary)
          {
-            return Program.Settings.PrimarySplitContainerDistance;
+            result = Program.Settings.PrimarySplitContainerDistance;
          }
          else if (splitContainer == splitContainerSecondary)
          {
-            return Program.Settings.SecondarySplitContainerDistance;
+            result = Program.Settings.SecondarySplitContainerDistance;
          }
-         Debug.Assert(false);
-         return 0;
+         else
+         {
+            Debug.Assert(false);
+         }
+
+         Trace.TraceInformation(
+            "[ConnectionPage] readSplitterDistanceFromConfig({0}): {1}",
+            splitContainer.Name, result);
+
+         return result;
       }
 
       private void saveSplitterDistanceToConfig(SplitContainer splitContainer)
       {
+         Trace.TraceInformation(
+            "[ConnectionPage] saveSplitterDistanceToConfig({0}, {1})",
+            splitContainer.Name, splitContainer.SplitterDistance);
+
          if (splitContainer == splitContainerPrimary)
          {
             Program.Settings.PrimarySplitContainerDistance = splitContainer.SplitterDistance;
@@ -481,28 +506,55 @@ namespace mrHelper.App.Controls
                }
                break;
          }
-         if (setSplitterDistanceSafe(splitContainer, splitterDistance))
+
+         bool ok = setSplitterDistanceSafe(splitContainer, splitterDistance);
+         Trace.TraceInformation(
+            "[ConnectionPage] resetSplitterDistance({0}, {1}): {2}, splitContainer Orientation={3}, Width/Height={4}",
+            splitContainer.Name, mode.ToString(), ok.ToString(),
+            splitContainer.Orientation.ToString(),
+            splitContainer.Orientation == Orientation.Vertical ? splitContainer.Width : splitContainer.Height);
+
+         if (ok)
          {
             saveSplitterDistanceToConfig(splitContainer);
-            return true;
          }
-         return false;
+         return ok;
       }
 
       private void updateSplitterOrientation()
       {
+         Orientation primarySplitterOldOrientation = splitContainerPrimary.Orientation;
+         Orientation secondarySplitterOldOrientation = splitContainerSecondary.Orientation;
+
+         Orientation primarySplitterNewOrientation = primarySplitterOldOrientation;
+         Orientation secondarySplitterNewOrientation = secondarySplitterOldOrientation;
+
          switch (ConfigurationHelper.GetMainWindowLayout(Program.Settings))
          {
             case ConfigurationHelper.MainWindowLayout.Horizontal:
-               splitContainerPrimary.Orientation = Orientation.Vertical;
-               splitContainerSecondary.Orientation = Orientation.Horizontal;
+               primarySplitterNewOrientation = Orientation.Vertical;
+               secondarySplitterNewOrientation = Orientation.Horizontal;
                break;
 
             case ConfigurationHelper.MainWindowLayout.Vertical:
-               splitContainerPrimary.Orientation = Orientation.Horizontal;
-               splitContainerSecondary.Orientation = Orientation.Vertical;
+               primarySplitterNewOrientation = Orientation.Horizontal;
+               secondarySplitterNewOrientation = Orientation.Vertical;
+               break;
+
+            default:
+               Debug.Assert(false);
                break;
          }
+
+         splitContainerPrimary.Orientation = primarySplitterNewOrientation;
+         splitContainerSecondary.Orientation = secondarySplitterNewOrientation;
+
+         Trace.TraceInformation(
+            "[ConnectionPage] updateSplitterOrientation(): " +
+            "Primary splitter orientation: {0} -> {1}, " +
+            "Secondary splitter orientation: {2} -> {3}",
+            primarySplitterOldOrientation.ToString(), primarySplitterNewOrientation.ToString(),
+            secondarySplitterOldOrientation.ToString(), secondarySplitterNewOrientation.ToString());
       }
 
       // Modes
@@ -527,11 +579,6 @@ namespace mrHelper.App.Controls
                Debug.Assert(false);
                break;
          }
-      }
-
-      private void switchTabAndSelectMergeRequestOrAnythingElse(EDataCacheType mode, MergeRequestKey? mrk)
-      {
-         switchMode(mode).SelectMergeRequest(mrk, false);
       }
 
       private bool switchTabAndSelectMergeRequest(EDataCacheType mode, MergeRequestKey? mrk)
@@ -754,7 +801,9 @@ namespace mrHelper.App.Controls
 
       private void onMainWindowLayoutChanged()
       {
-         if (splitContainerPrimary.Width == 0 || splitContainerSecondary.Width == 0)
+         bool ignoreChange = splitContainerPrimary.Width == 0 || splitContainerSecondary.Width == 0;
+         Trace.TraceInformation("[ConnectionPage] onMainWindowLayoutChanged(): ignoreChange={0}", ignoreChange);
+         if (ignoreChange)
          {
             return;
          }
@@ -891,6 +940,8 @@ namespace mrHelper.App.Controls
 
       private void onLongCachesReady()
       {
+         Trace.TraceInformation("[ConnectionPage] onLongCachesReady()");
+
          CanEditChanged?.Invoke(this);
          CanMergeChanged?.Invoke(this);
          CanCreateNewChanged?.Invoke(this);
