@@ -125,7 +125,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(sourceBranch != null);
 
          onCommitLoading();
-         Commit commit = await _repositoryAccessor.LoadCommit(sourceBranch.Name);
+         Commit commit = await _repositoryAccessor.FindFirstBranchCommit(sourceBranch.Name);
          onCommitLoaded(commit);
          return commit;
       }
@@ -251,7 +251,7 @@ namespace mrHelper.App.Forms
                   _repositoryAccessor = createRepositoryAccessor();
                   try
                   {
-                     Commit commit = await loadCommitAsync();
+                     await loadCommitAsync();
                   }
                   catch (RepositoryAccessorException ex)
                   {
