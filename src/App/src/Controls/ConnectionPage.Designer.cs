@@ -128,7 +128,7 @@ namespace mrHelper.App.Controls
          // 
          // splitContainerPrimary
          // 
-         this.splitContainerPrimary.BackColor = System.Drawing.Color.Transparent;
+         this.splitContainerPrimary.BackColor = System.Drawing.Color.LightGray;
          this.splitContainerPrimary.Dock = System.Windows.Forms.DockStyle.Fill;
          this.splitContainerPrimary.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
          this.splitContainerPrimary.Location = new System.Drawing.Point(0, 0);
@@ -137,15 +137,17 @@ namespace mrHelper.App.Controls
          // splitContainerPrimary.Panel1
          // 
          this.splitContainerPrimary.Panel1.AutoScroll = true;
+         this.splitContainerPrimary.Panel1.BackColor = System.Drawing.SystemColors.Window;
          this.splitContainerPrimary.Panel1.Controls.Add(this.tabControlMode);
          // 
          // splitContainerPrimary.Panel2
          // 
          this.splitContainerPrimary.Panel2.AutoScroll = true;
+         this.splitContainerPrimary.Panel2.BackColor = System.Drawing.SystemColors.Window;
          this.splitContainerPrimary.Panel2.Controls.Add(this.splitContainerSecondary);
          this.splitContainerPrimary.Size = new System.Drawing.Size(1185, 631);
          this.splitContainerPrimary.SplitterDistance = 853;
-         this.splitContainerPrimary.SplitterWidth = 8;
+         this.splitContainerPrimary.SplitterWidth = 4;
          this.splitContainerPrimary.TabIndex = 5;
          this.splitContainerPrimary.TabStop = false;
          this.splitContainerPrimary.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
@@ -565,6 +567,7 @@ namespace mrHelper.App.Controls
          // 
          // splitContainerSecondary
          // 
+         this.splitContainerSecondary.BackColor = System.Drawing.Color.LightGray;
          this.splitContainerSecondary.Dock = System.Windows.Forms.DockStyle.Fill;
          this.splitContainerSecondary.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
          this.splitContainerSecondary.Location = new System.Drawing.Point(0, 0);
@@ -574,15 +577,17 @@ namespace mrHelper.App.Controls
          // splitContainerSecondary.Panel1
          // 
          this.splitContainerSecondary.Panel1.AutoScroll = true;
+         this.splitContainerSecondary.Panel1.BackColor = System.Drawing.SystemColors.Window;
          this.splitContainerSecondary.Panel1.Controls.Add(this.groupBoxSelectedMR);
          // 
          // splitContainerSecondary.Panel2
          // 
          this.splitContainerSecondary.Panel2.AutoScroll = true;
+         this.splitContainerSecondary.Panel2.BackColor = System.Drawing.SystemColors.Window;
          this.splitContainerSecondary.Panel2.Controls.Add(this.groupBoxSelectRevisions);
          this.splitContainerSecondary.Size = new System.Drawing.Size(324, 631);
          this.splitContainerSecondary.SplitterDistance = 335;
-         this.splitContainerSecondary.SplitterWidth = 8;
+         this.splitContainerSecondary.SplitterWidth = 4;
          this.splitContainerSecondary.TabIndex = 7;
          this.splitContainerSecondary.TabStop = false;
          this.splitContainerSecondary.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
