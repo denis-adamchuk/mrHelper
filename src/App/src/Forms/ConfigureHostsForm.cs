@@ -24,6 +24,9 @@ namespace mrHelper.App.Forms
          InitializeComponent();
          applyFont(Program.Settings.MainWindowFontSizeName);
 
+         linkLabelCreateAccessToken.Text = String.Empty;
+         linkLabelCreateAccessToken.SetLinkLabelClicked(UrlHelper.OpenBrowser);
+
          checkHelpAvailability();
       }
 
@@ -312,6 +315,12 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void updateLinkLabel()
+      {
+         string hostname = getSelectedHostName();
+         linkLabelCreateAccessToken.Text = GitLabClient.Helpers.GetCreateAccessTokenUrl(hostname);
+      }
+
       private string getSelectedHostName()
       {
          return listViewKnownHosts.SelectedItems.Count < 1 ? null : listViewKnownHosts.SelectedItems[0].Text;
@@ -479,6 +488,7 @@ namespace mrHelper.App.Forms
          updateEnablementsOfWorkflowSelectors();
          updateProjectsListView();
          updateUsersListView();
+         updateLinkLabel();
       }
 
       public string GetAccessToken(string host)

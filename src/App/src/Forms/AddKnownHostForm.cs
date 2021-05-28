@@ -44,13 +44,7 @@ namespace mrHelper.App.Forms
       private void updateLinkLabel()
       {
          string hostname = textBoxHost.Text;
-         string url_suffix = @"/-/profile/personal_access_tokens/";
-         linkLabelCreateAccessToken.Text = StringUtils.GetHostWithPrefix(hostname + url_suffix);
-      }
-
-      private void resetLinkLabel()
-      {
-         linkLabelCreateAccessToken.Text = string.Empty;
+         linkLabelCreateAccessToken.Text = GitLabClient.Helpers.GetCreateAccessTokenUrl(hostname);
       }
    }
 }

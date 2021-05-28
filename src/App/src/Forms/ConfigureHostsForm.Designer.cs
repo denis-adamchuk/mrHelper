@@ -51,6 +51,7 @@ namespace mrHelper.App.Forms
          this.buttonCancel = new System.Windows.Forms.Button();
          this.groupBoxKnownHosts = new System.Windows.Forms.GroupBox();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.linkLabelCreateAccessToken = new mrHelper.CommonControls.Controls.LinkLabelEx();
          this.groupBoxSelectWorkflow.SuspendLayout();
          this.groupBoxConfigureProjectBasedWorkflow.SuspendLayout();
          this.groupBoxConfigureUserBasedWorkflow.SuspendLayout();
@@ -221,7 +222,7 @@ namespace mrHelper.App.Forms
          this.listViewKnownHosts.Location = new System.Drawing.Point(6, 19);
          this.listViewKnownHosts.MultiSelect = false;
          this.listViewKnownHosts.Name = "listViewKnownHosts";
-         this.listViewKnownHosts.Size = new System.Drawing.Size(474, 110);
+         this.listViewKnownHosts.Size = new System.Drawing.Size(474, 94);
          this.listViewKnownHosts.TabIndex = 29;
          this.listViewKnownHosts.UseCompatibleStateImageBehavior = false;
          this.listViewKnownHosts.View = System.Windows.Forms.View.Details;
@@ -260,6 +261,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxKnownHosts
          // 
+         this.groupBoxKnownHosts.Controls.Add(this.linkLabelCreateAccessToken);
          this.groupBoxKnownHosts.Controls.Add(this.buttonRemoveKnownHost);
          this.groupBoxKnownHosts.Controls.Add(this.buttonAddKnownHost);
          this.groupBoxKnownHosts.Controls.Add(this.listViewKnownHosts);
@@ -269,6 +271,16 @@ namespace mrHelper.App.Forms
          this.groupBoxKnownHosts.TabIndex = 34;
          this.groupBoxKnownHosts.TabStop = false;
          this.groupBoxKnownHosts.Text = "Known Hosts";
+         // 
+         // linkLabelCreateAccessToken
+         // 
+         this.linkLabelCreateAccessToken.AutoSize = true;
+         this.linkLabelCreateAccessToken.Location = new System.Drawing.Point(6, 116);
+         this.linkLabelCreateAccessToken.Name = "linkLabelCreateAccessToken";
+         this.linkLabelCreateAccessToken.Size = new System.Drawing.Size(105, 13);
+         this.linkLabelCreateAccessToken.TabIndex = 32;
+         this.linkLabelCreateAccessToken.TabStop = true;
+         this.linkLabelCreateAccessToken.Text = "Create access token";
          // 
          // ConfigureHostsForm
          // 
@@ -295,6 +307,7 @@ namespace mrHelper.App.Forms
          this.groupBoxConfigureProjectBasedWorkflow.ResumeLayout(false);
          this.groupBoxConfigureUserBasedWorkflow.ResumeLayout(false);
          this.groupBoxKnownHosts.ResumeLayout(false);
+         this.groupBoxKnownHosts.PerformLayout();
          this.ResumeLayout(false);
 
       }
@@ -321,5 +334,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonCancel;
       private System.Windows.Forms.GroupBox groupBoxKnownHosts;
       private System.Windows.Forms.ToolTip toolTip;
+      private CommonControls.Controls.LinkLabelEx linkLabelCreateAccessToken;
    }
 }

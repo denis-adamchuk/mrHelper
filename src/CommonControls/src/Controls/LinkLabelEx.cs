@@ -26,7 +26,7 @@ namespace mrHelper.CommonControls.Controls
       {
          if (e.Button == MouseButtons.Left)
          {
-            _onLinkLabelClicked(Text);
+            _onLinkLabelClicked?.Invoke(Text);
          }
          base.OnLinkClicked(e);
       }

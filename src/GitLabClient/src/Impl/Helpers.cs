@@ -37,6 +37,17 @@ namespace mrHelper.GitLabClient
          return false;
       }
 
+      public static string GetCreateAccessTokenUrl(string hostname)
+      {
+         if (String.IsNullOrEmpty(hostname))
+         {
+            return null;
+         }
+
+         string url_suffix = @"/-/profile/personal_access_tokens/";
+         return StringUtils.GetHostWithPrefix(hostname + url_suffix);
+      }
+
       public static string GetVersionLoaderKey(MergeRequest mergeRequest)
       {
          return mergeRequest == null ? null : mergeRequest.Sha + mergeRequest.Target_Branch;

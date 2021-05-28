@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
 using GitLabSharp;
-using mrHelper.App.Helpers.GitLab;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Tools;
