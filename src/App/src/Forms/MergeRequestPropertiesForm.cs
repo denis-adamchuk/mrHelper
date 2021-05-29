@@ -106,10 +106,12 @@ namespace mrHelper.App.Forms
       {
          string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
          string formCaption = "Edit Merge Request title";
-         TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, null, String.Empty);
-         if (editTitleForm.ShowDialog() == DialogResult.OK)
+         using (TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, null, String.Empty))
          {
-            setTitle(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editTitleForm.Body));
+            if (editTitleForm.ShowDialog() == DialogResult.OK)
+            {
+               setTitle(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editTitleForm.Body));
+            }
          }
       }
 
@@ -118,10 +120,12 @@ namespace mrHelper.App.Forms
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
          string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName()));
-         TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null, uploadsPrefix);
-         if (editDescriptionForm.ShowDialog() == DialogResult.OK)
+         using (TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null, uploadsPrefix))
          {
-            setDescription(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editDescriptionForm.Body));
+            if (editDescriptionForm.ShowDialog() == DialogResult.OK)
+            {
+               setDescription(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editDescriptionForm.Body));
+            }
          }
       }
 

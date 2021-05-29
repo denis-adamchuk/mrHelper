@@ -137,45 +137,53 @@ namespace mrHelper.App.Forms
 
       private void configureNotificationsToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         ConfigureNotificationsForm form = new ConfigureNotificationsForm(_keywords);
-         form.ShowDialog();
+         using (ConfigureNotificationsForm form = new ConfigureNotificationsForm(_keywords))
+         {
+            form.ShowDialog();
+         }
       }
 
       private void configureHostsToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         ConfigureHostsForm form = new ConfigureHostsForm();
-         if (form.ShowDialog() == DialogResult.OK && form.Changed)
+         using (ConfigureHostsForm form = new ConfigureHostsForm())
          {
-            Trace.TraceInformation("[MainForm] Reconnecting after workflow type change");
-            reconnect();
+            if (form.ShowDialog() == DialogResult.OK && form.Changed)
+            {
+               Trace.TraceInformation("[MainForm] Reconnecting after workflow type change");
+               reconnect();
+            }
          }
       }
 
       private void configureStorageToolStripMenuItem_Click(object sender, EventArgs e)
       {
          string oldPath = Program.Settings.LocalStorageFolder;
-         ConfigureStorageForm form = new ConfigureStorageForm();
-         if (form.ShowDialog() == DialogResult.OK && form.Changed)
+         using (ConfigureStorageForm form = new ConfigureStorageForm())
          {
-            string newPath = Program.Settings.LocalStorageFolder;
-            if (newPath != oldPath)
+            if (form.ShowDialog() == DialogResult.OK && form.Changed)
             {
-               Trace.TraceInformation("[MainForm] User decided to change file storage to {0}", newPath);
-               MessageBox.Show("Storage folder is changed.\n Please restart Diff Tool if you have already launched it.",
-                  "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
+               string newPath = Program.Settings.LocalStorageFolder;
+               if (newPath != oldPath)
+               {
+                  Trace.TraceInformation("[MainForm] User decided to change file storage to {0}", newPath);
+                  MessageBox.Show("Storage folder is changed.\n Please restart Diff Tool if you have already launched it.",
+                     "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-               addOperationRecord(String.Format("[MainForm] File storage path has changed to {0}", newPath));
+                  addOperationRecord(String.Format("[MainForm] File storage path has changed to {0}", newPath));
+               }
+
+               Trace.TraceInformation("[MainForm] Reconnecting after storage settings change");
+               reconnect();
             }
-
-            Trace.TraceInformation("[MainForm] Reconnecting after storage settings change");
-            reconnect();
          }
       }
 
       private void configureColorsToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.General, _colorScheme);
-         form.ShowDialog();
+         using (ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.General, _colorScheme))
+         {
+            form.ShowDialog();
+         }
       }
 
       private void showHelpToolStripMenuItem_Click(object sender, EventArgs e)

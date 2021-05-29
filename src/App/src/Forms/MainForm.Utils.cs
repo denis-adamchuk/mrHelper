@@ -556,10 +556,7 @@ namespace mrHelper.App.Forms
 
       private void clearCustomActionControls()
       {
-         toolStripCustomActions.SuspendLayout();
-         getCustomActionMenuItems().ToList().ForEach(item => item.Dispose());
-         getCustomActionMenuItems().ToList().ForEach(item => toolStripCustomActions.Items.Remove(item));
-         toolStripCustomActions.ResumeLayout();
+         removeToolbarButtons(toolStripCustomActions);
       }
 
       private void createCustomActionControls(IEnumerable<ICommand> commands)
@@ -650,8 +647,9 @@ namespace mrHelper.App.Forms
       private static void removeToolbarButtons(ToolStrip toolbar)
       {
          toolbar.SuspendLayout();
+         toolbar.Items.Cast<ToolStripItem>().ToList().ForEach(item => item.Image?.Dispose());
          toolbar.Items.Cast<ToolStripItem>().ToList().ForEach(item => item.Dispose());
-         toolbar.Items.Cast<ToolStripItem>().ToList().ForEach(item => toolbar.Items.Remove(item));
+         toolbar.Items.Clear();
          toolbar.ResumeLayout();
       }
 
@@ -750,11 +748,15 @@ namespace mrHelper.App.Forms
 
       private static void showHelp()
       {
-         string helpUrl = Program.ServiceManager.GetHelpUrl();
-         if (helpUrl != String.Empty)
-         {
-            UrlHelper.OpenBrowser(helpUrl);
-         }
+         // TODO_MF Remove
+         GC.Collect();
+         GC.WaitForPendingFinalizers();
+
+         //string helpUrl = Program.ServiceManager.GetHelpUrl();
+         //if (helpUrl != String.Empty)
+         //{
+         //   UrlHelper.OpenBrowser(helpUrl);
+         //}
       }
 
       private IEnumerable<string> getHostList()

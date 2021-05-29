@@ -78,12 +78,14 @@ namespace mrHelper.App.Controls
             _prevSearchQuery = new EditSearchQueryFormState(getDefaultProjectName());
          }
 
-         EditSearchQueryForm form = new EditSearchQueryForm(
-            projectNames, fullUserList, CurrentUser, _prevSearchQuery);
-         if (form.ShowDialog() == DialogResult.OK)
+         using (EditSearchQueryForm form = new EditSearchQueryForm(
+            projectNames, fullUserList, CurrentUser, _prevSearchQuery))
          {
-            searchMergeRequests(new SearchQueryCollection(form.SearchQuery));
-            _prevSearchQuery = form.State;
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+               searchMergeRequests(new SearchQueryCollection(form.SearchQuery));
+               _prevSearchQuery = form.State;
+            }
          }
       }
 

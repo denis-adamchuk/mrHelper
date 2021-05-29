@@ -86,6 +86,11 @@ namespace mrHelper.App.Controls
       {
          base.Dispose(disposing);
          _colorScheme.Changed -= onColorSchemeChanged;
+         foreach (NoteContainer noteContainer in getNoteContainers())
+         {
+            noteContainer.NoteInfo.ContextMenu?.Dispose();
+            noteContainer.NoteContent.ContextMenu?.Dispose();
+         }
       }
 
       internal bool HasNotes => getNoteContainers().Any();
@@ -201,7 +206,7 @@ namespace mrHelper.App.Controls
 
       private void Control_GotFocus(object sender, EventArgs e)
       {
-         _onControlGotFocus(sender as Control);
+         _onControlGotFocus?.Invoke(sender as Control);
       }
 
       private void onCreate(Control parent)
@@ -377,8 +382,9 @@ namespace mrHelper.App.Controls
             foreach (NoteContainer container in noteContainers)
             {
                Control control = Controls[iControl];
-               if (container.NoteContent == control || container.NoteInfo    == control)
+               if (container.NoteContent == control || container.NoteInfo == control)
                {
+                  control.Dispose();
                   Controls.Remove(control);
                   break;
                }
@@ -1298,6 +1304,7 @@ namespace mrHelper.App.Controls
             if (noteControl != null)
             {
                noteControl.BackColor = Color.LightGray;
+               noteControl.ContextMenu?.Dispose();
                noteControl.ContextMenu = new ContextMenu();
                noteControl.Tag = null;
             }
@@ -1335,7 +1342,7 @@ namespace mrHelper.App.Controls
          removeNoteContainers();
 
          // To suspend layout and hide me
-         _onContentChanging();
+         _onContentChanging?.Invoke();
 
          if (Parent == null
           || Discussion == null
@@ -1346,13 +1353,14 @@ namespace mrHelper.App.Controls
             // Possible cases:
             // - deleted note was the only discussion item
             // - deleted note was the only visible discussion item but there are System notes like 'a line changed ...'
+            Dispose();
             Parent?.Controls.Remove(this);
-            _onContentChanged();
+            _onContentChanged?.Invoke();
             return;
          }
 
          // To reposition new controls and unhide me back
-         _onContentChanged();
+         _onContentChanged?.Invoke();
          getNoteContainers().First().NoteContent.Focus();
       }
 

@@ -18,6 +18,7 @@ namespace mrHelper.App.Forms
          {
             components.Dispose();
          }
+         colorDialog?.Dispose();
          base.Dispose(disposing);
       }
 

@@ -338,39 +338,41 @@ namespace mrHelper.App.Forms
 
       private void launchAddKnownHostDialog()
       {
-         AddKnownHostForm form = new AddKnownHostForm();
-         if (form.ShowDialog() != DialogResult.OK)
+         using (AddKnownHostForm form = new AddKnownHostForm())
          {
-            return;
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+               return;
+            }
+
+            BeginInvoke(new Action(async () =>
+            {
+               string hostname = StringUtils.GetHostWithPrefix(form.Host);
+               string accessToken = form.AccessToken;
+               ConnectionCheckStatus status = await ConnectionChecker.CheckConnectionAsync(hostname, accessToken);
+               if (status != ConnectionCheckStatus.OK)
+               {
+                  string message =
+                     status == ConnectionCheckStatus.BadAccessToken
+                        ? String.Format("Bad access token \"{0}\"", accessToken)
+                        : String.Format("Invalid hostname \"{0}\"", hostname);
+                  MessageBox.Show(message, "Cannot connect to the host",
+                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+                  return;
+               }
+
+               if (!addKnownHost(hostname, accessToken))
+               {
+                  MessageBox.Show("Such host is already in the list", "Host will not be added",
+                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                  return;
+               }
+
+               await loadUsersForHost(hostname);
+               loadProjectsForHost(hostname);
+               updateHostsListView();
+            }));
          }
-
-         BeginInvoke(new Action(async () =>
-         {
-            string hostname = StringUtils.GetHostWithPrefix(form.Host);
-            string accessToken = form.AccessToken;
-            ConnectionCheckStatus status = await ConnectionChecker.CheckConnectionAsync(hostname, accessToken);
-            if (status != ConnectionCheckStatus.OK)
-            {
-               string message =
-                  status == ConnectionCheckStatus.BadAccessToken
-                     ? String.Format("Bad access token \"{0}\"", accessToken)
-                     : String.Format("Invalid hostname \"{0}\"", hostname);
-               MessageBox.Show(message, "Cannot connect to the host",
-                  MessageBoxButtons.OK, MessageBoxIcon.Error);
-               return;
-            }
-
-            if (!addKnownHost(hostname, accessToken))
-            {
-               MessageBox.Show("Such host is already in the list", "Host will not be added",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               return;
-            }
-
-            await loadUsersForHost(hostname);
-            loadProjectsForHost(hostname);
-            updateHostsListView();
-         }));
       }
 
       private bool saveKnownHosts()

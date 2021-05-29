@@ -127,8 +127,18 @@ namespace mrHelper.App.Controls
 
       internal void AssignContextMenu(MergeRequestListViewContextMenu contextMenu)
       {
+         if (ContextMenuStrip != null)
+         {
+            ContextMenuStrip.Opening -= ContextMenuStrip_Opening;
+            ContextMenuStrip.Dispose();
+         }
+
          ContextMenuStrip = contextMenu;
-         ContextMenuStrip.Opening += ContextMenuStrip_Opening;
+
+         if (ContextMenuStrip != null)
+         {
+            contextMenu.Opening += ContextMenuStrip_Opening;
+         }
       }
 
       internal void DeselectAllListViewItems()
@@ -443,7 +453,7 @@ namespace mrHelper.App.Controls
          _unmuteTimer.Stop();
          _unmuteTimer.Dispose();
          _toolTip?.Dispose();
-         SetPersistentStorage(null);
+         SmallImageList?.Dispose();
          base.Dispose(disposing);
       }
 

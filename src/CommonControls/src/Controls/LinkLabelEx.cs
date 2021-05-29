@@ -22,6 +22,14 @@ namespace mrHelper.CommonControls.Controls
          Clipboard.SetText(Text);
       }
 
+      protected override void Dispose(bool disposing)
+      {
+         base.Dispose(disposing);
+         ContextMenuStrip.Dispose();
+         ContextMenuStrip = null;
+         _onLinkLabelClicked = null;
+      }
+
       protected override void OnLinkClicked(LinkLabelLinkClickedEventArgs e)
       {
          if (e.Button == MouseButtons.Left)

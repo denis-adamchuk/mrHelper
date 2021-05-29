@@ -61,6 +61,12 @@ namespace mrHelper.App.Controls
          _operationController = operationController;
       }
 
+      protected override void Dispose(bool disposing)
+      {
+         base.Dispose(disposing);
+         _operationController = null;
+      }
+
       private ToolStripMenuItem addItem(Action action, string name, bool isDefault)
       {
          if (action == null)
@@ -161,7 +167,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private readonly IOperationController _operationController;
+      private IOperationController _operationController;
 
       private readonly ToolStripMenuItem _refreshListItem;
       private readonly ToolStripItem _editItem;

@@ -81,8 +81,10 @@ namespace mrHelper.App.Controls
 
       private void onConfigureColorsClicked(object sender, EventArgs e)
       {
-         ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.Discussions, _colorScheme);
-         form.ShowDialog();
+         using (ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.Discussions, _colorScheme))
+         {
+            form.ShowDialog();
+         }
       }
 
       private void onRefreshMenuItemClicked(object sender, EventArgs e)

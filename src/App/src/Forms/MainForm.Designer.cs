@@ -26,7 +26,7 @@ namespace mrHelper.App.Forms
 
          foreach (ToolStrip toolStrip in new ToolStrip[] { toolStripHosts, toolStripActions, toolStripCustomActions })
          {
-            removeToolbarButtons(toolStrip);
+            removeToolbarButtons(toolStrip); // actually unneeded
             toolStrip.Dispose();
          }
          toolTip.Dispose();

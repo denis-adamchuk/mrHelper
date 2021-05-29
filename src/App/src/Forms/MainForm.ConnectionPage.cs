@@ -133,7 +133,7 @@ namespace mrHelper.App.Forms
          foreach (ConnectionTabPage tab in tabControlHost.TabPages)
          {
             unsubscribeFromConnectionPage(tab.ConnectionPage);
-            tab.ConnectionPage.Dispose();
+            tab.Dispose();
          }
          tabControlHost.TabPages.Clear();
       }
@@ -408,9 +408,9 @@ namespace mrHelper.App.Forms
             SuspendLayout();
             disposeAllConnectionPages();
             removeToolbarButtons(toolStripHosts);
+            removeToolbarButtons(toolStripCustomActions);
             createConnectionPages();
             createHostToolbarButtons();
-            clearCustomActionControls();
             ResumeLayout();
          }
 

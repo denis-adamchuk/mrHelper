@@ -19,7 +19,33 @@ namespace mrHelper.App.Controls
             components.Dispose();
          }
 
+         foreach (EDataCacheType mode in new EDataCacheType[]
+            {
+               EDataCacheType.Live, EDataCacheType.Recent, EDataCacheType.Search
+            })
+         {
+            var listView = getListView(mode);
+
+            // Let ListView drop ContextMenuStrip
+            listView.AssignContextMenu(null);
+
+            // Let ListView unsubscribe from other objects
+            listView.SetPersistentStorage(null);
+            listView.SetDataCache(null);
+            listView.SetDiffStatisticProvider(null);
+            listView.SetColorScheme(null);
+            listView.SetFilter(null);
+            listView.SetExpressionResolver(null);
+         }
+
+         // Clear RevisionBrowser and let it drop ContextMenuStrip
+         clearRevisionBrowser();
+         revisionBrowser.AssignContextMenu(null);
+
          _colorScheme.Changed -= onColorSchemeChanged;
+
+         // To avoid dangling LinkLabelEx in a tooltip that we received from creator
+         _toolTip.SetToolTip(linkLabelConnectedTo, null);
 
          Program.Settings.MainWindowLayoutChanged -= onMainWindowLayoutChanged;
          Program.Settings.WordWrapLongRowsChanged -= onWrapLongRowsChanged;
@@ -33,11 +59,8 @@ namespace mrHelper.App.Controls
          resetLostConnectionInfo();
 
          _liveDataCache.Dispose();
-         _liveDataCache = null;
          _searchDataCache.Dispose();
-         _searchDataCache = null;
          _recentDataCache.Dispose();
-         _recentDataCache = null;
 
          disposeGitLabInstance();
 

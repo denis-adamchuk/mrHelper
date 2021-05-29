@@ -30,13 +30,25 @@ namespace mrHelper.App.Helpers
 
       private static IconGroup addIconToCache(Color color)
       {
-         Bitmap imageWithoutBorder = WinFormsHelpers.ReplaceColorInBitmap(
-            Properties.Resources.gitlab_icon_stub_16x16, Color.Green, color);
-         Icon iconWithoutBorder = WinFormsHelpers.ConvertToIco(imageWithoutBorder, 16);
+         Icon iconWithoutBorder;
+         using (Bitmap originalWithoutBorder = Properties.Resources.gitlab_icon_stub_16x16)
+         {
+            using (Bitmap imageWithoutBorder = WinFormsHelpers.ReplaceColorInBitmap(
+               originalWithoutBorder, Color.Green, color))
+            {
+               iconWithoutBorder = WinFormsHelpers.ConvertToIco(imageWithoutBorder, 16);
+            }
+         }
 
-         Bitmap imageWithBorder = WinFormsHelpers.ReplaceColorInBitmap(
-            Properties.Resources.gitlab_icon_stub_16x16_border, Color.Green, color);
-         Icon iconWithBorder = WinFormsHelpers.ConvertToIco(imageWithBorder, 16);
+         Icon iconWithBorder;
+         using (Bitmap originalWithBorder = Properties.Resources.gitlab_icon_stub_16x16_border)
+         {
+            using (Bitmap imageWithBorder = WinFormsHelpers.ReplaceColorInBitmap(
+               originalWithBorder, Color.Green, color))
+            {
+               iconWithBorder = WinFormsHelpers.ConvertToIco(imageWithBorder, 16);
+            }
+         }
 
          IconGroup icon = new IconGroup(iconWithoutBorder, iconWithBorder);
          _iconCache[color] = icon;

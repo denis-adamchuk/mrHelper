@@ -45,6 +45,12 @@ namespace mrHelper.App.Controls
          _operationController = operationController;
       }
 
+      protected override void Dispose(bool disposing)
+      {
+         base.Dispose(disposing);
+         _operationController = null;
+      }
+
       public void LaunchDefaultAction()
       {
          _defaultItem?.PerformClick();
@@ -96,7 +102,7 @@ namespace mrHelper.App.Controls
          return item;
       }
 
-      private readonly IOperationController _operationController;
+      private IOperationController _operationController;
 
       private readonly ToolStripMenuItem _onDiffBetweenSelected;
       private readonly ToolStripMenuItem _onDiffSelectedToBase;

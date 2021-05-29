@@ -17,6 +17,14 @@ namespace mrHelper.CommonControls.Tools
          // It is expected to use font size in pixels here
          int height = listView.Font.Height * maxLineCount + 2;
 
+         if (listView.SmallImageList != null
+          && listView.SmallImageList.ImageSize.Height == height)
+         {
+            return;
+         }
+
+         listView.SmallImageList?.Dispose();
+
          ImageList imgList = new ImageList
          {
             ImageSize = new Size(1, height)

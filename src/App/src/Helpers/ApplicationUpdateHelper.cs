@@ -24,15 +24,19 @@ namespace mrHelper.App.Helpers
       internal static bool ShowCheckForUpdatesDialog()
       {
          Trace.TraceInformation("[ApplicationUpdateHelper] ShowCheckForUpdatesDialog()");
-         CheckForUpdatesForm checkForUpdatesForm = new CheckForUpdatesForm();
-         return showDialogAndLaunchInstaller(checkForUpdatesForm);
+         using (CheckForUpdatesForm checkForUpdatesForm = new CheckForUpdatesForm())
+         {
+            return showDialogAndLaunchInstaller(checkForUpdatesForm);
+         }
       }
 
       internal static bool RemindAboutAvailableVersion()
       {
          Trace.TraceInformation("[ApplicationUpdateHelper] RemindAboutAvailableVersion()");
-         RemindAboutUpdateForm remindForm = new RemindAboutUpdateForm();
-         return showDialogAndLaunchInstaller(remindForm);
+         using (RemindAboutUpdateForm remindForm = new RemindAboutUpdateForm())
+         {
+            return showDialogAndLaunchInstaller(remindForm);
+         }
       }
 
       private static bool showDialogAndLaunchInstaller(CheckForUpdatesForm form)

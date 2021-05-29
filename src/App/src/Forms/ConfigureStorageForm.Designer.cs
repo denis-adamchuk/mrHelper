@@ -18,6 +18,8 @@ namespace mrHelper.App.Forms
          {
             components.Dispose();
          }
+         storageFolderBrowser.Dispose();
+         storageFolderBrowser = null;
          base.Dispose(disposing);
       }
 

@@ -215,6 +215,11 @@ namespace mrHelper.App.Controls
          ContentChanged?.Invoke();
       }
 
+      void onControlGotFocus(Control sender)
+      {
+         _mostRecentFocusedDiscussionControl = sender;
+      }
+
       private void createDiscussionBoxes(IEnumerable<Discussion> discussions)
       {
          foreach (Discussion discussion in discussions)
@@ -224,7 +229,7 @@ namespace mrHelper.App.Controls
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
-               sender => _mostRecentFocusedDiscussionControl = sender, _htmlTooltip,
+               onControlGotFocus, _htmlTooltip,
                _discussionLayout.DiffContextPosition,
                _discussionLayout.DiscussionColumnWidth,
                _discussionLayout.NeedShiftReplies,
@@ -237,6 +242,10 @@ namespace mrHelper.App.Controls
             if (box.HasNotes)
             {
                Controls.Add(box);
+            }
+            else
+            {
+               box.Dispose();
             }
          }
       }
@@ -274,6 +283,7 @@ namespace mrHelper.App.Controls
             getControlsAffectedByDiscussionChanges(deletedDiscussions, updatedDiscussions);
          foreach (Control control in affectedControls)
          {
+            control.Dispose();
             Controls.Remove(control);
          }
          createDiscussionBoxes(updatedDiscussions);
@@ -456,7 +466,7 @@ namespace mrHelper.App.Controls
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search
       /// </summary>
       private Control _mostRecentFocusedDiscussionControl;
-      private readonly HtmlToolTipEx _htmlTooltip = new HtmlToolTipEx
+      private HtmlToolTipEx _htmlTooltip = new HtmlToolTipEx
       {
          AutoPopDelay = 20000, // 20s
          InitialDelay = 300,

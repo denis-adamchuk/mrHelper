@@ -512,6 +512,7 @@ namespace mrHelper.App.Controls
             _gitLabInstance.ConnectionRestored -= onConnectionRestored;
             _gitLabInstance.Dispose();
             _gitLabInstance = null;
+            _shortcuts = null;
          }
       }
    }

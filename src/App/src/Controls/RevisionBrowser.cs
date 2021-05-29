@@ -50,8 +50,18 @@ namespace mrHelper.App.Controls
 
       internal void AssignContextMenu(RevisionBrowserContextMenu contextMenu)
       {
+         if (ContextMenuStrip != null)
+         {
+            ContextMenuStrip.Opening -= onContextMenuStripOpening;
+            ContextMenuStrip.Dispose();
+         }
+
          ContextMenuStrip = contextMenu;
-         ContextMenuStrip.Opening += onContextMenuStripOpening;
+
+         if (ContextMenuStrip != null)
+         {
+            contextMenu.Opening += onContextMenuStripOpening;
+         }
       }
 
       internal string GetBaseCommitSha()

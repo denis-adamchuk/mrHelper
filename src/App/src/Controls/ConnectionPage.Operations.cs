@@ -125,25 +125,27 @@ namespace mrHelper.App.Controls
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          var sourceBranchesInUse = GitLabClient.Helpers.GetSourceBranchesByUser(CurrentUser, dataCache);
 
-         MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
+         using (MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
             _shortcuts.GetProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList,
-            sourceBranchesInUse, _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()));
-         if (form.ShowDialog() != DialogResult.OK)
+            sourceBranchesInUse, _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate())))
          {
-            Trace.TraceInformation("[ConnectionPage] User declined to create a merge request");
-            return;
-         }
-
-         BeginInvoke(new Action(
-            async () =>
+            if (form.ShowDialog() != DialogResult.OK)
             {
-               ProjectKey projectKey = new ProjectKey(hostname, form.ProjectName);
-               SubmitNewMergeRequestParameters parameters = new SubmitNewMergeRequestParameters(
-                  projectKey, form.SourceBranch, form.TargetBranch, form.Title,
-                  form.AssigneeUsername, form.Description, form.DeleteSourceBranch, form.Squash,
-                  form.IsHighPriority);
-               await createNewMergeRequestAsync(parameters, form.SpecialNote);
-            }));
+               Trace.TraceInformation("[ConnectionPage] User declined to create a merge request");
+               return;
+            }
+
+            BeginInvoke(new Action(
+               async () =>
+               {
+                  ProjectKey projectKey = new ProjectKey(hostname, form.ProjectName);
+                  SubmitNewMergeRequestParameters parameters = new SubmitNewMergeRequestParameters(
+                     projectKey, form.SourceBranch, form.TargetBranch, form.Title,
+                     form.AssigneeUsername, form.Description, form.DeleteSourceBranch, form.Squash,
+                     form.IsHighPriority);
+                  await createNewMergeRequestAsync(parameters, form.SpecialNote);
+               }));
+         }
       }
 
       private void acceptMergeRequest(FullMergeRequestKey item)
@@ -302,33 +304,35 @@ namespace mrHelper.App.Controls
       {
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(dataCache.DiscussionCache, mrk);
-         MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
-            _shortcuts.GetProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList);
-         if (form.ShowDialog() != DialogResult.OK)
+         using (MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
+            _shortcuts.GetProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList))
          {
-            Trace.TraceInformation("[ConnectionPage] User declined to modify a merge request");
-            return;
-         }
+            if (form.ShowDialog() != DialogResult.OK)
+            {
+               Trace.TraceInformation("[ConnectionPage] User declined to modify a merge request");
+               return;
+            }
 
-         ApplyMergeRequestChangesParameters parameters =
-            new ApplyMergeRequestChangesParameters(form.Title, form.AssigneeUsername,
-            form.Description, form.TargetBranch, form.DeleteSourceBranch, form.Squash,
-            form.IsHighPriority);
+            ApplyMergeRequestChangesParameters parameters =
+               new ApplyMergeRequestChangesParameters(form.Title, form.AssigneeUsername,
+               form.Description, form.TargetBranch, form.DeleteSourceBranch, form.Squash,
+               form.IsHighPriority);
 
-         bool modified = await MergeRequestEditHelper.ApplyChangesToMergeRequest(
-            item.ProjectKey, item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser,
-            _shortcuts);
+            bool modified = await MergeRequestEditHelper.ApplyChangesToMergeRequest(
+               item.ProjectKey, item.MergeRequest, parameters, noteText, form.SpecialNote, currentUser,
+               _shortcuts);
 
-         string statusMessage = modified
-            ? String.Format("Merge Request !{0} has been modified", mrk.IId)
-            : String.Format("No changes have been made to Merge Request !{0}", mrk.IId);
-         addOperationRecord(statusMessage);
+            string statusMessage = modified
+               ? String.Format("Merge Request !{0} has been modified", mrk.IId)
+               : String.Format("No changes have been made to Merge Request !{0}", mrk.IId);
+            addOperationRecord(statusMessage);
 
-         if (modified)
-         {
-            requestUpdates(EDataCacheType.Live, mrk, new int[] {
+            if (modified)
+            {
+               requestUpdates(EDataCacheType.Live, mrk, new int[] {
                Program.Settings.OneShotUpdateFirstChanceDelayMs,
                Program.Settings.OneShotUpdateSecondChanceDelayMs });
+            }
          }
       }
 
