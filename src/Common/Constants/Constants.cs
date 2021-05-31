@@ -6,8 +6,7 @@ namespace mrHelper.Common.Constants
 {
    public static class Constants
    {
-      // TODO_MF - Rename it back
-      public static string ApplicationDataFolderName = "mrHelper_new";
+      public static string ApplicationDataFolderName = "mrHelper";
       public static string GitDiffToolName = "mrhelperdiff";
       public static string GitDiffToolConfigKey = "difftool.mrhelperdiff.cmd";
       public static string CustomProtocolName = "mrhelper";

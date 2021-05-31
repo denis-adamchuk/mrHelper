@@ -179,10 +179,10 @@ namespace mrHelper.App.Forms
             Size = new Size(Program.Settings.WidthBeforeClose, Program.Settings.HeightBeforeClose);
          }
 
+         int screenWidth = Screen.GetWorkingArea(this).Width;
+         int screenHeight = Screen.GetWorkingArea(this).Height;
          if (Program.Settings.LeftBeforeClose != 0 && Program.Settings.TopBeforeClose != 0)
          {
-            int screenWidth = Screen.GetWorkingArea(this).Width;
-            int screenHeight = Screen.GetWorkingArea(this).Height;
             double minAllowedVisibleAreaPx = 0.20; // 20%
             int maxX = screenWidth - Convert.ToInt32(screenWidth * minAllowedVisibleAreaPx);
             int maxY = screenHeight - Convert.ToInt32(screenHeight * minAllowedVisibleAreaPx);
@@ -201,8 +201,13 @@ namespace mrHelper.App.Forms
          }
 
          Trace.TraceInformation(
-            "[MainForm] restoreSize(), New Size = {0}x{1}, New Location = {2}x{3}, WindowState={4}",
-            Size.Width, Size.Height, Location.X, Location.Y, WindowState.ToString());
+            "[MainForm] restoreSize(), Size = {0}x{1}, Location = {2}x{3}, WindowState={4}, " +
+            "Screen = {5}x{6}, Size b/c = {7}x{8}, Location b/c = {9}x{10}, WasMaximized={11}, WasMinimized={12}",
+            Size.Width, Size.Height, Location.X, Location.Y, WindowState.ToString(),
+            screenWidth, screenHeight,
+            Program.Settings.WidthBeforeClose, Program.Settings.HeightBeforeClose,
+            Program.Settings.LeftBeforeClose, Program.Settings.TopBeforeClose,
+            Program.Settings.WasMaximizedBeforeClose, Program.Settings.WasMinimizedBeforeClose);
       }
 
       private static void disableSSLVerification()

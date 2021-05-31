@@ -748,15 +748,11 @@ namespace mrHelper.App.Forms
 
       private static void showHelp()
       {
-         // TODO_MF Remove
-         GC.Collect();
-         GC.WaitForPendingFinalizers();
-
-         //string helpUrl = Program.ServiceManager.GetHelpUrl();
-         //if (helpUrl != String.Empty)
-         //{
-         //   UrlHelper.OpenBrowser(helpUrl);
-         //}
+         string helpUrl = Program.ServiceManager.GetHelpUrl();
+         if (helpUrl != String.Empty)
+         {
+            UrlHelper.OpenBrowser(helpUrl);
+         }
       }
 
       private IEnumerable<string> getHostList()
