@@ -28,15 +28,15 @@ namespace mrHelper.Common.Tools
          return unescaped.Contains(' ') ? '"' + unescaped + '"' : unescaped;
       }
 
+      private static readonly string supportedProtocolPrefix = "https://";
+      private static string unsupportedProtocolPrefix = "http://";
+
       public static string GetHostWithPrefix(string host)
       {
          if (String.IsNullOrWhiteSpace(host))
          {
             return host;
          }
-
-         string supportedProtocolPrefix = "https://";
-         string unsupportedProtocolPrefix = "http://";
 
          host = host.ToLower().TrimEnd('/');
          if (host.StartsWith(supportedProtocolPrefix))
@@ -49,6 +49,26 @@ namespace mrHelper.Common.Tools
          }
 
          return supportedProtocolPrefix + host;
+      }
+
+      public static string GetHostWithoutPrefix(string host)
+      {
+         if (String.IsNullOrWhiteSpace(host))
+         {
+            return host;
+         }
+
+         host = host.ToLower().TrimEnd('/');
+         if (host.StartsWith(supportedProtocolPrefix))
+         {
+            return host.Substring(supportedProtocolPrefix.Length);
+         }
+         else if (host.StartsWith(unsupportedProtocolPrefix))
+         {
+            return host.Substring(unsupportedProtocolPrefix.Length);
+         }
+
+         return host;
       }
 
       public static string GetUploadsPrefix(ProjectKey projectKey)

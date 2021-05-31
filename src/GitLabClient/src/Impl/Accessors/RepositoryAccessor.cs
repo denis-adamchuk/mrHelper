@@ -47,6 +47,41 @@ namespace mrHelper.GitLabClient
             "Commit loading cancelled", "Cannot load commit");
       }
 
+      async public Task<Commit> FindFirstBranchCommit(string branchName)
+      {
+         Commit headBranchCommit = await LoadCommit(branchName);
+         if (headBranchCommit.Parent_Ids == null || !headBranchCommit.Parent_Ids.Any())
+         {
+            Debug.Assert(false);
+            return null;
+         }
+
+         string previousCommitSha = headBranchCommit.Id;
+         for (int iDepth = 0; iDepth < Constants.MaxCommitDepth; ++iDepth)
+         {
+            string sha = getParentSha(headBranchCommit.Parent_Ids.First(), iDepth);
+            IEnumerable<CommitRef> refs = await loadCommitRefs(sha);
+            if (refs == null || !refs.Any())
+            {
+               continue;
+            }
+
+            IEnumerable<CommitRef> branchRefs = refs.Where(x => x.Type == "branch");
+            if (branchRefs.Count() != 1 || branchRefs.First().Name != branchName)
+            {
+               break;
+            }
+
+            previousCommitSha = sha;
+         }
+
+         if (previousCommitSha == headBranchCommit.Id)
+         {
+            return headBranchCommit;
+         }
+         return await LoadCommit(previousCommitSha);
+      }
+
       public Task<IEnumerable<Branch>> GetBranches(string search)
       {
          return call(() => _operator.GetBranches(search),
@@ -68,12 +103,10 @@ namespace mrHelper.GitLabClient
             return null;
          }
 
-         int MaxCommitDepth = Constants.MaxCommitDepth;
-         for (int iDepth = 0; iDepth < MaxCommitDepth; ++iDepth)
+         for (int iDepth = 0; iDepth < Constants.MaxCommitDepth; ++iDepth)
          {
-            string sha = String.Format("{0}{1}", sourceBranchCommit.Parent_Ids.First(), new string('^', iDepth));
-            IEnumerable<CommitRef> refs = await call(() => _operator.LoadCommitRefsAsync(sha),
-               "Commit refs loading cancelled", "Cannot load commit refs");
+            string sha = getParentSha(sourceBranchCommit.Parent_Ids.First(), iDepth);
+            IEnumerable<CommitRef> refs = await loadCommitRefs(sha);
             if (refs == null || !refs.Any())
             {
                continue;
@@ -105,6 +138,17 @@ namespace mrHelper.GitLabClient
       {
          _operator?.Dispose();
          _operator = null;
+      }
+
+      private static string getParentSha(string sha, int depth)
+      {
+         return String.Format("{0}{1}", sha, new string('^', depth));
+      }
+
+      private Task<IEnumerable<CommitRef>> loadCommitRefs(string sha)
+      {
+         return call(() => _operator.LoadCommitRefsAsync(sha),
+            "Commit refs loading cancelled", "Cannot load commit refs");
       }
 
       async private Task call(Func<Task> func, string cancelMessage, string errorMessage)

@@ -50,10 +50,19 @@ namespace mrHelper.GitLabClient.Accessors
                {
                   if (glex.InnerException is System.Net.WebException wex)
                   {
-                     if (wex.Response is System.Net.HttpWebResponse response
-                      && response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                     if (wex.Response is System.Net.HttpWebResponse response)
                      {
-                        throw new ForbiddenTimeTrackerException(ex, span);
+                        if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                        {
+                           throw new ForbiddenTimeTrackerException(ex, span);
+                        }
+                        else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+                        {
+                           if (span.TotalSeconds < 1)
+                           {
+                              throw new TooSmallSpanTimeTrackerException(ex, span);
+                           }
+                        }
                      }
                   }
                }

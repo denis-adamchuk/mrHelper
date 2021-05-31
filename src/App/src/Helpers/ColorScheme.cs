@@ -29,24 +29,18 @@ namespace mrHelper.App.Helpers
    /// <summary>
    /// Represents a color scheme used in the application
    /// </summary>
-   internal class ColorScheme
+   public class ColorScheme
    {
-      /// <summary>
-      /// Create an empty scheme
-      /// </summary>
-      internal ColorScheme()
-      {
-      }
-
       /// <summary>
       /// Read scheme from file
       /// Throws ArgumentException
       /// </summary>
-      internal ColorScheme(string filename, ExpressionResolver expressionResolver)
+      internal void LoadFromFile(string filename)
       {
-         _expressionResolver = expressionResolver;
          initializeFromFile(filename);
       }
+
+      internal event Action Changed;
 
       internal ColorSchemeItem GetColor(string name)
       {
@@ -69,12 +63,40 @@ namespace mrHelper.App.Helpers
          return _colors[groupName]
             .Select(item =>
             {
-               IEnumerable<string> resolvedConditions = item.Conditions?
-                  .Select(condition => _expressionResolver.Resolve(condition)) ?? Array.Empty<string>();
                Color color = getCustomColor(item.Name) ?? item.Color;
-               return new ColorSchemeItem(item.Name, item.DisplayName, resolvedConditions, color, item.Color);
+               return new ColorSchemeItem(item.Name, item.DisplayName, item.Conditions, color, item.Color);
             })
             .ToArray();
+      }
+
+      internal void ResetToDefault()
+      {
+         Program.Settings.CustomColors = new Dictionary<string, string>();
+         Changed?.Invoke();
+      }
+
+      internal void SetColor(string name, Color color)
+      {
+         ColorSchemeItem colorSchemeItem = name != null ? GetColor(name) : null;
+         if (colorSchemeItem == null || color.Equals(colorSchemeItem.Color))
+         {
+            return;
+         }
+
+         Dictionary<string, string> dict = Program.Settings.CustomColors;
+         if (colorSchemeItem.FactoryColor.Equals(color))
+         {
+            dict.Remove(colorSchemeItem.Name);
+         }
+         else
+         {
+            string colorAsText = color.IsNamedColor
+               ? color.Name : String.Format("{0},{1},{2},{3}", color.A, color.R, color.G, color.B);
+            dict[colorSchemeItem.Name] = colorAsText;
+         }
+         Program.Settings.CustomColors = dict;
+
+         Changed?.Invoke();
       }
 
       private Color? getCustomColor(string name)
@@ -118,6 +140,7 @@ namespace mrHelper.App.Helpers
             throw new ArgumentException(String.Format("Cannot parse file \"{0}\"", filename));
          }
 
+         _colors.Clear();
          foreach (ColorGroup g in groups)
          {
             foreach (ColorItem i in g.Colors)
@@ -129,9 +152,10 @@ namespace mrHelper.App.Helpers
                }
             }
          }
+         Changed?.Invoke();
       }
 
-      private Color? readColorFromText(string text)
+      private static Color? readColorFromText(string text)
       {
          string[] rgbs = text.Split(',');
          if (rgbs.Length == 1)
@@ -189,8 +213,6 @@ namespace mrHelper.App.Helpers
          [JsonProperty]
          public IEnumerable<ColorItem> Colors { get; protected set; }
       }
-
-      private readonly ExpressionResolver _expressionResolver;
    }
 }
 

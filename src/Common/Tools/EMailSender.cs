@@ -19,13 +19,14 @@ namespace mrHelper.Common.Tools
 
    public static class EMailSender
    {
-      public static void Send(string logarchivepath, string sender, string recipient, string body, string subject)
+      public static void Send(string logarchivepath, string dumparchivepath,
+         string sender, string recipient, string body, string subject)
       {
          if (!new DesktopBridge.Helpers().IsRunningAsUwp())
          {
             try
             {
-               sendFromOutlook(logarchivepath, recipient, body, subject);
+               sendFromOutlook(logarchivepath, dumparchivepath, recipient, body, subject);
                return;
             }
             catch (EMailSenderException ex)
@@ -35,6 +36,7 @@ namespace mrHelper.Common.Tools
             }
          }
 
+         // TODO Add support of dumparchivepath
          try
          {
             sendFromEmlAssociation(logarchivepath, sender, recipient, body, subject);
@@ -49,7 +51,8 @@ namespace mrHelper.Common.Tools
          sendFromDefaultEmailClient(logarchivepath, recipient, subject, body);
       }
 
-      private static void sendFromOutlook(string logarchivepath, string recipient, string body, string subject)
+      private static void sendFromOutlook(string logarchivepath, string dumparchivepath,
+         string recipient, string body, string subject)
       {
          try
          {
@@ -61,13 +64,19 @@ namespace mrHelper.Common.Tools
             message.Subject = subject;
             message.Recipients.Add(recipient).Resolve();
 
-            if (!String.IsNullOrWhiteSpace(logarchivepath))
+            void addAttachment(string filePath)
             {
-               string filename = Path.GetFileName(logarchivepath);
-               int position = message.Body.Length + 1;
-               int attachmentType = (int)Outlook.OlAttachmentType.olByValue;
-               message.Attachments.Add(logarchivepath, attachmentType, position, filename);
+               if (!String.IsNullOrWhiteSpace(filePath))
+               {
+                  string filename = Path.GetFileName(filePath);
+                  int position = message.Body.Length + 1;
+                  int attachmentType = (int)Outlook.OlAttachmentType.olByValue;
+                  message.Attachments.Add(filePath, attachmentType, position, filename);
+               }
             }
+
+            addAttachment(logarchivepath);
+            addAttachment(dumparchivepath);
 
             message.Display();
          }
@@ -88,8 +97,7 @@ namespace mrHelper.Common.Tools
          }
          message.Headers.Add("X-Unsent", "1");
 
-         string tempDirectory = Environment.GetEnvironmentVariable("TEMP");
-         string emailDirectory = Path.Combine(tempDirectory, Guid.NewGuid().ToString());
+         string emailDirectory = PathFinder.NewEMailDirectory;
          Directory.CreateDirectory(emailDirectory);
 
          try

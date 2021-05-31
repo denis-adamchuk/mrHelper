@@ -8,6 +8,8 @@ using mrHelper.CustomActions;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Constants;
 using mrHelper.App.Forms.Helpers;
+using mrHelper.CommonControls.Tools;
+using mrHelper.App.Forms;
 
 namespace mrHelper.App.Controls
 {
@@ -35,12 +37,6 @@ namespace mrHelper.App.Controls
             showNotResolvedThreadsOnlyToolStripMenuItem
          };
 
-         _diffContextPositionMenuItemGroup = new ToolStripMenuItem[] {
-            topToolStripMenuItem,
-            leftToolStripMenuItem,
-            rightToolStripMenuItem
-         };
-
          Font = menuStrip.Font;
       }
 
@@ -53,8 +49,11 @@ namespace mrHelper.App.Controls
          AsyncDiscussionLoader discussionLoader,
          AsyncDiscussionHelper discussionHelper,
          IEnumerable<ICommand> commands,
-         Action<string> onFontSelected)
+         ICommandCallback commandCallback,
+         Action<string> onFontSelected,
+         ColorScheme colorScheme)
       {
+         _loadingConfiguration = true;
          _discussionSort = discussionSort;
          setDiscussionSortStateInControls(_discussionSort.SortState);
 
@@ -65,13 +64,27 @@ namespace mrHelper.App.Controls
          setDiscussionLayoutStateInControls();
          updateColumnWidthSizeMenuItemState();
 
+         emulateNativeLineBreaksToolStripMenuItem.Checked = Program.Settings.EmulateNativeLineBreaksInDiscussions;
+
          _discussionLoader = discussionLoader;
          _discussionHelper = discussionHelper;
 
-         addCustomActions(commands);
+         addCustomActions(commands, commandCallback);
 
          addFontSizes();
          _onFontSelected = onFontSelected;
+
+         _colorScheme = colorScheme;
+
+         _loadingConfiguration = false;
+      }
+
+      private void onConfigureColorsClicked(object sender, EventArgs e)
+      {
+         using (ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.Discussions, _colorScheme))
+         {
+            form.ShowDialog();
+         }
       }
 
       private void onRefreshMenuItemClicked(object sender, EventArgs e)
@@ -97,7 +110,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         uncheckAllExceptOne(_sortMenuItemGroup, checkBox);
+         WinFormsHelpers.UncheckAllExceptOne(_sortMenuItemGroup, checkBox);
          checkBox.CheckOnClick = false;
          _discussionSort.SortState = getDiscussionSortStateFromControls();
       }
@@ -110,7 +123,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         uncheckAllExceptOne(_filterByAnswersMenuItemGroup, checkBox);
+         WinFormsHelpers.UncheckAllExceptOne(_filterByAnswersMenuItemGroup, checkBox);
          checkBox.CheckOnClick = false;
          _displayFilter.FilterState = getDisplayFilterStateFromControls();
       }
@@ -123,7 +136,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         uncheckAllExceptOne(_filterByResolutionMenuItemGroup, checkBox);
+         WinFormsHelpers.UncheckAllExceptOne(_filterByResolutionMenuItemGroup, checkBox);
          checkBox.CheckOnClick = false;
          _displayFilter.FilterState = getDisplayFilterStateFromControls();
       }
@@ -141,7 +154,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         uncheckAllExceptOne(fontSizeToolStripMenuItem.DropDownItems
+         WinFormsHelpers.UncheckAllExceptOne(fontSizeToolStripMenuItem.DropDownItems
             .Cast<ToolStripMenuItem>().ToArray(), checkBox);
          checkBox.CheckOnClick = false;
          _onFontSelected(checkBox.Text);
@@ -184,15 +197,46 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         uncheckAllExceptOne(diffContextPositionToolStripMenuItem.DropDownItems
+         WinFormsHelpers.UncheckAllExceptOne(diffContextPositionToolStripMenuItem.DropDownItems
             .Cast<ToolStripMenuItem>().ToArray(), checkBox);
          checkBox.CheckOnClick = false;
          _discussionLayout.DiffContextPosition = getDiffContextPositionFromControls();
       }
 
+      private void onDiffContextDepthCheckedChanged(object sender, EventArgs e)
+      {
+         ToolStripMenuItem checkBox = sender as ToolStripMenuItem;
+         if (!checkBox.Checked || !int.TryParse(checkBox.Text, out int diffContextDepthInteger))
+         {
+            return;
+         }
+
+         WinFormsHelpers.UncheckAllExceptOne(diffContextDepthToolStripMenuItem.DropDownItems
+            .Cast<ToolStripMenuItem>().ToArray(), checkBox);
+         checkBox.CheckOnClick = false;
+         Program.Settings.DiffContextDepth = diffContextDepthInteger;
+         _discussionLayout.DiffContextDepth = new Core.Context.ContextDepth(0, diffContextDepthInteger);
+      }
+
       private void onFlatListOfRepliesCheckedChanged(object sender, EventArgs e)
       {
          _discussionLayout.NeedShiftReplies = !flatListOfRepliesToolStripMenuItem.Checked;
+      }
+
+      private void onEmulateNativeLineBreaksCheckedChanged(Object sender, EventArgs e)
+      {
+         Program.Settings.EmulateNativeLineBreaksInDiscussions = emulateNativeLineBreaksToolStripMenuItem.Checked;
+         if (!_loadingConfiguration)
+         {
+            MessageBox.Show("New setting will apply once Discussions view is reopened",
+               "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
+         }
+      }
+
+      private void onShowTooltipsForCodeCheckedChanged(object sender, EventArgs e)
+      {
+         Program.Settings.ShowTooltipsForCode = showTooltipsForCodeToolStripMenuItem.Checked;
+         _discussionLayout.ShowTooltipsForCode = showTooltipsForCodeToolStripMenuItem.Checked;
       }
 
       private void onRefreshAction()
@@ -223,13 +267,13 @@ namespace mrHelper.App.Controls
          }));
       }
 
-      private void onCommandAction(ICommand command)
+      private void onCommandAction(ICommand command, ICommandCallback commandCallback)
       {
          BeginInvoke(new Action(async () =>
          {
             try
             {
-               await command.Run();
+               await command.Run(commandCallback);
             }
             catch (Exception ex) // Exception type does not matter
             {
@@ -242,7 +286,7 @@ namespace mrHelper.App.Controls
          }));
       }
 
-      private void addCustomActions(IEnumerable<ICommand> commands)
+      private void addCustomActions(IEnumerable<ICommand> commands, ICommandCallback commandCallback)
       {
          if (commands == null)
          {
@@ -257,7 +301,7 @@ namespace mrHelper.App.Controls
                Name = "customAction" + id,
                Text = String.Format("{0} ({1})", command.Hint, command.Name)
             };
-            item.Click += (x, y) => onCommandAction(command);
+            item.Click += (x, y) => onCommandAction(command, commandCallback);
             actionsToolStripMenuItem.DropDownItems.Add(item);
             id++;
          }
@@ -355,15 +399,15 @@ namespace mrHelper.App.Controls
       {
          if (state == DiscussionSortState.Default)
          {
-            checkGroupItem(_sortMenuItemGroup, defaultToolStripMenuItem);
+            checkGroupItem(defaultToolStripMenuItem);
          }
          else if (state == DiscussionSortState.Reverse)
          {
-            checkGroupItem(_sortMenuItemGroup, reverseToolStripMenuItem);
+            checkGroupItem(reverseToolStripMenuItem);
          }
          else if (state == DiscussionSortState.ByReviewer)
          {
-            checkGroupItem(_sortMenuItemGroup, byReviewerToolStripMenuItem);
+            checkGroupItem(byReviewerToolStripMenuItem);
          }
       }
 
@@ -372,29 +416,29 @@ namespace mrHelper.App.Controls
          if (state.ByAnswers.HasFlag(FilterByAnswers.Answered)
           && state.ByAnswers.HasFlag(FilterByAnswers.Unanswered))
          {
-            checkGroupItem(_filterByAnswersMenuItemGroup, showAnsweredAndUnansweredThreadsToolStripMenuItem);
+            checkGroupItem(showAnsweredAndUnansweredThreadsToolStripMenuItem);
          }
          else if (state.ByAnswers.HasFlag(FilterByAnswers.Answered))
          {
-            checkGroupItem(_filterByAnswersMenuItemGroup, showAnsweredThreadsOnlyToolStripMenuItem);
+            checkGroupItem(showAnsweredThreadsOnlyToolStripMenuItem);
          }
          else if (state.ByAnswers.HasFlag(FilterByAnswers.Unanswered))
          {
-            checkGroupItem(_filterByAnswersMenuItemGroup, showUnansweredThreadsOnlyToolStripMenuItem);
+            checkGroupItem(showUnansweredThreadsOnlyToolStripMenuItem);
          }
 
          if (state.ByResolution.HasFlag(FilterByResolution.Resolved)
           && state.ByResolution.HasFlag(FilterByResolution.NotResolved))
          {
-            checkGroupItem(_filterByResolutionMenuItemGroup, showResolvedAndNotResolvedThreadsToolStripMenuItem);
+            checkGroupItem(showResolvedAndNotResolvedThreadsToolStripMenuItem);
          }
          else if (state.ByResolution.HasFlag(FilterByResolution.Resolved))
          {
-            checkGroupItem(_filterByResolutionMenuItemGroup, showResolvedThreadsOnlyToolStripMenuItem);
+            checkGroupItem(showResolvedThreadsOnlyToolStripMenuItem);
          }
          else if (state.ByResolution.HasFlag(FilterByResolution.NotResolved))
          {
-            checkGroupItem(_filterByResolutionMenuItemGroup, showNotResolvedThreadsOnlyToolStripMenuItem);
+            checkGroupItem(showNotResolvedThreadsOnlyToolStripMenuItem);
          }
 
          showThreadsStartedByMeOnlyToolStripMenuItem.Checked = state.ByCurrentUserOnly;
@@ -405,40 +449,46 @@ namespace mrHelper.App.Controls
       {
          if (_discussionLayout.DiffContextPosition == ConfigurationHelper.DiffContextPosition.Top)
          {
-            checkGroupItem(_diffContextPositionMenuItemGroup, topToolStripMenuItem);
+            checkGroupItem(topToolStripMenuItem);
          }
          else if (_discussionLayout.DiffContextPosition == ConfigurationHelper.DiffContextPosition.Left)
          {
-            checkGroupItem(_diffContextPositionMenuItemGroup, leftToolStripMenuItem);
+            checkGroupItem(leftToolStripMenuItem);
          }
          else if (_discussionLayout.DiffContextPosition == ConfigurationHelper.DiffContextPosition.Right)
          {
-            checkGroupItem(_diffContextPositionMenuItemGroup, rightToolStripMenuItem);
+            checkGroupItem(rightToolStripMenuItem);
          }
 
          flatListOfRepliesToolStripMenuItem.Checked = !_discussionLayout.NeedShiftReplies;
+
+         setDiffContextDepthStateInControls();
+         showTooltipsForCodeToolStripMenuItem.Checked = Program.Settings.ShowTooltipsForCode;
       }
 
-      private static void checkGroupItem(ToolStripMenuItem[] checkBoxGroup, ToolStripMenuItem checkBox)
+      private void setDiffContextDepthStateInControls()
+      {
+         int defaultContextDepth = 2;
+         Dictionary<int, ToolStripMenuItem> kv = new Dictionary<int, ToolStripMenuItem>
+         {
+            { 0, toolStripMenuItemDiffContextDepth0 },
+            { 1, toolStripMenuItemDiffContextDepth1 },
+            { 2, toolStripMenuItemDiffContextDepth2 },
+            { 3, toolStripMenuItemDiffContextDepth3 },
+            { 4, toolStripMenuItemDiffContextDepth4 }
+         };
+
+         if (!kv.TryGetValue(Program.Settings.DiffContextDepth, out ToolStripMenuItem item))
+         {
+            item = kv[defaultContextDepth];
+         }
+         checkGroupItem(item);
+      }
+
+      private static void checkGroupItem(ToolStripMenuItem checkBox)
       {
          checkBox.Checked = true;
          checkBox.CheckOnClick = true;
-         uncheckAllExceptOne(checkBoxGroup, checkBox);
-      }
-
-      private static void uncheckAllExceptOne(ToolStripMenuItem[] checkBoxGroup, ToolStripMenuItem checkBox)
-      {
-         if (checkBoxGroup.Contains(checkBox))
-         {
-            foreach (ToolStripMenuItem cb in checkBoxGroup)
-            {
-               if (cb != checkBox)
-               {
-                  cb.Checked = false;
-                  cb.CheckOnClick = true;
-               }
-            }
-         }
       }
 
       private DiscussionSort _discussionSort;
@@ -447,11 +497,11 @@ namespace mrHelper.App.Controls
       private AsyncDiscussionLoader _discussionLoader;
       private AsyncDiscussionHelper _discussionHelper;
       private Action<string> _onFontSelected;
-
+      private ColorScheme _colorScheme;
+      private bool _loadingConfiguration;
       private readonly ToolStripMenuItem[] _sortMenuItemGroup;
       private readonly ToolStripMenuItem[] _filterByAnswersMenuItemGroup;
       private readonly ToolStripMenuItem[] _filterByResolutionMenuItemGroup;
-      private readonly ToolStripMenuItem[] _diffContextPositionMenuItemGroup;
    }
 }
 

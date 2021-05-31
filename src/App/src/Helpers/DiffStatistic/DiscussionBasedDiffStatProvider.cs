@@ -88,7 +88,10 @@ namespace mrHelper.App.Helpers
 
       private static readonly Regex gitDiffStatRe =
          new Regex(
-            @"\*\*Files\((?'files'\d+)\)\*\*.*\|\*\*(?'add'\d+)\*\*\|\*\*(?'mod'\d+)\*\*\|\*\*(?'del'\d+)\*\*\|",
+            @"\*\*Files\((?'files'\d+)\)\*\*.*\"
+          + @"|\*\*(?'add'\d+)\*\*(?>\(manually\))?\"
+          + @"|\*\*(?'mod'\d+)\*\*(?>\(manually\))?\"
+          + @"|\*\*(?'del'\d+)\*\*(?>\(manually\))?\|",
                RegexOptions.Compiled);
 
       private DiffStatistic? parseGitDiffStatistic(string discussionBody, MergeRequestKey mrk)

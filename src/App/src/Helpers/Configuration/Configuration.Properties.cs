@@ -1,11 +1,13 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Drawing;
 using System.Collections.Generic;
 using System.ComponentModel;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Helpers
 {
-   public partial class UserDefinedSettings : INotifyPropertyChanged, IHostProperties
+   public partial class UserDefinedSettings : IHostProperties
    {
       public string[] KnownHosts
       {
@@ -84,6 +86,7 @@ namespace mrHelper.App.Helpers
          get => getBoolValue(WordWrapLongRowsKeyName, WordWrapLongRowsDefaultValue);
          set => setBoolValue(WordWrapLongRowsKeyName, value);
       }
+      public event Action WordWrapLongRowsChanged;
 
       public bool MinimizeOnClose
       {
@@ -109,10 +112,40 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(WPFSoftwareOnlyRenderModeKeyName, value);
       }
 
+      public int WidthBeforeClose
+      {
+         get => getIntValue(WidthBeforeCloseKeyName, WidthBeforeCloseDefaultValue);
+         set => setIntValue(WidthBeforeCloseKeyName, value);
+      }
+
+      public int HeightBeforeClose
+      {
+         get => getIntValue(HeightBeforeCloseKeyName, HeightBeforeCloseDefaultValue);
+         set => setIntValue(HeightBeforeCloseKeyName, value);
+      }
+
+      public int LeftBeforeClose
+      {
+         get => getIntValue(LeftBeforeCloseKeyName, LeftBeforeCloseDefaultValue);
+         set => setIntValue(LeftBeforeCloseKeyName, value);
+      }
+
+      public int TopBeforeClose
+      {
+         get => getIntValue(TopBeforeCloseKeyName, TopBeforeCloseDefaultValue);
+         set => setIntValue(TopBeforeCloseKeyName, value);
+      }
+
       public bool WasMaximizedBeforeClose
       {
          get => getBoolValue(WasMaximizedBeforeCloseKeyName, WasMaximizedBeforeCloseDefaultValue);
          set => setBoolValue(WasMaximizedBeforeCloseKeyName, value);
+      }
+
+      public bool WasMinimizedBeforeClose
+      {
+         get => getBoolValue(WasMinimizedBeforeCloseKeyName, WasMinimizedBeforeCloseDefaultValue);
+         set => setBoolValue(WasMinimizedBeforeCloseKeyName, value);
       }
 
       public bool DisableSplitterRestrictions
@@ -145,12 +178,6 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(ShowWarningOnCreateMergeRequestKeyName, value);
       }
 
-      public bool ShowWarningOnFilterMigration
-      {
-         get => getBoolValue(ShowWarningOnFilterMigrationKeyName, ShowWarningOnFilterMigrationDefaultValue);
-         set => setBoolValue(ShowWarningOnFilterMigrationKeyName, value);
-      }
-
       public bool ShowWarningOnHideToTray
       {
          get => getBoolValue(ShowWarningOnHideToTrayKeyName, ShowWarningOnHideToTrayDefaultValue);
@@ -163,10 +190,10 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(ShowRelatedThreadsKeyName, value);
       }
 
-      public string DiffContextDepth
+      public int DiffContextDepth
       {
-         get => getValue(DiffContextDepthKeyName, DiffContextDepthDefaultValue);
-         set => setValue(DiffContextDepthKeyName, value);
+         get => getIntValue(DiffContextDepthKeyName, DiffContextDepthDefaultValue);
+         set => setIntValue(DiffContextDepthKeyName, value);
       }
 
       public string DiffContextPosition
@@ -174,23 +201,32 @@ namespace mrHelper.App.Helpers
          get => getValue(DiffContextPositionKeyName, DiffContextPositionDefaultValue);
          set => setValue(DiffContextPositionKeyName, value);
       }
+      public event Action DiffContextPositionChanged;
 
       public string DiscussionColumnWidth
       {
          get => getValue(DiscussionColumnWidthKeyName, DiscussionColumnWidthDefaultValue);
          set => setValue(DiscussionColumnWidthKeyName, value);
       }
+      public event Action DiscussionColumnWidthChanged;
 
       public bool NeedShiftReplies
       {
          get => getBoolValue(NeedShiftRepliesKeyName, NeedShiftRepliesDefaultValue);
          set => setBoolValue(NeedShiftRepliesKeyName, value);
       }
+      public event Action NeedShiftRepliesChanged;
 
       public bool EmulateNativeLineBreaksInDiscussions
       {
          get => getBoolValue(EmulateNativeLineBreaksInDiscussionsKeyName, EmulateNativeLineBreaksInDiscussionsDefaultValue);
          set => setBoolValue(EmulateNativeLineBreaksInDiscussionsKeyName, value);
+      }
+
+      public bool ShowTooltipsForCode
+      {
+         get => getBoolValue(ShowTooltipsForCodeKeyName, ShowTooltipsForCodeDefaultValue);
+         set => setBoolValue(ShowTooltipsForCodeKeyName, value);
       }
 
       public bool IsDiscussionColumnWidthFixed
@@ -217,10 +253,23 @@ namespace mrHelper.App.Helpers
          set => setValue(MainWindowFontSizeNameKeyName, value);
       }
 
+      public string MainWindowLayout
+      {
+         get => getValue(MainWindowLayoutKeyName, MainWindowLayoutDefaultValue);
+         set => setValue(MainWindowLayoutKeyName, value);
+      }
+      public event Action MainWindowLayoutChanged;
+
       public int ServicePointConnectionLimit
       {
          get => getIntValue(ServicePointConnectionLimitKeyName, ServicePointConnectionLimitDefaultValue);
          set => setIntValue(ServicePointConnectionLimitKeyName, value);
+      }
+
+      public int AsyncOperationTimeOutSeconds
+      {
+         get => getIntValue(AsyncOperationTimeOutSecondsKeyName, AsyncOperationTimeOutSecondsDefaultValue);
+         set => setIntValue(AsyncOperationTimeOutSecondsKeyName, value);
       }
 
       public int LogFilesToKeep
@@ -358,16 +407,16 @@ namespace mrHelper.App.Helpers
          set => setStringToIntDictionary(RevisionBrowserColumnWidthsKeyName, value);
       }
 
-      public int MainWindowSplitterDistance
+      public int PrimarySplitContainerDistance
       {
-         get => getIntValue(MainWindowSplitterDistanceKeyName, MainWindowSplitterDistanceDefaultValue);
-         set => setIntValue(MainWindowSplitterDistanceKeyName, value);
+         get => getIntValue(PrimarySplitContainerDistanceKeyName, PrimarySplitContainerDistanceDefaultValue);
+         set => setIntValue(PrimarySplitContainerDistanceKeyName, value);
       }
 
-      public int RightPaneSplitterDistance
+      public int SecondarySplitContainerDistance
       {
-         get => getIntValue(RightPaneSplitterDistanceKeyName, RightPaneSplitterDistanceDefaultValue);
-         set => setIntValue(RightPaneSplitterDistanceKeyName, value);
+         get => getIntValue(SecondarySplitContainerDistanceKeyName, SecondarySplitContainerDistanceDefaultValue);
+         set => setIntValue(SecondarySplitContainerDistanceKeyName, value);
       }
 
       public int AutoUpdatePeriodMs
@@ -452,6 +501,18 @@ namespace mrHelper.App.Helpers
       {
          get => getStringToStringDictionary(CustomColorsKeyName, CustomColorsDefaultValue, false);
          set => setStringToStringDictionary(CustomColorsKeyName, value);
+      }
+
+      public Dictionary<string, Point> ToolStripLocations
+      {
+         get => getStringToPointDictionary(ToolStripLocationsKeyName, ToolStripLocationsDefaultValue);
+         set => setStringToPointDictionary(ToolStripLocationsKeyName, value);
+      }
+
+      public Dictionary<string, string> ToolStripLayoutStyles
+      {
+         get => getStringToStringDictionary(ToolStripLayoutStylesKeyName, ToolStripLayoutStylesDefaultValue, false);
+         set => setStringToStringDictionary(ToolStripLayoutStylesKeyName, value);
       }
 
       private bool AccessTokensProtected

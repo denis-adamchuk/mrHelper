@@ -92,6 +92,7 @@ namespace mrHelper.GitLabClient.Managers
          {
             _cachedTrackedTime[mrk] -= span;
          }
+         TotalTimeLoaded?.Invoke(this, mrk);
       }
 
       private static readonly Regex spentTimeRe =

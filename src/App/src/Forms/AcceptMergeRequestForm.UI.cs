@@ -98,8 +98,10 @@ namespace mrHelper.App.Forms
             ExceptionHandlers.Handle(String.Format("Failed to merge (attempts: {0})", attempts), ex);
             if (areConflictsFoundAtMerge(ex))
             {
+               disableProcessingTimer();
                MessageBox.Show("GitLab was unable to complete the merge. Rebase branch locally and try again",
                   "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+               enableProcessingTimer();
                return;
             }
             reportErrorToUser(ex);
@@ -252,8 +254,8 @@ namespace mrHelper.App.Forms
 
       private void updateWorkInProgressControls(bool isWIP)
       {
-         labelWIPStatus.Text = isWIP ? "This is a Work in Progress" : "This is not a Work in Progress";
-         labelWIPStatus.ForeColor = isWIP ? Color.Red : Color.Green;
+         labelDraftStatus.Text = isWIP ? "This is WIP/Draft" : "This is not WIP/Draft";
+         labelDraftStatus.ForeColor = isWIP ? Color.Red : Color.Green;
          buttonToggleDraft.Enabled = isWIP;
       }
 

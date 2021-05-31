@@ -1,4 +1,5 @@
 ﻿using System;
+using GitLabSharp.Entities;
 
 namespace mrHelper.GitLabClient.Managers
 {

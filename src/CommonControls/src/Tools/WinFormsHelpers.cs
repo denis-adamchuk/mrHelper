@@ -17,6 +17,14 @@ namespace mrHelper.CommonControls.Tools
          // It is expected to use font size in pixels here
          int height = listView.Font.Height * maxLineCount + 2;
 
+         if (listView.SmallImageList != null
+          && listView.SmallImageList.ImageSize.Height == height)
+         {
+            return;
+         }
+
+         listView.SmallImageList?.Dispose();
+
          ImageList imgList = new ImageList
          {
             ImageSize = new Size(1, height)
@@ -24,12 +32,12 @@ namespace mrHelper.CommonControls.Tools
          listView.SmallImageList = imgList;
       }
 
-      public static void CloseAllFormsExceptOne(Form exceptionalForm)
+      public static void CloseAllFormsExceptOne(string exceptionalFormName)
       {
          for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
          {
             Form form = Application.OpenForms[iForm];
-            if (form != exceptionalForm)
+            if (form.Name != exceptionalFormName)
             {
                form.Close();
             }
@@ -81,6 +89,36 @@ namespace mrHelper.CommonControls.Tools
                }
             }
             comboBox.SelectedIndex = selectedIndex;
+         }
+      }
+
+      public static void UncheckAllExceptOne(ToolStripMenuItem[] checkBoxGroup, ToolStripMenuItem checkBox)
+      {
+         if (checkBoxGroup.Contains(checkBox))
+         {
+            foreach (ToolStripMenuItem cb in checkBoxGroup)
+            {
+               if (cb != checkBox)
+               {
+                  cb.Checked = false;
+                  cb.CheckOnClick = true;
+               }
+            }
+         }
+      }
+
+      public static void UncheckAllExceptOne(ToolStripButton[] buttonGroup, ToolStripButton button)
+      {
+         if (buttonGroup.Contains(button))
+         {
+            foreach (ToolStripButton btn in buttonGroup)
+            {
+               if (btn != button)
+               {
+                  btn.Checked = false;
+                  btn.CheckOnClick = true;
+               }
+            }
          }
       }
 
@@ -196,7 +234,7 @@ namespace mrHelper.CommonControls.Tools
          // Sometimes Windows DPI behavior is strange when changed to non-default (and even back)
          // without signing out - windows got scaled incorrectly but after signing out they work ok.
          // There is a workaround for it.
-         // Component positions are defined at design-time with DPI 96 and when ResumeLauout occurs within
+         // Component positions are defined at design-time with DPI 96 and when ResumeLayout occurs within
          // InitializeComponent(), .NET checks CurrentAutoScaleDimensions to figure out a scale factor.
          // CurrentAutoScaleDimensions depends on the current font and we need to set it explicitly in advance.
          // This font has to be scaled in accordance with current DPI what gives a proper scale factor for
@@ -295,24 +333,29 @@ namespace mrHelper.CommonControls.Tools
             const int imgDim = 32;
             const int dotDim = 24;
             const int pad = 2;
-            using (Bitmap bmp = new Bitmap(imgDim, imgDim))
+            using (Bitmap bmp = DrawEllipse(imgDim, dotDim, pad, color.Value))
             {
-               using (Graphics g = Graphics.FromImage(bmp))
-               {
-                  g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                  g.Clear(Color.Transparent);
-                  using (SolidBrush brush = new SolidBrush(color.Value))
-                  {
-                     g.FillEllipse(brush, new Rectangle(imgDim - dotDim - pad, imgDim - dotDim - pad, dotDim, dotDim));
-                  }
-               }
-
                using (Icon overlay = Icon.FromHandle(bmp.GetHicon()))
                {
                   TaskbarManager.Instance.SetOverlayIcon(overlay, String.Empty);
                }
             }
          }
+      }
+
+      public static Bitmap DrawEllipse(int imgDim, int dotDim, int pad, Color c)
+      {
+         Bitmap bitmap = new Bitmap(imgDim, imgDim);
+         using (Graphics g = Graphics.FromImage(bitmap))
+         {
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.Clear(Color.Transparent);
+            using (SolidBrush brush = new SolidBrush(c))
+            {
+               g.FillEllipse(brush, new Rectangle(imgDim - dotDim - pad, imgDim - dotDim - pad, dotDim, dotDim));
+            }
+         }
+         return bitmap;
       }
 
       public static void PerformClick(Tuple<Button, bool>[] buttonsToClick)

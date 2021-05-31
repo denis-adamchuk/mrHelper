@@ -50,7 +50,6 @@ namespace mrHelper.App.Controls
          this.startAThreadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.addACommentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripMenuItemSeparator = new System.Windows.Forms.ToolStripSeparator();
-         this.fontSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.diffContextPositionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.topToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -60,6 +59,18 @@ namespace mrHelper.App.Controls
          this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
          this.increaseColumnWidthToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.decreaseColumnWidthToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
+         this.diffContextDepthToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.toolStripMenuItemDiffContextDepth0 = new System.Windows.Forms.ToolStripMenuItem();
+         this.toolStripMenuItemDiffContextDepth1 = new System.Windows.Forms.ToolStripMenuItem();
+         this.toolStripMenuItemDiffContextDepth2 = new System.Windows.Forms.ToolStripMenuItem();
+         this.toolStripMenuItemDiffContextDepth3 = new System.Windows.Forms.ToolStripMenuItem();
+         this.toolStripMenuItemDiffContextDepth4 = new System.Windows.Forms.ToolStripMenuItem();
+         this.showTooltipsForCodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.emulateNativeLineBreaksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+         this.fontSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.configureColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.menuStrip.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -73,7 +84,6 @@ namespace mrHelper.App.Controls
             this.sortToolStripMenuItem,
             this.filterToolStripMenuItem,
             this.actionsToolStripMenuItem,
-            this.fontSizeToolStripMenuItem,
             this.viewToolStripMenuItem});
          this.menuStrip.Location = new System.Drawing.Point(0, 0);
          this.menuStrip.Name = "menuStrip";
@@ -105,7 +115,7 @@ namespace mrHelper.App.Controls
          // 
          this.defaultToolStripMenuItem.CheckOnClick = true;
          this.defaultToolStripMenuItem.Name = "defaultToolStripMenuItem";
-         this.defaultToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+         this.defaultToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
          this.defaultToolStripMenuItem.Text = "Default";
          this.defaultToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onSortMenuItemCheckedChanged);
          // 
@@ -113,7 +123,7 @@ namespace mrHelper.App.Controls
          // 
          this.reverseToolStripMenuItem.CheckOnClick = true;
          this.reverseToolStripMenuItem.Name = "reverseToolStripMenuItem";
-         this.reverseToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+         this.reverseToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
          this.reverseToolStripMenuItem.Text = "Reverse";
          this.reverseToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onSortMenuItemCheckedChanged);
          // 
@@ -121,7 +131,7 @@ namespace mrHelper.App.Controls
          // 
          this.byReviewerToolStripMenuItem.CheckOnClick = true;
          this.byReviewerToolStripMenuItem.Name = "byReviewerToolStripMenuItem";
-         this.byReviewerToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+         this.byReviewerToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
          this.byReviewerToolStripMenuItem.Text = "By reviewer";
          this.byReviewerToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onSortMenuItemCheckedChanged);
          // 
@@ -229,27 +239,21 @@ namespace mrHelper.App.Controls
          // startAThreadToolStripMenuItem
          // 
          this.startAThreadToolStripMenuItem.Name = "startAThreadToolStripMenuItem";
-         this.startAThreadToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+         this.startAThreadToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
          this.startAThreadToolStripMenuItem.Text = "Start a thread";
          this.startAThreadToolStripMenuItem.Click += new System.EventHandler(this.onStartAThreadMenuItemClicked);
          // 
          // addACommentToolStripMenuItem
          // 
          this.addACommentToolStripMenuItem.Name = "addACommentToolStripMenuItem";
-         this.addACommentToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+         this.addACommentToolStripMenuItem.Size = new System.Drawing.Size(160, 22);
          this.addACommentToolStripMenuItem.Text = "Add a comment";
          this.addACommentToolStripMenuItem.Click += new System.EventHandler(this.onAddACommentMenuItemClicked);
          // 
          // toolStripMenuItemSeparator
          // 
          this.toolStripMenuItemSeparator.Name = "toolStripMenuItemSeparator";
-         this.toolStripMenuItemSeparator.Size = new System.Drawing.Size(177, 6);
-         // 
-         // fontSizeToolStripMenuItem
-         // 
-         this.fontSizeToolStripMenuItem.Name = "fontSizeToolStripMenuItem";
-         this.fontSizeToolStripMenuItem.Size = new System.Drawing.Size(66, 24);
-         this.fontSizeToolStripMenuItem.Text = "F&ont Size";
+         this.toolStripMenuItemSeparator.Size = new System.Drawing.Size(157, 6);
          // 
          // viewToolStripMenuItem
          // 
@@ -258,7 +262,14 @@ namespace mrHelper.App.Controls
             this.flatListOfRepliesToolStripMenuItem,
             this.toolStripMenuItem1,
             this.increaseColumnWidthToolStripMenuItem,
-            this.decreaseColumnWidthToolStripMenuItem});
+            this.decreaseColumnWidthToolStripMenuItem,
+            this.toolStripSeparator3,
+            this.diffContextDepthToolStripMenuItem,
+            this.showTooltipsForCodeToolStripMenuItem,
+            this.emulateNativeLineBreaksToolStripMenuItem,
+            this.toolStripSeparator4,
+            this.fontSizeToolStripMenuItem,
+            this.configureColorsToolStripMenuItem});
          this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
          this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 24);
          this.viewToolStripMenuItem.Text = "&View";
@@ -327,6 +338,97 @@ namespace mrHelper.App.Controls
          this.decreaseColumnWidthToolStripMenuItem.Text = "Decrease column width";
          this.decreaseColumnWidthToolStripMenuItem.Click += new System.EventHandler(this.onDecreaseColumnWidthClicked);
          // 
+         // toolStripSeparator3
+         // 
+         this.toolStripSeparator3.Name = "toolStripSeparator3";
+         this.toolStripSeparator3.Size = new System.Drawing.Size(273, 6);
+         // 
+         // diffContextDepthToolStripMenuItem
+         // 
+         this.diffContextDepthToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItemDiffContextDepth0,
+            this.toolStripMenuItemDiffContextDepth1,
+            this.toolStripMenuItemDiffContextDepth2,
+            this.toolStripMenuItemDiffContextDepth3,
+            this.toolStripMenuItemDiffContextDepth4});
+         this.diffContextDepthToolStripMenuItem.Name = "diffContextDepthToolStripMenuItem";
+         this.diffContextDepthToolStripMenuItem.Size = new System.Drawing.Size(276, 22);
+         this.diffContextDepthToolStripMenuItem.Text = "Diff context depth";
+         // 
+         // toolStripMenuItemDiffContextDepth0
+         // 
+         this.toolStripMenuItemDiffContextDepth0.CheckOnClick = true;
+         this.toolStripMenuItemDiffContextDepth0.Name = "toolStripMenuItemDiffContextDepth0";
+         this.toolStripMenuItemDiffContextDepth0.Size = new System.Drawing.Size(80, 22);
+         this.toolStripMenuItemDiffContextDepth0.Text = "0";
+         this.toolStripMenuItemDiffContextDepth0.CheckedChanged += new System.EventHandler(this.onDiffContextDepthCheckedChanged);
+         // 
+         // toolStripMenuItemDiffContextDepth1
+         // 
+         this.toolStripMenuItemDiffContextDepth1.CheckOnClick = true;
+         this.toolStripMenuItemDiffContextDepth1.Name = "toolStripMenuItemDiffContextDepth1";
+         this.toolStripMenuItemDiffContextDepth1.Size = new System.Drawing.Size(80, 22);
+         this.toolStripMenuItemDiffContextDepth1.Text = "1";
+         this.toolStripMenuItemDiffContextDepth1.CheckedChanged += new System.EventHandler(this.onDiffContextDepthCheckedChanged);
+         // 
+         // toolStripMenuItemDiffContextDepth2
+         // 
+         this.toolStripMenuItemDiffContextDepth2.CheckOnClick = true;
+         this.toolStripMenuItemDiffContextDepth2.Name = "toolStripMenuItemDiffContextDepth2";
+         this.toolStripMenuItemDiffContextDepth2.Size = new System.Drawing.Size(80, 22);
+         this.toolStripMenuItemDiffContextDepth2.Text = "2";
+         this.toolStripMenuItemDiffContextDepth2.CheckedChanged += new System.EventHandler(this.onDiffContextDepthCheckedChanged);
+         // 
+         // toolStripMenuItemDiffContextDepth3
+         // 
+         this.toolStripMenuItemDiffContextDepth3.CheckOnClick = true;
+         this.toolStripMenuItemDiffContextDepth3.Name = "toolStripMenuItemDiffContextDepth3";
+         this.toolStripMenuItemDiffContextDepth3.Size = new System.Drawing.Size(80, 22);
+         this.toolStripMenuItemDiffContextDepth3.Text = "3";
+         this.toolStripMenuItemDiffContextDepth3.CheckedChanged += new System.EventHandler(this.onDiffContextDepthCheckedChanged);
+         // 
+         // toolStripMenuItemDiffContextDepth4
+         // 
+         this.toolStripMenuItemDiffContextDepth4.CheckOnClick = true;
+         this.toolStripMenuItemDiffContextDepth4.Name = "toolStripMenuItemDiffContextDepth4";
+         this.toolStripMenuItemDiffContextDepth4.Size = new System.Drawing.Size(80, 22);
+         this.toolStripMenuItemDiffContextDepth4.Text = "4";
+         this.toolStripMenuItemDiffContextDepth4.CheckedChanged += new System.EventHandler(this.onDiffContextDepthCheckedChanged);
+         // 
+         // showTooltipsForCodeToolStripMenuItem
+         // 
+         this.showTooltipsForCodeToolStripMenuItem.CheckOnClick = true;
+         this.showTooltipsForCodeToolStripMenuItem.Name = "showTooltipsForCodeToolStripMenuItem";
+         this.showTooltipsForCodeToolStripMenuItem.Size = new System.Drawing.Size(276, 22);
+         this.showTooltipsForCodeToolStripMenuItem.Text = "Show tooltips for code";
+         this.showTooltipsForCodeToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onShowTooltipsForCodeCheckedChanged);
+         // 
+         // emulateNativeLineBreaksToolStripMenuItem
+         // 
+         this.emulateNativeLineBreaksToolStripMenuItem.CheckOnClick = true;
+         this.emulateNativeLineBreaksToolStripMenuItem.Name = "emulateNativeLineBreaksToolStripMenuItem";
+         this.emulateNativeLineBreaksToolStripMenuItem.Size = new System.Drawing.Size(276, 22);
+         this.emulateNativeLineBreaksToolStripMenuItem.Text = "Emulate native line breaks";
+         this.emulateNativeLineBreaksToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onEmulateNativeLineBreaksCheckedChanged);
+         // 
+         // toolStripSeparator4
+         // 
+         this.toolStripSeparator4.Name = "toolStripSeparator4";
+         this.toolStripSeparator4.Size = new System.Drawing.Size(273, 6);
+         // 
+         // fontSizeToolStripMenuItem
+         // 
+         this.fontSizeToolStripMenuItem.Name = "fontSizeToolStripMenuItem";
+         this.fontSizeToolStripMenuItem.Size = new System.Drawing.Size(276, 22);
+         this.fontSizeToolStripMenuItem.Text = "Font Size";
+         // 
+         // configureColorsToolStripMenuItem
+         // 
+         this.configureColorsToolStripMenuItem.Name = "configureColorsToolStripMenuItem";
+         this.configureColorsToolStripMenuItem.Size = new System.Drawing.Size(276, 22);
+         this.configureColorsToolStripMenuItem.Text = "Configure colors...";
+         this.configureColorsToolStripMenuItem.Click += new System.EventHandler(this.onConfigureColorsClicked);
+         // 
          // DiscussionsFormMenu
          // 
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
@@ -363,7 +465,6 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ToolStripMenuItem startAThreadToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem addACommentToolStripMenuItem;
       private System.Windows.Forms.ToolStripSeparator toolStripMenuItemSeparator;
-      private System.Windows.Forms.ToolStripMenuItem fontSizeToolStripMenuItem;
       private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
       private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
       private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
@@ -375,5 +476,17 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
       private System.Windows.Forms.ToolStripMenuItem increaseColumnWidthToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem decreaseColumnWidthToolStripMenuItem;
+      private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+      private System.Windows.Forms.ToolStripMenuItem emulateNativeLineBreaksToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem diffContextDepthToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDiffContextDepth0;
+      private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDiffContextDepth1;
+      private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDiffContextDepth2;
+      private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDiffContextDepth3;
+      private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDiffContextDepth4;
+      private System.Windows.Forms.ToolStripMenuItem showTooltipsForCodeToolStripMenuItem;
+      private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+      private System.Windows.Forms.ToolStripMenuItem fontSizeToolStripMenuItem;
+      private System.Windows.Forms.ToolStripMenuItem configureColorsToolStripMenuItem;
    }
 }

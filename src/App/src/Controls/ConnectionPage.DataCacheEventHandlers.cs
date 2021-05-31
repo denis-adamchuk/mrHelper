@@ -1,14 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using GitLabSharp.Entities;
-using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 
-namespace mrHelper.App.Forms
+namespace mrHelper.App.Controls
 {
-   internal partial class MainForm
+   internal partial class ConnectionPage
    {
+      private void onGitStatisticManagerUpdate()
+      {
+         getListView(EDataCacheType.Live).Invalidate();
+      }
+
       private void onPreLoadTrackedTime(ITotalTimeCache totalTimeCache, MergeRequestKey mrk)
       {
          onTrackedTimeManagerEvent(totalTimeCache, mrk);
@@ -28,8 +32,10 @@ namespace mrHelper.App.Forms
             {
                if (getDataCache(mode)?.TotalTimeCache == totalTimeCache)
                {
-                  // change control enabled state
-                  updateTotalTime(currentMergeRequestKey, getDataCache(mode));
+                  // This is helpful
+                  // - when discussions parsed (asynchronously) and tracked time value is calculated
+                  // - when time edited by ConnectionPage.EditTime()
+                  CanTrackTimeChanged?.Invoke(this);
                   break;
                }
             }
@@ -97,7 +103,7 @@ namespace mrHelper.App.Forms
          if (e.Details || e.Commits || e.Labels)
          {
             // Non-grid Details are updated here and Grid ones are updated in updateMergeRequestList() above
-            Trace.TraceInformation("[MainForm] Updating selected Merge Request ({0})",
+            Trace.TraceInformation("[ConnectionPage] Updating selected Merge Request ({0})",
                getDataCacheName(getDataCache(type)));
             onMergeRequestSelectionChanged(type);
          }
@@ -113,14 +119,14 @@ namespace mrHelper.App.Forms
             DataCache dataCache = getDataCache(EDataCacheType.Live);
             DateTime? refreshTimestamp = dataCache?.MergeRequestCache?.GetMergeRequestRefreshTime(mrk);
             Trace.TraceInformation(String.Format(
-               "[MainForm] Merge Request {0} refreshed at {1}",
+               "[ConnectionPage] Merge Request {0} refreshed at {1}",
                mrk.IId, refreshTimestamp.HasValue ? refreshTimestamp.Value.ToString() : "N/A"));
          }
       }
 
       private void onLiveMergeRequestListRefreshed()
       {
-         updateRefreshButtonToolTip();
+         LatestListRefreshTimestampChanged?.Invoke(this);
 
          // update Refreshed column
          getListView(EDataCacheType.Live).Invalidate();
@@ -130,20 +136,9 @@ namespace mrHelper.App.Forms
             DataCache dataCache = getDataCache(EDataCacheType.Live);
             DateTime? refreshTimestamp = dataCache?.MergeRequestCache?.GetListRefreshTime();
             Trace.TraceInformation(String.Format(
-               "[MainForm] Merge Request List refreshed at {0}",
+               "[ConnectionPage] Merge Request List refreshed at {0}",
                refreshTimestamp.HasValue ? refreshTimestamp.Value.ToString() : "N/A"));
          }
-      }
-
-      private void updateRefreshButtonToolTip()
-      {
-         DataCache dataCache = getDataCache(EDataCacheType.Live);
-         DateTime? refreshTimestamp = dataCache?.MergeRequestCache?.GetListRefreshTime();
-         string refreshedAgo = refreshTimestamp.HasValue
-            ? String.Format("Refreshed {0}", TimeUtils.DateTimeToStringAgo(refreshTimestamp.Value))
-            : String.Empty;
-         toolTip.SetToolTip(this.buttonReloadList, String.Format("{0}{1}{2}",
-            RefreshButtonTooltip, refreshedAgo == String.Empty ? String.Empty : "\r\n", refreshedAgo));
       }
    }
 }

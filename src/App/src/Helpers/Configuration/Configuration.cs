@@ -9,6 +9,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
+using System.Drawing;
 
 namespace mrHelper.App.Helpers
 {
@@ -22,14 +23,9 @@ namespace mrHelper.App.Helpers
       public string ConfigFilePath { get; }
    }
 
-   public partial class UserDefinedSettings : INotifyPropertyChanged, IHostProperties, IFileStorageProperties
+   public partial class UserDefinedSettings : IHostProperties, IFileStorageProperties
    {
       private static readonly string DefaultValuePrefix = ":";
-
-      private static readonly string BadValueSaved  = "bad-value-saved";
-      private static readonly string BadValueLoaded = "bad-value-loaded";
-
-      public event PropertyChangedEventHandler PropertyChanged;
 
       internal UserDefinedSettings()
       {
@@ -51,19 +47,6 @@ namespace mrHelper.App.Helpers
          {
             throw new CorruptedSettingsException(configFilePath);
          }
-      }
-
-      internal void Update()
-      {
-         try
-         {
-            _config.Save(ConfigurationSaveMode.Full);
-         }
-         catch (System.Configuration.ConfigurationErrorsException ex)
-         {
-            ExceptionHandlers.Handle("Cannot save configuration to disk", ex);
-         }
-         ConfigurationManager.RefreshSection("appSettings");
       }
 
       public string GetAccessToken(string host)
@@ -138,7 +121,7 @@ namespace mrHelper.App.Helpers
       private Dictionary<string, int> getStringToIntDictionary(string keyName, string defaultValue,
          int fallbackValue, int errorValue)
       {
-         return DictionaryStringHelper.DeserializeRawDictionaryString(getValue(keyName, defaultValue), false)
+         return RawDictionaryStringHelper.DeserializeRawDictionaryString(getValue(keyName, defaultValue), false)
             .ToDictionary(
                item => item.Key,
                item => int.TryParse(item.Value, out int result) ? result : fallbackValue)
@@ -150,20 +133,48 @@ namespace mrHelper.App.Helpers
 
       private void setStringToIntDictionary(string keyName, Dictionary<string, int> value)
       {
-         setValue(keyName, DictionaryStringHelper.SerializeRawDictionaryString(
+         setValue(keyName, RawDictionaryStringHelper.SerializeRawDictionaryString(
             value.ToDictionary(item => item.Key, item => item.Value.ToString())));
       }
 
       private Dictionary<string, string> getStringToStringDictionary(
          string keyName, string defaultValue, bool forceLowerCase)
       {
-         return DictionaryStringHelper.DeserializeRawDictionaryString(
+         return RawDictionaryStringHelper.DeserializeRawDictionaryString(
             getValue(keyName, defaultValue), forceLowerCase);
+      }
+
+      private void setStringToPointDictionary(string keyName, Dictionary<string, Point> value)
+      {
+         setValue(keyName, RawDictionaryStringHelper.SerializeRawDictionaryString(
+            value.ToDictionary(item => item.Key, item => String.Format("{0},{1}", item.Value.X, item.Value.Y))));
+      }
+
+      private Dictionary<string, Point> getStringToPointDictionary(
+         string keyName, string defaultValue)
+      {
+         return RawDictionaryStringHelper.DeserializeRawDictionaryString(getValue(keyName, defaultValue), false)
+            .ToDictionary(
+               item => item.Key,
+               item =>
+               {
+                  string[] splitted = item.Value.Split(',');
+                  if (splitted.Length == 2
+                  && int.TryParse(splitted[0], out int x)
+                  && int.TryParse(splitted[1], out int y))
+                  {
+                     return new Point(x, y);
+                  }
+                  return new Point(0, 0);
+               })
+            .ToDictionary(
+               item => item.Key,
+               item => item.Value);
       }
 
       private void setStringToStringDictionary(string keyName, Dictionary<string, string> value)
       {
-         setValue(keyName, DictionaryStringHelper.SerializeRawDictionaryString(value));
+         setValue(keyName, RawDictionaryStringHelper.SerializeRawDictionaryString(value));
       }
 
       private bool getBoolValue(string key, bool defaultValue)
@@ -230,7 +241,7 @@ namespace mrHelper.App.Helpers
 
          if (notify)
          {
-            OnPropertyChanged(key);
+            onPropertyChanged(key);
          }
       }
 
@@ -277,7 +288,7 @@ namespace mrHelper.App.Helpers
             byte[] protectedBytes = Base64Helper.FromBase64StringSafe(protectedValue);
             byte[] rawBytes = CryptoHelper.UnprotectSafe(protectedBytes);
             string rawValue = StringUtils.GetStringSafe(rawBytes);
-            rawValues.Add(rawValue ?? BadValueLoaded);
+            rawValues.Add(rawValue ?? Constants.ConfigurationBadValueLoaded);
          }
          return rawValues;
       }
@@ -293,7 +304,7 @@ namespace mrHelper.App.Helpers
             byte[] rawBytes = StringUtils.GetBytesSafe(rawValue);
             byte[] protectedBytes = CryptoHelper.ProtectSafe(rawBytes);
             string protectedString = Base64Helper.ToBase64StringSafe(protectedBytes);
-            protectedStrings.Add(protectedString ?? BadValueSaved);
+            protectedStrings.Add(protectedString ?? Constants.ConfigurationBadValueSaved);
          }
          setValues(key, protectedStrings.ToArray());
       }
@@ -303,9 +314,47 @@ namespace mrHelper.App.Helpers
          return value.ToString().ToLower();
       }
 
-      private void OnPropertyChanged(string name)
+      private void onPropertyChanged(string keyName)
       {
-         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+         update();
+         fireEventOnPropertyChange(keyName);
+      }
+
+      private void update()
+      {
+         try
+         {
+            _config.Save(ConfigurationSaveMode.Full);
+         }
+         catch (System.Configuration.ConfigurationErrorsException ex)
+         {
+            ExceptionHandlers.Handle("Cannot save configuration to disk", ex);
+         }
+         ConfigurationManager.RefreshSection("appSettings");
+      }
+
+      private void fireEventOnPropertyChange(string keyName)
+      {
+         if (keyName == WordWrapLongRowsKeyName)
+         {
+            WordWrapLongRowsChanged?.Invoke();
+         }
+         else if (keyName == MainWindowLayoutKeyName)
+         {
+            MainWindowLayoutChanged?.Invoke();
+         }
+         else if (keyName == DiffContextPositionKeyName)
+         {
+            DiffContextPositionChanged?.Invoke();
+         }
+         else if (keyName == DiscussionColumnWidthKeyName)
+         {
+            DiscussionColumnWidthChanged?.Invoke();
+         }
+         else if (keyName == NeedShiftRepliesKeyName)
+         {
+            NeedShiftRepliesChanged?.Invoke();
+         }
       }
 
       private readonly Configuration _config;

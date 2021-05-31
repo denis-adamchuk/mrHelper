@@ -8,7 +8,7 @@ namespace mrHelper.App.Forms
 {
    public partial class CustomFontForm : Form
    {
-      protected void applyFont(string font)
+      protected virtual void applyFont(string font)
       {
          if (!Constants.FontSizeChoices.ContainsKey(font))
          {

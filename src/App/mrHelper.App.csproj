@@ -72,6 +72,52 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\ConnectionPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ConnectionPage.DataCacheEventHandlers.cs">
+      <DependentUpon>ConnectionPage.cs</DependentUpon>
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ConnectionPage.Designer.cs">
+      <DependentUpon>ConnectionPage.cs</DependentUpon>
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ConnectionPage.EventHandlers.cs">
+      <DependentUpon>ConnectionPage.cs</DependentUpon>
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ConnectionPage.ExternalCalls.cs">
+      <DependentUpon>ConnectionPage.cs</DependentUpon>
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ConnectionPage.Init.cs">
+      <DependentUpon>ConnectionPage.cs</DependentUpon>
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ConnectionPage.Operations.cs">
+      <DependentUpon>ConnectionPage.cs</DependentUpon>
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ConnectionPage.Search.cs">
+      <DependentUpon>ConnectionPage.cs</DependentUpon>
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ConnectionPage.Utils.cs">
+      <DependentUpon>ConnectionPage.cs</DependentUpon>
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ConnectionPage.Public.cs">
+      <DependentUpon>ConnectionPage.cs</DependentUpon>
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ConnectionPage.Workflow.cs">
+      <DependentUpon>ConnectionPage.cs</DependentUpon>
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\CustomActionToolbarItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\DiscussionPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -90,6 +136,12 @@
     <Compile Include="src\Controls\DiscussionsFormMenu.Designer.cs">
       <DependentUpon>DiscussionsFormMenu.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\ConnectionTabPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="src\Controls\HostToolbarItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\HtmlToolTipEx.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -102,11 +154,17 @@
     <Compile Include="src\Controls\MergeRequestListViewToolTip.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\PlainTabControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\RevisionBrowser.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="src\Controls\RevisionBrowser.Designer.cs">
       <DependentUpon>RevisionBrowser.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Controls\RevisionBrowserContextMenu.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="src\Controls\TextControls.cs" />
     <Compile Include="src\Forms\AcceptMergeRequestForm.UI.cs">
@@ -131,7 +189,40 @@
     <Compile Include="src\Forms\CheckForUpdatesForm.Designer.cs">
       <DependentUpon>CheckForUpdatesForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="src\Forms\ConfigureColorsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\ConfigureColorsForm.Designer.cs">
+      <DependentUpon>ConfigureColorsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Forms\ConfigureHostsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\ConfigureHostsForm.Designer.cs">
+      <DependentUpon>ConfigureHostsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Forms\ConfigureNotificationsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\ConfigureNotificationsForm.Designer.cs">
+      <DependentUpon>ConfigureNotificationsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Forms\ConfigureStorageForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\ConfigureStorageForm.Designer.cs">
+      <DependentUpon>ConfigureStorageForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Forms\EditSearchQueryForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\EditSearchQueryForm.Designer.cs">
+      <DependentUpon>EditSearchQueryForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Forms\EditSearchQueryFormState.cs" />
     <Compile Include="src\Forms\Helpers\DiscussionLayout.cs" />
+    <Compile Include="src\Helpers\Configuration\DefaultWorkflowLoader.cs" />
+    <Compile Include="src\Helpers\Configuration\RawDictionaryStringHelper.cs" />
     <Compile Include="src\Helpers\GitLab\AsyncDiscussionHelper.cs" />
     <Compile Include="src\Helpers\GitLab\AsyncDiscussionLoader.cs" />
     <Compile Include="src\Helpers\GitLab\TimeTrackingHelpers.cs" />
@@ -199,15 +290,7 @@
     <Compile Include="src\Forms\MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\MainForm.DataCacheEventHandlers.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="src\Forms\MainForm.EventHandlers.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\MainForm.ExternalCalls.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
@@ -215,23 +298,7 @@
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\MainForm.Operations.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\MainForm.Review.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="src\Forms\MainForm.Settings.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\MainForm.Storage.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\MainForm.Search.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
@@ -239,12 +306,9 @@
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\MainForm.View.cs">
+    <Compile Include="src\Forms\MainForm.ConnectionPage.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="src\Forms\MainForm.Workflow.cs">
-      <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\NewDiscussionForm.cs">
       <SubType>Form</SubType>
@@ -255,6 +319,7 @@
     <Compile Include="src\Helpers\ApplicationUpdateHelper.cs" />
     <Compile Include="src\Helpers\Configuration\Configuration.KeyDefs.cs" />
     <Compile Include="src\Helpers\Configuration\Configuration.Properties.cs" />
+    <Compile Include="src\Helpers\IconCache.cs" />
     <Compile Include="src\Helpers\Interprocess\ReportedDiscussionNote.cs" />
     <Compile Include="src\Helpers\PeriodicUpdateChecker.cs" />
     <Compile Include="src\Helpers\PersistentStateHelpers.cs" />
@@ -264,7 +329,7 @@
     <Compile Include="src\Helpers\StaticUpdateChecker.cs" />
     <Compile Include="src\Helpers\Configuration\Configuration.cs" />
     <Compile Include="src\Helpers\Configuration\ConfigurationHelper.cs" />
-    <Compile Include="src\Helpers\Configuration\DictionaryStringHelper.cs" />
+    <Compile Include="src\Helpers\Configuration\HostStringHelper.cs" />
     <Compile Include="src\Helpers\GitLab\DiscussionFilter.cs" />
     <Compile Include="src\Helpers\GitLab\DiscussionSort.cs" />
     <Compile Include="src\Helpers\GitLab\ExpressionResolver.cs" />
@@ -292,10 +357,14 @@
     <Compile Include="src\Helpers\ServiceManager.cs" />
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserItem.cs" />
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserModel.cs" />
+    <Compile Include="src\Helpers\Url\UrlConnectionException.cs" />
     <Compile Include="src\Helpers\Url\UrlHelper.cs" />
     <Compile Include="src\LaunchOptions.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
+    <EmbeddedResource Include="src\Controls\ConnectionPage.resx">
+      <DependentUpon>ConnectionPage.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\DiscussionPanel.resx">
       <DependentUpon>DiscussionPanel.cs</DependentUpon>
     </EmbeddedResource>
@@ -316,6 +385,21 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\CheckForUpdatesForm.resx">
       <DependentUpon>CheckForUpdatesForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Forms\ConfigureColorsForm.resx">
+      <DependentUpon>ConfigureColorsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Forms\ConfigureHostsForm.resx">
+      <DependentUpon>ConfigureHostsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Forms\ConfigureNotificationsForm.resx">
+      <DependentUpon>ConfigureNotificationsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Forms\ConfigureStorageForm.resx">
+      <DependentUpon>ConfigureStorageForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Forms\EditSearchQueryForm.resx">
+      <DependentUpon>EditSearchQueryForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\MergeRequestPropertiesForm.resx">
       <DependentUpon>MergeRequestPropertiesForm.cs</DependentUpon>
@@ -340,6 +424,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\NewDiscussionForm.resx">
       <DependentUpon>NewDiscussionForm.cs</DependentUpon>
@@ -400,6 +485,18 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\toolbar\thread_24x24.png" />
+    <None Include="Resources\toolbar\create-new_24x24.png" />
+    <None Include="Resources\toolbar\stop_24x24.png" />
+    <None Include="Resources\toolbar\refresh_24x24.png" />
+    <None Include="Resources\toolbar\play_24x24.png" />
+    <None Include="Resources\toolbar\link_24x24.png" />
+    <None Include="Resources\toolbar\edit_24x24.png" />
+    <None Include="Resources\toolbar\discussions_24x24.png" />
+    <None Include="Resources\toolbar\diff_24x24.png" />
+    <None Include="Resources\toolbar\clipboard_24x24.png" />
+    <None Include="Resources\toolbar\cancel_24x24.png" />
+    <None Include="Resources\toolbar\add-comment_24x24.png" />
     <None Include="Resources\gitlab-icon-stub-16x16.png" />
     <None Include="Resources\gitlab-icon-stub-16x16-border.png" />
     <Content Include="Resources\ny2020\balls.png" />

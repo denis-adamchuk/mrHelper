@@ -17,6 +17,30 @@
          {
             components.Dispose();
          }
+
+         // TreeViewAdv does not Dispose() itself properly - it does not unsubscribe from ExpandingIcon static event
+         // - so TreeViewAdv is not destroyed - and we have to unsubcsribe from it manually to avoid leaks
+         if (_treeView != null)
+         {
+            _treeView.SelectionChanged -= onTreeViewSelectionChanged;
+            _treeView.NodeMouseDoubleClick -= onTreeViewNodeMouseDoubleClick;
+            _treeView.RowDraw -= onTreeViewDrawRow;
+            _treeView.ColumnWidthChanged -= this.onTreeViewColumnWidthChanged;
+            _treeView = null;
+         }
+
+         if (_name != null)
+         {
+            _name.DrawText -= onTreeViewDrawNode;
+            _name = null;
+         }
+
+         if (_timestamp != null)
+         {
+            _timestamp.DrawText -= onTreeViewDrawNode;
+            _timestamp = null;
+         }
+
          base.Dispose(disposing);
       }
 
@@ -62,7 +86,7 @@
          this._treeView.Size = new System.Drawing.Size(100, 100);
          this._treeView.TabIndex = 0;
          this._treeView.UseColumns = true;
-         this._treeView.ColumnWidthChanged += new System.EventHandler<Aga.Controls.Tree.TreeColumnEventArgs>(this.treeView_ColumnWidthChanged);
+         this._treeView.ColumnWidthChanged += new System.EventHandler<Aga.Controls.Tree.TreeColumnEventArgs>(this.onTreeViewColumnWidthChanged);
          // 
          // treeColumn1
          // 
@@ -102,7 +126,6 @@
          this.Controls.Add(this._treeView);
          this.Name = "RevisionBrowser";
          this.Size = new System.Drawing.Size(100, 100);
-         this.Load += new System.EventHandler(this.RevisionBrowser_Load);
          this.ResumeLayout(false);
 
       }

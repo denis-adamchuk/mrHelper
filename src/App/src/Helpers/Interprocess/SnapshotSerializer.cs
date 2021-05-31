@@ -1,4 +1,6 @@
-﻿using System;
+﻿using mrHelper.Common.Exceptions;
+using mrHelper.Common.Tools;
+using System;
 
 namespace mrHelper.App.Interprocess
 {
@@ -7,7 +9,7 @@ namespace mrHelper.App.Interprocess
    /// </summary>
    public class SnapshotSerializer
    {
-      private static readonly string snapshotPath = Environment.GetEnvironmentVariable("TEMP");
+      private static readonly string snapshotPath = PathFinder.SnapshotStorage;
 
       /// <summary>
       /// Serializes snapshot to disk.
@@ -15,7 +17,19 @@ namespace mrHelper.App.Interprocess
       public void SerializeToDisk(Snapshot snapshot, int pid)
       {
          string filename = String.Format("mrHelper.snapshot.{0}.json", pid);
-         Common.Tools.JsonUtils.SaveToFile(System.IO.Path.Combine(snapshotPath, filename), snapshot);
+         if (!System.IO.Directory.Exists(snapshotPath))
+         {
+            try
+            {
+               System.IO.Directory.CreateDirectory(snapshotPath);
+            }
+            catch (Exception ex) // Any exception from Directory.CreateDirectory()
+            {
+               ExceptionHandlers.Handle("Cannot create a directory for snapshot", ex);
+               return;
+            }
+         }
+         JsonUtils.SaveToFile(System.IO.Path.Combine(snapshotPath, filename), snapshot);
       }
 
       /// <summary>
@@ -32,7 +46,7 @@ namespace mrHelper.App.Interprocess
                String.Format("Cannot find interprocess snapshot at path \"{0}\"", fullSnapshotName));
          }
 
-         return Common.Tools.JsonUtils.LoadFromFile<Snapshot>(fullSnapshotName);
+         return JsonUtils.LoadFromFile<Snapshot>(fullSnapshotName);
       }
 
       /// <summary>
@@ -40,6 +54,11 @@ namespace mrHelper.App.Interprocess
       /// </summary>
       public static void CleanUpSnapshots()
       {
+         if (!System.IO.Directory.Exists(snapshotPath))
+         {
+            return;
+         }
+
          foreach (string f in System.IO.Directory.EnumerateFiles(snapshotPath, "mrHelper.snapshot.*.json"))
          {
             System.IO.File.Delete(f);

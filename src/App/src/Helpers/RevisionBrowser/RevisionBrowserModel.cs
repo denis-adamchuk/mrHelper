@@ -112,6 +112,7 @@ namespace mrHelper.App.Helpers
 
          return objects
             .Cast<Version>()
+            .Where(version => version.State != "empty")
             .OrderByDescending(version => version.Created_At)
             // filter out versions pointing to the same HEAD:
             .GroupBy(version => version.Head_Commit_SHA)

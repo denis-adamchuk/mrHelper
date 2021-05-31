@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using System.Threading.Tasks;
 using mrHelper.Common.Exceptions;
 using static mrHelper.App.Helpers.ServiceManager;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Helpers
 {
@@ -107,9 +108,21 @@ namespace mrHelper.App.Helpers
             return;
          }
 
+         if (!Directory.Exists(PathFinder.InstallerStorage))
+         {
+            try
+            {
+               Directory.CreateDirectory(PathFinder.InstallerStorage);
+            }
+            catch (Exception ex) // Any exception from Directory.CreateDirectory()
+            {
+               ExceptionHandlers.Handle("Cannot create a directory for installer", ex);
+               return;
+            }
+         }
+
          string filename = Path.GetFileName(info.InstallerFilePath);
-         string tempFolder = Environment.GetEnvironmentVariable("TEMP");
-         string destFilePath = Path.Combine(tempFolder, filename);
+         string destFilePath = Path.Combine(PathFinder.InstallerStorage, filename);
 
          Debug.Assert(!System.IO.File.Exists(destFilePath));
 

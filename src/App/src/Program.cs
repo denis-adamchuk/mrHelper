@@ -21,6 +21,7 @@ namespace mrHelper.App
    {
       private static void HandleUnhandledException(Exception ex)
       {
+         AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
          Debug.Assert(false);
          Trace.TraceError("Unhandled exception: [{0}] {1}\nCallstack:\n{2}",
             ex.GetType().ToString(), ex.Message, ex.StackTrace);
@@ -33,7 +34,9 @@ namespace mrHelper.App
                {
                   Program.FeedbackReporter.SendEMail("Merge Request Helper error report",
                      "Please provide some details about the problem here",
-                     Program.ServiceManager.GetBugReportEmail(), Constants.BugReportLogArchiveName);
+                     Program.ServiceManager.GetBugReportEmail(),
+                     Constants.BugReportLogArchiveName,
+                     Constants.BugReportDumpArchiveName);
                }
                catch (FeedbackReporterException ex2)
                {
@@ -41,7 +44,6 @@ namespace mrHelper.App
                }
             }
          }
-         Application.Exit();
       }
 
       internal static UserDefinedSettings Settings;
@@ -69,7 +71,12 @@ namespace mrHelper.App
          {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.ThreadException += (sender, e) => HandleUnhandledException(e.Exception);
+
+            // This should redirect exceptions from UI events to the global try/catch
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
+
+            // Handle exceptions from MainForm.OnLoad() etc (not events)
+            AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
             try
             {
@@ -92,13 +99,23 @@ namespace mrHelper.App
             catch (Exception ex) // Any unhandled exception, including CSE
             {
                HandleUnhandledException(ex);
+               throw; // pass exception to WER to have a dump
             }
          }
       }
 
+      [System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
+      private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+      {
+         HandleUnhandledException((Exception)e.ExceptionObject);
+
+         // and then - exception is caught by WER and we have a dump
+      }
+
       private static void initializeGitLabSharpLibrary()
       {
-         GitLabSharp.LibraryContext context = new GitLabSharp.LibraryContext(Settings.ServicePointConnectionLimit);
+         GitLabSharp.LibraryContext context = new GitLabSharp.LibraryContext(
+            Settings.ServicePointConnectionLimit, Settings.AsyncOperationTimeOutSeconds);
          GitLabSharp.GitLabSharp.Initialize(context);
       }
 
@@ -179,7 +196,8 @@ namespace mrHelper.App
                   // Cannot do anything good here
                }
             },
-         getApplicationDataPath());
+         getApplicationDataPath(),
+         PathFinder.DumpStorage);
       }
 
       private static void onLaunchMainInstance(LaunchOptions options)
@@ -459,9 +477,13 @@ namespace mrHelper.App
          }
       }
 
-      private static void cleanUpTempFolder(string template)
+      private static void cleanUpTempFolder(string tempFolder, string template)
       {
-         string tempFolder = Environment.GetEnvironmentVariable("TEMP");
+         if (!System.IO.Directory.Exists(tempFolder))
+         {
+            return;
+         }
+
          foreach (string f in System.IO.Directory.EnumerateFiles(tempFolder, template))
          {
             try
@@ -486,9 +508,9 @@ namespace mrHelper.App
             ExceptionHandlers.Handle("Failed to clean-up log files", ex);
          }
 
-         cleanUpTempFolder("mrHelper.*.msi");
-         cleanUpTempFolder("mrHelper.*.msix");
-         cleanUpTempFolder("mrHelper.logs.*.zip");
+         cleanUpTempFolder(PathFinder.InstallerStorage, "mrHelper.*.msi");
+         cleanUpTempFolder(PathFinder.InstallerStorage, "mrHelper.*.msix");
+         cleanUpTempFolder(PathFinder.LogArchiveStorage, "mrHelper.logs.*.zip");
       }
 
       static private bool registerCustomProtocol()

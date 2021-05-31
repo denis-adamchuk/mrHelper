@@ -125,7 +125,7 @@ namespace mrHelper.App.Forms
          Debug.Assert(sourceBranch != null);
 
          onCommitLoading();
-         Commit commit = await _repositoryAccessor.LoadCommit(sourceBranch.Name);
+         Commit commit = await _repositoryAccessor.FindFirstBranchCommit(sourceBranch.Name);
          onCommitLoaded(commit);
          return commit;
       }
@@ -234,7 +234,7 @@ namespace mrHelper.App.Forms
                string message = String.Format(
                   "A merge request for the source branch {0} already exists", _initialState.SourceBranch);
                MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               Trace.TraceWarning("[MainForm] Cannot create MR: {0}", message);
+               Trace.TraceWarning("[NewMergeRequestForm] Cannot create MR: {0}", message);
                DialogResult = DialogResult.Cancel;
                Close();
                return;
@@ -251,7 +251,7 @@ namespace mrHelper.App.Forms
                   _repositoryAccessor = createRepositoryAccessor();
                   try
                   {
-                     Commit commit = await loadCommitAsync();
+                     await loadCommitAsync();
                   }
                   catch (RepositoryAccessorException ex)
                   {

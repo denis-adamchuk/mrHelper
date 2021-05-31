@@ -2,10 +2,11 @@
 using System.ComponentModel;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Helpers
 {
-   public partial class UserDefinedSettings : INotifyPropertyChanged, IHostProperties
+   public partial class UserDefinedSettings : IHostProperties
    {
       private static readonly string KnownHostsKeyName = "KnownHosts";
       private static readonly string[] KnownHostsDefaultValue = Array.Empty<string>();
@@ -13,7 +14,7 @@ namespace mrHelper.App.Helpers
       private static readonly string KnownAccessTokensKeyName = "KnownAccessTokens";
 
       private static readonly string LocalStorageFolderKeyName      = "LocalGitFolder";
-      private static readonly string LocalStorageFolderDefaultValue = Environment.GetEnvironmentVariable("TEMP");
+      private static readonly string LocalStorageFolderDefaultValue = PathFinder.DefaultStorage;
 
       private static readonly string AutoSelectionModeKeyName      = "AutoSelectionMode";
       private static readonly string AutoSelectionModeDefaultValue = "LastVsLatest";
@@ -46,7 +47,7 @@ namespace mrHelper.App.Helpers
       private static readonly bool   WordWrapLongRowsDefaultValue = true;
 
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
-      private static readonly string DiffContextDepthDefaultValue = "2";
+      private static readonly int    DiffContextDepthDefaultValue = 2;
 
       private static readonly string DiffContextPositionKeyName = "DiffContextPosition";
       private static readonly string DiffContextPositionDefaultValue = "right";
@@ -63,6 +64,9 @@ namespace mrHelper.App.Helpers
       private static readonly string EmulateNativeLineBreaksInDiscussionsKeyName      = "EmulateNativeLineBreaksInDiscussions";
       private static readonly bool   EmulateNativeLineBreaksInDiscussionsDefaultValue = false;
 
+      private static readonly string ShowTooltipsForCodeKeyName      = "ShowTooltipsForCode";
+      private static readonly bool   ShowTooltipsForCodeDefaultValue = false;
+
       private static readonly string MinimizeOnCloseKeyName = "MinimizeOnClose";
       private static readonly bool   MinimizeOnCloseDefaultValue = false;
 
@@ -75,8 +79,23 @@ namespace mrHelper.App.Helpers
       private static readonly string WPFSoftwareOnlyRenderModeKeyName      = "WPFSoftwareOnlyRenderMode";
       private static readonly bool   WPFSoftwareOnlyRenderModeDefaultValue = false;
 
+      private static readonly string LeftBeforeCloseKeyName      = "LeftBeforeClose";
+      private static readonly int    LeftBeforeCloseDefaultValue = 0;
+
+      private static readonly string TopBeforeCloseKeyName      = "TopBeforeClose";
+      private static readonly int    TopBeforeCloseDefaultValue = 0;
+
+      private static readonly string WidthBeforeCloseKeyName      = "WidthBeforeClose";
+      private static readonly int    WidthBeforeCloseDefaultValue = 0;
+
+      private static readonly string HeightBeforeCloseKeyName      = "HeightBeforeClose";
+      private static readonly int    HeightBeforeCloseDefaultValue = 0;
+
       private static readonly string WasMaximizedBeforeCloseKeyName       = "WasMaximizedBeforeClose";
-      private static readonly bool   WasMaximizedBeforeCloseDefaultValue  = true;
+      private static readonly bool   WasMaximizedBeforeCloseDefaultValue  = false;
+
+      private static readonly string WasMinimizedBeforeCloseKeyName       = "WasMinimizedBeforeClose";
+      private static readonly bool   WasMinimizedBeforeCloseDefaultValue  = false;
 
       private static readonly string DisableSplitterRestrictionsKeyName = "DisableSplitterRestrictions";
       private static readonly bool   DisableSplitterRestrictionsDefaultValue = false;
@@ -93,9 +112,6 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowWarningOnCreateMergeRequestKeyName      = "ShowWarningOnCreateMergeRequest";
       private static readonly bool   ShowWarningOnCreateMergeRequestDefaultValue = true;
 
-      private static readonly string ShowWarningOnFilterMigrationKeyName      = "ShowWarningOnFilterMigration";
-      private static readonly bool   ShowWarningOnFilterMigrationDefaultValue = false;
-
       private static readonly string ShowWarningOnHideToTrayKeyName      = "ShowWarningOnHideToTray";
       private static readonly bool   ShowWarningOnHideToTrayDefaultValue = true;
 
@@ -107,6 +123,12 @@ namespace mrHelper.App.Helpers
 
       private static readonly string CustomColorsKeyName = "CustomColors";
       private static readonly string CustomColorsDefaultValue = String.Empty;
+
+      private static readonly string ToolStripLocationsKeyName = "ToolStripLocation";
+      private static readonly string ToolStripLocationsDefaultValue = String.Empty;
+
+      private static readonly string ToolStripLayoutStylesKeyName = "ToolStripLayoutStyle";
+      private static readonly string ToolStripLayoutStylesDefaultValue = String.Empty;
 
       private static readonly string AutoUpdatePeriodMsKeyName      = "AutoUpdatePeriodMs";
       private static readonly int    AutoUpdatePeriodMsDefaultValue = 5 * 60 * 1000; // 5 minutes
@@ -143,6 +165,9 @@ namespace mrHelper.App.Helpers
 
       private static readonly string ServicePointConnectionLimitKeyName = "ServicePointConnectionLimit";
       private static readonly int    ServicePointConnectionLimitDefaultValue = 25;
+
+      private static readonly string AsyncOperationTimeOutSecondsKeyName = "AsyncOperationTimeOutSeconds";
+      private static readonly int    AsyncOperationTimeOutSecondsDefaultValue = 60;
 
       private static readonly string LogFilesToKeepKeyName = "LogFilesToKeep";
       private static readonly int    LogFilesToKeepDefaultValue = 10;
@@ -207,11 +232,11 @@ namespace mrHelper.App.Helpers
       private static readonly string RevisionBrowserColumnWidthsDefaultValue      = String.Empty;
       private static readonly int    RevisionBrowserSingleColumnWidthDefaultValue = 100;
 
-      private static readonly string MainWindowSplitterDistanceKeyName      = "MWSplitterDistance";
-      private static readonly int    MainWindowSplitterDistanceDefaultValue = 0;
+      private static readonly string PrimarySplitContainerDistanceKeyName      = "MWSplitterDistance";
+      private static readonly int    PrimarySplitContainerDistanceDefaultValue = 0;
 
-      private static readonly string RightPaneSplitterDistanceKeyName      = "RPSplitterDistance";
-      private static readonly int    RightPaneSplitterDistanceDefaultValue = 0;
+      private static readonly string SecondarySplitContainerDistanceKeyName      = "RPSplitterDistance";
+      private static readonly int    SecondarySplitContainerDistanceDefaultValue = 0;
 
       private static readonly string VisualThemeNameKeyName       = "VisualThemeName";
       private static readonly string VisualThemeNameDefaultValue  = Constants.DefaultThemeName;
@@ -230,6 +255,9 @@ namespace mrHelper.App.Helpers
 
       private static readonly string MainWindowFontSizeNameKeyName       = "MWFontSize";
       private static readonly string MainWindowFontSizeNameDefaultValue  = Constants.DefaultMainWindowFontSizeChoice;
+
+      private static readonly string MainWindowLayoutKeyName      = "MWLayout";
+      private static readonly string MainWindowLayoutDefaultValue = "Horizontal";
 
       private static readonly string AccessTokensProtectedKeyName      = "AccessTokensProtected";
       private static readonly bool   AccessTokensProtectedDefaultValue = false;

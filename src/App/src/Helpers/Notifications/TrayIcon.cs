@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace mrHelper.App.Helpers
 {
-   internal class TrayIcon
+   public class TrayIcon
    {
       /// <summary>
       /// Tooltip timeout in seconds

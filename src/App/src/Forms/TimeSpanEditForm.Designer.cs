@@ -99,7 +99,7 @@
             0});
          this.numericUpDownH.Name = "numericUpDownH";
          this.numericUpDownH.Size = new System.Drawing.Size(42, 20);
-         this.numericUpDownH.TabIndex = 6;
+         this.numericUpDownH.TabIndex = 0;
          this.numericUpDownH.KeyDown += new System.Windows.Forms.KeyEventHandler(this.NumericUpDown_KeyDown);
          // 
          // numericUpDownM
@@ -112,7 +112,7 @@
             0});
          this.numericUpDownM.Name = "numericUpDownM";
          this.numericUpDownM.Size = new System.Drawing.Size(42, 20);
-         this.numericUpDownM.TabIndex = 7;
+         this.numericUpDownM.TabIndex = 1;
          this.numericUpDownM.KeyDown += new System.Windows.Forms.KeyEventHandler(this.NumericUpDown_KeyDown);
          // 
          // numericUpDownS
@@ -125,7 +125,7 @@
             0});
          this.numericUpDownS.Name = "numericUpDownS";
          this.numericUpDownS.Size = new System.Drawing.Size(42, 20);
-         this.numericUpDownS.TabIndex = 8;
+         this.numericUpDownS.TabIndex = 2;
          this.numericUpDownS.KeyDown += new System.Windows.Forms.KeyEventHandler(this.NumericUpDown_KeyDown);
          // 
          // EditTimeForm

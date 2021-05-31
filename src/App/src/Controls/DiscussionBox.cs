@@ -35,7 +35,9 @@ namespace mrHelper.App.Controls
          HtmlToolTipEx htmlTooltip,
          ConfigurationHelper.DiffContextPosition diffContextPosition,
          ConfigurationHelper.DiscussionColumnWidth discussionColumnWidth,
-         bool needShiftReplies)
+         bool needShiftReplies,
+         ContextDepth diffContextDepth,
+         bool showTooltipsForCode)
       {
          Discussion = discussion;
 
@@ -45,7 +47,7 @@ namespace mrHelper.App.Controls
          _currentUser = currentUser;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
 
-         _diffContextDepth = new ContextDepth(0, ConfigurationHelper.GetDiffContextDepth(Program.Settings));
+         _diffContextDepth = diffContextDepth;
          _tooltipContextDepth = new ContextDepth(5, 5);
          if (git != null)
          {
@@ -54,9 +56,12 @@ namespace mrHelper.App.Controls
             _simpleContextMaker = new SimpleContextMaker(git);
          }
          _colorScheme = colorScheme;
+         _colorScheme.Changed += onColorSchemeChanged;
+
          _diffContextPosition = diffContextPosition;
          _discussionColumnWidth = discussionColumnWidth;
          _needShiftReplies = needShiftReplies;
+         _showTooltipsForCode = showTooltipsForCode;
 
          _onContentChanging = () =>
          {
@@ -75,6 +80,17 @@ namespace mrHelper.App.Controls
             MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 
          onCreate(parent);
+      }
+
+      protected override void Dispose(bool disposing)
+      {
+         base.Dispose(disposing);
+         _colorScheme.Changed -= onColorSchemeChanged;
+         foreach (NoteContainer noteContainer in getNoteContainers())
+         {
+            noteContainer.NoteInfo.ContextMenu?.Dispose();
+            noteContainer.NoteContent.ContextMenu?.Dispose();
+         }
       }
 
       internal bool HasNotes => getNoteContainers().Any();
@@ -190,7 +206,7 @@ namespace mrHelper.App.Controls
 
       private void Control_GotFocus(object sender, EventArgs e)
       {
-         _onControlGotFocus(sender as Control);
+         _onControlGotFocus?.Invoke(sender as Control);
       }
 
       private void onCreate(Control parent)
@@ -258,7 +274,8 @@ namespace mrHelper.App.Controls
             resizeLimitedWidthHtmlPanel(htmlPanel, prevWidth);
          }
 
-         string tooltipHtml = getFormattedHtml(_tooltipContextMaker, position, _tooltipContextDepth, fontSizePx, 2, false);
+         string tooltipHtml = _showTooltipsForCode ? getFormattedHtml(_tooltipContextMaker, position,
+            _tooltipContextDepth, fontSizePx, 2, false) : null;
          _htmlTooltip.SetToolTip(htmlPanel, tooltipHtml);
       }
 
@@ -365,8 +382,9 @@ namespace mrHelper.App.Controls
             foreach (NoteContainer container in noteContainers)
             {
                Control control = Controls[iControl];
-               if (container.NoteContent == control || container.NoteInfo    == control)
+               if (container.NoteContent == control || container.NoteInfo == control)
                {
+                  control.Dispose();
                   Controls.Remove(control);
                   break;
                }
@@ -786,6 +804,34 @@ namespace mrHelper.App.Controls
       {
          _needShiftReplies = value;
          _previousWidth = null;
+      }
+
+      internal void SetDiffContextDepth(ContextDepth contextDepth)
+      {
+         _diffContextDepth = contextDepth;
+         _previousWidth = null;
+         if (_panelContext != null)
+         {
+            setDiffContextText(_panelContext);
+         }
+      }
+
+      internal void SetShowTooltipsForCode(bool value)
+      {
+         _showTooltipsForCode = value;
+         if (_panelContext != null)
+         {
+            setDiffContextText(_panelContext);
+         }
+      }
+
+      private void onColorSchemeChanged()
+      {
+         getNoteContainers()?
+            .ToList()
+            .ForEach(noteContainer =>
+               noteContainer.NoteContent.BackColor =
+                  getNoteColor(noteContainer.NoteContent.Tag as DiscussionNote));
       }
 
       private int getColumnInterval(int width)
@@ -1258,6 +1304,7 @@ namespace mrHelper.App.Controls
             if (noteControl != null)
             {
                noteControl.BackColor = Color.LightGray;
+               noteControl.ContextMenu?.Dispose();
                noteControl.ContextMenu = new ContextMenu();
                noteControl.Tag = null;
             }
@@ -1295,7 +1342,7 @@ namespace mrHelper.App.Controls
          removeNoteContainers();
 
          // To suspend layout and hide me
-         _onContentChanging();
+         _onContentChanging?.Invoke();
 
          if (Parent == null
           || Discussion == null
@@ -1306,13 +1353,14 @@ namespace mrHelper.App.Controls
             // Possible cases:
             // - deleted note was the only discussion item
             // - deleted note was the only visible discussion item but there are System notes like 'a line changed ...'
+            Dispose();
             Parent?.Controls.Remove(this);
-            _onContentChanged();
+            _onContentChanged?.Invoke();
             return;
          }
 
          // To reposition new controls and unhide me back
-         _onContentChanged();
+         _onContentChanged?.Invoke();
          getNoteContainers().First().NoteContent.Focus();
       }
 
@@ -1401,7 +1449,7 @@ namespace mrHelper.App.Controls
       private readonly User _currentUser;
       private readonly string _imagePath;
 
-      private readonly ContextDepth _diffContextDepth;
+      private ContextDepth _diffContextDepth;
       private readonly ContextDepth _tooltipContextDepth;
       private readonly IContextMaker _panelContextMaker;
       private readonly IContextMaker _tooltipContextMaker;
@@ -1412,7 +1460,7 @@ namespace mrHelper.App.Controls
       private ConfigurationHelper.DiffContextPosition _diffContextPosition;
       private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
       private bool _needShiftReplies;
-
+      private bool _showTooltipsForCode;
       private readonly ColorScheme _colorScheme;
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;

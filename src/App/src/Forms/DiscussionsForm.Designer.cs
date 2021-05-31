@@ -26,7 +26,9 @@ namespace mrHelper.App.Forms
 
          _discussionLoader.StatusChanged -= onDiscussionLoaderStatusChanged;
 
-         Program.Settings.PropertyChanged -= onSettingsPropertyChanged;
+         Program.Settings.DiffContextPositionChanged -= updateSaveDefaultLayoutState;
+         Program.Settings.DiscussionColumnWidthChanged -= updateSaveDefaultLayoutState;
+         Program.Settings.NeedShiftRepliesChanged -= updateSaveDefaultLayoutState;
 
          toolTip.Dispose();
 

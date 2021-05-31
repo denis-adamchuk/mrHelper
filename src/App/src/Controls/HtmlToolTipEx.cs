@@ -11,15 +11,19 @@ namespace mrHelper.App.Controls
    {
       public new void SetToolTip(Control control, string text)
       {
-         if (String.IsNullOrEmpty(text) && _userText.ContainsKey(control))
+         if (String.IsNullOrEmpty(text))
          {
-            _userText.Remove(control);
+            if (_userText.ContainsKey(control))
+            {
+               _userText.Remove(control);
+            }
+            base.SetToolTip(control, null);
          }
          else
          {
             _userText[control] = text;
+            base.SetToolTip(control, DefaultToolTipText);
          }
-         base.SetToolTip(control, DefaultToolTipText);
       }
 
       [DllImport("user32.dll")]
@@ -53,7 +57,7 @@ namespace mrHelper.App.Controls
          e.ToolTipSize = new Size(desiredWidth, desiredHeight);
       }
 
-      // copied from HtmlToolTIp.OnToolTipDraw
+      // copied from HtmlToolTip.OnToolTipDraw
       protected override void OnToolTipDraw(DrawToolTipEventArgs e)
       {
          if (_tooltipHandle == IntPtr.Zero)
