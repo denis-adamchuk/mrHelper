@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.Common.Constants;
+using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
@@ -17,11 +17,14 @@ namespace mrHelper.App.Controls
    {
       public ConnectionPage(
          string hostname,
-         PersistentStorage persistentStorage,
          DictionaryWrapper<MergeRequestKey, DateTime> recentMergeRequests,
          DictionaryWrapper<MergeRequestKey, HashSet<string>> reviewedRevisions,
          DictionaryWrapper<string, MergeRequestKey> lastMergeRequestsByHosts,
          DictionaryWrapper<string, NewMergeRequestProperties> newMergeRequestDialogStatesByHosts,
+         HashSetWrapper<ProjectKey> collapsedProjectsLive,
+         HashSetWrapper<ProjectKey> collapsedProjectsRecent,
+         HashSetWrapper<ProjectKey> collapsedProjectsSearch,
+         DictionaryWrapper<MergeRequestKey, DateTime> mutedMergeRequests,
          IEnumerable<string> keywords,
          TrayIcon trayIcon,
          ToolTip toolTip,
@@ -44,10 +47,15 @@ namespace mrHelper.App.Controls
          InitializeComponent();
          updateSplitterOrientation();
 
-         listViewLiveMergeRequests.Tag = Constants.LiveListViewName;
-         listViewFoundMergeRequests.Tag = Constants.SearchListViewName;
-         listViewRecentMergeRequests.Tag = Constants.RecentListViewName;
-         forEachListView(listView => listView.SetPersistentStorage(persistentStorage));
+         listViewLiveMergeRequests.SetIdentity(Constants.LiveListViewName);
+         listViewLiveMergeRequests.SetCollapsedProjects(collapsedProjectsLive);
+         listViewLiveMergeRequests.SetMutedMergeRequests(mutedMergeRequests);
+
+         listViewFoundMergeRequests.SetIdentity(Constants.SearchListViewName);
+         listViewFoundMergeRequests.SetCollapsedProjects(collapsedProjectsSearch);
+
+         listViewRecentMergeRequests.SetIdentity(Constants.RecentListViewName);
+         listViewRecentMergeRequests.SetCollapsedProjects(collapsedProjectsRecent);
 
          _redrawTimer.Tick += onRedrawTimer;
          _redrawTimer.Start();

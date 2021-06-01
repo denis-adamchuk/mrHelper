@@ -30,7 +30,6 @@ namespace mrHelper.App.Controls
             listView.AssignContextMenu(null);
 
             // Let ListView unsubscribe from other objects
-            listView.SetPersistentStorage(null);
             listView.SetDataCache(null);
             listView.SetDiffStatisticProvider(null);
             listView.SetColorScheme(null);

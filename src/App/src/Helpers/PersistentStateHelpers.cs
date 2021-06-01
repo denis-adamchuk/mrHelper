@@ -163,19 +163,19 @@ namespace mrHelper.App.Helpers
          _writer.Set(_recordName, hostname);
       }
 
-      internal void Save(HashSet<ProjectKey> values)
+      internal void Save(IReadOnlyCollection<ProjectKey> values)
       {
          IEnumerable<string> valuesSerialized = values.Select(item => saveProjectKey(item));
          _writer.Set(_recordName, valuesSerialized);
       }
 
-      internal void Save(HashSet<MergeRequestKey> values)
+      internal void Save(IReadOnlyCollection<MergeRequestKey> values)
       {
          IEnumerable<string> valuesSerialized = values.Select(item => saveMergeRequestKey(item));
          _writer.Set(_recordName, valuesSerialized);
       }
 
-      internal void Save(Dictionary<MergeRequestKey, HashSet<string>> values)
+      internal void Save(IReadOnlyDictionary<MergeRequestKey, HashSet<string>> values)
       {
          Dictionary<string, HashSet<string>> valuesSerialized = values
             .ToDictionary(
@@ -184,7 +184,7 @@ namespace mrHelper.App.Helpers
          _writer.Set(_recordName, valuesSerialized);
       }
 
-      internal void Save(Dictionary<MergeRequestKey, DateTime> values)
+      internal void Save(IReadOnlyDictionary<MergeRequestKey, DateTime> values)
       {
          Dictionary<string, string> valuesSerialized = values
             .ToDictionary(
@@ -193,7 +193,7 @@ namespace mrHelper.App.Helpers
          _writer.Set(_recordName, valuesSerialized);
       }
 
-      internal void Save(Dictionary<string, MergeRequestKey> values)
+      internal void Save(IReadOnlyDictionary<string, MergeRequestKey> values)
       {
          Dictionary<string, string> valuesSerialized = values
             .ToDictionary(
@@ -202,7 +202,7 @@ namespace mrHelper.App.Helpers
          _writer.Set(_recordName, valuesSerialized);
       }
 
-      internal void Save(Dictionary<string, NewMergeRequestProperties> values)
+      internal void Save(IReadOnlyDictionary<string, NewMergeRequestProperties> values)
       {
          Dictionary<string, string> valuesSerialized = values
             .ToDictionary(

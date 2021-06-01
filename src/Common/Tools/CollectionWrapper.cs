@@ -1,45 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace mrHelper.Common.Tools
 {
-   public class ListWrapper<TValue>
-   {
-      public ListWrapper(List<TValue> list, Action onChange)
-      {
-         _data = list.ToList(); // make a copy
-         _onChange = onChange;
-      }
-
-      public void Add(TValue value)
-      {
-         _data.Add(value);
-         _onChange();
-      }
-
-      public void Remove(TValue value)
-      {
-         if (_data.Remove(value))
-         {
-            _onChange();
-         }
-      }
-
-      public List<TValue> Data => _data;
-
-      private readonly List<TValue> _data = new List<TValue>();
-      private readonly Action _onChange;
-   }
-
    public class DictionaryWrapper<TKey, TValue>
    {
-      public DictionaryWrapper(Dictionary<TKey, TValue> dictionary, Action onChange)
+      public DictionaryWrapper(Action onChange)
       {
-         _data = dictionary.ToDictionary(item => item.Key, item => item.Value); // make a copy
          _onChange = onChange;
+         _data = new Dictionary<TKey, TValue>();
+      }
+
+      public void Assign(Dictionary<TKey, TValue> dictionary)
+      {
+         _data.Clear();
+         foreach (var kv in dictionary)
+         {
+            _data[kv.Key] = kv.Value;
+         }
       }
 
       public void Add(TKey key, TValue value)
@@ -63,6 +42,11 @@ namespace mrHelper.Common.Tools
          return _data.TryGetValue(key, out value);
       }
 
+      public bool ContainsKey(TKey key)
+      {
+         return _data.ContainsKey(key);
+      }
+
       public void Remove(TKey key)
       {
          if (_data.Remove(key))
@@ -84,9 +68,64 @@ namespace mrHelper.Common.Tools
          }
       }
 
-      public Dictionary<TKey, TValue> Data => _data;
+      public IReadOnlyDictionary<TKey, TValue> Data => _data;
 
       private readonly Dictionary<TKey, TValue> _data = new Dictionary<TKey, TValue>();
+      private readonly Action _onChange;
+   }
+
+   public class HashSetWrapper<TKey>
+   {
+      public HashSetWrapper(Action onChange)
+      {
+         _onChange = onChange;
+         _data = new HashSet<TKey>();
+      }
+
+      public void Assign(HashSet<TKey> source)
+      {
+         _data.Clear();
+         foreach (var key in source)
+         {
+            _data.Add(key);
+         }
+      }
+
+      public void Add(TKey key)
+      {
+         _data.Add(key);
+         _onChange();
+      }
+
+      public bool Contains(TKey key)
+      {
+         return _data.Contains(key);
+      }
+
+      public void Remove(TKey key)
+      {
+         if (_data.Remove(key))
+         {
+            _onChange();
+         }
+      }
+
+      public void RemoveMany(IEnumerable<TKey> keys)
+      {
+         foreach (TKey key in keys)
+         {
+            _data.Remove(key);
+         }
+
+         if (keys.Any())
+         {
+            _onChange();
+         }
+      }
+
+      public IReadOnlyCollection<TKey> Data => _data;
+
+      private readonly HashSet<TKey> _data = new HashSet<TKey>();
       private readonly Action _onChange;
    }
 }

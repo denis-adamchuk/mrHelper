@@ -47,14 +47,14 @@ namespace mrHelper.App.Forms
 
       private void createSharedCollections()
       {
-         _recentMergeRequests =
-            new DictionaryWrapper<MergeRequestKey, DateTime>(new Dictionary<MergeRequestKey, DateTime>(), saveState);
-         _reviewedRevisions =
-            new DictionaryWrapper<MergeRequestKey, HashSet<string>>(new Dictionary<MergeRequestKey, HashSet<string>>(), saveState);
-         _lastMergeRequestsByHosts =
-            new DictionaryWrapper<string, MergeRequestKey>(new Dictionary<string, MergeRequestKey>(), saveState);
-         _newMergeRequestDialogStatesByHosts =
-            new DictionaryWrapper<string, Helpers.NewMergeRequestProperties>(new Dictionary<string, Helpers.NewMergeRequestProperties>(), saveState);
+         _recentMergeRequests = new DictionaryWrapper<MergeRequestKey, DateTime>(saveState);
+         _reviewedRevisions = new DictionaryWrapper<MergeRequestKey, HashSet<string>>(saveState);
+         _lastMergeRequestsByHosts = new DictionaryWrapper<string, MergeRequestKey>(saveState);
+         _newMergeRequestDialogStatesByHosts = new DictionaryWrapper<string, Helpers.NewMergeRequestProperties>(saveState);
+         _collapsedProjectsLive = new HashSetWrapper<Common.Interfaces.ProjectKey>(saveState);
+         _collapsedProjectsRecent = new HashSetWrapper<Common.Interfaces.ProjectKey>(saveState);
+         _collapsedProjectsSearch = new HashSetWrapper<Common.Interfaces.ProjectKey>(saveState);
+         _mutedMergeRequests = new DictionaryWrapper<MergeRequestKey, DateTime>(saveState);
       }
 
       private void initializeWork()

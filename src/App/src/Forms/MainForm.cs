@@ -6,7 +6,7 @@ using mrHelper.Common.Tools;
 using mrHelper.CustomActions;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
-using System.Drawing;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -64,6 +64,10 @@ namespace mrHelper.App.Forms
       private DictionaryWrapper<MergeRequestKey, HashSet<string>> _reviewedRevisions;
       private DictionaryWrapper<string, MergeRequestKey> _lastMergeRequestsByHosts;
       private DictionaryWrapper<string, NewMergeRequestProperties> _newMergeRequestDialogStatesByHosts;
+      private HashSetWrapper<ProjectKey> _collapsedProjectsLive;
+      private HashSetWrapper<ProjectKey> _collapsedProjectsRecent;
+      private HashSetWrapper<ProjectKey> _collapsedProjectsSearch;
+      private DictionaryWrapper<MergeRequestKey, DateTime> _mutedMergeRequests;
 
       private readonly List<string> _operationRecordHistory = new List<string>();
 

@@ -11,6 +11,7 @@ using mrHelper.Common.Exceptions;
 using static mrHelper.App.Helpers.ConfigurationHelper;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
+using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
@@ -329,6 +330,14 @@ namespace mrHelper.App.Forms
          new PersistentStateSaveHelper("RecentMergeRequestsWithDateTime", writer).Save(_recentMergeRequests.Data);
          new PersistentStateSaveHelper("MergeRequestsByHosts", writer).Save(_lastMergeRequestsByHosts.Data);
          new PersistentStateSaveHelper("NewMergeRequestDialogStatesByHosts", writer).Save(_newMergeRequestDialogStatesByHosts.Data);
+         new PersistentStateSaveHelper("CollapsedProjects_" + Constants.LiveListViewName, writer)
+            .Save(_collapsedProjectsLive.Data);
+         new PersistentStateSaveHelper("CollapsedProjects_" + Constants.RecentListViewName, writer)
+            .Save(_collapsedProjectsRecent.Data);
+         new PersistentStateSaveHelper("CollapsedProjects_" + Constants.SearchListViewName, writer)
+            .Save(_collapsedProjectsSearch.Data);
+         new PersistentStateSaveHelper("MutedMergeRequests_" + Constants.LiveListViewName, writer)
+            .Save(_mutedMergeRequests.Data);
       }
 
       private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
@@ -343,8 +352,7 @@ namespace mrHelper.App.Forms
             out Dictionary<MergeRequestKey, HashSet<string>> revisions);
          if (revisions != null)
          {
-            _reviewedRevisions =
-               new DictionaryWrapper<MergeRequestKey, HashSet<string>>(revisions, saveState);
+            _reviewedRevisions.Assign(revisions);
          }
 
          new PersistentStateLoadHelper("RecentMergeRequests", reader).Load(out HashSet<MergeRequestKey> mergeRequests);
@@ -352,31 +360,55 @@ namespace mrHelper.App.Forms
             out Dictionary<MergeRequestKey, DateTime> mergeRequestsWithDateTime);
          if (mergeRequestsWithDateTime != null)
          {
-            _recentMergeRequests =
-               new DictionaryWrapper<MergeRequestKey, DateTime>(mergeRequestsWithDateTime, saveState);
+            _recentMergeRequests.Assign(mergeRequestsWithDateTime);
          }
          else if (mergeRequests != null)
          {
             // deprecated format
             var recentMergeRequests = mergeRequests.ToDictionary(item => item, item => DateTime.Now);
-            _recentMergeRequests =
-               new DictionaryWrapper<MergeRequestKey, DateTime>(recentMergeRequests, saveState);
+            _recentMergeRequests.Assign(recentMergeRequests);
          }
 
          new PersistentStateLoadHelper("MergeRequestsByHosts", reader).
             Load(out Dictionary<string, MergeRequestKey> mergeRequestsByHosts);
          if (mergeRequestsByHosts != null)
          {
-            _lastMergeRequestsByHosts =
-               new DictionaryWrapper<string, MergeRequestKey>(mergeRequestsByHosts, saveState);
+            _lastMergeRequestsByHosts.Assign(mergeRequestsByHosts);
          }
 
          new PersistentStateLoadHelper("NewMergeRequestDialogStatesByHosts", reader).Load(
             out Dictionary<string, NewMergeRequestProperties> properties);
          if (properties != null)
          {
-            _newMergeRequestDialogStatesByHosts =
-               new DictionaryWrapper<string, NewMergeRequestProperties>(properties, saveState);
+            _newMergeRequestDialogStatesByHosts.Assign(properties);
+         }
+
+         new PersistentStateLoadHelper("CollapsedProjects_" + Constants.LiveListViewName, reader).Load(
+            out HashSet<ProjectKey> collapsedProjectsLiveHashSet);
+         if (collapsedProjectsLiveHashSet != null)
+         {
+            _collapsedProjectsLive.Assign(collapsedProjectsLiveHashSet);
+         }
+
+         new PersistentStateLoadHelper("CollapsedProjects_" + Constants.RecentListViewName, reader).Load(
+            out HashSet<ProjectKey> collapsedProjectsRecentHashSet);
+         if (collapsedProjectsRecentHashSet != null)
+         {
+            _collapsedProjectsRecent.Assign(collapsedProjectsRecentHashSet);
+         }
+
+         new PersistentStateLoadHelper("CollapsedProjects_" + Constants.SearchListViewName, reader).Load(
+            out HashSet<ProjectKey> collapsedProjectsSearchHashSet);
+         if (collapsedProjectsSearchHashSet != null)
+         {
+            _collapsedProjectsSearch.Assign(collapsedProjectsSearchHashSet);
+         }
+
+         new PersistentStateLoadHelper("MutedMergeRequests_" + Constants.LiveListViewName, reader).Load(
+            out Dictionary<MergeRequestKey, DateTime> mutedMergeRequests);
+         if (mutedMergeRequests != null)
+         {
+            _mutedMergeRequests.Assign(mutedMergeRequests);
          }
       }
    }

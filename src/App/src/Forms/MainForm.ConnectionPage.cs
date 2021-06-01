@@ -115,10 +115,13 @@ namespace mrHelper.App.Forms
          tabControlHost.SuspendLayout();
          foreach (string hostname in getHostList())
          {
-            ConnectionPage connectionPage = new ConnectionPage(hostname, _persistentStorage,
+            ConnectionPage connectionPage = new ConnectionPage(hostname,
                _recentMergeRequests, _reviewedRevisions, _lastMergeRequestsByHosts,
-               _newMergeRequestDialogStatesByHosts, _keywords, _trayIcon,
-               toolTip, _integratedInGitExtensions, _integratedInSourceTree, _colorScheme);
+               _newMergeRequestDialogStatesByHosts, _collapsedProjectsLive,
+               _collapsedProjectsRecent, _collapsedProjectsSearch, _mutedMergeRequests,
+               _keywords, _trayIcon, toolTip,
+               _integratedInGitExtensions,
+               _integratedInSourceTree, _colorScheme);
             subscribeToConnectionPage(connectionPage);
             ConnectionTabPage tabPage = new ConnectionTabPage(hostname, connectionPage);
             tabControlHost.TabPages.Add(tabPage);

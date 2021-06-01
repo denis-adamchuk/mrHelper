@@ -68,7 +68,6 @@ namespace mrHelper.App.Controls
          _toolTip = new MergeRequestListViewToolTip(this);
          Tag = "DesignTimeName";
          _unmuteTimer.Tick += onUnmuteTimerTick;
-         _unmuteTimer.Start();
          cleanUpMutedMergeRequests();
       }
 
@@ -82,19 +81,27 @@ namespace mrHelper.App.Controls
          _getCurrentUser = funcGetter;
       }
 
-      internal void SetPersistentStorage(PersistentStorage persistentStorage)
+      internal void SetCollapsedProjects(HashSetWrapper<ProjectKey> collapsedProjects)
       {
-         if (_persistentStorage != null)
+         _collapsedProjects = collapsedProjects;
+      }
+
+      internal void SetIdentity(string identity)
+      {
+         _identity = identity;
+      }
+
+      internal void SetMutedMergeRequests(DictionaryWrapper<MergeRequestKey, DateTime> mutedMergeRequets)
+      {
+         _mutedMergeRequests = mutedMergeRequets;
+
+         if (_mutedMergeRequests != null && !_unmuteTimer.Enabled)
          {
-            _persistentStorage.OnDeserialize -= onDeserialize;
-            _persistentStorage.OnSerialize -= onSerialize;
+            _unmuteTimer.Start();
          }
-         _persistentStorage = persistentStorage;
-         if (_persistentStorage != null)
+         else if (_mutedMergeRequests == null && _unmuteTimer.Enabled)
          {
-            _persistentStorage.OnDeserialize += onDeserialize;
-            _persistentStorage.OnSerialize += onSerialize;
-            persistentStorage.Deserialize();
+            _unmuteTimer.Stop();
          }
       }
 
@@ -1057,44 +1064,6 @@ namespace mrHelper.App.Controls
          setSubItemTag(item, "Activities", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
       }
 
-      private void onSerialize(IPersistentStateSetter writer)
-      {
-         {
-            string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
-            new PersistentStateSaveHelper(recordName, writer).Save(_collapsedProjects);
-         }
-
-         {
-            string recordName = String.Format("MutedMergeRequests_{0}", getIdentity());
-            new PersistentStateSaveHelper(recordName, writer).Save(_mutedMergeRequests);
-         }
-      }
-
-      private void onDeserialize(IPersistentStateGetter reader)
-      {
-         {
-            string recordName = String.Format("CollapsedProjects_{0}", getIdentity());
-            new PersistentStateLoadHelper(recordName, reader).Load(
-               out HashSet<ProjectKey> collapsedProjectsHashSet);
-            if (collapsedProjectsHashSet != null)
-            {
-               _collapsedProjects = collapsedProjectsHashSet;
-            }
-         }
-
-         {
-            string recordName = String.Format("MutedMergeRequests_{0}", getIdentity());
-            new PersistentStateLoadHelper(recordName, reader).Load(
-               out Dictionary<MergeRequestKey, DateTime> mutedMergeRequests);
-            if (mutedMergeRequests != null)
-            {
-               _mutedMergeRequests = mutedMergeRequests;
-            }
-         }
-
-         UpdateItems();
-      }
-
       private void setColumnWidths(Dictionary<string, int> widths)
       {
          foreach (ColumnHeader column in Columns)
@@ -1195,6 +1164,11 @@ namespace mrHelper.App.Controls
 
       private void muteMergeRequestFor(FullMergeRequestKey fmk, TimeSpan timeSpan)
       {
+         if (!isMuteSupported())
+         {
+            return;
+         }
+
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
          _mutedMergeRequests[mrk] = DateTime.Now + timeSpan;
       }
@@ -1207,10 +1181,16 @@ namespace mrHelper.App.Controls
 
       private bool unmuteMergeRequest(MergeRequestKey mrk)
       {
+         if (!isMuteSupported())
+         {
+            return false;
+         }
+
          if (!_mutedMergeRequests.ContainsKey(mrk))
          {
             return false;
          }
+
          _mutedMergeRequests.Remove(mrk);
          return true;
       }
@@ -1222,11 +1202,17 @@ namespace mrHelper.App.Controls
 
       private bool isMuted(FullMergeRequestKey fmk)
       {
+         if (!isMuteSupported())
+         {
+            return false;
+         }
+
          if (isSummaryKey(fmk))
          {
             return getMatchingFilterProjectItems(fmk.ProjectKey).Any(key => isMuted(key));
          }
-         return _mutedMergeRequests
+
+         return _mutedMergeRequests.Data
             .Any(mrk => mrk.Key.IId == fmk.MergeRequest.IId
                      && mrk.Key.ProjectKey.Equals(fmk.ProjectKey));
       }
@@ -1241,9 +1227,14 @@ namespace mrHelper.App.Controls
 
       private bool cleanUpMutedMergeRequests()
       {
+         if (!isMuteSupported())
+         {
+            return false;
+         }
+
          // temporary copy because original collection is changed inside the loop
          Dictionary<MergeRequestKey, DateTime> temp =
-            _mutedMergeRequests.ToDictionary(kv => kv.Key, kv => kv.Value);
+            _mutedMergeRequests.Data.ToDictionary(kv => kv.Key, kv => kv.Value);
 
          bool changed = false;
          foreach (KeyValuePair<MergeRequestKey, DateTime> mr in temp)
@@ -1259,27 +1250,19 @@ namespace mrHelper.App.Controls
          return changed;
       }
 
+      private bool isMuteSupported()
+      {
+         return _mutedMergeRequests != null;
+      }
+
       private void onContentChanged()
       {
          ContentChanged?.Invoke(this);
-         saveState();
-      }
-
-      private void saveState()
-      {
-         try
-         {
-            _persistentStorage?.Serialize();
-         }
-         catch (PersistenceStateSerializationException ex)
-         {
-            ExceptionHandlers.Handle("Cannot serialize the state", ex);
-         }
       }
 
       private string getIdentity()
       {
-         return Tag.ToString();
+         return _identity;
       }
 
       private static bool isSummaryKey(FullMergeRequestKey fmk)
@@ -1320,12 +1303,11 @@ namespace mrHelper.App.Controls
       private DataCache _dataCache;
       private MergeRequestFilter _mergeRequestFilter;
       private ColorScheme _colorScheme;
-      private PersistentStorage _persistentStorage;
       private bool _suppressSelectionChange;
-      private HashSet<ProjectKey> _collapsedProjects = new HashSet<ProjectKey>();
-      private Dictionary<MergeRequestKey, DateTime> _mutedMergeRequests =
-         new Dictionary<MergeRequestKey, DateTime>();
+      private HashSetWrapper<ProjectKey> _collapsedProjects;
+      private DictionaryWrapper<MergeRequestKey, DateTime> _mutedMergeRequests;
       private ExpressionResolver _expressionResolver;
+      private string _identity;
       private static readonly int MaxListViewRows = 3;
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
 
