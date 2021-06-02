@@ -236,6 +236,15 @@ namespace mrHelper.CommonNative
 
       [DllImport("user32.dll")]
       public static extern bool LockWindowUpdate(IntPtr Handle);
+
+      /// <summary>
+      /// A set of constants to handle window activation
+      /// </summary>
+      public static uint WM_MOUSEACTIVATE = 0x0021;
+      public static uint MA_ACTIVATE         = 1;
+      public static uint MA_ACTIVATEANDEAT   = 2;
+      public static uint MA_NOACTIVATE       = 4;
+      public static uint MA_NOACTIVATEANDEAT = 4;
    }
 }
 

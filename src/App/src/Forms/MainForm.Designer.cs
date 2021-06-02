@@ -1,6 +1,6 @@
-﻿using mrHelper.App.Controls;
-using System.Linq;
-using System.Windows.Forms;
+﻿using System.Windows.Forms;
+using mrHelper.App.Controls;
+using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.App.Forms
 {
@@ -75,12 +75,12 @@ namespace mrHelper.App.Forms
          this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
          this.tabControlHost = new mrHelper.App.Controls.PlainTabControl();
          this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
-         this.statusStrip1 = new System.Windows.Forms.StatusStrip();
+         this.statusStrip1 = new StatusStripEx();
          this.labelConnectionStatus = new System.Windows.Forms.ToolStripStatusLabel();
          this.labelOperationStatus = new System.Windows.Forms.ToolStripStatusLabel();
          this.labelStorageStatus = new System.Windows.Forms.ToolStripStatusLabel();
          this.linkLabelAbortGitClone = new System.Windows.Forms.ToolStripStatusLabel();
-         this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+         this.menuStrip1 = new MenuStripEx();
          this.gitLabToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.configureHostsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.configureStorageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -125,8 +125,8 @@ namespace mrHelper.App.Forms
          this.diffToBaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.refreshListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.refreshSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.toolStripHosts = new System.Windows.Forms.ToolStrip();
-         this.toolStripActions = new System.Windows.Forms.ToolStrip();
+         this.toolStripHosts = new ToolStripEx();
+         this.toolStripActions = new ToolStripEx();
          this.toolStripHostsSeparator = new System.Windows.Forms.ToolStripSeparator();
          this.toolStripButtonLive = new System.Windows.Forms.ToolStripButton();
          this.toolStripButtonRecent = new System.Windows.Forms.ToolStripButton();
@@ -147,7 +147,7 @@ namespace mrHelper.App.Forms
          this.toolStripTextBoxTrackedTime = new System.Windows.Forms.ToolStripTextBox();
          this.toolStripButtonEditTrackedTime = new System.Windows.Forms.ToolStripButton();
          this.toolStripTimeTrackingSeparator = new System.Windows.Forms.ToolStripSeparator();
-         this.toolStripCustomActions = new System.Windows.Forms.ToolStrip();
+         this.toolStripCustomActions = new ToolStripEx();
          this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
          this.exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
          this.contextMenuStrip.SuspendLayout();
@@ -247,6 +247,7 @@ namespace mrHelper.App.Forms
          // 
          // statusStrip1
          // 
+         this.statusStrip1.ClickThrough = true;
          this.statusStrip1.Dock = System.Windows.Forms.DockStyle.None;
          this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.labelConnectionStatus,
@@ -300,6 +301,7 @@ namespace mrHelper.App.Forms
          // 
          // menuStrip1
          // 
+         this.menuStrip1.ClickThrough = true;
          this.menuStrip1.Dock = System.Windows.Forms.DockStyle.None;
          this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.gitLabToolStripMenuItem,
@@ -674,6 +676,7 @@ namespace mrHelper.App.Forms
          // 
          // toolStripHosts
          // 
+         this.toolStripHosts.ClickThrough = true;
          this.toolStripHosts.Dock = System.Windows.Forms.DockStyle.None;
          this.toolStripHosts.ImageScalingSize = new System.Drawing.Size(24, 24);
          this.toolStripHosts.Location = new System.Drawing.Point(3, 24);
@@ -683,6 +686,7 @@ namespace mrHelper.App.Forms
          // 
          // toolStripActions
          // 
+         this.toolStripActions.ClickThrough = true;
          this.toolStripActions.Dock = System.Windows.Forms.DockStyle.None;
          this.toolStripActions.ImageScalingSize = new System.Drawing.Size(24, 24);
          this.toolStripActions.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -901,6 +905,7 @@ namespace mrHelper.App.Forms
          // 
          // toolStripCustomActions
          // 
+         this.toolStripCustomActions.ClickThrough = true;
          this.toolStripCustomActions.Dock = System.Windows.Forms.DockStyle.None;
          this.toolStripCustomActions.ImageScalingSize = new System.Drawing.Size(24, 24);
          this.toolStripCustomActions.Location = new System.Drawing.Point(693, 24);
@@ -958,9 +963,9 @@ namespace mrHelper.App.Forms
       private ToolStripMenuItem openFromClipboardToolStripMenuItem;
       private PlainTabControl tabControlHost;
       private ToolStripContainer toolStripContainer1;
-      private MenuStrip menuStrip1;
-      private ToolStrip toolStripActions;
-      private StatusStrip statusStrip1;
+      private MenuStripEx menuStrip1;
+      private ToolStripEx toolStripActions;
+      private StatusStripEx statusStrip1;
       private ToolStripButton toolStripButtonCancelTimer;
       private ToolStripSeparator toolStripHostsSeparator;
       private ToolStripButton toolStripButtonLive;
@@ -1029,8 +1034,8 @@ namespace mrHelper.App.Forms
       private ToolStripMenuItem layoutToolStripMenuItem;
       private ToolStripMenuItem horizontalToolStripMenuItem;
       private ToolStripMenuItem verticalToolStripMenuItem;
-      private ToolStrip toolStripCustomActions;
-      private ToolStrip toolStripHosts;
+      private ToolStripEx toolStripCustomActions;
+      private ToolStripEx toolStripHosts;
       private ToolStripSeparator toolStripSeparator1;
       private ToolStripMenuItem exitToolStripMenuItem1;
    }

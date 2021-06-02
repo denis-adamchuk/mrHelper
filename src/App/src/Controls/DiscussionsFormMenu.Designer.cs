@@ -1,4 +1,5 @@
-﻿
+﻿using mrHelper.CommonControls.Controls;
+
 namespace mrHelper.App.Controls
 {
    partial class DiscussionsFormMenu
@@ -29,7 +30,7 @@ namespace mrHelper.App.Controls
       /// </summary>
       private void InitializeComponent()
       {
-         this.menuStrip = new System.Windows.Forms.MenuStrip();
+         this.menuStrip = new MenuStripEx();
          this.refreshToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.sortToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.defaultToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -77,6 +78,7 @@ namespace mrHelper.App.Controls
          // menuStrip
          // 
          this.menuStrip.BackColor = System.Drawing.SystemColors.Menu;
+         this.menuStrip.ClickThrough = true;
          this.menuStrip.Dock = System.Windows.Forms.DockStyle.Fill;
          this.menuStrip.GripMargin = new System.Windows.Forms.Padding(0);
          this.menuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -446,7 +448,7 @@ namespace mrHelper.App.Controls
 
       #endregion
 
-      private System.Windows.Forms.MenuStrip menuStrip;
+      private MenuStripEx menuStrip;
       private System.Windows.Forms.ToolStripMenuItem refreshToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem sortToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem defaultToolStripMenuItem;
