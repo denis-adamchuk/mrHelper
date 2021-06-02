@@ -109,69 +109,6 @@ namespace mrHelper.App.Helpers
          Right
       }
 
-      internal static void SaveToolStripLocation(string name, Point location,
-         ToolStripLayoutStyle style, UserDefinedSettings settings)
-      {
-         Dictionary<string, Point> locations = settings.ToolStripLocations;
-         locations[name] = location;
-         settings.ToolStripLocations = locations;
-
-         Dictionary<string, string> styles = settings.ToolStripLayoutStyles;
-         if (style == ToolStripLayoutStyle.Flow)
-         {
-            styles[name]  = "Flow";
-         }
-         else if (style == ToolStripLayoutStyle.Table)
-         {
-            styles[name]  = "Table";
-         }
-         else if (style == ToolStripLayoutStyle.HorizontalStackWithOverflow)
-         {
-            styles[name]  = "HorizontalStackWithOverflow";
-         }
-         else if (style == ToolStripLayoutStyle.VerticalStackWithOverflow)
-         {
-            styles[name]  = "VerticalStackWithOverflow";
-         }
-         else if (style == ToolStripLayoutStyle.StackWithOverflow)
-         {
-            styles[name]  = "StackWithOverflow";
-         }
-         settings.ToolStripLayoutStyles = styles;
-      }
-
-      internal static void GetToolStripLocation(string name, UserDefinedSettings settings,
-         out Point location, out ToolStripLayoutStyle style)
-      {
-         location = settings.ToolStripLocations[name];
-         string layoutStyle = settings.ToolStripLayoutStyles[name];
-         if (layoutStyle == "Flow")
-         {
-            style = ToolStripLayoutStyle.Flow;
-         }
-         else if (layoutStyle == "Table")
-         {
-            style = ToolStripLayoutStyle.Table;
-         }
-         else if (layoutStyle == "HorizontalStackWithOverflow")
-         {
-            style = ToolStripLayoutStyle.HorizontalStackWithOverflow;
-         }
-         else if (layoutStyle == "VerticalStackWithOverflow")
-         {
-            style = ToolStripLayoutStyle.VerticalStackWithOverflow;
-         }
-         else if (layoutStyle == "StackWithOverflow")
-         {
-            style = ToolStripLayoutStyle.StackWithOverflow;
-         }
-         else
-         {
-            Debug.Assert(false);
-            style = ToolStripLayoutStyle.HorizontalStackWithOverflow;
-         }
-      }
-
       internal static DiffContextPosition GetDiffContextPosition(UserDefinedSettings settings)
       {
          if (settings.DiffContextPosition == "top")

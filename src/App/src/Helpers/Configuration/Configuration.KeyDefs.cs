@@ -92,7 +92,7 @@ namespace mrHelper.App.Helpers
       private static readonly int    HeightBeforeCloseDefaultValue = 0;
 
       private static readonly string WasMaximizedBeforeCloseKeyName       = "WasMaximizedBeforeClose";
-      private static readonly bool   WasMaximizedBeforeCloseDefaultValue  = false;
+      private static readonly bool   WasMaximizedBeforeCloseDefaultValue  = true;
 
       private static readonly string WasMinimizedBeforeCloseKeyName       = "WasMinimizedBeforeClose";
       private static readonly bool   WasMinimizedBeforeCloseDefaultValue  = false;
@@ -123,12 +123,6 @@ namespace mrHelper.App.Helpers
 
       private static readonly string CustomColorsKeyName = "CustomColors";
       private static readonly string CustomColorsDefaultValue = String.Empty;
-
-      private static readonly string ToolStripLocationsKeyName = "ToolStripLocation";
-      private static readonly string ToolStripLocationsDefaultValue = String.Empty;
-
-      private static readonly string ToolStripLayoutStylesKeyName = "ToolStripLayoutStyle";
-      private static readonly string ToolStripLayoutStylesDefaultValue = String.Empty;
 
       private static readonly string AutoUpdatePeriodMsKeyName      = "AutoUpdatePeriodMs";
       private static readonly int    AutoUpdatePeriodMsDefaultValue = 5 * 60 * 1000; // 5 minutes

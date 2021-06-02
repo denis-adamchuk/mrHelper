@@ -503,18 +503,6 @@ namespace mrHelper.App.Helpers
          set => setStringToStringDictionary(CustomColorsKeyName, value);
       }
 
-      public Dictionary<string, Point> ToolStripLocations
-      {
-         get => getStringToPointDictionary(ToolStripLocationsKeyName, ToolStripLocationsDefaultValue);
-         set => setStringToPointDictionary(ToolStripLocationsKeyName, value);
-      }
-
-      public Dictionary<string, string> ToolStripLayoutStyles
-      {
-         get => getStringToStringDictionary(ToolStripLayoutStylesKeyName, ToolStripLayoutStylesDefaultValue, false);
-         set => setStringToStringDictionary(ToolStripLayoutStylesKeyName, value);
-      }
-
       private bool AccessTokensProtected
       {
          get => getBoolValue(AccessTokensProtectedKeyName, AccessTokensProtectedDefaultValue);
