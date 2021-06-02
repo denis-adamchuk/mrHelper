@@ -167,7 +167,7 @@ namespace mrHelper.App.Helpers
       private static readonly int    ServicePointConnectionLimitDefaultValue = 25;
 
       private static readonly string AsyncOperationTimeOutSecondsKeyName = "AsyncOperationTimeOutSeconds";
-      private static readonly int    AsyncOperationTimeOutSecondsDefaultValue = 60;
+      private static readonly int    AsyncOperationTimeOutSecondsDefaultValue = 90;
 
       private static readonly string LogFilesToKeepKeyName = "LogFilesToKeep";
       private static readonly int    LogFilesToKeepDefaultValue = 10;
