@@ -35,7 +35,6 @@ namespace mrHelper.App.Forms
          WinFormsHelpers.LogScreenResolution(this);
 
          _trayIcon = new TrayIcon(notifyIcon);
-         _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 
          SystemEvents.SessionSwitch += SystemEvents_SessionSwitch;
          SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;

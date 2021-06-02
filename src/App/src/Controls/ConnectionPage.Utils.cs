@@ -309,42 +309,6 @@ namespace mrHelper.App.Controls
          revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
       }
 
-      private void getShaForDiffBetweenSelected(out string left, out string right,
-         out IEnumerable<string> included, out RevisionType? type)
-      {
-         string[] selected = revisionBrowser.GetSelectedSha(out type);
-         if (selected.Count() != 2)
-         {
-            left = String.Empty;
-            right = String.Empty;
-            included = new List<string>();
-            Debug.Assert(false); // shall be not available
-            return;
-         }
-
-         left = selected[0];
-         right = selected[1];
-         included = revisionBrowser.GetIncludedBySelectedSha();
-      }
-
-      private void getShaForDiffWithBase(out string left, out string right,
-         out IEnumerable<string> included, out RevisionType? type)
-      {
-         string[] selected = revisionBrowser.GetSelectedSha(out type);
-         if (selected.Count() != 1)
-         {
-            left = String.Empty;
-            right = String.Empty;
-            included = new List<string>();
-            Debug.Assert(false); // shall be not available
-            return;
-         }
-
-         left = revisionBrowser.GetBaseCommitSha();
-         right =  selected[0];
-         included = revisionBrowser.GetIncludedBySelectedSha();
-      }
-
       private bool checkIfMergeRequestCanBeCreated()
       {
          string hostname = HostName;

@@ -372,7 +372,7 @@ namespace mrHelper.App.Forms
       private void processConnectionStatusChange(ConnectionPage.EConnectionState state, string details)
       {
          Trace.TraceInformation("[MainForm] processConnectionStatusChange({0}, {1})",
-            state.ToString(), details == null ? "null" : details);
+            state.ToString(), details ?? "null");
 
          updateConnectionStatusLabel(state, details);
          if (state == ConnectionPage.EConnectionState.ConnectionLost)

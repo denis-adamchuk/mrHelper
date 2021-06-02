@@ -1012,13 +1012,6 @@ namespace mrHelper.App.Controls
          return String.Format("Updating storage{0}: {1}...",
             storages.Count() > 1 ? "s" : "", String.Join(", ", storages));
       }
-
-      private string formatStorageStatusText(string text, MergeRequestKey? mrk)
-      {
-         return String.IsNullOrEmpty(text) || !mrk.HasValue
-            ? String.Empty
-            : String.Format("{0} #{1}: {2}", mrk.Value.ProjectKey.ProjectName, mrk.Value.IId.ToString(), text);
-      }
    }
 }
 

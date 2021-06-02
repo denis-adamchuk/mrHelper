@@ -193,7 +193,7 @@ namespace mrHelper.App.Controls
 
       private void createRevisionBrowserContextMenu()
       {
-         Action defaultAction = () => launchDiffTool(DiffToolMode.DiffSelectedToBase);
+         void defaultAction() => launchDiffTool(DiffToolMode.DiffSelectedToBase);
          revisionBrowser.AssignContextMenu(new RevisionBrowserContextMenu(
             this,
             () => launchDiffTool(DiffToolMode.DiffBetweenSelected),

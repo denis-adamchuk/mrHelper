@@ -38,7 +38,6 @@ namespace mrHelper.App.Forms
       private readonly PeriodicUpdateChecker _applicationUpdateChecker;
       private readonly bool _startMinimized;
       private readonly TrayIcon _trayIcon;
-      private readonly Markdig.MarkdownPipeline _mdPipeline;
       private readonly bool _allowAutoStartApplication = false;
       private readonly bool _integratedInGitExtensions;
       private readonly bool _integratedInSourceTree;
@@ -75,7 +74,7 @@ namespace mrHelper.App.Forms
       private ITimeTracker _timeTracker;
 
       private IEnumerable<string> _keywords;
-      private ColorScheme _colorScheme;
+      private readonly ColorScheme _colorScheme;
 
       private PersistentStorage _persistentStorage;
 
