@@ -129,7 +129,7 @@ namespace mrHelper.App.Controls
             _shortcuts.GetProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList,
             sourceBranchesInUse, _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate())))
          {
-            if (form.ShowDialog() != DialogResult.OK)
+            if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) != DialogResult.OK)
             {
                Trace.TraceInformation("[ConnectionPage] User declined to create a merge request");
                return;
@@ -153,7 +153,7 @@ namespace mrHelper.App.Controls
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
-         Form formExisting = WinFormsHelpers.FindFormByTag("AcceptMergeRequestForm", doesMatchTag);
+         Form formExisting = WinFormsHelpers.FindFormByTagAndName("AcceptMergeRequestForm", doesMatchTag);
          if (formExisting != null)
          {
             formExisting.Activate();
@@ -207,7 +207,7 @@ namespace mrHelper.App.Controls
          TimeSpan oldSpan = oldSpanOpt.Value;
          using (EditTimeForm form = new EditTimeForm(oldSpan))
          {
-            if (form.ShowDialog() == DialogResult.OK)
+            if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) == DialogResult.OK)
             {
                TimeSpan newSpan = form.TimeSpan;
                bool add = newSpan > oldSpan;
@@ -248,7 +248,7 @@ namespace mrHelper.App.Controls
             DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
                mrk, mergeRequest.Title, CurrentUser, _shortcuts);
-            bool res = await discussionHelper.AddCommentAsync();
+            bool res = await discussionHelper.AddCommentAsync(WinFormsHelpers.FindMainForm());
             addOperationRecord(res ? "New comment has been added" : "Comment has not been added");
          }));
       }
@@ -263,7 +263,7 @@ namespace mrHelper.App.Controls
             DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
                mrk, mergeRequest.Title, CurrentUser, _shortcuts);
-            bool res = await discussionHelper.AddThreadAsync();
+            bool res = await discussionHelper.AddThreadAsync(WinFormsHelpers.FindMainForm());
             addOperationRecord(res ? "A new discussion thread has been added" : "Discussion thread has not been added");
          }));
       }
@@ -307,7 +307,7 @@ namespace mrHelper.App.Controls
          using (MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
             _shortcuts.GetProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList))
          {
-            if (form.ShowDialog() != DialogResult.OK)
+            if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) != DialogResult.OK)
             {
                Trace.TraceInformation("[ConnectionPage] User declined to modify a merge request");
                return;
@@ -440,7 +440,7 @@ namespace mrHelper.App.Controls
          }
 
          bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
-         Form formExisting = WinFormsHelpers.FindFormByTag("DiscussionsForm", doesMatchTag);
+         Form formExisting = WinFormsHelpers.FindFormByTagAndName("DiscussionsForm", doesMatchTag);
          if (formExisting is DiscussionsForm existingDiscussionsForm)
          {
             existingDiscussionsForm.Restore();

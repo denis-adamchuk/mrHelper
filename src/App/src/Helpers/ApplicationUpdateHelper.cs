@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using mrHelper.App.Forms;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Helpers
 {
@@ -41,7 +42,7 @@ namespace mrHelper.App.Helpers
 
       private static bool showDialogAndLaunchInstaller(CheckForUpdatesForm form)
       {
-         if (form.ShowDialog() != DialogResult.OK)
+         if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) != DialogResult.OK)
          {
             Trace.TraceInformation("[ApplicationUpdateHelper] User discarded to install a new version");
             return false;

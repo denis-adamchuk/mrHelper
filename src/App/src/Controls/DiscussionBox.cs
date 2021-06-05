@@ -1143,7 +1143,7 @@ namespace mrHelper.App.Controls
          using (TextEditForm form = new TextEditForm("Reply to Discussion", "", true, true, actions, _imagePath))
          {
             actions.SetTextbox(form.TextBox);
-            if (form.ShowDialog() == DialogResult.OK)
+            if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
             {
                if (form.Body.Length == 0)
                {

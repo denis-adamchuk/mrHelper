@@ -139,7 +139,7 @@ namespace mrHelper.App.Forms
       {
          using (ConfigureNotificationsForm form = new ConfigureNotificationsForm(_keywords))
          {
-            form.ShowDialog();
+            WinFormsHelpers.ShowDialogOnControl(form, this);
          }
       }
 
@@ -147,7 +147,8 @@ namespace mrHelper.App.Forms
       {
          using (ConfigureHostsForm form = new ConfigureHostsForm())
          {
-            if (form.ShowDialog() == DialogResult.OK && form.Changed)
+            if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) == DialogResult.OK
+               && form.Changed)
             {
                Trace.TraceInformation("[MainForm] Reconnecting after workflow type change");
                reconnect();
@@ -160,7 +161,8 @@ namespace mrHelper.App.Forms
          string oldPath = Program.Settings.LocalStorageFolder;
          using (ConfigureStorageForm form = new ConfigureStorageForm())
          {
-            if (form.ShowDialog() == DialogResult.OK && form.Changed)
+            if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) == DialogResult.OK
+               && form.Changed)
             {
                string newPath = Program.Settings.LocalStorageFolder;
                if (newPath != oldPath)
@@ -182,7 +184,7 @@ namespace mrHelper.App.Forms
       {
          using (ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.General, _colorScheme))
          {
-            form.ShowDialog();
+            WinFormsHelpers.ShowDialogOnControl(form, this);
          }
       }
 

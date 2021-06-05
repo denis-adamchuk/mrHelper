@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using mrHelper.CommonControls.Tools;
 using static mrHelper.App.Helpers.ConfigurationHelper;
 
 namespace mrHelper.App.Forms
@@ -124,7 +125,7 @@ namespace mrHelper.App.Forms
       {
          using (AddItemForm form = new AddItemForm(_addItemCaption, _addItemHint))
          {
-            if (form.ShowDialog() != DialogResult.OK)
+            if (WinFormsHelpers.ShowDialogOnControl(form, this) != DialogResult.OK)
             {
                return;
             }

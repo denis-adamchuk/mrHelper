@@ -44,7 +44,41 @@ namespace mrHelper.CommonControls.Tools
          }
       }
 
-      public static Form FindFormByTag(string name, Func<object, bool> doesMatchTag)
+      public static DialogResult ShowDialogOnControl(Form dialog, Control control)
+      {
+         if (dialog == null)
+         {
+            throw new ArgumentException("dialog argument cannot be null");
+         }
+         if (control != null)
+         {
+            if (dialog.Parent == null)
+            {
+               dialog.StartPosition = FormStartPosition.Manual;
+               Point controlLocationAtScreen = control.PointToScreen(new Point(0, 0));
+               int x = controlLocationAtScreen.X + (control.Width - dialog.Width) / 2;
+               int y = controlLocationAtScreen.Y + (control.Height - dialog.Height) / 2;
+               dialog.Location = new Point(Math.Max(0, x), Math.Max(0, y));
+            }
+            else
+            {
+               Debug.Assert(false); // not implemented
+            }
+         }
+         return dialog.ShowDialog();
+      }
+
+      public static Form FindMainForm()
+      {
+         return FindFormByName("MainForm");
+      }
+
+      public static Form FindFormByName(string name)
+      {
+         return FindFormByTagAndName(name, obj => true);
+      }
+
+      public static Form FindFormByTagAndName(string name, Func<object, bool> doesMatchTag)
       {
          for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)
          {

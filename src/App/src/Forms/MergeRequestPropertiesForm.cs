@@ -108,7 +108,7 @@ namespace mrHelper.App.Forms
          string formCaption = "Edit Merge Request title";
          using (TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, null, String.Empty))
          {
-            if (editTitleForm.ShowDialog() == DialogResult.OK)
+            if (WinFormsHelpers.ShowDialogOnControl(editTitleForm, this) == DialogResult.OK)
             {
                setTitle(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editTitleForm.Body));
             }
@@ -122,7 +122,7 @@ namespace mrHelper.App.Forms
          string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName()));
          using (TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null, uploadsPrefix))
          {
-            if (editDescriptionForm.ShowDialog() == DialogResult.OK)
+            if (WinFormsHelpers.ShowDialogOnControl(editDescriptionForm, this) == DialogResult.OK)
             {
                setDescription(Common.Tools.StringUtils.ConvertNewlineWindowsToUnix(editDescriptionForm.Body));
             }

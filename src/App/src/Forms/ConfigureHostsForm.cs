@@ -10,6 +10,7 @@ using mrHelper.App.Helpers;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
+using mrHelper.CommonControls.Tools;
 using mrHelper.GitLabClient;
 using static mrHelper.App.Helpers.ConfigurationHelper;
 
@@ -340,7 +341,7 @@ namespace mrHelper.App.Forms
       {
          using (AddKnownHostForm form = new AddKnownHostForm())
          {
-            if (form.ShowDialog() != DialogResult.OK)
+            if (WinFormsHelpers.ShowDialogOnControl(form, this) != DialogResult.OK)
             {
                return;
             }
@@ -445,7 +446,8 @@ namespace mrHelper.App.Forms
             "Add project", "Type project name in group/project format",
             projects, new EditProjectsListViewCallback(rawDataAccessor), true))
          {
-            if (form.ShowDialog() == DialogResult.OK && !Enumerable.SequenceEqual(projects, form.Items))
+            if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) == DialogResult.OK
+                && !Enumerable.SequenceEqual(projects, form.Items))
             {
                setProjectsForHost(hostname, form.Items);
                updateProjectsListView();
@@ -470,7 +472,8 @@ namespace mrHelper.App.Forms
             "Add username", "Type a name of GitLab user, teams allowed",
             users, new EditUsersListViewCallback(rawDataAccessor), false))
          {
-            if (form.ShowDialog() == DialogResult.OK && !Enumerable.SequenceEqual(users, form.Items))
+            if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) == DialogResult.OK
+                && !Enumerable.SequenceEqual(users, form.Items))
             {
                setUsersForHost(hostname, form.Items);
                updateUsersListView();

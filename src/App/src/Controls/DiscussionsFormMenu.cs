@@ -83,7 +83,7 @@ namespace mrHelper.App.Controls
       {
          using (ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.Discussions, _colorScheme))
          {
-            form.ShowDialog();
+            WinFormsHelpers.ShowDialogOnControl(form, this.ParentForm);
          }
       }
 
@@ -249,7 +249,7 @@ namespace mrHelper.App.Controls
       {
          BeginInvoke(new Action(async () =>
          {
-            if (await _discussionHelper.AddThreadAsync())
+            if (await _discussionHelper.AddThreadAsync(ParentForm))
             {
                onRefreshAction();
             }
@@ -260,7 +260,7 @@ namespace mrHelper.App.Controls
       {
          BeginInvoke(new Action(async () =>
          {
-            if (await _discussionHelper.AddCommentAsync())
+            if (await _discussionHelper.AddCommentAsync(ParentForm))
             {
                onRefreshAction();
             }

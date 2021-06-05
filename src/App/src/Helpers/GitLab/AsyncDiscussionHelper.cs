@@ -7,6 +7,7 @@ using mrHelper.App.Forms;
 using mrHelper.App.Controls;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Helpers
 {
@@ -20,27 +21,27 @@ namespace mrHelper.App.Helpers
          _title = title;
       }
 
-      internal Task<bool> AddCommentAsync()
+      internal Task<bool> AddCommentAsync(Form parentForm)
       {
          string caption = String.Format("Add comment to merge request \"{0}\"", _title);
-         return createDiscussion(caption, (body) =>
+         return createDiscussion(parentForm, caption, (body) =>
             _creator.CreateNoteAsync(new CreateNewNoteParameters(body)));
       }
 
-      internal Task<bool> AddThreadAsync()
+      internal Task<bool> AddThreadAsync(Form parentForm)
       {
          string caption = String.Format("Create a new thread in merge request \"{0}\"", _title);
-         return createDiscussion(caption, (body) =>
+         return createDiscussion(parentForm, caption, (body) =>
             _creator.CreateDiscussionAsync(new NewDiscussionParameters(body, null), false));
       }
 
-      async private Task<bool> createDiscussion(string title, Func<string, Task> funcCreator)
+      async private Task<bool> createDiscussion(Form parentForm, string title, Func<string, Task> funcCreator)
       {
          NoteEditPanel actions = new NoteEditPanel();
          using (TextEditForm form = new TextEditForm(title, "", true, true, actions, _uploadsPrefix))
          {
             actions.SetTextbox(form.TextBox);
-            if (form.ShowDialog() == DialogResult.OK)
+            if (WinFormsHelpers.ShowDialogOnControl(form, parentForm) == DialogResult.OK)
             {
                if (form.Body.Length == 0)
                {

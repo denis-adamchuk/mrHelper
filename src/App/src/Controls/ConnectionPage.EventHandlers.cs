@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
 using mrHelper.GitLabClient;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Controls
 {
@@ -81,7 +82,7 @@ namespace mrHelper.App.Controls
          using (EditSearchQueryForm form = new EditSearchQueryForm(
             projectNames, fullUserList, CurrentUser, _prevSearchQuery))
          {
-            if (form.ShowDialog() == DialogResult.OK)
+            if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) == DialogResult.OK)
             {
                searchMergeRequests(new SearchQueryCollection(form.SearchQuery));
                _prevSearchQuery = form.State;
