@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using GitLabSharp.Entities;
+using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 using static mrHelper.GitLabClient.UserEvents;
 
@@ -45,13 +47,15 @@ namespace mrHelper.App.Helpers
             || (e.EventType == MergeRequestEvent.Type.AddedMergeRequest      && !_settings.Notifications_NewMergeRequests)
             || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest    && !_settings.Notifications_UpdatedMergeRequests)
             || (e.EventType == MergeRequestEvent.Type.UpdatedMergeRequest    && !((MergeRequestEvent.UpdateScope)e.Scope).Commits)
-            || (e.EventType == MergeRequestEvent.Type.RemovedMergeRequest    && !areEnabledNotificationsForMergedMergeRequests()));
+            || (e.EventType == MergeRequestEvent.Type.RemovedMergeRequest    && !isMergedNotificationsEnabled(e.FullMergeRequestKey.ProjectKey)));
       }
 
-      private bool areEnabledNotificationsForMergedMergeRequests()
+      private bool isMergedNotificationsEnabled(ProjectKey projectKey)
       {
-         return Program.Settings.Notifications_MergedMergeRequests
-             && ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings);
+         // notify about "merged" merge requests if only the whole project is watched
+         return _settings.Notifications_MergedMergeRequests
+             && ConfigurationHelper.GetEnabledProjects(projectKey.HostName, _settings)
+                .Any(projectName => projectKey.MatchProject(projectName));
       }
 
       internal bool NeedSuppressEvent(DiscussionEvent e)

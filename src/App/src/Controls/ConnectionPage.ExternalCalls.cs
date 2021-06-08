@@ -13,7 +13,6 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
-using static mrHelper.App.Helpers.ConfigurationHelper;
 
 namespace mrHelper.App.Controls
 {
@@ -183,12 +182,6 @@ namespace mrHelper.App.Controls
             {
                throw new UrlConnectionException("Merge request loading was cancelled due reconnect. ");
             }
-
-            if (!checkProjectWorkflowFilters(mrk))
-            {
-               // this may happen if project list changed while we were in 'await'
-               return false;
-            }
          }
 
          if (!switchTabAndSelectMergeRequest(EDataCacheType.Live, mrk) && getListView(EDataCacheType.Live).Enabled)
@@ -211,12 +204,6 @@ namespace mrHelper.App.Controls
             }
             else
             {
-               if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
-               {
-                  Debug.Assert(false);
-                  Trace.TraceError(String.Format("[ConnectionPage] Cannot open URL {0} by unknown reason", url));
-                  throw new UrlConnectionException("Something went wrong. ");
-               }
                return false;
             }
          }
@@ -258,100 +245,8 @@ namespace mrHelper.App.Controls
          return true;
       }
 
-      private bool addMissingProject(ProjectKey projectKey)
-      {
-         Trace.TraceInformation("[ConnectionPage] Notify that selected project is not in the list");
-
-         if (MessageBox.Show("Selected project is not in the list of projects. Do you want to add it? "
-               + "Selecting 'Yes' will cause reload of all projects. "
-               + "Selecting 'No' will open the merge request at Search tab. ",
-               "Warning",
-               MessageBoxButtons.YesNo, MessageBoxIcon.Question,
-               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification) != DialogResult.Yes)
-         {
-            Trace.TraceInformation("[ConnectionPage] User decided not to add project");
-            return false;
-         }
-
-         Dictionary<string, bool> projects = ConfigurationHelper.GetProjectsForHost(
-            projectKey.HostName, Program.Settings).ToDictionary(item => item.Item1, item => item.Item2);
-         Debug.Assert(!projects.ContainsKey(projectKey.ProjectName));
-         projects.Add(projectKey.ProjectName, true);
-
-         ConfigurationHelper.SetProjectsForHost(
-            projectKey.HostName,
-            new StringToBooleanCollection(Enumerable.Zip(
-               projects.Keys, projects.Values, (x, y) => new Tuple<string, bool>(x, y))),
-            Program.Settings);
-         return true;
-      }
-
-      private bool enableDisabledProject(ProjectKey projectKey)
-      {
-         Trace.TraceInformation("[ConnectionPage] Notify that selected project is disabled");
-
-         if (MessageBox.Show("Selected project is not enabled. Do you want to enable it? "
-               + "Selecting 'Yes' will cause reload of all projects. "
-               + "Selecting 'No' will open the merge request at Search tab. ",
-               "Warning",
-               MessageBoxButtons.YesNo, MessageBoxIcon.Question,
-               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification) != DialogResult.Yes)
-         {
-            Trace.TraceInformation("[ConnectionPage] User decided not to enable project");
-            return false;
-         }
-
-         changeProjectEnabledState(projectKey, true);
-         return true;
-      }
-
-      private bool checkProjectWorkflowFilters(MergeRequestKey mrk)
-      {
-         if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
-         {
-            return true;
-         }
-
-         return isProjectInTheList(mrk.ProjectKey) && isEnabledProject(mrk.ProjectKey);
-      }
-
-      async private Task<bool> fixProjectWorkflowFiltersAsync(MergeRequestKey mrk)
-      {
-         if (!ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
-         {
-            return true;
-         }
-
-         if (!isProjectInTheList(mrk.ProjectKey))
-         {
-            if (addMissingProject(mrk.ProjectKey))
-            {
-               await reconnect();
-               return true;
-            }
-            return false;
-         }
-
-         if (!isEnabledProject(mrk.ProjectKey))
-         {
-            if (enableDisabledProject(mrk.ProjectKey))
-            {
-               await reconnect();
-               return true;
-            }
-            return false;
-         }
-
-         return true;
-      }
-
       async private Task<bool> checkLiveDataCacheFilterAsync(MergeRequestKey mrk, string url)
       {
-         if (!await fixProjectWorkflowFiltersAsync(mrk))
-         {
-            return false;
-         }
-
          addOperationRecord(String.Format("Checking merge request at {0} started", url));
          MergeRequest mergeRequest = await searchMergeRequestAsync(mrk);
          Debug.Assert(mergeRequest != null);
@@ -371,22 +266,6 @@ namespace mrHelper.App.Controls
       private MergeRequestKey parseUrlIntoMergeRequestKey(UrlParser.ParsedMergeRequestUrl parsedUrl)
       {
          return new MergeRequestKey(new ProjectKey(parsedUrl.Host, parsedUrl.Project), parsedUrl.IId);
-      }
-
-      private static bool isProjectInTheList(ProjectKey projectKey)
-      {
-         StringToBooleanCollection projects =
-            ConfigurationHelper.GetProjectsForHost(projectKey.HostName, Program.Settings);
-         return projects.Any(x => projectKey.MatchProject(x.Item1));
-      }
-
-      private static bool isEnabledProject(ProjectKey projectKey)
-      {
-         StringToBooleanCollection projects =
-            ConfigurationHelper.GetProjectsForHost(projectKey.HostName, Program.Settings);
-         StringToBooleanCollection enabled =
-            new StringToBooleanCollection(projects.Where(x => projectKey.MatchProject(x.Item1)));
-         return enabled.Any() && enabled.First().Item2;
       }
 
       private bool isCustomActionEnabled(IEnumerable<User> approvedBy,
@@ -413,7 +292,6 @@ namespace mrHelper.App.Controls
                 && approvedBy.All(x => !StringUtils.DoesMatchPattern(dependency, "{{Approved_By:{0}}}", x.Username));
          }
       }
-
    }
 }
 

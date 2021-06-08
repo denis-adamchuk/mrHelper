@@ -24,10 +24,10 @@ namespace mrHelper.App.Controls
             String.Format("Cannot find access token for host {0}", hostname)) {}
       }
 
-      internal class NoProjectsException : Exception
+      internal class NothingToLoadException : Exception
       {
-         internal NoProjectsException(string hostname): base(
-            String.Format("Project list for hostname {0} is empty", hostname)) {}
+         internal NothingToLoadException(string hostname): base(
+            String.Format("Nothing to load for {0}. Add user or project in Settings.", hostname)) {}
       }
 
       internal class CannotLoadGitLabVersionException : Exception
@@ -46,7 +46,7 @@ namespace mrHelper.App.Controls
       {
          if (ex is DataCacheException
           || ex is UnknownHostException
-          || ex is NoProjectsException
+          || ex is NothingToLoadException
           || ex is CannotLoadGitLabVersionException
           || ex is CannotLoadCurentUserException)
          {
@@ -125,38 +125,13 @@ namespace mrHelper.App.Controls
          await loadCurrentUserAsync();
          checkApprovalSupport();
 
-         if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
-         {
-            initializeProjectListIfEmpty();
-            await upgradeProjectListFromOldVersion();
-         }
-         else
-         {
-            await initializeLabelListIfEmpty();
-         }
-      }
-
-      // Everything reconnects inside startWorkflowAsync(). If there are some things at gitlab that user
-      // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
-      // we will miss them. It might be ok in some cases, but if this method used to "refresh"
-      // things, missed events are not desirable.
-      // This is why "Refresh List" button implemented not by means of startWorkflowAsync().
-      async private Task startWorkflowAsync()
-      {
-         if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
-         {
-            await startProjectBasedWorkflowAsync();
-         }
-         else
-         {
-            await startUserBasedWorkflowAsync();
-         }
-         addOperationRecord(String.Format("Connection to {0} is established", HostName));
+         await upgradeProjectListFromOldVersion();
+         await initializeLabelListIfEmpty();
       }
 
       async private Task loadGitlabVersion()
       {
-         if (GitLabVersion == null)
+         if (GitLabVersion == null && _shortcuts != null)
          {
             GitLabVersion = await _shortcuts.GetGitLabVersionAccessor().GetGitLabVersionAsync();
          }
@@ -168,7 +143,7 @@ namespace mrHelper.App.Controls
 
       async private Task loadCurrentUserAsync()
       {
-         if (CurrentUser == null)
+         if (CurrentUser == null && _shortcuts != null)
          {
             CurrentUser = await _shortcuts.GetUserAccessor().GetCurrentUserAsync();
          }
@@ -189,30 +164,21 @@ namespace mrHelper.App.Controls
          CustomActionListChanged?.Invoke(this);
       }
 
-      private async Task startProjectBasedWorkflowAsync()
+      // Everything reconnects inside startWorkflowAsync(). If there are some things at gitlab that user
+      // wants to be notified about and we did not cache them yet (e.g. mentions in discussions)
+      // we will miss them. It might be ok in some cases, but if this method used to "refresh"
+      // things, missed events are not desirable.
+      // This is why "Refresh List" button implemented not by means of startWorkflowAsync().
+      async private Task startWorkflowAsync()
       {
-         IEnumerable<ProjectKey> projects = getEnabledProjects(HostName);
-         SearchQueryCollection queryCollection = getCustomDataForProjectBasedWorkflow(projects);
-         await connectLiveDataCacheAsync(queryCollection);
-      }
-
-      private IEnumerable<ProjectKey> getEnabledProjects(string hostname)
-      {
-         IEnumerable<ProjectKey> enabledProjects =
-            ConfigurationHelper.GetEnabledProjectNames(hostname, Program.Settings)
-            .Select(x => new ProjectKey(hostname, x));
-         if (!enabledProjects.Any())
+         SearchQueryCollection queryCollection = buildQueryCollection();
+         if (!queryCollection.Queries.Any())
          {
-            throw new NoProjectsException(hostname);
+            throw new NothingToLoadException(HostName);
          }
-         return enabledProjects;
-      }
-
-      private async Task startUserBasedWorkflowAsync()
-      {
-         IEnumerable<string> usernames = ConfigurationHelper.GetEnabledUsers(HostName, Program.Settings);
-         SearchQueryCollection queryCollection = getCustomDataForUserBasedWorkflow(usernames);
          await connectLiveDataCacheAsync(queryCollection);
+
+         addOperationRecord(String.Format("Connection to {0} is established", HostName));
       }
 
       async private Task connectLiveDataCacheAsync(SearchQueryCollection queryCollection)
@@ -262,21 +228,9 @@ namespace mrHelper.App.Controls
 
       private void onLiveDataCacheConnecting(string hostname)
       {
-         if (doesRequireFixedGroupCollection(EDataCacheType.Live))
-         {
-            initializeListViewGroups(EDataCacheType.Live, hostname);
-         }
+         initializeListViewGroups(EDataCacheType.Live, hostname);
 
-         if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
-         {
-            IEnumerable<ProjectKey> projectKeys = getEnabledProjects(hostname);
-            addOperationRecord(String.Format("Loading merge requests of {0} project{1} from {2} has started",
-               projectKeys.Count(), projectKeys.Count() > 1 ? "s" : "", hostname));
-         }
-         else
-         {
-            addOperationRecord(String.Format("Loading merge requests from {0} has started", hostname));
-         }
+         addOperationRecord(String.Format("Loading merge requests from {0} has started", hostname));
 
          setConnectionStatus(EConnectionStateInternal.ConnectingLive);
       }
@@ -323,20 +277,6 @@ namespace mrHelper.App.Controls
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      private void initializeProjectListIfEmpty()
-      {
-         if (!ConfigurationHelper.GetProjectsForHost(HostName, Program.Settings).Any())
-         {
-            setupDefaultProjectList(HostName);
-         }
-      }
-
-      private void setupDefaultProjectList(string hostname)
-      {
-         StringToBooleanCollection projects = DefaultWorkflowLoader.GetDefaultProjectsForHost(hostname);
-         ConfigurationHelper.SetProjectsForHost(hostname, projects, Program.Settings);
-      }
-
       async private Task upgradeProjectListFromOldVersion()
       {
          if (Program.Settings.SelectedProjectsUpgraded)
@@ -368,6 +308,8 @@ namespace mrHelper.App.Controls
 
       async private Task initializeLabelListIfEmpty()
       {
+         // this is helpful on the first start when users/projects are empty
+         // this is also helpful on upgrade from old versions where "users" were not supported
          if (ConfigurationHelper.GetUsersForHost(HostName, Program.Settings).Any())
          {
             return;
@@ -380,9 +322,12 @@ namespace mrHelper.App.Controls
          addOperationRecord("Workflow has been prepared to the first launch");
       }
 
-      private SearchQueryCollection getCustomDataForUserBasedWorkflow(IEnumerable<string> usernames)
+      private SearchQueryCollection buildQueryCollection()
       {
-         GitLabClient.SearchQuery[] queries = usernames
+         IEnumerable<string> usernames = ConfigurationHelper.GetEnabledUsers(HostName, Program.Settings);
+         IEnumerable<string> projectnames = ConfigurationHelper.GetEnabledProjects(HostName, Program.Settings);
+
+         GitLabClient.SearchQuery[] queriesByUser = usernames
             .SelectMany(username => new GitLabClient.SearchQuery[]
                {
                   new GitLabClient.SearchQuery
@@ -398,19 +343,16 @@ namespace mrHelper.App.Controls
                   }
                })
             .ToArray();
-         return new SearchQueryCollection(queries);
-      }
 
-      private SearchQueryCollection getCustomDataForProjectBasedWorkflow(IEnumerable<ProjectKey> enabledProjects)
-      {
-         GitLabClient.SearchQuery[] queries = enabledProjects
-            .Select(project => new GitLabClient.SearchQuery
+         GitLabClient.SearchQuery[] queriesByProjects = projectnames
+            .Select(projectName => new GitLabClient.SearchQuery
                {
-                  ProjectName = project.ProjectName,
+                  ProjectName = projectName,
                   State = "opened"
                })
             .ToArray();
-         return new SearchQueryCollection(queries);
+
+         return new SearchQueryCollection(queriesByUser.Concat(queriesByProjects));
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////

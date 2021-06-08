@@ -1,4 +1,6 @@
-﻿namespace mrHelper.App.Forms
+﻿using mrHelper.App.Controls;
+
+namespace mrHelper.App.Forms
 {
    partial class EditOrderedListViewForm
    {
@@ -28,7 +30,7 @@
       /// </summary>
       private void InitializeComponent()
       {
-         this.listView = new System.Windows.Forms.ListView();
+         this.listView = new StringToBooleanListView();
          this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.buttonAddItem = new System.Windows.Forms.Button();
          this.buttonRemoveItem = new System.Windows.Forms.Button();
@@ -58,7 +60,6 @@
          this.listView.TabIndex = 0;
          this.listView.UseCompatibleStateImageBehavior = false;
          this.listView.View = System.Windows.Forms.View.Details;
-         this.listView.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.listView_DrawSubItem);
          this.listView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listView_ItemSelectionChanged);
          this.listView.KeyDown += new System.Windows.Forms.KeyEventHandler(this.listView_KeyDown);
          // 
@@ -175,7 +176,7 @@
 
         #endregion
 
-        private System.Windows.Forms.ListView listView;
+        private StringToBooleanListView listView;
         private System.Windows.Forms.Button buttonAddItem;
         private System.Windows.Forms.Button buttonRemoveItem;
         private System.Windows.Forms.Button buttonToggleState;

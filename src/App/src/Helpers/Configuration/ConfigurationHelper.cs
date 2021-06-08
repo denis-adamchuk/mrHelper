@@ -346,7 +346,7 @@ namespace mrHelper.App.Helpers
             .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) && result)));
       }
 
-      internal static IEnumerable<string> GetEnabledProjectNames(string hostname, UserDefinedSettings settings)
+      internal static IEnumerable<string> GetEnabledProjects(string hostname, UserDefinedSettings settings)
       {
          return GetProjectsForHost(hostname, settings)
             .Where(x => x.Item2).Select(x => x.Item1);
@@ -357,13 +357,13 @@ namespace mrHelper.App.Helpers
          return GetUsersForHost(hostname, settings).Where(x => x.Item2)?.Select(x => x.Item1);
       }
 
-      internal static void SelectProjectBasedWorkflow(UserDefinedSettings settings)
-         => settings.WorkflowType = "Projects";
+      internal static void SelectCommonWorkflow(UserDefinedSettings settings)
+         => settings.WorkflowType = "Common";
 
-      internal static void SelectUserBasedWorkflow(UserDefinedSettings settings)
-         => settings.WorkflowType = "Users";
+      internal static bool IsCommonWorkflowSelected(UserDefinedSettings settings)
+         => settings.WorkflowType == "Common";
 
-      internal static bool IsProjectBasedWorkflowSelected(UserDefinedSettings settings)
+      internal static bool IsOldProjectBasedWorkflowSelected(UserDefinedSettings settings)
          => settings.WorkflowType == "Projects";
 
       internal static Dictionary<string, int> GetColumnWidths(UserDefinedSettings settings, string listViewName)

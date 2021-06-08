@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
-using SearchQuery = mrHelper.GitLabClient.SearchQuery;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
-using mrHelper.App.Helpers.GitLab;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 using static mrHelper.App.Helpers.ConfigurationHelper;
@@ -162,18 +160,14 @@ namespace mrHelper.App.Controls
 
       // List View
 
-      private bool doesRequireFixedGroupCollection(EDataCacheType mode)
-      {
-         return ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings) && mode == EDataCacheType.Live;
-      }
-
       private void initializeListViewGroups(EDataCacheType mode, string hostname)
       {
          Controls.MergeRequestListView listView = getListView(mode);
          listView.Items.Clear();
          listView.Groups.Clear();
 
-         IEnumerable<ProjectKey> projectKeys = getEnabledProjects(hostname);
+         IEnumerable<string> projectnames = ConfigurationHelper.GetEnabledProjects(HostName, Program.Settings);
+         IEnumerable<ProjectKey> projectKeys = projectnames.Select(name => new ProjectKey(HostName, name));
          foreach (ProjectKey projectKey in projectKeys)
          {
             listView.CreateGroupForProject(projectKey, false);
@@ -257,10 +251,7 @@ namespace mrHelper.App.Controls
          }
 
          MergeRequestListView listView = getListView(mode);
-         if (!doesRequireFixedGroupCollection(mode))
-         {
-            listView.UpdateGroups();
-         }
+         listView.UpdateGroups();
          listView.UpdateItems();
 
          if (mode == EDataCacheType.Live)

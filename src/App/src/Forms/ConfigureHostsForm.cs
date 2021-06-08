@@ -27,8 +27,6 @@ namespace mrHelper.App.Forms
 
          linkLabelCreateAccessToken.Text = String.Empty;
          linkLabelCreateAccessToken.SetLinkLabelClicked(UrlHelper.OpenBrowser);
-
-         checkHelpAvailability();
       }
 
       internal bool Changed { get; private set; }
@@ -36,7 +34,6 @@ namespace mrHelper.App.Forms
       async private void configureHostsForm_Load(object sender, System.EventArgs e)
       {
          loadKnownHosts();
-         loadWorkflowType();
 
          foreach (KeyValuePair<string, string> kv in _hosts)
          {
@@ -56,7 +53,6 @@ namespace mrHelper.App.Forms
       {
          Changed = false;
          Changed |= saveKnownHosts();
-         Changed |= saveWorkflowType();
          Changed |= saveProjects();
          Changed |= saveUsers();
       }
@@ -79,11 +75,6 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void radioButtonWorkflowType_CheckedChanged(object sender, EventArgs e)
-      {
-         updateConfigureWorkflowListState();
-      }
-
       private void buttonEditUsers_Click(object sender, EventArgs e)
       {
          launchEditUserListDialog();
@@ -94,35 +85,9 @@ namespace mrHelper.App.Forms
          launchEditProjectListDialog();
       }
 
-      private void linkLabelWorkflowDescription_LinkClicked_1(object sender, LinkLabelLinkClickedEventArgs e)
-      {
-         showHelp();
-      }
-
-      private void comboBoxProjectName_Format(object sender, ListControlConvertEventArgs e)
-      {
-         formatProjectListItem(e);
-      }
-
-      private void comboBoxUser_Format(object sender, ListControlConvertEventArgs e)
-      {
-         formatUserListItem(e);
-      }
-
       private void linkLabelWorkflowDescription_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          showHelp();
-      }
-
-      private void checkHelpAvailability()
-      {
-         string helpUrl = Program.ServiceManager.GetHelpUrl();
-         bool isHelpAvailable = helpUrl != String.Empty;
-         if (isHelpAvailable)
-         {
-            toolTip.SetToolTip(linkLabelWorkflowDescription, helpUrl);
-         }
-         linkLabelWorkflowDescription.Visible = isHelpAvailable;
       }
 
       private static void showHelp()
@@ -170,18 +135,6 @@ namespace mrHelper.App.Forms
          _hosts.Remove(hostname);
       }
 
-      private void loadWorkflowType()
-      {
-         if (ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings))
-         {
-            radioButtonSelectByProjects.Checked = true;
-         }
-         else
-         {
-            radioButtonSelectByUsernames.Checked = true;
-         }
-      }
-
       private void forEachKnownHost(Action<string> action)
       {
          _hosts.Keys.ToList().ForEach(hostname => action(hostname));
@@ -205,7 +158,7 @@ namespace mrHelper.App.Forms
          var projects = ConfigurationHelper.GetProjectsForHost(hostname, Program.Settings);
          if (!projects.Any())
          {
-            projects = DefaultWorkflowLoader.GetDefaultProjectsForHost(hostname);
+            projects = DefaultWorkflowLoader.GetDefaultProjectsForHost(hostname, false);
          }
          setProjectsForHost(hostname, projects);
       }
@@ -264,12 +217,6 @@ namespace mrHelper.App.Forms
          _usernames[hostname] = usernames;
       }
 
-      private void updateConfigureWorkflowListState()
-      {
-         listViewProjects.Enabled = radioButtonSelectByProjects.Checked;
-         listViewUsers.Enabled = radioButtonSelectByUsernames.Checked;
-      }
-
       private void updateHostsListView()
       {
          listViewKnownHosts.Items.Clear();
@@ -289,30 +236,43 @@ namespace mrHelper.App.Forms
 
       private void updateProjectsListView()
       {
-         listViewProjects.Items.Clear();
+         ListViewGroup listViewGroupProjects = listViewWorkflow.Groups["listViewGroupProjects"];
+         for (int iItem = listViewWorkflow.Items.Count - 1; iItem >= 0; --iItem)
+         {
+            if (listViewWorkflow.Items[iItem].Group == listViewGroupProjects)
+            {
+               listViewWorkflow.Items.RemoveAt(iItem);
+            }
+         }
 
          string hostname = getSelectedHostName();
          if (hostname != null)
          {
             getProjectsForHost(hostname)
-               .Where(item => item.Item2)
                .ToList()
-               .ForEach(item => listViewProjects.Items.Add(item.Item1));
+               .ForEach(item => listViewWorkflow.Items.Add(
+                  new ListViewItem(item.Item1, listViewGroupProjects) { Tag = item }));
          }
       }
 
       private void updateUsersListView()
       {
-         listViewUsers.Items.Clear();
+         ListViewGroup listViewGroupUsers = listViewWorkflow.Groups["listViewGroupUsers"];
+         for (int iItem = listViewWorkflow.Items.Count - 1; iItem >= 0; --iItem)
+         {
+            if (listViewWorkflow.Items[iItem].Group == listViewGroupUsers)
+            {
+               listViewWorkflow.Items.RemoveAt(iItem);
+            }
+         }
 
          string hostname = getSelectedHostName();
          if (hostname != null)
          {
-            StringToBooleanCollection users = getUsersForHost(hostname);
-            users
-               .Where(item => item.Item2)
+            getUsersForHost(hostname)
                .ToList()
-               .ForEach(item => listViewUsers.Items.Add(item.Item1));
+               .ForEach(item => listViewWorkflow.Items.Add(
+                  new ListViewItem(item.Item1, listViewGroupUsers) { Tag = item }));
          }
       }
 
@@ -391,42 +351,12 @@ namespace mrHelper.App.Forms
              || !Enumerable.SequenceEqual(oldTokens, Program.Settings.KnownAccessTokens);
       }
 
-      private bool saveWorkflowType()
-      {
-         if (radioButtonSelectByProjects.Checked)
-         {
-            bool wasProjectBased = ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings);
-            ConfigurationHelper.SelectProjectBasedWorkflow(Program.Settings);
-            return !wasProjectBased;
-         }
-         else
-         {
-            bool wasUserBased = !ConfigurationHelper.IsProjectBasedWorkflowSelected(Program.Settings);
-            ConfigurationHelper.SelectUserBasedWorkflow(Program.Settings);
-            return !wasUserBased;
-         }
-      }
-
       private void updateEnablementsOfWorkflowSelectors()
       {
-         if (listViewKnownHosts.SelectedItems.Count > 0)
-         {
-            radioButtonSelectByUsernames.Enabled = true;
-            radioButtonSelectByProjects.Enabled = true;
-            listViewUsers.Enabled = radioButtonSelectByUsernames.Checked;
-            listViewProjects.Enabled = radioButtonSelectByProjects.Checked;
-            buttonEditProjects.Enabled = true;
-            buttonEditUsers.Enabled = true;
-         }
-         else
-         {
-            radioButtonSelectByUsernames.Enabled = false;
-            radioButtonSelectByProjects.Enabled = false;
-            listViewUsers.Enabled = false;
-            listViewProjects.Enabled = false;
-            buttonEditProjects.Enabled = false;
-            buttonEditUsers.Enabled = false;
-         }
+         bool enabled = listViewKnownHosts.SelectedItems.Count > 0;
+         listViewWorkflow.Enabled = enabled;
+         buttonEditProjects.Enabled = enabled;
+         buttonEditUsers.Enabled = enabled;
       }
 
       private void launchEditProjectListDialog()
@@ -440,7 +370,7 @@ namespace mrHelper.App.Forms
          StringToBooleanCollection projects = getProjectsForHost(hostname);
          Debug.Assert(projects != null);
 
-         GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings, this);
+         GitLabInstance gitLabInstance = new GitLabInstance(hostname, this, this);
          RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Projects",
             "Add project", "Type project name in group/project format",
@@ -466,7 +396,7 @@ namespace mrHelper.App.Forms
          StringToBooleanCollection users = getUsersForHost(hostname);
          Debug.Assert(users != null);
 
-         GitLabInstance gitLabInstance = new GitLabInstance(hostname, Program.Settings, this);
+         GitLabInstance gitLabInstance = new GitLabInstance(hostname, this, this);
          RawDataAccessor rawDataAccessor = new RawDataAccessor(gitLabInstance);
          using (EditOrderedListViewForm form = new EditOrderedListViewForm("Edit Users",
             "Add username", "Type a name of GitLab user, teams allowed",

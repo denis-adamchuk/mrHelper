@@ -55,7 +55,7 @@ namespace mrHelper.App.Forms
          this.groupBoxNotifications.Controls.Add(this.checkBoxShowOnMention);
          this.groupBoxNotifications.Location = new System.Drawing.Point(12, 12);
          this.groupBoxNotifications.Name = "groupBoxNotifications";
-         this.groupBoxNotifications.Size = new System.Drawing.Size(577, 132);
+         this.groupBoxNotifications.Size = new System.Drawing.Size(486, 132);
          this.groupBoxNotifications.TabIndex = 0;
          this.groupBoxNotifications.TabStop = false;
          this.groupBoxNotifications.Text = "Notifications";
@@ -65,15 +65,16 @@ namespace mrHelper.App.Forms
          this.checkBoxShowMergedMergeRequests.AutoSize = true;
          this.checkBoxShowMergedMergeRequests.Location = new System.Drawing.Point(6, 41);
          this.checkBoxShowMergedMergeRequests.Name = "checkBoxShowMergedMergeRequests";
-         this.checkBoxShowMergedMergeRequests.Size = new System.Drawing.Size(307, 17);
+         this.checkBoxShowMergedMergeRequests.Size = new System.Drawing.Size(189, 17);
          this.checkBoxShowMergedMergeRequests.TabIndex = 1;
-         this.checkBoxShowMergedMergeRequests.Text = "Merged or closed Merge Requests (project-based workflow)";
+         this.checkBoxShowMergedMergeRequests.Text = "Merged or closed Merge Requests";
          this.checkBoxShowMergedMergeRequests.UseVisualStyleBackColor = true;
          // 
          // checkBoxShowServiceNotifications
          // 
+         this.checkBoxShowServiceNotifications.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.checkBoxShowServiceNotifications.AutoSize = true;
-         this.checkBoxShowServiceNotifications.Location = new System.Drawing.Point(319, 105);
+         this.checkBoxShowServiceNotifications.Location = new System.Drawing.Point(228, 105);
          this.checkBoxShowServiceNotifications.Name = "checkBoxShowServiceNotifications";
          this.checkBoxShowServiceNotifications.Size = new System.Drawing.Size(149, 17);
          this.checkBoxShowServiceNotifications.TabIndex = 7;
@@ -112,8 +113,9 @@ namespace mrHelper.App.Forms
          // 
          // checkBoxShowKeywords
          // 
+         this.checkBoxShowKeywords.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.checkBoxShowKeywords.AutoSize = true;
-         this.checkBoxShowKeywords.Location = new System.Drawing.Point(319, 64);
+         this.checkBoxShowKeywords.Location = new System.Drawing.Point(228, 64);
          this.checkBoxShowKeywords.Name = "checkBoxShowKeywords";
          this.checkBoxShowKeywords.Size = new System.Drawing.Size(75, 17);
          this.checkBoxShowKeywords.TabIndex = 5;
@@ -122,8 +124,9 @@ namespace mrHelper.App.Forms
          // 
          // checkBoxShowResolvedAll
          // 
+         this.checkBoxShowResolvedAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.checkBoxShowResolvedAll.AutoSize = true;
-         this.checkBoxShowResolvedAll.Location = new System.Drawing.Point(319, 18);
+         this.checkBoxShowResolvedAll.Location = new System.Drawing.Point(228, 18);
          this.checkBoxShowResolvedAll.Name = "checkBoxShowResolvedAll";
          this.checkBoxShowResolvedAll.Size = new System.Drawing.Size(127, 17);
          this.checkBoxShowResolvedAll.TabIndex = 3;
@@ -132,8 +135,9 @@ namespace mrHelper.App.Forms
          // 
          // checkBoxShowOnMention
          // 
+         this.checkBoxShowOnMention.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.checkBoxShowOnMention.AutoSize = true;
-         this.checkBoxShowOnMention.Location = new System.Drawing.Point(319, 41);
+         this.checkBoxShowOnMention.Location = new System.Drawing.Point(228, 41);
          this.checkBoxShowOnMention.Name = "checkBoxShowOnMention";
          this.checkBoxShowOnMention.Size = new System.Drawing.Size(170, 17);
          this.checkBoxShowOnMention.TabIndex = 4;
@@ -165,7 +169,7 @@ namespace mrHelper.App.Forms
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(596, 182);
+         this.ClientSize = new System.Drawing.Size(510, 182);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.groupBoxNotifications);

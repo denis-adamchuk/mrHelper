@@ -30,17 +30,9 @@ namespace mrHelper.App.Forms
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
-         this.groupBoxSelectWorkflow = new System.Windows.Forms.GroupBox();
-         this.linkLabelWorkflowDescription = new System.Windows.Forms.LinkLabel();
-         this.radioButtonSelectByProjects = new System.Windows.Forms.RadioButton();
-         this.radioButtonSelectByUsernames = new System.Windows.Forms.RadioButton();
-         this.groupBoxConfigureProjectBasedWorkflow = new System.Windows.Forms.GroupBox();
+         System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("Users", System.Windows.Forms.HorizontalAlignment.Left);
+         System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("Projects", System.Windows.Forms.HorizontalAlignment.Left);
          this.buttonEditProjects = new System.Windows.Forms.Button();
-         this.listViewProjects = new System.Windows.Forms.ListView();
-         this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.groupBoxConfigureUserBasedWorkflow = new System.Windows.Forms.GroupBox();
-         this.listViewUsers = new System.Windows.Forms.ListView();
-         this.columnHeaderUserName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.buttonEditUsers = new System.Windows.Forms.Button();
          this.buttonRemoveKnownHost = new System.Windows.Forms.Button();
          this.buttonAddKnownHost = new System.Windows.Forms.Button();
@@ -52,149 +44,40 @@ namespace mrHelper.App.Forms
          this.groupBoxKnownHosts = new System.Windows.Forms.GroupBox();
          this.linkLabelCreateAccessToken = new mrHelper.CommonControls.Controls.LinkLabelEx();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-         this.groupBoxSelectWorkflow.SuspendLayout();
-         this.groupBoxConfigureProjectBasedWorkflow.SuspendLayout();
-         this.groupBoxConfigureUserBasedWorkflow.SuspendLayout();
+         this.listViewWorkflow = new mrHelper.App.Controls.StringToBooleanListView();
+         this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.groupBoxSelectWorkflow = new System.Windows.Forms.GroupBox();
+         this.textBox1 = new System.Windows.Forms.TextBox();
          this.groupBoxKnownHosts.SuspendLayout();
+         this.groupBoxSelectWorkflow.SuspendLayout();
          this.SuspendLayout();
-         // 
-         // groupBoxSelectWorkflow
-         // 
-         this.groupBoxSelectWorkflow.Controls.Add(this.linkLabelWorkflowDescription);
-         this.groupBoxSelectWorkflow.Controls.Add(this.radioButtonSelectByProjects);
-         this.groupBoxSelectWorkflow.Controls.Add(this.radioButtonSelectByUsernames);
-         this.groupBoxSelectWorkflow.Location = new System.Drawing.Point(12, 156);
-         this.groupBoxSelectWorkflow.Name = "groupBoxSelectWorkflow";
-         this.groupBoxSelectWorkflow.Size = new System.Drawing.Size(577, 52);
-         this.groupBoxSelectWorkflow.TabIndex = 2;
-         this.groupBoxSelectWorkflow.TabStop = false;
-         this.groupBoxSelectWorkflow.Text = "Select Workflow";
-         // 
-         // linkLabelWorkflowDescription
-         // 
-         this.linkLabelWorkflowDescription.AutoSize = true;
-         this.linkLabelWorkflowDescription.Location = new System.Drawing.Point(441, 21);
-         this.linkLabelWorkflowDescription.Name = "linkLabelWorkflowDescription";
-         this.linkLabelWorkflowDescription.Size = new System.Drawing.Size(128, 13);
-         this.linkLabelWorkflowDescription.TabIndex = 2;
-         this.linkLabelWorkflowDescription.TabStop = true;
-         this.linkLabelWorkflowDescription.Text = "Show detailed description";
-         this.linkLabelWorkflowDescription.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelWorkflowDescription_LinkClicked_1);
-         // 
-         // radioButtonSelectByProjects
-         // 
-         this.radioButtonSelectByProjects.AutoSize = true;
-         this.radioButtonSelectByProjects.Location = new System.Drawing.Point(182, 19);
-         this.radioButtonSelectByProjects.Name = "radioButtonSelectByProjects";
-         this.radioButtonSelectByProjects.Size = new System.Drawing.Size(135, 17);
-         this.radioButtonSelectByProjects.TabIndex = 1;
-         this.radioButtonSelectByProjects.TabStop = true;
-         this.radioButtonSelectByProjects.Text = "Project-based workflow";
-         this.radioButtonSelectByProjects.UseVisualStyleBackColor = true;
-         this.radioButtonSelectByProjects.CheckedChanged += new System.EventHandler(this.radioButtonWorkflowType_CheckedChanged);
-         // 
-         // radioButtonSelectByUsernames
-         // 
-         this.radioButtonSelectByUsernames.AutoSize = true;
-         this.radioButtonSelectByUsernames.Location = new System.Drawing.Point(6, 19);
-         this.radioButtonSelectByUsernames.Name = "radioButtonSelectByUsernames";
-         this.radioButtonSelectByUsernames.Size = new System.Drawing.Size(124, 17);
-         this.radioButtonSelectByUsernames.TabIndex = 0;
-         this.radioButtonSelectByUsernames.TabStop = true;
-         this.radioButtonSelectByUsernames.Text = "User-based workflow";
-         this.radioButtonSelectByUsernames.UseVisualStyleBackColor = true;
-         this.radioButtonSelectByUsernames.CheckedChanged += new System.EventHandler(this.radioButtonWorkflowType_CheckedChanged);
-         // 
-         // groupBoxConfigureProjectBasedWorkflow
-         // 
-         this.groupBoxConfigureProjectBasedWorkflow.Controls.Add(this.buttonEditProjects);
-         this.groupBoxConfigureProjectBasedWorkflow.Controls.Add(this.listViewProjects);
-         this.groupBoxConfigureProjectBasedWorkflow.Location = new System.Drawing.Point(316, 212);
-         this.groupBoxConfigureProjectBasedWorkflow.Name = "groupBoxConfigureProjectBasedWorkflow";
-         this.groupBoxConfigureProjectBasedWorkflow.Size = new System.Drawing.Size(273, 219);
-         this.groupBoxConfigureProjectBasedWorkflow.TabIndex = 4;
-         this.groupBoxConfigureProjectBasedWorkflow.TabStop = false;
-         this.groupBoxConfigureProjectBasedWorkflow.Text = "Configure Project-based workflow";
          // 
          // buttonEditProjects
          // 
          this.buttonEditProjects.Enabled = false;
-         this.buttonEditProjects.Location = new System.Drawing.Point(182, 182);
+         this.buttonEditProjects.Location = new System.Drawing.Point(318, 100);
          this.buttonEditProjects.Name = "buttonEditProjects";
-         this.buttonEditProjects.Size = new System.Drawing.Size(83, 27);
+         this.buttonEditProjects.Size = new System.Drawing.Size(156, 27);
          this.buttonEditProjects.TabIndex = 1;
-         this.buttonEditProjects.Text = "Edit...";
+         this.buttonEditProjects.Text = "Add/remove projects...";
          this.buttonEditProjects.UseVisualStyleBackColor = true;
          this.buttonEditProjects.Click += new System.EventHandler(this.buttonEditProjects_Click);
-         // 
-         // listViewProjects
-         // 
-         this.listViewProjects.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderName});
-         this.listViewProjects.FullRowSelect = true;
-         this.listViewProjects.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-         this.listViewProjects.HideSelection = false;
-         this.listViewProjects.Location = new System.Drawing.Point(6, 19);
-         this.listViewProjects.MultiSelect = false;
-         this.listViewProjects.Name = "listViewProjects";
-         this.listViewProjects.ShowGroups = false;
-         this.listViewProjects.Size = new System.Drawing.Size(259, 157);
-         this.listViewProjects.TabIndex = 0;
-         this.listViewProjects.UseCompatibleStateImageBehavior = false;
-         this.listViewProjects.View = System.Windows.Forms.View.Details;
-         // 
-         // columnHeaderName
-         // 
-         this.columnHeaderName.Text = "Name";
-         this.columnHeaderName.Width = 160;
-         // 
-         // groupBoxConfigureUserBasedWorkflow
-         // 
-         this.groupBoxConfigureUserBasedWorkflow.Controls.Add(this.listViewUsers);
-         this.groupBoxConfigureUserBasedWorkflow.Controls.Add(this.buttonEditUsers);
-         this.groupBoxConfigureUserBasedWorkflow.Location = new System.Drawing.Point(12, 212);
-         this.groupBoxConfigureUserBasedWorkflow.Name = "groupBoxConfigureUserBasedWorkflow";
-         this.groupBoxConfigureUserBasedWorkflow.Size = new System.Drawing.Size(273, 219);
-         this.groupBoxConfigureUserBasedWorkflow.TabIndex = 3;
-         this.groupBoxConfigureUserBasedWorkflow.TabStop = false;
-         this.groupBoxConfigureUserBasedWorkflow.Text = "Configure User-based workflow";
-         // 
-         // listViewUsers
-         // 
-         this.listViewUsers.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeaderUserName});
-         this.listViewUsers.FullRowSelect = true;
-         this.listViewUsers.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-         this.listViewUsers.HideSelection = false;
-         this.listViewUsers.Location = new System.Drawing.Point(6, 19);
-         this.listViewUsers.MultiSelect = false;
-         this.listViewUsers.Name = "listViewUsers";
-         this.listViewUsers.ShowGroups = false;
-         this.listViewUsers.Size = new System.Drawing.Size(259, 157);
-         this.listViewUsers.TabIndex = 0;
-         this.listViewUsers.UseCompatibleStateImageBehavior = false;
-         this.listViewUsers.View = System.Windows.Forms.View.Details;
-         // 
-         // columnHeaderUserName
-         // 
-         this.columnHeaderUserName.Text = "Name";
-         this.columnHeaderUserName.Width = 160;
          // 
          // buttonEditUsers
          // 
          this.buttonEditUsers.Enabled = false;
-         this.buttonEditUsers.Location = new System.Drawing.Point(182, 182);
+         this.buttonEditUsers.Location = new System.Drawing.Point(318, 67);
          this.buttonEditUsers.Name = "buttonEditUsers";
-         this.buttonEditUsers.Size = new System.Drawing.Size(83, 27);
+         this.buttonEditUsers.Size = new System.Drawing.Size(156, 27);
          this.buttonEditUsers.TabIndex = 1;
-         this.buttonEditUsers.Text = "Edit...";
+         this.buttonEditUsers.Text = "Add/remove user names...";
          this.buttonEditUsers.UseVisualStyleBackColor = true;
          this.buttonEditUsers.Click += new System.EventHandler(this.buttonEditUsers_Click);
          // 
          // buttonRemoveKnownHost
          // 
          this.buttonRemoveKnownHost.Enabled = false;
-         this.buttonRemoveKnownHost.Location = new System.Drawing.Point(486, 102);
+         this.buttonRemoveKnownHost.Location = new System.Drawing.Point(488, 52);
          this.buttonRemoveKnownHost.Name = "buttonRemoveKnownHost";
          this.buttonRemoveKnownHost.Size = new System.Drawing.Size(83, 27);
          this.buttonRemoveKnownHost.TabIndex = 2;
@@ -241,7 +124,7 @@ namespace mrHelper.App.Forms
          // buttonOK
          // 
          this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonOK.Location = new System.Drawing.Point(595, 31);
+         this.buttonOK.Location = new System.Drawing.Point(500, 168);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(83, 27);
          this.buttonOK.TabIndex = 5;
@@ -252,7 +135,7 @@ namespace mrHelper.App.Forms
          // buttonCancel
          // 
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonCancel.Location = new System.Drawing.Point(595, 114);
+         this.buttonCancel.Location = new System.Drawing.Point(500, 201);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(83, 27);
          this.buttonCancel.TabIndex = 0;
@@ -282,19 +165,71 @@ namespace mrHelper.App.Forms
          this.linkLabelCreateAccessToken.TabStop = true;
          this.linkLabelCreateAccessToken.Text = "Create access token";
          // 
+         // listViewWorkflow
+         // 
+         this.listViewWorkflow.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader1});
+         this.listViewWorkflow.FullRowSelect = true;
+         listViewGroup1.Header = "Users";
+         listViewGroup1.Name = "listViewGroupUsers";
+         listViewGroup2.Header = "Projects";
+         listViewGroup2.Name = "listViewGroupProjects";
+         this.listViewWorkflow.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
+            listViewGroup1,
+            listViewGroup2});
+         this.listViewWorkflow.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+         this.listViewWorkflow.HideSelection = false;
+         this.listViewWorkflow.Location = new System.Drawing.Point(6, 67);
+         this.listViewWorkflow.MultiSelect = false;
+         this.listViewWorkflow.Name = "listViewWorkflow";
+         this.listViewWorkflow.OwnerDraw = true;
+         this.listViewWorkflow.Size = new System.Drawing.Size(306, 202);
+         this.listViewWorkflow.TabIndex = 6;
+         this.listViewWorkflow.UseCompatibleStateImageBehavior = false;
+         this.listViewWorkflow.View = System.Windows.Forms.View.Details;
+         // 
+         // columnHeader1
+         // 
+         this.columnHeader1.Text = "Name";
+         this.columnHeader1.Width = 240;
+         // 
+         // groupBoxSelectWorkflow
+         // 
+         this.groupBoxSelectWorkflow.Controls.Add(this.textBox1);
+         this.groupBoxSelectWorkflow.Controls.Add(this.buttonEditProjects);
+         this.groupBoxSelectWorkflow.Controls.Add(this.listViewWorkflow);
+         this.groupBoxSelectWorkflow.Controls.Add(this.buttonEditUsers);
+         this.groupBoxSelectWorkflow.Location = new System.Drawing.Point(12, 156);
+         this.groupBoxSelectWorkflow.Name = "groupBoxSelectWorkflow";
+         this.groupBoxSelectWorkflow.Size = new System.Drawing.Size(480, 275);
+         this.groupBoxSelectWorkflow.TabIndex = 2;
+         this.groupBoxSelectWorkflow.TabStop = false;
+         this.groupBoxSelectWorkflow.Text = "What Merge Requests to watch";
+         // 
+         // textBox1
+         // 
+         this.textBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
+         this.textBox1.Location = new System.Drawing.Point(6, 19);
+         this.textBox1.Multiline = true;
+         this.textBox1.Name = "textBox1";
+         this.textBox1.ReadOnly = true;
+         this.textBox1.Size = new System.Drawing.Size(468, 42);
+         this.textBox1.TabIndex = 7;
+         this.textBox1.Text = "Select user names whose merge requests you would like to watch.\r\nIf you also want" +
+    " to watch ALL merge requests in some projects, specify their names.\r\nThe list is" +
+    " configured per-host.";
+         // 
          // ConfigureHostsForm
          // 
          this.AcceptButton = this.buttonOK;
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(687, 438);
+         this.ClientSize = new System.Drawing.Size(601, 438);
          this.Controls.Add(this.groupBoxKnownHosts);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.buttonOK);
          this.Controls.Add(this.groupBoxSelectWorkflow);
-         this.Controls.Add(this.groupBoxConfigureProjectBasedWorkflow);
-         this.Controls.Add(this.groupBoxConfigureUserBasedWorkflow);
          this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
@@ -302,28 +237,16 @@ namespace mrHelper.App.Forms
          this.Name = "ConfigureHostsForm";
          this.Text = "Configure Hosts";
          this.Load += new System.EventHandler(this.configureHostsForm_Load);
-         this.groupBoxSelectWorkflow.ResumeLayout(false);
-         this.groupBoxSelectWorkflow.PerformLayout();
-         this.groupBoxConfigureProjectBasedWorkflow.ResumeLayout(false);
-         this.groupBoxConfigureUserBasedWorkflow.ResumeLayout(false);
          this.groupBoxKnownHosts.ResumeLayout(false);
          this.groupBoxKnownHosts.PerformLayout();
+         this.groupBoxSelectWorkflow.ResumeLayout(false);
+         this.groupBoxSelectWorkflow.PerformLayout();
          this.ResumeLayout(false);
 
       }
 
       #endregion
-      private System.Windows.Forms.GroupBox groupBoxSelectWorkflow;
-      private System.Windows.Forms.LinkLabel linkLabelWorkflowDescription;
-      private System.Windows.Forms.RadioButton radioButtonSelectByProjects;
-      private System.Windows.Forms.RadioButton radioButtonSelectByUsernames;
-      private System.Windows.Forms.GroupBox groupBoxConfigureProjectBasedWorkflow;
       private System.Windows.Forms.Button buttonEditProjects;
-      private System.Windows.Forms.ListView listViewProjects;
-      private System.Windows.Forms.ColumnHeader columnHeaderName;
-      private System.Windows.Forms.GroupBox groupBoxConfigureUserBasedWorkflow;
-      private System.Windows.Forms.ListView listViewUsers;
-      private System.Windows.Forms.ColumnHeader columnHeaderUserName;
       private System.Windows.Forms.Button buttonEditUsers;
       private System.Windows.Forms.Button buttonRemoveKnownHost;
       private System.Windows.Forms.Button buttonAddKnownHost;
@@ -335,5 +258,9 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.GroupBox groupBoxKnownHosts;
       private System.Windows.Forms.ToolTip toolTip;
       private CommonControls.Controls.LinkLabelEx linkLabelCreateAccessToken;
+      private Controls.StringToBooleanListView listViewWorkflow;
+      private System.Windows.Forms.ColumnHeader columnHeader1;
+      private System.Windows.Forms.GroupBox groupBoxSelectWorkflow;
+      private System.Windows.Forms.TextBox textBox1;
    }
 }

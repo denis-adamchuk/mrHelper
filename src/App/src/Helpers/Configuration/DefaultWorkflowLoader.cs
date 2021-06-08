@@ -34,7 +34,7 @@ namespace mrHelper.App.Helpers
 
       private static readonly string ProjectListFileName = "projects.json";
 
-      internal static StringToBooleanCollection GetDefaultProjectsForHost(string hostname)
+      internal static StringToBooleanCollection GetDefaultProjectsForHost(string hostname, bool enabledByDefault)
       {
          // Check if file exists. If it does not, it is not an error.
          string filepath = Path.Combine(Directory.GetCurrentDirectory(), ProjectListFileName);
@@ -59,7 +59,7 @@ namespace mrHelper.App.Helpers
             if (StringUtils.GetHostWithPrefix(hostname) == StringUtils.GetHostWithPrefix(projectGroup.Name))
             {
                StringToBooleanCollection projects = new StringToBooleanCollection(projectGroup.Projects
-                  .Select(project => new Tuple<string, bool>(project.Path_With_Namespace, true)));
+                  .Select(project => new Tuple<string, bool>(project.Path_With_Namespace, enabledByDefault)));
                return projects;
             }
          }

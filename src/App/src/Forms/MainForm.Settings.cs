@@ -37,8 +37,43 @@ namespace mrHelper.App.Forms
          addFontSizes();
          initializeColorScheme();
 
+         upgradeOldWorkflowToCommonWorkflow();
+         initializeProjectListIfEmpty();
+
          Trace.TraceInformation("[MainForm] Configuration loaded");
          _loadingConfiguration = false;
+      }
+
+      private static void upgradeOldWorkflowToCommonWorkflow()
+      {
+         if (!ConfigurationHelper.IsCommonWorkflowSelected(Program.Settings))
+         {
+            if (!ConfigurationHelper.IsOldProjectBasedWorkflowSelected(Program.Settings))
+            {
+               foreach (string hostname in Program.Settings.KnownHosts)
+               {
+                  StringToBooleanCollection projects = ConfigurationHelper.GetProjectsForHost(hostname, Program.Settings);
+                  StringToBooleanCollection projectsUpdated = new StringToBooleanCollection(projects
+                     .Select(project => new Tuple<string, bool>(project.Item1, false)));
+                  ConfigurationHelper.SetProjectsForHost(hostname, projectsUpdated, Program.Settings);
+               }
+            }
+            // Intentionally don't switch off "users" if even "Project-based" workflow was used.
+            // Most likely user wants to complement projects with users. If not, it is configurable.
+            ConfigurationHelper.SelectCommonWorkflow(Program.Settings);
+         }
+      }
+
+      private void initializeProjectListIfEmpty()
+      {
+         Program.Settings.KnownHosts
+            .Where(hostname => !ConfigurationHelper.GetProjectsForHost(hostname, Program.Settings).Any())
+            .ToList()
+            .ForEach(hostname =>
+            {
+               StringToBooleanCollection projects = DefaultWorkflowLoader.GetDefaultProjectsForHost(hostname, false);
+               ConfigurationHelper.SetProjectsForHost(hostname, projects, Program.Settings);
+            });
       }
 
       private void initializeColorScheme()
