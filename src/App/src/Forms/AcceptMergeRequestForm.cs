@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using Markdig;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
-using System.Collections.Generic;
 
 namespace mrHelper.App.Forms
 {
@@ -42,7 +42,6 @@ namespace mrHelper.App.Forms
          _getMergeRequestAccessor = getMergeRequestAccessor;
 
          initializeGitUILinks();
-         subscribeToTimer();
       }
 
       private void postProcessMerge(MergeRequest mergeRequest)

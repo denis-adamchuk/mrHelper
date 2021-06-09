@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
+using System.Drawing;
+using System.Diagnostics;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
@@ -14,9 +14,17 @@ namespace mrHelper.App.Forms
 {
    partial class AcceptMergeRequestForm
    {
-      private void AcceptMergeRequestForm_Load(object sender, EventArgs e)
+      protected override void OnLoad(EventArgs e)
       {
+         base.OnLoad(e);
+         subscribeToTimer();
          invokeFetchAndApplyOnInitialize();
+      }
+
+      protected override void OnClosed(EventArgs e)
+      {
+         base.OnClosed(e);
+         unsubscribeFromTimer();
       }
 
       private void buttonDiscussions_Click(object sender, EventArgs e)

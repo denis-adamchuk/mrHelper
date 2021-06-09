@@ -18,8 +18,6 @@
             components.Dispose();
          }
          base.Dispose(disposing);
-
-         unsubscribeFromTimer();
       }
 
       #region Windows Form Designer generated code
@@ -507,7 +505,6 @@
          this.MinimumSize = new System.Drawing.Size(732, 576);
          this.Name = "AcceptMergeRequestForm";
          this.Text = "Request to merge";
-         this.Load += new System.EventHandler(this.AcceptMergeRequestForm_Load);
          this.groupBoxMerge.ResumeLayout(false);
          this.groupBoxMerge.PerformLayout();
          this.groupBoxMergeCommitMessage.ResumeLayout(false);
