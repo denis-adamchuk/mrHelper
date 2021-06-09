@@ -39,6 +39,10 @@ namespace mrHelper.App.Forms
 
       private ConnectionPage getCurrentConnectionPage()
       {
+         if (!tabControlHost.Created)
+         {
+            return null;
+         }
          return (tabControlHost.SelectedTab as ConnectionTabPage)?.ConnectionPage;
       }
 

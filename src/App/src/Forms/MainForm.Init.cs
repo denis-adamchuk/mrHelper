@@ -30,9 +30,9 @@ namespace mrHelper.App.Forms
          WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"]);
          _loadingConfiguration = true;
          InitializeComponent();
-         _loadingConfiguration = false;
          WinFormsHelpers.LogScaleDimensions(this);
          WinFormsHelpers.LogScreenResolution(this);
+         _loadingConfiguration = false;
 
          _trayIcon = new TrayIcon(notifyIcon);
 
