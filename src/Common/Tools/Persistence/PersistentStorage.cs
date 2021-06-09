@@ -1,15 +1,14 @@
 using System;
-using System.Threading.Tasks;
-using System.Web.Script.Serialization;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Common.Tools
 {
-   public class PersistenceStateSerializationException : Exception
+   public class PersistenceStateSerializationException : ExceptionEx
    {
       internal PersistenceStateSerializationException(string msg, Exception exception) : base(msg, exception) { }
    }
 
-   public class PersistenceStateDeserializationException : Exception
+   public class PersistenceStateDeserializationException : ExceptionEx
    {
       internal PersistenceStateDeserializationException(string msg, Exception exception) : base(msg, exception) { }
    }

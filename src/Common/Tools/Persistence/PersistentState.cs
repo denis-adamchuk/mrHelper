@@ -24,7 +24,8 @@ namespace mrHelper.Common.Tools
 
       internal PersistentState(string json)
       {
-         _state = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+         var state = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
+         _state = state == null ? new Dictionary<string, object>() : state;
       }
 
       internal string ToJson()
