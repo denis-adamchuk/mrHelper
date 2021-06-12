@@ -249,6 +249,7 @@ namespace mrHelper.App.Forms
          }
 
          checkBoxSquash.Checked = _isSquashNeeded.Value;
+         checkBoxSquash.Visible = _commits.Length > 1;
          checkBoxDeleteSourceBranch.Checked = _isRemoteBranchDeletionNeeded.Value;
          if (_sourceBranchName  == "master")
          {

@@ -187,19 +187,12 @@ namespace mrHelper.App.Forms
          bool? prevSquashNeeded = _isSquashNeeded;
          bool? prevRemoteBranchDeletionNeeded = _isRemoteBranchDeletionNeeded;
 
-         if (!_isSquashNeeded.HasValue)
-         {
-            _isSquashNeeded = mergeRequest.Squash;
-            applySquashCommitMessageVisibility();
-         }
-
-         if (!_isRemoteBranchDeletionNeeded.HasValue)
-         {
-            _isRemoteBranchDeletionNeeded = mergeRequest.Force_Remove_Source_Branch;
-         }
+         _isSquashNeeded = mergeRequest.Squash && _commits.Length > 1;
+         _isRemoteBranchDeletionNeeded = mergeRequest.Force_Remove_Source_Branch;
 
          if (prevSquashNeeded != _isSquashNeeded)
          {
+            applySquashCommitMessageVisibility();
             traceInformation(String.Format("Changed _isSquashNeeded to {0}", _isSquashNeeded.ToString()));
          }
 
