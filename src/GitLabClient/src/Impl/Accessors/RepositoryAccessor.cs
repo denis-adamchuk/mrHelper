@@ -123,6 +123,38 @@ namespace mrHelper.GitLabClient
          return null;
       }
 
+      async public Task<bool> IsDescendantOf(string descendantBranchName, string ancestorBranchName)
+      {
+         if (descendantBranchName == ancestorBranchName)
+         {
+            return false;
+         }
+
+         Branch descendantBranch = (await GetBranches(descendantBranchName)).FirstOrDefault();
+         Branch ancestorBranch = (await GetBranches(ancestorBranchName)).FirstOrDefault();
+         if (descendantBranch == null || ancestorBranch == null)
+         {
+            return false;
+         }
+
+         if (descendantBranch.Commit.Id == ancestorBranch.Commit.Id)
+         {
+            return false;
+         }
+
+         for (int iDepth = 1; iDepth < Constants.MaxCommitDepth; ++iDepth)
+         {
+            string sha = getParentSha(descendantBranch.Commit.Id, iDepth);
+            Commit commit = await LoadCommit(sha);
+            if (commit.Id == ancestorBranch.Commit.Id)
+            {
+               return true;
+            }
+         }
+
+         return false;
+      }
+
       public Task DeleteBranch(string name)
       {
          return call(() => _operator.DeleteBranchAsync(name),

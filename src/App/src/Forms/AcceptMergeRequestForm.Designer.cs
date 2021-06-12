@@ -115,7 +115,7 @@
          // 
          this.buttonClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
          this.buttonClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonClose.Location = new System.Drawing.Point(608, 492);
+         this.buttonClose.Location = new System.Drawing.Point(628, 492);
          this.buttonClose.Name = "buttonClose";
          this.buttonClose.Size = new System.Drawing.Size(96, 32);
          this.buttonClose.TabIndex = 4;
@@ -135,7 +135,7 @@
          this.groupBoxMerge.Controls.Add(this.labelMergeStatus);
          this.groupBoxMerge.Location = new System.Drawing.Point(12, 218);
          this.groupBoxMerge.Name = "groupBoxMerge";
-         this.groupBoxMerge.Size = new System.Drawing.Size(692, 268);
+         this.groupBoxMerge.Size = new System.Drawing.Size(712, 268);
          this.groupBoxMerge.TabIndex = 6;
          this.groupBoxMerge.TabStop = false;
          this.groupBoxMerge.Text = "Merge";
@@ -150,7 +150,7 @@
          this.groupBoxMergeCommitMessage.Controls.Add(this.textBoxCommitMessage);
          this.groupBoxMergeCommitMessage.Location = new System.Drawing.Point(9, 63);
          this.groupBoxMergeCommitMessage.Name = "groupBoxMergeCommitMessage";
-         this.groupBoxMergeCommitMessage.Size = new System.Drawing.Size(670, 161);
+         this.groupBoxMergeCommitMessage.Size = new System.Drawing.Size(690, 161);
          this.groupBoxMergeCommitMessage.TabIndex = 12;
          this.groupBoxMergeCommitMessage.TabStop = false;
          this.groupBoxMergeCommitMessage.Text = "Merge Commit Message";
@@ -159,7 +159,7 @@
          // 
          this.labelCommitMessageLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.labelCommitMessageLabel.AutoSize = true;
-         this.labelCommitMessageLabel.Location = new System.Drawing.Point(116, 22);
+         this.labelCommitMessageLabel.Location = new System.Drawing.Point(136, 22);
          this.labelCommitMessageLabel.Name = "labelCommitMessageLabel";
          this.labelCommitMessageLabel.Size = new System.Drawing.Size(160, 13);
          this.labelCommitMessageLabel.TabIndex = 2;
@@ -170,7 +170,7 @@
          this.comboBoxCommit.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.comboBoxCommit.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
          this.comboBoxCommit.FormattingEnabled = true;
-         this.comboBoxCommit.Location = new System.Drawing.Point(299, 19);
+         this.comboBoxCommit.Location = new System.Drawing.Point(319, 19);
          this.comboBoxCommit.Name = "comboBoxCommit";
          this.comboBoxCommit.Size = new System.Drawing.Size(365, 21);
          this.comboBoxCommit.TabIndex = 0;
@@ -186,14 +186,14 @@
          this.textBoxCommitMessage.Multiline = true;
          this.textBoxCommitMessage.Name = "textBoxCommitMessage";
          this.textBoxCommitMessage.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-         this.textBoxCommitMessage.Size = new System.Drawing.Size(658, 108);
+         this.textBoxCommitMessage.Size = new System.Drawing.Size(678, 108);
          this.textBoxCommitMessage.TabIndex = 1;
          // 
          // checkBoxSquash
          // 
          this.checkBoxSquash.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.checkBoxSquash.AutoSize = true;
-         this.checkBoxSquash.Location = new System.Drawing.Point(419, 40);
+         this.checkBoxSquash.Location = new System.Drawing.Point(439, 40);
          this.checkBoxSquash.Name = "checkBoxSquash";
          this.checkBoxSquash.Size = new System.Drawing.Size(260, 17);
          this.checkBoxSquash.TabIndex = 1;
@@ -249,7 +249,7 @@
          this.groupBoxMergeRequestInformation.Controls.Add(this.labelSourceBranchLabel);
          this.groupBoxMergeRequestInformation.Location = new System.Drawing.Point(12, 12);
          this.groupBoxMergeRequestInformation.Name = "groupBoxMergeRequestInformation";
-         this.groupBoxMergeRequestInformation.Size = new System.Drawing.Size(692, 106);
+         this.groupBoxMergeRequestInformation.Size = new System.Drawing.Size(712, 106);
          this.groupBoxMergeRequestInformation.TabIndex = 10;
          this.groupBoxMergeRequestInformation.TabStop = false;
          this.groupBoxMergeRequestInformation.Text = "Merge Request Information";
@@ -258,7 +258,7 @@
          // 
          this.labelProject.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.labelProject.AutoSize = true;
-         this.labelProject.Location = new System.Drawing.Point(538, 57);
+         this.labelProject.Location = new System.Drawing.Point(558, 57);
          this.labelProject.Name = "labelProject";
          this.labelProject.Size = new System.Drawing.Size(141, 13);
          this.labelProject.TabIndex = 11;
@@ -268,7 +268,7 @@
          // 
          this.labelProjectLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.labelProjectLabel.AutoSize = true;
-         this.labelProjectLabel.Location = new System.Drawing.Point(451, 57);
+         this.labelProjectLabel.Location = new System.Drawing.Point(471, 57);
          this.labelProjectLabel.Name = "labelProjectLabel";
          this.labelProjectLabel.Size = new System.Drawing.Size(43, 13);
          this.labelProjectLabel.TabIndex = 10;
@@ -311,7 +311,7 @@
          this.htmlPanelTitle.Cursor = System.Windows.Forms.Cursors.IBeam;
          this.htmlPanelTitle.Location = new System.Drawing.Point(96, 19);
          this.htmlPanelTitle.Name = "htmlPanelTitle";
-         this.htmlPanelTitle.Size = new System.Drawing.Size(583, 23);
+         this.htmlPanelTitle.Size = new System.Drawing.Size(603, 23);
          this.htmlPanelTitle.TabIndex = 0;
          this.htmlPanelTitle.Text = null;
          // 
@@ -319,7 +319,7 @@
          // 
          this.labelTargetBranch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.labelTargetBranch.AutoSize = true;
-         this.labelTargetBranch.Location = new System.Drawing.Point(538, 81);
+         this.labelTargetBranch.Location = new System.Drawing.Point(558, 81);
          this.labelTargetBranch.Name = "labelTargetBranch";
          this.labelTargetBranch.Size = new System.Drawing.Size(139, 13);
          this.labelTargetBranch.TabIndex = 5;
@@ -338,7 +338,7 @@
          // 
          this.labelTargetBranchLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
          this.labelTargetBranchLabel.AutoSize = true;
-         this.labelTargetBranchLabel.Location = new System.Drawing.Point(451, 81);
+         this.labelTargetBranchLabel.Location = new System.Drawing.Point(471, 81);
          this.labelTargetBranchLabel.Name = "labelTargetBranchLabel";
          this.labelTargetBranchLabel.Size = new System.Drawing.Size(78, 13);
          this.labelTargetBranchLabel.TabIndex = 3;
@@ -415,7 +415,7 @@
          this.tableLayoutPanel1.Name = "tableLayoutPanel1";
          this.tableLayoutPanel1.RowCount = 1;
          this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-         this.tableLayoutPanel1.Size = new System.Drawing.Size(692, 88);
+         this.tableLayoutPanel1.Size = new System.Drawing.Size(712, 88);
          this.tableLayoutPanel1.TabIndex = 22;
          // 
          // groupBoxRebase
@@ -423,9 +423,9 @@
          this.groupBoxRebase.Controls.Add(this.buttonRebase);
          this.groupBoxRebase.Controls.Add(this.labelRebaseStatus);
          this.groupBoxRebase.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.groupBoxRebase.Location = new System.Drawing.Point(463, 3);
+         this.groupBoxRebase.Location = new System.Drawing.Point(477, 3);
          this.groupBoxRebase.Name = "groupBoxRebase";
-         this.groupBoxRebase.Size = new System.Drawing.Size(226, 82);
+         this.groupBoxRebase.Size = new System.Drawing.Size(232, 82);
          this.groupBoxRebase.TabIndex = 24;
          this.groupBoxRebase.TabStop = false;
          this.groupBoxRebase.Text = "Rebase";
@@ -446,9 +446,9 @@
          this.groupBoxDiscussions.Controls.Add(this.buttonDiscussions);
          this.groupBoxDiscussions.Controls.Add(this.labelDiscussionStatus);
          this.groupBoxDiscussions.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.groupBoxDiscussions.Location = new System.Drawing.Point(233, 3);
+         this.groupBoxDiscussions.Location = new System.Drawing.Point(240, 3);
          this.groupBoxDiscussions.Name = "groupBoxDiscussions";
-         this.groupBoxDiscussions.Size = new System.Drawing.Size(224, 82);
+         this.groupBoxDiscussions.Size = new System.Drawing.Size(231, 82);
          this.groupBoxDiscussions.TabIndex = 23;
          this.groupBoxDiscussions.TabStop = false;
          this.groupBoxDiscussions.Text = "Discussions";
@@ -470,7 +470,7 @@
          this.groupBoxWorkInProgress.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxWorkInProgress.Location = new System.Drawing.Point(3, 3);
          this.groupBoxWorkInProgress.Name = "groupBoxWorkInProgress";
-         this.groupBoxWorkInProgress.Size = new System.Drawing.Size(224, 82);
+         this.groupBoxWorkInProgress.Size = new System.Drawing.Size(231, 82);
          this.groupBoxWorkInProgress.TabIndex = 22;
          this.groupBoxWorkInProgress.TabStop = false;
          this.groupBoxWorkInProgress.Text = "WIP/Draft";
@@ -491,7 +491,7 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.AutoScroll = true;
          this.CancelButton = this.buttonClose;
-         this.ClientSize = new System.Drawing.Size(716, 537);
+         this.ClientSize = new System.Drawing.Size(736, 537);
          this.Controls.Add(this.tableLayoutPanel1);
          this.Controls.Add(this.linkLabelOpenAtGitLab);
          this.Controls.Add(this.groupBoxMergeRequestInformation);
@@ -502,7 +502,7 @@
          this.Controls.Add(this.linkLabelOpenExplorer);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
-         this.MinimumSize = new System.Drawing.Size(732, 576);
+         this.MinimumSize = new System.Drawing.Size(752, 576);
          this.Name = "AcceptMergeRequestForm";
          this.Text = "Request to merge";
          this.groupBoxMerge.ResumeLayout(false);

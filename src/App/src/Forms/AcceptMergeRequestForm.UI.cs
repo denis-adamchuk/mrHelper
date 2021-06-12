@@ -3,6 +3,7 @@ using System.Linq;
 using System.Drawing;
 using System.Diagnostics;
 using System.Windows.Forms;
+using System.ComponentModel;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Exceptions;
@@ -19,6 +20,12 @@ namespace mrHelper.App.Forms
          base.OnLoad(e);
          subscribeToTimer();
          invokeFetchAndApplyOnInitialize();
+      }
+
+      protected override void OnClosing(CancelEventArgs e)
+      {
+         base.OnClosing(e);
+         e.Cancel = _isAwaiting;
       }
 
       protected override void OnClosed(EventArgs e)
@@ -232,25 +239,21 @@ namespace mrHelper.App.Forms
          updateRebaseControls();
 
          bool isRemoteRebaseNeeded = _rebaseState == RemoteRebaseState.Required;
-         bool isLocalRebaseNeded = _rebaseState == RemoteRebaseState.Failed;
+         bool isLocalRebaseNeeded = _rebaseState == RemoteRebaseState.Failed
+                                || _rebaseState == RemoteRebaseState.RequiredLocalRebase;
          bool isRebaseNotAvailable = _rebaseState == RemoteRebaseState.NotAvailable
-                                  || _rebaseState == RemoteRebaseState.InProgress;
-         bool areConflictsPossible = isRemoteRebaseNeeded || isLocalRebaseNeded || isRebaseNotAvailable;
+                                  || _rebaseState == RemoteRebaseState.InProgress
+                                  || _rebaseState == RemoteRebaseState.CheckingHierarchy;
+         bool areConflictsPossible = isRemoteRebaseNeeded || isLocalRebaseNeeded || isRebaseNotAvailable;
          bool areDependenciesResolved = !isWIP && !areUnresolvedDiscussions && !areConflictsPossible;
          updateMergeControls(areDependenciesResolved);
-
-         if (comboBoxCommit.Items.Count == 0)
-         {
-            comboBoxCommit.Items.AddRange(_commits.ToArray());
-            if (comboBoxCommit.Items.Count > 0)
-            {
-               comboBoxCommit.SelectedIndex = comboBoxCommit.Items.Count - 1;
-            }
-         }
+         updateCommitList();
 
          checkBoxSquash.Checked = _isSquashNeeded.Value;
          checkBoxSquash.Visible = _commits.Length > 1;
+         checkBoxSquash.Enabled = !_isAwaiting;
          checkBoxDeleteSourceBranch.Checked = _isRemoteBranchDeletionNeeded.Value;
+         checkBoxDeleteSourceBranch.Enabled = !_isAwaiting;
          if (_sourceBranchName  == "master")
          {
             checkBoxDeleteSourceBranch.Enabled = false;
@@ -259,13 +262,15 @@ namespace mrHelper.App.Forms
 
          string urlTooltip = String.IsNullOrEmpty(_webUrl) ? String.Empty : _webUrl;
          toolTip.SetToolTip(linkLabelOpenAtGitLab, urlTooltip);
+
+         buttonClose.Enabled = !_isAwaiting;
       }
 
       private void updateWorkInProgressControls(bool isWIP)
       {
          labelDraftStatus.Text = isWIP ? "This is WIP/Draft" : "This is not WIP/Draft";
          labelDraftStatus.ForeColor = isWIP ? Color.Red : Color.Green;
-         buttonToggleDraft.Enabled = isWIP;
+         buttonToggleDraft.Enabled = isWIP && !_isAwaiting;
       }
 
       private void updateDiscussionControls(bool areUnresolvedDiscussions)
@@ -273,7 +278,7 @@ namespace mrHelper.App.Forms
          labelDiscussionStatus.Text = areUnresolvedDiscussions
             ? "Please resolve unresolved threads" : "All discussions resolved";
          labelDiscussionStatus.ForeColor = areUnresolvedDiscussions ? Color.Red : Color.Green;
-         buttonDiscussions.Enabled = areUnresolvedDiscussions;
+         buttonDiscussions.Enabled = areUnresolvedDiscussions && !_isAwaiting;
       }
 
       private void updateMergeControls(bool areDependenciesResolved)
@@ -307,7 +312,7 @@ namespace mrHelper.App.Forms
             case MergeStatus.CanBeMerged:
                labelMergeStatus.Text = "Can be merged. Merge type: Fast-forward merge without a merge commit";
                labelMergeStatus.ForeColor = Color.Green;
-               buttonMerge.Enabled = true;
+               buttonMerge.Enabled = !_isAwaiting;
                break;
 
             case MergeStatus.CannotBeMerged:
@@ -335,10 +340,22 @@ namespace mrHelper.App.Forms
                buttonRebase.Enabled = false;
                break;
 
+            case RemoteRebaseState.CheckingHierarchy:
+               labelRebaseStatus.Text = "Checking if Rebase is needed...";
+               labelRebaseStatus.ForeColor = Color.Blue;
+               buttonRebase.Enabled = false;
+               break;
+
             case RemoteRebaseState.Required:
                labelRebaseStatus.Text = "Fast-forward merge is not possible";
                labelRebaseStatus.ForeColor = Color.Red;
-               buttonRebase.Enabled = true;
+               buttonRebase.Enabled = !_isAwaiting;
+               break;
+
+            case RemoteRebaseState.RequiredLocalRebase:
+               labelRebaseStatus.Text = "Rebase branch locally";
+               labelRebaseStatus.ForeColor = Color.Red;
+               buttonRebase.Enabled = false;
                break;
 
             case RemoteRebaseState.InProgress:
@@ -355,6 +372,30 @@ namespace mrHelper.App.Forms
                showRebaseUnneeded();
                break;
          }
+      }
+
+      private void updateCommitList()
+      {
+         if (!_invalidateCommitList)
+         {
+            return;
+         }
+
+         int prevSelectedIndex = comboBoxCommit.SelectedIndex;
+
+         comboBoxCommit.Items.Clear();
+         comboBoxCommit.Items.AddRange(_commits.ToArray());
+
+         if (prevSelectedIndex >= 0 && prevSelectedIndex < comboBoxCommit.Items.Count)
+         {
+            comboBoxCommit.SelectedIndex = prevSelectedIndex;
+         }
+         else if (comboBoxCommit.Items.Count > 0)
+         {
+            comboBoxCommit.SelectedIndex = comboBoxCommit.Items.Count - 1;
+         }
+
+         _invalidateCommitList = false;
       }
 
       private void showRebaseInProgress()

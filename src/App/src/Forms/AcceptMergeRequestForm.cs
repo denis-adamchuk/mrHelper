@@ -9,6 +9,7 @@ using GitLabSharp.Entities;
 using Markdig;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Forms
 {
@@ -21,7 +22,8 @@ namespace mrHelper.App.Forms
          Func<MergeRequestKey, string, User, string, Task> onOpenDiscussions,
          Func<DataCache> getCache,
          Func<Task<DataCache>> fetchCache,
-         Func<GitLabClient.MergeRequestAccessor> getMergeRequestAccessor)
+         Func<GitLabClient.MergeRequestAccessor> getMergeRequestAccessor,
+         Func<GitLabClient.RepositoryAccessor> getRepositoryAccessor)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);
@@ -40,6 +42,7 @@ namespace mrHelper.App.Forms
          _getCache = getCache;
          _fetchCache = fetchCache;
          _getMergeRequestAccessor = getMergeRequestAccessor;
+         _getRepositoryAccessor = getRepositoryAccessor;
 
          initializeGitUILinks();
       }
@@ -69,12 +72,20 @@ namespace mrHelper.App.Forms
 
       private void refreshCommits(IMergeRequestCache mergeRequestCache)
       {
-         int prevCommitCount = _commits?.Length ?? 0;
-
-         _commits = mergeRequestCache.GetCommits(_mergeRequestKey).ToArray();
-
-         if (prevCommitCount != _commits.Length)
+         string getSummaryId(IEnumerable<Commit> commits)
          {
+            return _commits?
+               .Select(commit => commit.Id)?
+               .Aggregate("", (total, id) => total += id) ?? String.Empty;
+         }
+
+         string oldCommitSummaryId = getSummaryId(_commits);
+         _commits = mergeRequestCache.GetCommits(_mergeRequestKey).ToArray();
+         string newCommitSummaryId = getSummaryId(_commits);
+
+         if (oldCommitSummaryId != newCommitSummaryId)
+         {
+            _invalidateCommitList = true;
             traceInformation(String.Format("Changed _commits.Length to {0}", _commits.Length.ToString()));
          }
       }
@@ -187,8 +198,21 @@ namespace mrHelper.App.Forms
          bool? prevSquashNeeded = _isSquashNeeded;
          bool? prevRemoteBranchDeletionNeeded = _isRemoteBranchDeletionNeeded;
 
-         _isSquashNeeded = mergeRequest.Squash && _commits.Length > 1;
-         _isRemoteBranchDeletionNeeded = mergeRequest.Force_Remove_Source_Branch;
+         if (!_isSquashNeeded.HasValue)
+         {
+            _isSquashNeeded = mergeRequest.Squash && _commits.Length > 1;
+         }
+         else if (_commits.Length < 2)
+         {
+            // If number of commits decreased to 1, reset the flag.
+            // Checkbox will become invisible in updateControls().
+            _isSquashNeeded = false;
+         }
+
+         if (!_isRemoteBranchDeletionNeeded.HasValue)
+         {
+            _isRemoteBranchDeletionNeeded = mergeRequest.Force_Remove_Source_Branch;
+         }
 
          if (prevSquashNeeded != _isSquashNeeded)
          {
@@ -242,18 +266,36 @@ namespace mrHelper.App.Forms
          {
             if (mergeRequest.Has_Conflicts)
             {
-               _rebaseState = RemoteRebaseState.Required;
+               _rebaseState = RemoteRebaseState.RequiredLocalRebase;
+            }
+            else if (_rebaseState == RemoteRebaseState.RequiredLocalRebase)
+            {
+               // Conflicts are resolved, set N/A to check hierarchy again
+               _rebaseState = RemoteRebaseState.NotAvailable;
             }
             else if (_rebaseState == RemoteRebaseState.InProgress)
             {
                _rebaseState = RemoteRebaseState.SucceededOrNotNeeded;
             }
-            else if (_rebaseState == RemoteRebaseState.NotAvailable || _rebaseState == RemoteRebaseState.Failed)
+            else if (_rebaseState == RemoteRebaseState.CheckingHierarchy)
             {
-               // We have to set initial state of a dialog to Required because it is not possible to tell from GitLab
-               // API if MR needs Rebase or not because has_conflicts flag value can be false even when
-               // GitLab Web UI tells that fast-forwarding merge is not possible and Rebase is needed.
+               if (_isSourceBranchDescendantOfTargetBranch.HasValue)
+               {
+                  _rebaseState = _isSourceBranchDescendantOfTargetBranch.Value
+                     ? RemoteRebaseState.SucceededOrNotNeeded : RemoteRebaseState.Required;
+               }
+            }
+            else if (_rebaseState == RemoteRebaseState.Failed)
+            {
                _rebaseState = RemoteRebaseState.Required;
+            }
+
+            if (_rebaseState == RemoteRebaseState.NotAvailable)
+            {
+               _rebaseState = RemoteRebaseState.CheckingHierarchy;
+               _isSourceBranchDescendantOfTargetBranch = null;
+               BeginInvoke(new Action(async () =>
+                  _isSourceBranchDescendantOfTargetBranch = await checkHierarchyAsync()), null);
             }
          }
          else
@@ -318,7 +360,8 @@ namespace mrHelper.App.Forms
                _mergeStatus = MergeStatus.CannotBeMerged;
             }
             else if (mergeRequest.Merge_Status == "unchecked"
-                  || mergeRequest.Merge_Status == "checking")
+                  || mergeRequest.Merge_Status == "checking"
+                  || mergeRequest.Merge_Status == "cannot_be_merged_recheck")
             {
                _mergeStatus = MergeStatus.Unchecked;
             }
@@ -407,7 +450,7 @@ namespace mrHelper.App.Forms
 
       private void invokeFetchAndApplyOnInitialize()
       {
-         BeginInvoke(new Action(() => applyMergeRequest(fetchUpdatedMergeRequest(_getCache()))), null);
+         applyMergeRequest(fetchUpdatedMergeRequest(_getCache()));
       }
 
       private void invokeFetchAndApplyOnTimer()
@@ -467,10 +510,31 @@ namespace mrHelper.App.Forms
          return dataCache.MergeRequestCache.GetMergeRequest(_mergeRequestKey);
       }
 
+      async private Task<bool> checkHierarchyAsync()
+      {
+         RepositoryAccessor accessor = _getRepositoryAccessor();
+         if (accessor == null)
+         {
+            return false;
+         }
+
+         try
+         {
+            return await accessor.IsDescendantOf(_sourceBranchName, _targetBranchName);
+         }
+         catch (RepositoryAccessorException ex)
+         {
+            string message = String.Format("Cannot check hierarchy, source = {0}, target = {1}",
+               _sourceBranchName, _targetBranchName);
+            ExceptionHandlers.Handle(message, ex);
+         }
+         return false;
+      }
+
       async private Task<MergeRequestRebaseResponse> rebaseAsync()
       {
          traceInformation("[AcceptMergeRequestForm] Starting Rebase operation...");
-         disableProcessingTimer();
+         preAsyncOperation();
          try
          {
             IMergeRequestEditor editor = getEditor();
@@ -489,7 +553,7 @@ namespace mrHelper.App.Forms
                // a timer might bring us an outdated state of rebase_in_progress flag.
                // This delay is a way to skip one timer occurrence.
                await Task.Delay(mergeRequestUpdateInterval);
-               enableProcessingTimer();
+               postAsyncOperation();
             }), null);
             traceInformation("[AcceptMergeRequestForm] Rebase operation finished");
          }
@@ -501,7 +565,7 @@ namespace mrHelper.App.Forms
             null, squashCommitMessage, null, shouldRemoveSourceBranch, null, null);
 
          traceInformation("[AcceptMergeRequestForm] Starting Merge operation...");
-         disableProcessingTimer();
+         preAsyncOperation();
          try
          {
             IMergeRequestEditor editor = getEditor();
@@ -514,7 +578,7 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            enableProcessingTimer();
+            postAsyncOperation();
             traceInformation("[AcceptMergeRequestForm] Merge operation finished");
          }
       }
@@ -548,7 +612,7 @@ namespace mrHelper.App.Forms
 
       async private Task<MergeRequest> applyModification(UpdateMergeRequestParameters parameters)
       {
-         disableProcessingTimer();
+         preAsyncOperation();
          try
          {
             IMergeRequestEditor editor = getEditor();
@@ -561,7 +625,7 @@ namespace mrHelper.App.Forms
          }
          finally
          {
-            enableProcessingTimer();
+            postAsyncOperation();
             traceInformation("[AcceptMergeRequestForm] Modification applied");
          }
       }
@@ -607,6 +671,20 @@ namespace mrHelper.App.Forms
          }
 
          showDialogAndLogError();
+      }
+
+      private void preAsyncOperation()
+      {
+         disableProcessingTimer();
+         _isAwaiting = true;
+         updateControls();
+      }
+
+      public void postAsyncOperation()
+      {
+         _isAwaiting = false;
+         updateControls();
+         enableProcessingTimer();
       }
 
       private static bool areConflictsFoundAtMerge(MergeRequestEditorException ex)
@@ -657,6 +735,7 @@ namespace mrHelper.App.Forms
       private readonly Func<Task<DataCache>> _fetchCache;
       private readonly Func<DataCache> _getCache;
       private readonly Func<GitLabClient.MergeRequestAccessor> _getMergeRequestAccessor;
+      private readonly Func<RepositoryAccessor> _getRepositoryAccessor;
 
       private enum DiscussionsState
       {
@@ -673,7 +752,9 @@ namespace mrHelper.App.Forms
       private enum RemoteRebaseState
       {
          NotAvailable,
+         CheckingHierarchy,
          Required,
+         RequiredLocalRebase,
          Failed,
          InProgress,
          SucceededOrNotNeeded
@@ -699,9 +780,11 @@ namespace mrHelper.App.Forms
       private bool? _isSquashNeeded;
       private bool? _isRemoteBranchDeletionNeeded;
       private Commit[] _commits;
+      private bool _invalidateCommitList;
       private string _webUrl;
       private string _state;
-
+      private bool _isAwaiting;
+      private bool? _isSourceBranchDescendantOfTargetBranch;
       private readonly int _formDefaultMinimumHeight;
       private readonly int _groupBoxCommitMessageDefaultHeight;
    }

@@ -176,7 +176,12 @@ namespace mrHelper.App.Controls
                await checkForUpdatesAsync(dataCache, mrk, DataCacheUpdateKind.MergeRequest);
                return dataCache;
             },
-            () => _shortcuts.GetMergeRequestAccessor(mrk.ProjectKey.ProjectName))
+            () => _shortcuts
+                     .GetMergeRequestAccessor(mrk.ProjectKey.ProjectName),
+            () => _shortcuts
+                     .GetProjectAccessor()
+                     .GetSingleProjectAccessor(mrk.ProjectKey.ProjectName)
+                     .GetRepositoryAccessor())
          {
             Tag = mrk
          };
