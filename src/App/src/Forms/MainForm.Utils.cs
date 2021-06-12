@@ -844,6 +844,18 @@ namespace mrHelper.App.Forms
             "It is recommended to restart application to update layout"
          ));
       }
+
+      private bool checkAutoScaleDimensions()
+      {
+         if (CurrentAutoScaleDimensions.Height == 0 || CurrentAutoScaleDimensions.Width == 0)
+         {
+            MessageBox.Show("A problem with system fonts has been detected, mrHelper cannot start",
+               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            doClose();
+            return false;
+         }
+         return true;
+      }
    }
 }
 

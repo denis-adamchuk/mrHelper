@@ -15,6 +15,10 @@ namespace mrHelper.App.Forms
       protected override void OnLoad(EventArgs e)
       {
          base.OnLoad(e);
+         if (!checkAutoScaleDimensions())
+         {
+            return;
+         }
          Win32Tools.EnableCopyDataMessageHandling(this.Handle);
          initializeWork();
       }
