@@ -53,7 +53,7 @@ namespace mrHelper.App.Forms
          _getRelatedDiscussions = getRelatedDiscussions;
 
          NewDiscussionPosition = newDiscussionPosition;
-         _needIncludeContextInNewDiscussion = true;
+         _needIncludeContextInNewDiscussion = NewDiscussionPosition != null;
 
          _reportedNotes = oldNotes.ToList();
          resetCurrentNoteIndex();
@@ -519,7 +519,7 @@ namespace mrHelper.App.Forms
 
          checkBoxIncludeContext.Checked = isCurrentNoteNew()
             ? _needIncludeContextInNewDiscussion : getCurrentNoteDiffPosition() != null;
-         checkBoxIncludeContext.Enabled = isCurrentNoteNew();
+         checkBoxIncludeContext.Enabled = isCurrentNoteNew() && getCurrentNoteDiffPosition() != null;
 
          bool isScrollingEnabled = isCurrentNoteNew() && _needIncludeContextInNewDiscussion;
          buttonScrollUp.Visible = isScrollingEnabled;

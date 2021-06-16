@@ -141,13 +141,13 @@ namespace mrHelper.StorageSupport
             case DiffMode.Context:
                Debug.Assert(SpecialArgs is DiffContextArguments);
                DiffContextArguments args = (DiffContextArguments)SpecialArgs;
-               return String.Format("diff {0} {1}", args.ToString(), CommonArgs.ToString());
+               return String.Format("diff --no-textconv {0} {1}", args.ToString(), CommonArgs.ToString());
 
             case DiffMode.ShortStat:
-               return String.Format("diff --shortstat {0}", CommonArgs.ToString());
+               return String.Format("diff --no-textconv --shortstat {0}", CommonArgs.ToString());
 
             case DiffMode.NumStat:
-               return String.Format("diff --numstat {0}", CommonArgs.ToString());
+               return String.Format("diff --no-textconv --numstat {0}", CommonArgs.ToString());
          }
 
          Debug.Assert(false);

@@ -481,8 +481,14 @@ namespace mrHelper.App.Interprocess
          return editor.DeleteNoteAsync(noteId);
       }
 
-      private static PositionParameters createPositionParameters(DiffPosition position)
+      private static PositionParameters? createPositionParameters(DiffPosition position)
       {
+         if (position == null)
+         {
+            Debug.Assert(false);
+            return null;
+         }
+
          return new PositionParameters(position.LeftPath, position.RightPath, position.LeftLine,
             position.RightLine, position.Refs.LeftSHA, position.Refs.RightSHA, position.Refs.LeftSHA);
       }
