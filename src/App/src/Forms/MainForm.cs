@@ -15,12 +15,9 @@ namespace mrHelper.App.Forms
       // TODO Combine multiple timers into a single one
       private static readonly int ConnectionLossBlinkingTimerInterval = 750 * 1; // 0.75 second
       private static readonly int TimeTrackingTimerInterval = 1000 * 1; // 1 second
-      private static readonly int ClipboardCheckingTimerInterval = 1000 * 1; // 1 second
       private static readonly int NewVersionReminderTimerInterval = 1000 * 60 * 60 * 24; // 24 hours
 
       private static readonly string DefaultTimeTrackingTextBoxText = "00:00:00";
-
-      private static readonly string openFromClipboardDisabledText = "Open from Clipboard (Copy GitLab MR URL to activate)";
 
       private static readonly string RefreshButtonTooltip = "Refresh merge request list in the background";
 
@@ -44,10 +41,6 @@ namespace mrHelper.App.Forms
       private readonly Timer _connectionLossBlinkingTimer = new Timer
       {
          Interval = ConnectionLossBlinkingTimerInterval
-      };
-      private readonly Timer _clipboardCheckingTimer = new Timer
-      {
-         Interval = ClipboardCheckingTimerInterval
       };
       private readonly Timer _newVersionReminderTimer = new Timer
       {

@@ -653,21 +653,6 @@ namespace mrHelper.App.Forms
          toolbar.ResumeLayout();
       }
 
-      private void onClipboardCheckingTimer(object sender, EventArgs e)
-      {
-         string clipboardText = getClipboardText();
-         bool isValidUrl = UrlHelper.CheckMergeRequestUrl(clipboardText);
-         bool canOpenFromClipboard = isValidUrl && getCurrentConnectionPage() != null;
-
-         toolStripButtonOpenFromClipboard.Enabled = canOpenFromClipboard;
-         toolStripButtonOpenFromClipboard.ToolTipText =
-            canOpenFromClipboard ? clipboardText : openFromClipboardDisabledText;
-
-         openFromClipboardToolStripMenuItem.Enabled = canOpenFromClipboard;
-         openFromClipboardToolStripMenuItem.ToolTipText =
-            canOpenFromClipboard ? clipboardText : openFromClipboardDisabledText;
-      }
-
       private string getClipboardText()
       {
          try

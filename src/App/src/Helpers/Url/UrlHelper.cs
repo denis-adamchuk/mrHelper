@@ -48,9 +48,11 @@ namespace mrHelper.App.Helpers
          return null;
       }
 
-      internal static bool CheckMergeRequestUrl(string originalUrl)
+      private static readonly int MaxUrlLength = 256;
+
+      internal static bool CheckGitLabMergeRequestUrl(string originalUrl)
       {
-         if (String.IsNullOrEmpty(originalUrl))
+         if (String.IsNullOrEmpty(originalUrl) || originalUrl.Length > MaxUrlLength)
          {
             return false;
          }

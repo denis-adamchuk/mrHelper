@@ -120,7 +120,6 @@ namespace mrHelper.App.Forms
       {
          prepareToolBar();
          prepareStatusBarControls();
-         startClipboardCheckTimer();
          startNewVersionReminderTimer();
          subscribeToNewVersionReminderTimer();
          subscribeToConnectionLossBlinkingTimer();
@@ -291,17 +290,6 @@ namespace mrHelper.App.Forms
                ExceptionHandlers.Handle("Cannot load keywords from file", ex);
             }
          }
-      }
-
-      private void startClipboardCheckTimer()
-      {
-         _clipboardCheckingTimer.Tick += new EventHandler(onClipboardCheckingTimer);
-         _clipboardCheckingTimer.Start();
-      }
-
-      private void stopClipboardCheckTimer()
-      {
-         _clipboardCheckingTimer.Stop();
       }
 
       private void subscribeToConnectionLossBlinkingTimer()

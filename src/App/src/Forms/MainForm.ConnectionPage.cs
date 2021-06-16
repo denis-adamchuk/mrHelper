@@ -62,12 +62,15 @@ namespace mrHelper.App.Forms
       private void connectToUrlFromClipboard()
       {
          string clipboardText = getClipboardText();
-         if (UrlHelper.CheckMergeRequestUrl(clipboardText))
+         bool isValidUrl = UrlHelper.CheckGitLabMergeRequestUrl(clipboardText);
+         if (!isValidUrl)
          {
-            string url = clipboardText;
-            Trace.TraceInformation(String.Format("[Mainform] Connecting to URL from clipboard: {0}", url.ToString()));
-            reconnect(url);
+            return;
          }
+
+         string url = clipboardText;
+         Trace.TraceInformation(String.Format("[Mainform] Connecting to URL from clipboard: {0}", url.ToString()));
+         reconnect(url);
       }
 
       private void subscribeToConnectionPage(ConnectionPage connectionPage)

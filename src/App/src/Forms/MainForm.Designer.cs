@@ -39,9 +39,6 @@ namespace mrHelper.App.Forms
          unsubscribeFromApplicationUpdates();
          _applicationUpdateChecker.Dispose();
 
-         stopClipboardCheckTimer();
-         _clipboardCheckingTimer?.Dispose();
-
          stopNewVersionReminderTimer();
          _newVersionReminderTimer?.Dispose();
 
@@ -177,7 +174,6 @@ namespace mrHelper.App.Forms
          // 
          // openFromClipboardToolStripMenuItem
          // 
-         this.openFromClipboardToolStripMenuItem.Enabled = false;
          this.openFromClipboardToolStripMenuItem.Name = "openFromClipboardToolStripMenuItem";
          this.openFromClipboardToolStripMenuItem.Size = new System.Drawing.Size(208, 22);
          this.openFromClipboardToolStripMenuItem.Text = "Open MR from Clipboard";
@@ -781,13 +777,12 @@ namespace mrHelper.App.Forms
          // toolStripButtonOpenFromClipboard
          // 
          this.toolStripButtonOpenFromClipboard.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-         this.toolStripButtonOpenFromClipboard.Enabled = false;
          this.toolStripButtonOpenFromClipboard.Image = global::mrHelper.App.Properties.Resources.clipboard_24x24;
          this.toolStripButtonOpenFromClipboard.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonOpenFromClipboard.Name = "toolStripButtonOpenFromClipboard";
          this.toolStripButtonOpenFromClipboard.Size = new System.Drawing.Size(28, 28);
          this.toolStripButtonOpenFromClipboard.Text = "toolStripButtonOpenFromClipboard";
-         this.toolStripButtonOpenFromClipboard.ToolTipText = "Open merge request by URL from clipboard";
+         this.toolStripButtonOpenFromClipboard.ToolTipText = "Open merge request by URL from Clipboard";
          this.toolStripButtonOpenFromClipboard.Click += new System.EventHandler(this.toolStripButtonOpenFromClipboard_Click);
          // 
          // toolStripGlobalActionsSeparator
