@@ -27,7 +27,8 @@ namespace mrHelper.App.Helpers
          Trace.TraceInformation("[ApplicationUpdateHelper] ShowCheckForUpdatesDialog()");
          using (CheckForUpdatesForm checkForUpdatesForm = new CheckForUpdatesForm())
          {
-            return showDialogAndLaunchInstaller(checkForUpdatesForm);
+            bool isAlreadyShown = WinFormsHelpers.FindFormByName(checkForUpdatesForm.Name) != null;
+            return !isAlreadyShown && showDialogAndLaunchInstaller(checkForUpdatesForm);
          }
       }
 
@@ -36,7 +37,8 @@ namespace mrHelper.App.Helpers
          Trace.TraceInformation("[ApplicationUpdateHelper] RemindAboutAvailableVersion()");
          using (RemindAboutUpdateForm remindForm = new RemindAboutUpdateForm())
          {
-            return showDialogAndLaunchInstaller(remindForm);
+            bool isAlreadyShown = WinFormsHelpers.FindFormByName(remindForm.Name) != null;
+            return !isAlreadyShown && showDialogAndLaunchInstaller(remindForm);
          }
       }
 
