@@ -78,6 +78,7 @@ namespace mrHelper.App.Forms
       {
          this.WindowState = _previousState;
          Activate();
+         _discussionLoader.LoadDiscussions();
       }
 
       // Logging stub
