@@ -465,6 +465,48 @@ namespace mrHelper.App.Helpers
                break;
          }
       }
+      internal enum ToolBarPosition
+      {
+         Top,
+         Left,
+         Right
+      }
+
+      internal static ToolBarPosition GetToolBarPosition(UserDefinedSettings settings)
+      {
+         if (settings.ToolBarPosition == "Top")
+         {
+            return ToolBarPosition.Top;
+         }
+         else if (settings.ToolBarPosition == "Left")
+         {
+            return ToolBarPosition.Left;
+         }
+         else if (settings.ToolBarPosition == "Right")
+         {
+            return ToolBarPosition.Right;
+         }
+         Debug.Assert(false);
+         return ToolBarPosition.Right;
+      }
+
+      internal static void SetToolBarPosition(UserDefinedSettings settings, ToolBarPosition ToolBarPosition)
+      {
+         switch (ToolBarPosition)
+         {
+            case ToolBarPosition.Top:
+               settings.ToolBarPosition = "Top";
+               break;
+
+            case ToolBarPosition.Left:
+               settings.ToolBarPosition = "Left";
+               break;
+
+            case ToolBarPosition.Right:
+               settings.ToolBarPosition = "Right";
+               break;
+         }
+      }
    }
 }
 

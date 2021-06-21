@@ -163,6 +163,7 @@ namespace mrHelper.App.Forms
             toolbarItem.Click += onHostToolbarButtonClicked;
             toolStripHosts.Items.Insert(0, toolbarItem);
          }
+         toolStripHosts.Visible = isToolStripHostsVisible();
          toolStripHosts.ResumeLayout();
       }
 

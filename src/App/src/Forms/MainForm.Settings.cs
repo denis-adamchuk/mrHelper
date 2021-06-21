@@ -34,6 +34,7 @@ namespace mrHelper.App.Forms
          setShowWarningOnFileMismatchRadioValue();
          setDefaultRevisionTypeRadioValue();
          setMainWindowLayoutRadioValue();
+         setToolBarPositionRadioValue();
          addFontSizes();
          initializeColorScheme();
 
@@ -169,6 +170,25 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void setToolBarPositionRadioValue()
+      {
+         ToolBarPosition ToolBarPosition = ConfigurationHelper.GetToolBarPosition(Program.Settings);
+         switch (ToolBarPosition)
+         {
+            case ToolBarPosition.Top:
+               topTBPositionToolStripMenuItem.Checked = true;
+               break;
+
+            case ToolBarPosition.Left:
+               leftTBPositionToolStripMenuItem.Checked = true;
+               break;
+
+            case ToolBarPosition.Right:
+               rightTBPositionToolStripMenuItem.Checked = true;
+               break;
+         }
+      }
+
       private void setShowWarningOnFileMismatchRadioValue()
       {
          var showWarningsOnFileMismatchMode = ConfigurationHelper.GetShowWarningsOnFileMismatchMode(Program.Settings);
@@ -267,6 +287,28 @@ namespace mrHelper.App.Forms
          {
             Debug.Assert(verticalToolStripMenuItem.Checked);
             ConfigurationHelper.SetMainWindowLayout(Program.Settings, MainWindowLayout.Vertical);
+         }
+      }
+
+      private void applyToolbarLayoutChange()
+      {
+         if (_loadingConfiguration)
+         {
+            return;
+         }
+
+         if (topTBPositionToolStripMenuItem.Checked)
+         {
+            ConfigurationHelper.SetToolBarPosition(Program.Settings, ToolBarPosition.Top);
+         }
+         else if (leftTBPositionToolStripMenuItem.Checked)
+         {
+            ConfigurationHelper.SetToolBarPosition(Program.Settings, ToolBarPosition.Left);
+         }
+         else
+         {
+            Debug.Assert(rightTBPositionToolStripMenuItem.Checked);
+            ConfigurationHelper.SetToolBarPosition(Program.Settings, ToolBarPosition.Right);
          }
       }
 

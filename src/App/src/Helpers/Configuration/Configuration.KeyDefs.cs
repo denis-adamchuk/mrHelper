@@ -253,6 +253,9 @@ namespace mrHelper.App.Helpers
       private static readonly string MainWindowLayoutKeyName      = "MWLayout";
       private static readonly string MainWindowLayoutDefaultValue = "Horizontal";
 
+      private static readonly string ToolBarPositionKeyName      = "TBLayout";
+      private static readonly string ToolBarPositionDefaultValue = "Top";
+
       private static readonly string AccessTokensProtectedKeyName      = "AccessTokensProtected";
       private static readonly bool   AccessTokensProtectedDefaultValue = false;
 

@@ -343,6 +343,10 @@ namespace mrHelper.App.Helpers
          {
             MainWindowLayoutChanged?.Invoke();
          }
+         else if (keyName == ToolBarPositionKeyName)
+         {
+            ToolBarPositionChanged?.Invoke();
+         }
          else if (keyName == DiffContextPositionKeyName)
          {
             DiffContextPositionChanged?.Invoke();

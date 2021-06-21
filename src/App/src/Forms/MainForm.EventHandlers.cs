@@ -230,6 +230,20 @@ namespace mrHelper.App.Forms
          applyMainWindowLayoutChange();
       }
 
+      private void radioButtonToolbarLayout_CheckedChanged(object sender, EventArgs e)
+      {
+         ToolStripMenuItem checkBox = sender as ToolStripMenuItem;
+         if (!checkBox.Checked)
+         {
+            return;
+         }
+
+         WinFormsHelpers.UncheckAllExceptOne(toolbarPositionToolStripMenuItem.DropDownItems
+            .Cast<ToolStripMenuItem>().ToArray(), checkBox);
+         checkBox.CheckOnClick = false;
+         applyToolbarLayoutChange();
+      }
+
       private void radioButtonAutoSelectionMode_CheckedChanged(object sender, EventArgs e)
       {
          ToolStripMenuItem checkBox = sender as ToolStripMenuItem;

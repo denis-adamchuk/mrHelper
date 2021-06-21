@@ -260,6 +260,13 @@ namespace mrHelper.App.Helpers
       }
       public event Action MainWindowLayoutChanged;
 
+      public string ToolBarPosition
+      {
+         get => getValue(ToolBarPositionKeyName, ToolBarPositionDefaultValue);
+         set => setValue(ToolBarPositionKeyName, value);
+      }
+      public event Action ToolBarPositionChanged;
+
       public int ServicePointConnectionLimit
       {
          get => getIntValue(ServicePointConnectionLimitKeyName, ServicePointConnectionLimitDefaultValue);

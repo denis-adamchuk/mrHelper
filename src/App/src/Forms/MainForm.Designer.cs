@@ -22,6 +22,8 @@ namespace mrHelper.App.Forms
             components.Dispose();
          }
 
+         Program.Settings.ToolBarPositionChanged -= onToolBarPositionChanged;
+
          _colorScheme.Changed -= onColorSchemeChanged;
 
          foreach (ToolStrip toolStrip in new ToolStrip[] { toolStripHosts, toolStripActions, toolStripCustomActions })
@@ -72,15 +74,17 @@ namespace mrHelper.App.Forms
          this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
          this.tabControlHost = new mrHelper.App.Controls.PlainTabControl();
          this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
-         this.statusStrip1 = new StatusStripEx();
+         this.statusStrip1 = new mrHelper.CommonControls.Controls.StatusStripEx();
          this.labelConnectionStatus = new System.Windows.Forms.ToolStripStatusLabel();
          this.labelOperationStatus = new System.Windows.Forms.ToolStripStatusLabel();
          this.labelStorageStatus = new System.Windows.Forms.ToolStripStatusLabel();
          this.linkLabelAbortGitClone = new System.Windows.Forms.ToolStripStatusLabel();
-         this.menuStrip1 = new MenuStripEx();
+         this.menuStrip1 = new mrHelper.CommonControls.Controls.MenuStripEx();
          this.gitLabToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.configureHostsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.configureStorageToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+         this.exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
          this.behaviorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.minimizeOnCloseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.runMrHelperWhenWindowsStartsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -111,6 +115,10 @@ namespace mrHelper.App.Forms
          this.layoutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.horizontalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.verticalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.toolbarPositionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.topTBPositionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.leftTBPositionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.rightTBPositionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.sendFeedbackToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.showHelpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -122,8 +130,8 @@ namespace mrHelper.App.Forms
          this.diffToBaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.refreshListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.refreshSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-         this.toolStripHosts = new ToolStripEx();
-         this.toolStripActions = new ToolStripEx();
+         this.toolStripHosts = new mrHelper.CommonControls.Controls.ToolStripEx();
+         this.toolStripActions = new mrHelper.CommonControls.Controls.ToolStripEx();
          this.toolStripHostsSeparator = new System.Windows.Forms.ToolStripSeparator();
          this.toolStripButtonLive = new System.Windows.Forms.ToolStripButton();
          this.toolStripButtonRecent = new System.Windows.Forms.ToolStripButton();
@@ -144,9 +152,7 @@ namespace mrHelper.App.Forms
          this.toolStripTextBoxTrackedTime = new System.Windows.Forms.ToolStripTextBox();
          this.toolStripButtonEditTrackedTime = new System.Windows.Forms.ToolStripButton();
          this.toolStripTimeTrackingSeparator = new System.Windows.Forms.ToolStripSeparator();
-         this.toolStripCustomActions = new ToolStripEx();
-         this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
-         this.exitToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+         this.toolStripCustomActions = new mrHelper.CommonControls.Controls.ToolStripEx();
          this.contextMenuStrip.SuspendLayout();
          this.toolStripContainer1.BottomToolStripPanel.SuspendLayout();
          this.toolStripContainer1.ContentPanel.SuspendLayout();
@@ -210,7 +216,7 @@ namespace mrHelper.App.Forms
          this.tabControlHost.Location = new System.Drawing.Point(0, 0);
          this.tabControlHost.Name = "tabControlHost";
          this.tabControlHost.SelectedIndex = 0;
-         this.tabControlHost.Size = new System.Drawing.Size(1050, 402);
+         this.tabControlHost.Size = new System.Drawing.Size(1050, 377);
          this.tabControlHost.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
          this.tabControlHost.TabIndex = 0;
          this.tabControlHost.SelectedIndexChanged += new System.EventHandler(this.tabControlHost_SelectedIndexChanged);
@@ -226,7 +232,7 @@ namespace mrHelper.App.Forms
          // 
          this.toolStripContainer1.ContentPanel.AutoScroll = true;
          this.toolStripContainer1.ContentPanel.Controls.Add(this.tabControlHost);
-         this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(1050, 402);
+         this.toolStripContainer1.ContentPanel.Size = new System.Drawing.Size(1050, 377);
          this.toolStripContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
          this.toolStripContainer1.Location = new System.Drawing.Point(0, 0);
          this.toolStripContainer1.Name = "toolStripContainer1";
@@ -325,16 +331,28 @@ namespace mrHelper.App.Forms
          // configureHostsToolStripMenuItem
          // 
          this.configureHostsToolStripMenuItem.Name = "configureHostsToolStripMenuItem";
-         this.configureHostsToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+         this.configureHostsToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
          this.configureHostsToolStripMenuItem.Text = "Configure hosts...";
          this.configureHostsToolStripMenuItem.Click += new System.EventHandler(this.configureHostsToolStripMenuItem_Click);
          // 
          // configureStorageToolStripMenuItem
          // 
          this.configureStorageToolStripMenuItem.Name = "configureStorageToolStripMenuItem";
-         this.configureStorageToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+         this.configureStorageToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
          this.configureStorageToolStripMenuItem.Text = "Configure storage...";
          this.configureStorageToolStripMenuItem.Click += new System.EventHandler(this.configureStorageToolStripMenuItem_Click);
+         // 
+         // toolStripSeparator1
+         // 
+         this.toolStripSeparator1.Name = "toolStripSeparator1";
+         this.toolStripSeparator1.Size = new System.Drawing.Size(175, 6);
+         // 
+         // exitToolStripMenuItem1
+         // 
+         this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
+         this.exitToolStripMenuItem1.Size = new System.Drawing.Size(178, 22);
+         this.exitToolStripMenuItem1.Text = "Exit";
+         this.exitToolStripMenuItem1.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
          // 
          // behaviorToolStripMenuItem
          // 
@@ -510,7 +528,8 @@ namespace mrHelper.App.Forms
             this.disableSplitterRestrictionsToolStripMenuItem,
             this.wrapLongRowsToolStripMenuItem,
             this.toolStripSeparator7,
-            this.layoutToolStripMenuItem});
+            this.layoutToolStripMenuItem,
+            this.toolbarPositionToolStripMenuItem});
          this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
          this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
          this.viewToolStripMenuItem.Text = "View";
@@ -577,6 +596,37 @@ namespace mrHelper.App.Forms
          this.verticalToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
          this.verticalToolStripMenuItem.Text = "Vertical";
          this.verticalToolStripMenuItem.CheckedChanged += new System.EventHandler(this.radioButtonMainWindowLayout_CheckedChanged);
+         // 
+         // toolbarPositionToolStripMenuItem
+         // 
+         this.toolbarPositionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.topTBPositionToolStripMenuItem,
+            this.leftTBPositionToolStripMenuItem,
+            this.rightTBPositionToolStripMenuItem });
+         this.toolbarPositionToolStripMenuItem.Name = "toolbarPositionToolStripMenuItem";
+         this.toolbarPositionToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+         this.toolbarPositionToolStripMenuItem.Text = "Toolbar position";
+         // 
+         // topTBPositionToolStripMenuItem
+         // 
+         this.topTBPositionToolStripMenuItem.Name = "topTBPositionToolStripMenuItem";
+         this.topTBPositionToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
+         this.topTBPositionToolStripMenuItem.Text = "Top";
+         this.topTBPositionToolStripMenuItem.CheckedChanged += new System.EventHandler(this.radioButtonToolbarLayout_CheckedChanged);
+         // 
+         // leftTBPositionToolStripMenuItem
+         // 
+         this.leftTBPositionToolStripMenuItem.Name = "leftTBPositionToolStripMenuItem";
+         this.leftTBPositionToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
+         this.leftTBPositionToolStripMenuItem.Text = "Left";
+         this.leftTBPositionToolStripMenuItem.CheckedChanged += new System.EventHandler(this.radioButtonToolbarLayout_CheckedChanged);
+         // 
+         // rightTBPositionToolStripMenuItem
+         // 
+         this.rightTBPositionToolStripMenuItem.Name = "rightTBPositionToolStripMenuItem";
+         this.rightTBPositionToolStripMenuItem.Size = new System.Drawing.Size(129, 22);
+         this.rightTBPositionToolStripMenuItem.Text = "Right";
+         this.rightTBPositionToolStripMenuItem.CheckedChanged += new System.EventHandler(this.radioButtonToolbarLayout_CheckedChanged);
          // 
          // helpToolStripMenuItem
          // 
@@ -691,24 +741,24 @@ namespace mrHelper.App.Forms
             this.toolStripButtonRecent,
             this.toolStripButtonSearch,
             this.toolStripModesSeparator,
-            this.toolStripButtonCreateNew,
-            this.toolStripButtonRefreshList,
-            this.toolStripButtonOpenFromClipboard,
-            this.toolStripGlobalActionsSeparator,
-            this.toolStripButtonDiffTool,
-            this.toolStripButtonDiscussions,
-            this.toolStripButtonAddComment,
-            this.toolStripButtonNewThread,
-            this.toolStripActionsSeparator,
             this.toolStripButtonStartStopTimer,
             this.toolStripButtonCancelTimer,
             this.toolStripButtonGoToTimeTracking,
             this.toolStripTextBoxTrackedTime,
             this.toolStripButtonEditTrackedTime,
-            this.toolStripTimeTrackingSeparator});
+            this.toolStripTimeTrackingSeparator,
+            this.toolStripButtonDiffTool,
+            this.toolStripButtonDiscussions,
+            this.toolStripButtonAddComment,
+            this.toolStripButtonNewThread,
+            this.toolStripActionsSeparator,
+            this.toolStripButtonCreateNew,
+            this.toolStripButtonRefreshList,
+            this.toolStripButtonOpenFromClipboard,
+            this.toolStripGlobalActionsSeparator});
          this.toolStripActions.Location = new System.Drawing.Point(114, 24);
          this.toolStripActions.Name = "toolStripActions";
-         this.toolStripActions.Size = new System.Drawing.Size(577, 31);
+         this.toolStripActions.Size = new System.Drawing.Size(568, 31);
          this.toolStripActions.TabIndex = 3;
          // 
          // toolStripHostsSeparator
@@ -880,7 +930,8 @@ namespace mrHelper.App.Forms
          this.toolStripTextBoxTrackedTime.Font = new System.Drawing.Font("Segoe UI", 9F);
          this.toolStripTextBoxTrackedTime.Name = "toolStripTextBoxTrackedTime";
          this.toolStripTextBoxTrackedTime.ReadOnly = true;
-         this.toolStripTextBoxTrackedTime.Size = new System.Drawing.Size(100, 31);
+         this.toolStripTextBoxTrackedTime.Size = new System.Drawing.Size(65, 31);
+         this.toolStripTextBoxTrackedTime.TextBoxTextAlign = HorizontalAlignment.Center;
          // 
          // toolStripButtonEditTrackedTime
          // 
@@ -903,22 +954,10 @@ namespace mrHelper.App.Forms
          this.toolStripCustomActions.ClickThrough = true;
          this.toolStripCustomActions.Dock = System.Windows.Forms.DockStyle.None;
          this.toolStripCustomActions.ImageScalingSize = new System.Drawing.Size(24, 24);
-         this.toolStripCustomActions.Location = new System.Drawing.Point(693, 24);
+         this.toolStripCustomActions.Location = new System.Drawing.Point(39, 55);
          this.toolStripCustomActions.Name = "toolStripCustomActions";
          this.toolStripCustomActions.Size = new System.Drawing.Size(111, 25);
          this.toolStripCustomActions.TabIndex = 4;
-         // 
-         // toolStripSeparator1
-         // 
-         this.toolStripSeparator1.Name = "toolStripSeparator1";
-         this.toolStripSeparator1.Size = new System.Drawing.Size(177, 6);
-         // 
-         // exitToolStripMenuItem1
-         // 
-         this.exitToolStripMenuItem1.Name = "exitToolStripMenuItem1";
-         this.exitToolStripMenuItem1.Size = new System.Drawing.Size(180, 22);
-         this.exitToolStripMenuItem1.Text = "Exit";
-         this.exitToolStripMenuItem1.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
          // 
          // MainForm
          // 
@@ -1029,6 +1068,10 @@ namespace mrHelper.App.Forms
       private ToolStripMenuItem layoutToolStripMenuItem;
       private ToolStripMenuItem horizontalToolStripMenuItem;
       private ToolStripMenuItem verticalToolStripMenuItem;
+      private ToolStripMenuItem toolbarPositionToolStripMenuItem;
+      private ToolStripMenuItem topTBPositionToolStripMenuItem;
+      private ToolStripMenuItem rightTBPositionToolStripMenuItem;
+      private ToolStripMenuItem leftTBPositionToolStripMenuItem;
       private ToolStripEx toolStripCustomActions;
       private ToolStripEx toolStripHosts;
       private ToolStripSeparator toolStripSeparator1;

@@ -841,6 +841,130 @@ namespace mrHelper.App.Forms
          }
          return true;
       }
+
+      void moveToolstrips(ToolStripPanel moveFrom, ToolStripPanel moveTo)
+      {
+         bool isMoveable(ToolStrip toolStrip)
+         {
+            return toolStrip == toolStripCustomActions || toolStrip == toolStripActions;
+         }
+
+         for (int iToolStrip = moveFrom.Controls.Count - 1; iToolStrip >= 0; --iToolStrip)
+         {
+            ToolStrip toolStrip = moveFrom.Controls[iToolStrip] as ToolStrip;
+            if (isMoveable(toolStrip))
+            {
+               moveFrom.Controls.Remove(toolStrip);
+               moveTo.Controls.Add(toolStrip);
+            }
+         }
+      }
+
+      private void onToolBarPositionChanged()
+      {
+         initToolBars();
+      }
+
+      private void pullToolBar(ToolStrip toolStrip, bool up)
+      {
+         int min = int.MaxValue;
+         while (true)
+         {
+            int prev = up ? toolStrip.Location.Y : toolStrip.Location.X;
+            if (prev == 1)
+            {
+               break;
+            }
+
+            toolStrip.Location = up
+               ? new Point(toolStrip.Location.X, prev - 1)
+               : new Point(prev - 1, toolStrip.Location.Y);
+            int current = up ? toolStrip.Location.Y : toolStrip.Location.X;
+            if (current > prev)
+            {
+               if (min != int.MaxValue)
+               {
+                  toolStrip.Location = up
+                     ? new Point(toolStrip.Location.X, min)
+                     : new Point(min, toolStrip.Location.Y);
+               }
+               break;
+            }
+
+            if (current < prev)
+            {
+               min = current;
+               continue;
+            }
+
+            break; // current == prev
+         }
+      }
+
+      private void initToolBars()
+      {
+         toolStripContainer1.SuspendLayout();
+
+         // Attach tool bars to their parents
+         var tbPosition = ConfigurationHelper.GetToolBarPosition(Program.Settings);
+         switch (tbPosition)
+         {
+            case ConfigurationHelper.ToolBarPosition.Top:
+               moveToolstrips(toolStripContainer1.LeftToolStripPanel, toolStripContainer1.TopToolStripPanel);
+               moveToolstrips(toolStripContainer1.RightToolStripPanel, toolStripContainer1.TopToolStripPanel);
+               break;
+
+            case ConfigurationHelper.ToolBarPosition.Left:
+               moveToolstrips(toolStripContainer1.TopToolStripPanel, toolStripContainer1.LeftToolStripPanel);
+               moveToolstrips(toolStripContainer1.RightToolStripPanel, toolStripContainer1.LeftToolStripPanel);
+               break;
+
+            case ConfigurationHelper.ToolBarPosition.Right:
+               moveToolstrips(toolStripContainer1.TopToolStripPanel, toolStripContainer1.LeftToolStripPanel);
+               moveToolstrips(toolStripContainer1.LeftToolStripPanel, toolStripContainer1.RightToolStripPanel);
+               break;
+         }
+
+         // To guarantee the following order: Hosts - Actions - Custom Actions
+         toolStripCustomActions.Location = new System.Drawing.Point(0, 0);
+         toolStripActions.Location = new System.Drawing.Point(0, 0);
+         toolStripHosts.Location = new System.Drawing.Point(0, 0);
+
+         // Pull first control closer to the border and minimize gaps between tool bars
+         if (toolStripContainer1.TopToolStripPanel.Controls.Contains(toolStripActions))
+         {
+            if (isToolStripHostsVisible())
+            {
+               pullToolBar(toolStripHosts, false);
+               toolStripActions.Location = new Point(
+                  toolStripHosts.Location.X + toolStripHosts.Width,
+                  toolStripActions.Location.Y);
+            }
+            else
+            {
+               pullToolBar(toolStripActions, false);
+            }
+            toolStripCustomActions.Location = new Point(
+               toolStripActions.Location.X + toolStripActions.Width,
+               toolStripCustomActions.Location.Y);
+         }
+         else
+         {
+            pullToolBar(toolStripActions, true);
+            toolStripCustomActions.Location = new Point(
+               toolStripCustomActions.Location.X,
+               toolStripActions.Location.Y + toolStripActions.Height);
+         }
+
+         // Place menu
+         menuStrip1.Location = new System.Drawing.Point(0, 0);
+         toolStripContainer1.ResumeLayout();
+      }
+
+      private bool isToolStripHostsVisible()
+      {
+         return toolStripHosts.Items.Count > 1;
+      }
    }
 }
 
