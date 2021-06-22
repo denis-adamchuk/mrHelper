@@ -48,7 +48,7 @@ namespace mrHelper.App.Controls
             Trace.TraceInformation("[ConnectionPage] User list is not ready at the moment of creating a MR from URL");
          }
 
-         createNewMergeRequest(HostName, CurrentUser, initialProperties, fullProjectList, fullUserList);
+         createNewMergeRequest(HostName, CurrentUser, initialProperties, fullProjectList, fullUserList, false);
       }
 
       async private Task connectToUrlAsyncInternal(string url, UrlParser.ParsedMergeRequestUrl parsedUrl)

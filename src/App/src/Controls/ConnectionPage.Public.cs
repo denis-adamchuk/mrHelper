@@ -79,12 +79,12 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         showWarningAboutIntegrationWithGitUI();
-
          string projectName = getDefaultProjectName();
          NewMergeRequestProperties initialFormState = getDefaultNewMergeRequestProperties(
             HostName, CurrentUser, projectName);
-         createNewMergeRequest(HostName, CurrentUser, initialFormState, fullProjectList, fullUserList);
+         bool showIntegrationHint = _integratedInGitExtensions || _integratedInSourceTree;
+         createNewMergeRequest(HostName, CurrentUser, initialFormState, fullProjectList, fullUserList,
+            showIntegrationHint);
       }
 
       internal void CreateFromUrl(ParsedNewMergeRequestUrl parsedNewMergeRequestUrl)

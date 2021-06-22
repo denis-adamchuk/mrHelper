@@ -53,6 +53,7 @@
          this.groupBoxProject = new System.Windows.Forms.GroupBox();
          this.comboBoxProject = new System.Windows.Forms.ComboBox();
          this.labelCheckingTargetBranch = new System.Windows.Forms.Label();
+         this.labelIntegrationHint = new System.Windows.Forms.Label();
          this.groupBoxSource.SuspendLayout();
          this.groupBoxTarget.SuspendLayout();
          this.groupBoxTitle.SuspendLayout();
@@ -323,6 +324,7 @@
          // 
          // labelCheckingTargetBranch
          // 
+         this.labelCheckingTargetBranch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.labelCheckingTargetBranch.AutoSize = true;
          this.labelCheckingTargetBranch.Location = new System.Drawing.Point(93, 425);
          this.labelCheckingTargetBranch.Name = "labelCheckingTargetBranch";
@@ -331,12 +333,26 @@
          this.labelCheckingTargetBranch.Text = "Checking target branch...";
          this.labelCheckingTargetBranch.Visible = false;
          // 
+         // labelIntegrationHint
+         // 
+         this.labelIntegrationHint.AutoSize = true;
+         this.labelIntegrationHint.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelIntegrationHint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
+         this.labelIntegrationHint.Location = new System.Drawing.Point(70, 68);
+         this.labelIntegrationHint.Name = "labelIntegrationHint";
+         this.labelIntegrationHint.Size = new System.Drawing.Size(658, 13);
+         this.labelIntegrationHint.TabIndex = 9;
+         this.labelIntegrationHint.Text = "You will not need to manually fill all fields if you use \"Create Merge Request\" f" +
+    "rom GitExtensions/SourceTree menu";
+         this.labelIntegrationHint.Visible = false;
+         // 
          // MergeRequestPropertiesForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(797, 455);
+         this.Controls.Add(this.labelIntegrationHint);
          this.Controls.Add(this.labelCheckingTargetBranch);
          this.Controls.Add(this.groupBoxOptions);
          this.Controls.Add(this.groupBoxProject);
@@ -391,5 +407,6 @@
       protected System.Windows.Forms.Label labelSpecialNotePrefix;
       protected System.Windows.Forms.CheckBox checkBoxHighPriority;
       private System.Windows.Forms.Label labelCheckingTargetBranch;
+      protected System.Windows.Forms.Label labelIntegrationHint;
    }
 }

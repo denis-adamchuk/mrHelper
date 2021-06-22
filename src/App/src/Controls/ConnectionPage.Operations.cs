@@ -120,14 +120,20 @@ namespace mrHelper.App.Controls
       }
 
       private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties,
-         IEnumerable<Project> fullProjectList, IEnumerable<User> fullUserList)
+         IEnumerable<Project> fullProjectList, IEnumerable<User> fullUserList, bool showIntegrationHint)
       {
+         if (showIntegrationHint)
+         {
+            showHintAboutIntegrationWithGitUI();
+         }
+
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          var sourceBranchesInUse = GitLabClient.Helpers.GetSourceBranchesByUser(CurrentUser, dataCache);
 
          using (MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
             _shortcuts.GetProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList,
-            sourceBranchesInUse, _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate())))
+            sourceBranchesInUse, _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()),
+            showIntegrationHint))
          {
             if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) != DialogResult.OK)
             {

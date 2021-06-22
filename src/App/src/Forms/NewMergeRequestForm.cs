@@ -17,7 +17,8 @@ namespace mrHelper.App.Forms
    {
       internal NewMergeRequestForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
          NewMergeRequestProperties initialState, IEnumerable<Project> projects, IEnumerable<User> users,
-         IEnumerable<ProjectBranchKey> sourceBranchesInUse, string sourceBranchTemplate)
+         IEnumerable<ProjectBranchKey> sourceBranchesInUse, string sourceBranchTemplate,
+         bool showIntegrationHint)
          : base(hostname, projectAccessor, currentUser, isAllowedToChangeSource(initialState), users)
       {
          _initialState = initialState;
@@ -34,6 +35,7 @@ namespace mrHelper.App.Forms
          }
 
          buttonCancel.ConfirmationText = "Do you want to discard creating a new merge request?";
+         labelIntegrationHint.Visible = showIntegrationHint;
       }
 
       protected override void Dispose(bool disposing)

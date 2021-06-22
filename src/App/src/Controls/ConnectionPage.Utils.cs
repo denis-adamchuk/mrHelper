@@ -864,7 +864,7 @@ namespace mrHelper.App.Controls
          dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
       }
 
-      private void showWarningAboutIntegrationWithGitUI()
+      private void showHintAboutIntegrationWithGitUI()
       {
          if (Program.Settings.ShowWarningOnCreateMergeRequest && (_integratedInGitExtensions || _integratedInSourceTree))
          {
