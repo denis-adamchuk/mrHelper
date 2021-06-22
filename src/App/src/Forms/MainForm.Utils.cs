@@ -478,21 +478,26 @@ namespace mrHelper.App.Forms
             }
          }
 
+         Color? consolidatedColor = getConsolidatedColor();
          if (_colorScheme == null)
          {
             applyColor(null);
-         }
-         else if (isConnectionLost())
-         {
-            applyColor(_colorScheme.GetColor("Status_LostConnection")?.Color);
          }
          else if (isTrackingTime())
          {
             applyColor(_colorScheme.GetColor("Status_Tracking")?.Color);
          }
+         else if (consolidatedColor.HasValue)
+         {
+            applyColor(consolidatedColor);
+         }
+         else if (isConnectionLost())
+         {
+            applyColor(_colorScheme.GetColor("Status_LostConnection")?.Color);
+         }
          else
          {
-            applyColor(getConsolidatedColor());
+            applyColor(null);
          }
       }
 
