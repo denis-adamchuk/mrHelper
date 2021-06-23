@@ -503,6 +503,7 @@ namespace mrHelper.App.Controls
 
          resetSplitterDistance(splitContainerPrimary, ResetSplitterDistanceMode.UserDefined);
          resetSplitterDistance(splitContainerSecondary, ResetSplitterDistanceMode.UserDefined);
+         //resetSplitterDistance(splitContainerDescription.SplitContainer, ResetSplitterDistanceMode.UserDefined);
       }
 
       internal void StoreSplitterDistance()
@@ -512,6 +513,7 @@ namespace mrHelper.App.Controls
 
          saveSplitterDistanceToConfig(splitContainerPrimary);
          saveSplitterDistanceToConfig(splitContainerSecondary);
+         //saveSplitterDistanceToConfig(splitContainerDescription.SplitContainer);
       }
 
       internal Color? GetSummaryColor()

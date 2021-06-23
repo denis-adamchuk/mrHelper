@@ -53,6 +53,12 @@ namespace mrHelper.App.Controls
       private void onPostLoadDiscussions(MergeRequestKey mrk, IEnumerable<Discussion> discussions)
       {
          onDiscussionManagerEvent();
+
+         var fmkOpt = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
+         if (fmkOpt.HasValue && mrk.Equals(fmkOpt.Value))
+         {
+            splitContainerSiteDescription.UpdateData(fmkOpt, getDataCache(getCurrentTabDataCacheType()));
+         }
       }
 
       private void onDiscussionManagerEvent()

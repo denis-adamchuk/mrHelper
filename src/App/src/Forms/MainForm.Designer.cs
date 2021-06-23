@@ -930,7 +930,7 @@ namespace mrHelper.App.Forms
          this.toolStripTextBoxTrackedTime.Font = new System.Drawing.Font("Segoe UI", 9F);
          this.toolStripTextBoxTrackedTime.Name = "toolStripTextBoxTrackedTime";
          this.toolStripTextBoxTrackedTime.ReadOnly = true;
-         this.toolStripTextBoxTrackedTime.Size = new System.Drawing.Size(65, 31);
+         this.toolStripTextBoxTrackedTime.Size = new System.Drawing.Size(70, 31);
          this.toolStripTextBoxTrackedTime.TextBoxTextAlign = HorizontalAlignment.Center;
          // 
          // toolStripButtonEditTrackedTime

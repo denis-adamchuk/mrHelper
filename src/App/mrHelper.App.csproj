@@ -118,6 +118,13 @@
     <Compile Include="src\Controls\CustomActionToolbarItem.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\DescriptionSplitContainerSite.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\DescriptionSplitContainerSite.Designer.cs">
+      <DependentUpon>DescriptionSplitContainerSite.cs</DependentUpon>
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="src\Controls\DiscussionPanel.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -367,6 +374,9 @@
     <Compile Include="src\Program.cs" />
     <EmbeddedResource Include="src\Controls\ConnectionPage.resx">
       <DependentUpon>ConnectionPage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Controls\DescriptionSplitContainerSite.resx">
+      <DependentUpon>DescriptionSplitContainerSite.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\DiscussionPanel.resx">
       <DependentUpon>DiscussionPanel.cs</DependentUpon>

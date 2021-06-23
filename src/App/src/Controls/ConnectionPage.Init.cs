@@ -10,6 +10,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
+using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace mrHelper.App.Controls
 {
@@ -117,15 +118,9 @@ namespace mrHelper.App.Controls
          linkLabelConnectedTo.Text = String.Empty;
          linkLabelConnectedTo.SetLinkLabelClicked(UrlHelper.OpenBrowser);
 
-         setFontSizeInMergeRequestDescriptionBox();
-      }
-
-      private void setFontSizeInMergeRequestDescriptionBox()
-      {
-         string cssEx = String.Format("body div {{ font-size: {0}px; }}",
-            CommonControls.Tools.WinFormsHelpers.GetFontSizeInPixels(richTextBoxMergeRequestDescription));
-         richTextBoxMergeRequestDescription.BaseStylesheet =
-            String.Format("{0}{1}", mrHelper.App.Properties.Resources.Common_CSS, cssEx);
+         splitContainerSiteDescription.Initialize(_keywords, _mdPipeline);
+         splitContainerSiteDescription.SplitContainer.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
+         splitContainerSiteDescription.SplitContainer.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
       }
 
       private void startRedrawTimer()

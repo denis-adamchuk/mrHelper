@@ -287,16 +287,6 @@ namespace mrHelper.App.Forms
          return listViewKnownHosts.SelectedItems.Count < 1 ? null : listViewKnownHosts.SelectedItems[0].Text;
       }
 
-      private static void formatProjectListItem(ListControlConvertEventArgs e)
-      {
-         e.Value = e.ListItem.ToString();
-      }
-
-      private static void formatUserListItem(ListControlConvertEventArgs e)
-      {
-         e.Value = (e.ListItem as User).Name;
-      }
-
       private void launchAddKnownHostDialog()
       {
          using (AddKnownHostForm form = new AddKnownHostForm())

@@ -118,25 +118,8 @@ namespace mrHelper.App.Controls
          Trace.TraceInformation(String.Format("[ConnectionPage] Font changed, new emSize = {0}", Font.Size));
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
-         // see 9b65d7413c
-         if (richTextBoxMergeRequestDescription.Location.X < 0
-          || richTextBoxMergeRequestDescription.Location.Y < 0)
-         {
-            Trace.TraceWarning(
-                  "Detected negative Location of Html Panel. "
-                + "Location: {{{0}, {1}}}, Size: {{{2}, {3}}}. GroupBox Size: {{{4}, {5}}}",
-               richTextBoxMergeRequestDescription.Location.X,
-               richTextBoxMergeRequestDescription.Location.Y,
-               richTextBoxMergeRequestDescription.Size.Width,
-               richTextBoxMergeRequestDescription.Size.Height,
-               groupBoxSelectedMR.Size.Width,
-               groupBoxSelectedMR.Size.Height);
-            Debug.Assert(false);
-         }
-
          updateMergeRequestList(EDataCacheType.Live); // update row height of List View
          updateMergeRequestList(EDataCacheType.Search); // update row height of List View
-         setFontSizeInMergeRequestDescriptionBox();
       }
    }
 }

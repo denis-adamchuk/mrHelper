@@ -837,7 +837,7 @@ namespace mrHelper.App.Forms
 
       private bool checkAutoScaleDimensions()
       {
-         if (CurrentAutoScaleDimensions.Height == 0 || CurrentAutoScaleDimensions.Width == 0)
+         if (CurrentAutoScaleDimensions.Height == 0 || CurrentAutoScaleDimensions.Width == 0) //-V3024
          {
             MessageBox.Show("A problem with system fonts has been detected, mrHelper cannot start",
                "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

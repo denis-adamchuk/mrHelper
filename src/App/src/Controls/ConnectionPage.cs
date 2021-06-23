@@ -26,8 +26,7 @@ namespace mrHelper.App.Controls
 
       private bool _isActivePage;
       private bool _exiting = false;
-      private bool _userIsMovingSplitter1 = false;
-      private bool _userIsMovingSplitter2 = false;
+      private readonly Dictionary<string, bool> _userIsMovingSplitter = new Dictionary<string, bool>();
       private readonly bool _integratedInGitExtensions;
       private readonly bool _integratedInSourceTree;
 

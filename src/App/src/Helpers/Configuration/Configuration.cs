@@ -144,34 +144,6 @@ namespace mrHelper.App.Helpers
             getValue(keyName, defaultValue), forceLowerCase);
       }
 
-      private void setStringToPointDictionary(string keyName, Dictionary<string, Point> value)
-      {
-         setValue(keyName, RawDictionaryStringHelper.SerializeRawDictionaryString(
-            value.ToDictionary(item => item.Key, item => String.Format("{0},{1}", item.Value.X, item.Value.Y))));
-      }
-
-      private Dictionary<string, Point> getStringToPointDictionary(
-         string keyName, string defaultValue)
-      {
-         return RawDictionaryStringHelper.DeserializeRawDictionaryString(getValue(keyName, defaultValue), false)
-            .ToDictionary(
-               item => item.Key,
-               item =>
-               {
-                  string[] splitted = item.Value.Split(',');
-                  if (splitted.Length == 2
-                  && int.TryParse(splitted[0], out int x)
-                  && int.TryParse(splitted[1], out int y))
-                  {
-                     return new Point(x, y);
-                  }
-                  return new Point(0, 0);
-               })
-            .ToDictionary(
-               item => item.Key,
-               item => item.Value);
-      }
-
       private void setStringToStringDictionary(string keyName, Dictionary<string, string> value)
       {
          setValue(keyName, RawDictionaryStringHelper.SerializeRawDictionaryString(value));

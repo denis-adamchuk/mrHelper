@@ -232,6 +232,9 @@ namespace mrHelper.App.Helpers
       private static readonly string SecondarySplitContainerDistanceKeyName      = "RPSplitterDistance";
       private static readonly int    SecondarySplitContainerDistanceDefaultValue = 0;
 
+      private static readonly string DescriptionSplitContainerDistanceKeyName      = "DescriptionSplitterDistance";
+      private static readonly int    DescriptionSplitContainerDistanceDefaultValue = 0;
+
       private static readonly string VisualThemeNameKeyName       = "VisualThemeName";
       private static readonly string VisualThemeNameDefaultValue  = Constants.DefaultThemeName;
 

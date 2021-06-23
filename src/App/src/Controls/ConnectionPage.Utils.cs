@@ -11,6 +11,7 @@ using mrHelper.GitLabClient;
 using static mrHelper.App.Helpers.ConfigurationHelper;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
+using System.Text;
 
 namespace mrHelper.App.Controls
 {
@@ -160,7 +161,7 @@ namespace mrHelper.App.Controls
 
       // List View
 
-      private void initializeListViewGroups(EDataCacheType mode, string hostname)
+      private void initializeListViewGroups(EDataCacheType mode)
       {
          Controls.MergeRequestListView listView = getListView(mode);
          listView.Items.Clear();
@@ -321,36 +322,23 @@ namespace mrHelper.App.Controls
 
       private bool isUserMovingSplitter(SplitContainer splitter)
       {
-         Debug.Assert(splitter == splitContainerPrimary || splitter == splitContainerSecondary);
-
-         return splitter == splitContainerPrimary ? _userIsMovingSplitter1 : _userIsMovingSplitter2;
+         Debug.Assert(splitter == splitContainerPrimary
+                   || splitter == splitContainerSecondary
+                   || splitter == splitContainerSiteDescription.SplitContainer);
+         return _userIsMovingSplitter.TryGetValue(splitter.Name, out bool value) && value;
       }
 
       private void onUserIsMovingSplitter(SplitContainer splitter, bool value)
       {
-         Debug.Assert(splitter == splitContainerPrimary || splitter == splitContainerSecondary);
-
+         Debug.Assert(splitter == splitContainerPrimary
+                   || splitter == splitContainerSecondary
+                   || splitter == splitContainerSiteDescription.SplitContainer);
          if (!value) // move is finished
          {
             Trace.TraceInformation("[ConnectionPage] onUserIsMovingSplitter({0}, false)", splitter.Name);
+            saveSplitterDistanceToConfig(splitter);
          }
-
-         if (splitter == splitContainerPrimary)
-         {
-            if (!value)
-            {
-               saveSplitterDistanceToConfig(splitContainerPrimary);
-            }
-            _userIsMovingSplitter1 = value;
-         }
-         else
-         {
-            if (!value)
-            {
-               saveSplitterDistanceToConfig(splitContainerSecondary);
-            }
-            _userIsMovingSplitter2 = value;
-         }
+         _userIsMovingSplitter[splitter.Name] = value;
       }
 
       private bool setSplitterDistanceSafe(SplitContainer splitContainer, int distance)
@@ -404,6 +392,10 @@ namespace mrHelper.App.Controls
          {
             result = Program.Settings.SecondarySplitContainerDistance;
          }
+         else if (splitContainer == splitContainerSiteDescription.SplitContainer)
+         {
+            result = Program.Settings.DescriptionSplitContainerDistance;
+         }
          else
          {
             Debug.Assert(false);
@@ -429,6 +421,10 @@ namespace mrHelper.App.Controls
          else if (splitContainer == splitContainerSecondary)
          {
             Program.Settings.SecondarySplitContainerDistance = splitContainer.SplitterDistance;
+         }
+         else if (splitContainer == splitContainerSiteDescription.SplitContainer)
+         {
+            Program.Settings.DescriptionSplitContainerDistance = splitContainer.SplitterDistance;
          }
          else
          {
@@ -672,29 +668,21 @@ namespace mrHelper.App.Controls
 
       private void updateMergeRequestDetails(FullMergeRequestKey? fmkOpt)
       {
+         splitContainerSiteDescription.UpdateData(fmkOpt, getDataCache(getCurrentTabDataCacheType()));
+         updateConnectedToLabel(fmkOpt);
+      }
+
+      private void updateConnectedToLabel(FullMergeRequestKey? fmkOpt)
+      {
          if (!fmkOpt.HasValue)
          {
-            richTextBoxMergeRequestDescription.Text = String.Empty;
             linkLabelConnectedTo.Text = String.Empty;
          }
          else
          {
             FullMergeRequestKey fmk = fmkOpt.Value;
-
-            string rawTitle = !String.IsNullOrEmpty(fmk.MergeRequest.Title) ? fmk.MergeRequest.Title : "Title is empty";
-            string title = MarkDownUtils.ConvertToHtml(rawTitle, String.Empty, _mdPipeline);
-
-            string rawDescription = !String.IsNullOrEmpty(fmk.MergeRequest.Description)
-               ? fmk.MergeRequest.Description : "Description is empty";
-            string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey);
-            string description = MarkDownUtils.ConvertToHtml(rawDescription, uploadsPrefix, _mdPipeline);
-
-            string body = String.Format("<b>Title</b><br>{0}<br><b>Description</b><br>{1}", title, description);
-            richTextBoxMergeRequestDescription.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
             linkLabelConnectedTo.Text = fmk.MergeRequest.Web_Url;
          }
-
-         richTextBoxMergeRequestDescription.Update();
          _toolTip.SetToolTip(linkLabelConnectedTo, linkLabelConnectedTo.Text);
       }
 
@@ -765,17 +753,21 @@ namespace mrHelper.App.Controls
 
          splitContainerPrimary.SuspendLayout();
          splitContainerSecondary.SuspendLayout();
+         splitContainerSiteDescription.SuspendLayout();
 
          resetSplitterDistance(splitContainerPrimary, ResetSplitterDistanceMode.Minimum);
          resetSplitterDistance(splitContainerSecondary, ResetSplitterDistanceMode.Minimum);
+         resetSplitterDistance(splitContainerSiteDescription.SplitContainer, ResetSplitterDistanceMode.Minimum);
 
          updateSplitterOrientation();
 
          resetSplitterDistance(splitContainerPrimary, ResetSplitterDistanceMode.Middle);
          resetSplitterDistance(splitContainerSecondary, ResetSplitterDistanceMode.Middle);
+         resetSplitterDistance(splitContainerSiteDescription.SplitContainer, ResetSplitterDistanceMode.Middle);
 
          splitContainerPrimary.ResumeLayout();
          splitContainerSecondary.ResumeLayout();
+         splitContainerSiteDescription.ResumeLayout();
       }
 
       // Filter

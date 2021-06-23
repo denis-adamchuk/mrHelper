@@ -25,6 +25,12 @@ namespace mrHelper.GitLabClient
                 IId == other.IId;
       }
 
+      public bool Equals(FullMergeRequestKey other)
+      {
+         return ProjectKey.Equals(other.ProjectKey) &&
+                IId == other.MergeRequest.IId;
+      }
+
       public override int GetHashCode()
       {
          int hashCode = -195462282;
