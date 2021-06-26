@@ -281,5 +281,17 @@ namespace mrHelper.StorageSupport
          return hashCode;
       }
    }
+
+   public struct RevisionComparisonArguments
+   {
+      public RevisionComparisonArguments(string sha1, string sha2)
+      {
+         Sha1 = sha1;
+         Sha2 = sha2;
+      }
+
+      public string Sha1 { get; }
+      public string Sha2 { get; }
+   }
 }
 

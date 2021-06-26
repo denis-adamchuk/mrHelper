@@ -7,6 +7,7 @@ using System.IO;
 using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.StorageSupport
 {
@@ -54,7 +55,8 @@ namespace mrHelper.StorageSupport
       /// Throws ArgumentException if requirements on `path` argument are not met
       /// </summary>
       internal GitRepository(string parentFolder, ProjectKey projectKey,
-         ISynchronizeInvoke synchronizeInvoke, LocalCommitStorageType type, Action<IGitRepository> onClonedRepo)
+         ISynchronizeInvoke synchronizeInvoke, LocalCommitStorageType type, Action<IGitRepository> onClonedRepo,
+         RepositoryAccessor repositoryAccessor)
       {
          Path = LocalCommitStoragePathFinder.FindPath(parentFolder, projectKey, type);
 
@@ -75,7 +77,7 @@ namespace mrHelper.StorageSupport
          _updater = new GitRepositoryUpdater(synchronizeInvoke, this, _processManager, mode, onCloned, onFetched);
          _onClonedRepo = onClonedRepo;
 
-         _commandService = new NativeGitCommandService(_processManager, Path);
+         _commandService = new NativeGitCommandService(_processManager, Path, repositoryAccessor);
 
          ExpectingClone = isEmptyFolder(Path);
          ProjectKey = projectKey;

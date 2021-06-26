@@ -281,24 +281,9 @@ namespace mrHelper.StorageSupport
          await TaskUtils.WhileAsync(() => !isAwaitedUpdate && _activeAwaitedUpdateRequestCount > 0);
       }
 
-      async private Task<Comparison> fetchSingleComparisonAsync(string baseSha, string headSha)
+      private Task<Comparison> fetchSingleComparisonAsync(string baseSha, string headSha)
       {
-         Comparison comparison = _fileStorage.ComparisonCache.LoadComparison(baseSha, headSha);
-         if (comparison != null || _repositoryAccessor == null)
-         {
-            return comparison;
-         }
-
-         traceDebug(String.Format("Fetching comparison {0} vs {1}...", baseSha, headSha));
-         comparison = await _repositoryAccessor.Compare(baseSha, headSha);
-         if (comparison == null)
-         {
-            return null;
-         }
-
-         _fileStorage.ComparisonCache.SaveComparison(baseSha, headSha, comparison);
-         traceDebug(String.Format("Saved comparison {0} vs {1}", baseSha, headSha));
-         return comparison;
+         return _repositoryAccessor.Compare(baseSha, headSha, _fileStorage.ComparisonCache);
       }
 
       private async Task processComparisonsAsync(bool isAwaitedUpdate,

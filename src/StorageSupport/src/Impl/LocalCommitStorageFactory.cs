@@ -71,10 +71,11 @@ namespace mrHelper.StorageSupport
          ILocalCommitStorage result;
          try
          {
+            RepositoryAccessor repositoryAccessor =
+               _projectAccessor.GetSingleProjectAccessor(key.ProjectName).GetRepositoryAccessor();
             if (type == LocalCommitStorageType.FileStorage)
             {
-               FileStorage storage = new FileStorage(ParentFolder, key, _synchronizeInvoke,
-                  _projectAccessor.GetSingleProjectAccessor(key.ProjectName).GetRepositoryAccessor(), this);
+               FileStorage storage = new FileStorage(ParentFolder, key, _synchronizeInvoke, repositoryAccessor, this);
                _fileStorages[key] = storage;
                result = storage;
             }
@@ -84,7 +85,7 @@ namespace mrHelper.StorageSupport
                          || type == LocalCommitStorageType.ShallowGitRepository);
 
                GitRepository storage = new GitRepository(ParentFolder, key, _synchronizeInvoke, type,
-                  (r) => GitRepositoryCloned?.Invoke(r));
+                  (r) => GitRepositoryCloned?.Invoke(r), repositoryAccessor);
                _gitRepositories[key] = storage;
                result = storage;
             }

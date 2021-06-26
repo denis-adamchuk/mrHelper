@@ -45,7 +45,7 @@ namespace mrHelper.StorageSupport
          _updater = new FileStorageUpdater(synchronizeInvoke, this, repositoryAccessor, properties);
 
          _processManager = new GitProcessManager(synchronizeInvoke, Path);
-         _commandService = new FileStorageGitCommandService(_processManager, Path, this);
+         _commandService = new FileStorageGitCommandService(_processManager, Path, this, repositoryAccessor);
 
          Trace.TraceInformation(String.Format(
             "[FileStorage] Created FileStorage at Path {0} for host {1}, project {2}, ",

@@ -23,7 +23,9 @@ namespace mrHelper.StorageSupport
    public interface IGitCommandService
    {
       IEnumerable<string> ShowRevision(GitShowRevisionArguments arguments);
+
       IEnumerable<string> ShowDiff(GitDiffArguments arguments);
+
       int LaunchDiffTool(DiffToolArguments arguments);
 
       IFileRenameDetector RenameDetector { get; }

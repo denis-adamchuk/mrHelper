@@ -1,12 +1,14 @@
 ﻿using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.StorageSupport
 {
    class NativeGitCommandService : GitCommandService
    {
-      internal NativeGitCommandService(IExternalProcessManager operationManager, string path)
-         : base(operationManager)
+      internal NativeGitCommandService(IExternalProcessManager operationManager, string path,
+         RepositoryAccessor repositoryAccessor)
+         : base(operationManager, repositoryAccessor)
       {
          _path = path;
          RenameDetector = new GitRepositoryRenameDetector(this);
@@ -37,6 +39,11 @@ namespace mrHelper.StorageSupport
       async protected override Task<object> runCommandAsync(GitShowRevisionArguments arguments)
       {
          return (await startExternalProcessAsync("git", arguments.ToString(), _path, null)).StdOut;
+      }
+
+      async protected override Task<object> runCommandAsync(RevisionComparisonArguments arguments)
+      {
+         return await _repositoryAccessor.Compare(arguments.Sha1, arguments.Sha2, null);
       }
 
       private readonly string _path;

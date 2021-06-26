@@ -18,6 +18,7 @@ namespace mrHelper.StorageSupport
    {
       Task FetchAsync(GitShowRevisionArguments arguments);
       Task FetchAsync(GitDiffArguments arguments);
+      Task FetchAsync(RevisionComparisonArguments arguments);
    }
 }
 

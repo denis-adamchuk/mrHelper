@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.StorageSupport
 {
@@ -17,9 +19,10 @@ namespace mrHelper.StorageSupport
 
    internal abstract class GitCommandService : IAsyncGitCommandService, IDisposable
    {
-      internal GitCommandService(IExternalProcessManager processManager)
+      internal GitCommandService(IExternalProcessManager processManager, RepositoryAccessor repositoryAccessor)
       {
          _processManager = processManager;
+         _repositoryAccessor = repositoryAccessor;
          FullContextDiffProvider = new FullContextDiffProvider(this);
          GitDiffAnalyzer = new GitDiffAnalyzer(this);
       }
@@ -76,6 +79,19 @@ namespace mrHelper.StorageSupport
          }
       }
 
+      public Task FetchAsync(RevisionComparisonArguments arguments)
+      {
+         try
+         {
+            return runCommandAndCacheResultAsync(arguments, _cachedComparisons);
+         }
+         catch (GitCommandServiceInternalException ex)
+         {
+            ExceptionHandlers.Handle(ex.Message, ex);
+            throw new FetchFailedException(ex);
+         }
+      }
+
       public int LaunchDiffTool(DiffToolArguments arguments)
       {
          try
@@ -105,26 +121,26 @@ namespace mrHelper.StorageSupport
       abstract protected object runCommand(DiffToolArguments arguments);
       abstract protected Task<object> runCommandAsync(GitDiffArguments arguments);
       abstract protected Task<object> runCommandAsync(GitShowRevisionArguments arguments);
+      abstract protected Task<object> runCommandAsync(RevisionComparisonArguments arguments);
 
-      private IEnumerable<string> runCommandAndCacheResult<T>(T arguments,
-         SelfCleanUpDictionary<T, IEnumerable<string>> cache)
+      private K runCommandAndCacheResult<T, K>(T arguments, SelfCleanUpDictionary<T, K> cache)
       {
          if (_isDisposed)
          {
-            return null;
+            return default(K);
          }
 
-         if (cache.TryGetValue(arguments, out IEnumerable<string> value))
+         if (cache.TryGetValue(arguments, out K value))
          {
             return value;
          }
 
          if (!((dynamic)arguments).IsValid())
          {
-            return null;
+            return default(K);
          }
 
-         IEnumerable<string> result = (IEnumerable<string>)runCommand((dynamic)arguments);
+         K result = (K)runCommand((dynamic)arguments);
          if (result != null)
          {
             cache.Add(arguments, result);
@@ -132,15 +148,15 @@ namespace mrHelper.StorageSupport
          return result;
       }
 
-      async private Task runCommandAndCacheResultAsync<T>(T arguments,
-         SelfCleanUpDictionary<T, IEnumerable<string>> cache)
+      async private Task runCommandAndCacheResultAsync<T, K>(T arguments,
+         SelfCleanUpDictionary<T, K> cache)
       {
          if (_isDisposed || cache.ContainsKey(arguments) || !((dynamic)arguments).IsValid())
          {
             return;
          }
 
-         IEnumerable<string> result = (IEnumerable<string>)(await runCommandAsync((dynamic)arguments));
+         K result = (K)(await runCommandAsync((dynamic)arguments));
          if (result == null || cache.ContainsKey(arguments))
          {
             return;
@@ -192,6 +208,10 @@ namespace mrHelper.StorageSupport
       private bool _isDisposed;
 
       protected readonly IExternalProcessManager _processManager;
+      protected readonly RepositoryAccessor _repositoryAccessor;
+
+      private readonly SelfCleanUpDictionary<RevisionComparisonArguments, Comparison> _cachedComparisons =
+         new SelfCleanUpDictionary<RevisionComparisonArguments, Comparison>(CacheCleanupPeriodSeconds);
 
       private readonly SelfCleanUpDictionary<GitDiffArguments, IEnumerable<string>> _cachedDiffs =
          new SelfCleanUpDictionary<GitDiffArguments, IEnumerable<string>>(CacheCleanupPeriodSeconds);
