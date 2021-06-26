@@ -432,6 +432,12 @@ namespace mrHelper.App.Helpers
          set => setIntValue(DescriptionSplitContainerDistanceKeyName, value);
       }
 
+      public int RevisionSplitContainerDistance
+      {
+         get => getIntValue(RevisionSplitContainerDistanceKeyName, RevisionSplitContainerDistanceDefaultValue);
+         set => setIntValue(RevisionSplitContainerDistanceKeyName, value);
+      }
+
       public int AutoUpdatePeriodMs
       {
          get => getIntValue(AutoUpdatePeriodMsKeyName, AutoUpdatePeriodMsDefaultValue);

@@ -26,10 +26,16 @@ namespace mrHelper.App.Controls
          setFontSizeInHtmlPanel(htmlPanelAuthorComments);
       }
 
-      internal void UpdateData(FullMergeRequestKey? fmkOpt, DataCache dataCache)
+      internal void UpdateData(FullMergeRequestKey fmk, DataCache dataCache)
       {
-         updateMergeRequestDescription(fmkOpt);
-         updateAuthorComments(fmkOpt, dataCache);
+         updateMergeRequestDescription(fmk);
+         updateAuthorComments(fmk, dataCache);
+      }
+
+      internal void ClearData()
+      {
+         updateMergeRequestDescription(null);
+         updateAuthorComments(null, null);
       }
 
       public SplitContainer SplitContainer => splitContainer;

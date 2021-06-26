@@ -173,6 +173,12 @@
     <Compile Include="src\Controls\RevisionBrowserContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\RevisionSplitContainerSite.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\RevisionSplitContainerSite.Designer.cs">
+      <DependentUpon>RevisionSplitContainerSite.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Controls\StringToBooleanListView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -389,6 +395,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\RevisionBrowser.resx">
       <DependentUpon>RevisionBrowser.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Controls\RevisionSplitContainerSite.resx">
+      <DependentUpon>RevisionSplitContainerSite.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\AddItemForm.resx">
       <DependentUpon>AddItemForm.cs</DependentUpon>

@@ -414,7 +414,7 @@ namespace mrHelper.App.Controls
             return false;
          }
 
-         int selectedRevisions = revisionBrowser.GetSelectedSha(out _).Count();
+         int selectedRevisions = getRevisionBrowser().GetSelectedSha(out _).Count();
          switch (mode)
          {
             case DiffToolMode.DiffBetweenSelected:
@@ -424,7 +424,7 @@ namespace mrHelper.App.Controls
                return selectedRevisions == 1;
 
             case DiffToolMode.DiffSelectedToParent:
-               bool hasParent = revisionBrowser.GetParentShaForSelected() != null;
+               bool hasParent = getRevisionBrowser().GetParentShaForSelected() != null;
                return selectedRevisions == 1 && hasParent;
 
             case DiffToolMode.DiffLatestToBase:
@@ -503,7 +503,8 @@ namespace mrHelper.App.Controls
 
          resetSplitterDistance(splitContainerPrimary, ResetSplitterDistanceMode.UserDefined);
          resetSplitterDistance(splitContainerSecondary, ResetSplitterDistanceMode.UserDefined);
-         //resetSplitterDistance(splitContainerDescription.SplitContainer, ResetSplitterDistanceMode.UserDefined);
+         resetSplitterDistance(descriptionSplitContainerSite.SplitContainer, ResetSplitterDistanceMode.UserDefined);
+         resetSplitterDistance(revisionSplitContainerSite.SplitContainer, ResetSplitterDistanceMode.UserDefined);
       }
 
       internal void StoreSplitterDistance()
@@ -513,7 +514,8 @@ namespace mrHelper.App.Controls
 
          saveSplitterDistanceToConfig(splitContainerPrimary);
          saveSplitterDistanceToConfig(splitContainerSecondary);
-         //saveSplitterDistanceToConfig(splitContainerDescription.SplitContainer);
+         saveSplitterDistanceToConfig(descriptionSplitContainerSite.SplitContainer);
+         saveSplitterDistanceToConfig(revisionSplitContainerSite.SplitContainer);
       }
 
       internal Color? GetSummaryColor()

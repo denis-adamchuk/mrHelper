@@ -92,6 +92,15 @@ namespace mrHelper.StorageSupport
          }
       }
 
+      public Comparison GetComparison(RevisionComparisonArguments arguments)
+      {
+         if (_cachedComparisons.TryGetValue(arguments, out Comparison value))
+         {
+            return value;
+         }
+         return null;
+      }
+
       public int LaunchDiffTool(DiffToolArguments arguments)
       {
          try

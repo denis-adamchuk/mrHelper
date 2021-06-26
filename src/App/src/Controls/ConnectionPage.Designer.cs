@@ -40,8 +40,8 @@ namespace mrHelper.App.Controls
          }
 
          // Clear RevisionBrowser and let it drop ContextMenuStrip
-         clearRevisionBrowser();
-         revisionBrowser.AssignContextMenu(null);
+         revisionSplitContainerSite.ClearData();
+         getRevisionBrowser().AssignContextMenu(null);
 
          _colorScheme.Changed -= onColorSchemeChanged;
 
@@ -127,10 +127,10 @@ namespace mrHelper.App.Controls
          this.columnHeaderRecentActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.splitContainerSecondary = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectedMR = new System.Windows.Forms.GroupBox();
-         this.splitContainerSiteDescription = new mrHelper.App.Controls.DescriptionSplitContainerSite();
+         this.descriptionSplitContainerSite = new mrHelper.App.Controls.DescriptionSplitContainerSite();
          this.linkLabelConnectedTo = new mrHelper.CommonControls.Controls.LinkLabelEx();
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
-         this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
+         this.revisionSplitContainerSite = new mrHelper.App.Controls.RevisionSplitContainerSite();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainerPrimary)).BeginInit();
          this.splitContainerPrimary.Panel1.SuspendLayout();
          this.splitContainerPrimary.Panel2.SuspendLayout();
@@ -617,7 +617,7 @@ namespace mrHelper.App.Controls
          // 
          // groupBoxSelectedMR
          // 
-         this.groupBoxSelectedMR.Controls.Add(this.splitContainerSiteDescription);
+         this.groupBoxSelectedMR.Controls.Add(this.descriptionSplitContainerSite);
          this.groupBoxSelectedMR.Controls.Add(this.linkLabelConnectedTo);
          this.groupBoxSelectedMR.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSelectedMR.Location = new System.Drawing.Point(0, 0);
@@ -629,11 +629,11 @@ namespace mrHelper.App.Controls
          // 
          // splitContainerSiteDescription
          // 
-         this.splitContainerSiteDescription.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.splitContainerSiteDescription.Location = new System.Drawing.Point(3, 16);
-         this.splitContainerSiteDescription.Name = "splitContainerSiteDescription";
-         this.splitContainerSiteDescription.Size = new System.Drawing.Size(322, 293);
-         this.splitContainerSiteDescription.TabIndex = 6;
+         this.descriptionSplitContainerSite.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.descriptionSplitContainerSite.Location = new System.Drawing.Point(3, 16);
+         this.descriptionSplitContainerSite.Name = "descriptionSplitContainerSite";
+         this.descriptionSplitContainerSite.Size = new System.Drawing.Size(322, 293);
+         this.descriptionSplitContainerSite.TabIndex = 6;
          // 
          // linkLabelConnectedTo
          // 
@@ -650,7 +650,7 @@ namespace mrHelper.App.Controls
          // 
          // groupBoxSelectRevisions
          // 
-         this.groupBoxSelectRevisions.Controls.Add(this.revisionBrowser);
+         this.groupBoxSelectRevisions.Controls.Add(this.revisionSplitContainerSite);
          this.groupBoxSelectRevisions.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSelectRevisions.Location = new System.Drawing.Point(0, 0);
          this.groupBoxSelectRevisions.Name = "groupBoxSelectRevisions";
@@ -659,14 +659,13 @@ namespace mrHelper.App.Controls
          this.groupBoxSelectRevisions.TabStop = false;
          this.groupBoxSelectRevisions.Text = "Select revisions for comparison";
          // 
-         // revisionBrowser
+         // revisionSplitContainerSite
          // 
-         this.revisionBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.revisionBrowser.Location = new System.Drawing.Point(3, 16);
-         this.revisionBrowser.Name = "revisionBrowser";
-         this.revisionBrowser.Size = new System.Drawing.Size(322, 273);
-         this.revisionBrowser.TabIndex = 0;
-         this.revisionBrowser.SelectionChanged += new System.EventHandler(this.revisionBrowser_SelectionChanged);
+         this.revisionSplitContainerSite.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.revisionSplitContainerSite.Location = new System.Drawing.Point(3, 16);
+         this.revisionSplitContainerSite.Name = "revisionSplitContainerSite";
+         this.revisionSplitContainerSite.Size = new System.Drawing.Size(322, 273);
+         this.revisionSplitContainerSite.TabIndex = 0;
          // 
          // ConnectionPage
          // 
@@ -748,9 +747,9 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.SplitContainer splitContainerSecondary;
       private System.Windows.Forms.GroupBox groupBoxSelectedMR;
       private System.Windows.Forms.GroupBox groupBoxSelectRevisions;
-      private App.Controls.RevisionBrowser revisionBrowser;
       private CommonControls.Controls.LinkLabelEx linkLabelConnectedTo;
       private System.Windows.Forms.LinkLabel linkLabelNewSearch;
-      private DescriptionSplitContainerSite splitContainerSiteDescription;
+      private DescriptionSplitContainerSite descriptionSplitContainerSite;
+      private RevisionSplitContainerSite revisionSplitContainerSite;
    }
 }

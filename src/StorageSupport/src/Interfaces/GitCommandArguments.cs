@@ -282,7 +282,7 @@ namespace mrHelper.StorageSupport
       }
    }
 
-   public struct RevisionComparisonArguments
+   public struct RevisionComparisonArguments : IEquatable<RevisionComparisonArguments>
    {
       public RevisionComparisonArguments(string sha1, string sha2)
       {
@@ -292,6 +292,30 @@ namespace mrHelper.StorageSupport
 
       public string Sha1 { get; }
       public string Sha2 { get; }
+
+      public bool IsValid()
+      {
+         return true;//TODO
+      }
+
+      public override bool Equals(object obj)
+      {
+         return obj is RevisionComparisonArguments arguments && Equals(arguments);
+      }
+
+      public bool Equals(RevisionComparisonArguments other)
+      {
+         return Sha1 == other.Sha1 &&
+                Sha2 == other.Sha2;
+      }
+
+      public override int GetHashCode()
+      {
+         int hashCode = 1466273857;
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Sha1);
+         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Sha2);
+         return hashCode;
+      }
    }
 }
 
