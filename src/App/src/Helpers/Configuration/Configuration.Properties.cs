@@ -414,6 +414,15 @@ namespace mrHelper.App.Helpers
          set => setStringToIntDictionary(RevisionBrowserColumnWidthsKeyName, value);
       }
 
+      public Dictionary<string, int> RevisionComparisonColumnWidths
+      {
+         get => getStringToIntDictionary(RevisionComparisonColumnWidthsKeyName,
+                                         RevisionComparisonColumnWidthsDefaultValue,
+                                         RevisionComparisonSingleColumnWidthDefaultValue,
+                                         -1);
+         set => setStringToIntDictionary(RevisionComparisonColumnWidthsKeyName, value);
+      }
+
       public int PrimarySplitContainerDistance
       {
          get => getIntValue(PrimarySplitContainerDistanceKeyName, PrimarySplitContainerDistanceDefaultValue);

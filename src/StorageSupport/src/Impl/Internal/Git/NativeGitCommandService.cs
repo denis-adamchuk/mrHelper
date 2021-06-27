@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 
@@ -43,7 +44,9 @@ namespace mrHelper.StorageSupport
 
       async protected override Task<object> runCommandAsync(RevisionComparisonArguments arguments)
       {
-         return await _repositoryAccessor.Compare(arguments.Sha1, arguments.Sha2, null);
+         _repositoryAccessor.Cancel();
+         Comparison comparison = await _repositoryAccessor.Compare(arguments.Sha1, arguments.Sha2, null);
+         return comparison == null ? null : new ComparisonEx(comparison);
       }
 
       private readonly string _path;

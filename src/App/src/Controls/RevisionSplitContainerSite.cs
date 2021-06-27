@@ -52,10 +52,19 @@ namespace mrHelper.App.Controls
          base.OnFontChanged(e);
       }
 
+      private void panelLoading_SizeChanged(object sender, EventArgs e)
+      {
+         // position label at the center of the panel
+         labelLoading.Location = new System.Drawing.Point(
+            (panelLoading.Width - labelLoading.Width) / 2,
+            (panelLoading.Height - labelLoading.Height) / 2);
+      }
+
       private void revisionBrowser_SelectionChanged(object sender, EventArgs e)
       {
          if (_storage == null)
          {
+            listViewRevisionComparisonStructure.ClearData();
             return;
          }
 
@@ -73,11 +82,11 @@ namespace mrHelper.App.Controls
          RevisionComparisonArguments? arguments = getArguments();
          if (!arguments.HasValue)
          {
-            // Clear UI
+            listViewRevisionComparisonStructure.ClearData();
             return;
          }
 
-         textBox1.Text = "Loading...";
+         panelLoading.Visible = true;
          Action method = new Action(async () => await showRevisionPreviewAsync(arguments.Value));
          BeginInvoke(method, null);
       }
@@ -85,16 +94,14 @@ namespace mrHelper.App.Controls
       async private Task showRevisionPreviewAsync(RevisionComparisonArguments arguments)
       {
          await _storage.Git?.FetchAsync(arguments);
+         panelLoading.Visible = false;
          ComparisonEx comparison = _storage.Git?.GetComparison(arguments);
          if (comparison == null)
          {
-            Debug.Assert(false);
+            listViewRevisionComparisonStructure.ClearData();
             return;
          }
-
-         textBox1.Text = String.Join("\r\n",
-            comparison.GetStatistic().Data.Select(x =>
-               String.Format("{0}/{1}/{2}/{3}", x.Old_Path ?? "", x.New_Path ?? "", x.Added, x.Deleted)));
+         listViewRevisionComparisonStructure.SetData(comparison.GetStatistic());
       }
 
       private void updateRevisionBrowserTree(DataCache dataCache, MergeRequestKey mrk)

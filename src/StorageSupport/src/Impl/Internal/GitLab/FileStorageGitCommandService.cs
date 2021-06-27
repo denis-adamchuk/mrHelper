@@ -90,9 +90,9 @@ namespace mrHelper.StorageSupport
 
       async protected override Task<object> runCommandAsync(RevisionComparisonArguments arguments)
       {
-         Comparison comparison = await _repositoryAccessor.Compare(
-            arguments.Sha1, arguments.Sha2, _comparisonCache);
-         return new ComparisonEx(comparison);
+         _repositoryAccessor.Cancel();
+         Comparison comparison = await _repositoryAccessor.Compare(arguments.Sha1, arguments.Sha2, _comparisonCache);
+         return comparison == null ? null : new ComparisonEx(comparison);
       }
 
       private readonly FileStorageArgumentConverter _argumentConverter;

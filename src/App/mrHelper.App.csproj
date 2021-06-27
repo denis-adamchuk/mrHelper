@@ -173,6 +173,9 @@
     <Compile Include="src\Controls\RevisionBrowserContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\RevisionComparisonListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\RevisionSplitContainerSite.cs">
       <SubType>UserControl</SubType>
     </Compile>
