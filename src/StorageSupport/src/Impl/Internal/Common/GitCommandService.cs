@@ -92,9 +92,9 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      public Comparison GetComparison(RevisionComparisonArguments arguments)
+      public ComparisonEx GetComparison(RevisionComparisonArguments arguments)
       {
-         if (_cachedComparisons.TryGetValue(arguments, out Comparison value))
+         if (_cachedComparisons.TryGetValue(arguments, out ComparisonEx value))
          {
             return value;
          }
@@ -219,8 +219,8 @@ namespace mrHelper.StorageSupport
       protected readonly IExternalProcessManager _processManager;
       protected readonly RepositoryAccessor _repositoryAccessor;
 
-      private readonly SelfCleanUpDictionary<RevisionComparisonArguments, Comparison> _cachedComparisons =
-         new SelfCleanUpDictionary<RevisionComparisonArguments, Comparison>(CacheCleanupPeriodSeconds);
+      private readonly SelfCleanUpDictionary<RevisionComparisonArguments, ComparisonEx> _cachedComparisons =
+         new SelfCleanUpDictionary<RevisionComparisonArguments, ComparisonEx>(CacheCleanupPeriodSeconds);
 
       private readonly SelfCleanUpDictionary<GitDiffArguments, IEnumerable<string>> _cachedDiffs =
          new SelfCleanUpDictionary<GitDiffArguments, IEnumerable<string>>(CacheCleanupPeriodSeconds);

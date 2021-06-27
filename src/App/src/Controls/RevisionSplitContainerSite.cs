@@ -33,8 +33,8 @@ namespace mrHelper.App.Controls
 
       internal void SetData(MergeRequestKey mrk, DataCache dataCache)
       {
-         updateRevisionBrowserTree(dataCache, mrk);
          _storage = _getStorage(mrk.ProjectKey);
+         updateRevisionBrowserTree(dataCache, mrk);
       }
 
       internal void ClearData()
@@ -85,14 +85,16 @@ namespace mrHelper.App.Controls
       async private Task showRevisionPreviewAsync(RevisionComparisonArguments arguments)
       {
          await _storage.Git?.FetchAsync(arguments);
-         Comparison comparison = _storage.Git?.GetComparison(arguments);
+         ComparisonEx comparison = _storage.Git?.GetComparison(arguments);
          if (comparison == null)
          {
             Debug.Assert(false);
             return;
          }
 
-         textBox1.Text = String.Join("\r\n", comparison.Diffs.Select(diff => diff.Diff));
+         textBox1.Text = String.Join("\r\n",
+            comparison.GetStatistic().Data.Select(x =>
+               String.Format("{0}/{1}/{2}/{3}", x.Old_Path ?? "", x.New_Path ?? "", x.Added, x.Deleted)));
       }
 
       private void updateRevisionBrowserTree(DataCache dataCache, MergeRequestKey mrk)

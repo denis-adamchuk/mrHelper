@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
+using GitLabSharp.Entities;
 
 namespace mrHelper.StorageSupport
 {
@@ -89,7 +90,9 @@ namespace mrHelper.StorageSupport
 
       async protected override Task<object> runCommandAsync(RevisionComparisonArguments arguments)
       {
-         return await _repositoryAccessor.Compare(arguments.Sha1, arguments.Sha2, _comparisonCache);
+         Comparison comparison = await _repositoryAccessor.Compare(
+            arguments.Sha1, arguments.Sha2, _comparisonCache);
+         return new ComparisonEx(comparison);
       }
 
       private readonly FileStorageArgumentConverter _argumentConverter;

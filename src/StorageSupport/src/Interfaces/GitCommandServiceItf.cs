@@ -27,7 +27,7 @@ namespace mrHelper.StorageSupport
 
       IEnumerable<string> ShowDiff(GitDiffArguments arguments);
 
-      Comparison GetComparison(RevisionComparisonArguments arguments);
+      ComparisonEx GetComparison(RevisionComparisonArguments arguments);
 
       int LaunchDiffTool(DiffToolArguments arguments);
 
