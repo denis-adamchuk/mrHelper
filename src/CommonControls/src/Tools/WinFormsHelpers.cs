@@ -192,7 +192,7 @@ namespace mrHelper.CommonControls.Tools
 
          foreach (ColumnHeader column in listview.Columns)
          {
-            string columnName = (string)column.Tag;
+            string columnName = column.Tag.ToString();
             column.DisplayIndex = columnDisplayIndices[columnName];
          }
       }

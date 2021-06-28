@@ -264,73 +264,73 @@ namespace mrHelper.App.Controls
          // 
          // columnHeaderIId
          // 
-         this.columnHeaderIId.Tag = "IId";
+         this.columnHeaderIId.Tag = ColumnType.IId;
          this.columnHeaderIId.Text = "IId";
          this.columnHeaderIId.Width = 40;
          // 
          // columnHeaderAuthor
          // 
-         this.columnHeaderAuthor.Tag = "Author";
+         this.columnHeaderAuthor.Tag = ColumnType.Author;
          this.columnHeaderAuthor.Text = "Author";
          this.columnHeaderAuthor.Width = 110;
          // 
          // columnHeaderTitle
          // 
-         this.columnHeaderTitle.Tag = "Title";
+         this.columnHeaderTitle.Tag = ColumnType.Title;
          this.columnHeaderTitle.Text = "Title";
          this.columnHeaderTitle.Width = 400;
          // 
          // columnHeaderLabels
          // 
-         this.columnHeaderLabels.Tag = "Labels";
+         this.columnHeaderLabels.Tag = ColumnType.Labels;
          this.columnHeaderLabels.Text = "Labels";
          this.columnHeaderLabels.Width = 180;
          // 
          // columnHeaderSize
          // 
-         this.columnHeaderSize.Tag = "Size";
+         this.columnHeaderSize.Tag = ColumnType.Size;
          this.columnHeaderSize.Text = "Size";
          this.columnHeaderSize.Width = 100;
          // 
          // columnHeaderJira
          // 
-         this.columnHeaderJira.Tag = "Jira";
+         this.columnHeaderJira.Tag = ColumnType.Jira;
          this.columnHeaderJira.Text = "Jira";
          this.columnHeaderJira.Width = 80;
          // 
          // columnHeaderTotalTime
          // 
-         this.columnHeaderTotalTime.Tag = "TotalTime";
+         this.columnHeaderTotalTime.Tag = ColumnType.TotalTime;
          this.columnHeaderTotalTime.Text = "Total Time";
          this.columnHeaderTotalTime.Width = 70;
          // 
          // columnHeaderResolved
          // 
-         this.columnHeaderResolved.Tag = "Resolved";
+         this.columnHeaderResolved.Tag = ColumnType.Resolved;
          this.columnHeaderResolved.Text = "Resolved";
          this.columnHeaderResolved.Width = 65;
          // 
          // columnHeaderSourceBranch
          // 
-         this.columnHeaderSourceBranch.Tag = "SourceBranch";
+         this.columnHeaderSourceBranch.Tag = ColumnType.SourceBranch;
          this.columnHeaderSourceBranch.Text = "Source Branch";
          this.columnHeaderSourceBranch.Width = 100;
          // 
          // columnHeaderTargetBranch
          // 
-         this.columnHeaderTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderTargetBranch.Tag = ColumnType.TargetBranch;
          this.columnHeaderTargetBranch.Text = "Target Branch";
          this.columnHeaderTargetBranch.Width = 100;
          // 
          // columnHeaderRefreshTime
          // 
-         this.columnHeaderRefreshTime.Tag = "RefreshTime";
+         this.columnHeaderRefreshTime.Tag = ColumnType.RefreshTime;
          this.columnHeaderRefreshTime.Text = "Refreshed";
          this.columnHeaderRefreshTime.Width = 90;
          // 
          // columnHeaderActivities
          // 
-         this.columnHeaderActivities.Tag = "Activities";
+         this.columnHeaderActivities.Tag = ColumnType.Activities;
          this.columnHeaderActivities.Text = "Activities";
          this.columnHeaderActivities.Width = 90;
          // 
@@ -414,55 +414,55 @@ namespace mrHelper.App.Controls
          // 
          // columnHeaderFoundIId
          // 
-         this.columnHeaderFoundIId.Tag = "IId";
+         this.columnHeaderFoundIId.Tag = ColumnType.IId;
          this.columnHeaderFoundIId.Text = "IId";
          this.columnHeaderFoundIId.Width = 40;
          // 
          // columnHeaderFoundState
          // 
-         this.columnHeaderFoundState.Tag = "State";
+         this.columnHeaderFoundState.Tag = ColumnType.State;
          this.columnHeaderFoundState.Text = "State";
          this.columnHeaderFoundState.Width = 80;
          // 
          // columnHeaderFoundAuthor
          // 
-         this.columnHeaderFoundAuthor.Tag = "Author";
+         this.columnHeaderFoundAuthor.Tag = ColumnType.Author;
          this.columnHeaderFoundAuthor.Text = "Author";
          this.columnHeaderFoundAuthor.Width = 110;
          // 
          // columnHeaderFoundTitle
          // 
-         this.columnHeaderFoundTitle.Tag = "Title";
+         this.columnHeaderFoundTitle.Tag = ColumnType.Title;
          this.columnHeaderFoundTitle.Text = "Title";
          this.columnHeaderFoundTitle.Width = 400;
          // 
          // columnHeaderFoundLabels
          // 
-         this.columnHeaderFoundLabels.Tag = "Labels";
+         this.columnHeaderFoundLabels.Tag = ColumnType.Labels;
          this.columnHeaderFoundLabels.Text = "Labels";
          this.columnHeaderFoundLabels.Width = 180;
          // 
          // columnHeaderFoundJira
          // 
-         this.columnHeaderFoundJira.Tag = "Jira";
+         this.columnHeaderFoundJira.Tag = ColumnType.Jira;
          this.columnHeaderFoundJira.Text = "Jira";
          this.columnHeaderFoundJira.Width = 80;
          // 
          // columnHeaderFoundSourceBranch
          // 
-         this.columnHeaderFoundSourceBranch.Tag = "SourceBranch";
+         this.columnHeaderFoundSourceBranch.Tag = ColumnType.SourceBranch;
          this.columnHeaderFoundSourceBranch.Text = "Source Branch";
          this.columnHeaderFoundSourceBranch.Width = 100;
          // 
          // columnHeaderFoundTargetBranch
          // 
-         this.columnHeaderFoundTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderFoundTargetBranch.Tag = ColumnType.TargetBranch;
          this.columnHeaderFoundTargetBranch.Text = "Target Branch";
          this.columnHeaderFoundTargetBranch.Width = 100;
          // 
          // columnHeaderFoundActivities
          // 
-         this.columnHeaderFoundActivities.Tag = "Activities";
+         this.columnHeaderFoundActivities.Tag = ColumnType.Activities;
          this.columnHeaderFoundActivities.Text = "Activities";
          this.columnHeaderFoundActivities.Width = 90;
          // 
@@ -536,55 +536,55 @@ namespace mrHelper.App.Controls
          // 
          // columnHeaderRecentIId
          // 
-         this.columnHeaderRecentIId.Tag = "IId";
+         this.columnHeaderRecentIId.Tag = ColumnType.IId;
          this.columnHeaderRecentIId.Text = "IId";
          this.columnHeaderRecentIId.Width = 40;
          // 
          // columnHeaderRecentState
          // 
-         this.columnHeaderRecentState.Tag = "State";
+         this.columnHeaderRecentState.Tag = ColumnType.State;
          this.columnHeaderRecentState.Text = "State";
          this.columnHeaderRecentState.Width = 80;
          // 
          // columnHeaderRecentAuthor
          // 
-         this.columnHeaderRecentAuthor.Tag = "Author";
+         this.columnHeaderRecentAuthor.Tag = ColumnType.Author;
          this.columnHeaderRecentAuthor.Text = "Author";
          this.columnHeaderRecentAuthor.Width = 110;
          // 
          // columnHeaderRecentTitle
          // 
-         this.columnHeaderRecentTitle.Tag = "Title";
+         this.columnHeaderRecentTitle.Tag = ColumnType.Title;
          this.columnHeaderRecentTitle.Text = "Title";
          this.columnHeaderRecentTitle.Width = 400;
          // 
          // columnHeaderRecentLabels
          // 
-         this.columnHeaderRecentLabels.Tag = "Labels";
+         this.columnHeaderRecentLabels.Tag = ColumnType.Labels;
          this.columnHeaderRecentLabels.Text = "Labels";
          this.columnHeaderRecentLabels.Width = 180;
          // 
          // columnHeaderRecentJira
          // 
-         this.columnHeaderRecentJira.Tag = "Jira";
+         this.columnHeaderRecentJira.Tag = ColumnType.Jira;
          this.columnHeaderRecentJira.Text = "Jira";
          this.columnHeaderRecentJira.Width = 80;
          // 
          // columnHeaderRecentSourceBranch
          // 
-         this.columnHeaderRecentSourceBranch.Tag = "SourceBranch";
+         this.columnHeaderRecentSourceBranch.Tag = ColumnType.SourceBranch;
          this.columnHeaderRecentSourceBranch.Text = "Source Branch";
          this.columnHeaderRecentSourceBranch.Width = 100;
          // 
          // columnHeaderRecentTargetBranch
          // 
-         this.columnHeaderRecentTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderRecentTargetBranch.Tag = ColumnType.TargetBranch;
          this.columnHeaderRecentTargetBranch.Text = "Target Branch";
          this.columnHeaderRecentTargetBranch.Width = 100;
          // 
          // columnHeaderRecentActivities
          // 
-         this.columnHeaderRecentActivities.Tag = "Activities";
+         this.columnHeaderRecentActivities.Tag = ColumnType.Activities;
          this.columnHeaderRecentActivities.Text = "Activities";
          this.columnHeaderRecentActivities.Width = 90;
          // 

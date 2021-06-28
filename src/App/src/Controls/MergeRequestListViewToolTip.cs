@@ -1,14 +1,18 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+using static System.Windows.Forms.ListViewItem;
 
 namespace mrHelper.App.Controls
 {
    public partial class MergeRequestListViewToolTip : ToolTip
    {
-      public MergeRequestListViewToolTip(ListView listView)
+      public MergeRequestListViewToolTip(ListView listView,
+         Func<ListViewSubItem, string> getToolTipText)
       {
          _listView = listView;
+         _getToolTipText = getToolTipText;
 
          _toolTipTimer = new System.Timers.Timer
          {
@@ -126,11 +130,9 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         MergeRequestListViewSubItemInfo info = (MergeRequestListViewSubItemInfo)_lastHistTestInfo.SubItem.Tag;
-
          // shift tooltip position to the right of the cursor 16 pixels
          Point location = new Point(_lastMouseLocation.X + 16, _lastMouseLocation.Y);
-         Show(info.TooltipText, _listView, location);
+         Show(_getToolTipText(_lastHistTestInfo.SubItem), _listView, location);
          _toolTipShown = true;
       }
 
@@ -148,6 +150,7 @@ namespace mrHelper.App.Controls
       private bool _toolTipScheduled;
 
       private readonly ListView _listView;
+      private readonly Func<ListViewSubItem, string> _getToolTipText;
       private readonly System.Timers.Timer _toolTipTimer;
 
       private Point _lastMouseLocation = new Point(-1, -1);
