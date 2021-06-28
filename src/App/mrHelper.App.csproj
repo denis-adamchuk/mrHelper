@@ -158,7 +158,7 @@
     <Compile Include="src\Controls\MergeRequestListViewSubItemInfo.cs">
     </Compile>
     <Compile Include="src\Controls\MergeRequestListView.cs" />
-    <Compile Include="src\Controls\MergeRequestListViewToolTip.cs">
+    <Compile Include="src\Controls\ListViewToolTip.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="src\Controls\PlainTabControl.cs">

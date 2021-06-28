@@ -4,11 +4,19 @@ using System.Collections.Generic;
 using mrHelper.StorageSupport;
 using mrHelper.CommonControls.Controls;
 using System.Diagnostics;
+using System.Drawing;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Controls
 {
    internal class RevisionComparisonListView : ListViewEx
    {
+      public RevisionComparisonListView()
+      {
+         _toolTip = new ListViewToolTip(this, getToolTipText);
+         OwnerDraw = true;
+      }
+
       internal void SetData(ComparisonEx.Statistic statistic)
       {
          ClearData();
@@ -22,6 +30,28 @@ namespace mrHelper.App.Controls
       internal void ClearData()
       {
          Items.Clear();
+      }
+
+      protected override void Dispose(bool disposing)
+      {
+         _toolTip?.Dispose();
+         base.Dispose(disposing);
+      }
+
+      protected override void OnMouseLeave(EventArgs e)
+      {
+         // this callback is called not only when mouse leaves the list view so let's check if we need to cancel tooltip
+         ListViewHitTestInfo hit = HitTest(this.PointToClient(Cursor.Position));
+         _toolTip.CancelIfNeeded(hit);
+
+         base.OnMouseLeave(e);
+      }
+
+      protected override void OnMouseMove(MouseEventArgs e)
+      {
+         _toolTip.UpdateOnMouseMove(e.Location);
+
+         base.OnMouseMove(e);
       }
 
       private bool _processingHandleCreated = false;
@@ -55,6 +85,34 @@ namespace mrHelper.App.Controls
          {
             saveColumnWidths();
          }
+      }
+
+      protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
+      {
+         base.OnDrawColumnHeader(e);
+         e.DrawDefault = true;
+      }
+
+      protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
+      {
+         base.OnDrawSubItem(e);
+
+         if (e.Item.ListView == null)
+         {
+            return; // is being removed
+         }
+
+         bool isSelected = e.Item.Selected;
+         Color backgroundColor = e.ItemIndex % 2 == 1 ? Color.Gainsboro : Color.White;
+         WinFormsHelpers.FillRectangle(e, e.Bounds, backgroundColor, isSelected);
+
+         StringFormat format = new StringFormat(StringFormatFlags.NoWrap)
+         {
+            Trimming = StringTrimming.EllipsisCharacter
+         };
+
+         Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+         e.Graphics.DrawString(e.SubItem.Text, Font, textBrush, e.Bounds, format);
       }
 
       private ListViewItem createListViewItem(ComparisonEx.Statistic.Item statisticItem)
@@ -115,6 +173,32 @@ namespace mrHelper.App.Controls
             _restoringColumns = false;
          }
       }
+
+      private string getToolTipText(ListViewItem.ListViewSubItem subItem)
+      {
+         string text = subItem.Text;
+         StringFormatFlags formatFlags = StringFormatFlags.NoWrap;
+         Graphics graphics = CreateGraphics();
+
+         StringFormat formatTrimmed = new StringFormat(formatFlags)
+         {
+            Trimming = StringTrimming.EllipsisCharacter
+         };
+         SizeF textTrimmedSize = graphics.MeasureString(text, Font, subItem.Bounds.Size, formatTrimmed);
+
+         StringFormat formatFull = new StringFormat(formatFlags)
+         {
+            Trimming = StringTrimming.None
+         };
+         SizeF textFullSize = graphics.MeasureString(text, Font, subItem.Bounds.Size, formatFull);
+
+         bool exceedsWidth = textTrimmedSize.Width != textFullSize.Width;
+         bool exceedsHeight = textTrimmedSize.Height != textFullSize.Height;
+         bool needShowToolTip = exceedsWidth || exceedsHeight;
+         return needShowToolTip ? text : null;
+      }
+
+      private readonly ListViewToolTip _toolTip;
    }
 }
 

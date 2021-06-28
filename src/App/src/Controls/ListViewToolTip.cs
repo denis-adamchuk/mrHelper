@@ -6,9 +6,9 @@ using static System.Windows.Forms.ListViewItem;
 
 namespace mrHelper.App.Controls
 {
-   public partial class MergeRequestListViewToolTip : ToolTip
+   public partial class ListViewToolTip : ToolTip
    {
-      public MergeRequestListViewToolTip(ListView listView,
+      public ListViewToolTip(ListView listView,
          Func<ListViewSubItem, string> getToolTipText)
       {
          _listView = listView;
@@ -55,7 +55,7 @@ namespace mrHelper.App.Controls
          Debug.Assert(_lastHistTestInfo == null || (_lastHistTestInfo.Item != null && _lastHistTestInfo.SubItem != null));
 
          bool hitAnotherCell() => _lastHistTestInfo.Item.Index  != hit.Item.Index
-                               || _lastHistTestInfo.SubItem.Tag != hit.SubItem.Tag;
+                               || _lastHistTestInfo.SubItem != hit.SubItem;
 
          if (isTooltipShown())
          {
@@ -123,7 +123,6 @@ namespace mrHelper.App.Controls
 
          if (_lastHistTestInfo == null
           || _lastHistTestInfo.SubItem == null
-          || _lastHistTestInfo.SubItem.Tag == null
           || _lastHistTestInfo.Item == null
           || _lastHistTestInfo.Item.ListView == null)
          {

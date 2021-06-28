@@ -65,7 +65,8 @@ namespace mrHelper.App.Controls
       public MergeRequestListView()
       {
          ListViewItemSorter = new ListViewItemComparer();
-         _toolTip = new MergeRequestListViewToolTip(this, getToolTipText);
+         OwnerDraw = true;
+         _toolTip = new ListViewToolTip(this, getToolTipText);
          Tag = "DesignTimeName";
          _unmuteTimer.Tick += onUnmuteTimerTick;
          cleanUpMutedMergeRequests();
@@ -584,7 +585,10 @@ namespace mrHelper.App.Controls
          WinFormsHelpers.FillRectangle(e, bounds, backgroundColor, isSelected);
 
          ColumnType columnType = getColumnType(e.SubItem);
-         StringFormat format = getSubItemStringFormat(e.SubItem);
+         StringFormat format = new StringFormat(getSubItemStringFormatFlags(e.SubItem))
+         {
+            Trimming = StringTrimming.EllipsisCharacter
+         };
          string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
          bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
          if (columnType == ColumnType.IId)
@@ -633,7 +637,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private StringFormat getSubItemStringFormat(ListViewItem.ListViewSubItem subItem)
+      private StringFormatFlags getSubItemStringFormatFlags(ListViewItem.ListViewSubItem subItem)
       {
          ColumnType columnType = getColumnType(subItem);
          bool isWrappableColumnItem =
@@ -643,13 +647,7 @@ namespace mrHelper.App.Controls
             || columnType == ColumnType.Jira
             || columnType == ColumnType.Author;
          bool needWordWrap = isWrappableColumnItem && Program.Settings.WordWrapLongRows;
-         StringFormatFlags formatFlags = needWordWrap ? StringFormatFlags.LineLimit : StringFormatFlags.NoWrap;
-         StringFormat format = new StringFormat
-         {
-            Trimming = StringTrimming.EllipsisCharacter,
-            FormatFlags = formatFlags
-         };
-         return format;
+         return needWordWrap ? StringFormatFlags.LineLimit : StringFormatFlags.NoWrap;
       }
 
       bool _restoringColumns = false;
@@ -1261,13 +1259,26 @@ namespace mrHelper.App.Controls
 
       private string getToolTipText(ListViewItem.ListViewSubItem subItem)
       {
-         //using (Font font = new Font(e.Item.ListView.Font, fontStyle))
-         //{
-         //   this.CreateGraphics().MeasureString(subItem.Text, Font, )
-         //   e.Graphics.DrawString(text, font, Brushes.Blue, bounds, format);
-         //}
+         string text = (subItem.Tag as ListViewSubItemInfo).Text;
+         StringFormatFlags formatFlags = getSubItemStringFormatFlags(subItem);
+         Graphics graphics = CreateGraphics();
 
-         return (subItem.Tag as ListViewSubItemInfo).TooltipText;
+         StringFormat formatTrimmed = new StringFormat(formatFlags)
+         {
+            Trimming = StringTrimming.EllipsisCharacter
+         };
+         SizeF textTrimmedSize = graphics.MeasureString(text, Font, subItem.Bounds.Size, formatTrimmed);
+
+         StringFormat formatFull = new StringFormat(formatFlags)
+         {
+            Trimming = StringTrimming.None
+         };
+         SizeF textFullSize = graphics.MeasureString(text, Font, subItem.Bounds.Size, formatFull);
+
+         bool exceedsWidth = textTrimmedSize.Width != textFullSize.Width;
+         bool exceedsHeight = textTrimmedSize.Height != textFullSize.Height;
+         bool needShowToolTip = exceedsWidth || exceedsHeight;
+         return needShowToolTip ? (subItem.Tag as ListViewSubItemInfo).TooltipText : null;
       }
 
       private static bool isSummaryKey(FullMergeRequestKey fmk)
@@ -1302,7 +1313,7 @@ namespace mrHelper.App.Controls
          return Cursors.Default;
       }
 
-      private readonly MergeRequestListViewToolTip _toolTip;
+      private readonly ListViewToolTip _toolTip;
       private IDiffStatisticProvider _diffStatisticProvider;
       private Func<User> _getCurrentUser;
       private DataCache _dataCache;

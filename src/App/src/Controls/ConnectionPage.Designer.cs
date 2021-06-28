@@ -254,7 +254,6 @@ namespace mrHelper.App.Controls
          this.listViewLiveMergeRequests.Location = new System.Drawing.Point(3, 46);
          this.listViewLiveMergeRequests.MultiSelect = false;
          this.listViewLiveMergeRequests.Name = "listViewLiveMergeRequests";
-         this.listViewLiveMergeRequests.OwnerDraw = true;
          this.listViewLiveMergeRequests.Size = new System.Drawing.Size(833, 567);
          this.listViewLiveMergeRequests.TabIndex = 3;
          this.listViewLiveMergeRequests.Tag = "DesignTimeName";
@@ -404,7 +403,6 @@ namespace mrHelper.App.Controls
          this.listViewFoundMergeRequests.Location = new System.Drawing.Point(3, 32);
          this.listViewFoundMergeRequests.MultiSelect = false;
          this.listViewFoundMergeRequests.Name = "listViewFoundMergeRequests";
-         this.listViewFoundMergeRequests.OwnerDraw = true;
          this.listViewFoundMergeRequests.Size = new System.Drawing.Size(833, 581);
          this.listViewFoundMergeRequests.TabIndex = 3;
          this.listViewFoundMergeRequests.Tag = "DesignTimeName";
@@ -526,7 +524,6 @@ namespace mrHelper.App.Controls
          this.listViewRecentMergeRequests.Location = new System.Drawing.Point(3, 53);
          this.listViewRecentMergeRequests.MultiSelect = false;
          this.listViewRecentMergeRequests.Name = "listViewRecentMergeRequests";
-         this.listViewRecentMergeRequests.OwnerDraw = true;
          this.listViewRecentMergeRequests.Size = new System.Drawing.Size(833, 560);
          this.listViewRecentMergeRequests.TabIndex = 4;
          this.listViewRecentMergeRequests.Tag = "DesignTimeName";
