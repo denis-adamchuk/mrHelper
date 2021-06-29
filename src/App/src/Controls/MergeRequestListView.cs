@@ -66,7 +66,8 @@ namespace mrHelper.App.Controls
       {
          ListViewItemSorter = new ListViewItemComparer();
          OwnerDraw = true;
-         _toolTip = new ListViewToolTip(this, getToolTipText);
+         _toolTip = new ListViewToolTip(this,
+            getText, getToolTipText, getSubItemStringFormatFlags, getBounds);
          Tag = "DesignTimeName";
          _unmuteTimer.Tick += onUnmuteTimerTick;
          cleanUpMutedMergeRequests();
@@ -1063,6 +1064,18 @@ namespace mrHelper.App.Controls
          }
       }
 
+      private int getColumnWidth(ColumnType columnType)
+      {
+         foreach (ColumnHeader column in Columns)
+         {
+            if ((ColumnType)column.Tag == columnType)
+            {
+               return column.Width;
+            }
+         }
+         return 0;
+      }
+
       private void setColumnIndices(Dictionary<string, int> indices)
       {
          try
@@ -1259,26 +1272,18 @@ namespace mrHelper.App.Controls
 
       private string getToolTipText(ListViewItem.ListViewSubItem subItem)
       {
-         string text = (subItem.Tag as ListViewSubItemInfo).Text;
-         StringFormatFlags formatFlags = getSubItemStringFormatFlags(subItem);
-         Graphics graphics = CreateGraphics();
+         return (subItem.Tag as ListViewSubItemInfo).TooltipText;
+      }
 
-         StringFormat formatTrimmed = new StringFormat(formatFlags)
-         {
-            Trimming = StringTrimming.EllipsisCharacter
-         };
-         SizeF textTrimmedSize = graphics.MeasureString(text, Font, subItem.Bounds.Size, formatTrimmed);
+      private string getText(ListViewItem.ListViewSubItem subItem)
+      {
+         return (subItem.Tag as ListViewSubItemInfo).Text;
+      }
 
-         StringFormat formatFull = new StringFormat(formatFlags)
-         {
-            Trimming = StringTrimming.None
-         };
-         SizeF textFullSize = graphics.MeasureString(text, Font, subItem.Bounds.Size, formatFull);
-
-         bool exceedsWidth = textTrimmedSize.Width != textFullSize.Width;
-         bool exceedsHeight = textTrimmedSize.Height != textFullSize.Height;
-         bool needShowToolTip = exceedsWidth || exceedsHeight;
-         return needShowToolTip ? (subItem.Tag as ListViewSubItemInfo).TooltipText : null;
+      private Rectangle getBounds(ListViewItem.ListViewSubItem subItem)
+      {
+         var width = getColumnWidth((subItem.Tag as ListViewSubItemInfo).ColumnType);
+         return new Rectangle(subItem.Bounds.X, subItem.Bounds.Y, width, subItem.Bounds.Height);
       }
 
       private static bool isSummaryKey(FullMergeRequestKey fmk)

@@ -20,6 +20,8 @@ namespace mrHelper.App.Controls
             components.Dispose();
          }
 
+         _repositoryAccessor?.Dispose();
+
          base.Dispose(disposing);
       }
 
@@ -33,7 +35,7 @@ namespace mrHelper.App.Controls
       {
          this.splitContainer = new System.Windows.Forms.SplitContainer();
          this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
-         this.panelLoading = new System.Windows.Forms.Panel();
+         this.panelPreviewStatus = new System.Windows.Forms.Panel();
          this.labelLoading = new System.Windows.Forms.Label();
          this.listViewRevisionComparisonStructure = new mrHelper.App.Controls.RevisionComparisonListView();
          this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -43,7 +45,7 @@ namespace mrHelper.App.Controls
          this.splitContainer.Panel1.SuspendLayout();
          this.splitContainer.Panel2.SuspendLayout();
          this.splitContainer.SuspendLayout();
-         this.panelLoading.SuspendLayout();
+         this.panelPreviewStatus.SuspendLayout();
          this.SuspendLayout();
          // 
          // splitContainer
@@ -63,7 +65,7 @@ namespace mrHelper.App.Controls
          // splitContainer.Panel2
          // 
          this.splitContainer.Panel2.BackColor = System.Drawing.SystemColors.Window;
-         this.splitContainer.Panel2.Controls.Add(this.panelLoading);
+         this.splitContainer.Panel2.Controls.Add(this.panelPreviewStatus);
          this.splitContainer.Panel2.Controls.Add(this.listViewRevisionComparisonStructure);
          this.splitContainer.Size = new System.Drawing.Size(396, 374);
          this.splitContainer.SplitterDistance = 124;
@@ -80,14 +82,14 @@ namespace mrHelper.App.Controls
          // 
          // panelLoading
          // 
-         this.panelLoading.Controls.Add(this.labelLoading);
-         this.panelLoading.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.panelLoading.Location = new System.Drawing.Point(0, 0);
-         this.panelLoading.Name = "panelLoading";
-         this.panelLoading.Size = new System.Drawing.Size(396, 246);
-         this.panelLoading.TabIndex = 2;
-         this.panelLoading.Visible = false;
-         this.panelLoading.SizeChanged += new System.EventHandler(this.panelLoading_SizeChanged);
+         this.panelPreviewStatus.Controls.Add(this.labelLoading);
+         this.panelPreviewStatus.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.panelPreviewStatus.Location = new System.Drawing.Point(0, 0);
+         this.panelPreviewStatus.Name = "panelPreviewStatus";
+         this.panelPreviewStatus.Size = new System.Drawing.Size(396, 246);
+         this.panelPreviewStatus.TabIndex = 2;
+         this.panelPreviewStatus.Visible = false;
+         this.panelPreviewStatus.SizeChanged += new System.EventHandler(this.panelLoading_SizeChanged);
          // 
          // labelLoading
          // 
@@ -144,8 +146,8 @@ namespace mrHelper.App.Controls
          this.splitContainer.Panel2.ResumeLayout(false);
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
          this.splitContainer.ResumeLayout(false);
-         this.panelLoading.ResumeLayout(false);
-         this.panelLoading.PerformLayout();
+         this.panelPreviewStatus.ResumeLayout(false);
+         this.panelPreviewStatus.PerformLayout();
          this.ResumeLayout(false);
 
       }
@@ -158,7 +160,7 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ColumnHeader columnHeaderName;
       private System.Windows.Forms.ColumnHeader columnHeaderAdded;
       private System.Windows.Forms.ColumnHeader columnHeaderDeleted;
-      private System.Windows.Forms.Panel panelLoading;
+      private System.Windows.Forms.Panel panelPreviewStatus;
       private System.Windows.Forms.Label labelLoading;
    }
 }

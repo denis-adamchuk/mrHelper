@@ -119,13 +119,19 @@ namespace mrHelper.App.Controls
          linkLabelConnectedTo.SetLinkLabelClicked(UrlHelper.OpenBrowser);
 
          descriptionSplitContainerSite.Initialize(_keywords, _mdPipeline);
-         descriptionSplitContainerSite.SplitContainer.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
-         descriptionSplitContainerSite.SplitContainer.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
+         descriptionSplitContainerSite.SplitContainer.SplitterMoving +=
+            new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
+         descriptionSplitContainerSite.SplitContainer.SplitterMoved +=
+            new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
 
-         revisionSplitContainerSite.Initialize(pk => getCommitStorage(pk, false), getReviewedRevisions);
-         revisionSplitContainerSite.SplitContainer.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
-         revisionSplitContainerSite.SplitContainer.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
-         revisionSplitContainerSite.RevisionBrowser.SelectionChanged += new System.EventHandler(this.revisionBrowser_SelectionChanged);
+         revisionSplitContainerSite.Initialize(
+            pk => getCommitStorage(pk, false), getRepositoryAccessor, getReviewedRevisions);
+         revisionSplitContainerSite.SplitContainer.SplitterMoving +=
+            new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
+         revisionSplitContainerSite.SplitContainer.SplitterMoved +=
+            new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
+         revisionSplitContainerSite.RevisionBrowser.SelectionChanged +=
+            new System.EventHandler(this.revisionBrowser_SelectionChanged);
       }
 
       private void startRedrawTimer()

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Interfaces;
+using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
 
@@ -15,8 +15,10 @@ namespace mrHelper.App.Controls
    internal partial class RevisionSplitContainerSite : UserControl
    {
       private Func<ProjectKey, ILocalCommitStorage> _getStorage;
+      private Func<ProjectKey, RepositoryAccessor> _getRepositoryAccessor;
       private Func<MergeRequestKey, HashSet<string>> _getReviewedRevisions;
       private ILocalCommitStorage _storage;
+      private RepositoryAccessor _repositoryAccessor;
 
       public RevisionSplitContainerSite()
       {
@@ -25,15 +27,19 @@ namespace mrHelper.App.Controls
 
       internal void Initialize(
          Func<ProjectKey, ILocalCommitStorage> getStorage,
+         Func<ProjectKey, RepositoryAccessor> getRepositoryAccessor,
          Func<MergeRequestKey, HashSet<string>> getReviewedRevisions)
       {
          _getStorage = getStorage;
+         _getRepositoryAccessor = getRepositoryAccessor;
          _getReviewedRevisions = getReviewedRevisions;
       }
 
       internal void SetData(MergeRequestKey mrk, DataCache dataCache)
       {
          _storage = _getStorage(mrk.ProjectKey);
+         _repositoryAccessor?.Dispose();
+         _repositoryAccessor = _getRepositoryAccessor(mrk.ProjectKey);
          updateRevisionBrowserTree(dataCache, mrk);
       }
 
@@ -47,24 +53,26 @@ namespace mrHelper.App.Controls
 
       public RevisionBrowser RevisionBrowser => revisionBrowser;
 
-      protected override void OnFontChanged(EventArgs e)
+      private void updateStatusLabelLocation()
       {
-         base.OnFontChanged(e);
+         // position label at the center of the panel
+         labelLoading.Location = new System.Drawing.Point(
+            (panelPreviewStatus.Width - labelLoading.Width) / 2,
+            (panelPreviewStatus.Height - labelLoading.Height) / 2);
       }
 
       private void panelLoading_SizeChanged(object sender, EventArgs e)
       {
-         // position label at the center of the panel
-         labelLoading.Location = new System.Drawing.Point(
-            (panelLoading.Width - labelLoading.Width) / 2,
-            (panelLoading.Height - labelLoading.Height) / 2);
+         updateStatusLabelLocation();
       }
 
-      private void revisionBrowser_SelectionChanged(object sender, EventArgs e)
+      async private void revisionBrowser_SelectionChanged(object sender, EventArgs e)
       {
-         if (_storage == null)
+         _repositoryAccessor?.Cancel();
+         await TaskUtils.WhileAsync(() => _isFetching); // to not shuffle states
+         if (_storage == null || _repositoryAccessor == null)
          {
-            listViewRevisionComparisonStructure.ClearData();
+            updatePreviewState(PreviewLoadingState.NotAvailable);
             return;
          }
 
@@ -80,28 +88,49 @@ namespace mrHelper.App.Controls
          };
 
          RevisionComparisonArguments? arguments = getArguments();
-         if (!arguments.HasValue)
+         if (!arguments.HasValue || !arguments.Value.IsValid())
          {
-            listViewRevisionComparisonStructure.ClearData();
+            updatePreviewState(PreviewLoadingState.Failed);
             return;
          }
 
-         panelLoading.Visible = true;
-         Action method = new Action(async () => await showRevisionPreviewAsync(arguments.Value));
-         BeginInvoke(method, null);
+         updatePreviewState(PreviewLoadingState.Loading);
+         await showRevisionPreviewAsync(arguments.Value);
       }
 
       async private Task showRevisionPreviewAsync(RevisionComparisonArguments arguments)
       {
-         await _storage.Git?.FetchAsync(arguments);
-         panelLoading.Visible = false;
+         try
+         {
+            _isFetching = true;
+            try
+            {
+               await _storage.Git?.FetchAsync(arguments, _repositoryAccessor);
+            }
+            finally
+            {
+               _isFetching = false;
+            }
+         }
+         catch (FetchFailedException)
+         {
+            updatePreviewState(PreviewLoadingState.Failed);
+            return;
+         }
+
          ComparisonEx comparison = _storage.Git?.GetComparison(arguments);
          if (comparison == null)
          {
-            listViewRevisionComparisonStructure.ClearData();
-            return;
+            updatePreviewState(PreviewLoadingState.Cancelled);
          }
-         listViewRevisionComparisonStructure.SetData(comparison.GetStatistic());
+         else if (comparison.Compare_Timeout)
+         {
+            updatePreviewState(PreviewLoadingState.CancelledByTimeOut);
+         }
+         else
+         {
+            updatePreviewState(PreviewLoadingState.Ready, comparison);
+         }
       }
 
       private void updateRevisionBrowserTree(DataCache dataCache, MergeRequestKey mrk)
@@ -131,6 +160,58 @@ namespace mrHelper.App.Controls
       {
          revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
       }
+
+      private enum PreviewLoadingState
+      {
+         NotAvailable,
+         Loading,
+         Failed,
+         CancelledByTimeOut,
+         Cancelled,
+         Ready
+      }
+
+      private void updatePreviewState(PreviewLoadingState state, ComparisonEx comparison = null)
+      {
+         _previewState = state;
+         switch (_previewState)
+         {
+            case PreviewLoadingState.NotAvailable:
+               listViewRevisionComparisonStructure.ClearData();
+               panelPreviewStatus.Visible = false;
+               break;
+            case PreviewLoadingState.Loading:
+               labelLoading.Text = "Loading...";
+               panelPreviewStatus.Visible = true;
+               break;
+            case PreviewLoadingState.Failed:
+               labelLoading.Text = "Failed to load revision comparison preview";
+               panelPreviewStatus.Visible = true;
+               break;
+            case PreviewLoadingState.CancelledByTimeOut:
+               labelLoading.Text = "Revision comparison preview loading timed out";
+               panelPreviewStatus.Visible = true;
+               break;
+            case PreviewLoadingState.Cancelled:
+               listViewRevisionComparisonStructure.ClearData();
+               panelPreviewStatus.Visible = false;
+               break;
+            case PreviewLoadingState.Ready:
+               if (comparison != null)
+               {
+                  listViewRevisionComparisonStructure.SetData(comparison.GetStatistic());
+               }
+               panelPreviewStatus.Visible = false;
+               break;
+         }
+         if (panelPreviewStatus.Visible)
+         {
+            updateStatusLabelLocation();
+         }
+      }
+
+      private PreviewLoadingState _previewState = PreviewLoadingState.NotAvailable;
+      private bool _isFetching;
    }
 }
 

@@ -295,7 +295,7 @@ namespace mrHelper.StorageSupport
 
       public bool IsValid()
       {
-         return true;//TODO
+         return !String.IsNullOrEmpty(Sha1) && !String.IsNullOrEmpty(Sha2);
       }
 
       public override bool Equals(object obj)

@@ -13,7 +13,8 @@ namespace mrHelper.App.Controls
    {
       public RevisionComparisonListView()
       {
-         _toolTip = new ListViewToolTip(this, getToolTipText);
+         _toolTip = new ListViewToolTip(this,
+            getText, getToolTipText, getFormatFlags, getBounds);
          OwnerDraw = true;
       }
 
@@ -24,6 +25,10 @@ namespace mrHelper.App.Controls
          {
             ListViewItem item = createListViewItem(statisticItem);
             Items.Add(item);
+            for (int iSubItem = 0; iSubItem < item.SubItems.Count; ++iSubItem)
+            {
+               item.SubItems[iSubItem].Tag = Columns[iSubItem].Tag;
+            }
          }
       }
 
@@ -103,7 +108,7 @@ namespace mrHelper.App.Controls
          }
 
          bool isSelected = e.Item.Selected;
-         Color backgroundColor = e.ItemIndex % 2 == 1 ? Color.Gainsboro : Color.White;
+         Color backgroundColor = e.ItemIndex % 2 == 1 ? Color.WhiteSmoke : Color.White;
          WinFormsHelpers.FillRectangle(e, e.Bounds, backgroundColor, isSelected);
 
          StringFormat format = new StringFormat(StringFormatFlags.NoWrap)
@@ -117,14 +122,15 @@ namespace mrHelper.App.Controls
 
       private ListViewItem createListViewItem(ComparisonEx.Statistic.Item statisticItem)
       {
-         string name = statisticItem.New_Path ?? "";
-         if (!String.IsNullOrEmpty(statisticItem.Old_Path) && name != statisticItem.Old_Path)
+         string filepath = statisticItem.New_Path ?? "";
+         if (!String.IsNullOrEmpty(statisticItem.Old_Path) && filepath != statisticItem.Old_Path)
          {
-            name += String.Format("(was {0})", statisticItem.Old_Path);
+            filepath += String.Format(" (was {0})", statisticItem.Old_Path);
          }
+         filepath = filepath.Replace("/", " / ");
          string[] subitems = new string[]
          {
-            name, statisticItem.Added.ToString(), statisticItem.Deleted.ToString()
+            filepath, statisticItem.Added.ToString(), statisticItem.Deleted.ToString()
          };
          Debug.Assert(subitems.Length == Columns.Count);
          return new ListViewItem(subitems);
@@ -140,6 +146,18 @@ namespace mrHelper.App.Controls
                column.Width = widths[columnName];
             }
          }
+      }
+
+      private int getColumnWidth(string columnTag)
+      {
+         foreach (ColumnHeader column in Columns)
+         {
+            if (column.Tag.ToString() == columnTag)
+            {
+               return column.Width;
+            }
+         }
+         return 0;
       }
 
       private void saveColumnWidths()
@@ -176,26 +194,23 @@ namespace mrHelper.App.Controls
 
       private string getToolTipText(ListViewItem.ListViewSubItem subItem)
       {
-         string text = subItem.Text;
-         StringFormatFlags formatFlags = StringFormatFlags.NoWrap;
-         Graphics graphics = CreateGraphics();
+         return getText(subItem);
+      }
 
-         StringFormat formatTrimmed = new StringFormat(formatFlags)
-         {
-            Trimming = StringTrimming.EllipsisCharacter
-         };
-         SizeF textTrimmedSize = graphics.MeasureString(text, Font, subItem.Bounds.Size, formatTrimmed);
+      private string getText(ListViewItem.ListViewSubItem subItem)
+      {
+         return subItem.Text;
+      }
 
-         StringFormat formatFull = new StringFormat(formatFlags)
-         {
-            Trimming = StringTrimming.None
-         };
-         SizeF textFullSize = graphics.MeasureString(text, Font, subItem.Bounds.Size, formatFull);
+      private StringFormatFlags getFormatFlags(ListViewItem.ListViewSubItem subItem)
+      {
+         return StringFormatFlags.NoWrap;
+      }
 
-         bool exceedsWidth = textTrimmedSize.Width != textFullSize.Width;
-         bool exceedsHeight = textTrimmedSize.Height != textFullSize.Height;
-         bool needShowToolTip = exceedsWidth || exceedsHeight;
-         return needShowToolTip ? text : null;
+      private Rectangle getBounds(ListViewItem.ListViewSubItem subItem)
+      {
+         var width = getColumnWidth(subItem.Tag.ToString());
+         return new Rectangle(subItem.Bounds.X, subItem.Bounds.Y, width, subItem.Bounds.Height);
       }
 
       private readonly ListViewToolTip _toolTip;

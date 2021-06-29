@@ -2,19 +2,18 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
-using GitLabSharp.Entities;
 
 namespace mrHelper.StorageSupport
 {
    internal class FileStorageGitCommandService : GitCommandService
    {
       internal FileStorageGitCommandService(
-         IExternalProcessManager operationManager, string path, IFileStorage fileStorage,
-         RepositoryAccessor repositoryAccessor)
-         : base(operationManager, repositoryAccessor)
+         IExternalProcessManager operationManager, string path, IFileStorage fileStorage)
+         : base(operationManager)
       {
          _fileCache = fileStorage.FileCache;
          _comparisonCache = fileStorage.ComparisonCache;
@@ -88,10 +87,10 @@ namespace mrHelper.StorageSupport
          return Task.FromResult<object>(runCommand(arguments));
       }
 
-      async protected override Task<object> runCommandAsync(RevisionComparisonArguments arguments)
+      async protected override Task<object> runCommandAsync(
+         RevisionComparisonArguments arguments, RepositoryAccessor repositoryAccessor)
       {
-         _repositoryAccessor.Cancel();
-         Comparison comparison = await _repositoryAccessor.Compare(arguments.Sha1, arguments.Sha2, _comparisonCache);
+         Comparison comparison = await repositoryAccessor.Compare(arguments.Sha1, arguments.Sha2, _comparisonCache);
          return comparison == null ? null : new ComparisonEx(comparison);
       }
 

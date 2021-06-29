@@ -181,16 +181,20 @@ namespace mrHelper.App.Controls
                await checkForUpdatesAsync(dataCache, mrk, DataCacheUpdateKind.MergeRequest);
                return dataCache;
             },
-            () => _shortcuts
-                     .GetMergeRequestAccessor(mrk.ProjectKey.ProjectName),
-            () => _shortcuts
-                     .GetProjectAccessor()
-                     .GetSingleProjectAccessor(mrk.ProjectKey.ProjectName)
-                     .GetRepositoryAccessor())
+            () => _shortcuts.GetMergeRequestAccessor(mrk.ProjectKey.ProjectName),
+            () => getRepositoryAccessor(mrk.ProjectKey))
          {
             Tag = mrk
          };
          form.Show();
+      }
+
+      private RepositoryAccessor getRepositoryAccessor(ProjectKey pk)
+      {
+         return _shortcuts?
+            .GetProjectAccessor()
+            .GetSingleProjectAccessor(pk.ProjectName)
+            .GetRepositoryAccessor();
       }
 
       private void editTimeOfSelectedMergeRequest()

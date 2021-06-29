@@ -294,12 +294,12 @@ namespace mrHelper.App.Controls
          }
 
          int id = 0;
-         foreach (ICommand command in commands)
+         foreach (ICommand command in commands.Where(c => c.ShowInDiscussionsMenu))
          {
             ToolStripMenuItem item = new ToolStripMenuItem
             {
                Name = "customAction" + id,
-               Text = String.Format("{0} ({1})", command.Hint, command.Name)
+               Text = String.Format("{0} ({1})", command.Name, command.Hint)
             };
             item.Click += (x, y) => onCommandAction(command, commandCallback);
             actionsToolStripMenuItem.DropDownItems.Add(item);

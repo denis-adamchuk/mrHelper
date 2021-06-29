@@ -512,21 +512,23 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> checkHierarchyAsync()
       {
-         RepositoryAccessor accessor = _getRepositoryAccessor();
-         if (accessor == null)
+         using (RepositoryAccessor accessor = _getRepositoryAccessor())
          {
-            return false;
-         }
+            if (accessor == null)
+            {
+               return false;
+            }
 
-         try
-         {
-            return await accessor.IsDescendantOf(_sourceBranchName, _targetBranchName);
-         }
-         catch (RepositoryAccessorException ex)
-         {
-            string message = String.Format("Cannot check hierarchy, source = {0}, target = {1}",
-               _sourceBranchName, _targetBranchName);
-            ExceptionHandlers.Handle(message, ex);
+            try
+            {
+               return await accessor.IsDescendantOf(_sourceBranchName, _targetBranchName);
+            }
+            catch (RepositoryAccessorException ex)
+            {
+               string message = String.Format("Cannot check hierarchy, source = {0}, target = {1}",
+                  _sourceBranchName, _targetBranchName);
+               ExceptionHandlers.Handle(message, ex);
+            }
          }
          return false;
       }
