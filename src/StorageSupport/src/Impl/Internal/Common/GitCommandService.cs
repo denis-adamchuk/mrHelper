@@ -131,7 +131,7 @@ namespace mrHelper.StorageSupport
       abstract protected Task<object> runCommandAsync(RevisionComparisonArguments arguments,
          RepositoryAccessor repositoryAccessor);
 
-      private K runCommandAndCacheResult<T, K>(T arguments, SelfCleanUpDictionary<T, K> cache)
+      private K runCommandAndCacheResult<T, K>(T arguments, SelfCleanUpDictionary<T, K> cache) where K : class
       {
          if (_isDisposed)
          {
@@ -157,7 +157,7 @@ namespace mrHelper.StorageSupport
       }
 
       async private Task runCommandAndCacheResultAsync<T, K>(T arguments,
-         SelfCleanUpDictionary<T, K> cache)
+         SelfCleanUpDictionary<T, K> cache) where K : class
       {
          if (_isDisposed || cache.ContainsKey(arguments) || !((dynamic)arguments).IsValid())
          {
@@ -173,7 +173,7 @@ namespace mrHelper.StorageSupport
       }
 
       async private Task runCommandAndCacheResultAsync<T, K>(T arguments,
-         SelfCleanUpDictionary<T, K> cache, RepositoryAccessor repositoryAccessor)
+         SelfCleanUpDictionary<T, K> cache, RepositoryAccessor repositoryAccessor) where K : class
       {
          if (_isDisposed || cache.ContainsKey(arguments) || !((dynamic)arguments).IsValid())
          {

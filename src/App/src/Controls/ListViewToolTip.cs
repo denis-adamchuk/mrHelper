@@ -167,8 +167,8 @@ namespace mrHelper.App.Controls
          };
          SizeF textFullSize = graphics.MeasureString(text, _listView.Font, bounds.Size, formatFull);
 
-         bool exceedsWidth = textTrimmedSize.Width != textFullSize.Width;
-         bool exceedsHeight = textTrimmedSize.Height != textFullSize.Height;
+         bool exceedsWidth = textTrimmedSize.Width != textFullSize.Width; //-V3024
+         bool exceedsHeight = textTrimmedSize.Height != textFullSize.Height; //-V3024
          return exceedsWidth || exceedsHeight;
       }
 

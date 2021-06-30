@@ -14,7 +14,7 @@ namespace mrHelper.GitLabClient
    {
       private static readonly Regex GitLabVersionRegex = new Regex(
          @"(?'major_version'\d*)\.(?'minor_version'\d*)\.", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-      private static System.Version EarliestGitLabVersionWithApprovalsSupport = new System.Version(13, 6);
+      private static readonly System.Version EarliestGitLabVersionWithApprovalsSupport = new System.Version(13, 6);
 
       /// <summary>
       /// This is a VERY simplified way of functionality checking because GitLab has complicated editions and plans.

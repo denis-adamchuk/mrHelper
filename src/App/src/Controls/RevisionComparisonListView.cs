@@ -179,8 +179,7 @@ namespace mrHelper.App.Controls
          _restoringColumns = true;
          try
          {
-            Dictionary<string, int> widths = Program.Settings == null
-               ? null : Program.Settings.RevisionComparisonColumnWidths;
+            Dictionary<string, int> widths = Program.Settings?.RevisionComparisonColumnWidths;
             if (widths != null)
             {
                setColumnWidths(widths);

@@ -82,7 +82,7 @@ namespace mrHelper.App.Controls
             switch (selected.Count())
             {
                case 1: return new RevisionComparisonArguments(revisionBrowser.GetBaseCommitSha(), selected[0]);
-               case 2: return new RevisionComparisonArguments(selected[0], selected[1]); // TODO order?
+               case 2: return new RevisionComparisonArguments(selected[0], selected[1]);
             }
             return null;
          };
