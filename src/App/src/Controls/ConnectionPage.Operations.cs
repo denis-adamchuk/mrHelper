@@ -15,7 +15,6 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
-using mrHelper.CustomActions;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
 
@@ -182,16 +181,20 @@ namespace mrHelper.App.Controls
                await checkForUpdatesAsync(dataCache, mrk, DataCacheUpdateKind.MergeRequest);
                return dataCache;
             },
-            () => _shortcuts
-                     .GetMergeRequestAccessor(mrk.ProjectKey.ProjectName),
-            () => _shortcuts
-                     .GetProjectAccessor()
-                     .GetSingleProjectAccessor(mrk.ProjectKey.ProjectName)
-                     .GetRepositoryAccessor())
+            () => _shortcuts.GetMergeRequestAccessor(mrk.ProjectKey.ProjectName),
+            () => getRepositoryAccessor(mrk.ProjectKey))
          {
             Tag = mrk
          };
          form.Show();
+      }
+
+      private RepositoryAccessor getRepositoryAccessor(ProjectKey pk)
+      {
+         return _shortcuts?
+            .GetProjectAccessor()
+            .GetSingleProjectAccessor(pk.ProjectName)
+            .GetRepositoryAccessor();
       }
 
       private void editTimeOfSelectedMergeRequest()
@@ -566,7 +569,7 @@ namespace mrHelper.App.Controls
          MergeRequestKey? currentMrk = getMergeRequestKey(null);
          if (currentMrk.HasValue && currentMrk.Value.Equals(mrk))
          {
-            revisionBrowser.UpdateReviewedRevisions(reviewedRevisions, type.Value);
+            getRevisionBrowser().UpdateReviewedRevisions(reviewedRevisions, type.Value);
          }
       }
 
@@ -637,6 +640,8 @@ namespace mrHelper.App.Controls
             Debug.Assert(false);
             return;
          }
+
+         RevisionBrowser revisionBrowser = getRevisionBrowser();
 
          string leftSHA;
          string rightSHA;

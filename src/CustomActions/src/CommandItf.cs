@@ -23,6 +23,8 @@ namespace mrHelper.CustomActions
 
       bool InitiallyVisible { get; }
 
+      bool ShowInDiscussionsMenu { get; }
+
       Task Run(ICommandCallback callback);
    }
 }

@@ -57,7 +57,7 @@ namespace mrHelper.App.Controls
          var fmkOpt = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
          if (fmkOpt.HasValue && mrk.Equals(fmkOpt.Value))
          {
-            splitContainerSiteDescription.UpdateData(fmkOpt, getDataCache(getCurrentTabDataCacheType()));
+            descriptionSplitContainerSite.UpdateData(fmkOpt.Value, getDataCache(getCurrentTabDataCacheType()));
          }
       }
 

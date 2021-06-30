@@ -40,8 +40,8 @@ namespace mrHelper.App.Controls
          }
 
          // Clear RevisionBrowser and let it drop ContextMenuStrip
-         clearRevisionBrowser();
-         revisionBrowser.AssignContextMenu(null);
+         revisionSplitContainerSite.ClearData();
+         getRevisionBrowser().AssignContextMenu(null);
 
          _colorScheme.Changed -= onColorSchemeChanged;
 
@@ -127,10 +127,10 @@ namespace mrHelper.App.Controls
          this.columnHeaderRecentActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.splitContainerSecondary = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectedMR = new System.Windows.Forms.GroupBox();
-         this.splitContainerSiteDescription = new mrHelper.App.Controls.DescriptionSplitContainerSite();
+         this.descriptionSplitContainerSite = new mrHelper.App.Controls.DescriptionSplitContainerSite();
          this.linkLabelConnectedTo = new mrHelper.CommonControls.Controls.LinkLabelEx();
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
-         this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
+         this.revisionSplitContainerSite = new mrHelper.App.Controls.RevisionSplitContainerSite();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainerPrimary)).BeginInit();
          this.splitContainerPrimary.Panel1.SuspendLayout();
          this.splitContainerPrimary.Panel2.SuspendLayout();
@@ -254,7 +254,6 @@ namespace mrHelper.App.Controls
          this.listViewLiveMergeRequests.Location = new System.Drawing.Point(3, 46);
          this.listViewLiveMergeRequests.MultiSelect = false;
          this.listViewLiveMergeRequests.Name = "listViewLiveMergeRequests";
-         this.listViewLiveMergeRequests.OwnerDraw = true;
          this.listViewLiveMergeRequests.Size = new System.Drawing.Size(833, 567);
          this.listViewLiveMergeRequests.TabIndex = 3;
          this.listViewLiveMergeRequests.Tag = "DesignTimeName";
@@ -264,73 +263,73 @@ namespace mrHelper.App.Controls
          // 
          // columnHeaderIId
          // 
-         this.columnHeaderIId.Tag = "IId";
+         this.columnHeaderIId.Tag = ColumnType.IId;
          this.columnHeaderIId.Text = "IId";
          this.columnHeaderIId.Width = 40;
          // 
          // columnHeaderAuthor
          // 
-         this.columnHeaderAuthor.Tag = "Author";
+         this.columnHeaderAuthor.Tag = ColumnType.Author;
          this.columnHeaderAuthor.Text = "Author";
          this.columnHeaderAuthor.Width = 110;
          // 
          // columnHeaderTitle
          // 
-         this.columnHeaderTitle.Tag = "Title";
+         this.columnHeaderTitle.Tag = ColumnType.Title;
          this.columnHeaderTitle.Text = "Title";
          this.columnHeaderTitle.Width = 400;
          // 
          // columnHeaderLabels
          // 
-         this.columnHeaderLabels.Tag = "Labels";
+         this.columnHeaderLabels.Tag = ColumnType.Labels;
          this.columnHeaderLabels.Text = "Labels";
          this.columnHeaderLabels.Width = 180;
          // 
          // columnHeaderSize
          // 
-         this.columnHeaderSize.Tag = "Size";
+         this.columnHeaderSize.Tag = ColumnType.Size;
          this.columnHeaderSize.Text = "Size";
          this.columnHeaderSize.Width = 100;
          // 
          // columnHeaderJira
          // 
-         this.columnHeaderJira.Tag = "Jira";
+         this.columnHeaderJira.Tag = ColumnType.Jira;
          this.columnHeaderJira.Text = "Jira";
          this.columnHeaderJira.Width = 80;
          // 
          // columnHeaderTotalTime
          // 
-         this.columnHeaderTotalTime.Tag = "TotalTime";
+         this.columnHeaderTotalTime.Tag = ColumnType.TotalTime;
          this.columnHeaderTotalTime.Text = "Total Time";
          this.columnHeaderTotalTime.Width = 70;
          // 
          // columnHeaderResolved
          // 
-         this.columnHeaderResolved.Tag = "Resolved";
+         this.columnHeaderResolved.Tag = ColumnType.Resolved;
          this.columnHeaderResolved.Text = "Resolved";
          this.columnHeaderResolved.Width = 65;
          // 
          // columnHeaderSourceBranch
          // 
-         this.columnHeaderSourceBranch.Tag = "SourceBranch";
+         this.columnHeaderSourceBranch.Tag = ColumnType.SourceBranch;
          this.columnHeaderSourceBranch.Text = "Source Branch";
          this.columnHeaderSourceBranch.Width = 100;
          // 
          // columnHeaderTargetBranch
          // 
-         this.columnHeaderTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderTargetBranch.Tag = ColumnType.TargetBranch;
          this.columnHeaderTargetBranch.Text = "Target Branch";
          this.columnHeaderTargetBranch.Width = 100;
          // 
          // columnHeaderRefreshTime
          // 
-         this.columnHeaderRefreshTime.Tag = "RefreshTime";
+         this.columnHeaderRefreshTime.Tag = ColumnType.RefreshTime;
          this.columnHeaderRefreshTime.Text = "Refreshed";
          this.columnHeaderRefreshTime.Width = 90;
          // 
          // columnHeaderActivities
          // 
-         this.columnHeaderActivities.Tag = "Activities";
+         this.columnHeaderActivities.Tag = ColumnType.Activities;
          this.columnHeaderActivities.Text = "Activities";
          this.columnHeaderActivities.Width = 90;
          // 
@@ -404,7 +403,6 @@ namespace mrHelper.App.Controls
          this.listViewFoundMergeRequests.Location = new System.Drawing.Point(3, 32);
          this.listViewFoundMergeRequests.MultiSelect = false;
          this.listViewFoundMergeRequests.Name = "listViewFoundMergeRequests";
-         this.listViewFoundMergeRequests.OwnerDraw = true;
          this.listViewFoundMergeRequests.Size = new System.Drawing.Size(833, 581);
          this.listViewFoundMergeRequests.TabIndex = 3;
          this.listViewFoundMergeRequests.Tag = "DesignTimeName";
@@ -414,55 +412,55 @@ namespace mrHelper.App.Controls
          // 
          // columnHeaderFoundIId
          // 
-         this.columnHeaderFoundIId.Tag = "IId";
+         this.columnHeaderFoundIId.Tag = ColumnType.IId;
          this.columnHeaderFoundIId.Text = "IId";
          this.columnHeaderFoundIId.Width = 40;
          // 
          // columnHeaderFoundState
          // 
-         this.columnHeaderFoundState.Tag = "State";
+         this.columnHeaderFoundState.Tag = ColumnType.State;
          this.columnHeaderFoundState.Text = "State";
          this.columnHeaderFoundState.Width = 80;
          // 
          // columnHeaderFoundAuthor
          // 
-         this.columnHeaderFoundAuthor.Tag = "Author";
+         this.columnHeaderFoundAuthor.Tag = ColumnType.Author;
          this.columnHeaderFoundAuthor.Text = "Author";
          this.columnHeaderFoundAuthor.Width = 110;
          // 
          // columnHeaderFoundTitle
          // 
-         this.columnHeaderFoundTitle.Tag = "Title";
+         this.columnHeaderFoundTitle.Tag = ColumnType.Title;
          this.columnHeaderFoundTitle.Text = "Title";
          this.columnHeaderFoundTitle.Width = 400;
          // 
          // columnHeaderFoundLabels
          // 
-         this.columnHeaderFoundLabels.Tag = "Labels";
+         this.columnHeaderFoundLabels.Tag = ColumnType.Labels;
          this.columnHeaderFoundLabels.Text = "Labels";
          this.columnHeaderFoundLabels.Width = 180;
          // 
          // columnHeaderFoundJira
          // 
-         this.columnHeaderFoundJira.Tag = "Jira";
+         this.columnHeaderFoundJira.Tag = ColumnType.Jira;
          this.columnHeaderFoundJira.Text = "Jira";
          this.columnHeaderFoundJira.Width = 80;
          // 
          // columnHeaderFoundSourceBranch
          // 
-         this.columnHeaderFoundSourceBranch.Tag = "SourceBranch";
+         this.columnHeaderFoundSourceBranch.Tag = ColumnType.SourceBranch;
          this.columnHeaderFoundSourceBranch.Text = "Source Branch";
          this.columnHeaderFoundSourceBranch.Width = 100;
          // 
          // columnHeaderFoundTargetBranch
          // 
-         this.columnHeaderFoundTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderFoundTargetBranch.Tag = ColumnType.TargetBranch;
          this.columnHeaderFoundTargetBranch.Text = "Target Branch";
          this.columnHeaderFoundTargetBranch.Width = 100;
          // 
          // columnHeaderFoundActivities
          // 
-         this.columnHeaderFoundActivities.Tag = "Activities";
+         this.columnHeaderFoundActivities.Tag = ColumnType.Activities;
          this.columnHeaderFoundActivities.Text = "Activities";
          this.columnHeaderFoundActivities.Width = 90;
          // 
@@ -526,7 +524,6 @@ namespace mrHelper.App.Controls
          this.listViewRecentMergeRequests.Location = new System.Drawing.Point(3, 53);
          this.listViewRecentMergeRequests.MultiSelect = false;
          this.listViewRecentMergeRequests.Name = "listViewRecentMergeRequests";
-         this.listViewRecentMergeRequests.OwnerDraw = true;
          this.listViewRecentMergeRequests.Size = new System.Drawing.Size(833, 560);
          this.listViewRecentMergeRequests.TabIndex = 4;
          this.listViewRecentMergeRequests.Tag = "DesignTimeName";
@@ -536,55 +533,55 @@ namespace mrHelper.App.Controls
          // 
          // columnHeaderRecentIId
          // 
-         this.columnHeaderRecentIId.Tag = "IId";
+         this.columnHeaderRecentIId.Tag = ColumnType.IId;
          this.columnHeaderRecentIId.Text = "IId";
          this.columnHeaderRecentIId.Width = 40;
          // 
          // columnHeaderRecentState
          // 
-         this.columnHeaderRecentState.Tag = "State";
+         this.columnHeaderRecentState.Tag = ColumnType.State;
          this.columnHeaderRecentState.Text = "State";
          this.columnHeaderRecentState.Width = 80;
          // 
          // columnHeaderRecentAuthor
          // 
-         this.columnHeaderRecentAuthor.Tag = "Author";
+         this.columnHeaderRecentAuthor.Tag = ColumnType.Author;
          this.columnHeaderRecentAuthor.Text = "Author";
          this.columnHeaderRecentAuthor.Width = 110;
          // 
          // columnHeaderRecentTitle
          // 
-         this.columnHeaderRecentTitle.Tag = "Title";
+         this.columnHeaderRecentTitle.Tag = ColumnType.Title;
          this.columnHeaderRecentTitle.Text = "Title";
          this.columnHeaderRecentTitle.Width = 400;
          // 
          // columnHeaderRecentLabels
          // 
-         this.columnHeaderRecentLabels.Tag = "Labels";
+         this.columnHeaderRecentLabels.Tag = ColumnType.Labels;
          this.columnHeaderRecentLabels.Text = "Labels";
          this.columnHeaderRecentLabels.Width = 180;
          // 
          // columnHeaderRecentJira
          // 
-         this.columnHeaderRecentJira.Tag = "Jira";
+         this.columnHeaderRecentJira.Tag = ColumnType.Jira;
          this.columnHeaderRecentJira.Text = "Jira";
          this.columnHeaderRecentJira.Width = 80;
          // 
          // columnHeaderRecentSourceBranch
          // 
-         this.columnHeaderRecentSourceBranch.Tag = "SourceBranch";
+         this.columnHeaderRecentSourceBranch.Tag = ColumnType.SourceBranch;
          this.columnHeaderRecentSourceBranch.Text = "Source Branch";
          this.columnHeaderRecentSourceBranch.Width = 100;
          // 
          // columnHeaderRecentTargetBranch
          // 
-         this.columnHeaderRecentTargetBranch.Tag = "TargetBranch";
+         this.columnHeaderRecentTargetBranch.Tag = ColumnType.TargetBranch;
          this.columnHeaderRecentTargetBranch.Text = "Target Branch";
          this.columnHeaderRecentTargetBranch.Width = 100;
          // 
          // columnHeaderRecentActivities
          // 
-         this.columnHeaderRecentActivities.Tag = "Activities";
+         this.columnHeaderRecentActivities.Tag = ColumnType.Activities;
          this.columnHeaderRecentActivities.Text = "Activities";
          this.columnHeaderRecentActivities.Width = 90;
          // 
@@ -617,7 +614,7 @@ namespace mrHelper.App.Controls
          // 
          // groupBoxSelectedMR
          // 
-         this.groupBoxSelectedMR.Controls.Add(this.splitContainerSiteDescription);
+         this.groupBoxSelectedMR.Controls.Add(this.descriptionSplitContainerSite);
          this.groupBoxSelectedMR.Controls.Add(this.linkLabelConnectedTo);
          this.groupBoxSelectedMR.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSelectedMR.Location = new System.Drawing.Point(0, 0);
@@ -629,11 +626,11 @@ namespace mrHelper.App.Controls
          // 
          // splitContainerSiteDescription
          // 
-         this.splitContainerSiteDescription.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.splitContainerSiteDescription.Location = new System.Drawing.Point(3, 16);
-         this.splitContainerSiteDescription.Name = "splitContainerSiteDescription";
-         this.splitContainerSiteDescription.Size = new System.Drawing.Size(322, 293);
-         this.splitContainerSiteDescription.TabIndex = 6;
+         this.descriptionSplitContainerSite.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.descriptionSplitContainerSite.Location = new System.Drawing.Point(3, 16);
+         this.descriptionSplitContainerSite.Name = "descriptionSplitContainerSite";
+         this.descriptionSplitContainerSite.Size = new System.Drawing.Size(322, 293);
+         this.descriptionSplitContainerSite.TabIndex = 6;
          // 
          // linkLabelConnectedTo
          // 
@@ -650,7 +647,7 @@ namespace mrHelper.App.Controls
          // 
          // groupBoxSelectRevisions
          // 
-         this.groupBoxSelectRevisions.Controls.Add(this.revisionBrowser);
+         this.groupBoxSelectRevisions.Controls.Add(this.revisionSplitContainerSite);
          this.groupBoxSelectRevisions.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSelectRevisions.Location = new System.Drawing.Point(0, 0);
          this.groupBoxSelectRevisions.Name = "groupBoxSelectRevisions";
@@ -659,14 +656,13 @@ namespace mrHelper.App.Controls
          this.groupBoxSelectRevisions.TabStop = false;
          this.groupBoxSelectRevisions.Text = "Select revisions for comparison";
          // 
-         // revisionBrowser
+         // revisionSplitContainerSite
          // 
-         this.revisionBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.revisionBrowser.Location = new System.Drawing.Point(3, 16);
-         this.revisionBrowser.Name = "revisionBrowser";
-         this.revisionBrowser.Size = new System.Drawing.Size(322, 273);
-         this.revisionBrowser.TabIndex = 0;
-         this.revisionBrowser.SelectionChanged += new System.EventHandler(this.revisionBrowser_SelectionChanged);
+         this.revisionSplitContainerSite.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.revisionSplitContainerSite.Location = new System.Drawing.Point(3, 16);
+         this.revisionSplitContainerSite.Name = "revisionSplitContainerSite";
+         this.revisionSplitContainerSite.Size = new System.Drawing.Size(322, 273);
+         this.revisionSplitContainerSite.TabIndex = 0;
          // 
          // ConnectionPage
          // 
@@ -748,9 +744,9 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.SplitContainer splitContainerSecondary;
       private System.Windows.Forms.GroupBox groupBoxSelectedMR;
       private System.Windows.Forms.GroupBox groupBoxSelectRevisions;
-      private App.Controls.RevisionBrowser revisionBrowser;
       private CommonControls.Controls.LinkLabelEx linkLabelConnectedTo;
       private System.Windows.Forms.LinkLabel linkLabelNewSearch;
-      private DescriptionSplitContainerSite splitContainerSiteDescription;
+      private DescriptionSplitContainerSite descriptionSplitContainerSite;
+      private RevisionSplitContainerSite revisionSplitContainerSite;
    }
 }

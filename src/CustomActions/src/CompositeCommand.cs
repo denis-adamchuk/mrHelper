@@ -15,7 +15,8 @@ namespace mrHelper.CustomActions
          bool stopTimer,
          bool reload,
          string hint,
-         bool initiallyVisible)
+         bool initiallyVisible,
+         bool showInDiscussionsMenu)
       {
          _commands = commands;
          Name = name;
@@ -25,6 +26,7 @@ namespace mrHelper.CustomActions
          Reload = reload;
          Hint = hint;
          InitiallyVisible = initiallyVisible;
+         ShowInDiscussionsMenu = showInDiscussionsMenu;
       }
 
       public string Name { get; }
@@ -40,6 +42,8 @@ namespace mrHelper.CustomActions
       public string Hint { get; }
 
       public bool InitiallyVisible { get; }
+
+      public bool ShowInDiscussionsMenu { get; }
 
       async public Task Run(ICommandCallback callback)
       {

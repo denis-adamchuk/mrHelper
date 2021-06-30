@@ -5,10 +5,11 @@ using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Exceptions;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.StorageSupport
 {
-   internal class FileStorageComparisonCache
+   internal class FileStorageComparisonCache : IComparisonCache
    {
       internal FileStorageComparisonCache(string path, int comparisonsToKeep)
       {
@@ -19,7 +20,7 @@ namespace mrHelper.StorageSupport
          cleanupOldComparisons(comparisonsToKeep);
       }
 
-      internal Comparison LoadComparison(string baseSha, string headSha)
+      public Comparison LoadComparison(string baseSha, string headSha)
       {
          string comparisonCacheFilepath = getComparisonCacheFilepath(baseSha, headSha);
          if (System.IO.File.Exists(comparisonCacheFilepath))
@@ -36,7 +37,7 @@ namespace mrHelper.StorageSupport
          return null;
       }
 
-      internal void SaveComparison(string baseSha, string headSha, Comparison comparison)
+      public void SaveComparison(string baseSha, string headSha, Comparison comparison)
       {
          string comparisonCacheFilepath = getComparisonCacheFilepath(baseSha, headSha);
          string comparisonCacheDirName = Path.GetDirectoryName(comparisonCacheFilepath);

@@ -157,12 +157,6 @@ namespace mrHelper.App.Controls
          }
       }
 
-      async private Task reconnect()
-      {
-         await connect(new Func<Exception, bool>(x =>
-            throw new UrlConnectionException("Failed to connect to GitLab. ", x)));
-      }
-
       async private Task<bool> openUrlAtLiveTabAsync(MergeRequestKey mrk, string url)
       {
          DataCache dataCache = getDataCache(EDataCacheType.Live);

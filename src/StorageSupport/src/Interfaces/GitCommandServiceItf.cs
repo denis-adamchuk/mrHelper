@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
 
 namespace mrHelper.StorageSupport
@@ -23,7 +24,11 @@ namespace mrHelper.StorageSupport
    public interface IGitCommandService
    {
       IEnumerable<string> ShowRevision(GitShowRevisionArguments arguments);
+
       IEnumerable<string> ShowDiff(GitDiffArguments arguments);
+
+      ComparisonEx GetComparison(RevisionComparisonArguments arguments);
+
       int LaunchDiffTool(DiffToolArguments arguments);
 
       IFileRenameDetector RenameDetector { get; }

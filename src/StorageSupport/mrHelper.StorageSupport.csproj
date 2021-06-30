@@ -63,6 +63,7 @@
     <Compile Include="src\Impl\Internal\Interfaces\GitCommandArgumentConverterItf.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileRevision.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageArgumentConverter.cs" />
+    <Compile Include="src\Interfaces\ComparisonEx.cs" />
     <Compile Include="src\Interfaces\FileRenameDetectorItf.cs" />
     <Compile Include="src\Interfaces\CommitStorageUpdateContextItf.cs" />
     <Compile Include="src\Interfaces\GitCommandArguments.cs" />

@@ -29,10 +29,23 @@ namespace mrHelper.GitLabClient
          _networkOperationStatusListener = networkOperationStatusListener;
       }
 
-      public Task<Comparison> Compare(string from, string to)
+      async public Task<Comparison> Compare(string from, string to, IComparisonCache cache)
       {
-         return call(() => _operator.CompareAsync(from, to),
+         Comparison comparison = cache?.LoadComparison(from, to);
+         if (comparison != null)
+         {
+            return comparison;
+         }
+
+         comparison = await call(() => _operator.CompareAsync(from, to),
                "Cancelled Compare() call", "Failed Compare() call");
+         if (comparison == null)
+         {
+            return null;
+         }
+
+         cache?.SaveComparison(from, to, comparison);
+         return comparison;
       }
 
       public Task<File> LoadFile(string filename, string sha)

@@ -65,7 +65,9 @@ namespace mrHelper.App.Controls
       public MergeRequestListView()
       {
          ListViewItemSorter = new ListViewItemComparer();
-         _toolTip = new MergeRequestListViewToolTip(this);
+         OwnerDraw = true;
+         _toolTip = new ListViewToolTip(this,
+            getText, getToolTipText, getSubItemStringFormatFlags, getBounds);
          Tag = "DesignTimeName";
          _unmuteTimer.Tick += onUnmuteTimerTick;
          cleanUpMutedMergeRequests();
@@ -572,40 +574,6 @@ namespace mrHelper.App.Controls
             return; // is being removed
          }
 
-         int iidColumnIndex = getColumnByTag("IId").Index;
-         int labelsColumnIndex = getColumnByTag("Labels").Index;
-         int? resolvedCountColumnIndex = getColumnByTag("Resolved")?.Index;
-         int? totalTimeColumnIndex = getColumnByTag("TotalTime")?.Index;
-         int? titleColumnIndex = getColumnByTag("Title")?.Index;
-         int? sourceBranchColumnIndex = getColumnByTag("SourceBranch")?.Index;
-         int? targetBranchColumnIndex = getColumnByTag("TargetBranch")?.Index;
-         int? jiraColumnIndex = getColumnByTag("Jira")?.Index;
-         int? authorColumnIndex = getColumnByTag("Author")?.Index;
-
-         bool isIIdColumnItem = e.ColumnIndex == iidColumnIndex;
-         bool isLabelsColumnItem = e.ColumnIndex == labelsColumnIndex;
-         bool isResolvedColumnItem = resolvedCountColumnIndex.HasValue && e.ColumnIndex == resolvedCountColumnIndex.Value;
-         bool isTotalTimeColumnItem = totalTimeColumnIndex.HasValue && e.ColumnIndex == totalTimeColumnIndex.Value;
-         bool isTitleColumnItem = titleColumnIndex.HasValue && e.ColumnIndex == titleColumnIndex.Value;
-         bool isSourceBranchColumnItem = sourceBranchColumnIndex.HasValue && e.ColumnIndex == sourceBranchColumnIndex.Value;
-         bool isTargetBranchColumnItem = targetBranchColumnIndex.HasValue && e.ColumnIndex == targetBranchColumnIndex.Value;
-         bool isJiraColumnItem = jiraColumnIndex.HasValue && e.ColumnIndex == jiraColumnIndex.Value;
-         bool isAuthorColumnItem = authorColumnIndex.HasValue && e.ColumnIndex == authorColumnIndex.Value;
-
-         bool isWrappableColumnItem =
-               isTitleColumnItem
-            || isSourceBranchColumnItem
-            || isTargetBranchColumnItem
-            || isJiraColumnItem
-            || isAuthorColumnItem;
-         bool needWordWrap = isWrappableColumnItem && Program.Settings.WordWrapLongRows;
-         StringFormatFlags formatFlags = needWordWrap ? StringFormatFlags.LineLimit : StringFormatFlags.NoWrap;
-         StringFormat format = new StringFormat
-            {
-               Trimming = StringTrimming.EllipsisCharacter,
-               FormatFlags = formatFlags
-            };
-
          Rectangle bounds = e.Bounds;
          if (e.ColumnIndex == 0 && e.Item.ListView.Columns[0].DisplayIndex != 0)
          {
@@ -617,9 +585,14 @@ namespace mrHelper.App.Controls
          Color backgroundColor = getMergeRequestColor(fmk, Color.Transparent, true);
          WinFormsHelpers.FillRectangle(e, bounds, backgroundColor, isSelected);
 
+         ColumnType columnType = getColumnType(e.SubItem);
+         StringFormat format = new StringFormat(getSubItemStringFormatFlags(e.SubItem))
+         {
+            Trimming = StringTrimming.EllipsisCharacter
+         };
          string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
          bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
-         if (isIIdColumnItem)
+         if (columnType == ColumnType.IId)
          {
             FontStyle fontStyle = isClickable ? FontStyle.Underline : FontStyle.Regular;
             using (Font font = new Font(e.Item.ListView.Font, fontStyle))
@@ -639,21 +612,21 @@ namespace mrHelper.App.Controls
                e.Graphics.DrawString(text, font, brush, bounds, format);
             }
          }
-         else if (isSelected && isLabelsColumnItem)
+         else if (isSelected && columnType == ColumnType.Labels)
          {
             using (Brush brush = new SolidBrush(getMergeRequestColor(fmk, SystemColors.Window, true)))
             {
                e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
             }
          }
-         else if (isResolvedColumnItem)
+         else if (columnType == ColumnType.Resolved)
          {
             using (Brush brush = new SolidBrush(getDiscussionCountColor(fmk, isSelected)))
             {
                e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
             }
          }
-         else if (isTotalTimeColumnItem)
+         else if (columnType == ColumnType.TotalTime)
          {
             Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
             e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
@@ -663,6 +636,19 @@ namespace mrHelper.App.Controls
             Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
             e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
          }
+      }
+
+      private StringFormatFlags getSubItemStringFormatFlags(ListViewItem.ListViewSubItem subItem)
+      {
+         ColumnType columnType = getColumnType(subItem);
+         bool isWrappableColumnItem =
+               columnType == ColumnType.Title
+            || columnType == ColumnType.SourceBranch
+            || columnType == ColumnType.TargetBranch
+            || columnType == ColumnType.Jira
+            || columnType == ColumnType.Author;
+         bool needWordWrap = isWrappableColumnItem && Program.Settings.WordWrapLongRows;
+         return needWordWrap ? StringFormatFlags.LineLimit : StringFormatFlags.NoWrap;
       }
 
       bool _restoringColumns = false;
@@ -893,9 +879,9 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         int getMaxRowCountInColumn(string columnName)
+         int getMaxRowCountInColumn(ColumnType type)
          {
-            int labelsColumnIndex = getColumnByTag(columnName).Index;
+            int labelsColumnIndex = getColumnByType(type).Index;
             IEnumerable<string> rows = Items.Cast<ListViewItem>()
                .Select(item => ((ListViewSubItemInfo)(item.SubItems[labelsColumnIndex].Tag)).Text);
             IEnumerable<int> rowCounts = rows
@@ -903,15 +889,16 @@ namespace mrHelper.App.Controls
             return rowCounts.Max() + 1;
          }
 
-         int maxLineCount = Math.Max(getMaxRowCountInColumn("Labels"), getMaxRowCountInColumn("Author"));
+         int maxLineCount = Math.Max(getMaxRowCountInColumn(ColumnType.Labels),
+                                     getMaxRowCountInColumn(ColumnType.Author));
          WinFormsHelpers.SetListViewRowHeight(this, maxLineCount);
       }
 
-      private ColumnHeader getColumnByTag(string tag)
+      private ColumnHeader getColumnByType(ColumnType columnType)
       {
          return Columns
             .Cast<ColumnHeader>()
-            .SingleOrDefault(x => x.Tag.ToString() == tag);
+            .SingleOrDefault(x => (ColumnType)x.Tag == columnType);
       }
 
       private IEnumerable<FullMergeRequestKey> getAllProjectItems(ProjectKey projectKey)
@@ -951,17 +938,6 @@ namespace mrHelper.App.Controls
          return item;
       }
 
-      private void setSubItemTag(ListViewItem item, string columnTag, ListViewSubItemInfo subItemInfo)
-      {
-         ColumnHeader columnHeader = getColumnByTag(columnTag);
-         if (columnHeader == null)
-         {
-            return;
-         }
-
-         item.SubItems[columnHeader.Index].Tag = subItemInfo;
-      }
-
       private void setListViewSubItemsTags(ListViewItem item, FullMergeRequestKey fmk)
       {
          Debug.Assert(item.ListView == this);
@@ -980,19 +956,31 @@ namespace mrHelper.App.Controls
          };
 
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, mr.IId);
-         setSubItemTag(item, "IId", new ListViewSubItemInfo(x => mr.IId.ToString(), () => mr.Web_Url));
-         setSubItemTag(item, "Author", new ListViewSubItemInfo(x => author, () => String.Empty));
-         setSubItemTag(item, "Title", new ListViewSubItemInfo(x => mr.Title, () => String.Empty));
-         setSubItemTag(item, "Labels", new ListViewSubItemInfo(x => labels[x], () => String.Empty));
-         setSubItemTag(item, "Size", new ListViewSubItemInfo(x => getSize(mrk), () => String.Empty));
-         setSubItemTag(item, "Jira", new ListViewSubItemInfo(x => getJiraTask(mr), () => getJiraTaskUrl(mr)));
-         setSubItemTag(item, "TotalTime", new ListViewSubItemInfo(x => getTotalTimeText(mrk, mr.Author), () => String.Empty));
-         setSubItemTag(item, "SourceBranch", new ListViewSubItemInfo(x => mr.Source_Branch, () => String.Empty));
-         setSubItemTag(item, "TargetBranch", new ListViewSubItemInfo(x => mr.Target_Branch, () => String.Empty));
-         setSubItemTag(item, "State", new ListViewSubItemInfo(x => mr.State, () => String.Empty));
-         setSubItemTag(item, "Resolved", new ListViewSubItemInfo(x => getDiscussionCount(mrk), () => String.Empty));
-         setSubItemTag(item, "RefreshTime", new ListViewSubItemInfo(x => getRefreshed(mrk, x), () => String.Empty));
-         setSubItemTag(item, "Activities", new ListViewSubItemInfo(x => getActivities(mr.Created_At, mrk, x), () => String.Empty));
+         setSubItemTag(item, ColumnType.IId, x => mr.IId.ToString(), () => mr.Web_Url);
+         setSubItemTag(item, ColumnType.Author, x => author, () => String.Empty);
+         setSubItemTag(item, ColumnType.Title, x => mr.Title, () => String.Empty);
+         setSubItemTag(item, ColumnType.Labels, x => labels[x], () => String.Empty);
+         setSubItemTag(item, ColumnType.Size, x => getSize(mrk), () => String.Empty);
+         setSubItemTag(item, ColumnType.Jira, x => getJiraTask(mr), () => getJiraTaskUrl(mr));
+         setSubItemTag(item, ColumnType.TotalTime, x => getTotalTimeText(mrk, mr.Author), () => String.Empty);
+         setSubItemTag(item, ColumnType.SourceBranch, x => mr.Source_Branch, () => String.Empty);
+         setSubItemTag(item, ColumnType.TargetBranch, x => mr.Target_Branch, () => String.Empty);
+         setSubItemTag(item, ColumnType.State, x => mr.State, () => String.Empty);
+         setSubItemTag(item, ColumnType.Resolved, x => getDiscussionCount(mrk), () => String.Empty);
+         setSubItemTag(item, ColumnType.RefreshTime, x => getRefreshed(mrk, x), () => String.Empty);
+         setSubItemTag(item, ColumnType.Activities, x => getActivities(mr.Created_At, mrk, x), () => String.Empty);
+      }
+
+      private void setSubItemTag(ListViewItem item, ColumnType columnType, Func<bool, string> p1, Func<string> p2)
+      {
+         ColumnHeader columnHeader = getColumnByType(columnType);
+         if (columnHeader == null)
+         {
+            return;
+         }
+
+         ListViewSubItemInfo subItemInfo = new ListViewSubItemInfo(p1, p2, columnType);
+         item.SubItems[columnHeader.Index].Tag = subItemInfo;
       }
 
       private void setListViewSubItemsTagsForSummary(ListViewItem item)
@@ -1049,31 +1037,43 @@ namespace mrHelper.App.Controls
             [true] = StringUtils.JoinSubstrings(distinctTargetBranches.OrderBy(branch => branch))
          };
 
-         setSubItemTag(item, "IId", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
-         setSubItemTag(item, "Author", new ListViewSubItemInfo(x => authors[x], () => String.Empty));
-         setSubItemTag(item, "Title", new ListViewSubItemInfo(x => titles[x], () => String.Empty));
-         setSubItemTag(item, "Labels", new ListViewSubItemInfo(x => labels[x], () => String.Empty));
-         setSubItemTag(item, "Size", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
-         setSubItemTag(item, "Jira", new ListViewSubItemInfo(x => jiraTasks[x], () => String.Empty));
-         setSubItemTag(item, "TotalTime", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
-         setSubItemTag(item, "SourceBranch", new ListViewSubItemInfo(x => sourceBranches[x], () => String.Empty));
-         setSubItemTag(item, "TargetBranch", new ListViewSubItemInfo(x => targetBranches[x], () => String.Empty));
-         setSubItemTag(item, "State", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
-         setSubItemTag(item, "Resolved", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
-         setSubItemTag(item, "RefreshTime", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
-         setSubItemTag(item, "Activities", new ListViewSubItemInfo(x => String.Empty, () => String.Empty));
+         setSubItemTag(item, ColumnType.IId, x => String.Empty, () => String.Empty);
+         setSubItemTag(item, ColumnType.Author, x => authors[x], () => String.Empty);
+         setSubItemTag(item, ColumnType.Title, x => titles[x], () => String.Empty);
+         setSubItemTag(item, ColumnType.Labels, x => labels[x], () => String.Empty);
+         setSubItemTag(item, ColumnType.Size, x => String.Empty, () => String.Empty);
+         setSubItemTag(item, ColumnType.Jira, x => jiraTasks[x], () => String.Empty);
+         setSubItemTag(item, ColumnType.TotalTime, x => String.Empty, () => String.Empty);
+         setSubItemTag(item, ColumnType.SourceBranch, x => sourceBranches[x], () => String.Empty);
+         setSubItemTag(item, ColumnType.TargetBranch, x => targetBranches[x], () => String.Empty);
+         setSubItemTag(item, ColumnType.State, x => String.Empty, () => String.Empty);
+         setSubItemTag(item, ColumnType.Resolved, x => String.Empty, () => String.Empty);
+         setSubItemTag(item, ColumnType.RefreshTime, x => String.Empty, () => String.Empty);
+         setSubItemTag(item, ColumnType.Activities, x => String.Empty, () => String.Empty);
       }
 
       private void setColumnWidths(Dictionary<string, int> widths)
       {
          foreach (ColumnHeader column in Columns)
          {
-            string columnName = (string)column.Tag;
+            string columnName = column.Tag.ToString();
             if (widths.ContainsKey(columnName))
             {
                column.Width = widths[columnName];
             }
          }
+      }
+
+      private int getColumnWidth(ColumnType columnType)
+      {
+         foreach (ColumnHeader column in Columns)
+         {
+            if ((ColumnType)column.Tag == columnType)
+            {
+               return column.Width;
+            }
+         }
+         return 0;
       }
 
       private void setColumnIndices(Dictionary<string, int> indices)
@@ -1101,7 +1101,7 @@ namespace mrHelper.App.Controls
          Dictionary<string, int> columnWidths = new Dictionary<string, int>();
          foreach (ColumnHeader column in Columns)
          {
-            columnWidths[(string)column.Tag] = column.Width;
+            columnWidths[column.Tag.ToString()] = column.Width;
          }
          ConfigurationHelper.SetColumnWidths(Program.Settings, columnWidths, getIdentity());
       }
@@ -1265,6 +1265,27 @@ namespace mrHelper.App.Controls
          return _identity;
       }
 
+      private ColumnType getColumnType(ListViewItem.ListViewSubItem subItem)
+      {
+         return (subItem.Tag as ListViewSubItemInfo).ColumnType;
+      }
+
+      private string getToolTipText(ListViewItem.ListViewSubItem subItem)
+      {
+         return (subItem.Tag as ListViewSubItemInfo).TooltipText;
+      }
+
+      private string getText(ListViewItem.ListViewSubItem subItem)
+      {
+         return (subItem.Tag as ListViewSubItemInfo).Text;
+      }
+
+      private Rectangle getBounds(ListViewItem.ListViewSubItem subItem)
+      {
+         var width = getColumnWidth((subItem.Tag as ListViewSubItemInfo).ColumnType);
+         return new Rectangle(subItem.Bounds.X, subItem.Bounds.Y, width, subItem.Bounds.Height);
+      }
+
       private static bool isSummaryKey(FullMergeRequestKey fmk)
       {
          return fmk.MergeRequest == null;
@@ -1297,7 +1318,7 @@ namespace mrHelper.App.Controls
          return Cursors.Default;
       }
 
-      private readonly MergeRequestListViewToolTip _toolTip;
+      private readonly ListViewToolTip _toolTip;
       private IDiffStatisticProvider _diffStatisticProvider;
       private Func<User> _getCurrentUser;
       private DataCache _dataCache;

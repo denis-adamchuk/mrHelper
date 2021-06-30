@@ -118,9 +118,20 @@ namespace mrHelper.App.Controls
          linkLabelConnectedTo.Text = String.Empty;
          linkLabelConnectedTo.SetLinkLabelClicked(UrlHelper.OpenBrowser);
 
-         splitContainerSiteDescription.Initialize(_keywords, _mdPipeline);
-         splitContainerSiteDescription.SplitContainer.SplitterMoving += new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
-         splitContainerSiteDescription.SplitContainer.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
+         descriptionSplitContainerSite.Initialize(_keywords, _mdPipeline);
+         descriptionSplitContainerSite.SplitContainer.SplitterMoving +=
+            new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
+         descriptionSplitContainerSite.SplitContainer.SplitterMoved +=
+            new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
+
+         revisionSplitContainerSite.Initialize(
+            pk => getCommitStorage(pk, false), getRepositoryAccessor, getReviewedRevisions);
+         revisionSplitContainerSite.SplitContainer.SplitterMoving +=
+            new System.Windows.Forms.SplitterCancelEventHandler(this.splitContainer_SplitterMoving);
+         revisionSplitContainerSite.SplitContainer.SplitterMoved +=
+            new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
+         revisionSplitContainerSite.RevisionBrowser.SelectionChanged +=
+            new System.EventHandler(this.revisionBrowser_SelectionChanged);
       }
 
       private void startRedrawTimer()
@@ -189,7 +200,7 @@ namespace mrHelper.App.Controls
       private void createRevisionBrowserContextMenu()
       {
          void defaultAction() => launchDiffTool(DiffToolMode.DiffSelectedToBase);
-         revisionBrowser.AssignContextMenu(new RevisionBrowserContextMenu(
+         getRevisionBrowser().AssignContextMenu(new RevisionBrowserContextMenu(
             this,
             () => launchDiffTool(DiffToolMode.DiffBetweenSelected),
             defaultAction,

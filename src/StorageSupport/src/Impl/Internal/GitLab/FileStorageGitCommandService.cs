@@ -2,8 +2,10 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.StorageSupport
 {
@@ -14,6 +16,7 @@ namespace mrHelper.StorageSupport
          : base(operationManager)
       {
          _fileCache = fileStorage.FileCache;
+         _comparisonCache = fileStorage.ComparisonCache;
          _path = path;
          _argumentConverter = new FileStorageArgumentConverter(fileStorage);
          RenameDetector = new FileStorageRenameDetector(fileStorage);
@@ -84,8 +87,16 @@ namespace mrHelper.StorageSupport
          return Task.FromResult<object>(runCommand(arguments));
       }
 
+      async protected override Task<object> runCommandAsync(
+         RevisionComparisonArguments arguments, RepositoryAccessor repositoryAccessor)
+      {
+         Comparison comparison = await repositoryAccessor.Compare(arguments.Sha1, arguments.Sha2, _comparisonCache);
+         return comparison == null ? null : new ComparisonEx(comparison);
+      }
+
       private readonly FileStorageArgumentConverter _argumentConverter;
       private readonly FileStorageRevisionCache _fileCache;
+      private readonly FileStorageComparisonCache _comparisonCache;
       private readonly string _path;
    }
 }

@@ -167,6 +167,7 @@ namespace mrHelper.CustomActions
          XmlNode reload = attributes.GetNamedItem("Reload");
          XmlNode hint = attributes.GetNamedItem("Hint");
          XmlNode initiallyVisible = attributes.GetNamedItem("InitiallyVisible");
+         XmlNode showInDiscussionsMenu = attributes.GetNamedItem("ShowInDiscussionsMenu");
          return new CompositeCommand(
                            commands,
                            name,
@@ -175,7 +176,8 @@ namespace mrHelper.CustomActions
                            (stopTimer?.Value ?? "0") == "1",
                            (reload?.Value ?? "0") == "1",
                            hint?.Value ?? String.Empty,
-                           (initiallyVisible?.Value ?? "0") == "1");
+                           (initiallyVisible?.Value ?? "0") == "1",
+                           (showInDiscussionsMenu?.Value ?? "0") == "1");
       }
    }
 }

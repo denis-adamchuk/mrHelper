@@ -226,6 +226,10 @@ namespace mrHelper.App.Helpers
       private static readonly string RevisionBrowserColumnWidthsDefaultValue      = String.Empty;
       private static readonly int    RevisionBrowserSingleColumnWidthDefaultValue = 100;
 
+      private static readonly string RevisionComparisonColumnWidthsKeyName           = "RC_ColWidths";
+      private static readonly string RevisionComparisonColumnWidthsDefaultValue      = String.Empty;
+      private static readonly int    RevisionComparisonSingleColumnWidthDefaultValue = 100;
+
       private static readonly string PrimarySplitContainerDistanceKeyName      = "MWSplitterDistance";
       private static readonly int    PrimarySplitContainerDistanceDefaultValue = 0;
 
@@ -234,6 +238,9 @@ namespace mrHelper.App.Helpers
 
       private static readonly string DescriptionSplitContainerDistanceKeyName      = "DescriptionSplitterDistance";
       private static readonly int    DescriptionSplitContainerDistanceDefaultValue = 0;
+
+      private static readonly string RevisionSplitContainerDistanceKeyName      = "RevisionSplitterDistance";
+      private static readonly int    RevisionSplitContainerDistanceDefaultValue = 0;
 
       private static readonly string VisualThemeNameKeyName       = "VisualThemeName";
       private static readonly string VisualThemeNameDefaultValue  = Constants.DefaultThemeName;

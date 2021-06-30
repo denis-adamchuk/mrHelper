@@ -9,9 +9,7 @@ using mrHelper.App.Helpers;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 using static mrHelper.App.Helpers.ConfigurationHelper;
-using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
-using System.Text;
 
 namespace mrHelper.App.Controls
 {
@@ -206,8 +204,9 @@ namespace mrHelper.App.Controls
 
          DataCache dataCache = getDataCache(mode);
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
-         updateMergeRequestDetails(fmk);
-         updateRevisionBrowserTree(dataCache, mrk);
+         descriptionSplitContainerSite.UpdateData(fmk, dataCache);
+         revisionSplitContainerSite.SetData(mrk, dataCache);
+         updateConnectedToLabel(fmk);
 
          string status = _latestStorageUpdateStatus.TryGetValue(mrk, out string value) ? value : String.Empty;
          StorageStatusChanged?.Invoke(this);
@@ -273,32 +272,9 @@ namespace mrHelper.App.Controls
 
       // Revision Browser
 
-      private void updateRevisionBrowserTree(DataCache dataCache, MergeRequestKey mrk)
+      private RevisionBrowser getRevisionBrowser()
       {
-         IMergeRequestCache cache = dataCache.MergeRequestCache;
-         if (cache != null)
-         {
-            GitLabSharp.Entities.Version latestVersion = cache.GetLatestVersion(mrk);
-            IEnumerable<GitLabSharp.Entities.Version> versions = cache.GetVersions(mrk);
-            IEnumerable<Commit> commits = cache.GetCommits(mrk);
-
-            bool hasObjects = commits.Any() || versions.Any();
-            if (hasObjects)
-            {
-               RevisionBrowserModelData data = new RevisionBrowserModelData(latestVersion?.Base_Commit_SHA,
-                  commits, versions, getReviewedRevisions(mrk));
-               revisionBrowser.SetData(data, ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
-            }
-            else
-            {
-               clearRevisionBrowser();
-            }
-         }
-      }
-
-      private void clearRevisionBrowser()
-      {
-         revisionBrowser.ClearData(ConfigurationHelper.GetDefaultRevisionType(Program.Settings));
+         return revisionSplitContainerSite.RevisionBrowser;
       }
 
       private bool checkIfMergeRequestCanBeCreated()
@@ -322,17 +298,11 @@ namespace mrHelper.App.Controls
 
       private bool isUserMovingSplitter(SplitContainer splitter)
       {
-         Debug.Assert(splitter == splitContainerPrimary
-                   || splitter == splitContainerSecondary
-                   || splitter == splitContainerSiteDescription.SplitContainer);
          return _userIsMovingSplitter.TryGetValue(splitter.Name, out bool value) && value;
       }
 
       private void onUserIsMovingSplitter(SplitContainer splitter, bool value)
       {
-         Debug.Assert(splitter == splitContainerPrimary
-                   || splitter == splitContainerSecondary
-                   || splitter == splitContainerSiteDescription.SplitContainer);
          if (!value) // move is finished
          {
             Trace.TraceInformation("[ConnectionPage] onUserIsMovingSplitter({0}, false)", splitter.Name);
@@ -392,9 +362,13 @@ namespace mrHelper.App.Controls
          {
             result = Program.Settings.SecondarySplitContainerDistance;
          }
-         else if (splitContainer == splitContainerSiteDescription.SplitContainer)
+         else if (splitContainer == descriptionSplitContainerSite.SplitContainer)
          {
             result = Program.Settings.DescriptionSplitContainerDistance;
+         }
+         else if (splitContainer == revisionSplitContainerSite.SplitContainer)
+         {
+            result = Program.Settings.RevisionSplitContainerDistance;
          }
          else
          {
@@ -422,9 +396,13 @@ namespace mrHelper.App.Controls
          {
             Program.Settings.SecondarySplitContainerDistance = splitContainer.SplitterDistance;
          }
-         else if (splitContainer == splitContainerSiteDescription.SplitContainer)
+         else if (splitContainer == descriptionSplitContainerSite.SplitContainer)
          {
             Program.Settings.DescriptionSplitContainerDistance = splitContainer.SplitterDistance;
+         }
+         else if (splitContainer == revisionSplitContainerSite.SplitContainer)
+         {
+            Program.Settings.RevisionSplitContainerDistance = splitContainer.SplitterDistance;
          }
          else
          {
@@ -666,12 +644,6 @@ namespace mrHelper.App.Controls
 
       // Controls
 
-      private void updateMergeRequestDetails(FullMergeRequestKey? fmkOpt)
-      {
-         splitContainerSiteDescription.UpdateData(fmkOpt, getDataCache(getCurrentTabDataCacheType()));
-         updateConnectedToLabel(fmkOpt);
-      }
-
       private void updateConnectedToLabel(FullMergeRequestKey? fmkOpt)
       {
          if (!fmkOpt.HasValue)
@@ -710,8 +682,9 @@ namespace mrHelper.App.Controls
 
       private void disableSelectedMergeRequestControls()
       {
-         updateMergeRequestDetails(null);
-         clearRevisionBrowser();
+         descriptionSplitContainerSite.ClearData();
+         revisionSplitContainerSite.ClearData();
+         updateConnectedToLabel(null);
 
          StorageStatusChanged?.Invoke(this);
          onMergeRequestActionsEnabled();
@@ -730,7 +703,7 @@ namespace mrHelper.App.Controls
             getListView(mode).Refresh();
          }
 
-         revisionBrowser.Refresh();
+         getRevisionBrowser().Refresh();
 
          LatestListRefreshTimestampChanged?.Invoke(this);
       }
@@ -753,21 +726,25 @@ namespace mrHelper.App.Controls
 
          splitContainerPrimary.SuspendLayout();
          splitContainerSecondary.SuspendLayout();
-         splitContainerSiteDescription.SuspendLayout();
+         descriptionSplitContainerSite.SplitContainer.SuspendLayout();
+         revisionSplitContainerSite.SplitContainer.SuspendLayout();
 
          resetSplitterDistance(splitContainerPrimary, ResetSplitterDistanceMode.Minimum);
          resetSplitterDistance(splitContainerSecondary, ResetSplitterDistanceMode.Minimum);
-         resetSplitterDistance(splitContainerSiteDescription.SplitContainer, ResetSplitterDistanceMode.Minimum);
+         resetSplitterDistance(descriptionSplitContainerSite.SplitContainer, ResetSplitterDistanceMode.Minimum);
+         resetSplitterDistance(revisionSplitContainerSite.SplitContainer, ResetSplitterDistanceMode.Minimum);
 
          updateSplitterOrientation();
 
          resetSplitterDistance(splitContainerPrimary, ResetSplitterDistanceMode.Middle);
          resetSplitterDistance(splitContainerSecondary, ResetSplitterDistanceMode.Middle);
-         resetSplitterDistance(splitContainerSiteDescription.SplitContainer, ResetSplitterDistanceMode.Middle);
+         resetSplitterDistance(descriptionSplitContainerSite.SplitContainer, ResetSplitterDistanceMode.Middle);
+         resetSplitterDistance(revisionSplitContainerSite.SplitContainer, ResetSplitterDistanceMode.Middle);
 
          splitContainerPrimary.ResumeLayout();
          splitContainerSecondary.ResumeLayout();
-         splitContainerSiteDescription.ResumeLayout();
+         descriptionSplitContainerSite.SplitContainer.ResumeLayout();
+         revisionSplitContainerSite.SplitContainer.ResumeLayout();
       }
 
       // Filter

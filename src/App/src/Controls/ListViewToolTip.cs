@@ -1,14 +1,24 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+using static System.Windows.Forms.ListViewItem;
 
 namespace mrHelper.App.Controls
 {
-   public partial class MergeRequestListViewToolTip : ToolTip
+   public partial class ListViewToolTip : ToolTip
    {
-      public MergeRequestListViewToolTip(ListView listView)
+      public ListViewToolTip(ListView listView,
+         Func<ListViewSubItem, string> getText,
+         Func<ListViewSubItem, string> getToolTipText,
+         Func<ListViewSubItem, StringFormatFlags> getFormatFlags,
+         Func<ListViewSubItem, Rectangle> getBounds)
       {
          _listView = listView;
+         _getText = getText;
+         _getToolTipText = getToolTipText;
+         _getFormatFlags = getFormatFlags;
+         _getBounds = getBounds;
 
          _toolTipTimer = new System.Timers.Timer
          {
@@ -51,7 +61,7 @@ namespace mrHelper.App.Controls
          Debug.Assert(_lastHistTestInfo == null || (_lastHistTestInfo.Item != null && _lastHistTestInfo.SubItem != null));
 
          bool hitAnotherCell() => _lastHistTestInfo.Item.Index  != hit.Item.Index
-                               || _lastHistTestInfo.SubItem.Tag != hit.SubItem.Tag;
+                               || _lastHistTestInfo.SubItem != hit.SubItem;
 
          if (isTooltipShown())
          {
@@ -119,18 +129,16 @@ namespace mrHelper.App.Controls
 
          if (_lastHistTestInfo == null
           || _lastHistTestInfo.SubItem == null
-          || _lastHistTestInfo.SubItem.Tag == null
           || _lastHistTestInfo.Item == null
           || _lastHistTestInfo.Item.ListView == null)
          {
             return;
          }
 
-         MergeRequestListViewSubItemInfo info = (MergeRequestListViewSubItemInfo)_lastHistTestInfo.SubItem.Tag;
-
          // shift tooltip position to the right of the cursor 16 pixels
          Point location = new Point(_lastMouseLocation.X + 16, _lastMouseLocation.Y);
-         Show(info.TooltipText, _listView, location);
+         string text = needShowToolTip(_lastHistTestInfo.SubItem) ? _getToolTipText(_lastHistTestInfo.SubItem) : null;
+         Show(text, _listView, location);
          _toolTipShown = true;
       }
 
@@ -138,6 +146,30 @@ namespace mrHelper.App.Controls
       {
          _toolTipShown = false;
          Hide(_listView);
+      }
+
+      private bool needShowToolTip(ListViewItem.ListViewSubItem subItem)
+      {
+         string text = _getText(subItem);
+         StringFormatFlags formatFlags = _getFormatFlags(subItem);
+         Rectangle bounds = _getBounds(subItem);
+         Graphics graphics = _listView.CreateGraphics();
+
+         StringFormat formatTrimmed = new StringFormat(formatFlags)
+         {
+            Trimming = StringTrimming.EllipsisCharacter
+         };
+         SizeF textTrimmedSize = graphics.MeasureString(text, _listView.Font, bounds.Size, formatTrimmed);
+
+         StringFormat formatFull = new StringFormat(formatFlags)
+         {
+            Trimming = StringTrimming.None
+         };
+         SizeF textFullSize = graphics.MeasureString(text, _listView.Font, bounds.Size, formatFull);
+
+         bool exceedsWidth = textTrimmedSize.Width != textFullSize.Width; //-V3024
+         bool exceedsHeight = textTrimmedSize.Height != textFullSize.Height; //-V3024
+         return exceedsWidth || exceedsHeight;
       }
 
       private static bool isCellHit(ListViewHitTestInfo hit) => hit.Item != null && hit.SubItem != null;
@@ -148,6 +180,10 @@ namespace mrHelper.App.Controls
       private bool _toolTipScheduled;
 
       private readonly ListView _listView;
+      private readonly Func<ListViewSubItem, string> _getText;
+      private readonly Func<ListViewSubItem, string> _getToolTipText;
+      private readonly Func<ListViewSubItem, StringFormatFlags> _getFormatFlags;
+      private readonly Func<ListViewSubItem, Rectangle> _getBounds;
       private readonly System.Timers.Timer _toolTipTimer;
 
       private Point _lastMouseLocation = new Point(-1, -1);

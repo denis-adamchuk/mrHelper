@@ -158,7 +158,7 @@
     <Compile Include="src\Controls\MergeRequestListViewSubItemInfo.cs">
     </Compile>
     <Compile Include="src\Controls\MergeRequestListView.cs" />
-    <Compile Include="src\Controls\MergeRequestListViewToolTip.cs">
+    <Compile Include="src\Controls\ListViewToolTip.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="src\Controls\PlainTabControl.cs">
@@ -172,6 +172,15 @@
     </Compile>
     <Compile Include="src\Controls\RevisionBrowserContextMenu.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="src\Controls\RevisionComparisonListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="src\Controls\RevisionSplitContainerSite.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\RevisionSplitContainerSite.Designer.cs">
+      <DependentUpon>RevisionSplitContainerSite.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Controls\StringToBooleanListView.cs">
       <SubType>Component</SubType>
@@ -389,6 +398,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\RevisionBrowser.resx">
       <DependentUpon>RevisionBrowser.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Controls\RevisionSplitContainerSite.resx">
+      <DependentUpon>RevisionSplitContainerSite.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\AddItemForm.resx">
       <DependentUpon>AddItemForm.cs</DependentUpon>

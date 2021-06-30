@@ -1,6 +1,7 @@
-using mrHelper.Common.Exceptions;
 using System;
 using System.Threading.Tasks;
+using mrHelper.Common.Exceptions;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.StorageSupport
 {
@@ -18,6 +19,7 @@ namespace mrHelper.StorageSupport
    {
       Task FetchAsync(GitShowRevisionArguments arguments);
       Task FetchAsync(GitDiffArguments arguments);
+      Task FetchAsync(RevisionComparisonArguments arguments, RepositoryAccessor repositoryAccessor);
    }
 }
 

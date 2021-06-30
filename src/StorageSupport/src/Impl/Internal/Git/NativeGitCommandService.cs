@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
+using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
+using mrHelper.GitLabClient;
 
 namespace mrHelper.StorageSupport
 {
@@ -37,6 +39,13 @@ namespace mrHelper.StorageSupport
       async protected override Task<object> runCommandAsync(GitShowRevisionArguments arguments)
       {
          return (await startExternalProcessAsync("git", arguments.ToString(), _path, null)).StdOut;
+      }
+
+      async protected override Task<object> runCommandAsync(
+         RevisionComparisonArguments arguments, RepositoryAccessor repositoryAccessor)
+      {
+         Comparison comparison = await repositoryAccessor.Compare(arguments.Sha1, arguments.Sha2, null);
+         return comparison == null ? null : new ComparisonEx(comparison);
       }
 
       private readonly string _path;
