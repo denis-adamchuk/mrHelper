@@ -13,6 +13,13 @@ namespace mrHelper.GitLabClient
       }
    }
 
+   public class DiscussionEditorCancelledException : DiscussionEditorException
+   {
+      public DiscussionEditorCancelledException() : base(String.Empty, null)
+      {
+      }
+   }
+
    public interface IDiscussionEditor
    {
       Task ReplyAsync(string body);

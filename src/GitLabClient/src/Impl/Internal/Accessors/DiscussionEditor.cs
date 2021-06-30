@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient.Operators;
@@ -32,7 +33,15 @@ namespace mrHelper.GitLabClient.Accessors
             }
             catch (OperatorException ex)
             {
-               throw new DiscussionEditorException("Cannot send reply", ex);
+               if (ex.Cancelled)
+               {
+                  throw new DiscussionEditorCancelledException();
+               }
+               if (ex.InnerException is GitLabRequestException glx)
+               {
+                  throw new DiscussionEditorException("Cannot send reply", glx);
+               }
+               throw new DiscussionEditorException("Cannot send reply by unknown reason", null);
             }
          }
       }
@@ -49,7 +58,15 @@ namespace mrHelper.GitLabClient.Accessors
             }
             catch (OperatorException ex)
             {
-               throw new DiscussionEditorException("Cannot send reply", ex);
+               if (ex.Cancelled)
+               {
+                  throw new DiscussionEditorCancelledException();
+               }
+               if (ex.InnerException is GitLabRequestException glx)
+               {
+                  throw new DiscussionEditorException("Cannot send reply", glx);
+               }
+               throw new DiscussionEditorException("Cannot send reply by unknown reason", null);
             }
          }
       }
@@ -67,7 +84,15 @@ namespace mrHelper.GitLabClient.Accessors
             }
             catch (OperatorException ex)
             {
-               throw new DiscussionEditorException("Cannot modify discussion body", ex);
+               if (ex.Cancelled)
+               {
+                  throw new DiscussionEditorCancelledException();
+               }
+               if (ex.InnerException is GitLabRequestException glx)
+               {
+                  throw new DiscussionEditorException("Cannot modify discussion body", glx);
+               }
+               throw new DiscussionEditorException("Cannot modify discussion body by unknown reason", null);
             }
          }
       }
@@ -84,7 +109,15 @@ namespace mrHelper.GitLabClient.Accessors
             }
             catch (OperatorException ex)
             {
-               throw new DiscussionEditorException("Cannot delete discussion note", ex);
+               if (ex.Cancelled)
+               {
+                  throw new DiscussionEditorCancelledException();
+               }
+               if (ex.InnerException is GitLabRequestException glx)
+               {
+                  throw new DiscussionEditorException("Cannot delete discussion note", glx);
+               }
+               throw new DiscussionEditorException("Cannot delete discussion note by unknown reason", null);
             }
          }
       }
@@ -101,7 +134,15 @@ namespace mrHelper.GitLabClient.Accessors
             }
             catch (OperatorException ex)
             {
-               throw new DiscussionEditorException("Cannot change discussion note resolve state", ex);
+               if (ex.Cancelled)
+               {
+                  throw new DiscussionEditorCancelledException();
+               }
+               if (ex.InnerException is GitLabRequestException glx)
+               {
+                  throw new DiscussionEditorException("Cannot change discussion note resolve state", glx);
+               }
+               throw new DiscussionEditorException("Cannot change discussion note resolve state by unknown reason", null);
             }
          }
       }
@@ -119,7 +160,15 @@ namespace mrHelper.GitLabClient.Accessors
             }
             catch (OperatorException ex)
             {
-               throw new DiscussionEditorException("Cannot change discussion resolve state", ex);
+               if (ex.Cancelled)
+               {
+                  throw new DiscussionEditorCancelledException();
+               }
+               if (ex.InnerException is GitLabRequestException glx)
+               {
+                  throw new DiscussionEditorException("Cannot change discussion note resolve state", glx);
+               }
+               throw new DiscussionEditorException("Cannot change discussion note resolve state by unknown reason", null);
             }
          }
       }

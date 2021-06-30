@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
+using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
@@ -25,7 +26,7 @@ namespace mrHelper.App.Controls
    {
       internal DiscussionBox(
          Control parent,
-         SingleDiscussionAccessor accessor, IGitCommandService git,
+         GitLabClient.SingleDiscussionAccessor accessor, IGitCommandService git,
          User currentUser, ProjectKey projectKey, Discussion discussion,
          User mergeRequestAuthor,
          ColorScheme colorScheme,
@@ -1182,7 +1183,7 @@ namespace mrHelper.App.Controls
          }
          catch (DiscussionEditorException ex)
          {
-            string message = "Cannot create a reply to discussion";
+            string message = getErrorMessage("Cannot create a reply to discussion", ex);
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             discussion = Discussion;
@@ -1216,7 +1217,7 @@ namespace mrHelper.App.Controls
          }
          catch (DiscussionEditorException ex)
          {
-            string message = "Cannot update discussion text";
+            string message = getErrorMessage("Cannot update discussion text", ex);
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             discussion = Discussion;
@@ -1241,7 +1242,7 @@ namespace mrHelper.App.Controls
          }
          catch (DiscussionEditorException ex)
          {
-            string message = "Cannot delete a note";
+            string message = getErrorMessage("Cannot delete a note", ex);
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             discussion = Discussion;
@@ -1267,7 +1268,7 @@ namespace mrHelper.App.Controls
          }
          catch (DiscussionEditorException ex)
          {
-            string message = "Cannot toggle 'Resolved' state of a note";
+            string message = getErrorMessage("Cannot toggle 'Resolved' state of a note", ex);
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             discussion = Discussion;
@@ -1288,13 +1289,31 @@ namespace mrHelper.App.Controls
          }
          catch (DiscussionEditorException ex)
          {
-            string message = "Cannot toggle 'Resolved' state of a thread";
+            string message = getErrorMessage("Cannot toggle 'Resolved' state of a discussion", ex);
             ExceptionHandlers.Handle(message, ex);
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             discussion = Discussion;
          }
 
          await refreshDiscussion(discussion);
+      }
+
+      private static string getErrorMessage(string defaultMessage, DiscussionEditorException ex)
+      {
+         string message = defaultMessage;
+         if (ex.InnerException != null && (ex.InnerException is GitLabRequestException))
+         {
+            GitLabRequestException rx = ex.InnerException as GitLabRequestException;
+            if (rx.InnerException is System.Net.WebException wx && wx.Response != null)
+            {
+               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
+               if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+               {
+                  message += " (note/discussion does not exist, use Refresh to update the list)";
+               }
+            }
+         }
+         return message;
       }
 
       private void disableAllNoteControls()
@@ -1454,7 +1473,7 @@ namespace mrHelper.App.Controls
       private readonly IContextMaker _panelContextMaker;
       private readonly IContextMaker _tooltipContextMaker;
       private readonly IContextMaker _simpleContextMaker;
-      private readonly SingleDiscussionAccessor _accessor;
+      private readonly GitLabClient.SingleDiscussionAccessor _accessor;
       private readonly IDiscussionEditor _editor;
 
       private ConfigurationHelper.DiffContextPosition _diffContextPosition;
