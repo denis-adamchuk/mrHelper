@@ -66,7 +66,29 @@ namespace mrHelper.App.Controls
          updateStatusLabelLocation();
       }
 
+      private void revisionBrowser_PreSelectionChanged(object sender, EventArgs e)
+      {
+         _delayedSelectionHandling = true;
+      }
+
       async private void revisionBrowser_SelectionChanged(object sender, EventArgs e)
+      {
+         if (!_delayedSelectionHandling)
+         {
+            await onRevisionSelectionChanged();
+         }
+      }
+
+      async private void revisionBrowser_PostSelectionChanged(object sender, EventArgs e)
+      {
+         if (_delayedSelectionHandling)
+         {
+            _delayedSelectionHandling = false;
+            await onRevisionSelectionChanged();
+         }
+      }
+
+      private async Task onRevisionSelectionChanged()
       {
          _repositoryAccessor?.Cancel();
          await TaskUtils.WhileAsync(() => _isFetching); // to not shuffle states
@@ -212,6 +234,7 @@ namespace mrHelper.App.Controls
 
       private PreviewLoadingState _previewState = PreviewLoadingState.NotAvailable;
       private bool _isFetching;
+      private bool _delayedSelectionHandling;
    }
 }
 

@@ -144,7 +144,9 @@ namespace mrHelper.App.Controls
          }
       }
 
+      public event EventHandler PreSelectionChanged;
       public event EventHandler SelectionChanged;
+      public event EventHandler PostSelectionChanged;
 
       protected override void OnLoad(EventArgs e)
       {
@@ -281,40 +283,48 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         IEnumerable<string> reviewedRevisions = getModel().Data.ReviewedRevisions;
-         TreeNodeAdv newestRevisionNode = sortedChildren.First();
-         TreeNodeAdv newestReviewedRevisionNode = sortedChildren
-            .FirstOrDefault(x => reviewedRevisions.Contains((x.Tag as RevisionBrowserItem).FullSHA));
-         if (newestReviewedRevisionNode == null)
+         PreSelectionChanged?.Invoke(this, null);
+         try
          {
-            newestRevisionNode.IsSelected = true;
-         }
-         else
-         {
-            var mode = ConfigurationHelper.GetRevisionAutoSelectionMode(Program.Settings);
-            switch (mode)
+            IEnumerable<string> reviewedRevisions = getModel().Data.ReviewedRevisions;
+            TreeNodeAdv newestRevisionNode = sortedChildren.First();
+            TreeNodeAdv newestReviewedRevisionNode = sortedChildren
+               .FirstOrDefault(x => reviewedRevisions.Contains((x.Tag as RevisionBrowserItem).FullSHA));
+            if (newestReviewedRevisionNode == null)
             {
-               case ConfigurationHelper.RevisionAutoSelectionMode.LastVsLatest:
-                  newestReviewedRevisionNode.IsSelected = true;
-                  if (newestReviewedRevisionNode != newestRevisionNode)
-                  {
-                     newestRevisionNode.IsSelected = true;
-                  }
-                  break;
-
-               case ConfigurationHelper.RevisionAutoSelectionMode.LastVsNext:
-                  newestReviewedRevisionNode.IsSelected = true;
-                  TreeNodeAdv earliestNotReviewedRevisionNode = newestReviewedRevisionNode.PreviousNode;
-                  if (earliestNotReviewedRevisionNode != null)
-                  {
-                     earliestNotReviewedRevisionNode.IsSelected = true;
-                  }
-                  break;
-
-               case ConfigurationHelper.RevisionAutoSelectionMode.BaseVsLatest:
-                  newestReviewedRevisionNode.IsSelected = true;
-                  break;
+               newestRevisionNode.IsSelected = true;
             }
+            else
+            {
+               var mode = ConfigurationHelper.GetRevisionAutoSelectionMode(Program.Settings);
+               switch (mode)
+               {
+                  case ConfigurationHelper.RevisionAutoSelectionMode.LastVsLatest:
+                     newestReviewedRevisionNode.IsSelected = true;
+                     if (newestReviewedRevisionNode != newestRevisionNode)
+                     {
+                        newestRevisionNode.IsSelected = true;
+                     }
+                     break;
+
+                  case ConfigurationHelper.RevisionAutoSelectionMode.LastVsNext:
+                     newestReviewedRevisionNode.IsSelected = true;
+                     TreeNodeAdv earliestNotReviewedRevisionNode = newestReviewedRevisionNode.PreviousNode;
+                     if (earliestNotReviewedRevisionNode != null)
+                     {
+                        earliestNotReviewedRevisionNode.IsSelected = true;
+                     }
+                     break;
+
+                  case ConfigurationHelper.RevisionAutoSelectionMode.BaseVsLatest:
+                     newestReviewedRevisionNode.IsSelected = true;
+                     break;
+               }
+            }
+         }
+         finally
+         {
+            PostSelectionChanged?.Invoke(this, null);
          }
       }
 

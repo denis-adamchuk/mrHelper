@@ -78,7 +78,9 @@ namespace mrHelper.App.Controls
          this.revisionBrowser.Name = "revisionBrowser";
          this.revisionBrowser.Size = new System.Drawing.Size(396, 124);
          this.revisionBrowser.TabIndex = 0;
+         this.revisionBrowser.PreSelectionChanged += new System.EventHandler(this.revisionBrowser_PreSelectionChanged);
          this.revisionBrowser.SelectionChanged += new System.EventHandler(this.revisionBrowser_SelectionChanged);
+         this.revisionBrowser.PostSelectionChanged += new System.EventHandler(this.revisionBrowser_PostSelectionChanged);
          // 
          // panelLoading
          // 
