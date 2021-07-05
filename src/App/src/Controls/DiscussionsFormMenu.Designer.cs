@@ -67,7 +67,6 @@ namespace mrHelper.App.Controls
          this.toolStripMenuItemDiffContextDepth2 = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripMenuItemDiffContextDepth3 = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripMenuItemDiffContextDepth4 = new System.Windows.Forms.ToolStripMenuItem();
-         this.showTooltipsForCodeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.emulateNativeLineBreaksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
          this.fontSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -267,7 +266,6 @@ namespace mrHelper.App.Controls
             this.decreaseColumnWidthToolStripMenuItem,
             this.toolStripSeparator3,
             this.diffContextDepthToolStripMenuItem,
-            this.showTooltipsForCodeToolStripMenuItem,
             this.emulateNativeLineBreaksToolStripMenuItem,
             this.toolStripSeparator4,
             this.fontSizeToolStripMenuItem,
@@ -397,14 +395,6 @@ namespace mrHelper.App.Controls
          this.toolStripMenuItemDiffContextDepth4.Text = "4";
          this.toolStripMenuItemDiffContextDepth4.CheckedChanged += new System.EventHandler(this.onDiffContextDepthCheckedChanged);
          // 
-         // showTooltipsForCodeToolStripMenuItem
-         // 
-         this.showTooltipsForCodeToolStripMenuItem.CheckOnClick = true;
-         this.showTooltipsForCodeToolStripMenuItem.Name = "showTooltipsForCodeToolStripMenuItem";
-         this.showTooltipsForCodeToolStripMenuItem.Size = new System.Drawing.Size(276, 22);
-         this.showTooltipsForCodeToolStripMenuItem.Text = "Show tooltips for code";
-         this.showTooltipsForCodeToolStripMenuItem.CheckedChanged += new System.EventHandler(this.onShowTooltipsForCodeCheckedChanged);
-         // 
          // emulateNativeLineBreaksToolStripMenuItem
          // 
          this.emulateNativeLineBreaksToolStripMenuItem.CheckOnClick = true;
@@ -486,7 +476,6 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDiffContextDepth2;
       private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDiffContextDepth3;
       private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDiffContextDepth4;
-      private System.Windows.Forms.ToolStripMenuItem showTooltipsForCodeToolStripMenuItem;
       private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
       private System.Windows.Forms.ToolStripMenuItem fontSizeToolStripMenuItem;
       private System.Windows.Forms.ToolStripMenuItem configureColorsToolStripMenuItem;

@@ -66,7 +66,6 @@ namespace mrHelper.App.Controls
          _discussionLayout.DiscussionColumnWidthChanged += onDiscussionColumnWidthChanged;
          _discussionLayout.NeedShiftRepliesChanged += onNeedShiftRepliesChanged;
          _discussionLayout.DiffContextDepthChanged += onDiffContextDepthChanged;
-         _discussionLayout.ShowTooltipsForCodeChanged += onShowTooltipsForCodeChanged;
 
          apply(discussions);
       }
@@ -166,15 +165,6 @@ namespace mrHelper.App.Controls
          PerformLayout();
       }
 
-      private void onShowTooltipsForCodeChanged()
-      {
-         foreach (var box in getAllBoxes())
-         {
-            box.SetShowTooltipsForCode(_discussionLayout.ShowTooltipsForCode);
-         }
-         PerformLayout();
-      }
-
       private void onNeedShiftRepliesChanged()
       {
          foreach (var box in getAllBoxes())
@@ -234,8 +224,7 @@ namespace mrHelper.App.Controls
                _discussionLayout.DiffContextPosition,
                _discussionLayout.DiscussionColumnWidth,
                _discussionLayout.NeedShiftReplies,
-               _discussionLayout.DiffContextDepth,
-               _discussionLayout.ShowTooltipsForCode)
+               _discussionLayout.DiffContextDepth)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false

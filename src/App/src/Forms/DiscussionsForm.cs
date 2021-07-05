@@ -38,8 +38,7 @@ namespace mrHelper.App.Forms
             ConfigurationHelper.GetDiffContextPosition(Program.Settings),
             ConfigurationHelper.GetDiscussionColumnWidth(Program.Settings),
             Program.Settings.NeedShiftReplies,
-            new ContextDepth(0, Program.Settings.DiffContextDepth),
-            Program.Settings.ShowTooltipsForCode);
+            new ContextDepth(0, Program.Settings.DiffContextDepth));
          _discussionLayout = discussionLayout;
          _discussionLayout.DiffContextPositionChanged += updateSaveDefaultLayoutState;
          _discussionLayout.DiscussionColumnWidthChanged += updateSaveDefaultLayoutState;

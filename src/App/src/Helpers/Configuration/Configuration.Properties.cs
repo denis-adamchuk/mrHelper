@@ -223,12 +223,6 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(EmulateNativeLineBreaksInDiscussionsKeyName, value);
       }
 
-      public bool ShowTooltipsForCode
-      {
-         get => getBoolValue(ShowTooltipsForCodeKeyName, ShowTooltipsForCodeDefaultValue);
-         set => setBoolValue(ShowTooltipsForCodeKeyName, value);
-      }
-
       public bool IsDiscussionColumnWidthFixed
       {
          get => getBoolValue(IsDiscussionColumnWidthFixedKeyName, IsDiscussionColumnWidthFixedDefaultValue);

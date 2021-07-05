@@ -38,8 +38,7 @@ namespace mrHelper.App.Controls
          ConfigurationHelper.DiffContextPosition diffContextPosition,
          ConfigurationHelper.DiscussionColumnWidth discussionColumnWidth,
          bool needShiftReplies,
-         ContextDepth diffContextDepth,
-         bool showTooltipsForCode)
+         ContextDepth diffContextDepth)
       {
          Discussion = discussion;
 
@@ -63,7 +62,6 @@ namespace mrHelper.App.Controls
          _diffContextPosition = diffContextPosition;
          _discussionColumnWidth = discussionColumnWidth;
          _needShiftReplies = needShiftReplies;
-         _showTooltipsForCode = showTooltipsForCode;
 
          _onContentChanging = () =>
          {
@@ -336,10 +334,6 @@ namespace mrHelper.App.Controls
          {
             resizeLimitedWidthHtmlPanel(htmlPanel, prevWidth);
          }
-
-         string tooltipHtml = _showTooltipsForCode ? getFormattedHtml(_popupContextMaker, position,
-            _popupDiffContextDepth, fontSizePx, 2, false) : null;
-         _htmlTooltip.SetToolTip(htmlPanel, tooltipHtml);
       }
 
       private void setPopupDiffContextText(Control popupContextControl)
@@ -905,15 +899,6 @@ namespace mrHelper.App.Controls
       {
          _diffContextDepth = contextDepth;
          _previousWidth = null;
-         if (_panelContext != null)
-         {
-            setDiffContextText(_panelContext);
-         }
-      }
-
-      internal void SetShowTooltipsForCode(bool value)
-      {
-         _showTooltipsForCode = value;
          if (_panelContext != null)
          {
             setDiffContextText(_panelContext);
@@ -1589,7 +1574,6 @@ namespace mrHelper.App.Controls
       private ConfigurationHelper.DiffContextPosition _diffContextPosition;
       private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
       private bool _needShiftReplies;
-      private bool _showTooltipsForCode;
       private PopupWindow _popupWindow; // shared between other Discussion Boxes
       private HtmlPanel _popupContext; // specific for this instance
       private readonly ColorScheme _colorScheme;

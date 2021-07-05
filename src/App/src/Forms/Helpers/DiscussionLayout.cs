@@ -10,21 +10,18 @@ namespace mrHelper.App.Forms.Helpers
          DiffContextPosition diffContextPosition,
          DiscussionColumnWidth discussionColumnWidth,
          bool needShiftReplies,
-         ContextDepth diffContextDepth,
-         bool showTooltipsForCode)
+         ContextDepth diffContextDepth)
       {
          _diffContextPosition = diffContextPosition;
          _discussionColumnWidth = discussionColumnWidth;
          _needShiftReplies = needShiftReplies;
          _diffContextDepth = diffContextDepth;
-         _showToolTipsForCode = showTooltipsForCode;
       }
 
       internal event Action DiffContextPositionChanged;
       internal event Action DiscussionColumnWidthChanged;
       internal event Action NeedShiftRepliesChanged;
       internal event Action DiffContextDepthChanged;
-      internal event Action ShowTooltipsForCodeChanged;
 
       internal DiffContextPosition DiffContextPosition
       {
@@ -66,21 +63,10 @@ namespace mrHelper.App.Forms.Helpers
          }
       }
 
-      internal bool ShowTooltipsForCode
-      {
-         get => _showToolTipsForCode;
-         set
-         {
-            _showToolTipsForCode = value;
-            ShowTooltipsForCodeChanged?.Invoke();
-         }
-      }
-
       private DiffContextPosition _diffContextPosition;
       private DiscussionColumnWidth _discussionColumnWidth;
       private bool _needShiftReplies;
       private ContextDepth _diffContextDepth;
-      private bool _showToolTipsForCode;
    }
 }
 

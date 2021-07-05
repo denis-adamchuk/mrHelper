@@ -233,12 +233,6 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void onShowTooltipsForCodeCheckedChanged(object sender, EventArgs e)
-      {
-         Program.Settings.ShowTooltipsForCode = showTooltipsForCodeToolStripMenuItem.Checked;
-         _discussionLayout.ShowTooltipsForCode = showTooltipsForCodeToolStripMenuItem.Checked;
-      }
-
       private void onRefreshAction()
       {
          Trace.TraceInformation("[DiscussionsFormMenu] Refreshing by user request");
@@ -463,7 +457,6 @@ namespace mrHelper.App.Controls
          flatListOfRepliesToolStripMenuItem.Checked = !_discussionLayout.NeedShiftReplies;
 
          setDiffContextDepthStateInControls();
-         showTooltipsForCodeToolStripMenuItem.Checked = Program.Settings.ShowTooltipsForCode;
       }
 
       private void setDiffContextDepthStateInControls()
