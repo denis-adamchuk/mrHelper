@@ -34,6 +34,8 @@
          _redrawTimer.Stop();
          _redrawTimer.Dispose();
 
+         _popupWindow.Dispose();
+
          base.Dispose(disposing);
       }
 

@@ -34,6 +34,7 @@ namespace mrHelper.App.Controls
          Action<DiscussionBox> onContentChanged,
          Action<Control> onControlGotFocus,
          HtmlToolTipEx htmlTooltip,
+         PopupWindow popupWindow,
          ConfigurationHelper.DiffContextPosition diffContextPosition,
          ConfigurationHelper.DiscussionColumnWidth discussionColumnWidth,
          bool needShiftReplies,
@@ -49,11 +50,11 @@ namespace mrHelper.App.Controls
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
 
          _diffContextDepth = diffContextDepth;
-         _tooltipContextDepth = new ContextDepth(5, 5);
+         _popupDiffContextDepth = new ContextDepth(5, 5);
          if (git != null)
          {
             _panelContextMaker = new EnhancedContextMaker(git);
-            _tooltipContextMaker = new CombinedContextMaker(git);
+            _popupContextMaker = new CombinedContextMaker(git);
             _simpleContextMaker = new SimpleContextMaker(git);
          }
          _colorScheme = colorScheme;
@@ -76,6 +77,8 @@ namespace mrHelper.App.Controls
          _onControlGotFocus = onControlGotFocus;
 
          _htmlTooltip = htmlTooltip;
+         _popupWindow = popupWindow;
+         _popupWindow.Closed += onPopupWindowClosed;
 
          _specialDiscussionNoteMarkdownPipeline =
             MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
@@ -86,11 +89,26 @@ namespace mrHelper.App.Controls
       protected override void Dispose(bool disposing)
       {
          base.Dispose(disposing);
+
+         disposePopupContext();
+         _popupWindow.Closed -= onPopupWindowClosed;
+         _popupWindow = null;
+
          _colorScheme.Changed -= onColorSchemeChanged;
+
          foreach (NoteContainer noteContainer in getNoteContainers())
          {
             noteContainer.NoteInfo.ContextMenu?.Dispose();
             noteContainer.NoteContent.ContextMenu?.Dispose();
+         }
+      }
+
+      protected override void OnLocationChanged(EventArgs e)
+      {
+         base.OnLocationChanged(e);
+         if (_popupContext != null) // change location of a popup window if only it is visible now
+         {
+            showPopupWindow();
          }
       }
 
@@ -210,6 +228,47 @@ namespace mrHelper.App.Controls
          _onControlGotFocus?.Invoke(sender as Control);
       }
 
+      private void onShowMoreContextClick(object sender, EventArgs e)
+      {
+         DiscussionNote note = _panelContext == null ? null : getNoteFromControl(_panelContext);
+         if (note == null )
+         {
+            return;
+         }
+
+         Debug.Assert(_popupContext == null); // it should have been disposed and reset when popup window closes
+         _popupContext = new HtmlPanel
+         {
+            BorderStyle = BorderStyle.FixedSingle,
+            TabStop = false,
+            Font = Font,
+            Tag = note
+         };
+
+         setPopupDiffContextText(_popupContext);
+         resizeLimitedWidthHtmlPanel(_popupContext, _panelContext.Width);
+
+         _popupWindow.SetContent(_popupContext, PopupContextPadding);
+         showPopupWindow();
+      }
+
+      private void showPopupWindow()
+      {
+         Point ptScreen = PointToScreen(new Point(_panelContext.Location.X, _panelContext.Location.Y));
+         _popupWindow.Show(ptScreen);
+      }
+
+      private void onPopupWindowClosed(object sender, ToolStripDropDownClosedEventArgs e)
+      {
+         disposePopupContext();
+      }
+
+      private void disposePopupContext()
+      {
+         _popupContext?.Dispose();
+         _popupContext = null;
+      }
+
       private void onCreate(Control parent)
       {
          Debug.Assert(Discussion.Notes.Any());
@@ -220,6 +279,9 @@ namespace mrHelper.App.Controls
 
          _textboxFilename = createTextboxFilename(parent, Discussion.Notes.First());
          Controls.Add(_textboxFilename);
+
+         _showMoreContext = createShowMoreContext(Discussion.Notes.First());
+         Controls.Add(_showMoreContext);
 
          _panelContext = createDiffContext(Discussion.Notes.First());
          Controls.Add(_panelContext);
@@ -275,9 +337,24 @@ namespace mrHelper.App.Controls
             resizeLimitedWidthHtmlPanel(htmlPanel, prevWidth);
          }
 
-         string tooltipHtml = _showTooltipsForCode ? getFormattedHtml(_tooltipContextMaker, position,
-            _tooltipContextDepth, fontSizePx, 2, false) : null;
+         string tooltipHtml = _showTooltipsForCode ? getFormattedHtml(_popupContextMaker, position,
+            _popupDiffContextDepth, fontSizePx, 2, false) : null;
          _htmlTooltip.SetToolTip(htmlPanel, tooltipHtml);
+      }
+
+      private void setPopupDiffContextText(Control popupContextControl)
+      {
+         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(popupContextControl);
+
+         DiscussionNote note = getNoteFromControl(popupContextControl);
+         Debug.Assert(note.Type == "DiffNote");
+         DiffPosition position = PositionConverter.Convert(note.Position);
+
+         Debug.Assert(popupContextControl is HtmlPanel);
+         HtmlPanel htmlPanel = popupContextControl as HtmlPanel;
+
+         htmlPanel.Text = getFormattedHtml(_popupContextMaker, position,
+            _popupDiffContextDepth, fontSizePx, 2, true);
       }
 
       private string getFormattedHtml(IContextMaker contextMaker, DiffPosition position, ContextDepth depth,
@@ -361,6 +438,23 @@ namespace mrHelper.App.Controls
          };
          textBox.GotFocus += Control_GotFocus;
          return textBox;
+      }
+
+      private Control createShowMoreContext(DiscussionNote firstNote)
+      {
+         if (firstNote.Type != "DiffNote")
+         {
+            return null;
+         }
+
+         LinkLabel linkLabel = new LinkLabel()
+         {
+            AutoSize = true,
+            Text = "Show more context",
+            BorderStyle = BorderStyle.None
+         };
+         linkLabel.Click += onShowMoreContextClick;
+         return linkLabel;
       }
 
       private bool initializeNoteContainers(Control parent, IEnumerable<DiscussionNote> notes)
@@ -907,7 +1001,8 @@ namespace mrHelper.App.Controls
 
          if (_textboxFilename != null)
          {
-            _textboxFilename.Width = getDiffContextWidth(width);
+            _textboxFilename.Width = getDiffContextWidth(width)
+               - (_showMoreContext == null ? 0 : _showMoreContext.Width + 50);
             _textboxFilename.Height = (_textboxFilename as TextBoxEx).FullPreferredHeight;
          }
 
@@ -951,6 +1046,12 @@ namespace mrHelper.App.Controls
             {
                _panelContext.Location = contextPos;
             }
+
+            if (_showMoreContext != null)
+            {
+               _showMoreContext.Location = new Point(
+                  _panelContext.Location.X + _panelContext.Width - _showMoreContext.Width, 0);
+            }
          }
 
          // column B
@@ -979,6 +1080,12 @@ namespace mrHelper.App.Controls
          {
             _panelContext.Location = controlPos;
             controlPos.Offset(0, _panelContext.Height + 5);
+         }
+
+         if (_showMoreContext != null)
+         {
+            _showMoreContext.Location = new Point(
+               _panelContext.Location.X + _panelContext.Width - _showMoreContext.Width, 0);
          }
 
          repositionNotes(width, controlPos);
@@ -1454,7 +1561,10 @@ namespace mrHelper.App.Controls
       };
       private int? _previousWidth;
 
+      private readonly Padding PopupContextPadding = new Padding(2, 1, 2, 3);
+
       private Control _textboxFilename;
+      private Control _showMoreContext;
       private Control _panelContext;
 
       private class NoteContainer
@@ -1469,9 +1579,9 @@ namespace mrHelper.App.Controls
       private readonly string _imagePath;
 
       private ContextDepth _diffContextDepth;
-      private readonly ContextDepth _tooltipContextDepth;
+      private readonly ContextDepth _popupDiffContextDepth;
       private readonly IContextMaker _panelContextMaker;
-      private readonly IContextMaker _tooltipContextMaker;
+      private readonly IContextMaker _popupContextMaker;
       private readonly IContextMaker _simpleContextMaker;
       private readonly GitLabClient.SingleDiscussionAccessor _accessor;
       private readonly IDiscussionEditor _editor;
@@ -1480,6 +1590,8 @@ namespace mrHelper.App.Controls
       private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
       private bool _needShiftReplies;
       private bool _showTooltipsForCode;
+      private PopupWindow _popupWindow; // shared between other Discussion Boxes
+      private HtmlPanel _popupContext; // specific for this instance
       private readonly ColorScheme _colorScheme;
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;

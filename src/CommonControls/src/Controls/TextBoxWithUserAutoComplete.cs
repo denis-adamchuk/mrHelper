@@ -271,7 +271,8 @@ namespace mrHelper.CommonControls.Controls
 
       private void createPopupWindow(ListBox listBox)
       {
-         _popupWindow = new PopupWindow(listBox, PopupWindowPadding);
+         _popupWindow = new PopupWindow();
+         _popupWindow.SetContent(listBox, PopupWindowPadding);
       }
 
       private class ListBoxEx : ListBox

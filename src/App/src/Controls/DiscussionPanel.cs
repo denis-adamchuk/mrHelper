@@ -8,6 +8,7 @@ using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
 using mrHelper.App.Helpers.GitLab;
+using mrHelper.CommonControls.Controls;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
 using static mrHelper.App.Helpers.ConfigurationHelper;
@@ -229,7 +230,7 @@ namespace mrHelper.App.Controls
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
                _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
-               onControlGotFocus, _htmlTooltip,
+               onControlGotFocus, _htmlTooltip, _popupWindow,
                _discussionLayout.DiffContextPosition,
                _discussionLayout.DiscussionColumnWidth,
                _discussionLayout.NeedShiftReplies,
@@ -472,6 +473,7 @@ namespace mrHelper.App.Controls
          InitialDelay = 300,
          // BaseStylesheet = Don't specify anything here because users' HTML <style> override it
       };
+      private PopupWindow _popupWindow = new PopupWindow(true);
 
       private static readonly int RedrawTimerInterval = 1000 * 60; // 1 minute
 

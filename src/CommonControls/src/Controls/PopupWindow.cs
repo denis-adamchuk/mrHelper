@@ -8,12 +8,18 @@ namespace mrHelper.CommonControls.Controls
    /// </summary>
    public class PopupWindow : System.Windows.Forms.ToolStripDropDown
    {
-      public PopupWindow(System.Windows.Forms.Control content, Padding padding)
+      public PopupWindow(bool autoClose = false)
       {
          AutoSize = false;
-         AutoClose = false;
+         AutoClose = autoClose;
          DoubleBuffered = true;
          ResizeRedraw = true;
+      }
+
+      public void SetContent(System.Windows.Forms.Control content, Padding padding)
+      {
+         Items.Clear();
+
          Padding = padding;
 
          System.Drawing.Size contentSize = new System.Drawing.Size(
