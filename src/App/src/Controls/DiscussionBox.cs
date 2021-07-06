@@ -1030,12 +1030,12 @@ namespace mrHelper.App.Controls
             if (_panelContext != null)
             {
                _panelContext.Location = contextPos;
-            }
 
-            if (_showMoreContext != null)
-            {
-               _showMoreContext.Location = new Point(
-                  _panelContext.Location.X + _panelContext.Width - _showMoreContext.Width, 0);
+               if (_showMoreContext != null)
+               {
+                  _showMoreContext.Location = new Point(
+                     _panelContext.Location.X + _panelContext.Width - _showMoreContext.Width, 0);
+               }
             }
          }
 
@@ -1065,12 +1065,12 @@ namespace mrHelper.App.Controls
          {
             _panelContext.Location = controlPos;
             controlPos.Offset(0, _panelContext.Height + 5);
-         }
 
-         if (_showMoreContext != null)
-         {
-            _showMoreContext.Location = new Point(
-               _panelContext.Location.X + _panelContext.Width - _showMoreContext.Width, 0);
+            if (_showMoreContext != null)
+            {
+               _showMoreContext.Location = new Point(
+                  _panelContext.Location.X + _panelContext.Width - _showMoreContext.Width, 0);
+            }
          }
 
          repositionNotes(width, controlPos);
