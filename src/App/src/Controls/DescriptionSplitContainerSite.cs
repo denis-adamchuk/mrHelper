@@ -104,13 +104,13 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private string getCommentsAsHtmlTable(FullMergeRequestKey fmk, IEnumerable<Discussion> filteredDiscussions)
+      private string getCommentsAsHtmlTable(FullMergeRequestKey fmk, IEnumerable<Discussion> discussions)
       {
          string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey);
          StringBuilder builder = new StringBuilder();
          builder.Append("<b>Notes from author</b><br>");
          builder.Append("<table class=\"no-border no-bg\"><tbody>");
-         foreach (Discussion discussion in filteredDiscussions)
+         foreach (Discussion discussion in discussions)
          {
             DiscussionNote note = discussion.Notes.First();
             string noteBody = MarkDownUtils.ConvertToHtml(note.Body, uploadsPrefix, _mdPipeline);

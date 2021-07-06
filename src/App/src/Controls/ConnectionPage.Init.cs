@@ -58,9 +58,6 @@ namespace mrHelper.App.Controls
          listViewRecentMergeRequests.SetIdentity(Constants.RecentListViewName);
          listViewRecentMergeRequests.SetCollapsedProjects(collapsedProjectsRecent);
 
-         _redrawTimer.Tick += onRedrawTimer;
-         _redrawTimer.Start();
-
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 
          Program.Settings.MainWindowLayoutChanged += onMainWindowLayoutChanged;
