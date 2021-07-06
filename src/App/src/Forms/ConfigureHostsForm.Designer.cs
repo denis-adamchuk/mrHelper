@@ -30,8 +30,8 @@ namespace mrHelper.App.Forms
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
-         System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("Users", System.Windows.Forms.HorizontalAlignment.Left);
-         System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("Projects", System.Windows.Forms.HorizontalAlignment.Left);
+         System.Windows.Forms.ListViewGroup listViewGroup5 = new System.Windows.Forms.ListViewGroup("Users", System.Windows.Forms.HorizontalAlignment.Left);
+         System.Windows.Forms.ListViewGroup listViewGroup6 = new System.Windows.Forms.ListViewGroup("Projects", System.Windows.Forms.HorizontalAlignment.Left);
          this.buttonEditProjects = new System.Windows.Forms.Button();
          this.buttonEditUsers = new System.Windows.Forms.Button();
          this.buttonRemoveKnownHost = new System.Windows.Forms.Button();
@@ -42,6 +42,7 @@ namespace mrHelper.App.Forms
          this.buttonOK = new System.Windows.Forms.Button();
          this.buttonCancel = new System.Windows.Forms.Button();
          this.groupBoxKnownHosts = new System.Windows.Forms.GroupBox();
+         this.labelChecking = new System.Windows.Forms.Label();
          this.linkLabelCreateAccessToken = new mrHelper.CommonControls.Controls.LinkLabelEx();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.listViewWorkflow = new mrHelper.App.Controls.StringToBooleanListView();
@@ -144,6 +145,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxKnownHosts
          // 
+         this.groupBoxKnownHosts.Controls.Add(this.labelChecking);
          this.groupBoxKnownHosts.Controls.Add(this.linkLabelCreateAccessToken);
          this.groupBoxKnownHosts.Controls.Add(this.buttonRemoveKnownHost);
          this.groupBoxKnownHosts.Controls.Add(this.buttonAddKnownHost);
@@ -154,6 +156,16 @@ namespace mrHelper.App.Forms
          this.groupBoxKnownHosts.TabIndex = 1;
          this.groupBoxKnownHosts.TabStop = false;
          this.groupBoxKnownHosts.Text = "Known Hosts";
+         // 
+         // labelChecking
+         // 
+         this.labelChecking.AutoSize = true;
+         this.labelChecking.Location = new System.Drawing.Point(485, 116);
+         this.labelChecking.Name = "labelChecking";
+         this.labelChecking.Size = new System.Drawing.Size(61, 13);
+         this.labelChecking.TabIndex = 33;
+         this.labelChecking.Text = "Checking...";
+         this.labelChecking.Visible = false;
          // 
          // linkLabelCreateAccessToken
          // 
@@ -170,13 +182,13 @@ namespace mrHelper.App.Forms
          this.listViewWorkflow.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1});
          this.listViewWorkflow.FullRowSelect = true;
-         listViewGroup1.Header = "Users";
-         listViewGroup1.Name = "listViewGroupUsers";
-         listViewGroup2.Header = "Projects";
-         listViewGroup2.Name = "listViewGroupProjects";
+         listViewGroup5.Header = "Users";
+         listViewGroup5.Name = "listViewGroupUsers";
+         listViewGroup6.Header = "Projects";
+         listViewGroup6.Name = "listViewGroupProjects";
          this.listViewWorkflow.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
-            listViewGroup1,
-            listViewGroup2});
+            listViewGroup5,
+            listViewGroup6});
          this.listViewWorkflow.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
          this.listViewWorkflow.HideSelection = false;
          this.listViewWorkflow.Location = new System.Drawing.Point(6, 67);
@@ -262,5 +274,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.ColumnHeader columnHeader1;
       private System.Windows.Forms.GroupBox groupBoxSelectWorkflow;
       private System.Windows.Forms.TextBox textBox1;
+      private System.Windows.Forms.Label labelChecking;
    }
 }

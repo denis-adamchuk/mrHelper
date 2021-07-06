@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Constants;
@@ -31,14 +31,28 @@ namespace mrHelper.App.Forms
 
       internal bool Changed { get; private set; }
 
+      protected override void OnClosing(CancelEventArgs e)
+      {
+         base.OnClosing(e);
+         e.Cancel = isChecking();
+      }
+
       async private void configureHostsForm_Load(object sender, System.EventArgs e)
       {
          loadKnownHosts();
 
-         foreach (KeyValuePair<string, string> kv in _hosts)
+         onStartChecking(CheckingMode.LoadingUsers);
+         try
          {
-            await loadUsersForHost(kv.Key);
-            loadProjectsForHost(kv.Key);
+            foreach (KeyValuePair<string, string> kv in _hosts)
+            {
+               await loadUsersForHost(kv.Key);
+               loadProjectsForHost(kv.Key);
+            }
+         }
+         finally
+         {
+            onEndChecking();
          }
 
          updateHostsListView();
@@ -298,30 +312,38 @@ namespace mrHelper.App.Forms
 
             BeginInvoke(new Action(async () =>
             {
-               string hostname = StringUtils.GetHostWithPrefix(form.Host);
-               string accessToken = form.AccessToken;
-               ConnectionCheckStatus status = await ConnectionChecker.CheckConnectionAsync(hostname, accessToken);
-               if (status != ConnectionCheckStatus.OK)
+               onStartChecking(CheckingMode.CheckingHost);
+               try
                {
-                  string message =
-                     status == ConnectionCheckStatus.BadAccessToken
-                        ? String.Format("Bad access token \"{0}\"", accessToken)
-                        : String.Format("Invalid hostname \"{0}\"", hostname);
-                  MessageBox.Show(message, "Cannot connect to the host",
-                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  return;
-               }
+                  string hostname = StringUtils.GetHostWithPrefix(form.Host);
+                  string accessToken = form.AccessToken;
+                  ConnectionCheckStatus status = await ConnectionChecker.CheckConnectionAsync(hostname, accessToken);
+                  if (status != ConnectionCheckStatus.OK)
+                  {
+                     string message =
+                        status == ConnectionCheckStatus.BadAccessToken
+                           ? String.Format("Bad access token \"{0}\"", accessToken)
+                           : String.Format("Invalid hostname \"{0}\"", hostname);
+                     MessageBox.Show(message, "Cannot connect to the host",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                     return;
+                  }
 
-               if (!addKnownHost(hostname, accessToken))
+                  if (!addKnownHost(hostname, accessToken))
+                  {
+                     MessageBox.Show("Such host is already in the list", "Host will not be added",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                     return;
+                  }
+
+                  await loadUsersForHost(hostname);
+                  loadProjectsForHost(hostname);
+                  updateHostsListView();
+               }
+               finally
                {
-                  MessageBox.Show("Such host is already in the list", "Host will not be added",
-                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                  return;
+                  onEndChecking();
                }
-
-               await loadUsersForHost(hostname);
-               loadProjectsForHost(hostname);
-               updateHostsListView();
             }));
          }
       }
@@ -344,9 +366,9 @@ namespace mrHelper.App.Forms
       private void updateEnablementsOfWorkflowSelectors()
       {
          bool enabled = listViewKnownHosts.SelectedItems.Count > 0;
-         listViewWorkflow.Enabled = enabled;
-         buttonEditProjects.Enabled = enabled;
-         buttonEditUsers.Enabled = enabled;
+         listViewWorkflow.Enabled = !isChecking() && enabled;
+         buttonEditProjects.Enabled = !isChecking() && enabled;
+         buttonEditUsers.Enabled = !isChecking() && enabled;
       }
 
       private void launchEditProjectListDialog()
@@ -404,7 +426,14 @@ namespace mrHelper.App.Forms
       private void updateAddRemoveButtonState()
       {
          bool enableRemoveButton = listViewKnownHosts.SelectedItems.Count > 0;
-         buttonRemoveKnownHost.Enabled = enableRemoveButton;
+         buttonAddKnownHost.Enabled = !isChecking();
+         buttonRemoveKnownHost.Enabled = !isChecking() && enableRemoveButton;
+      }
+
+      private void updateOkCancelButtonState()
+      {
+         buttonOK.Enabled = !isChecking();
+         buttonCancel.Enabled = !isChecking();
       }
 
       private void onKnownHostSelectionChanged()
@@ -414,6 +443,43 @@ namespace mrHelper.App.Forms
          updateProjectsListView();
          updateUsersListView();
          updateLinkLabel();
+      }
+
+      enum CheckingMode
+      {
+         LoadingUsers,
+         CheckingHost
+      }
+
+      private void onStartChecking(CheckingMode mode)
+      {
+         switch (mode)
+         {
+            case CheckingMode.LoadingUsers:
+               labelChecking.Text = "Loading users...";
+               break;
+            case CheckingMode.CheckingHost:
+               labelChecking.Text = "Checking host...";
+               break;
+         }
+
+         labelChecking.Visible = true;
+         updateAddRemoveButtonState();
+         updateEnablementsOfWorkflowSelectors();
+         updateOkCancelButtonState();
+      }
+
+      private void onEndChecking()
+      {
+         labelChecking.Visible = false;
+         updateAddRemoveButtonState();
+         updateEnablementsOfWorkflowSelectors();
+         updateOkCancelButtonState();
+      }
+
+      private bool isChecking()
+      {
+         return labelChecking.Visible;
       }
 
       public string GetAccessToken(string host)

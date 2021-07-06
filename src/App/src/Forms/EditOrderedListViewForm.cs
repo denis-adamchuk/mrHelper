@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -56,6 +56,12 @@ namespace mrHelper.App.Forms
          }
       }
 
+      protected override void OnClosing(CancelEventArgs e)
+      {
+         base.OnClosing(e);
+         e.Cancel = isChecking();
+      }
+
       private void updateListView(StringToBooleanCollection items)
       {
          listView.Items.Clear();
@@ -68,26 +74,38 @@ namespace mrHelper.App.Forms
          listView.Items.Add(new ListViewItem(item.Item1) { Tag = item });
       }
 
+      private void updateButtonState()
+      {
+         bool isAnythingSelected = listView.SelectedItems.Count > 0;
+
+         buttonUp.Enabled = !isChecking()
+                         && isAnythingSelected
+                         && _allowReorder
+                         && listView.SelectedIndices[0] != 0;
+
+         buttonDown.Enabled = !isChecking()
+                           && isAnythingSelected
+                           && _allowReorder
+                           && listView.SelectedIndices[0] != listView.Items.Count - 1;
+
+         buttonAddItem.Enabled = !isChecking();
+         buttonRemoveItem.Enabled = !isChecking() && isAnythingSelected;
+         buttonToggleState.Enabled = !isChecking() && isAnythingSelected;
+
+         buttonOK.Enabled = !isChecking();
+         buttonCancel.Enabled = !isChecking();
+
+         if (isAnythingSelected)
+         {
+            Tuple<string, bool> tag = (Tuple<string, bool>)(listView.SelectedItems[0].Tag);
+            buttonToggleState.Text = tag.Item2 ? "Disable" : "Enable";
+         }
+      }
+
       private void listView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
       {
-         ListView listView = (sender as ListView);
          listView.Refresh();
-
-         if (listView.SelectedItems.Count < 1)
-         {
-            buttonRemoveItem.Enabled = false;
-            buttonToggleState.Enabled = false;
-            return;
-         }
-
-         buttonUp.Enabled = _allowReorder && listView.SelectedIndices[0] != 0;
-         buttonDown.Enabled = _allowReorder && listView.SelectedIndices[0] != listView.Items.Count - 1;
-
-         buttonRemoveItem.Enabled = true;
-         buttonToggleState.Enabled = true;
-
-         Tuple<string, bool> tag = (Tuple<string, bool>)(listView.SelectedItems[0].Tag);
-         buttonToggleState.Text = tag.Item2 ? "Disable" : "Enable";
+         updateButtonState();
       }
 
       async private void buttonAddItem_Click(object sender, EventArgs e)
@@ -99,11 +117,19 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            string itemToBeAdded = await _callback.CanAddItem(form.Item,
-                  listView.Items.Cast<ListViewItem>().Select(x => x.Text));
-            if (itemToBeAdded != null)
+            onStartChecking();
+            try
             {
-               addListViewItem(new Tuple<string, bool>(itemToBeAdded, true));
+               string itemToBeAdded = await _callback.CanAddItem(form.Item,
+                     listView.Items.Cast<ListViewItem>().Select(x => x.Text));
+               if (itemToBeAdded != null)
+               {
+                  addListViewItem(new Tuple<string, bool>(itemToBeAdded, true));
+               }
+            }
+            finally
+            {
+               onEndChecking();
             }
          }
       }
@@ -122,8 +148,7 @@ namespace mrHelper.App.Forms
          {
             Tuple<string, bool> tag = (Tuple<string, bool>)(listView.SelectedItems[0].Tag);
             listView.SelectedItems[0].Tag = new Tuple<string, bool>(tag.Item1, !tag.Item2);
-
-            buttonToggleState.Text = !tag.Item2 ? "Disable" : "Enable";
+            updateButtonState();
          }
       }
 
@@ -162,6 +187,23 @@ namespace mrHelper.App.Forms
          {
             buttonOK.PerformClick();
          }
+      }
+
+      private void onStartChecking()
+      {
+         labelChecking.Visible = true;
+         updateButtonState();
+      }
+
+      private void onEndChecking()
+      {
+         labelChecking.Visible = false;
+         updateButtonState();
+      }
+
+      private bool isChecking()
+      {
+         return labelChecking.Visible;
       }
 
       private readonly string _addItemHint;

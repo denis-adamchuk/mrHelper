@@ -161,7 +161,7 @@ namespace mrHelper.CommonControls.Tools
          Dictionary<string, int> columnIndices = new Dictionary<string, int>();
          foreach (ColumnHeader column in listView.Columns)
          {
-            columnIndices[(string)column.Tag] = column.DisplayIndex;
+            columnIndices[column.Tag.ToString()] = column.DisplayIndex;
          }
          return columnIndices;
       }
@@ -213,7 +213,7 @@ namespace mrHelper.CommonControls.Tools
             .Columns
             .Cast<ColumnHeader>()
             .ToDictionary(
-               item => (string)item.Tag,
+               item => item.Tag.ToString(),
                item =>
                {
                   if (moveForward && item.DisplayIndex > oldDisplayIndex && item.DisplayIndex <= newDisplayIndex)

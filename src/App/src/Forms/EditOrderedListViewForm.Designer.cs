@@ -30,15 +30,16 @@ namespace mrHelper.App.Forms
       /// </summary>
       private void InitializeComponent()
       {
-         this.listView = new StringToBooleanListView();
+         this.listView = new mrHelper.App.Controls.StringToBooleanListView();
          this.columnHeaderName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.buttonAddItem = new System.Windows.Forms.Button();
          this.buttonRemoveItem = new System.Windows.Forms.Button();
          this.buttonToggleState = new System.Windows.Forms.Button();
          this.buttonOK = new System.Windows.Forms.Button();
-         this.buttonCancel = new CommonControls.Controls.ConfirmCancelButton();
+         this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonUp = new System.Windows.Forms.Button();
          this.buttonDown = new System.Windows.Forms.Button();
+         this.labelChecking = new System.Windows.Forms.Label();
          this.SuspendLayout();
          // 
          // listView
@@ -117,6 +118,7 @@ namespace mrHelper.App.Forms
          // buttonCancel
          // 
          this.buttonCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonCancel.ConfirmationText = "All changes will be lost, are you sure?";
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
          this.buttonCancel.Location = new System.Drawing.Point(230, 225);
          this.buttonCancel.Name = "buttonCancel";
@@ -149,6 +151,17 @@ namespace mrHelper.App.Forms
          this.buttonDown.UseVisualStyleBackColor = true;
          this.buttonDown.Click += new System.EventHandler(this.buttonDown_Click);
          // 
+         // labelChecking
+         // 
+         this.labelChecking.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.labelChecking.AutoSize = true;
+         this.labelChecking.Location = new System.Drawing.Point(243, 180);
+         this.labelChecking.Name = "labelChecking";
+         this.labelChecking.Size = new System.Drawing.Size(61, 13);
+         this.labelChecking.TabIndex = 8;
+         this.labelChecking.Text = "Checking...";
+         this.labelChecking.Visible = false;
+         // 
          // EditOrderedListViewForm
          // 
          this.AcceptButton = this.buttonOK;
@@ -156,6 +169,7 @@ namespace mrHelper.App.Forms
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
          this.ClientSize = new System.Drawing.Size(316, 260);
+         this.Controls.Add(this.labelChecking);
          this.Controls.Add(this.buttonDown);
          this.Controls.Add(this.buttonUp);
          this.Controls.Add(this.buttonCancel);
@@ -171,6 +185,7 @@ namespace mrHelper.App.Forms
          this.Name = "EditOrderedListViewForm";
          this.Text = "Edit Items";
          this.ResumeLayout(false);
+         this.PerformLayout();
 
       }
 
@@ -185,5 +200,6 @@ namespace mrHelper.App.Forms
       private CommonControls.Controls.ConfirmCancelButton buttonCancel;
       private System.Windows.Forms.Button buttonUp;
       private System.Windows.Forms.Button buttonDown;
+      private System.Windows.Forms.Label labelChecking;
    }
 }
