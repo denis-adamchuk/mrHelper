@@ -12,13 +12,15 @@ namespace mrHelper.App.Controls
          Func<ListViewSubItem, string> getText,
          Func<ListViewSubItem, string> getToolTipText,
          Func<ListViewSubItem, StringFormatFlags> getFormatFlags,
-         Func<ListViewSubItem, Rectangle> getBounds)
+         Func<ListViewSubItem, Rectangle> getBounds,
+         Func<ListViewSubItem, bool> getForceShowToolTip)
       {
          _listView = listView;
          _getText = getText;
          _getToolTipText = getToolTipText;
          _getFormatFlags = getFormatFlags;
          _getBounds = getBounds;
+         _getForceShowToolTip = getForceShowToolTip;
 
          _toolTipTimer = new System.Timers.Timer
          {
@@ -150,6 +152,11 @@ namespace mrHelper.App.Controls
 
       private bool needShowToolTip(ListViewItem.ListViewSubItem subItem)
       {
+         if (_getForceShowToolTip(subItem))
+         {
+            return true;
+         }
+
          string text = _getText(subItem);
          StringFormatFlags formatFlags = _getFormatFlags(subItem);
          Rectangle bounds = _getBounds(subItem);
@@ -184,6 +191,7 @@ namespace mrHelper.App.Controls
       private readonly Func<ListViewSubItem, string> _getToolTipText;
       private readonly Func<ListViewSubItem, StringFormatFlags> _getFormatFlags;
       private readonly Func<ListViewSubItem, Rectangle> _getBounds;
+      private readonly Func<ListViewSubItem, bool> _getForceShowToolTip;
       private readonly System.Timers.Timer _toolTipTimer;
 
       private Point _lastMouseLocation = new Point(-1, -1);

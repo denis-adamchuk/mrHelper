@@ -67,7 +67,7 @@ namespace mrHelper.App.Controls
          ListViewItemSorter = new ListViewItemComparer();
          OwnerDraw = true;
          _toolTip = new ListViewToolTip(this,
-            getText, getToolTipText, getSubItemStringFormatFlags, getBounds);
+            getText, getToolTipText, getSubItemStringFormatFlags, getBounds, getForceShowToolTip);
          Tag = "DesignTimeName";
          _unmuteTimer.Tick += onUnmuteTimerTick;
          cleanUpMutedMergeRequests();
@@ -1284,6 +1284,19 @@ namespace mrHelper.App.Controls
       {
          var width = getColumnWidth((subItem.Tag as ListViewSubItemInfo).ColumnType);
          return new Rectangle(subItem.Bounds.X, subItem.Bounds.Y, width, subItem.Bounds.Height);
+      }
+
+      private bool getForceShowToolTip(ListViewItem.ListViewSubItem subItem)
+      {
+         ColumnType columnType = (subItem.Tag as ListViewSubItemInfo).ColumnType;
+         switch (columnType)
+         {
+            case ColumnType.Labels:
+               return getText(subItem).Contains(MoreListViewRowsHint);
+            case ColumnType.Activities:
+               return true;
+         }
+         return false;
       }
 
       private static bool isSummaryKey(FullMergeRequestKey fmk)

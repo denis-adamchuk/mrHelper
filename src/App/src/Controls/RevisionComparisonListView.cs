@@ -14,7 +14,7 @@ namespace mrHelper.App.Controls
       public RevisionComparisonListView()
       {
          _toolTip = new ListViewToolTip(this,
-            getText, getToolTipText, getFormatFlags, getBounds);
+            getText, getToolTipText, getFormatFlags, getBounds, x => false);
          OwnerDraw = true;
       }
 
