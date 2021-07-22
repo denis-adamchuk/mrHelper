@@ -415,36 +415,12 @@ namespace mrHelper.App.Controls
 
       private void reloadMergeRequestsByUserRequest(DataCache dataCache)
       {
-         showWarningOnReloadList();
-
          if (HostName != String.Empty)
          {
             addOperationRecord("List refresh has started");
 
             requestUpdates(dataCache, null, PseudoTimerInterval,
                () => addOperationRecord("List refresh has completed"));
-         }
-      }
-
-      private static void showWarningOnReloadList()
-      {
-         if (Program.Settings.ShowWarningOnReloadList)
-         {
-            int autoUpdateMs = Program.Settings.AutoUpdatePeriodMs;
-            double oneMinuteMs = 60000;
-            double autoUpdateMinutes = autoUpdateMs / oneMinuteMs;
-
-            string periodicity = autoUpdateMs > oneMinuteMs
-               ? (autoUpdateMs % Convert.ToInt32(oneMinuteMs) == 0
-                  ? String.Format("{0} minutes", autoUpdateMinutes)
-                  : String.Format("{0:F1} minutes", autoUpdateMinutes))
-               : String.Format("{0} seconds", autoUpdateMs / 1000);
-
-            string message = String.Format(
-               "Merge Request list updates each {0} and you don't usually need to update it manually", periodicity);
-            MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-            Program.Settings.ShowWarningOnReloadList = false;
          }
       }
    }

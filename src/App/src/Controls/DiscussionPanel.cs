@@ -456,13 +456,13 @@ namespace mrHelper.App.Controls
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search
       /// </summary>
       private Control _mostRecentFocusedDiscussionControl;
-      private HtmlToolTipEx _htmlTooltip = new HtmlToolTipEx
+      private readonly HtmlToolTipEx _htmlTooltip = new HtmlToolTipEx
       {
          AutoPopDelay = 20000, // 20s
          InitialDelay = 300,
          // BaseStylesheet = Don't specify anything here because users' HTML <style> override it
       };
-      private PopupWindow _popupWindow = new PopupWindow(true);
+      private readonly PopupWindow _popupWindow = new PopupWindow(true);
 
       private static readonly int RedrawTimerInterval = 1000 * 60; // 1 minute
 

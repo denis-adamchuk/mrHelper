@@ -29,7 +29,7 @@ namespace mrHelper.Common.Tools
       }
 
       private static readonly string supportedProtocolPrefix = "https://";
-      private static string unsupportedProtocolPrefix = "http://";
+      private static readonly string unsupportedProtocolPrefix = "http://";
 
       public static string GetHostWithPrefix(string host)
       {

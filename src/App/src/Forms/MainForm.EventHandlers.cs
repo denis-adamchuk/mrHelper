@@ -489,6 +489,7 @@ namespace mrHelper.App.Forms
 
       private void toolStripButtonRefreshList_Click(object sender, System.EventArgs e)
       {
+         showWarningOnReloadList();
          getCurrentConnectionPage()?.ReloadAll();
       }
 
