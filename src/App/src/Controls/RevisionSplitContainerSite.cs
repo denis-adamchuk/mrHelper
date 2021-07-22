@@ -112,7 +112,9 @@ namespace mrHelper.App.Controls
          RevisionComparisonArguments? arguments = getArguments();
          if (!arguments.HasValue || !arguments.Value.IsValid())
          {
-            updatePreviewState(PreviewLoadingState.Failed);
+            PreviewLoadingState state = arguments.HasValue ?
+               PreviewLoadingState.Failed : PreviewLoadingState.NotAvailable;
+            updatePreviewState(state);
             return;
          }
 
