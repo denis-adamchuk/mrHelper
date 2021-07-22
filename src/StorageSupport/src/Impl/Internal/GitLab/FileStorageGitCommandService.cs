@@ -7,6 +7,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 using System.Diagnostics;
+using mrHelper.Common.Exceptions;
 
 namespace mrHelper.StorageSupport
 {
@@ -37,6 +38,9 @@ namespace mrHelper.StorageSupport
             ExternalProcess.Result result = startExternalProcess(
                converted.App, converted.Arguments, _path, true, new int[] { 0, 1 });
 
+            Trace.TraceInformation("[FileStorageGitCommandService] Finished {0} at {1} with arguments {2}",
+               converted.App, _path, converted.Arguments);
+
             if (result.StdOut.Any())
             {
                Trace.TraceInformation("[FileStorageGitCommandService] StdOut starts with:\r\n{0}",
@@ -54,6 +58,12 @@ namespace mrHelper.StorageSupport
          catch (ArgumentConversionException ex)
          {
             throw new GitCommandServiceInternalException(ex);
+         }
+         catch (Exception ex)
+         {
+            ExceptionHandlers.Handle(ex.Message ?? "N/A", ex);
+            // have I missed something?
+            throw;
          }
       }
 
