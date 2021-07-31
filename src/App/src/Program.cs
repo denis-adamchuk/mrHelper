@@ -365,7 +365,6 @@ namespace mrHelper.App
          finally
          {
             GitTools.TraceGitConfiguration();
-            GitTools.TraceGitLocation();
          }
 
          return true;

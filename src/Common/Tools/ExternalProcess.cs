@@ -33,9 +33,6 @@ namespace mrHelper.Common.Tools
       {
          succesCodes = succesCodes ?? new int[] { 0 };
 
-         Trace.TraceInformation("[ExternalProcess] Starting {0} at {1} with arguments {2}",
-            name, path, arguments);
-
          using (Process process = new Process
          {
             StartInfo = new ProcessStartInfo
@@ -74,8 +71,7 @@ namespace mrHelper.Common.Tools
             int exitcode = 0;
             try
             {
-               bool result = process.Start();
-               Trace.TraceInformation("[ExternalProcess] Process.Start() returns {0}", result.ToString());
+               process.Start();
 
                process.BeginOutputReadLine();
                process.BeginErrorReadLine();
@@ -108,11 +104,6 @@ namespace mrHelper.Common.Tools
                throw new ExternalProcessFailureException(name, arguments, exitcode, standardError);
             }
 
-            Trace.TraceInformation("[ExternalProcess] Process.HasExited = {0}", process.HasExited.ToString());
-            if (wait)
-            {
-               Trace.TraceInformation("[ExternalProcess] Process.ExitCode = {0}", process.ExitCode.ToString());
-            }
             return new Result(process.HasExited ? -1 : process.Id, standardOutput, standardError);
          }
       }

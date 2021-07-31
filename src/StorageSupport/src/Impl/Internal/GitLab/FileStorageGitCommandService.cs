@@ -6,8 +6,6 @@ using GitLabSharp.Entities;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
-using System.Diagnostics;
-using mrHelper.Common.Exceptions;
 
 namespace mrHelper.StorageSupport
 {
@@ -31,39 +29,12 @@ namespace mrHelper.StorageSupport
          try
          {
             ConvertedArguments converted = _argumentConverter.Convert(arguments);
-
-            Trace.TraceInformation("[FileStorageGitCommandService] Starting {0} at {1} with arguments {2}",
-               converted.App, _path, converted.Arguments);
-
-            ExternalProcess.Result result = startExternalProcess(
-               converted.App, converted.Arguments, _path, true, new int[] { 0, 1 });
-
-            Trace.TraceInformation("[FileStorageGitCommandService] Finished {0} at {1} with arguments {2}",
-               converted.App, _path, converted.Arguments);
-
-            if (result.StdOut.Any())
-            {
-               Trace.TraceInformation("[FileStorageGitCommandService] StdOut starts with:\r\n{0}",
-                  String.Join("\r\n", result.StdOut.Take(3)));
-            }
-
-            if (result.StdErr.Any())
-            {
-               Trace.TraceInformation("[FileStorageGitCommandService] StdErr:\r\n{0}",
-                  String.Join("\r\n", result.StdErr));
-            }
-
-            return result.StdOut.Where(x => !String.IsNullOrEmpty(x));
+            return startExternalProcess(converted.App, converted.Arguments, _path, true, new int[] { 0, 1 })
+               .StdOut.Where(x => !String.IsNullOrEmpty(x));
          }
          catch (ArgumentConversionException ex)
          {
             throw new GitCommandServiceInternalException(ex);
-         }
-         catch (Exception ex)
-         {
-            ExceptionHandlers.Handle(ex.Message ?? "N/A", ex);
-            // have I missed something?
-            throw;
          }
       }
 
@@ -101,26 +72,9 @@ namespace mrHelper.StorageSupport
          try
          {
             ConvertedArguments converted = _argumentConverter.Convert(arguments);
-
-            Trace.TraceInformation("[FileStorageGitCommandService] (async) Starting {0} at {1} with arguments {2}",
-               converted.App, _path, converted.Arguments);
-
-            ExternalProcess.AsyncTaskDescriptor result = await startExternalProcessAsync(
-               converted.App, converted.Arguments, _path, new int[] { 0, 1 });
-
-            if (result.StdOut.Any())
-            {
-               Trace.TraceInformation("[FileStorageGitCommandService] (args={0}) StdOut starts with:\r\n{1}",
-                  converted.Arguments, String.Join("\r\n", result.StdOut.Take(3)));
-            }
-
-            if (result.StdErr.Any())
-            {
-               Trace.TraceInformation("[FileStorageGitCommandService] (args={0}) StdErr:\r\n{1}",
-                  converted.Arguments, String.Join("\r\n", result.StdErr));
-            }
-
-            return result.StdOut.Where(x => !String.IsNullOrEmpty(x));
+            IEnumerable<string> result =
+               (await startExternalProcessAsync(converted.App, converted.Arguments, _path, new int[] { 0, 1 })).StdOut;
+            return result.Where(x => !String.IsNullOrEmpty(x));
          }
          catch (ArgumentConversionException ex)
          {

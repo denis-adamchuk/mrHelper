@@ -183,22 +183,6 @@ namespace mrHelper.Common.Tools
          }
       }
 
-      public static void TraceGitLocation()
-      {
-         try
-         {
-            IEnumerable<string> stdOut = ExternalProcess.Start("where", "git", true, String.Empty).StdOut;
-            if (stdOut.Any())
-            {
-               Trace.TraceInformation(String.Format("where git ==>\n{0}", String.Join("\n", stdOut)));
-            }
-         }
-         catch (ExternalProcessException ex)
-         {
-            ExceptionHandlers.Handle("Cannot trace git location", ex);
-         }
-      }
-
       async public static Task<bool> DoesEntityExistAtPathAsync(
          IExternalProcessManager operationManager, string path, string entity)
       {
