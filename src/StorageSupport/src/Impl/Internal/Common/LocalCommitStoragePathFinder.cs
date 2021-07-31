@@ -31,7 +31,17 @@ namespace mrHelper.StorageSupport
       private static bool findRepositoryAtDisk(string parentFolder, ProjectKey projectKey,
          LocalCommitStorageType type, out string repositoryPath)
       {
-         string[] childFolders = Directory.GetDirectories(parentFolder);
+         string[] childFolders = Array.Empty<string>();
+         try
+         {
+            childFolders = Directory.GetDirectories(parentFolder);
+         }
+         catch (Exception) // Any exception from Directory.GetDirectories
+         {
+            repositoryPath = String.Empty;
+            return false;
+         }
+
          foreach (string childFolder in childFolders)
          {
             repositoryPath = Path.Combine(parentFolder, childFolder);
