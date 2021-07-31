@@ -92,9 +92,9 @@ namespace mrHelper.App.Controls
       {
          _repositoryAccessor?.Cancel();
          await TaskUtils.WhileAsync(() => _isFetching); // to not shuffle states
-         if (_storage == null || _repositoryAccessor == null)
+         if (!isStorageAvailable())
          {
-            updatePreviewState(PreviewLoadingState.NotAvailable);
+            updatePreviewState(PreviewLoadingState.StorageNotAvailable);
             return;
          }
 
@@ -129,7 +129,7 @@ namespace mrHelper.App.Controls
             _isFetching = true;
             try
             {
-               await _storage.Git?.FetchAsync(arguments, _repositoryAccessor);
+               await _storage.Git.FetchAsync(arguments, _repositoryAccessor);
             }
             finally
             {
@@ -139,6 +139,12 @@ namespace mrHelper.App.Controls
          catch (FetchFailedException)
          {
             updatePreviewState(PreviewLoadingState.Failed);
+            return;
+         }
+
+         if (!isStorageAvailable())
+         {
+            updatePreviewState(PreviewLoadingState.StorageNotAvailable);
             return;
          }
 
@@ -187,6 +193,7 @@ namespace mrHelper.App.Controls
 
       private enum PreviewLoadingState
       {
+         StorageNotAvailable,
          NotAvailable,
          Loading,
          Failed,
@@ -200,6 +207,10 @@ namespace mrHelper.App.Controls
          _previewState = state;
          switch (_previewState)
          {
+            case PreviewLoadingState.StorageNotAvailable:
+               labelLoading.Text = "File storage is not ready";
+               panelPreviewStatus.Visible = true;
+               break;
             case PreviewLoadingState.NotAvailable:
                listViewRevisionComparisonStructure.ClearData();
                panelPreviewStatus.Visible = false;
@@ -232,6 +243,11 @@ namespace mrHelper.App.Controls
          {
             updateStatusLabelLocation();
          }
+      }
+
+      private bool isStorageAvailable()
+      {
+         return _storage != null && _storage.Git != null && _repositoryAccessor != null;
       }
 
       private PreviewLoadingState _previewState = PreviewLoadingState.NotAvailable;
