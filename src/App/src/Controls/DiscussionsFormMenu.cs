@@ -51,7 +51,8 @@ namespace mrHelper.App.Controls
          IEnumerable<ICommand> commands,
          ICommandCallback commandCallback,
          Action<string> onFontSelected,
-         ColorScheme colorScheme)
+         ColorScheme colorScheme,
+         IsCommandEnabledFn isCommandEnabled)
       {
          _loadingConfiguration = true;
          _discussionSort = discussionSort;
@@ -69,6 +70,7 @@ namespace mrHelper.App.Controls
          _discussionLoader = discussionLoader;
          _discussionHelper = discussionHelper;
 
+         _isCommandEnabled = isCommandEnabled;
          addCustomActions(commands, commandCallback);
 
          addFontSizes();
@@ -237,6 +239,7 @@ namespace mrHelper.App.Controls
       {
          Trace.TraceInformation("[DiscussionsFormMenu] Refreshing by user request");
          _discussionLoader.LoadDiscussions();
+         updateCustomActionVisibility();
       }
 
       private void onAddThreadAction()
@@ -280,6 +283,19 @@ namespace mrHelper.App.Controls
          }));
       }
 
+      private void updateCustomActionVisibility()
+      {
+         foreach (ToolStripItem menuItem in actionsToolStripMenuItem.DropDownItems)
+         {
+            ICommand command = (ICommand)menuItem.Tag;
+            if (command != null)
+            {
+               menuItem.Enabled = _isCommandEnabled(command, out bool isVisible);
+               menuItem.Visible = isVisible;
+            }
+         }
+      }
+
       private void addCustomActions(IEnumerable<ICommand> commands, ICommandCallback commandCallback)
       {
          if (commands == null)
@@ -288,17 +304,22 @@ namespace mrHelper.App.Controls
          }
 
          int id = 0;
-         foreach (ICommand command in commands.Where(c => c.ShowInDiscussionsMenu))
+         foreach (ICommand command in commands)
          {
             ToolStripMenuItem item = new ToolStripMenuItem
             {
+               AutoToolTip = false,
                Name = "customAction" + id,
-               Text = String.Format("{0} ({1})", command.Name, command.Hint)
+               Tag = command,
+               Text = command.Name,
+               ToolTipText = command.Hint
             };
             item.Click += (x, y) => onCommandAction(command, commandCallback);
             actionsToolStripMenuItem.DropDownItems.Add(item);
             id++;
          }
+
+         updateCustomActionVisibility();
       }
 
       private void addFontSizes()
@@ -490,6 +511,7 @@ namespace mrHelper.App.Controls
       private AsyncDiscussionLoader _discussionLoader;
       private AsyncDiscussionHelper _discussionHelper;
       private Action<string> _onFontSelected;
+      private IsCommandEnabledFn _isCommandEnabled;
       private ColorScheme _colorScheme;
       private bool _loadingConfiguration;
       private readonly ToolStripMenuItem[] _sortMenuItemGroup;

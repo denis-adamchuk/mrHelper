@@ -13,6 +13,8 @@ using mrHelper.Core.Context;
 
 namespace mrHelper.App.Forms
 {
+   public delegate bool IsCommandEnabledFn(ICommand command, out bool isVisible);
+
    internal partial class DiscussionsForm : CustomFontForm, ICommandCallback
    {
       public DiscussionsForm(
@@ -20,7 +22,7 @@ namespace mrHelper.App.Forms
          string mergeRequestTitle, User mergeRequestAuthor,
          ColorScheme colorScheme, AsyncDiscussionLoader discussionLoader, AsyncDiscussionHelper discussionHelper,
          string webUrl, Shortcuts shortcuts,
-         IEnumerable<ICommand> commands)
+         IEnumerable<ICommand> commands, IsCommandEnabledFn isCommandEnabled)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -63,7 +65,7 @@ namespace mrHelper.App.Forms
          searchPanel.Initialize(discussionPanel);
 
          discussionMenu.Initialize(discussionSort, displayFilter, discussionLayout,
-            discussionLoader, discussionHelper, commands, this, applyFont, colorScheme);
+            discussionLoader, discussionHelper, commands, this, applyFont, colorScheme, isCommandEnabled);
 
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);

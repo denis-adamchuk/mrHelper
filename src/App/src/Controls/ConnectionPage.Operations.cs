@@ -496,7 +496,7 @@ namespace mrHelper.App.Controls
 
             DiscussionsForm discussionsForm = new DiscussionsForm(
                git, currentUser, mrk, discussions, title, author, _colorScheme,
-               discussionLoader, discussionHelper, webUrl, _shortcuts, GetCustomActionList())
+               discussionLoader, discussionHelper, webUrl, _shortcuts, GetCustomActionList(), IsCommandEnabled)
             {
                Tag = mrk
             };

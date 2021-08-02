@@ -90,6 +90,7 @@ namespace mrHelper.App.Controls
          this.menuStrip.Name = "menuStrip";
          this.menuStrip.Padding = new System.Windows.Forms.Padding(0);
          this.menuStrip.Size = new System.Drawing.Size(534, 24);
+         this.menuStrip.ShowItemToolTips = true;
          this.menuStrip.TabIndex = 4;
          this.menuStrip.Text = "menuStrip1";
          // 
