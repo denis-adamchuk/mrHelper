@@ -92,11 +92,6 @@ namespace mrHelper.App.Controls
       {
          _repositoryAccessor?.Cancel();
          await TaskUtils.WhileAsync(() => _isFetching); // to not shuffle states
-         if (!isStorageAvailable())
-         {
-            updatePreviewState(PreviewLoadingState.StorageNotAvailable);
-            return;
-         }
 
          RevisionComparisonArguments? getArguments()
          {
@@ -115,6 +110,12 @@ namespace mrHelper.App.Controls
             PreviewLoadingState state = arguments.HasValue ?
                PreviewLoadingState.Failed : PreviewLoadingState.NotAvailable;
             updatePreviewState(state);
+            return;
+         }
+
+         if (!isStorageAvailable())
+         {
+            updatePreviewState(PreviewLoadingState.StorageNotAvailable);
             return;
          }
 

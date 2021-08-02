@@ -65,7 +65,7 @@ namespace mrHelper.Common.Constants
            "Dark Gray", "Gray", "Silver",
            "Green", "Pale Green", "Spring Green", "Lime",
            "Dodger Blue", "Aqua", "Light Cyan", "Light Sky Blue",
-           "Violet", "Orchid" };
+           "Misty Rose", "Lavender", "Magenta", "Violet", "Orchid" };
 
       public static string LiveListViewName = "Live";
       public static string SearchListViewName = "Search";

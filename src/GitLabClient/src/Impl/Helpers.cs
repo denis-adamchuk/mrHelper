@@ -53,33 +53,51 @@ namespace mrHelper.GitLabClient
          return mergeRequest == null ? null : mergeRequest.Sha + mergeRequest.Target_Branch;
       }
 
-      // Check if the passed merge request mets ALL conditions
-      public static bool CheckConditions(IEnumerable<string> conditions, MergeRequest mergeRequest)
+      public static bool CheckConditions(IEnumerable<string> conditions,
+         IEnumerable<User> approvedBy, IEnumerable<string> labels, User author)
       {
-         foreach (var cond in conditions)
-         {
-            if (cond.Contains("Label:"))
-            {
-               if (!mergeRequest.Labels.Any(label => StringUtils.DoesMatchPattern(cond, "{{Label:{0}}}", label)))
-               {
-                  return false;
-               }
-            }
-            else if (cond.Contains("Author:"))
-            {
-               if (!StringUtils.DoesMatchPattern(cond, "{{Author:{0}}}", mergeRequest.Author.Username))
-               {
-                  return false;
-               }
-            }
-         }
-         return true;
+         return conditions.All(cond => checkCondition(cond, approvedBy, labels, author));
       }
 
-      // Check if any of the passed merge requests met ALL conditions
-      public static bool CheckConditions(IEnumerable<string> conditions, IEnumerable<MergeRequest> mergeRequests)
+      private static bool checkCondition(string condition,
+         IEnumerable<User> approvedBy, IEnumerable<string> labels, User author)
       {
-         return mergeRequests.Any(mergeRequest => CheckConditions(conditions, mergeRequest));
+         if (String.IsNullOrEmpty(condition))
+         {
+            return true;
+         }
+
+         string excludePrefix = "NOT ";
+         bool isExpected = !condition.StartsWith(excludePrefix);
+         condition = isExpected ? condition : condition.Substring(excludePrefix.Length);
+
+         string[] splitted = condition.TrimStart('{').TrimEnd('}').Split(':');
+         if (splitted.Length != 2)
+         {
+            return false;
+         }
+
+         string conditionName = splitted[0];
+         string conditionValue = splitted[1];
+         if (conditionName == "Label")
+         {
+            return isExpected == labels.Any(label => String.Compare(conditionValue, label, true) == 0);
+         }
+         else if (conditionName == "LabelSubString")
+         {
+            return isExpected == labels.Any(label => StringUtils.ContainsNoCase(label, conditionValue));
+         }
+         else if (conditionName == "Author")
+         {
+            return isExpected == (String.Compare(conditionValue, author.Username, true) == 0);
+         }
+         else if (conditionName == "Approved_By")
+         {
+            return isExpected == approvedBy.Any(approve => String.Compare(conditionValue, approve.Username, true) == 0);
+         }
+
+         Debug.Assert(false);
+         return false;
       }
 
       public static bool IsUserMentioned(string text, User user)

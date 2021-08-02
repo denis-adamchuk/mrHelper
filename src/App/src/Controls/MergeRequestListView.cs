@@ -745,10 +745,19 @@ namespace mrHelper.App.Controls
                IEnumerable<string> conditions = colorSchemeItem.Conditions;
                IEnumerable<string> resolvedConditions = conditions?
                   .Select(condition => _expressionResolver.Resolve(condition)) ?? Array.Empty<string>();
-               IEnumerable<MergeRequest> mergeRequests = keys.Select(fmk => fmk.MergeRequest);
-               return GitLabClient.Helpers.CheckConditions(resolvedConditions, mergeRequests);
+               return keys.Any(fmk => checkConditions(resolvedConditions, fmk));
             })?
             .Color;
+      }
+
+      private bool checkConditions(IEnumerable<string> conditions, FullMergeRequestKey fmk)
+      {
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         IEnumerable<User> approvedBy = _dataCache?.MergeRequestCache?.GetApprovals(mrk)?.Approved_By?
+            .Select(item => item.User) ?? Array.Empty<User>();
+         IEnumerable<string> labels = fmk.MergeRequest.Labels;
+         User author = fmk.MergeRequest.Author;
+         return GitLabClient.Helpers.CheckConditions(conditions, approvedBy, labels, author);
       }
 
       private Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)

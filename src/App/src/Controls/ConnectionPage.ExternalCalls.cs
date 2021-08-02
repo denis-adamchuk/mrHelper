@@ -261,31 +261,6 @@ namespace mrHelper.App.Controls
       {
          return new MergeRequestKey(new ProjectKey(parsedUrl.Host, parsedUrl.Project), parsedUrl.IId);
       }
-
-      private bool isCustomActionEnabled(IEnumerable<User> approvedBy,
-         IEnumerable<string> labels, User author, string dependency)
-      {
-         if (String.IsNullOrEmpty(dependency))
-         {
-            return true;
-         }
-
-         string excludePrefix = "NOT ";
-         bool isExpected = !dependency.StartsWith(excludePrefix);
-         dependency = isExpected ? dependency : dependency.Substring(excludePrefix.Length);
-         if (isExpected)
-         {
-            return labels.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x))
-                || StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username)
-                || approvedBy.Any(x => StringUtils.DoesMatchPattern(dependency, "{{Approved_By:{0}}}", x.Username));
-         }
-         else
-         {
-            return labels.All(x => !StringUtils.DoesMatchPattern(dependency, "{{Label:{0}}}", x))
-                && !StringUtils.DoesMatchPattern(dependency, "{{Author:{0}}}", author.Username)
-                && approvedBy.All(x => !StringUtils.DoesMatchPattern(dependency, "{{Approved_By:{0}}}", x.Username));
-         }
-      }
    }
 }
 

@@ -137,27 +137,14 @@ namespace mrHelper.App.Controls
             return false;
          }
 
-         string enabledIfFullString = command.EnabledIf;
-         string[] enabledIfCollection = enabledIfFullString.Split(',');
-         bool isEnabled = true;
-         foreach (string enabledIf in enabledIfCollection)
-         {
-            string resolvedEnabledIf =
-               String.IsNullOrEmpty(enabledIf) ? String.Empty : _expressionResolver.Resolve(enabledIf);
-            isEnabled &= isCustomActionEnabled(approvedBy, labels, author, resolvedEnabledIf);
-         }
+         IEnumerable<string> resolveCollection(IEnumerable<string> coll) =>
+            coll.Select(item => String.IsNullOrEmpty(item) ? String.Empty : _expressionResolver.Resolve(item));
 
-         string visibleIfFullString = command.VisibleIf;
-         string[] visibleIfCollection = visibleIfFullString.Split(',');
-         isVisible = true;
-         foreach (string visibleIf in visibleIfCollection)
-         {
-            string resolvedVisibleIf =
-               String.IsNullOrEmpty(visibleIf) ? String.Empty : _expressionResolver.Resolve(visibleIf);
-            isVisible &= isCustomActionEnabled(approvedBy, labels, author, resolvedVisibleIf);
-         }
+         IEnumerable<string> resolvedVisibleIf = resolveCollection(command.VisibleIf.Split(','));
+         isVisible = GitLabClient.Helpers.CheckConditions(resolvedVisibleIf, approvedBy, labels, author);
 
-         return isEnabled;
+         IEnumerable<string> resolvedEnabledIf = resolveCollection(command.EnabledIf.Split(','));
+         return GitLabClient.Helpers.CheckConditions(resolvedEnabledIf, approvedBy, labels, author);
       }
 
       internal bool AreCommandsEnabled()

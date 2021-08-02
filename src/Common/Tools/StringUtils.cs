@@ -13,16 +13,6 @@ namespace mrHelper.Common.Tools
          return text.IndexOf(substring, StringComparison.CurrentCultureIgnoreCase) >= 0;
       }
 
-      public static bool DoesMatchPattern(string value, string format, params object[] args)
-      {
-         return String.Compare(value, String.Format(format, args), true) == 0;
-      }
-
-      public static bool DoesMatchPattern(IEnumerable<string> values, string format, params object[] args)
-      {
-         return values.All(value => DoesMatchPattern(value, format, args));
-      }
-
       public static string EscapeSpaces(string unescaped)
       {
          return unescaped.Contains(' ') ? '"' + unescaped + '"' : unescaped;
