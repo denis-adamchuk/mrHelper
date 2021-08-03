@@ -282,6 +282,11 @@ namespace mrHelper.App.Forms
          applyWordWrapLongRows((sender as ToolStripMenuItem).Checked);
       }
 
+      private void checkBoxFlatRevisionPreview_CheckedChanged(object sender, EventArgs e)
+      {
+         applyFlatRevisionPreview((sender as ToolStripMenuItem).Checked);
+      }
+
       private void checkBoxRemindAboutAvailableNewVersion_CheckedChanged(object sender, EventArgs e)
       {
          applyRemindAboutAvailableNewVersionChange((sender as ToolStripMenuItem).Checked);

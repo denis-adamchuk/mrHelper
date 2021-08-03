@@ -29,6 +29,7 @@ namespace mrHelper.App.Forms
          disableSplitterRestrictionsToolStripMenuItem.Checked = Program.Settings.DisableSplitterRestrictions;
          showNewDiscussionOnTopOfAllApplicationsToolStripMenuItem.Checked = Program.Settings.NewDiscussionIsTopMostForm;
          wrapLongRowsToolStripMenuItem.Checked = Program.Settings.WordWrapLongRows;
+         flatRevisionPreviewToolStripMenuItem.Checked = Program.Settings.FlatRevisionPreview;
 
          setAutoSelectionModeChangeRadioValue();
          setShowWarningOnFileMismatchRadioValue();
@@ -344,6 +345,14 @@ namespace mrHelper.App.Forms
          if (!_loadingConfiguration)
          {
             Program.Settings.WordWrapLongRows = value;
+         }
+      }
+
+      private void applyFlatRevisionPreview(bool value)
+      {
+         if (!_loadingConfiguration)
+         {
+            Program.Settings.FlatRevisionPreview = value;
          }
       }
 

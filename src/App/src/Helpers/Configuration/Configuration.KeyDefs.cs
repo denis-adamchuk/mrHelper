@@ -46,6 +46,9 @@ namespace mrHelper.App.Helpers
       private static readonly string WordWrapLongRowsKeyName      = "WordWrapLongRows";
       private static readonly bool   WordWrapLongRowsDefaultValue = true;
 
+      private static readonly string FlatRevisionPreviewKeyName      = "FlatRevisionPreview";
+      private static readonly bool   FlatRevisionPreviewDefaultValue = true;
+
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
       private static readonly int    DiffContextDepthDefaultValue = 2;
 
@@ -222,6 +225,10 @@ namespace mrHelper.App.Helpers
       private static readonly string RevisionBrowserColumnWidthsKeyName           = "RB_ColWidths";
       private static readonly string RevisionBrowserColumnWidthsDefaultValue      = String.Empty;
       private static readonly int    RevisionBrowserSingleColumnWidthDefaultValue = 100;
+
+      private static readonly string RevisionPreviewBrowserColumnWidthsKeyName           = "RPB_ColWidths";
+      private static readonly string RevisionPreviewBrowserColumnWidthsDefaultValue      = String.Empty;
+      private static readonly int    RevisionPreviewBrowserSingleColumnWidthDefaultValue = 100;
 
       private static readonly string RevisionComparisonColumnWidthsKeyName           = "RC_ColWidths";
       private static readonly string RevisionComparisonColumnWidthsDefaultValue      = String.Empty;

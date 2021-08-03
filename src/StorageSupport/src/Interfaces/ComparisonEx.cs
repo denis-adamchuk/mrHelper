@@ -19,6 +19,7 @@ namespace mrHelper.StorageSupport
          public Statistic(IEnumerable<DiffStruct> diffs)
          {
             fillData(diffs);
+            Tree = DiffTreeBuilder.Build(diffs);
          }
 
          public class Item
@@ -39,29 +40,19 @@ namespace mrHelper.StorageSupport
 
          public IEnumerable<Item> Data => _data;
 
-         private const string plus = "+";
-         private const string minus = "-";
+         public DiffTree Tree { get; }
 
          private void fillData(IEnumerable<DiffStruct> diffs)
          {
             _data.Clear();
             foreach (DiffStruct diff in diffs)
             {
-               int added = 0;
-               int deleted = 0;
-               diff.Diff
-                  .Split('\n')
-                  .ToList()
-                  .ForEach(s =>
-                  {
-                     added += s.StartsWith(plus) ? 1 : 0;
-                     deleted += s.StartsWith(minus) ? 1 : 0;
-                  });
+               DiffStructCounter.Count(diff, out int added, out int deleted);
                _data.Add(new Item(diff.Old_Path, diff.New_Path, added, deleted));
             }
          }
 
-         public List<Item> _data = new List<Item>();
+         private readonly List<Item> _data = new List<Item>();
       }
 
       public Statistic GetStatistic()

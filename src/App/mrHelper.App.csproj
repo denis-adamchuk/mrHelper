@@ -176,6 +176,12 @@
     <Compile Include="src\Controls\RevisionComparisonListView.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\RevisionPreviewBrowser.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\RevisionPreviewBrowser.Designer.cs">
+      <DependentUpon>RevisionPreviewBrowser.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Controls\RevisionSplitContainerSite.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -376,6 +382,8 @@
     <Compile Include="src\Helpers\ServiceManager.cs" />
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserItem.cs" />
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserModel.cs" />
+    <Compile Include="src\Helpers\RevisionPreviewBrowser\RevisionPreviewBrowserItem.cs" />
+    <Compile Include="src\Helpers\RevisionPreviewBrowser\RevisionPreviewBrowserModel.cs" />
     <Compile Include="src\Helpers\Url\UrlConnectionException.cs" />
     <Compile Include="src\Helpers\Url\UrlHelper.cs" />
     <Compile Include="src\LaunchOptions.cs" />

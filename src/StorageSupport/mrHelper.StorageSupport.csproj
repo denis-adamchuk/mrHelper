@@ -48,6 +48,8 @@
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="src\Impl\Internal\Common\DiffTreeBuilder.cs" />
+    <Compile Include="src\Impl\Internal\Common\DiffStructCounter.cs" />
     <Compile Include="src\Impl\Internal\Common\FullContextDiffProvider.cs" />
     <Compile Include="src\Impl\Internal\Common\GitDiffAnalyzer.cs" />
     <Compile Include="src\Impl\Internal\Common\InternalUpdateContext.cs" />
@@ -64,6 +66,7 @@
     <Compile Include="src\Impl\Internal\GitLab\FileRevision.cs" />
     <Compile Include="src\Impl\Internal\GitLab\FileStorageArgumentConverter.cs" />
     <Compile Include="src\Interfaces\ComparisonEx.cs" />
+    <Compile Include="src\Interfaces\DiffTree.cs" />
     <Compile Include="src\Interfaces\FileRenameDetectorItf.cs" />
     <Compile Include="src\Interfaces\CommitStorageUpdateContextItf.cs" />
     <Compile Include="src\Interfaces\GitCommandArguments.cs" />

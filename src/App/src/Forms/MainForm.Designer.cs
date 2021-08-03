@@ -111,6 +111,7 @@ namespace mrHelper.App.Forms
          this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
          this.disableSplitterRestrictionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.wrapLongRowsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.flatRevisionPreviewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
          this.layoutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.horizontalToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -527,6 +528,7 @@ namespace mrHelper.App.Forms
             this.toolStripSeparator6,
             this.disableSplitterRestrictionsToolStripMenuItem,
             this.wrapLongRowsToolStripMenuItem,
+            this.flatRevisionPreviewToolStripMenuItem,
             this.toolStripSeparator7,
             this.layoutToolStripMenuItem,
             this.toolbarPositionToolStripMenuItem});
@@ -568,6 +570,14 @@ namespace mrHelper.App.Forms
          this.wrapLongRowsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
          this.wrapLongRowsToolStripMenuItem.Text = "Wrap long rows";
          this.wrapLongRowsToolStripMenuItem.CheckedChanged += new System.EventHandler(this.checkBoxWordWrapLongRows_CheckedChanged);
+         // 
+         // flatRevisionPreviewToolStripMenuItem
+         // 
+         this.flatRevisionPreviewToolStripMenuItem.CheckOnClick = true;
+         this.flatRevisionPreviewToolStripMenuItem.Name = "flatRevisionPreviewToolStripMenuItem";
+         this.flatRevisionPreviewToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+         this.flatRevisionPreviewToolStripMenuItem.Text = "Flat revision preview";
+         this.flatRevisionPreviewToolStripMenuItem.CheckedChanged += new System.EventHandler(this.checkBoxFlatRevisionPreview_CheckedChanged);
          // 
          // toolStripSeparator7
          // 
@@ -1043,6 +1053,7 @@ namespace mrHelper.App.Forms
       private ToolStripSeparator toolStripSeparator7;
       private ToolStripMenuItem disableSplitterRestrictionsToolStripMenuItem;
       private ToolStripMenuItem wrapLongRowsToolStripMenuItem;
+      private ToolStripMenuItem flatRevisionPreviewToolStripMenuItem;
       private ToolStripMenuItem helpToolStripMenuItem;
       private ToolStripMenuItem sendFeedbackToolStripMenuItem;
       private ToolStripMenuItem showHelpToolStripMenuItem;
