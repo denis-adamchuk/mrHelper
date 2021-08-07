@@ -88,6 +88,13 @@ namespace mrHelper.App.Helpers
       }
       public event Action WordWrapLongRowsChanged;
 
+      public bool FlatRevisionPreview
+      {
+         get => getBoolValue(FlatRevisionPreviewKeyName, FlatRevisionPreviewDefaultValue);
+         set => setBoolValue(FlatRevisionPreviewKeyName, value);
+      }
+      public event Action FlatRevisionPreviewChanged;
+
       public bool MinimizeOnClose
       {
          get => getBoolValue(MinimizeOnCloseKeyName, MinimizeOnCloseDefaultValue);
@@ -406,6 +413,15 @@ namespace mrHelper.App.Helpers
                                          RevisionBrowserSingleColumnWidthDefaultValue,
                                          -1);
          set => setStringToIntDictionary(RevisionBrowserColumnWidthsKeyName, value);
+      }
+
+      public Dictionary<string, int> RevisionPreviewBrowserColumnWidths
+      {
+         get => getStringToIntDictionary(RevisionPreviewBrowserColumnWidthsKeyName,
+                                         RevisionPreviewBrowserColumnWidthsDefaultValue,
+                                         RevisionPreviewBrowserSingleColumnWidthDefaultValue,
+                                         -1);
+         set => setStringToIntDictionary(RevisionPreviewBrowserColumnWidthsKeyName, value);
       }
 
       public Dictionary<string, int> RevisionComparisonColumnWidths

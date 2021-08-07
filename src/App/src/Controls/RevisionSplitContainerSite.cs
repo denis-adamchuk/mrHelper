@@ -23,6 +23,7 @@ namespace mrHelper.App.Controls
       public RevisionSplitContainerSite()
       {
          InitializeComponent();
+         applyRevisionPreviewStyle();
       }
 
       internal void Initialize(
@@ -33,6 +34,8 @@ namespace mrHelper.App.Controls
          _getStorage = getStorage;
          _getRepositoryAccessor = getRepositoryAccessor;
          _getReviewedRevisions = getReviewedRevisions;
+
+         Program.Settings.FlatRevisionPreviewChanged += applyRevisionPreviewStyle;
       }
 
       internal void SetData(MergeRequestKey mrk, DataCache dataCache)
@@ -88,6 +91,13 @@ namespace mrHelper.App.Controls
          }
       }
 
+      private void applyRevisionPreviewStyle()
+      {
+         bool isRevisionPreviewTreeVisible = !Program.Settings.FlatRevisionPreview;
+         revisionPreviewBrowser.Visible = isRevisionPreviewTreeVisible;
+         listViewRevisionComparisonStructure.Visible = !isRevisionPreviewTreeVisible;
+      }
+
       private async Task onRevisionSelectionChanged()
       {
          _repositoryAccessor?.Cancel();
@@ -125,6 +135,11 @@ namespace mrHelper.App.Controls
 
       async private Task showRevisionPreviewAsync(RevisionComparisonArguments arguments)
       {
+         if (_storage.Git == null)
+         {
+            return;
+         }
+
          try
          {
             _isFetching = true;
@@ -214,6 +229,7 @@ namespace mrHelper.App.Controls
                break;
             case PreviewLoadingState.NotAvailable:
                listViewRevisionComparisonStructure.ClearData();
+               revisionPreviewBrowser.ClearData();
                panelPreviewStatus.Visible = false;
                break;
             case PreviewLoadingState.Loading:
@@ -230,12 +246,14 @@ namespace mrHelper.App.Controls
                break;
             case PreviewLoadingState.Cancelled:
                listViewRevisionComparisonStructure.ClearData();
+               revisionPreviewBrowser.ClearData();
                panelPreviewStatus.Visible = false;
                break;
             case PreviewLoadingState.Ready:
                if (comparison != null)
                {
                   listViewRevisionComparisonStructure.SetData(comparison.GetStatistic());
+                  revisionPreviewBrowser.SetData(new RevisionPreviewBrowserModelData(comparison.GetStatistic()));
                }
                panelPreviewStatus.Visible = false;
                break;

@@ -18,7 +18,7 @@ namespace mrHelper.GitLabClient
 
       /// <summary>
       /// This is a VERY simplified way of functionality checking because GitLab has complicated editions and plans.
-      /// TODO: Make approval status support check better.
+      /// TODO Make approval status support check better.
       /// </summary>
       public static bool DoesGitLabVersionSupportApprovals(GitLabVersion version)
       {

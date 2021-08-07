@@ -331,6 +331,10 @@ namespace mrHelper.App.Helpers
          {
             NeedShiftRepliesChanged?.Invoke();
          }
+         else if (keyName == FlatRevisionPreviewKeyName)
+         {
+            FlatRevisionPreviewChanged?.Invoke();
+         }
       }
 
       private readonly Configuration _config;

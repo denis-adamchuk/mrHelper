@@ -20,6 +20,8 @@ namespace mrHelper.App.Controls
             components.Dispose();
          }
 
+         Program.Settings.FlatRevisionPreviewChanged -= applyRevisionPreviewStyle;
+
          _repositoryAccessor?.Dispose();
 
          base.Dispose(disposing);
@@ -35,6 +37,7 @@ namespace mrHelper.App.Controls
       {
          this.splitContainer = new System.Windows.Forms.SplitContainer();
          this.revisionBrowser = new mrHelper.App.Controls.RevisionBrowser();
+         this.revisionPreviewBrowser = new mrHelper.App.Controls.RevisionPreviewBrowser();
          this.panelPreviewStatus = new System.Windows.Forms.Panel();
          this.labelLoading = new System.Windows.Forms.Label();
          this.listViewRevisionComparisonStructure = new mrHelper.App.Controls.RevisionComparisonListView();
@@ -67,6 +70,7 @@ namespace mrHelper.App.Controls
          this.splitContainer.Panel2.BackColor = System.Drawing.SystemColors.Window;
          this.splitContainer.Panel2.Controls.Add(this.panelPreviewStatus);
          this.splitContainer.Panel2.Controls.Add(this.listViewRevisionComparisonStructure);
+         this.splitContainer.Panel2.Controls.Add(this.revisionPreviewBrowser);
          this.splitContainer.Size = new System.Drawing.Size(396, 374);
          this.splitContainer.SplitterDistance = 124;
          this.splitContainer.TabIndex = 0;
@@ -103,6 +107,14 @@ namespace mrHelper.App.Controls
          this.labelLoading.TabIndex = 3;
          this.labelLoading.Text = "Loading...";
          // 
+         // revisionPreviewBrowser
+         // 
+         this.revisionPreviewBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.revisionPreviewBrowser.Location = new System.Drawing.Point(0, 0);
+         this.revisionPreviewBrowser.Name = "revisionPreviewBrowser";
+         this.revisionPreviewBrowser.Size = new System.Drawing.Size(396, 246);
+         this.revisionPreviewBrowser.TabIndex = 1;
+         // 
          // listViewRevisionComparisonStructure
          // 
          this.listViewRevisionComparisonStructure.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -120,6 +132,7 @@ namespace mrHelper.App.Controls
          this.listViewRevisionComparisonStructure.TabIndex = 1;
          this.listViewRevisionComparisonStructure.UseCompatibleStateImageBehavior = false;
          this.listViewRevisionComparisonStructure.View = System.Windows.Forms.View.Details;
+         this.listViewRevisionComparisonStructure.Visible = false;
          // 
          // columnHeaderName
          // 
@@ -158,6 +171,7 @@ namespace mrHelper.App.Controls
 
       private System.Windows.Forms.SplitContainer splitContainer;
       private App.Controls.RevisionBrowser revisionBrowser;
+      private App.Controls.RevisionPreviewBrowser revisionPreviewBrowser;
       private RevisionComparisonListView listViewRevisionComparisonStructure;
       private System.Windows.Forms.ColumnHeader columnHeaderName;
       private System.Windows.Forms.ColumnHeader columnHeaderAdded;

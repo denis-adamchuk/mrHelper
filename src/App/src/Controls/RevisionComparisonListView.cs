@@ -6,6 +6,7 @@ using mrHelper.CommonControls.Controls;
 using System.Diagnostics;
 using System.Drawing;
 using mrHelper.CommonControls.Tools;
+using mrHelper.Common.Constants;
 
 namespace mrHelper.App.Controls
 {
@@ -130,7 +131,9 @@ namespace mrHelper.App.Controls
          filepath = filepath.Replace("/", " / ");
          string[] subitems = new string[]
          {
-            filepath, statisticItem.Added.ToString(), statisticItem.Deleted.ToString()
+            filepath,
+            statisticItem.DiffSize?.Added.ToString() ?? Constants.NoDataAtGitLab,
+            statisticItem.DiffSize?.Deleted.ToString() ?? String.Empty
          };
          Debug.Assert(subitems.Length == Columns.Count);
          return new ListViewItem(subitems);
