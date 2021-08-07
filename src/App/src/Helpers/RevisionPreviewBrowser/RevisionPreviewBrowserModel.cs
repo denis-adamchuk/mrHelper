@@ -1,6 +1,7 @@
 ﻿#pragma warning disable 67  // Event never used
 
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using Aga.Controls.Tree;
 using mrHelper.StorageSupport;
@@ -62,7 +63,7 @@ namespace mrHelper.App.Helpers
          RevisionPreviewBrowserBaseItem parent, CompositeItem compositeItem)
       {
          List<RevisionPreviewBrowserBaseItem> items = new List<RevisionPreviewBrowserBaseItem>();
-         foreach (var child in compositeItem.ChildItems)
+         foreach (BaseItem child in compositeItem.ChildItems)
          {
             if (child is FolderItem folderItem)
             {
@@ -73,7 +74,17 @@ namespace mrHelper.App.Helpers
                items.Add(new RevisionPreviewBrowserFileItem(parent, this, fileItem));
             }
          }
-         return items;
+         return sortItems(items);
+      }
+
+      private IEnumerable<RevisionPreviewBrowserBaseItem> sortItems(
+         IEnumerable<RevisionPreviewBrowserBaseItem> items)
+      {
+         return items
+            // put folders first
+            .OrderBy(item => (item is RevisionPreviewBrowserFileItem))
+            // sort alphabetically
+            .ThenBy(item => item.Name);
       }
 
       public bool IsLeaf(TreePath treePath)
