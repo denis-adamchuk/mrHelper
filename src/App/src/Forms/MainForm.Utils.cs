@@ -898,7 +898,7 @@ namespace mrHelper.App.Forms
          while (true)
          {
             int prev = up ? toolStrip.Location.Y : toolStrip.Location.X;
-            if (prev == 1)
+            if (prev < 2)
             {
                break;
             }

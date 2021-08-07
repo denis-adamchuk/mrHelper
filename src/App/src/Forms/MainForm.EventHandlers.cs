@@ -87,6 +87,8 @@ namespace mrHelper.App.Forms
             Trace.TraceInformation("[MainForm] OnResize() calling StoreSplitterDistance()");
             getCurrentConnectionPage()?.StoreSplitterDistance();
          }
+
+         initToolBars();
       }
 
       protected override void OnResizeEnd(EventArgs e)
