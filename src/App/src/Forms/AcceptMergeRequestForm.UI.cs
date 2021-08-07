@@ -381,18 +381,35 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         int prevSelectedIndex = comboBoxCommit.SelectedIndex;
+         string prevSelectedSha = comboBoxCommit.SelectedIndex >= 0
+            ? (comboBoxCommit.Items[comboBoxCommit.SelectedIndex] as Commit).Id
+            : null;
 
          comboBoxCommit.Items.Clear();
          comboBoxCommit.Items.AddRange(_commits.ToArray());
 
-         if (prevSelectedIndex >= 0 && prevSelectedIndex < comboBoxCommit.Items.Count)
+         if (comboBoxCommit.Items.Count > 0)
          {
-            comboBoxCommit.SelectedIndex = prevSelectedIndex;
-         }
-         else if (comboBoxCommit.Items.Count > 0)
-         {
-            comboBoxCommit.SelectedIndex = comboBoxCommit.Items.Count - 1;
+            bool prevCommitSelected = false;
+            if (prevSelectedSha != null)
+            {
+               Commit prevSelectedCommit = comboBoxCommit.Items.Cast<Commit>()
+                  .FirstOrDefault(commit => commit.Id == prevSelectedSha);
+               if (prevSelectedCommit != null)
+               {
+                  int indexOfPrevSelectedCommit = comboBoxCommit.Items.IndexOf(prevSelectedCommit);
+                  if (indexOfPrevSelectedCommit != -1)
+                  {
+                     comboBoxCommit.SelectedIndex = indexOfPrevSelectedCommit;
+                     prevCommitSelected = true;
+                  }
+               }
+            }
+
+            if (!prevCommitSelected)
+            {
+               comboBoxCommit.SelectedIndex = comboBoxCommit.Items.Count - 1;
+            }
          }
 
          _invalidateCommitList = false;

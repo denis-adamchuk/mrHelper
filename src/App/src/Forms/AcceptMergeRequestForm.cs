@@ -90,7 +90,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void checkProjectProperties(IProjectCache projectCache)
+      private bool checkProjectProperties(IProjectCache projectCache)
       {
          IEnumerable<Project> fullProjectList = projectCache.GetProjects();
          Project selectedProject = fullProjectList
@@ -104,7 +104,9 @@ namespace mrHelper.App.Forms
             MessageBox.Show(message, "Unsupported project merge method", MessageBoxButtons.OK, MessageBoxIcon.Error);
             enableProcessingTimer();
             Close();
+            return false;
          }
+         return true;
       }
 
       private void applyMergeRequest(MergeRequest mergeRequest)
@@ -505,7 +507,11 @@ namespace mrHelper.App.Forms
             return null;
          }
 
-         checkProjectProperties(dataCache.ProjectCache);
+         if (!checkProjectProperties(dataCache.ProjectCache))
+         {
+            return null;
+         }
+
          refreshCommits(dataCache.MergeRequestCache);
          return dataCache.MergeRequestCache.GetMergeRequest(_mergeRequestKey);
       }
