@@ -24,18 +24,16 @@ namespace mrHelper.StorageSupport
 
          public class Item
          {
-            public Item(string old_Path, string new_Path, int added, int deleted)
+            public Item(string old_Path, string new_Path, DiffSize? diffSize)
             {
                Old_Path = old_Path;
                New_Path = new_Path;
-               Added = added;
-               Deleted = deleted;
+               DiffSize = diffSize;
             }
 
             public string Old_Path { get; }
             public string New_Path { get; }
-            public int Added { get; }
-            public int Deleted { get; }
+            public DiffSize? DiffSize { get; }
          }
 
          public IEnumerable<Item> Data => _data;
@@ -47,8 +45,8 @@ namespace mrHelper.StorageSupport
             _data.Clear();
             foreach (DiffStruct diff in diffs)
             {
-               DiffStructCounter.Count(diff, out int added, out int deleted);
-               _data.Add(new Item(diff.Old_Path, diff.New_Path, added, deleted));
+               DiffStructCounter.Count(diff, out DiffSize? diffSize);
+               _data.Add(new Item(diff.Old_Path, diff.New_Path, diffSize));
             }
          }
 

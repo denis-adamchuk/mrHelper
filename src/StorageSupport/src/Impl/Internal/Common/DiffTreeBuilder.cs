@@ -17,17 +17,17 @@ namespace mrHelper.StorageSupport
          DiffTree root = new DiffTree();
          foreach (DiffStruct diffStruct in diffStructs)
          {
-            DiffStructCounter.Count(diffStruct, out int added, out int deleted);
+            DiffStructCounter.Count(diffStruct, out DiffSize? diffSize);
             if (diffStruct.Deleted_File)
             {
                string[] splittedPath = splitPath(diffStruct.Old_Path);
-               DiffDescription data = new DiffDescription(0, 0, DiffKind.Deleted, null);
+               FileDiffDescription data = new FileDiffDescription(diffSize, DiffKind.Deleted, null);
                createMissingChilds(root, splittedPath, data);
             }
             else if (diffStruct.New_File)
             {
                string[] splittedPath = splitPath(diffStruct.New_Path);
-               DiffDescription data = new DiffDescription(added, 0, DiffKind.New, null);
+               FileDiffDescription data = new FileDiffDescription(diffSize, DiffKind.New, null);
                createMissingChilds(root, splittedPath, data);
             }
             else if (diffStruct.Renamed_File)
@@ -38,13 +38,13 @@ namespace mrHelper.StorageSupport
                {
                   string[] splittedPath = splitPath(diffStruct.Old_Path);
                   var kind = isMoved ? DiffKind.MovedFrom : DiffKind.RenamedFrom;
-                  DiffDescription data = new DiffDescription(0, 0, kind, newName);
+                  FileDiffDescription data = new FileDiffDescription(diffSize, kind, newName);
                   createMissingChilds(root, splittedPath, data);
                }
                {
                   string[] splittedPath = splitPath(diffStruct.New_Path);
                   var kind = isMoved ? DiffKind.MovedTo : DiffKind.RenamedTo;
-                  DiffDescription data = new DiffDescription(added, deleted, kind, oldName);
+                  FileDiffDescription data = new FileDiffDescription(diffSize, kind, oldName);
                   createMissingChilds(root, splittedPath, data);
                }
             }
@@ -53,7 +53,7 @@ namespace mrHelper.StorageSupport
                Debug.Assert(diffStruct.Old_Path == diffStruct.New_Path);
                string[] splittedPath = splitPath(diffStruct.New_Path);
                string anotherName = System.IO.Path.GetFileName(diffStruct.Old_Path);
-               DiffDescription data = new DiffDescription(added, deleted, DiffKind.Modified, anotherName);
+               FileDiffDescription data = new FileDiffDescription(diffSize, DiffKind.Modified, anotherName);
                createMissingChilds(root, splittedPath, data);
             }
          }
@@ -67,7 +67,7 @@ namespace mrHelper.StorageSupport
       }
 
       private static void createMissingChilds(
-         CompositeItem item, IEnumerable<string> remainingPath, DiffDescription data)
+         CompositeItem item, IEnumerable<string> remainingPath, FileDiffDescription data)
       {
          if (!remainingPath.Any())
          {

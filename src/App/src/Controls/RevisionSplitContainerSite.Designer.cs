@@ -20,7 +20,7 @@ namespace mrHelper.App.Controls
             components.Dispose();
          }
 
-         Program.Settings.FlatRevisionPreviewChanged -= onRevisionBrowserModeChanged;
+         Program.Settings.FlatRevisionPreviewChanged -= applyRevisionPreviewStyle;
 
          _repositoryAccessor?.Dispose();
 

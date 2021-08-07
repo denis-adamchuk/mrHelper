@@ -4,6 +4,18 @@ using System.Linq;
 
 namespace mrHelper.StorageSupport
 {
+   public struct DiffSize
+   {
+      public DiffSize(int added, int deleted)
+      {
+         Added = added;
+         Deleted = deleted;
+      }
+
+      public int Added { get; }
+      public int Deleted { get; }
+   }
+
    public class BaseItem
    {
       public BaseItem(string name)
@@ -12,8 +24,7 @@ namespace mrHelper.StorageSupport
       }
 
       public string Name;
-      public virtual int Added { get; }
-      public virtual int Deleted { get; }
+      public virtual DiffSize? DiffSize { get; }
    }
 
    public class CompositeItem : BaseItem
@@ -24,8 +35,11 @@ namespace mrHelper.StorageSupport
       }
 
       public List<BaseItem> ChildItems = new List<BaseItem>();
-      public override int Added => ChildItems.Sum(child => child.Added);
-      public override int Deleted => ChildItems.Sum(child => child.Deleted);
+      public override DiffSize? DiffSize =>
+         ChildItems.All(child => !child.DiffSize.HasValue)
+            ? new DiffSize?()
+            : new DiffSize(ChildItems.Sum(child => child.DiffSize?.Added ?? 0),
+                           ChildItems.Sum(child => child.DiffSize?.Deleted ?? 0));
    }
 
    public enum DiffKind
@@ -39,33 +53,30 @@ namespace mrHelper.StorageSupport
       Modified
    }
 
-   public struct DiffDescription
+   public struct FileDiffDescription
    {
-      public DiffDescription(int added, int deleted, DiffKind kind, string anotherName)
+      public FileDiffDescription(DiffSize? diffSize, DiffKind kind, string anotherName)
       {
-         Added = added;
-         Deleted = deleted;
+         DiffSize = diffSize;
          Kind = kind;
          AnotherName = anotherName;
       }
 
-      public int Added { get; }
-      public int Deleted { get; }
+      public DiffSize? DiffSize { get; }
       public DiffKind Kind { get; }
       public string AnotherName { get; }
    }
 
    public class FileDiffItem : BaseItem
    {
-      public FileDiffItem(string name, DiffDescription data)
+      public FileDiffItem(string name, FileDiffDescription data)
          : base(name)
       {
          Data = data;
       }
 
-      public DiffDescription Data;
-      public override int Added => Data.Added;
-      public override int Deleted => Data.Deleted;
+      public FileDiffDescription Data;
+      public override DiffSize? DiffSize => Data.DiffSize;
    }
 
    public class FolderItem : CompositeItem

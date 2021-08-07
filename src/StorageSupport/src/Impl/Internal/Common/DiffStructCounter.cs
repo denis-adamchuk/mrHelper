@@ -8,8 +8,14 @@ namespace mrHelper.StorageSupport
       private const string plus = "+";
       private const string minus = "-";
 
-      internal static void Count(DiffStruct diff, out int added, out int deleted)
+      internal static void Count(DiffStruct diff, out DiffSize? diffSize)
       {
+         if (string.IsNullOrEmpty(diff.Diff))
+         {
+            diffSize = null;
+            return;
+         }
+
          // cannot use out parameters inside anonymous lambdas
          int localAdded = 0;
          int localDeleted = 0;
@@ -21,8 +27,7 @@ namespace mrHelper.StorageSupport
                localAdded += s.StartsWith(plus) ? 1 : 0;
                localDeleted += s.StartsWith(minus) ? 1 : 0;
             });
-         added = localAdded;
-         deleted = localDeleted;
+         diffSize = new DiffSize(localAdded, localDeleted);
       }
    }
 }

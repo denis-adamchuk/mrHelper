@@ -23,6 +23,7 @@ namespace mrHelper.App.Controls
       public RevisionSplitContainerSite()
       {
          InitializeComponent();
+         applyRevisionPreviewStyle();
       }
 
       internal void Initialize(
@@ -34,7 +35,7 @@ namespace mrHelper.App.Controls
          _getRepositoryAccessor = getRepositoryAccessor;
          _getReviewedRevisions = getReviewedRevisions;
 
-         Program.Settings.FlatRevisionPreviewChanged += onRevisionBrowserModeChanged;
+         Program.Settings.FlatRevisionPreviewChanged += applyRevisionPreviewStyle;
       }
 
       internal void SetData(MergeRequestKey mrk, DataCache dataCache)
@@ -90,7 +91,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void onRevisionBrowserModeChanged()
+      private void applyRevisionPreviewStyle()
       {
          bool isRevisionPreviewTreeVisible = !Program.Settings.FlatRevisionPreview;
          revisionPreviewBrowser.Visible = isRevisionPreviewTreeVisible;

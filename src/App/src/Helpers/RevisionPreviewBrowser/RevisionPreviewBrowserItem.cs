@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
+using mrHelper.Common.Constants;
 using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Helpers
@@ -34,8 +34,8 @@ namespace mrHelper.App.Helpers
       internal FolderItem FolderItem { get; }
 
       public override string Name => FolderItem.Name;
-      public override string Added => FolderItem.Added.ToString();
-      public override string Deleted => FolderItem.Deleted.ToString();
+      public override string Added => FolderItem.DiffSize?.Added.ToString() ?? String.Empty;
+      public override string Deleted => FolderItem.DiffSize?.Deleted.ToString() ?? String.Empty;
    }
 
    internal class RevisionPreviewBrowserFileItem : RevisionPreviewBrowserBaseItem
@@ -49,11 +49,11 @@ namespace mrHelper.App.Helpers
 
       internal FileDiffItem FileItem { get; }
 
-      public override string Name => getName();
-      public override string Added => FileItem.Added.ToString();
-      public override string Deleted => FileItem.Deleted.ToString();
+      public override string Name => FileItem.Name;
+      public override string Added => getAdded();
+      public override string Deleted => getDeleted();
 
-      private string getName()
+      private string getAdded()
       {
          switch (FileItem.Data.Kind)
          {
@@ -62,11 +62,32 @@ namespace mrHelper.App.Helpers
             case DiffKind.Modified:
             case DiffKind.RenamedTo:
             case DiffKind.MovedTo:
-               return FileItem.Name;
+               return FileItem.DiffSize?.Added.ToString() ?? Constants.NoDataAtGitLab;
             case DiffKind.RenamedFrom:
-               return String.Format("{0} (renamed)", FileItem.Name);
+               return "renamed";
             case DiffKind.MovedFrom:
-               return String.Format("{0} (moved)", FileItem.Name);
+               return "moved";
+            default:
+               Debug.Assert(false);
+               break;
+         }
+         return String.Empty;
+      }
+
+      private string getDeleted()
+      {
+         switch (FileItem.Data.Kind)
+         {
+            case DiffKind.New:
+            case DiffKind.Deleted:
+            case DiffKind.Modified:
+            case DiffKind.RenamedTo:
+            case DiffKind.MovedTo:
+               return FileItem.DiffSize?.Deleted.ToString() ?? String.Empty;
+            case DiffKind.RenamedFrom:
+               return "renamed";
+            case DiffKind.MovedFrom:
+               return "moved";
             default:
                Debug.Assert(false);
                break;
