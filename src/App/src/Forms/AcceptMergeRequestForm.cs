@@ -200,15 +200,16 @@ namespace mrHelper.App.Forms
          bool? prevSquashNeeded = _isSquashNeeded;
          bool? prevRemoteBranchDeletionNeeded = _isRemoteBranchDeletionNeeded;
 
-         if (!_isSquashNeeded.HasValue)
-         {
-            _isSquashNeeded = mergeRequest.Squash && _commits.Length > 1;
-         }
-         else if (_commits.Length < 2)
+         if (_commits.Length < 2)
          {
             // If number of commits decreased to 1, reset the flag.
             // Checkbox will become invisible in updateControls().
-            _isSquashNeeded = false;
+            _isSquashNeeded = null;
+         }
+         else if (!_isSquashNeeded.HasValue)
+         {
+            // Initialize flag once number of commits is > 1
+            _isSquashNeeded = mergeRequest.Squash;
          }
 
          if (!_isRemoteBranchDeletionNeeded.HasValue)
@@ -219,7 +220,7 @@ namespace mrHelper.App.Forms
          if (prevSquashNeeded != _isSquashNeeded)
          {
             applySquashCommitMessageVisibility();
-            traceInformation(String.Format("Changed _isSquashNeeded to {0}", _isSquashNeeded.ToString()));
+            traceInformation(String.Format("Changed _isSquashNeeded to {0}", _isSquashNeeded?.ToString() ?? "N/A"));
          }
 
          if (prevRemoteBranchDeletionNeeded != _isRemoteBranchDeletionNeeded)
@@ -391,7 +392,7 @@ namespace mrHelper.App.Forms
 
       private string getSquashCommitMessage()
       {
-         if (!_isSquashNeeded.HasValue || !_isSquashNeeded.Value)
+         if (!_isSquashNeeded.GetValueOrDefault(false))
          {
             return null;
          }
@@ -597,8 +598,11 @@ namespace mrHelper.App.Forms
          // sometimes does not affect the merge. For instance, this occurs when
          // Merge_Error is already set to "Failed to squash", in this case simply
          // set "squash=false" has no effect.
-         MergeRequest mergeRequest = await setSquashAsync(_isSquashNeeded.Value);
-         Debug.Assert(mergeRequest.Squash == _isSquashNeeded.Value);
+         if (_isSquashNeeded.HasValue)
+         {
+            MergeRequest mergeRequest = await setSquashAsync(_isSquashNeeded.Value);
+            Debug.Assert(mergeRequest.Squash == _isSquashNeeded.Value);
+         }
       }
 
       async private Task<MergeRequest> toggleDraftAsync()

@@ -866,6 +866,7 @@ namespace mrHelper.App.Controls
       private void onGitRepositoryCloned(ILocalCommitStorage storage)
       {
          requestCommitStorageUpdate(storage.ProjectKey);
+         revisionSplitContainerSite.UpdatePreview();
       }
 
       /// <summary>

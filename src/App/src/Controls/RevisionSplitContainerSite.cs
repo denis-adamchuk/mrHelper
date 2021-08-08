@@ -52,6 +52,11 @@ namespace mrHelper.App.Controls
          clearRevisionBrowser();
       }
 
+      internal void UpdatePreview()
+      {
+         BeginInvoke(new Action(async () => await onRevisionSelectionChanged()));
+      }
+
       public SplitContainer SplitContainer => splitContainer;
 
       public RevisionBrowser RevisionBrowser => revisionBrowser;

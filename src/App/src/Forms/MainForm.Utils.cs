@@ -939,16 +939,19 @@ namespace mrHelper.App.Forms
             case ConfigurationHelper.ToolBarPosition.Top:
                moveToolstrips(toolStripContainer1.LeftToolStripPanel, toolStripContainer1.TopToolStripPanel);
                moveToolstrips(toolStripContainer1.RightToolStripPanel, toolStripContainer1.TopToolStripPanel);
+               moveToolstrips(toolStripContainer1.BottomToolStripPanel, toolStripContainer1.TopToolStripPanel);
                break;
 
             case ConfigurationHelper.ToolBarPosition.Left:
                moveToolstrips(toolStripContainer1.TopToolStripPanel, toolStripContainer1.LeftToolStripPanel);
                moveToolstrips(toolStripContainer1.RightToolStripPanel, toolStripContainer1.LeftToolStripPanel);
+               moveToolstrips(toolStripContainer1.BottomToolStripPanel, toolStripContainer1.LeftToolStripPanel);
                break;
 
             case ConfigurationHelper.ToolBarPosition.Right:
-               moveToolstrips(toolStripContainer1.TopToolStripPanel, toolStripContainer1.LeftToolStripPanel);
+               moveToolstrips(toolStripContainer1.TopToolStripPanel, toolStripContainer1.RightToolStripPanel);
                moveToolstrips(toolStripContainer1.LeftToolStripPanel, toolStripContainer1.RightToolStripPanel);
+               moveToolstrips(toolStripContainer1.BottomToolStripPanel, toolStripContainer1.RightToolStripPanel);
                break;
          }
 

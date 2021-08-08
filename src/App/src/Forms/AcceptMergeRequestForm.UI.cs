@@ -20,6 +20,7 @@ namespace mrHelper.App.Forms
          base.OnLoad(e);
          subscribeToTimer();
          invokeFetchAndApplyOnInitialize();
+         applySquashCommitMessageVisibility();
       }
 
       protected override void OnClosing(CancelEventArgs e)
@@ -73,7 +74,7 @@ namespace mrHelper.App.Forms
       {
          string traceMessage = String.Format(
             "Starting Merge by user request. _isSquashNeeded: {0}, _isRemoteBranchDeletionNeeded: {1}",
-            _isSquashNeeded.ToString(), _isRemoteBranchDeletionNeeded.ToString());
+            _isSquashNeeded?.ToString() ?? "N/A", _isRemoteBranchDeletionNeeded.ToString());
          traceInformation(traceMessage);
 
          int attempts = 0;
@@ -105,7 +106,10 @@ namespace mrHelper.App.Forms
                   throw;
                }
             }
-            postProcessMerge(mergeRequest);
+            if (mergeRequest != null)
+            {
+               postProcessMerge(mergeRequest);
+            }
             traceInformation(String.Format("attempts: {0}", attempts));
          }
          catch (MergeRequestEditorException ex)
@@ -152,13 +156,14 @@ namespace mrHelper.App.Forms
       private void checkBoxSquash_CheckedChanged(object sender, EventArgs e)
       {
          Debug.Assert(sender == checkBoxSquash);
+         Debug.Assert(_isSquashNeeded.HasValue);
          _isSquashNeeded = checkBoxSquash.Checked;
          applySquashCommitMessageVisibility();
       }
 
       private void applySquashCommitMessageVisibility()
       {
-         if (!_isSquashNeeded.Value)
+         if (!_isSquashNeeded.GetValueOrDefault(false))
          {
             int newFormHeight = _formDefaultMinimumHeight - _groupBoxCommitMessageDefaultHeight;
             this.MinimumSize = new System.Drawing.Size(this.MinimumSize.Width, newFormHeight);
@@ -249,8 +254,11 @@ namespace mrHelper.App.Forms
          updateMergeControls(areDependenciesResolved);
          updateCommitList();
 
-         checkBoxSquash.Checked = _isSquashNeeded.Value;
-         checkBoxSquash.Visible = _commits.Length > 1;
+         if (_isSquashNeeded.HasValue)
+         {
+            checkBoxSquash.Checked = _isSquashNeeded.Value;
+         }
+         checkBoxSquash.Visible = _isSquashNeeded.HasValue;
          checkBoxSquash.Enabled = !_isAwaiting;
          checkBoxDeleteSourceBranch.Checked = _isRemoteBranchDeletionNeeded.Value;
          checkBoxDeleteSourceBranch.Enabled = !_isAwaiting;

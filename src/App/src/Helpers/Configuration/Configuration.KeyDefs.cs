@@ -47,7 +47,7 @@ namespace mrHelper.App.Helpers
       private static readonly bool   WordWrapLongRowsDefaultValue = true;
 
       private static readonly string FlatRevisionPreviewKeyName      = "FlatRevisionPreview";
-      private static readonly bool   FlatRevisionPreviewDefaultValue = true;
+      private static readonly bool   FlatRevisionPreviewDefaultValue = false;
 
       private static readonly string DiffContextDepthKeyName = "DiffContextDepth";
       private static readonly int    DiffContextDepthDefaultValue = 2;
