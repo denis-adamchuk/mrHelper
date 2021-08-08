@@ -735,6 +735,7 @@ namespace mrHelper.App.Forms
          this.toolStripHosts.ClickThrough = true;
          this.toolStripHosts.Dock = System.Windows.Forms.DockStyle.None;
          this.toolStripHosts.ImageScalingSize = new System.Drawing.Size(24, 24);
+         this.toolStripHosts.GripStyle = ToolStripGripStyle.Hidden;
          this.toolStripHosts.Location = new System.Drawing.Point(3, 24);
          this.toolStripHosts.Name = "toolStripHosts";
          this.toolStripHosts.Size = new System.Drawing.Size(111, 25);
@@ -766,6 +767,7 @@ namespace mrHelper.App.Forms
             this.toolStripButtonRefreshList,
             this.toolStripButtonOpenFromClipboard,
             this.toolStripGlobalActionsSeparator});
+         this.toolStripActions.GripStyle = ToolStripGripStyle.Hidden;
          this.toolStripActions.Location = new System.Drawing.Point(114, 24);
          this.toolStripActions.Name = "toolStripActions";
          this.toolStripActions.Size = new System.Drawing.Size(568, 31);
@@ -964,6 +966,7 @@ namespace mrHelper.App.Forms
          this.toolStripCustomActions.ClickThrough = true;
          this.toolStripCustomActions.Dock = System.Windows.Forms.DockStyle.None;
          this.toolStripCustomActions.ImageScalingSize = new System.Drawing.Size(24, 24);
+         this.toolStripCustomActions.GripStyle = ToolStripGripStyle.Hidden;
          this.toolStripCustomActions.Location = new System.Drawing.Point(39, 55);
          this.toolStripCustomActions.Name = "toolStripCustomActions";
          this.toolStripCustomActions.Size = new System.Drawing.Size(111, 25);

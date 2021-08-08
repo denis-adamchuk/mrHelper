@@ -147,6 +147,7 @@ namespace mrHelper.App.Forms
          toolStripButtonCancelTimer.Enabled = true;
          toolStripTextBoxTrackedTime.Text = DefaultTimeTrackingTextBoxText;
          toolStripButtonStartStopTimer.Image = Properties.Resources.stop_24x24;
+         pullCustomActionToolBar();
 
          updateTrayAndTaskBar();
          addOperationRecord("Time tracking has started");
@@ -161,6 +162,7 @@ namespace mrHelper.App.Forms
          toolStripButtonCancelTimer.Enabled = false;
          toolStripTextBoxTrackedTime.Text = connectionPage?.GetTrackedTimeAsText() ?? DefaultTimeTrackingTextBoxText;
          toolStripButtonStartStopTimer.Image = Properties.Resources.play_24x24;
+         pullCustomActionToolBar();
 
          updateTrayAndTaskBar();
 
@@ -909,12 +911,10 @@ namespace mrHelper.App.Forms
             int current = up ? toolStrip.Location.Y : toolStrip.Location.X;
             if (current > prev)
             {
-               if (min != int.MaxValue)
-               {
-                  toolStrip.Location = up
-                     ? new Point(toolStrip.Location.X, min)
-                     : new Point(min, toolStrip.Location.Y);
-               }
+               int newValue = min != int.MaxValue ? min : prev;
+               toolStrip.Location = up
+                  ? new Point(toolStrip.Location.X, newValue)
+                  : new Point(newValue, toolStrip.Location.Y);
                break;
             }
 
@@ -926,6 +926,53 @@ namespace mrHelper.App.Forms
 
             break; // current == prev
          }
+      }
+
+      private void pullCustomActionToolBar()
+      {
+         toolStripContainer1.SuspendLayout();
+
+         if (toolStripContainer1.TopToolStripPanel.Controls.Contains(toolStripActions))
+         {
+            toolStripCustomActions.Location = new Point(
+               toolStripActions.Location.X + toolStripActions.Width,
+               toolStripCustomActions.Location.Y);
+            pullToolBar(toolStripCustomActions, false);
+         }
+         else
+         {
+            toolStripCustomActions.Location = new Point(
+               toolStripCustomActions.Location.X,
+               toolStripActions.Location.Y + toolStripActions.Height);
+            pullToolBar(toolStripCustomActions, true);
+         }
+
+         toolStripContainer1.ResumeLayout();
+      }
+
+      private void pullToolBars()
+      {
+         toolStripContainer1.SuspendLayout();
+
+         // Pull first control closer to the border and minimize gaps between tool bars
+         if (toolStripContainer1.TopToolStripPanel.Controls.Contains(toolStripActions))
+         {
+            if (isToolStripHostsVisible())
+            {
+               pullToolBar(toolStripHosts, false);
+               toolStripActions.Location = new Point(
+                  toolStripHosts.Location.X + toolStripHosts.Width,
+                  toolStripActions.Location.Y);
+            }
+            pullToolBar(toolStripActions, false);
+         }
+         else
+         {
+            pullToolBar(toolStripActions, true);
+         }
+         pullCustomActionToolBar();
+
+         toolStripContainer1.ResumeLayout();
       }
 
       private void initToolBars()
@@ -960,34 +1007,11 @@ namespace mrHelper.App.Forms
          toolStripActions.Location = new System.Drawing.Point(0, 0);
          toolStripHosts.Location = new System.Drawing.Point(0, 0);
 
-         // Pull first control closer to the border and minimize gaps between tool bars
-         if (toolStripContainer1.TopToolStripPanel.Controls.Contains(toolStripActions))
-         {
-            if (isToolStripHostsVisible())
-            {
-               pullToolBar(toolStripHosts, false);
-               toolStripActions.Location = new Point(
-                  toolStripHosts.Location.X + toolStripHosts.Width,
-                  toolStripActions.Location.Y);
-            }
-            else
-            {
-               pullToolBar(toolStripActions, false);
-            }
-            toolStripCustomActions.Location = new Point(
-               toolStripActions.Location.X + toolStripActions.Width,
-               toolStripCustomActions.Location.Y);
-         }
-         else
-         {
-            pullToolBar(toolStripActions, true);
-            toolStripCustomActions.Location = new Point(
-               toolStripCustomActions.Location.X,
-               toolStripActions.Location.Y + toolStripActions.Height);
-         }
+         pullToolBars();
 
          // Place menu
          menuStrip1.Location = new System.Drawing.Point(0, 0);
+
          toolStripContainer1.ResumeLayout();
       }
 

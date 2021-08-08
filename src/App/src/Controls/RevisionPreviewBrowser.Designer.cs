@@ -83,21 +83,21 @@
          this.treeColumn1.Header = "Name";
          this.treeColumn1.SortOrder = System.Windows.Forms.SortOrder.None;
          this.treeColumn1.TooltipText = "Name";
-         this.treeColumn1.Width = 300;
+         this.treeColumn1.Width = 260;
          // 
          // treeColumn2
          // 
          this.treeColumn2.Header = "Added";
          this.treeColumn2.SortOrder = System.Windows.Forms.SortOrder.None;
          this.treeColumn2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-         this.treeColumn2.Width = 140;
+         this.treeColumn2.Width = 120;
          // 
          // treeColumn3
          // 
          this.treeColumn3.Header = "Deleted";
          this.treeColumn3.SortOrder = System.Windows.Forms.SortOrder.None;
          this.treeColumn3.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
-         this.treeColumn3.Width = 140;
+         this.treeColumn3.Width = 120;
          // 
          // _name
          // 
