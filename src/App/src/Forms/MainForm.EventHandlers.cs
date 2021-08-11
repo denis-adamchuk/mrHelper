@@ -497,7 +497,7 @@ namespace mrHelper.App.Forms
       private void toolStripButtonRefreshList_Click(object sender, System.EventArgs e)
       {
          showWarningOnReloadList();
-         getCurrentConnectionPage()?.ReloadAll();
+         getCurrentConnectionPage()?.ReloadLive();
       }
 
       private void toolStripButtonOpenFromClipboard_Click(object sender, System.EventArgs e)

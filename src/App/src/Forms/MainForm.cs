@@ -19,7 +19,7 @@ namespace mrHelper.App.Forms
 
       private static readonly string DefaultTimeTrackingTextBoxText = "00:00:00";
 
-      private static readonly string RefreshButtonTooltip = "Refresh merge request list in the background";
+      private static readonly string RefreshButtonTooltip = "Refresh Live merge request list in the background";
 
       private static readonly int OperationRecordHistoryDepth = 10;
 

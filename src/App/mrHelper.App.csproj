@@ -246,6 +246,7 @@
     </Compile>
     <Compile Include="src\Forms\EditSearchQueryFormState.cs" />
     <Compile Include="src\Forms\Helpers\DiscussionLayout.cs" />
+    <Compile Include="src\Helpers\CommandState.cs" />
     <Compile Include="src\Helpers\Configuration\DefaultWorkflowLoader.cs" />
     <Compile Include="src\Helpers\Configuration\RawDictionaryStringHelper.cs" />
     <Compile Include="src\Helpers\GitLab\AsyncDiscussionHelper.cs" />

@@ -136,6 +136,8 @@ namespace mrHelper.GitLabClient.Managers
          }
          Debug.Assert(!_updating.Contains(mrk));
 
+         _closed.Remove(mrk);
+
          try
          {
             await updateDiscussionsAsync(mrk, DiscussionUpdateType.PeriodicUpdate);

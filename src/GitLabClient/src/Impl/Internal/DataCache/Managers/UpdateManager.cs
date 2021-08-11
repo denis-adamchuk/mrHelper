@@ -91,7 +91,7 @@ namespace mrHelper.GitLabClient.Managers
             "enqueueOneShotTimer() called for mrk {0}, interval={1}, onUpdateFinished={2}, _oneShotTimers.Count={3}",
             mrkString, interval, onUpdateFinished == null ? "null" : "non-null", _oneShotTimers.Count));
 
-         if (interval < 1)
+         if (interval < 1 || _timer == null)
          {
             return;
          }

@@ -399,8 +399,9 @@ namespace mrHelper.App.Forms
             foreach (ToolStripItem menuItem in getCustomActionMenuItems())
             {
                ICommand command = (ICommand)menuItem.Tag;
-               menuItem.Enabled = connectionPage.IsCommandEnabled(command, out bool isVisible);
-               menuItem.Visible = isVisible;
+               CommandState commandState = connectionPage.IsCommandEnabledForSelectedMergeRequest(command);
+               menuItem.Enabled = commandState.Enabled;
+               menuItem.Visible = commandState.Visible;
             }
             toolStripCustomActions.ResumeLayout();
          }

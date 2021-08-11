@@ -46,13 +46,13 @@ namespace mrHelper.App.Controls
          DiscussionSort discussionSort,
          DiscussionFilter displayFilter,
          DiscussionLayout discussionLayout,
-         AsyncDiscussionLoader discussionLoader,
          AsyncDiscussionHelper discussionHelper,
          IEnumerable<ICommand> commands,
          ICommandCallback commandCallback,
          Action<string> onFontSelected,
          ColorScheme colorScheme,
-         IsCommandEnabledFn isCommandEnabled)
+         Func<ICommand, CommandState> isCommandEnabled,
+         Action onRefresh)
       {
          _loadingConfiguration = true;
          _discussionSort = discussionSort;
@@ -67,7 +67,7 @@ namespace mrHelper.App.Controls
 
          emulateNativeLineBreaksToolStripMenuItem.Checked = Program.Settings.EmulateNativeLineBreaksInDiscussions;
 
-         _discussionLoader = discussionLoader;
+         _onRefresh = onRefresh;
          _discussionHelper = discussionHelper;
 
          _isCommandEnabled = isCommandEnabled;
@@ -81,6 +81,11 @@ namespace mrHelper.App.Controls
          _loadingConfiguration = false;
       }
 
+      internal void OnMergeRequestEvent()
+      {
+         updateCustomActionVisibility();
+      }
+
       private void onConfigureColorsClicked(object sender, EventArgs e)
       {
          using (ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.Discussions, _colorScheme))
@@ -91,6 +96,7 @@ namespace mrHelper.App.Controls
 
       private void onRefreshMenuItemClicked(object sender, EventArgs e)
       {
+         Trace.TraceInformation("[DiscussionsFormMenu] Refreshing by user request");
          onRefreshAction();
       }
 
@@ -237,9 +243,7 @@ namespace mrHelper.App.Controls
 
       private void onRefreshAction()
       {
-         Trace.TraceInformation("[DiscussionsFormMenu] Refreshing by user request");
-         _discussionLoader.LoadDiscussions();
-         updateCustomActionVisibility();
+         _onRefresh?.Invoke();
       }
 
       private void onAddThreadAction()
@@ -248,6 +252,7 @@ namespace mrHelper.App.Controls
          {
             if (await _discussionHelper.AddThreadAsync(ParentForm))
             {
+               Trace.TraceInformation("[DiscussionsFormMenu] onAddThreadAction()");
                onRefreshAction();
             }
          }));
@@ -259,6 +264,7 @@ namespace mrHelper.App.Controls
          {
             if (await _discussionHelper.AddCommentAsync(ParentForm))
             {
+               Trace.TraceInformation("[DiscussionsFormMenu] onAddCommentAction()");
                onRefreshAction();
             }
          }));
@@ -279,6 +285,7 @@ namespace mrHelper.App.Controls
                MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                return;
             }
+            Trace.TraceInformation("[DiscussionsFormMenu] onCommandAction({0})", command.Name);
             onRefreshAction();
          }));
       }
@@ -290,8 +297,9 @@ namespace mrHelper.App.Controls
             ICommand command = (ICommand)menuItem.Tag;
             if (command != null)
             {
-               menuItem.Enabled = _isCommandEnabled(command, out bool isVisible);
-               menuItem.Visible = isVisible;
+               CommandState state = _isCommandEnabled(command);
+               menuItem.Enabled = state.Enabled;
+               menuItem.Visible = state.Visible;
             }
          }
       }
@@ -508,10 +516,10 @@ namespace mrHelper.App.Controls
       private DiscussionSort _discussionSort;
       private DiscussionFilter _displayFilter; // filters out discussions by user preferences
       private DiscussionLayout _discussionLayout;
-      private AsyncDiscussionLoader _discussionLoader;
+      private Action _onRefresh;
       private AsyncDiscussionHelper _discussionHelper;
       private Action<string> _onFontSelected;
-      private IsCommandEnabledFn _isCommandEnabled;
+      private Func<ICommand, CommandState> _isCommandEnabled;
       private ColorScheme _colorScheme;
       private bool _loadingConfiguration;
       private readonly ToolStripMenuItem[] _sortMenuItemGroup;

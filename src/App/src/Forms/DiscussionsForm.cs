@@ -13,8 +13,6 @@ using mrHelper.Core.Context;
 
 namespace mrHelper.App.Forms
 {
-   public delegate bool IsCommandEnabledFn(ICommand command, out bool isVisible);
-
    internal partial class DiscussionsForm : CustomFontForm, ICommandCallback
    {
       public DiscussionsForm(
@@ -22,11 +20,13 @@ namespace mrHelper.App.Forms
          string mergeRequestTitle, User mergeRequestAuthor,
          ColorScheme colorScheme, AsyncDiscussionLoader discussionLoader, AsyncDiscussionHelper discussionHelper,
          string webUrl, Shortcuts shortcuts,
-         IEnumerable<ICommand> commands, IsCommandEnabledFn isCommandEnabled)
+         IEnumerable<ICommand> commands, Func<ICommand, CommandState> isCommandEnabled,
+         Action onRefresh)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
 
+         _onRefresh = onRefresh;
          _discussionLoader = discussionLoader;
          _discussionLoader.StatusChanged += onDiscussionLoaderStatusChanged;
 
@@ -65,7 +65,7 @@ namespace mrHelper.App.Forms
          searchPanel.Initialize(discussionPanel);
 
          discussionMenu.Initialize(discussionSort, displayFilter, discussionLayout,
-            discussionLoader, discussionHelper, commands, this, applyFont, colorScheme, isCommandEnabled);
+            discussionHelper, commands, this, applyFont, colorScheme, isCommandEnabled, onRefreshByUser);
 
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);
@@ -73,6 +73,11 @@ namespace mrHelper.App.Forms
 
          Text = DefaultCaption;
          MainMenuStrip = discussionMenu.MenuStrip;
+      }
+
+      internal void OnMergeRequestEvent()
+      {
+         discussionMenu.OnMergeRequestEvent();
       }
 
       internal void Restore()
@@ -153,6 +158,12 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void onRefreshByUser()
+      {
+         _discussionLoader.LoadDiscussions();
+         _onRefresh?.Invoke();
+      }
+
       private void onSaveAsDefaultClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
          ConfigurationHelper.SetDiffContextPosition(Program.Settings, _discussionLayout.DiffContextPosition);
@@ -218,6 +229,7 @@ namespace mrHelper.App.Forms
 
       private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _mergeRequestTitle;
+      private readonly Action _onRefresh;
       private readonly AsyncDiscussionLoader _discussionLoader;
       private readonly DiscussionLayout _discussionLayout;
       private FormWindowState _previousState;

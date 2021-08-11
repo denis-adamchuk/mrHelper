@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Windows.Forms;
 using GitLabSharp.Entities;
+using mrHelper.App.Forms;
+using mrHelper.CommonControls.Tools;
 using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Controls
@@ -54,10 +57,15 @@ namespace mrHelper.App.Controls
       {
          onDiscussionManagerEvent();
 
-         var fmkOpt = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
-         if (fmkOpt.HasValue && mrk.Equals(fmkOpt.Value))
+         MergeRequestKey? currentMRK = getMergeRequestKey(null);
+         MergeRequest currentMR = getMergeRequest(null);
+         if (currentMRK.HasValue && currentMR != null)
          {
-            descriptionSplitContainerSite.UpdateData(fmkOpt.Value, getDataCache(getCurrentTabDataCacheType()));
+            FullMergeRequestKey fmk = new FullMergeRequestKey(currentMRK.Value.ProjectKey, currentMR);
+            if (mrk.Equals(fmk))
+            {
+               descriptionSplitContainerSite.UpdateData(fmk, getDataCache(getCurrentTabDataCacheType()));
+            }
          }
       }
 
@@ -72,6 +80,19 @@ namespace mrHelper.App.Controls
 
       private void onRecentMergeRequestEvent(UserEvents.MergeRequestEvent e) =>
          onMergeRequestEvent(e, EDataCacheType.Recent);
+
+      private void onSearchMergeRequestEvent(UserEvents.MergeRequestEvent e) =>
+         onMergeRequestEvent(e, EDataCacheType.Search);
+
+      private void notifyDiscussionForm(MergeRequestKey mrk)
+      {
+         bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
+         Form formExisting = WinFormsHelpers.FindFormByTagAndName("DiscussionsForm", doesMatchTag);
+         if (formExisting is DiscussionsForm existingDiscussionsForm)
+         {
+            existingDiscussionsForm.OnMergeRequestEvent();
+         }
+      }
 
       private void onMergeRequestEvent(UserEvents.MergeRequestEvent e, EDataCacheType type)
       {
@@ -99,6 +120,10 @@ namespace mrHelper.App.Controls
          }
 
          updateMergeRequestList(type);
+         if (e.Details || e.Commits || e.Labels)
+         {
+            notifyDiscussionForm(mrk);
+         }
 
          FullMergeRequestKey? fmk = getListView(type).GetSelectedMergeRequest();
          if (!fmk.HasValue || !fmk.Value.Equals(e.FullMergeRequestKey) || getCurrentTabDataCacheType() != type)

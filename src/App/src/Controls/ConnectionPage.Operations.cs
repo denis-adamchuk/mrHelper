@@ -49,7 +49,7 @@ namespace mrHelper.App.Controls
          }
 
          BeginInvoke(new Action(async () => await applyChangesToMergeRequestAsync(
-            dataCache, HostName, CurrentUser, fmk.Value, fullUserList)));
+            HostName, CurrentUser, fmk.Value, fullUserList)));
       }
 
       private void acceptSelectedMergeRequest()
@@ -313,9 +313,11 @@ namespace mrHelper.App.Controls
             parameters.AssigneeUserName, firstNote);
       }
 
-      async private Task applyChangesToMergeRequestAsync(DataCache dataCache, string hostname, User currentUser,
+      async private Task applyChangesToMergeRequestAsync(string hostname, User currentUser,
          FullMergeRequestKey item, IEnumerable<User> fullUserList)
       {
+         EDataCacheType mode = EDataCacheType.Live;
+         DataCache dataCache = getDataCache(mode);
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(dataCache.DiscussionCache, mrk);
          using (MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
@@ -343,7 +345,7 @@ namespace mrHelper.App.Controls
 
             if (modified)
             {
-               requestUpdates(EDataCacheType.Live, mrk, new int[] {
+               requestUpdates(mode, mrk, new int[] {
                Program.Settings.OneShotUpdateFirstChanceDelayMs,
                Program.Settings.OneShotUpdateSecondChanceDelayMs });
             }
@@ -453,6 +455,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
+         // TODO This likely can be checked before calling showDiscussionForm() to avoid some preparation steps.
          bool doesMatchTag(object tag) => tag != null && ((MergeRequestKey)(tag)).Equals(mrk);
          Form formExisting = WinFormsHelpers.FindFormByTagAndName("DiscussionsForm", doesMatchTag);
          if (formExisting is DiscussionsForm existingDiscussionsForm)
@@ -496,7 +499,8 @@ namespace mrHelper.App.Controls
 
             DiscussionsForm discussionsForm = new DiscussionsForm(
                git, currentUser, mrk, discussions, title, author, _colorScheme,
-               discussionLoader, discussionHelper, webUrl, _shortcuts, GetCustomActionList(), IsCommandEnabled)
+               discussionLoader, discussionHelper, webUrl, _shortcuts, GetCustomActionList(),
+               cmd => isCommandEnabledInDiscussionsView(mrk, cmd), () => reloadByDiscussionsViewRequest(mrk))
             {
                Tag = mrk
             };

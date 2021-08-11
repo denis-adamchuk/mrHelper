@@ -116,35 +116,47 @@ namespace mrHelper.App.Controls
          selectTab(EDataCacheType.Search);
       }
 
-      internal bool IsCommandEnabled(ICommand command, out bool isVisible)
+      internal CommandState IsCommandEnabledForSelectedMergeRequest(ICommand command)
       {
-         isVisible = false;
-
          MergeRequestKey? mrk = getMergeRequestKey(null);
          if (!mrk.HasValue)
          {
-            return false;
+            return new CommandState(false, false);
+         }
+         CommandState? commandStateOpt = isCommandEnabledInDiscussionsView(
+            getCurrentTabDataCacheType(), mrk.Value, command);
+         return commandStateOpt.HasValue ? commandStateOpt.Value : new CommandState(false, false);
+      }
+
+      private CommandState? isCommandEnabledInDiscussionsView(EDataCacheType mode, MergeRequestKey mrk, ICommand command)
+      {
+         DataCache dataCache = getDataCache(mode);
+         MergeRequest mergeRequest = dataCache?.MergeRequestCache?.GetMergeRequest(mrk);
+         if (mergeRequest == null)
+         {
+            return null;
          }
 
-         DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
-         User author = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Author;
-         IEnumerable<string> labels = dataCache?.MergeRequestCache?.GetMergeRequest(mrk.Value)?.Labels;
-         IEnumerable<User> approvedBy = dataCache?.MergeRequestCache?.GetApprovals(mrk.Value)?.Approved_By?
+         User author = mergeRequest.Author;
+         IEnumerable<string> labels = mergeRequest.Labels;
+         IEnumerable<User> approvedBy = dataCache.MergeRequestCache.GetApprovals(mrk)?.Approved_By?
             .Select(item => item.User) ?? Array.Empty<User>();
          if (author == null || labels == null || approvedBy == null || _expressionResolver == null)
          {
             Debug.Assert(false);
-            return false;
+            return null;
          }
 
          IEnumerable<string> resolveCollection(IEnumerable<string> coll) =>
             coll.Select(item => String.IsNullOrEmpty(item) ? String.Empty : _expressionResolver.Resolve(item));
 
          IEnumerable<string> resolvedVisibleIf = resolveCollection(command.VisibleIf.Split(','));
-         isVisible = GitLabClient.Helpers.CheckConditions(resolvedVisibleIf, approvedBy, labels, author);
+         var isVisible = GitLabClient.Helpers.CheckConditions(resolvedVisibleIf, approvedBy, labels, author);
 
          IEnumerable<string> resolvedEnabledIf = resolveCollection(command.EnabledIf.Split(','));
-         return GitLabClient.Helpers.CheckConditions(resolvedEnabledIf, approvedBy, labels, author);
+         var isEnabled = GitLabClient.Helpers.CheckConditions(resolvedEnabledIf, approvedBy, labels, author);
+
+         return new CommandState(isEnabled, isVisible);
       }
 
       internal bool AreCommandsEnabled()
@@ -193,14 +205,9 @@ namespace mrHelper.App.Controls
          showDiscussionsForSelectedMergeRequest();
       }
 
-      internal void ReloadAll()
+      internal void ReloadLive()
       {
          reloadMergeRequestsByUserRequest(getDataCache(EDataCacheType.Live));
-      }
-
-      internal void ReloadOne(MergeRequestKey mrk, int[] periods)
-      {
-         requestUpdates(EDataCacheType.Live, mrk, periods);
       }
 
       internal void ReloadSelected()
@@ -208,9 +215,20 @@ namespace mrHelper.App.Controls
          refreshSelectedMergeRequest();
       }
 
+      internal void ReloadOne(MergeRequestKey mrk)
+      {
+         // In general case MR can belong to multiple DataCache at once
+         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
+         {
+            requestUpdates(mode, mrk, new int[] {
+               Program.Settings.OneShotUpdateFirstChanceDelayMs,
+               Program.Settings.OneShotUpdateSecondChanceDelayMs });
+         }
+      }
+
       internal void ReloadAllOnConnectionRestore()
       {
-         ReloadAll();
+         ReloadLive();
          reloadMergeRequestsByUserRequest(getDataCache(EDataCacheType.Recent));
       }
 

@@ -24,15 +24,12 @@ namespace mrHelper.GitLabClient.Managers
          _cacheUpdater = cacheUpdater;
          _listRefreshTimestamp = DateTime.Now;
 
-         if (dataCacheContext.UpdateRules.UpdateMergeRequestsPeriod.HasValue)
-         {
-            _updateManager = new UpdateManager(dataCacheContext, hostname, hostProperties,
-               queryCollection, _cacheUpdater, networkOperationStatusListener,
-               isApprovalStatusSupported);
-            _updateManager.MergeRequestEvent += onUpdate;
-            _updateManager.MergeRequestListRefreshed += onListRefreshed;
-            _updateManager.MergeRequestRefreshed += onMergeRequestRefreshed;
-         }
+         _updateManager = new UpdateManager(dataCacheContext, hostname, hostProperties,
+            queryCollection, _cacheUpdater, networkOperationStatusListener,
+            isApprovalStatusSupported);
+         _updateManager.MergeRequestEvent += onUpdate;
+         _updateManager.MergeRequestListRefreshed += onListRefreshed;
+         _updateManager.MergeRequestRefreshed += onMergeRequestRefreshed;
       }
 
       public void Dispose()

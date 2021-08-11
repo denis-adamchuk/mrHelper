@@ -10,6 +10,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.GitLabClient;
 using static mrHelper.App.Helpers.ConfigurationHelper;
 using mrHelper.Common.Constants;
+using mrHelper.CustomActions;
 
 namespace mrHelper.App.Controls
 {
@@ -879,6 +880,46 @@ namespace mrHelper.App.Controls
          CanEditChanged?.Invoke(this);
          CanMergeChanged?.Invoke(this);
          CanCreateNewChanged?.Invoke(this);
+      }
+
+      private CommandState isCommandEnabledInDiscussionsView(MergeRequestKey mrk, ICommand command)
+      {
+         // In Discussions view we cannot say what DataCache contains MR in advance,
+         // because during Discussions view lifetime, MR can be removed from the original DataCache.
+         // Find out Data Cache with the latest MRRefreshTime for mrk.
+
+         EDataCacheType bestMode = EDataCacheType.Live;
+         DateTime bestRefreshTime = DateTime.MinValue;
+         foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
+         {
+            DataCache dataCache = getDataCache(mode);
+            IMergeRequestCache mergeRequestCache = dataCache?.MergeRequestCache;
+            if (mergeRequestCache != null)
+            {
+               DateTime refreshTime = mergeRequestCache.GetMergeRequestRefreshTime(mrk);
+               if (refreshTime > bestRefreshTime)
+               {
+                  bestMode = mode;
+                  bestRefreshTime = refreshTime;
+               }
+            }
+         }
+
+         CommandState? commandStateOpt = isCommandEnabledInDiscussionsView(bestMode, mrk, command);
+         if (commandStateOpt.HasValue)
+         {
+            return commandStateOpt.Value;
+         }
+         return new CommandState(false, false);
+      }
+
+      private void reloadByDiscussionsViewRequest(MergeRequestKey mrk)
+      {
+         // In Discussions view we cannot say what DataCache contains MR in advance,
+         // because during Discussions view lifetime, MR can be removed from the original DataCache.
+         // ReloadOne() updates all Data Caches.
+
+         ReloadOne(mrk);
       }
    }
 }

@@ -631,9 +631,7 @@ namespace mrHelper.App.Forms
                bool reload = command.Reload;
                if (reload)
                {
-                  connectionPage.ReloadOne(mergeRequestKey, new int[] {
-                     Program.Settings.OneShotUpdateFirstChanceDelayMs,
-                     Program.Settings.OneShotUpdateSecondChanceDelayMs });
+                  connectionPage.ReloadOne(mergeRequestKey);
                }
             };
             toolStripCustomActions.Items.Add(menuItem);

@@ -236,18 +236,11 @@ namespace mrHelper.App.Controls
 
       private void createLiveDataCacheAndDependencies()
       {
-         // The idea is that:
-         // 1. Already cached MR that became closed remotely will not be removed from the cache
-         // 2. Open MR that are missing in the cache, will be added to the cache
-         // 3. Open MR that exist in the cache, will be updated
-         // 4. Non-cached MR that are closed remotely, will not be added to the cache even if directly requested by IId
-         bool updateOnlyOpened = true;
 
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Live",
             new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
-            new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, Program.Settings.AutoUpdatePeriodMs,
-            updateOnlyOpened), true, true);
+            getDataCacheUpdateRules(EDataCacheType.Live), true, true);
          _liveDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Live).SetDataCache(_liveDataCache);
          getListView(EDataCacheType.Live).SetFilter(_mergeRequestFilter);
@@ -336,13 +329,26 @@ namespace mrHelper.App.Controls
       {
          switch (mode)
          {
+            case EDataCacheType.Live:
+               // The idea is that:
+               // 1. Already cached MR that became closed remotely will not be removed from the cache
+               // 2. Open MR that are missing in the cache, will be added to the cache
+               // 3. Open MR that exist in the cache, will be updated
+               // 4. Non-cached MR that are closed remotely, will not be added to the cache even if directly requested by IId
+               bool updateOnlyOpened = true;
+               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
+                                               Program.Settings.AutoUpdatePeriodMs,
+                                               updateOnlyOpened);
+
             case EDataCacheType.Recent:
                return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
                                                Program.Settings.AutoUpdatePeriodMs,
                                                false);
 
             case EDataCacheType.Search:
-               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs, null, false);
+               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
+                                               int.MaxValue,
+                                               false);
 
             default:
                Debug.Assert(false);
@@ -363,10 +369,21 @@ namespace mrHelper.App.Controls
       private void subscribeToSearchDataCacheInternalEvents()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Search);
+         if (dataCache?.MergeRequestCache != null)
+         {
+            dataCache.MergeRequestCache.MergeRequestEvent += onSearchMergeRequestEvent;
+         }
+
          if (dataCache?.TotalTimeCache != null)
          {
             dataCache.TotalTimeCache.TotalTimeLoading += onPreLoadTrackedTime;
             dataCache.TotalTimeCache.TotalTimeLoaded += onPostLoadTrackedTime;
+         }
+
+         if (dataCache?.DiscussionCache != null)
+         {
+            dataCache.DiscussionCache.DiscussionsLoading += onPreLoadDiscussions;
+            dataCache.DiscussionCache.DiscussionsLoaded += onPostLoadDiscussions;
          }
       }
 
@@ -389,10 +406,21 @@ namespace mrHelper.App.Controls
       private void unsubscribeFromSearchDataCacheInternalEvents()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Search);
+         if (dataCache?.MergeRequestCache != null)
+         {
+            dataCache.MergeRequestCache.MergeRequestEvent -= onSearchMergeRequestEvent;
+         }
+
          if (dataCache?.TotalTimeCache != null)
          {
             dataCache.TotalTimeCache.TotalTimeLoading -= onPreLoadTrackedTime;
             dataCache.TotalTimeCache.TotalTimeLoaded -= onPostLoadTrackedTime;
+         }
+
+         if (dataCache?.DiscussionCache != null)
+         {
+            dataCache.DiscussionCache.DiscussionsLoading -= onPreLoadDiscussions;
+            dataCache.DiscussionCache.DiscussionsLoaded -= onPostLoadDiscussions;
          }
       }
 
@@ -417,6 +445,12 @@ namespace mrHelper.App.Controls
          {
             dataCache.TotalTimeCache.TotalTimeLoading += onPreLoadTrackedTime;
             dataCache.TotalTimeCache.TotalTimeLoaded += onPostLoadTrackedTime;
+         }
+
+         if (dataCache?.DiscussionCache != null)
+         {
+            dataCache.DiscussionCache.DiscussionsLoading += onPreLoadDiscussions;
+            dataCache.DiscussionCache.DiscussionsLoaded += onPostLoadDiscussions;
          }
       }
 
@@ -454,6 +488,12 @@ namespace mrHelper.App.Controls
          {
             dataCache.TotalTimeCache.TotalTimeLoading -= onPreLoadTrackedTime;
             dataCache.TotalTimeCache.TotalTimeLoaded -= onPostLoadTrackedTime;
+         }
+
+         if (dataCache?.DiscussionCache != null)
+         {
+            dataCache.DiscussionCache.DiscussionsLoading -= onPreLoadDiscussions;
+            dataCache.DiscussionCache.DiscussionsLoaded -= onPostLoadDiscussions;
          }
       }
 
