@@ -706,16 +706,6 @@ namespace mrHelper.App.Controls
 
          getRevisionBrowser().Refresh();
 
-         // Update timestamps in "Notes from author".
-         // It is not the very efficient way but the simplest one.
-         EDataCacheType currentMode = getCurrentTabDataCacheType();
-         FullMergeRequestKey? fmkOpt = getListView(currentMode).GetSelectedMergeRequest();
-         if (fmkOpt.HasValue)
-         {
-            descriptionSplitContainerSite.UpdateData(fmkOpt.Value, getDataCache(currentMode));
-         }
-         //
-
          LatestListRefreshTimestampChanged?.Invoke(this);
       }
 

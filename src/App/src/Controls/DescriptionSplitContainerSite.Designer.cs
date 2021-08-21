@@ -20,6 +20,7 @@ namespace mrHelper.App.Controls
          }
 
          base.Dispose(disposing);
+         stopRedrawTimer();
       }
 
       #region Component Designer generated code

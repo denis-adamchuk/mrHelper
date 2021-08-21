@@ -21,6 +21,7 @@ namespace mrHelper.App.Controls
       {
          _keywords = keywords;
          _mdPipeline = mdPipeline;
+         startRedrawTimer();
 
          setFontSizeInHtmlPanel(richTextBoxMergeRequestDescription);
          setFontSizeInHtmlPanel(htmlPanelAuthorComments);
@@ -28,14 +29,20 @@ namespace mrHelper.App.Controls
 
       internal void UpdateData(FullMergeRequestKey fmk, DataCache dataCache)
       {
-         updateMergeRequestDescription(fmk);
-         updateAuthorComments(fmk, dataCache);
+         _currentMergeRequest = fmk;
+         _currentDataCache = dataCache;
+
+         updateMergeRequestDescription();
+         updateAuthorComments();
       }
 
       internal void ClearData()
       {
-         updateMergeRequestDescription(null);
-         updateAuthorComments(null, null);
+         _currentMergeRequest = null;
+         _currentDataCache = null;
+
+         updateMergeRequestDescription();
+         updateAuthorComments();
       }
 
       public SplitContainer SplitContainer => splitContainer;
@@ -48,15 +55,15 @@ namespace mrHelper.App.Controls
          setFontSizeInHtmlPanel(htmlPanelAuthorComments);
       }
 
-      private void updateMergeRequestDescription(FullMergeRequestKey? fmkOpt)
+      private void updateMergeRequestDescription()
       {
-         if (!fmkOpt.HasValue)
+         if (!_currentMergeRequest.HasValue)
          {
             richTextBoxMergeRequestDescription.Text = String.Empty;
          }
          else
          {
-            FullMergeRequestKey fmk = fmkOpt.Value;
+            FullMergeRequestKey fmk = _currentMergeRequest.Value;
 
             string rawTitle = !String.IsNullOrEmpty(fmk.MergeRequest.Title) ? fmk.MergeRequest.Title : "Title is empty";
             string title = MarkDownUtils.ConvertToHtml(rawTitle, String.Empty, _mdPipeline);
@@ -72,17 +79,17 @@ namespace mrHelper.App.Controls
          richTextBoxMergeRequestDescription.Update();
       }
 
-      private void updateAuthorComments(FullMergeRequestKey? fmkOpt, DataCache dataCache)
+      private void updateAuthorComments()
       {
-         if (!fmkOpt.HasValue)
+         if (!_currentMergeRequest.HasValue)
          {
             splitContainer.Panel2Collapsed = true;
             return;
          }
 
-         FullMergeRequestKey fmk = fmkOpt.Value;
+         FullMergeRequestKey fmk = _currentMergeRequest.Value;
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
-         DiscussionCount.EStatus? status = dataCache.DiscussionCache?.GetDiscussionCount(mrk).Status;
+         DiscussionCount.EStatus? status = _currentDataCache.DiscussionCache?.GetDiscussionCount(mrk).Status;
          if (status == DiscussionCount.EStatus.NotAvailable)
          {
             splitContainer.Panel2Collapsed = true;
@@ -93,7 +100,7 @@ namespace mrHelper.App.Controls
          }
          else if (status == DiscussionCount.EStatus.Ready)
          {
-            IEnumerable<Discussion> filteredDiscussions = getFilteredDiscussions(dataCache, fmk);
+            IEnumerable<Discussion> filteredDiscussions = getFilteredDiscussions(_currentDataCache, fmk);
             splitContainer.Panel2Collapsed = !filteredDiscussions.Any();
             if (filteredDiscussions.Any())
             {
@@ -151,6 +158,23 @@ namespace mrHelper.App.Controls
             .OrderByDescending(discussion => discussion.Notes.First().Created_At).ToArray() ?? Array.Empty<Discussion>();
       }
 
+      private void startRedrawTimer()
+      {
+         _redrawTimer.Tick += onRedrawTimer;
+         _redrawTimer.Start();
+      }
+
+      private void stopRedrawTimer()
+      {
+         _redrawTimer.Tick -= onRedrawTimer;
+         _redrawTimer.Stop();
+      }
+
+      private void onRedrawTimer(object sender, EventArgs e)
+      {
+         updateAuthorComments();
+      }
+
       static private void setFontSizeInHtmlPanel(HtmlPanel htmlPanel)
       {
          string cssEx = String.Format("body div {{ font-size: {0}px; }}",
@@ -158,8 +182,17 @@ namespace mrHelper.App.Controls
          htmlPanel.BaseStylesheet = String.Format("{0}{1}", Properties.Resources.Common_CSS, cssEx);
       }
 
+      private static readonly int RedrawTimerInterval = 1000 * 30; // 0.5 minute
+      private readonly Timer _redrawTimer = new Timer
+      {
+         // This timer is needed to update "ago" timestamps
+         Interval = RedrawTimerInterval
+      };
+
       private Markdig.MarkdownPipeline _mdPipeline;
       private IEnumerable<string> _keywords;
+      private FullMergeRequestKey? _currentMergeRequest;
+      private DataCache _currentDataCache;
    }
 }
 
