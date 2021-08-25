@@ -1,6 +1,6 @@
-﻿using Microsoft.Win32;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
+using Microsoft.Win32;
 
 namespace mrHelper.Common.Tools
 {
@@ -8,39 +8,33 @@ namespace mrHelper.Common.Tools
    {
       public class AppInfo
       {
-         public AppInfo(string installPath, string productCode)
+         public AppInfo(string installPath, string productCode, string displayVersion)
          {
             InstallPath = installPath;
             ProductCode = productCode;
+            DisplayVersion = displayVersion;
          }
 
          public string InstallPath { get; }
          public string ProductCode { get; }
-
-         public override bool Equals(object obj)
-         {
-            return obj is AppInfo info &&
-                   InstallPath == info.InstallPath &&
-                   ProductCode == info.ProductCode;
-         }
-
-         public override int GetHashCode()
-         {
-            int hashCode = -602943768;
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(InstallPath);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ProductCode);
-            return hashCode;
-         }
+         public string DisplayVersion { get; }
       }
 
-      static public AppInfo GetApplicationInfo(string[] applicationNames)
+      public enum MatchKind
+      {
+         Exact,
+         Contains,
+         StartsWith
+      }
+
+      static public AppInfo GetApplicationInfo(string[] applicationNames, MatchKind matchKind = MatchKind.Contains)
       {
          Debug.Assert(applicationNames != null);
          foreach (RegistryHive hive in new RegistryHive[] { RegistryHive.LocalMachine, RegistryHive.CurrentUser })
          {
             foreach (RegistryView view in new RegistryView[] { RegistryView.Registry32, RegistryView.Registry64 })
             {
-               AppInfo appInfo = findApplication(hive, view, applicationNames);
+               AppInfo appInfo = findApplication(hive, view, applicationNames, matchKind);
                if (appInfo != null)
                {
                   return appInfo;
@@ -50,30 +44,60 @@ namespace mrHelper.Common.Tools
          return null;
       }
 
-      static private AppInfo findApplication(RegistryHive hive, RegistryView view, string[] applicationNames)
+      static private AppInfo findApplication(RegistryHive hive, RegistryView view, string[] applicationNames,
+         MatchKind matchKind)
       {
          try
          {
-            RegistryKey hklm = RegistryKey.OpenBaseKey(hive, view);
-            RegistryKey uninstall = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-            foreach (string productSubKey in uninstall.GetSubKeyNames())
-            {
-               RegistryKey product = uninstall.OpenSubKey(productSubKey);
-               object displayName = product.GetValue("DisplayName");
-               foreach (string appName in applicationNames)
-               {
-                  if (displayName != null && displayName.ToString().Contains(appName))
-                  {
-                     return new AppInfo(product.GetValue("InstallLocation").ToString(), productSubKey);
-                  }
-               }
-            }
+            return findApplicationSafe(hive, view, applicationNames, matchKind);
          }
-         catch (System.Exception ex)
+         catch (Exception ex)
          {
             Trace.TraceError(
                "[AppFinder] An exception occurred on attempt to access the registry: {0}",
                ex.ToString());
+         }
+         return null;
+      }
+
+      static private AppInfo findApplicationSafe(RegistryHive hive, RegistryView view, string[] applicationNames,
+         MatchKind matchKind)
+      {
+         RegistryKey hklm = RegistryKey.OpenBaseKey(hive, view);
+         RegistryKey uninstall = hklm.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+         foreach (string productSubKey in uninstall.GetSubKeyNames())
+         {
+            RegistryKey product = uninstall.OpenSubKey(productSubKey);
+            object displayName = product.GetValue("DisplayName");
+            if (displayName == null)
+            {
+               continue;
+            }
+            foreach (string appName in applicationNames)
+            {
+               bool match = false;
+               StringComparison comparison = StringComparison.InvariantCultureIgnoreCase;
+               switch (matchKind)
+               {
+                  case MatchKind.Exact:
+                     match = displayName.ToString().Equals(appName, comparison);
+                     break;
+                  case MatchKind.Contains:
+                     match = displayName.ToString().Contains(appName);
+                     break;
+                  case MatchKind.StartsWith:
+                     match = displayName.ToString().StartsWith(appName, comparison);
+                     break;
+               }
+               if (match)
+               {
+                  object installLocation = product.GetValue("InstallLocation");
+                  string installLocationString = installLocation?.ToString() ?? String.Empty;
+                  object displayVersion = product.GetValue("DisplayVersion");
+                  string displayVersionString = displayVersion?.ToString() ?? String.Empty;
+                  return new AppInfo(installLocationString, productSubKey, displayVersionString);
+               }
+            }
          }
          return null;
       }

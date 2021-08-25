@@ -79,6 +79,7 @@
     <Compile Include="Tools\ExternalProcess.cs" />
     <Compile Include="Tools\ExternalProcessManager.cs" />
     <Compile Include="Tools\GitTools.cs" />
+    <Compile Include="Tools\GitVersion.cs" />
     <Compile Include="Tools\JsonUtils.cs" />
     <Compile Include="Tools\PathFinder.cs" />
     <Compile Include="Tools\Persistence\PersistentState.cs" />

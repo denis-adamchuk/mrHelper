@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -65,69 +66,36 @@ namespace mrHelper.Common.Tools
          }
       }
 
-      public static class GitVersionAccessor
+      public static bool IsGit2AvailableAtPath()
       {
-         public class UnknownVersionException : ExceptionEx
+         try
          {
-            internal UnknownVersionException(Exception innerException)
-               : base(String.Empty, innerException)
-            {
-            }
+            return GitVersionCommandLineReader.GetVersion().Major == 2;
          }
-
-         public static Version GetVersion()
+         catch (GitVersionCommandLineReader.UnknownVersionException)
          {
-            if (_cachedVersion == null)
-            {
-               _cachedVersion = getVersion();
-            }
-            return _cachedVersion;
+            return false;
          }
-
-         private static Version _cachedVersion;
-
-         private static Version getVersion()
-         {
-            try
-            {
-               IEnumerable<string> stdOut =
-                  ExternalProcess.Start("git", "--version", true, String.Empty).StdOut;
-               if (!stdOut.Any())
-               {
-                  throw new UnknownVersionException(null);
-               }
-
-               Match m = gitVersion_re.Match(stdOut.First());
-               if (!m.Success || m.Groups.Count < 3
-                || !m.Groups["major"].Success || !m.Groups["minor"].Success || !m.Groups["build"].Success
-                || !int.TryParse(m.Groups["major"].Value, out int major)
-                || !int.TryParse(m.Groups["minor"].Value, out int minor)
-                || !int.TryParse(m.Groups["build"].Value, out int build))
-               {
-                  throw new UnknownVersionException(null);
-               }
-
-               return new Version(major, minor, build);
-            }
-            catch (ExternalProcessException ex)
-            {
-               throw new UnknownVersionException(ex);
-            }
-         }
-
-         private static readonly Regex gitVersion_re =
-            new Regex(@"git version (?'major'\d+).(?'minor'\d+).(?'build'\d+)");
       }
 
-      public static bool IsGit2Installed()
+      public static string GetInstallPath()
       {
-         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "Git version 2" });
-         return appInfo != null && !String.IsNullOrEmpty(appInfo.InstallPath);
+         return findBinaryFolderInRegistry();
       }
 
-      public static string GetBinaryFolder()
+      public static string GetGitBashPath()
       {
-         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(new string[] { "Git version 2" });
+         string folder = findBinaryFolderInRegistry();
+         if (String.IsNullOrEmpty(folder))
+         {
+            return String.Empty;
+         }
+         return Path.Combine(folder, Constants.Constants.BashFileName);
+      }
+
+      private static string findBinaryFolderInRegistry()
+      {
+         AppFinder.AppInfo appInfo = getAppInfoFromRegistry();
          if (appInfo != null && !String.IsNullOrEmpty(appInfo.InstallPath))
          {
             return System.IO.Path.Combine(appInfo.InstallPath, "bin");
@@ -135,14 +103,43 @@ namespace mrHelper.Common.Tools
          return String.Empty;
       }
 
+      private static AppFinder.AppInfo getAppInfoFromRegistry()
+      {
+         AppFinder.AppInfo appInfo;
+
+         // git version < 2.33 (before https://github.com/git-for-windows/git/issues/3319) 
+         appInfo = AppFinder.GetApplicationInfo(new string[] { "Git version 2" }, AppFinder.MatchKind.Contains);
+         if (appInfo != null)
+         {
+            return appInfo;
+         }
+
+         // git version >= 2.33
+         appInfo = AppFinder.GetApplicationInfo(new string[] { "Git" }, AppFinder.MatchKind.Exact);
+         if (appInfo != null)
+         {
+            try
+            {
+               Version version = GitVersion.FromText(appInfo.DisplayVersion).ToVersion();
+               return version.Major == 2 && version.Minor >= 33 ? appInfo : null;
+            }
+            catch (ArgumentException)
+            {
+               return null;
+            }
+         }
+
+         return null;
+      }
+
       public static bool SupportsFetchNoTags()
       {
          try
          {
-            Version version = GitVersionAccessor.GetVersion();
-            return version.Major > 2 || (version.Major == 2 && version.Minor >= 14);
+            Version version = GitVersionCommandLineReader.GetVersion();
+            return version.Major == 2 && version.Minor >= 14;
          }
-         catch (GitVersionAccessor.UnknownVersionException ex)
+         catch (GitVersionCommandLineReader.UnknownVersionException ex)
          {
             ExceptionHandlers.Handle("Cannot detect git version", ex);
          }
@@ -153,10 +150,10 @@ namespace mrHelper.Common.Tools
       {
          try
          {
-            Version version = GitVersionAccessor.GetVersion();
-            return version.Major > 2 || (version.Major == 2 && version.Minor >= 23);
+            Version version = GitVersionCommandLineReader.GetVersion();
+            return version.Major == 2 && version.Minor >= 23;
          }
-         catch (GitVersionAccessor.UnknownVersionException ex)
+         catch (GitVersionCommandLineReader.UnknownVersionException ex)
          {
             ExceptionHandlers.Handle("Cannot detect git version", ex);
          }

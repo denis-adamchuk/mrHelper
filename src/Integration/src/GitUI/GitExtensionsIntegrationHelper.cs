@@ -50,7 +50,7 @@ namespace mrHelper.Integration.GitUI
             throw new GitExtensionsIntegrationHelperException("Cannot find Git Extensions configuration file");
          }
 
-         string gitbash = Path.Combine(GitTools.GetBinaryFolder(), Constants.BashFileName);
+         string gitbash = GitTools.GetGitBashPath();
          if (!File.Exists(gitbash))
          {
             throw new GitExtensionsIntegrationHelperException("Cannot find git bash");

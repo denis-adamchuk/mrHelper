@@ -47,7 +47,7 @@ namespace mrHelper.Integration.GitUI
 
       public static void AddCustomActions(string scriptPath)
       {
-         string gitbash = Path.Combine(GitTools.GetBinaryFolder(), Constants.BashFileName);
+         string gitbash = GitTools.GetGitBashPath();
          if (!File.Exists(gitbash))
          {
             throw new SourceTreeIntegrationHelperException("Cannot find git bash");

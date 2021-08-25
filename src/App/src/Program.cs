@@ -317,24 +317,53 @@ namespace mrHelper.App
 
       private static bool prepareGitEnvironment()
       {
-         if (!GitTools.IsGit2Installed())
+         string installPath = GitTools.GetInstallPath();
+         if (!GitTools.IsGit2AvailableAtPath())
          {
-            MessageBox.Show(
-               "Git for Windows (version 2) is not installed. "
-             + "It must be installed at least for the current user. Application cannot start.",
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            return false;
+            if (String.IsNullOrEmpty(installPath))
+            {
+               MessageBox.Show(
+                  "Git for Windows (version 2) is not installed. "
+                + "It must be installed at least for the current user. Application cannot start.",
+                  "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+               return false;
+            }
+
+            string pathEV = System.Environment.GetEnvironmentVariable("PATH");
+            System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + installPath);
+            Debug.Assert(GitTools.IsGit2AvailableAtPath());
          }
 
-         string pathEV = System.Environment.GetEnvironmentVariable("PATH");
-         System.Environment.SetEnvironmentVariable("PATH", pathEV + ";" + GitTools.GetBinaryFolder());
-         Trace.TraceInformation(String.Format("Updated PATH variable: {0}",
-            System.Environment.GetEnvironmentVariable("PATH")));
+         Trace.TraceInformation(String.Format("git install path: {0}", installPath));
+         Trace.TraceInformation(String.Format("git binary path: {0}", whereIsFile("git")));
+         Trace.TraceInformation(String.Format("git bash path: {0}", GitTools.GetGitBashPath()));
          System.Environment.SetEnvironmentVariable("GIT_TERMINAL_PROMPT", "0");
          Trace.TraceInformation("Set GIT_TERMINAL_PROMPT=0");
+         Trace.TraceInformation(String.Format("PATH variable: {0}",
+            System.Environment.GetEnvironmentVariable("PATH")));
          Trace.TraceInformation(String.Format("TEMP variable: {0}",
             System.Environment.GetEnvironmentVariable("TEMP")));
          return true;
+      }
+
+      private static string whereIsFile(string filename)
+      {
+         string utilityName = "where";
+         try
+         {
+            IEnumerable<string> stdOut = ExternalProcess.Start(utilityName, filename, true, String.Empty).StdOut;
+            if (stdOut.Any())
+            {
+               return stdOut.First();
+            }
+         }
+         catch (Common.Exceptions.ExternalProcessException ex)
+         {
+            string msg = String.Format("Cannot determine filename \"{0}\" location using \"{1}\" utility",
+               filename, utilityName);
+            ExceptionHandlers.Handle(msg, ex);
+         }
+         return String.Empty;
       }
 
       private static bool integrateInDiffTool(string applicationFullPath)
