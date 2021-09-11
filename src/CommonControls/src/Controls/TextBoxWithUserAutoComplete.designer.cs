@@ -38,6 +38,7 @@
          // 
          this.textBoxAutoComplete.Dock = System.Windows.Forms.DockStyle.Fill;
          this.textBoxAutoComplete.Location = new System.Drawing.Point(0, 0);
+         this.textBoxAutoComplete.Multiline = false;
          this.textBoxAutoComplete.Name = "textBoxAutoComplete";
          this.textBoxAutoComplete.Size = new System.Drawing.Size(271, 20);
          this.textBoxAutoComplete.TabIndex = 0;
