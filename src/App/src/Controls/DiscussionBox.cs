@@ -1392,20 +1392,9 @@ namespace mrHelper.App.Controls
 
       private static string getErrorMessage(string defaultMessage, DiscussionEditorException ex)
       {
-         string message = defaultMessage;
-         if (ex.InnerException != null && (ex.InnerException is GitLabRequestException))
-         {
-            GitLabRequestException rx = ex.InnerException as GitLabRequestException;
-            if (rx.InnerException is System.Net.WebException wx && wx.Response != null)
-            {
-               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
-               if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
-               {
-                  message += " (note/discussion does not exist, use Refresh to update the list)";
-               }
-            }
-         }
-         return message;
+         return ex.IsNotFoundException()
+            ? defaultMessage + " (note/discussion does not exist, use Refresh to update the list)"
+            : defaultMessage;
       }
 
       private void disableAllNoteControls()
@@ -1488,6 +1477,7 @@ namespace mrHelper.App.Controls
             if (note != null && note.Resolvable && !note.Resolved)
             {
                result = false;
+               break;
             }
          }
 

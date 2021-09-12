@@ -63,6 +63,7 @@
          this.labelRelatedDiscussionAuthor = new System.Windows.Forms.Label();
          this.htmlPanelPreviewRelatedDiscussion = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.panelScroll = new System.Windows.Forms.Panel();
+         this.buttonReply = new System.Windows.Forms.Button();
          this.panelHtmlContextCanvas.SuspendLayout();
          this.tabControlMode.SuspendLayout();
          this.tabPageEdit.SuspendLayout();
@@ -380,6 +381,7 @@
          // 
          this.groupBoxRelated.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+         this.groupBoxRelated.Controls.Add(this.buttonReply);
          this.groupBoxRelated.Controls.Add(this.labelDifferentContextHint);
          this.groupBoxRelated.Controls.Add(this.panelRelatedDiscussionHtmlContextCanvas);
          this.groupBoxRelated.Controls.Add(this.panelRelatedDiscussionNavigation);
@@ -485,6 +487,18 @@
          this.panelScroll.TabIndex = 31;
          this.panelScroll.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelScroll_MouseWheel);
          // 
+         // buttonReply
+         // 
+         this.buttonReply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonReply.Location = new System.Drawing.Point(722, 139);
+         this.buttonReply.Name = "buttonReply";
+         this.buttonReply.Size = new System.Drawing.Size(75, 23);
+         this.buttonReply.TabIndex = 38;
+         this.buttonReply.Text = "Reply";
+         this.buttonReply.UseVisualStyleBackColor = true;
+         this.buttonReply.Click += new System.EventHandler(this.buttonReply_Click);
+         this.toolTip.SetToolTip(this.buttonReply, "Continue the selected thread");
+         // 
          // NewDiscussionForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -565,5 +579,6 @@
       private System.Windows.Forms.Button buttonScrollDown;
       private System.Windows.Forms.Panel panelScroll;
       private System.Windows.Forms.Label labelDifferentContextHint;
+      private System.Windows.Forms.Button buttonReply;
    }
 }

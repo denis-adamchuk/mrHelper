@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Exceptions;
 
@@ -10,6 +11,20 @@ namespace mrHelper.GitLabClient
       internal DiscussionEditorException(string message, Exception innerException)
          : base(message, innerException)
       {
+      }
+
+      public bool IsNotFoundException()
+      {
+         if (InnerException != null && (InnerException is GitLabRequestException))
+         {
+            GitLabRequestException rx = InnerException as GitLabRequestException;
+            if (rx.InnerException is System.Net.WebException wx && wx.Response != null)
+            {
+               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
+               return response.StatusCode == System.Net.HttpStatusCode.NotFound;
+            }
+         }
+         return false;
       }
    }
 

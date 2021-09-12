@@ -125,7 +125,7 @@ namespace mrHelper.App.Controls
          }
          CommandState? commandStateOpt = isCommandEnabledInDiscussionsView(
             getCurrentTabDataCacheType(), mrk.Value, command);
-         return commandStateOpt.HasValue ? commandStateOpt.Value : new CommandState(false, false);
+         return commandStateOpt ?? new CommandState(false, false);
       }
 
       private CommandState? isCommandEnabledInDiscussionsView(EDataCacheType mode, MergeRequestKey mrk, ICommand command)

@@ -4,13 +4,15 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using mrHelper.App.Controls;
+using mrHelper.App.Interprocess;
 using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
+using mrHelper.Common.Interfaces;
 using mrHelper.CommonNative;
 using mrHelper.CommonControls.Tools;
-using mrHelper.Common.Tools;
-using mrHelper.App.Interprocess;
 using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace mrHelper.App.Forms
@@ -25,6 +27,7 @@ namespace mrHelper.App.Forms
          Func<string, bool, DiffPosition, Task> onSubmitNewDiscussion,
          Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> onEditOldNote,
          Func<ReportedDiscussionNoteKey, Task> onDeleteOldNote,
+         Func<NewDiscussionForm, ReportedDiscussionNote, Task> onReply,
          Func<ReportedDiscussionNoteKey?, DiffPosition, IEnumerable<ReportedDiscussionNote>> getRelatedDiscussions,
          Func<DiffPosition, DiffContext> getNewDiscussionDiffContext,
          Func<DiffPosition, DiffContext> getDiffContext)
@@ -48,6 +51,7 @@ namespace mrHelper.App.Forms
          _onSubmitNewDiscussion = onSubmitNewDiscussion;
          _onEditOldNote = onEditOldNote;
          _onDeleteOldNote = onDeleteOldNote;
+         _onReply = onReply;
          _getNewDiscussionDiffContext = getNewDiscussionDiffContext;
          _getDiffContext = getDiffContext;
          _getRelatedDiscussions = getRelatedDiscussions;
@@ -235,6 +239,11 @@ namespace mrHelper.App.Forms
       private void panelNavigation_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
       {
          WinFormsHelpers.ConvertMouseWheelToClick(buttonNext, buttonPrev, e.Delta);
+      }
+
+      async private void buttonReply_Click(object sender, EventArgs e)
+      {
+         await _onReply(this, _relatedDiscussions[_relatedDiscussionIndex.Value]);
       }
 
       private bool needShowDiffContext()
@@ -761,6 +770,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       private readonly Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> _onEditOldNote;
       private readonly Func<ReportedDiscussionNoteKey, Task> _onDeleteOldNote;
+      private readonly Func<NewDiscussionForm, ReportedDiscussionNote, Task> _onReply;
       private readonly Func<DiffPosition, DiffContext> _getNewDiscussionDiffContext;
       private readonly List<ReportedDiscussionNote> _reportedNotes = new List<ReportedDiscussionNote>();
       private readonly List<ReportedDiscussionNoteKey> _deletedNotes = new List<ReportedDiscussionNoteKey>();

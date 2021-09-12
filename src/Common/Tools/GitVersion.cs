@@ -40,9 +40,9 @@ namespace mrHelper.Common.Tools
       private static readonly string gitVersionFormat = @"(?'major'\d+).(?'minor'\d+).(?'build'\d+)";
       private static readonly Regex GitVersionRegex = new Regex(gitVersionFormat);
 
-      private int _major;
-      private int _minor;
-      private int _build;
+      private readonly int _major;
+      private readonly int _minor;
+      private readonly int _build;
    }
 
    public static class GitVersionCommandLineReader

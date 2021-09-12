@@ -164,6 +164,12 @@
     <Compile Include="src\Controls\PlainTabControl.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\ReplyOnRelatedNotePanel.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ReplyOnRelatedNotePanel.Designer.cs">
+      <DependentUpon>ReplyOnRelatedNotePanel.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Controls\RevisionBrowser.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -404,6 +410,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\DiscussionsFormMenu.resx">
       <DependentUpon>DiscussionsFormMenu.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Controls\ReplyOnRelatedNotePanel.resx">
+      <DependentUpon>ReplyOnRelatedNotePanel.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\RevisionBrowser.resx">
       <DependentUpon>RevisionBrowser.cs</DependentUpon>

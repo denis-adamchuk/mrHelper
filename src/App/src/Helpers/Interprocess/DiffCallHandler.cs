@@ -9,10 +9,13 @@ using GitLabSharp.Accessors;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
 using mrHelper.App.Helpers.GitLab;
+using mrHelper.App.Controls;
 using mrHelper.Core.Matching;
 using mrHelper.Core.Context;
+using mrHelper.Common.Tools;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
+using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using static mrHelper.App.Helpers.ConfigurationHelper;
@@ -76,6 +79,10 @@ namespace mrHelper.App.Interprocess
             await actOnGitLab("delete", () =>
                deleteDiscussionNoteAsync(mrk, notePosition.DiscussionId, notePosition.Id));
 
+         async Task fnOnReply(Form newDiscussionForm, ReportedDiscussionNote existingNote) =>
+            await actOnGitLab("reply on", () =>
+               replyOnDiscussionAsync(newDiscussionForm, existingNote, mrk));
+
          IEnumerable<ReportedDiscussionNote> fnGetRelatedDiscussions(ReportedDiscussionNoteKey? keyOpt, DiffPosition position) =>
             getRelatedDiscussions(mrk, keyOpt, position).ToArray();
 
@@ -103,6 +110,7 @@ namespace mrHelper.App.Interprocess
             fnOnSubmitNewDiscussion,
             fnOnEditOldNote,
             fnOnDeleteOldNote,
+            fnOnReply,
             fnGetRelatedDiscussions,
             fnGetNewDiscussionDiffContext,
             fnGetDiffContext);
@@ -406,10 +414,18 @@ namespace mrHelper.App.Interprocess
       {
          void handleException(Exception ex)
          {
-            string message = String.Format("Cannot {0} a discussion at GitLab", actionName);
+            string message = String.Format(
+               "Cannot {0} a discussion at GitLab. Check your connection and try again.", actionName);
+            string caption = "Error";
+            var icon = MessageBoxIcon.Error;
+            if (ex is DiscussionEditorException dex && dex.IsNotFoundException() && actionName == "reply on")
+            {
+               message = "Discussion note does not longer exist";
+               caption = "Warning";
+               icon = MessageBoxIcon.Warning;
+            }
             ExceptionHandlers.Handle(message, ex);
-            MessageBox.Show(String.Format("{0}. Check your connection and try again.", message),
-               "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+            MessageBox.Show(message, caption, MessageBoxButtons.OK, icon,
                MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
          }
 
@@ -479,6 +495,35 @@ namespace mrHelper.App.Interprocess
       {
          IDiscussionEditor editor = _shortcuts.GetDiscussionEditor(mrk, discussionId);
          return editor.DeleteNoteAsync(noteId);
+      }
+
+      async private Task replyOnDiscussionAsync(Form newDiscussionForm, ReportedDiscussionNote note,
+         MergeRequestKey mrk)
+      {
+         ReplyOnRelatedNotePanel actions = new ReplyOnRelatedNotePanel(true);
+         string imagePath = StringUtils.GetUploadsPrefix(mrk.ProjectKey);
+         using (TextEditForm form = new TextEditForm("Reply on a Discussion", "", true, true, actions, imagePath))
+         {
+            actions.SetTextbox(form.TextBox);
+            if (WinFormsHelpers.ShowDialogOnControl(form, newDiscussionForm) == DialogResult.OK)
+            {
+               if (form.Body.Length == 0)
+               {
+                  MessageBox.Show("Reply text cannot be empty", "Warning",
+                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                  return;
+               }
+
+               if (actions.IsCloseDialogActionChecked)
+               {
+                  newDiscussionForm.Close();
+               }
+
+               string proposedBody = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
+               IDiscussionEditor editor = _shortcuts.GetDiscussionEditor(mrk, note.Key.DiscussionId);
+               await editor.ReplyAsync(proposedBody);
+            }
+         }
       }
 
       private static PositionParameters? createPositionParameters(DiffPosition position)
