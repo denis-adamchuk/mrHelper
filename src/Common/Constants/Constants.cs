@@ -105,6 +105,7 @@ namespace mrHelper.Common.Constants
       public static int RecentMergeRequestPerProjectMinCount = 3;
       public static int RecentMergeRequestPerProjectDefaultCount = 7;
       public static int RecentMergeRequestPerProjectMaxCount = 10;
+      public static int FavoriteProjectsPerHostCount = 5;
 
       public static TaskUtils.BatchLimits MergeRequestLoaderSearchQueryBatchLimits = new TaskUtils.BatchLimits
       {

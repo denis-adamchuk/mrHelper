@@ -312,11 +312,23 @@ namespace mrHelper.App.Forms
          setTitle(StringUtils.ToggleDraftTitle(getTitle()));
       }
 
-      protected void fillProjectListAndSelect(IEnumerable<string> projects, string defaultProjectName)
+      protected void fillProjectListAndSelect(
+         IEnumerable<string> projects, IEnumerable<string> favoriteProjects, string defaultProjectName)
       {
+         if (favoriteProjects.Any())
+         {
+            comboBoxProject.Items.Add(FavoriteProjectsItemText);
+            comboBoxProject.Items.AddRange(favoriteProjects.ToArray());
+            comboBoxProject.Items.Add(AllProjectsItemText);
+         }
          comboBoxProject.Items.AddRange(projects.OrderBy(x => x).ToArray());
          WinFormsHelpers.SelectComboBoxItem(comboBoxProject, String.IsNullOrWhiteSpace(defaultProjectName)
             ? null : new Func<object, bool>(o => (o as string) == defaultProjectName));
+      }
+
+      protected void fillProjectListAndSelect(string project)
+      {
+         fillProjectListAndSelect(new string[] { project }, Array.Empty<string>(), null);
       }
 
       protected void fillSourceBranchListAndSelect(IEnumerable<Branch> branches, string defaultSourceBrachName)
@@ -408,6 +420,9 @@ namespace mrHelper.App.Forms
          }
          return trimmed.StartsWith("@") ? trimmed.Substring(1) : trimmed;
       }
+
+      protected static string FavoriteProjectsItemText = "--- Recently used ---";
+      protected static string AllProjectsItemText      = "--- All ---";
 
       protected readonly User _currentUser;
       protected readonly ProjectAccessor _projectAccessor;

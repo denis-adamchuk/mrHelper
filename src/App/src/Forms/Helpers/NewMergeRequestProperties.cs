@@ -6,7 +6,8 @@ namespace mrHelper.App.Forms.Helpers
    {
       public NewMergeRequestProperties(string defaultProject, string sourceBranch,
          IEnumerable<string> targetBranchCandidates, string assigneeUsername,
-         bool isSquashNeeded, bool isBranchDeletionNeeded)
+         bool isSquashNeeded, bool isBranchDeletionNeeded,
+         string[] favoriteProjects)
       {
          DefaultProject = defaultProject;
          SourceBranch = sourceBranch;
@@ -14,6 +15,7 @@ namespace mrHelper.App.Forms.Helpers
          AssigneeUsername = assigneeUsername;
          IsSquashNeeded = isSquashNeeded;
          IsBranchDeletionNeeded = isBranchDeletionNeeded;
+         FavoriteProjects = favoriteProjects;
       }
 
       internal string DefaultProject { get; }
@@ -22,6 +24,7 @@ namespace mrHelper.App.Forms.Helpers
       internal string AssigneeUsername { get; }
       internal bool IsSquashNeeded { get; }
       internal bool IsBranchDeletionNeeded { get; }
+      internal string[] FavoriteProjects { get; }
    }
 }
 

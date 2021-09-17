@@ -22,12 +22,13 @@ namespace mrHelper.App.Forms
       internal NewDiscussionForm(
          DiffPosition newDiscussionPosition,
          ReportedDiscussionNote[] oldNotes,
+         ProjectKey projectKey,
          Func<DiffPosition, bool, DiffPosition> onScrollPosition,
          Action onDialogClosed,
          Func<string, bool, DiffPosition, Task> onSubmitNewDiscussion,
          Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> onEditOldNote,
          Func<ReportedDiscussionNoteKey, Task> onDeleteOldNote,
-         Func<NewDiscussionForm, ReportedDiscussionNote, Task> onReply,
+         Func<ReportedDiscussionNoteKey, string, Task> onReply,
          Func<ReportedDiscussionNoteKey?, DiffPosition, IEnumerable<ReportedDiscussionNote>> getRelatedDiscussions,
          Func<DiffPosition, DiffContext> getNewDiscussionDiffContext,
          Func<DiffPosition, DiffContext> getDiffContext)
@@ -39,6 +40,7 @@ namespace mrHelper.App.Forms
          createWPFTextBox();
          _groupBoxRelatedThreadsDefaultHeight = groupBoxRelated.Height;
          _diffContextDefaultHeight = panelHtmlContextCanvas.Height;
+         _imagePath = StringUtils.GetUploadsPrefix(projectKey);
 
          this.Text = Constants.StartNewThreadCaption;
          labelInvisibleCharactersHint.Text = Constants.WarningOnUnescapedMarkdown;
@@ -77,12 +79,7 @@ namespace mrHelper.App.Forms
 
       async private void buttonOK_Click(object sender, EventArgs e)
       {
-         if (checkModifications(out bool needSubmitNewDiscussion, out bool needSubmitModifications))
-         {
-            Hide();
-            await submit(needSubmitNewDiscussion, needSubmitModifications);
-            Close();
-         }
+         await checkAndSubmit();
       }
 
       private void buttonCancel_Click(object sender, EventArgs e)
@@ -243,7 +240,33 @@ namespace mrHelper.App.Forms
 
       async private void buttonReply_Click(object sender, EventArgs e)
       {
-         await _onReply(this, _relatedDiscussions[_relatedDiscussionIndex.Value]);
+         ReplyOnRelatedNotePanel actions = new ReplyOnRelatedNotePanel(true);
+         using (TextEditForm form = new TextEditForm("Reply on a Discussion", "", true, true, actions, _imagePath))
+         {
+            actions.SetTextbox(form.TextBox);
+            if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
+            {
+               if (form.Body.Length == 0)
+               {
+                  MessageBox.Show("Reply text cannot be empty", "Warning",
+                     MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                  return;
+               }
+
+               if (actions.IsCloseDialogActionChecked)
+               {
+                  Hide();
+               }
+
+               string text = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
+               await _onReply(_relatedDiscussions[_relatedDiscussionIndex.Value].Key, text);
+
+               if (actions.IsCloseDialogActionChecked)
+               {
+                  await checkAndSubmit();
+               }
+            }
+         }
       }
 
       private bool needShowDiffContext()
@@ -422,6 +445,7 @@ namespace mrHelper.App.Forms
          _deletedNotes.Add(key);
          _modifiedNoteTexts.Remove(key);
          _reportedNotes.RemoveAt(CurrentNoteIndex);
+         updateRelatedDiscussions();
       }
 
       private void saveNoteText(int index, string text)
@@ -700,6 +724,16 @@ namespace mrHelper.App.Forms
                              == DialogResult.Yes;
       }
 
+      private async Task checkAndSubmit()
+      {
+         if (checkModifications(out bool needSubmitNewDiscussion, out bool needSubmitModifications))
+         {
+            Hide();
+            await submit(needSubmitNewDiscussion, needSubmitModifications);
+            Close();
+         }
+      }
+
       private async Task submit(bool needSubmitNewDiscussion, bool needSubmitModifications)
       {
          if (needSubmitNewDiscussion)
@@ -770,7 +804,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       private readonly Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> _onEditOldNote;
       private readonly Func<ReportedDiscussionNoteKey, Task> _onDeleteOldNote;
-      private readonly Func<NewDiscussionForm, ReportedDiscussionNote, Task> _onReply;
+      private readonly Func<ReportedDiscussionNoteKey, string, Task> _onReply;
       private readonly Func<DiffPosition, DiffContext> _getNewDiscussionDiffContext;
       private readonly List<ReportedDiscussionNote> _reportedNotes = new List<ReportedDiscussionNote>();
       private readonly List<ReportedDiscussionNoteKey> _deletedNotes = new List<ReportedDiscussionNoteKey>();
@@ -857,6 +891,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       private readonly int _groupBoxRelatedThreadsDefaultHeight;
       private readonly int _diffContextDefaultHeight;
+      private readonly string _imagePath;
    }
 }
 

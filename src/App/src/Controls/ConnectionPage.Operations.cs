@@ -302,15 +302,38 @@ namespace mrHelper.App.Controls
          addOperationRecord(String.Format("Merge Request !{0} has been created in project {1}",
             mrkOpt.Value.IId, parameters.ProjectKey.ProjectName));
 
+         string[] currentFavoriteProjects = _newMergeRequestDialogStatesByHosts.ContainsKey(HostName)
+            ? _newMergeRequestDialogStatesByHosts[HostName].FavoriteProjects
+            : Array.Empty<string>();
+
+         string projectName = parameters.ProjectKey.ProjectName;
+         string[] newFavoriteProjects = updateFavoriteProjectList(currentFavoriteProjects, projectName);
          _newMergeRequestDialogStatesByHosts[HostName] = new NewMergeRequestProperties(
-            parameters.ProjectKey.ProjectName, null, null, parameters.AssigneeUserName, parameters.Squash,
-            parameters.DeleteSourceBranch);
+            projectName, null, null, parameters.AssigneeUserName, parameters.Squash,
+            parameters.DeleteSourceBranch, newFavoriteProjects);
 
          Trace.TraceInformation(
             "[ConnectionPage] Created a new merge request. " +
             "Project: {0}, SourceBranch: {1}, TargetBranch: {2}, Assignee: {3}, firstNote: {4}",
             parameters.ProjectKey.ProjectName, parameters.SourceBranch, parameters.TargetBranch,
             parameters.AssigneeUserName, firstNote);
+      }
+
+      private string[] updateFavoriteProjectList(string[] currentFavoriteProjects, string projectName)
+      {
+         if (!currentFavoriteProjects.Contains(projectName) || currentFavoriteProjects.Count() > 1)
+         {
+            List<string> favoriteProjectsList = currentFavoriteProjects.ToList();
+            if (currentFavoriteProjects.Contains(projectName))
+            {
+               favoriteProjectsList.Remove(projectName);
+            }
+            favoriteProjectsList.Insert(0, projectName);
+            currentFavoriteProjects = favoriteProjectsList
+               .Take(Constants.FavoriteProjectsPerHostCount)
+               .ToArray();
+         }
+         return currentFavoriteProjects;
       }
 
       async private Task applyChangesToMergeRequestAsync(string hostname, User currentUser,

@@ -823,7 +823,7 @@ namespace mrHelper.App.Controls
       {
          // This state is expected to be used only once, next times 'persistent storage' is used
          NewMergeRequestProperties factoryProperties = new NewMergeRequestProperties(
-            projectName, null, null, currentUser.Username, true, true);
+            projectName, null, null, currentUser.Username, true, true, Array.Empty<string>());
          return _newMergeRequestDialogStatesByHosts.Data.TryGetValue(hostname, out var value) ? value : factoryProperties;
       }
 

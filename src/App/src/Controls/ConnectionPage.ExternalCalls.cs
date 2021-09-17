@@ -39,7 +39,8 @@ namespace mrHelper.App.Controls
          NewMergeRequestProperties initialProperties = new NewMergeRequestProperties(
             parsedNewMergeRequestUrl.ProjectKey.ProjectName, parsedNewMergeRequestUrl.SourceBranch,
             parsedNewMergeRequestUrl.TargetBranchCandidates, defaultProperties.AssigneeUsername,
-            defaultProperties.IsSquashNeeded, defaultProperties.IsBranchDeletionNeeded);
+            defaultProperties.IsSquashNeeded, defaultProperties.IsBranchDeletionNeeded,
+            defaultProperties.FavoriteProjects);
          DataCache dataCache = getDataCache(EDataCacheType.Live);
          var fullProjectList = dataCache?.ProjectCache?.GetProjects() ?? Array.Empty<Project>();
          var fullUserList = dataCache?.UserCache?.GetUsers() ?? Array.Empty<User>();

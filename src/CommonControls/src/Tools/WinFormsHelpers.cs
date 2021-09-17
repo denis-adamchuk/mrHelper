@@ -115,7 +115,7 @@ namespace mrHelper.CommonControls.Tools
             int selectedIndex = 0;
             if (predicate != null)
             {
-               object item = comboBox.Items.Cast<object>().SingleOrDefault(x => predicate(x));
+               object item = comboBox.Items.Cast<object>().FirstOrDefault(x => predicate(x));
                int defaultIndex = item == null ? -1 : comboBox.Items.IndexOf(item);
                if (defaultIndex != -1)
                {

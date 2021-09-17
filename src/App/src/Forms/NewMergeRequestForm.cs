@@ -53,6 +53,25 @@ namespace mrHelper.App.Forms
 
       async private void comboBoxProject_SelectedIndexChanged(object sender, EventArgs e)
       {
+         if (comboBoxProject.SelectedItem == null)
+         {
+            return;
+         }
+
+         if (comboBoxProject.SelectedItem.ToString() == FavoriteProjectsItemText)
+         {
+            Debug.Assert(comboBoxProject.SelectedIndex < comboBoxProject.Items.Count - 1);
+            ++comboBoxProject.SelectedIndex;
+            return;
+         }
+
+         if (comboBoxProject.SelectedItem.ToString() == AllProjectsItemText)
+         {
+            Debug.Assert(comboBoxProject.SelectedIndex > 0);
+            --comboBoxProject.SelectedIndex;
+            return;
+         }
+
          _repositoryAccessor?.Cancel();
          _repositoryAccessor = createRepositoryAccessor();
 
@@ -225,7 +244,7 @@ namespace mrHelper.App.Forms
          if (isAllowedToChangeSource(_initialState))
          {
             IEnumerable<string> projectNames = _projects.Select(project => project.Path_With_Namespace);
-            fillProjectListAndSelect(projectNames, _initialState.DefaultProject);
+            fillProjectListAndSelect(projectNames, _initialState.FavoriteProjects, _initialState.DefaultProject);
          }
          else
          {
@@ -242,7 +261,7 @@ namespace mrHelper.App.Forms
                return;
             }
 
-            fillProjectListAndSelect(new string[] { _initialState.DefaultProject }, null);
+            fillProjectListAndSelect(_initialState.DefaultProject);
             fillSourceBranchListAndSelect(adjustedArray, null);
             fillTargetBranchListAndSelect(_initialState.TargetBranchCandidates, null);
 

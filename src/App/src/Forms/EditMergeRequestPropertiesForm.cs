@@ -29,7 +29,7 @@ namespace mrHelper.App.Forms
       {
          if (!String.IsNullOrEmpty(_projectKey.ProjectName))
          {
-            fillProjectListAndSelect(new string[] { _projectKey.ProjectName }, null);
+            fillProjectListAndSelect(_projectKey.ProjectName);
          }
 
          if (!String.IsNullOrEmpty(_initialMergeRequest.Source_Branch))

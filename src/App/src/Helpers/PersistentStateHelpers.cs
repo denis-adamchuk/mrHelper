@@ -69,21 +69,44 @@ namespace mrHelper.App.Helpers
 
       internal void Load(out Dictionary<string, NewMergeRequestProperties> values)
       {
+         // version with Favorite Projects support
          values = readObjectAsDict(_reader, _recordName)?
-            .Where(x => ((x.Value as string) ?? String.Empty).Split('|').Length == 4)
+            .Where(x => ((x.Value as string) ?? String.Empty).Split('|').Length == 5)
             .ToDictionary(
                item => item.Key,
                item =>
                {
                   string[] splitted = (item.Value as string).Split('|');
+                  string[] splittedProjects = splitted[4].Split(';');
                   return new NewMergeRequestProperties(
                      splitted[0],
                      null,
                      null,
                      splitted[1],
                      splitted[2] == bool.TrueString,
-                     splitted[3] == bool.TrueString);
+                     splitted[3] == bool.TrueString,
+                     splittedProjects);
                });
+
+         if (values == null || !values.Any())
+         {
+            values = readObjectAsDict(_reader, _recordName)?
+               .Where(x => ((x.Value as string) ?? String.Empty).Split('|').Length == 4)
+               .ToDictionary(
+                  item => item.Key,
+                  item =>
+                  {
+                     string[] splitted = (item.Value as string).Split('|');
+                     return new NewMergeRequestProperties(
+                        splitted[0],
+                        null,
+                        null,
+                        splitted[1],
+                        splitted[2] == bool.TrueString,
+                        splitted[3] == bool.TrueString,
+                        Array.Empty<string>());
+                  });
+         }
       }
 
       private static int loadIId(string keyAsText)
@@ -210,7 +233,8 @@ namespace mrHelper.App.Helpers
                item => item.Value.DefaultProject
                + "|" + item.Value.AssigneeUsername
                + "|" + item.Value.IsBranchDeletionNeeded.ToString()
-               + "|" + item.Value.IsSquashNeeded.ToString());
+               + "|" + item.Value.IsSquashNeeded.ToString()
+               + "|" + String.Join(";", item.Value.FavoriteProjects));
          _writer.Set(_recordName, valuesSerialized);
       }
 

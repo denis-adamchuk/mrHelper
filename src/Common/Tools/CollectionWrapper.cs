@@ -57,12 +57,13 @@ namespace mrHelper.Common.Tools
 
       public void RemoveMany(IEnumerable<TKey> keys)
       {
+         bool anyRemoved = false;
          foreach (TKey key in keys)
          {
-            _data.Remove(key);
+            anyRemoved |= _data.Remove(key);
          }
 
-         if (keys.Any())
+         if (anyRemoved)
          {
             _onChange();
          }
@@ -105,19 +106,6 @@ namespace mrHelper.Common.Tools
       public void Remove(TKey key)
       {
          if (_data.Remove(key))
-         {
-            _onChange();
-         }
-      }
-
-      public void RemoveMany(IEnumerable<TKey> keys)
-      {
-         foreach (TKey key in keys)
-         {
-            _data.Remove(key);
-         }
-
-         if (keys.Any())
          {
             _onChange();
          }
