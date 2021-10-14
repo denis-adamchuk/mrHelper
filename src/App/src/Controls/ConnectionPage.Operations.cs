@@ -56,9 +56,24 @@ namespace mrHelper.App.Controls
       {
          Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
          FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
-         if (!fmk.HasValue || !checkIfMergeRequestCanBeEdited())
+         if (!fmk.HasValue
+          || !checkIfMergeRequestCanBeEdited()
+          || CurrentUser == null
+          || fmk.Value.MergeRequest.Author == null)
          {
             return;
+         }
+
+         if (CurrentUser.Id != fmk.Value.MergeRequest.Author.Id)
+         {
+            Trace.TraceWarning("[ConnectionPage] Current user is not the author of the selected merge request");
+            if (MessageBox.Show("You are NOT the author of the selected merge request. " +
+                 "Are you sure you want to continue?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                 MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+            {
+               Trace.TraceInformation("[ConnectionPage] User declined to continue with merge");
+               return;
+            }
          }
 
          IEnumerable<Project> fullProjectList = getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects();
