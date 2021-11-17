@@ -530,6 +530,15 @@ namespace mrHelper.App.Controls
          {
             GetContextMenu()?.LaunchDefaultAction();
          }
+         else
+         {
+            ListViewHitTestInfo testAtCursor = HitTest(e.Location);
+            ProjectKey projectKey = getGroupProjectKey(testAtCursor.Item.Group);
+            if (isGroupCollapsed(projectKey))
+            {
+               setGroupCollapsing(projectKey, false);
+            }
+         }
       }
 
       protected override void OnColumnWidthChanged(ColumnWidthChangedEventArgs e)
