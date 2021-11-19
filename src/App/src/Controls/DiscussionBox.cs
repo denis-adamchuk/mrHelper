@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
-using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
 using mrHelper.App.Helpers;
@@ -250,6 +250,90 @@ namespace mrHelper.App.Controls
          showPopupWindow();
       }
 
+      private void onCopyToClipboardContextClick(object sender, EventArgs e)
+      {
+         DiscussionNote note = _panelContext == null ? null : getNoteFromControl(_panelContext);
+         if (note == null || note.Position == null)
+         {
+            return;
+         }
+
+         string contextAsText = getContextAsText(note);
+         string noteAsText = String.Format("{0}\r\n---\r\n{1}\r\n---\r\n{2}\r\n{3}",
+            getFileName(note.Position), contextAsText, note.Author.Name, note.Body);
+         Clipboard.SetText(noteAsText);
+
+         disableCopyToClipboard();
+         scheduleCopyToClipboardStateChange();
+      }
+
+      private void scheduleCopyToClipboardStateChange()
+      {
+         int CopyToClipboardTimerInterval = 500; // 0.5 second
+         Timer copyToClipboardTimer = new Timer
+         {
+            Interval = CopyToClipboardTimerInterval
+         };
+         copyToClipboardTimer.Tick += (s, e) =>
+         {
+            copyToClipboardTimer.Stop();
+            copyToClipboardTimer.Dispose();
+            enableCopyToClipboard();
+         };
+         copyToClipboardTimer.Start();
+      }
+
+      private string getContextAsText(DiscussionNote note)
+      {
+         string errorMessage = "Cannot create a diff context";
+         DiffPosition position = PositionConverter.Convert(note.Position);
+         DiffContext? context;
+         try
+         {
+            context = getContext(_panelContextMaker, position, _diffContextDepth);
+         }
+         catch (Exception ex)
+         {
+            if (ex is ArgumentException || ex is ContextMakingException)
+            {
+               ExceptionHandlers.Handle("Cannot create a diff context", ex);
+               return errorMessage;
+            }
+            throw;
+         }
+         if (!context.HasValue)
+         {
+            Debug.Assert(false);
+            return errorMessage;
+         }
+         StringBuilder stringBuilder = new StringBuilder();
+         int iLine = 0;
+         foreach (DiffContext.Line line in context.Value.Lines)
+         {
+            char prefix = ' ';
+            if (line.Left.HasValue && !line.Right.HasValue)
+            {
+               prefix = '-';
+            }
+            else if (!line.Left.HasValue && line.Right.HasValue)
+            {
+               prefix = '+';
+            }
+            string lineWithoutTabs = line.Text.Replace("\t", "    ");
+            string lineWithPrefix = String.Format("{0} {1}", prefix, lineWithoutTabs);
+            if (iLine == context.Value.Lines.Count() - 1)
+            {
+               stringBuilder.Append(lineWithPrefix);
+            }
+            else
+            {
+               stringBuilder.AppendLine(lineWithPrefix);
+            }
+            ++iLine;
+         }
+         return stringBuilder.ToString();
+      }
+
       private void showPopupWindow()
       {
          Point ptScreen = PointToScreen(new Point(_panelContext.Location.X, _panelContext.Location.Y));
@@ -280,6 +364,10 @@ namespace mrHelper.App.Controls
 
          _showMoreContext = createShowMoreContext(Discussion.Notes.First());
          Controls.Add(_showMoreContext);
+
+         _copyToClipboard = createCopyToClipboard(Discussion.Notes.First());
+         enableCopyToClipboard();
+         Controls.Add(_copyToClipboard);
 
          _panelContext = createDiffContext(Discussion.Notes.First());
          Controls.Add(_panelContext);
@@ -395,43 +483,53 @@ namespace mrHelper.App.Controls
             return null;
          }
 
-         string oldPath = firstNote.Position.Old_Path + " (line " + firstNote.Position.Old_Line + ")";
-         string newPath = firstNote.Position.New_Path + " (line " + firstNote.Position.New_Line + ")";
-
-         Color textColor;
-         string result;
-         if (firstNote.Position.Old_Line == null)
-         {
-            result = newPath;
-            textColor = Color.Green;
-         }
-         else if (firstNote.Position.New_Line == null)
-         {
-            result = oldPath;
-            textColor = Color.Red;
-         }
-         else if (firstNote.Position.Old_Path == firstNote.Position.New_Path)
-         {
-            result = newPath;
-            textColor = Color.Black;
-         }
-         else
-         {
-            result = newPath + "\r\n(was " + oldPath + ")";
-            textColor = Color.Blue;
-         }
-
          TextBox textBox = new SearchableTextBox(parent as IHighlightListener)
          {
             ReadOnly = true,
-            Text = result,
+            Text = getFileName(firstNote.Position),
             Multiline = true,
             WordWrap = false,
             BorderStyle = BorderStyle.None,
-            ForeColor = textColor
+            ForeColor = getFileNameColor(firstNote.Position)
          };
          textBox.GotFocus += Control_GotFocus;
          return textBox;
+      }
+
+      private string getFileName(Position position)
+      {
+         string oldPath = position.Old_Path + " (line " + position.Old_Line + ")";
+         string newPath = position.New_Path + " (line " + position.New_Line + ")";
+         if (position.Old_Line == null)
+         {
+            return newPath;
+         }
+         else if (position.New_Line == null)
+         {
+            return oldPath;
+         }
+         else if (position.Old_Path == position.New_Path)
+         {
+            return newPath;
+         }
+         return newPath + "\r\n(was " + oldPath + ")";
+      }
+
+      private Color getFileNameColor(Position position)
+      {
+         if (position.Old_Line == null)
+         {
+            return Color.Green;
+         }
+         else if (position.New_Line == null)
+         {
+            return Color.Red;
+         }
+         else if (position.Old_Path == position.New_Path)
+         {
+            return Color.Black;
+         }
+         return Color.Blue;
       }
 
       private Control createShowMoreContext(DiscussionNote firstNote)
@@ -449,6 +547,39 @@ namespace mrHelper.App.Controls
          };
          linkLabel.Click += onShowMoreContextClick;
          return linkLabel;
+      }
+
+      private Control createCopyToClipboard(DiscussionNote firstNote)
+      {
+         if (firstNote.Type != "DiffNote")
+         {
+            return null;
+         }
+
+         LinkLabel linkLabel = new LinkLabel()
+         {
+            AutoSize = true,
+            Text = "Copy to clipboard",
+            BorderStyle = BorderStyle.None
+         };
+         linkLabel.Click += onCopyToClipboardContextClick;
+         return linkLabel;
+      }
+
+      private void enableCopyToClipboard()
+      {
+         if (_copyToClipboard != null)
+         {
+            _copyToClipboard.Enabled = true;
+         }
+      }
+
+      private void disableCopyToClipboard()
+      {
+         if (_copyToClipboard != null)
+         {
+            _copyToClipboard.Enabled = false;
+         }
       }
 
       private bool initializeNoteContainers(Control parent, IEnumerable<DiscussionNote> notes)
@@ -987,7 +1118,9 @@ namespace mrHelper.App.Controls
          if (_textboxFilename != null)
          {
             _textboxFilename.Width = getDiffContextWidth(width)
-               - (_showMoreContext == null ? 0 : _showMoreContext.Width + 50);
+               - (_showMoreContext == null ? 0 : _showMoreContext.Width)
+               - (_copyToClipboard == null ? 0 : _copyToClipboard.Width)
+               - (_copyToClipboard == null && _showMoreContext == null ? 0 : 50);
             _textboxFilename.Height = (_textboxFilename as TextBoxEx).FullPreferredHeight;
          }
 
@@ -1036,6 +1169,14 @@ namespace mrHelper.App.Controls
                   _showMoreContext.Location = new Point(
                      _panelContext.Location.X + _panelContext.Width - _showMoreContext.Width, 0);
                }
+
+               if (_copyToClipboard != null)
+               {
+                  _showMoreContext.Location = new Point(
+                     _showMoreContext.Location.X - _copyToClipboard.Width - 20, _showMoreContext.Location.Y);
+                  _copyToClipboard.Location = new Point(
+                     _panelContext.Location.X + _panelContext.Width - _copyToClipboard.Width, 0);
+               }
             }
          }
 
@@ -1070,6 +1211,14 @@ namespace mrHelper.App.Controls
             {
                _showMoreContext.Location = new Point(
                   _panelContext.Location.X + _panelContext.Width - _showMoreContext.Width, 0);
+            }
+
+            if (_copyToClipboard != null)
+            {
+               _showMoreContext.Location = new Point(
+                  _showMoreContext.Location.X - _copyToClipboard.Width - 20, _showMoreContext.Location.Y);
+               _copyToClipboard.Location = new Point(
+                  _panelContext.Location.X + _panelContext.Width - _copyToClipboard.Width, 0);
             }
          }
 
@@ -1540,6 +1689,7 @@ namespace mrHelper.App.Controls
 
       private Control _textboxFilename;
       private Control _showMoreContext;
+      private Control _copyToClipboard;
       private Control _panelContext;
 
       private class NoteContainer

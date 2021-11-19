@@ -417,7 +417,6 @@ namespace mrHelper.App.Controls
          {
             if (getMergeRequest(null) == null || !getMergeRequestKey(null).HasValue)
             {
-               Debug.Assert(false);
                return;
             }
 
