@@ -243,6 +243,7 @@ namespace mrHelper.App.Forms
          ReplyOnRelatedNotePanel actions = new ReplyOnRelatedNotePanel(true);
          using (TextEditForm form = new TextEditForm("Reply on a Discussion", "", true, true, actions, _imagePath))
          {
+            form.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
             actions.SetTextbox(form.TextBox);
             if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
             {
