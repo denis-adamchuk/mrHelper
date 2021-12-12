@@ -487,11 +487,18 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private Dictionary<string, string> getSourceBranchTemplates()
+      {
+         return getConnectionPages()?.ToDictionary(
+            connectionPage => connectionPage.GetCurrentHostName(),
+            ConnectionPage => ConnectionPage.GetSourceBranchTemplate());
+      }
+
       private async Task processNonEmptyUrl(string url)
       {
          try
          {
-            object parsed = UrlHelper.Parse(url);
+            object parsed = UrlHelper.Parse(url, getSourceBranchTemplates());
             if (parsed is UrlParser.ParsedMergeRequestUrl parsedMergeRequestUrl)
             {
                throwOnUnknownHost(parsedMergeRequestUrl.Host);

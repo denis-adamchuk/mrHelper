@@ -40,7 +40,7 @@ namespace mrHelper.App.Helpers
       /// <summary>
       /// Splits passed url in parts and stores in object properties
       /// <summary>
-      public static ParsedNewMergeRequestUrl Parse(string url)
+      public static ParsedNewMergeRequestUrl Parse(string url, Dictionary<string, string> sourceBranchTemplates)
       {
          if (url.Length > MaxUrlLength)
          {
@@ -71,7 +71,8 @@ namespace mrHelper.App.Helpers
          // - origin/br_foo
          // - 53ff02a
          // Resolve all these cases to origin/br_foo here.
-         string remoteSourceBranch = getRemoteSourceBranch(path.Value, sourceBranch.Value);
+         sourceBranchTemplates.TryGetValue(projectKey.Value.HostName, out string templateForHost);
+         string remoteSourceBranch = getRemoteSourceBranch(path.Value, sourceBranch.Value, templateForHost);
          if (String.IsNullOrEmpty(remoteSourceBranch))
          {
             throw new UriFormatException(String.Format("\"{0}\" does not point to a remote branch", sourceBranch.Value));
@@ -83,10 +84,26 @@ namespace mrHelper.App.Helpers
          return new ParsedNewMergeRequestUrl(projectKey.Value, sourceBranchName, targetBranchName);
       }
 
-      private static string getRemoteSourceBranch(string path, string sourceBranch)
+      private static string getRemoteSourceBranch(string path, string sourceBranch, string template)
       {
          IEnumerable<string> refs = GitTools.GetRemotePointsAt(path, sourceBranch);
-         return refs?.FirstOrDefault();
+         if (refs == null)
+         {
+            return null;
+         }
+         if (!String.IsNullOrWhiteSpace(template))
+         {
+            Regex template_re = new Regex(template, RegexOptions.IgnoreCase);
+            foreach (string candidate in refs)
+            {
+               Match m = template_re.Match(trimRemoteOrigin(candidate));
+               if (m.Success)
+               {
+                  return candidate;
+               }
+            }
+         }
+         return refs.First();
       }
 
       private static IEnumerable<string> findTargetBranch(string path, string remoteSourceBranch)

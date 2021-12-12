@@ -53,6 +53,11 @@ namespace mrHelper.App.Controls
          return connectToUrlAsyncInternal(url, parsedUrl);
       }
 
+      internal string GetSourceBranchTemplate()
+      {
+         return getSourceBranchTemplate();
+      }
+
       internal void CreateNew()
       {
          DataCache dataCache = getDataCache(EDataCacheType.Live);

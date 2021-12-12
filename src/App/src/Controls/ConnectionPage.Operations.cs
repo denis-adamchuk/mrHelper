@@ -133,6 +133,11 @@ namespace mrHelper.App.Controls
          getListView(type).UnmuteSelectedMergeRequest();
       }
 
+      private string getSourceBranchTemplate()
+      {
+         return _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate());
+      }
+
       private void createNewMergeRequest(string hostname, User currentUser, NewMergeRequestProperties initialProperties,
          IEnumerable<Project> fullProjectList, IEnumerable<User> fullUserList, bool showIntegrationHint)
       {
@@ -146,8 +151,7 @@ namespace mrHelper.App.Controls
 
          using (MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
             _shortcuts.GetProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList,
-            sourceBranchesInUse, _expressionResolver.Resolve(Program.ServiceManager.GetSourceBranchTemplate()),
-            showIntegrationHint))
+            sourceBranchesInUse, getSourceBranchTemplate(), showIntegrationHint))
          {
             if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) != DialogResult.OK)
             {

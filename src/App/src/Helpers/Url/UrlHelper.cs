@@ -11,7 +11,7 @@ namespace mrHelper.App.Helpers
 {
    internal static class UrlHelper
    {
-      internal static object Parse(string originalUrl)
+      internal static object Parse(string originalUrl, Dictionary<string, string> sourceBranchTemplates)
       {
          if (String.IsNullOrEmpty(originalUrl))
          {
@@ -36,7 +36,7 @@ namespace mrHelper.App.Helpers
 
          try
          {
-            return NewMergeRequestUrlParser.Parse(url);
+            return NewMergeRequestUrlParser.Parse(url, sourceBranchTemplates);
          }
          catch (UriFormatException ex)
          {
