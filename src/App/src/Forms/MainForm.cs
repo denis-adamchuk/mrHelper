@@ -16,6 +16,7 @@ namespace mrHelper.App.Forms
       private static readonly int ConnectionLossBlinkingTimerInterval = 750 * 1; // 0.75 second
       private static readonly int TimeTrackingTimerInterval = 1000 * 1; // 1 second
       private static readonly int NewVersionReminderTimerInterval = 1000 * 60 * 60 * 24; // 24 hours
+      private static readonly int SessionLockCheckTimerInterval = 1000 * 30; // 30 seconds
 
       private static readonly string DefaultTimeTrackingTextBoxText = "00:00:00";
 
@@ -49,6 +50,10 @@ namespace mrHelper.App.Forms
       private readonly Timer _timeTrackingTimer = new Timer
       {
          Interval = TimeTrackingTimerInterval
+      };
+      private readonly Timer _sessionLockCheckTimer = new Timer
+      {
+         Interval = SessionLockCheckTimerInterval
       };
 
       private string _defaultHostName;

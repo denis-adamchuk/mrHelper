@@ -47,6 +47,9 @@ namespace mrHelper.App.Forms
          stopConnectionLossBlinkingTimer();
          _connectionLossBlinkingTimer?.Dispose();
 
+         stopSessionLockCheckTimer();
+         _sessionLockCheckTimer?.Dispose();
+
          _timeTrackingTimer?.Stop();
          _timeTrackingTimer?.Dispose();
 

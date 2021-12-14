@@ -61,6 +61,22 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void pauseTimeTrackingTimer()
+      {
+         if (isTrackingTime())
+         {
+            _timeTracker.Pause();
+         }
+      }
+
+      private void resumeTimeTrackingTimer()
+      {
+         if (isTrackingTime())
+         {
+            _timeTracker.Resume();
+         }
+      }
+
       private void stopTimeTrackingTimer()
       {
          BeginInvoke(new Action(async () => await stopTimeTrackingTimerAsync()));
@@ -557,6 +573,31 @@ namespace mrHelper.App.Forms
             case BlinkingPhase.Second: _connectionLossBlinkingPhase = BlinkingPhase.First; break;
          }
          updateConnectionStatusLabelOnConnectionLoss();
+      }
+
+      private void onSessionLockCheckTimer(object sender, EventArgs e)
+      {
+         if (isTrackingTime())
+         {
+            Trace.TraceInformation("[MainForm] Time tracking will be stopped because workstation was locked");
+            stopTimeTrackingTimer();
+         }
+      }
+
+      private void startSessionLockCheckTimer()
+      {
+         if (!_sessionLockCheckTimer.Enabled)
+         {
+            _sessionLockCheckTimer.Start();
+         }
+      }
+
+      private void stopSessionLockCheckTimer()
+      {
+         if (_sessionLockCheckTimer.Enabled)
+         {
+            _sessionLockCheckTimer.Stop();
+         }
       }
 
       // Custom Actions

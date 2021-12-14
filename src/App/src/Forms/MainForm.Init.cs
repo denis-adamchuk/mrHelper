@@ -125,6 +125,7 @@ namespace mrHelper.App.Forms
          startNewVersionReminderTimer();
          subscribeToNewVersionReminderTimer();
          subscribeToConnectionLossBlinkingTimer();
+         subscribeToSessionLockCheckTimer();
          updateNewVersionStatus();
 
          _timeTrackingTimer.Tick += new System.EventHandler(onTimeTrackingTimer);
@@ -279,6 +280,11 @@ namespace mrHelper.App.Forms
       private void subscribeToConnectionLossBlinkingTimer()
       {
          _connectionLossBlinkingTimer.Tick += new EventHandler(onConnectionLossBlinkingTimer);
+      }
+
+      private void subscribeToSessionLockCheckTimer()
+      {
+         _sessionLockCheckTimer.Tick += new EventHandler(onSessionLockCheckTimer);
       }
 
       private void subscribeToNewVersionReminderTimer()

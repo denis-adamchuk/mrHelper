@@ -31,9 +31,28 @@ namespace mrHelper.GitLabClient.Accessors
             _mergeRequestKey.IId, _mergeRequestKey.ProjectKey.ProjectName));
       }
 
+      public void Pause()
+      {
+         if (_stopwatch.IsRunning)
+         {
+            _stopwatch.Stop();
+         }
+      }
+
+      public void Resume()
+      {
+         if (!_stopwatch.IsRunning)
+         {
+            _stopwatch.Start();
+         }
+      }
+
       async public Task<TimeSpan> Stop()
       {
-         _stopwatch.Stop();
+         if (_stopwatch.IsRunning)
+         {
+            _stopwatch.Stop();
+         }
          TimeSpan span = Elapsed;
 
          MergeRequestEditor editor = new MergeRequestEditor(

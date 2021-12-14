@@ -119,15 +119,19 @@ namespace mrHelper.App.Forms
 
       private void SystemEvents_SessionSwitch(object sender, SessionSwitchEventArgs e)
       {
-         if (e.Reason == SessionSwitchReason.SessionLock)
+         switch (e.Reason)
          {
-            if (isTrackingTime())
-            {
-               stopTimeTrackingTimer();
-               MessageBox.Show("mrHelper stopped time tracking because workstation was locked", "Warning",
-                  MessageBoxButtons.OK, MessageBoxIcon.Warning);
-               Trace.TraceInformation("[MainForm] Time tracking stopped because workstation was locked");
-            }
+            case SessionSwitchReason.SessionLock:
+               pauseTimeTrackingTimer();
+               startSessionLockCheckTimer();
+               Trace.TraceInformation("[MainForm] Workstation locked");
+               break;
+
+            case SessionSwitchReason.SessionUnlock:
+               resumeTimeTrackingTimer();
+               stopSessionLockCheckTimer();
+               Trace.TraceInformation("[MainForm] Workstation unlocked");
+               break;
          }
       }
 

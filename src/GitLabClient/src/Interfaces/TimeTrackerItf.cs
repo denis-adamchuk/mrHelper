@@ -35,6 +35,10 @@ namespace mrHelper.GitLabClient
    {
       void Start();
 
+      void Pause();
+
+      void Resume();
+
       Task<TimeSpan> Stop();
 
       void Cancel();
