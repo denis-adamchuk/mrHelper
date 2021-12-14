@@ -50,7 +50,8 @@ namespace mrHelper.App.Forms
          this.searchPanel = new mrHelper.App.Controls.DiscussionSearchPanel();
          this.panelHeader = new System.Windows.Forms.Panel();
          this.linkLabelSaveAsDefaultLayout = new System.Windows.Forms.LinkLabel();
-         this.linkLabelGitLabURL = new LinkLabelEx();
+         this.linkLabelGitLabURL = new mrHelper.CommonControls.Controls.LinkLabelEx();
+         this.linkLabelReapplyFilter = new System.Windows.Forms.LinkLabel();
          this.panelHeader.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -68,6 +69,7 @@ namespace mrHelper.App.Forms
          // 
          this.discussionMenu.BackColor = System.Drawing.SystemColors.Menu;
          this.discussionMenu.Dock = System.Windows.Forms.DockStyle.Top;
+         this.discussionMenu.Font = new System.Drawing.Font("Segoe UI", 9F);
          this.discussionMenu.Location = new System.Drawing.Point(0, 0);
          this.discussionMenu.Margin = new System.Windows.Forms.Padding(0);
          this.discussionMenu.Name = "discussionMenu";
@@ -85,6 +87,7 @@ namespace mrHelper.App.Forms
          // panelHeader
          // 
          this.panelHeader.BackColor = System.Drawing.SystemColors.ControlLight;
+         this.panelHeader.Controls.Add(this.linkLabelReapplyFilter);
          this.panelHeader.Controls.Add(this.linkLabelSaveAsDefaultLayout);
          this.panelHeader.Controls.Add(this.linkLabelGitLabURL);
          this.panelHeader.Dock = System.Windows.Forms.DockStyle.Top;
@@ -118,6 +121,19 @@ namespace mrHelper.App.Forms
          this.linkLabelGitLabURL.TabStop = true;
          this.linkLabelGitLabURL.Text = "<merge-request-url>";
          // 
+         // linkLabelRefreshToApplyFilter
+         // 
+         this.linkLabelReapplyFilter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.linkLabelReapplyFilter.AutoSize = true;
+         this.linkLabelReapplyFilter.Location = new System.Drawing.Point(284, 3);
+         this.linkLabelReapplyFilter.Name = "linkLabelRefreshToApplyFilter";
+         this.linkLabelReapplyFilter.Size = new System.Drawing.Size(106, 13);
+         this.linkLabelReapplyFilter.TabIndex = 5;
+         this.linkLabelReapplyFilter.TabStop = true;
+         this.linkLabelReapplyFilter.Text = "Re-apply filter";
+         this.linkLabelReapplyFilter.Visible = false;
+         this.linkLabelReapplyFilter.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.onReaplyFilterClicked);
+         // 
          // DiscussionsForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -149,5 +165,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Panel panelHeader;
       private LinkLabelEx linkLabelGitLabURL;
       private System.Windows.Forms.LinkLabel linkLabelSaveAsDefaultLayout;
+      private System.Windows.Forms.LinkLabel linkLabelReapplyFilter;
    }
 }

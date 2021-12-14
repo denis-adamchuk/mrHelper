@@ -29,6 +29,7 @@ namespace mrHelper.App.Forms
          _onRefresh = onRefresh;
          _discussionLoader = discussionLoader;
          _discussionLoader.StatusChanged += onDiscussionLoaderStatusChanged;
+         _discussionLoader.Loaded += _ => hideReapplyFilter();
 
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);
@@ -57,6 +58,8 @@ namespace mrHelper.App.Forms
          // Includes making some boxes visible. This does not paint them because their parent (Form) is hidden so far.
          discussionPanel.Initialize(discussionSort, displayFilter, discussionLoader, discussions,
             shortcuts, git, colorScheme, mrk, mergeRequestAuthor, currentUser, discussionLayout);
+         discussionPanel.ContentMismatchesFilter += showReapplyFilter;
+         discussionPanel.ContentMatchesFilter += hideReapplyFilter;
          if (discussionPanel.DiscussionCount < 1)
          {
             throw new NoDiscussionsToShow();
@@ -170,6 +173,22 @@ namespace mrHelper.App.Forms
          ConfigurationHelper.SetDiscussionColumnWidth(Program.Settings, _discussionLayout.DiscussionColumnWidth);
          Program.Settings.NeedShiftReplies = _discussionLayout.NeedShiftReplies;
          updateSaveDefaultLayoutState();
+      }
+
+      private void onReaplyFilterClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         onRefreshByUser();
+         hideReapplyFilter();
+      }
+
+      private void showReapplyFilter()
+      {
+         linkLabelReapplyFilter.Visible = true;
+      }
+
+      private void hideReapplyFilter()
+      {
+         linkLabelReapplyFilter.Visible = false;
       }
 
       private void onDiscussionLoaderStatusChanged(string status)

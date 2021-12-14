@@ -93,6 +93,8 @@ namespace mrHelper.App.Controls
       ITextControl ITextControlHost.ActiveControl => ((_mostRecentFocusedDiscussionControl ?? ActiveControl) as ITextControl);
 
       public event Action ContentChanged;
+      public event Action ContentMismatchesFilter;
+      public event Action ContentMatchesFilter;
 
       protected override System.Drawing.Point ScrollToControl(System.Windows.Forms.Control activeControl)
       {
@@ -377,11 +379,7 @@ namespace mrHelper.App.Controls
 
       private IEnumerable<DiscussionBox> getVisibleBoxes()
       {
-         // Check if this box will be visible or not. The same condition as in updateVisibilityOfBoxes().
-         // Cannot check Visible property because it might be temporarily unset to avoid flickering.
-         return getAllBoxes()
-            .Where(box => _displayFilter.DoesMatchFilter(box.Discussion))
-            .ToArray(); // force immediate execution
+         return _visibleBoxes.Where(box => box.Discussion != null);
       }
 
       private IEnumerable<DiscussionBox> getVisibleAndSortedBoxes()
@@ -408,9 +406,17 @@ namespace mrHelper.App.Controls
       private void onDiscussionBoxContentChanged(DiscussionBox sender)
       {
          SuspendLayout(); // Avoid repositioning child controls on changing sender visibility
-         updateVisibilityOfBox(sender);
+         sender.Visible = true;
          ResumeLayout(true); // Put child controls at their places
          ContentChanged?.Invoke();
+
+         bool doesContentStillMatchFilter =
+            getVisibleBoxes()
+            .FirstOrDefault(box => !_displayFilter.DoesMatchFilter(box.Discussion)) != null;
+         if (doesContentStillMatchFilter)
+         {
+            ContentMismatchesFilter?.Invoke();
+         }
       }
 
       private void updateVisibilityOfBoxes()
@@ -419,6 +425,13 @@ namespace mrHelper.App.Controls
          {
             updateVisibilityOfBox(box);
          }
+
+         // Check if this box will be visible or not. The same condition as in updateVisibilityOfBoxes().
+         // Cannot check Visible property because it might be temporarily unset to avoid flickering.
+         _visibleBoxes = getAllBoxes()
+            .Where(box => _displayFilter.DoesMatchFilter(box.Discussion))
+            .ToArray(); // force immediate execution
+         ContentMatchesFilter?.Invoke();
       }
 
       private void updateVisibilityOfBox(DiscussionBox box)
@@ -456,6 +469,7 @@ namespace mrHelper.App.Controls
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search
       /// </summary>
       private Control _mostRecentFocusedDiscussionControl;
+      private IEnumerable<DiscussionBox> _visibleBoxes;
       private readonly HtmlToolTipEx _htmlTooltip = new HtmlToolTipEx
       {
          AutoPopDelay = 20000, // 20s
