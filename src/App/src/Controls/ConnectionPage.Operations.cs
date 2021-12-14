@@ -340,6 +340,11 @@ namespace mrHelper.App.Controls
 
       private string[] updateFavoriteProjectList(string[] currentFavoriteProjects, string projectName)
       {
+         if (!int.TryParse(Program.Settings.FavoriteProjectsPerHostCount, out int favoriteProjectsPerHost))
+         {
+            favoriteProjectsPerHost = Constants.FavoriteProjectsPerHostDefaultCount;
+         }
+
          if (!currentFavoriteProjects.Contains(projectName) || currentFavoriteProjects.Count() > 1)
          {
             List<string> favoriteProjectsList = currentFavoriteProjects.ToList();
@@ -349,7 +354,7 @@ namespace mrHelper.App.Controls
             }
             favoriteProjectsList.Insert(0, projectName);
             currentFavoriteProjects = favoriteProjectsList
-               .Take(Constants.FavoriteProjectsPerHostCount)
+               .Take(favoriteProjectsPerHost)
                .ToArray();
          }
          return currentFavoriteProjects;

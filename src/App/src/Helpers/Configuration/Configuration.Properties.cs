@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Linq;
-using System.Drawing;
 using System.Collections.Generic;
-using System.ComponentModel;
 using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Helpers
@@ -302,6 +300,12 @@ namespace mrHelper.App.Helpers
       {
          get => getValue(RecentMergeRequestsPerProjectCountKeyName, RecentMergeRequestsPerProjectCountDefaultValue);
          set => setValue(RecentMergeRequestsPerProjectCountKeyName, value);
+      }
+
+      public string FavoriteProjectsPerHostCount
+      {
+         get => getValue(FavoriteProjectsPerHostCountKeyName, FavoriteProjectsPerHostCountDefaultValue);
+         set => setValue(FavoriteProjectsPerHostCountKeyName, value);
       }
 
       public bool Notifications_NewMergeRequests
