@@ -1168,12 +1168,16 @@ namespace mrHelper.App.Controls
                {
                   _showMoreContext.Location = new Point(
                      _panelContext.Location.X + _panelContext.Width - _showMoreContext.Width, 0);
+
+                  if (_copyToClipboard != null)
+                  {
+                     _showMoreContext.Location = new Point(
+                        _showMoreContext.Location.X - _copyToClipboard.Width - 20, _showMoreContext.Location.Y);
+                  }
                }
 
                if (_copyToClipboard != null)
                {
-                  _showMoreContext.Location = new Point(
-                     _showMoreContext.Location.X - _copyToClipboard.Width - 20, _showMoreContext.Location.Y);
                   _copyToClipboard.Location = new Point(
                      _panelContext.Location.X + _panelContext.Width - _copyToClipboard.Width, 0);
                }
@@ -1211,12 +1215,16 @@ namespace mrHelper.App.Controls
             {
                _showMoreContext.Location = new Point(
                   _panelContext.Location.X + _panelContext.Width - _showMoreContext.Width, 0);
+
+               if (_copyToClipboard != null)
+               {
+                  _showMoreContext.Location = new Point(
+                     _showMoreContext.Location.X - _copyToClipboard.Width - 20, _showMoreContext.Location.Y);
+               }
             }
 
             if (_copyToClipboard != null)
             {
-               _showMoreContext.Location = new Point(
-                  _showMoreContext.Location.X - _copyToClipboard.Width - 20, _showMoreContext.Location.Y);
                _copyToClipboard.Location = new Point(
                   _panelContext.Location.X + _panelContext.Width - _copyToClipboard.Width, 0);
             }

@@ -410,10 +410,10 @@ namespace mrHelper.App.Controls
          ResumeLayout(true); // Put child controls at their places
          ContentChanged?.Invoke();
 
-         bool doesContentStillMatchFilter =
+         bool doesContentMismatchFilter =
             getVisibleBoxes()
             .FirstOrDefault(box => !_displayFilter.DoesMatchFilter(box.Discussion)) != null;
-         if (doesContentStillMatchFilter)
+         if (doesContentMismatchFilter)
          {
             ContentMismatchesFilter?.Invoke();
          }

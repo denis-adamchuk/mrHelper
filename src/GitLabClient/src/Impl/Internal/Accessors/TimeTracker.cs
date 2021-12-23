@@ -49,10 +49,7 @@ namespace mrHelper.GitLabClient.Accessors
 
       async public Task<TimeSpan> Stop()
       {
-         if (_stopwatch.IsRunning)
-         {
-            _stopwatch.Stop();
-         }
+         _stopwatch.Stop();
          TimeSpan span = Elapsed;
 
          MergeRequestEditor editor = new MergeRequestEditor(
