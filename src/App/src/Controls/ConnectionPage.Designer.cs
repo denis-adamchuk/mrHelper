@@ -85,6 +85,7 @@ namespace mrHelper.App.Controls
          this.tabPageLive = new System.Windows.Forms.TabPage();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
          this.textBoxDisplayFilter = new mrHelper.CommonControls.Controls.DelayedTextBox();
+         this.textBoxDisplayFilterRecent = new mrHelper.CommonControls.Controls.DelayedTextBox();
          this.listViewLiveMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -99,6 +100,7 @@ namespace mrHelper.App.Controls
          this.columnHeaderRefreshTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxDisplayFilter = new System.Windows.Forms.CheckBox();
+         this.checkBoxDisplayFilterRecent = new System.Windows.Forms.CheckBox();
          this.tabPageSearch = new System.Windows.Forms.TabPage();
          this.groupBoxSearchMergeRequest = new System.Windows.Forms.GroupBox();
          this.linkLabelNewSearch = new System.Windows.Forms.LinkLabel();
@@ -228,6 +230,17 @@ namespace mrHelper.App.Controls
          this.textBoxDisplayFilter.TextChanged += new System.EventHandler(this.textBoxDisplayFilter_TextChanged);
          this.textBoxDisplayFilter.Leave += new System.EventHandler(this.textBoxDisplayFilter_Leave);
          // 
+         // textBoxDisplayFilterRecent
+         // 
+         this.textBoxDisplayFilterRecent.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.textBoxDisplayFilterRecent.Location = new System.Drawing.Point(60, 17);
+         this.textBoxDisplayFilterRecent.Name = "textBoxDisplayFilterRecent";
+         this.textBoxDisplayFilterRecent.Size = new System.Drawing.Size(776, 20);
+         this.textBoxDisplayFilterRecent.TabIndex = 1;
+         this.textBoxDisplayFilterRecent.TextChanged += new System.EventHandler(this.textBoxDisplayFilterRecent_TextChanged);
+         this.textBoxDisplayFilterRecent.Leave += new System.EventHandler(this.textBoxDisplayFilterRecent_Leave);
+         // 
          // listViewLiveMergeRequests
          // 
          this.listViewLiveMergeRequests.AllowColumnReorder = true;
@@ -344,6 +357,18 @@ namespace mrHelper.App.Controls
          this.checkBoxDisplayFilter.Text = "Filter";
          this.checkBoxDisplayFilter.UseVisualStyleBackColor = true;
          this.checkBoxDisplayFilter.CheckedChanged += new System.EventHandler(this.checkBoxDisplayFilter_CheckedChanged);
+         // 
+         // checkBoxDisplayFilterRecent
+         // 
+         this.checkBoxDisplayFilterRecent.AutoSize = true;
+         this.checkBoxDisplayFilterRecent.Location = new System.Drawing.Point(6, 19);
+         this.checkBoxDisplayFilterRecent.MinimumSize = new System.Drawing.Size(48, 0);
+         this.checkBoxDisplayFilterRecent.Name = "checkBoxDisplayFilterRecent";
+         this.checkBoxDisplayFilterRecent.Size = new System.Drawing.Size(48, 17);
+         this.checkBoxDisplayFilterRecent.TabIndex = 0;
+         this.checkBoxDisplayFilterRecent.Text = "Filter";
+         this.checkBoxDisplayFilterRecent.UseVisualStyleBackColor = true;
+         this.checkBoxDisplayFilterRecent.CheckedChanged += new System.EventHandler(this.checkBoxDisplayFilterRecent_CheckedChanged);
          // 
          // tabPageSearch
          // 
@@ -478,6 +503,8 @@ namespace mrHelper.App.Controls
          // 
          // groupBoxRecentMergeRequest
          // 
+         this.groupBoxRecentMergeRequest.Controls.Add(this.textBoxDisplayFilterRecent);
+         this.groupBoxRecentMergeRequest.Controls.Add(this.checkBoxDisplayFilterRecent);
          this.groupBoxRecentMergeRequest.Controls.Add(this.textBoxRecentMergeRequestsHint);
          this.groupBoxRecentMergeRequest.Controls.Add(this.listViewRecentMergeRequests);
          this.groupBoxRecentMergeRequest.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -491,7 +518,7 @@ namespace mrHelper.App.Controls
          // textBoxRecentMergeRequestsHint
          // 
          this.textBoxRecentMergeRequestsHint.BorderStyle = System.Windows.Forms.BorderStyle.None;
-         this.textBoxRecentMergeRequestsHint.Location = new System.Drawing.Point(3, 19);
+         this.textBoxRecentMergeRequestsHint.Location = new System.Drawing.Point(3, 39);
          this.textBoxRecentMergeRequestsHint.Multiline = true;
          this.textBoxRecentMergeRequestsHint.Name = "textBoxRecentMergeRequestsHint";
          this.textBoxRecentMergeRequestsHint.ReadOnly = true;
@@ -521,10 +548,10 @@ namespace mrHelper.App.Controls
          this.listViewRecentMergeRequests.GridLines = true;
          this.listViewRecentMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
          this.listViewRecentMergeRequests.HideSelection = false;
-         this.listViewRecentMergeRequests.Location = new System.Drawing.Point(3, 53);
+         this.listViewRecentMergeRequests.Location = new System.Drawing.Point(3, 73);
          this.listViewRecentMergeRequests.MultiSelect = false;
          this.listViewRecentMergeRequests.Name = "listViewRecentMergeRequests";
-         this.listViewRecentMergeRequests.Size = new System.Drawing.Size(833, 560);
+         this.listViewRecentMergeRequests.Size = new System.Drawing.Size(833, 540);
          this.listViewRecentMergeRequests.TabIndex = 4;
          this.listViewRecentMergeRequests.Tag = "DesignTimeName";
          this.listViewRecentMergeRequests.UseCompatibleStateImageBehavior = false;
@@ -702,6 +729,7 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.TabPage tabPageLive;
       private System.Windows.Forms.GroupBox groupBoxSelectMergeRequest;
       private CommonControls.Controls.DelayedTextBox textBoxDisplayFilter;
+      private CommonControls.Controls.DelayedTextBox textBoxDisplayFilterRecent;
       private App.Controls.MergeRequestListView listViewLiveMergeRequests;
       private System.Windows.Forms.ColumnHeader columnHeaderIId;
       private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
@@ -716,6 +744,7 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ColumnHeader columnHeaderRefreshTime;
       private System.Windows.Forms.ColumnHeader columnHeaderActivities;
       private System.Windows.Forms.CheckBox checkBoxDisplayFilter;
+      private System.Windows.Forms.CheckBox checkBoxDisplayFilterRecent;
       private System.Windows.Forms.TabPage tabPageSearch;
       private System.Windows.Forms.GroupBox groupBoxSearchMergeRequest;
       private App.Controls.MergeRequestListView listViewFoundMergeRequests;

@@ -41,6 +41,7 @@ namespace mrHelper.App.Controls
       private EventFilter _eventFilter;
       private ExpressionResolver _expressionResolver;
       private MergeRequestFilter _mergeRequestFilter;
+      private MergeRequestFilter _mergeRequestFilterRecent;
       private readonly System.Windows.Forms.ToolTip _toolTip;
       private Forms.EditSearchQueryFormState _prevSearchQuery;
 

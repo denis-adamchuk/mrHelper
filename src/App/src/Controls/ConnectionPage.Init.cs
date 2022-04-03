@@ -72,6 +72,8 @@ namespace mrHelper.App.Controls
       {
          textBoxDisplayFilter.Text = Program.Settings.DisplayFilter;
          checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
+         textBoxDisplayFilterRecent.Text = Program.Settings.DisplayFilterRecent;
+         checkBoxDisplayFilterRecent.Checked = Program.Settings.DisplayFilterRecentEnabled;
 
          preparePageToStart();
 
@@ -95,7 +97,7 @@ namespace mrHelper.App.Controls
       private void preparePageToStart()
       {
          preparePageControlsToStart();
-         createMessageFilterFromSettings();
+         createMessageFiltersFromSettings();
       }
 
       private void preparePageControlsToStart()
@@ -143,19 +145,39 @@ namespace mrHelper.App.Controls
          _redrawTimer.Stop();
       }
 
-      private void createMessageFilterFromSettings()
+      private void createMessageFiltersFromSettings()
       {
-         _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState());
+         _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState(EDataCacheType.Live));
          _mergeRequestFilter.FilterChanged += () => updateMergeRequestList(EDataCacheType.Live);
+
+         _mergeRequestFilterRecent = new MergeRequestFilter(createMergeRequestFilterState(EDataCacheType.Recent));
+         _mergeRequestFilterRecent.FilterChanged += () => updateMergeRequestList(EDataCacheType.Recent);
       }
 
-      private MergeRequestFilterState createMergeRequestFilterState()
+      private MergeRequestFilterState createMergeRequestFilterState(EDataCacheType type)
       {
-         return new MergeRequestFilterState
-         (
-            ConfigurationHelper.GetDisplayFilterKeywords(Program.Settings),
-            Program.Settings.DisplayFilterEnabled
-         );
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               return new MergeRequestFilterState
+               (
+                  ConfigurationHelper.GetDisplayFilterKeywords(Program.Settings),
+                  Program.Settings.DisplayFilterEnabled
+               );
+
+            case EDataCacheType.Recent:
+               return new MergeRequestFilterState
+               (
+                  ConfigurationHelper.GetDisplayFilterRecentKeywords(Program.Settings),
+                  Program.Settings.DisplayFilterRecentEnabled
+               );
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               break;
+         }
+         return default(MergeRequestFilterState);
       }
 
       private void createListViewContextMenu()
@@ -236,7 +258,6 @@ namespace mrHelper.App.Controls
 
       private void createLiveDataCacheAndDependencies()
       {
-
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Live",
             new DataCacheCallbacks(onForbiddenProject, onNotFoundProject),
@@ -426,11 +447,12 @@ namespace mrHelper.App.Controls
 
       private void createRecentDataCache()
       {
-         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
+         DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilterRecent, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Recent", new DataCacheCallbacks(null, null),
             getDataCacheUpdateRules(EDataCacheType.Recent), false, false);
          _recentDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Recent).SetDataCache(_recentDataCache);
+         getListView(EDataCacheType.Recent).SetFilter(_mergeRequestFilterRecent);
       }
 
       private void subscribeToRecentDataCacheInternalEvents()

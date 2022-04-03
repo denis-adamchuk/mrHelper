@@ -296,6 +296,14 @@ namespace mrHelper.App.Helpers
             .ToArray();
       }
 
+      internal static string[] GetDisplayFilterRecentKeywords(UserDefinedSettings settings)
+      {
+         return settings.DisplayFilterRecent
+            .Split(',')
+            .Select(x => x.Trim(' '))
+            .ToArray();
+      }
+
       internal class StringToBooleanCollection : List<Tuple<string, bool>>
       {
          internal StringToBooleanCollection()

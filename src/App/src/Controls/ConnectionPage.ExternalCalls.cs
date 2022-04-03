@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -233,9 +232,18 @@ namespace mrHelper.App.Controls
             return false;
          }
 
-         if (dataCacheType == EDataCacheType.Live)
+         switch (dataCacheType)
          {
-            checkBoxDisplayFilter.Checked = false;
+            case EDataCacheType.Live:
+               checkBoxDisplayFilter.Checked = false;
+               break;
+            case EDataCacheType.Recent:
+               checkBoxDisplayFilterRecent.Checked = false;
+               break;
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               break;
          }
          return true;
       }

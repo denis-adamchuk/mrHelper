@@ -61,10 +61,22 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(CheckedLabelsFilterKeyName, value);
       }
 
+      public bool DisplayFilterRecentEnabled
+      {
+         get => getBoolValue(CheckedLabelsFilterRecentKeyName, CheckedLabelsFilterRecentDefaultValue);
+         set => setBoolValue(CheckedLabelsFilterRecentKeyName, value);
+      }
+
       public string DisplayFilter
       {
          get => getValue(LastUsedLabelsKeyName, LastUsedLabelsDefaultValue);
          set => setValue(LastUsedLabelsKeyName, value);
+      }
+
+      public string DisplayFilterRecent
+      {
+         get => getValue(LastUsedLabelsRecentKeyName, LastUsedLabelsRecentDefaultValue);
+         set => setValue(LastUsedLabelsRecentKeyName, value);
       }
 
       public bool ShowPublicOnly

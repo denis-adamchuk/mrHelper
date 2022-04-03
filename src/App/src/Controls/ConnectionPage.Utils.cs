@@ -255,19 +255,36 @@ namespace mrHelper.App.Controls
          listView.UpdateGroups();
          listView.UpdateItems();
 
-         if (mode == EDataCacheType.Live)
+         switch (mode)
          {
-            if (listView.Items.Count > 0 || Program.Settings.DisplayFilterEnabled)
-            {
-               enableMergeRequestFilterControls(true);
-               listView.Enabled = true;
-            }
-            SummaryColorChanged?.Invoke(this);
-            onLiveMergeRequestListRefreshed();
-         }
-         else if (listView.Items.Count > 0)
-         {
-            listView.Enabled = true;
+            case EDataCacheType.Live:
+               if (listView.Items.Count > 0 || Program.Settings.DisplayFilterEnabled)
+               {
+                  enableMergeRequestFilterControls(mode, true);
+                  listView.Enabled = true;
+               }
+               SummaryColorChanged?.Invoke(this);
+               onLiveMergeRequestListRefreshed();
+               break;
+
+            case EDataCacheType.Recent:
+               if (listView.Items.Count > 0 || Program.Settings.DisplayFilterRecentEnabled)
+               {
+                  enableMergeRequestFilterControls(mode, true);
+                  listView.Enabled = true;
+               }
+               break;
+
+            case EDataCacheType.Search:
+               if (listView.Items.Count > 0)
+               {
+                  listView.Enabled = true;
+               }
+               break;
+
+            default:
+               Debug.Assert(false);
+               break;
          }
       }
 
@@ -662,7 +679,7 @@ namespace mrHelper.App.Controls
       private void disableLiveTabControls()
       {
          getListView(EDataCacheType.Live).DisableListView();
-         enableMergeRequestFilterControls(false);
+         enableMergeRequestFilterControls(EDataCacheType.Live, false);
       }
 
       private void disableSearchTabControls()
@@ -679,6 +696,7 @@ namespace mrHelper.App.Controls
       private void disableRecentTabControls()
       {
          getListView(EDataCacheType.Recent).DisableListView();
+         enableMergeRequestFilterControls(EDataCacheType.Recent, false);
       }
 
       private void disableSelectedMergeRequestControls()
@@ -691,10 +709,22 @@ namespace mrHelper.App.Controls
          onMergeRequestActionsEnabled();
       }
 
-      private void enableMergeRequestFilterControls(bool enabled)
+      private void enableMergeRequestFilterControls(EDataCacheType type, bool enabled)
       {
-         checkBoxDisplayFilter.Enabled = enabled;
-         textBoxDisplayFilter.Enabled = enabled;
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               checkBoxDisplayFilter.Enabled = enabled;
+               textBoxDisplayFilter.Enabled = enabled;
+               break;
+            case EDataCacheType.Recent:
+               checkBoxDisplayFilterRecent.Enabled = enabled;
+               textBoxDisplayFilterRecent.Enabled = enabled;
+               break;
+            case EDataCacheType.Search:
+            default:
+               break;
+         }
       }
 
       private void onRedrawTimer(object sender, EventArgs e)
@@ -750,23 +780,73 @@ namespace mrHelper.App.Controls
 
       // Filter
 
-      private void onTextBoxDisplayFilterUpdate()
+      private void onTextBoxDisplayFilterUpdate(EDataCacheType type)
       {
-         Program.Settings.DisplayFilter = textBoxDisplayFilter.Text;
-         if (_mergeRequestFilter != null)
+         switch (type)
          {
-            _mergeRequestFilter.Filter = createMergeRequestFilterState();
+            case EDataCacheType.Live:
+               Program.Settings.DisplayFilter = textBoxDisplayFilter.Text;
+               break;
+
+            case EDataCacheType.Recent:
+               Program.Settings.DisplayFilterRecent = textBoxDisplayFilterRecent.Text;
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               return;
+         }
+
+         applyFilterChange(type);
+      }
+
+      private void onCheckBoxDisplayFilterUpdate(EDataCacheType type, bool enabled)
+      {
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               Program.Settings.DisplayFilterEnabled = enabled;
+               break;
+
+            case EDataCacheType.Recent:
+               Program.Settings.DisplayFilterRecentEnabled = enabled;
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               return;
+         }
+
+         applyFilterChange(type);
+      }
+
+      private void applyFilterChange(EDataCacheType type)
+      {
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               if (_mergeRequestFilter != null)
+               {
+                  _mergeRequestFilter.Filter = createMergeRequestFilterState(EDataCacheType.Live);
+               }
+               break;
+
+            case EDataCacheType.Recent:
+               if (_mergeRequestFilterRecent != null)
+               {
+                  _mergeRequestFilterRecent.Filter = createMergeRequestFilterState(EDataCacheType.Recent);
+               }
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               break;
          }
       }
 
-      private void applyFilterChange(bool enabled)
-      {
-         Program.Settings.DisplayFilterEnabled = enabled;
-         if (_mergeRequestFilter != null)
-         {
-            _mergeRequestFilter.Filter = createMergeRequestFilterState();
-         }
-      }
 
       // Misc
 

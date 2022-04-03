@@ -14,17 +14,32 @@ namespace mrHelper.App.Controls
    {
       private void textBoxDisplayFilter_TextChanged(object sender, EventArgs e)
       {
-         onTextBoxDisplayFilterUpdate();
+         onTextBoxDisplayFilterUpdate(EDataCacheType.Live);
       }
 
       private void textBoxDisplayFilter_Leave(object sender, EventArgs e)
       {
-         onTextBoxDisplayFilterUpdate();
+         onTextBoxDisplayFilterUpdate(EDataCacheType.Live);
+      }
+
+      private void textBoxDisplayFilterRecent_TextChanged(object sender, EventArgs e)
+      {
+         onTextBoxDisplayFilterUpdate(EDataCacheType.Recent);
+      }
+
+      private void textBoxDisplayFilterRecent_Leave(object sender, EventArgs e)
+      {
+         onTextBoxDisplayFilterUpdate(EDataCacheType.Recent);
       }
 
       private void checkBoxDisplayFilter_CheckedChanged(object sender, EventArgs e)
       {
-         applyFilterChange((sender as CheckBox).Checked);
+         onCheckBoxDisplayFilterUpdate(EDataCacheType.Live, (sender as CheckBox).Checked);
+      }
+
+      private void checkBoxDisplayFilterRecent_CheckedChanged(object sender, EventArgs e)
+      {
+         onCheckBoxDisplayFilterUpdate(EDataCacheType.Recent, (sender as CheckBox).Checked);
       }
 
       private void listViewMergeRequests_ContentChanged(object sender)
