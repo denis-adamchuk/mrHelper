@@ -19,6 +19,8 @@ using static mrHelper.App.Helpers.ConfigurationHelper;
 
 namespace mrHelper.App.Interprocess
 {
+   public class SubmitFailedException : Exception { }
+
    internal class DiffCallHandler
    {
       internal DiffCallHandler(IGitCommandService git,
@@ -65,7 +67,7 @@ namespace mrHelper.App.Interprocess
             scrollPosition(position, scrollUp, matchInfo.IsLeftSideLineNumber);
 
          async Task fnOnSubmitNewDiscussion(string body, bool includeContext, DiffPosition position) =>
-            await actOnGitLab("create", () =>
+            await actOnGitLab("submit", () =>
                submitDiscussionAsync(mrk, matchInfo, snapshot.Refs, position, body, includeContext));
 
          async Task fnOnEditOldNote(ReportedDiscussionNoteKey notePosition, ReportedDiscussionNoteContent content) =>
@@ -410,35 +412,32 @@ namespace mrHelper.App.Interprocess
 
       async private Task actOnGitLab(string actionName, Func<Task> action)
       {
-         void handleException(Exception ex)
-         {
-            string message = String.Format(
-               "Cannot {0} a discussion at GitLab. Check your connection and try again.", actionName);
-            string caption = "Error";
-            var icon = MessageBoxIcon.Error;
-            if (ex is DiscussionEditorException dex && dex.IsNotFoundException()
-             && (actionName == "reply on" || actionName == "delete" || actionName == "edit"))
-            {
-               message = "Discussion note does not longer exist";
-               caption = "Warning";
-               icon = MessageBoxIcon.Warning;
-            }
-            ExceptionHandlers.Handle(message, ex);
-            MessageBox.Show(message, caption, MessageBoxButtons.OK, icon,
-               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
-         }
-
          try
          {
             await action();
          }
          catch (DiscussionEditorException ex)
          {
-            handleException(ex);
+            if (ex.IsNotFoundException())
+            {
+               Debug.Assert(actionName == "reply on" || actionName == "delete" || actionName == "edit");
+               string message = String.Format(
+                  "Cannot {0} a discussion at GitLab. Discussion note no longer exists.", actionName);
+               string caption = "Warning";
+               MessageBoxIcon icon = MessageBoxIcon.Warning;
+
+               ExceptionHandlers.Handle(message, ex);
+               MessageBox.Show(message, caption, MessageBoxButtons.OK, icon,
+                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+            }
+            else
+            {
+               throw new SubmitFailedException();
+            }
          }
-         catch (DiscussionCreatorException ex)
+         catch (DiscussionCreatorException)
          {
-            handleException(ex);
+            throw new SubmitFailedException();
          }
       }
 

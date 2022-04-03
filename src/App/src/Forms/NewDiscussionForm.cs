@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
@@ -10,6 +11,7 @@ using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
+using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.CommonNative;
 using mrHelper.CommonControls.Tools;
@@ -259,8 +261,28 @@ namespace mrHelper.App.Forms
                   Hide();
                }
 
-               string text = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
-               await _onReply(_relatedDiscussions[_relatedDiscussionIndex.Value].Key, text);
+               try
+               {
+                  string text = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
+                  await _onReply(_relatedDiscussions[_relatedDiscussionIndex.Value].Key, text);
+               }
+               catch (SubmitFailedException ex)
+               {
+                  Clipboard.SetText(form.Body);
+
+                  string message = 
+                     "Cannot reply on a discussion at GitLab. Check your network connection.\r\n" +
+                     "Your text was copied to Clipboard.";
+                  ExceptionHandlers.Handle(message, ex);
+                  MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+                     MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+
+                  if (actions.IsCloseDialogActionChecked)
+                  {
+                     Show();
+                  }
+                  return;
+               }
 
                if (actions.IsCloseDialogActionChecked)
                {
@@ -730,7 +752,15 @@ namespace mrHelper.App.Forms
          if (checkModifications(out bool needSubmitNewDiscussion, out bool needSubmitModifications))
          {
             Hide();
-            await submit(needSubmitNewDiscussion, needSubmitModifications);
+            try
+            {
+               await submit(needSubmitNewDiscussion, needSubmitModifications);
+            }
+            catch (SubmitFailedException)
+            {
+               Show();
+               return;
+            }
             Close();
          }
       }
@@ -750,20 +780,52 @@ namespace mrHelper.App.Forms
 
       private async Task submitNewDiscussion()
       {
-         string body = getNewNoteText();
-         await _onSubmitNewDiscussion?.Invoke(body, _needIncludeContextInNewDiscussion, NewDiscussionPosition);
+         try
+         {
+            string body = getNewNoteText();
+            await _onSubmitNewDiscussion?.Invoke(body, _needIncludeContextInNewDiscussion, NewDiscussionPosition);
+         }
+         catch (SubmitFailedException ex)
+         {
+            string message = "Cannot create a discussion at GitLab. Check your network connection and try again.";
+            ExceptionHandlers.Handle(message, ex);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+               MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+            throw; // re-throw to un-hide the dialog
+         }
       }
 
       private async Task submitOldEditedNotes()
       {
+         HashSet<ReportedDiscussionNoteKey> submitted = new HashSet<ReportedDiscussionNoteKey>();
          foreach (KeyValuePair<ReportedDiscussionNoteKey, string> keyValuePair in _modifiedNoteTexts)
          {
             string discussionId = keyValuePair.Key.DiscussionId;
             int noteId = keyValuePair.Key.Id;
             string body = keyValuePair.Value;
-            await _onEditOldNote(
-               new ReportedDiscussionNoteKey(noteId, discussionId),
-               new ReportedDiscussionNoteContent(body));
+            try
+            {
+               await _onEditOldNote(
+                  new ReportedDiscussionNoteKey(noteId, discussionId),
+                  new ReportedDiscussionNoteContent(body));
+            }
+            catch (SubmitFailedException ex)
+            {
+               StringBuilder builder = new StringBuilder();
+               _modifiedNoteTexts
+                  .Where(kv => !submitted.Contains(kv.Key))
+                  .ToList()
+                  .ForEach(kv => builder.AppendLine(kv.Value));
+               Clipboard.SetText(builder.ToString());
+               string message = 
+                  "Cannot edit one or more discussions at GitLab. Check your network connection.\r\n" +
+                  "Unsubmitted text was copied to Clipboard.";
+               ExceptionHandlers.Handle(message, ex);
+               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+               break; // don't rethrow because it is ok to close dialog if a Edit attempt failed
+            }
+            submitted.Add(keyValuePair.Key);
          }
       }
 
@@ -771,7 +833,20 @@ namespace mrHelper.App.Forms
       {
          foreach (ReportedDiscussionNoteKey item in _deletedNotes)
          {
-            await _onDeleteOldNote(new ReportedDiscussionNoteKey(item.Id, item.DiscussionId));
+            try
+            {
+               await _onDeleteOldNote(new ReportedDiscussionNoteKey(item.Id, item.DiscussionId));
+            }
+            catch (SubmitFailedException ex)
+            {
+               string message = 
+                  "Cannot delete one or more discussions at GitLab. " +
+                  "Check your network connection and try again.";
+               ExceptionHandlers.Handle(message, ex);
+               MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
+                  MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+               break; // don't rethrow because it is ok to close dialog if a Delete attempt failed
+            }
          }
       }
 
