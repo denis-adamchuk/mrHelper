@@ -51,6 +51,7 @@ namespace mrHelper.App.Controls
          listViewLiveMergeRequests.SetIdentity(Constants.LiveListViewName);
          listViewLiveMergeRequests.SetCollapsedProjects(collapsedProjectsLive);
          listViewLiveMergeRequests.SetMutedMergeRequests(mutedMergeRequests);
+         listViewLiveMergeRequests.SetOpenMergeRequestUrlCallback(openBrowserForMergeRequest);
 
          listViewFoundMergeRequests.SetIdentity(Constants.SearchListViewName);
          listViewFoundMergeRequests.SetCollapsedProjects(collapsedProjectsSearch);
@@ -115,7 +116,7 @@ namespace mrHelper.App.Controls
          forEachListView(listView => listView.ContentChanged += listViewMergeRequests_ContentChanged);
 
          linkLabelConnectedTo.Text = String.Empty;
-         linkLabelConnectedTo.SetLinkLabelClicked(UrlHelper.OpenBrowser);
+         linkLabelConnectedTo.SetLinkLabelClicked(openBrowserForSelectedMergeRequest);
 
          descriptionSplitContainerSite.Initialize(_keywords, _mdPipeline);
          descriptionSplitContainerSite.SplitContainer.SplitterMoving +=

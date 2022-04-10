@@ -804,6 +804,23 @@ namespace mrHelper.App.Controls
          return discussions;
       }
 
+      private void openBrowserForMergeRequest(MergeRequestKey mrk, string url)
+      {
+         UrlHelper.OpenBrowser(url);
+         ensureMergeRequestInRecentDataCache(mrk);
+      }
+
+      private void openBrowserForSelectedMergeRequest(string url)
+      {
+         MergeRequestKey? mrkOpt = getMergeRequestKey(null);
+         if (!mrkOpt.HasValue)
+         {
+            return;
+         }
+
+         openBrowserForMergeRequest(mrkOpt.Value, url);
+      }
+
       /// <summary>
       /// Collect records that correspond to merge requests that are missing in the cache
       /// </summary>

@@ -117,6 +117,11 @@ namespace mrHelper.App.Controls
          _mergeRequestFilter = filter;
       }
 
+      internal void SetOpenMergeRequestUrlCallback(Action<MergeRequestKey, string> callback)
+      {
+         _openMergeRequestUrlCallback = callback;
+      }
+
       internal void SetColorScheme(ColorScheme colorScheme)
       {
          _colorScheme = colorScheme;
@@ -1327,16 +1332,36 @@ namespace mrHelper.App.Controls
          return item != null && isSummaryKey((FullMergeRequestKey)(item.Tag));
       }
 
-      private static void onUrlClick(ListViewHitTestInfo hit)
+      private void onUrlClick(ListViewHitTestInfo hit)
       {
-         if (hit.SubItem != null)
+         if (hit.SubItem == null)
          {
-            ListViewSubItemInfo info = (ListViewSubItemInfo)(hit.SubItem.Tag);
-            if (info.Clickable)
-            {
-               UrlHelper.OpenBrowser(info.Url);
-            }
+            return;
          }
+
+         ListViewSubItemInfo info = (ListViewSubItemInfo)(hit.SubItem.Tag);
+         if (!info.Clickable)
+         {
+            return;
+         }
+
+         if (info.ColumnType == ColumnType.IId && _openMergeRequestUrlCallback != null)
+         {
+            FullMergeRequestKey? fmkOpt = (FullMergeRequestKey?)(hit.Item.Tag);
+            if (fmkOpt.HasValue)
+            {
+               FullMergeRequestKey fmk = fmkOpt.Value;
+               MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+               _openMergeRequestUrlCallback(mrk, info.Url);
+            }
+            else
+            {
+               Debug.Assert(false);
+            }
+            return;
+         }
+
+         UrlHelper.OpenBrowser(info.Url);
       }
 
       private static Cursor getCursor(ListViewHitTestInfo hit)
@@ -1360,6 +1385,7 @@ namespace mrHelper.App.Controls
       private DictionaryWrapper<MergeRequestKey, DateTime> _mutedMergeRequests;
       private ExpressionResolver _expressionResolver;
       private string _identity;
+      private Action<MergeRequestKey, string> _openMergeRequestUrlCallback;
       private static readonly int MaxListViewRows = 3;
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
 
