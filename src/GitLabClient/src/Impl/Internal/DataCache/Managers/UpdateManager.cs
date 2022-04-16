@@ -106,8 +106,22 @@ namespace mrHelper.GitLabClient.Managers
          oneShotTimer.Elapsed +=
             async (s, e) =>
          {
-            var updateTask = mrk.HasValue ? updateOneOnTimer(mrk.Value) : updateAllOnTimer();
-            IEnumerable<UserEvents.MergeRequestEvent> updates = await updateTask;
+            IEnumerable<UserEvents.MergeRequestEvent> updates;
+            if (mrk.HasValue)
+            {
+               try
+               {
+                  updates = await updateOneOnTimer(mrk.Value);
+               }
+               catch (RenamedProjectException)
+               {
+                  updates = await updateAllOnTimer();
+               }
+            }
+            else
+            {
+               updates = await updateAllOnTimer();
+            }
             notify(updates);
 
             onUpdateFinished?.Invoke();
@@ -145,15 +159,18 @@ namespace mrHelper.GitLabClient.Managers
             {
                await _mergeRequestLoader.LoadMergeRequest(mrk);
             }
-            MergeRequestRefreshed?.Invoke(mrk);
+         }
+         catch (RenamedProjectException)
+         {
+            throw;
          }
          catch (BaseLoaderException ex)
          {
             ExceptionHandlers.Handle("Cannot perform a one-shot update", ex);
-            return null;
          }
          finally
          {
+            MergeRequestRefreshed?.Invoke(mrk);
             _updating = false;
             traceDetailed(String.Format("Updated !{0} in {1}", mrk.IId, mrk.ProjectKey.ProjectName));
          }
@@ -194,15 +211,14 @@ namespace mrHelper.GitLabClient.Managers
             {
                await _mergeRequestListLoader.Load();
             }
-            MergeRequestListRefreshed?.Invoke();
          }
          catch (BaseLoaderException ex)
          {
             ExceptionHandlers.Handle("Cannot update merge requests on timer", ex);
-            return null;
          }
          finally
          {
+            MergeRequestListRefreshed?.Invoke();
             _updating = false;
             traceDetailed("Updated the list");
          }

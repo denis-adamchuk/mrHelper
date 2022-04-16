@@ -79,7 +79,34 @@ namespace mrHelper.GitLabClient.Loaders
       {
          SearchQueryCollection queries = _queryCollection;
          IEnumerable<MergeRequest> mergeRequests = await fetchMergeRequestsAsync(queries);
-         return await groupMergeRequests(mergeRequests);
+         IEnumerable<int> renamedProjectIds = checkRenamedProjects(mergeRequests);
+         return await groupMergeRequests(mergeRequests, renamedProjectIds);
+      }
+
+      private IEnumerable<int> checkRenamedProjects(IEnumerable<MergeRequest> mergeRequests)
+      {
+         List<int> renamedProjectIds = new List<int>();
+         foreach (MergeRequest mergeRequest in mergeRequests)
+         {
+            ProjectKey? projectKeyOpt = GlobalCache.GetProjectKey(_hostname, mergeRequest.Project_Id);
+            if (!projectKeyOpt.HasValue)
+            {
+               continue;
+            }
+
+            MergeRequestKey mrk = new MergeRequestKey(projectKeyOpt.Value, mergeRequest.IId);
+            MergeRequest cachedMergeRequest = _cacheUpdater.Cache.GetMergeRequest(mrk);
+            if (cachedMergeRequest == null)
+            {
+               continue;
+            }
+
+            if (0 != String.Compare(cachedMergeRequest.Web_Url, mergeRequest.Web_Url))
+            {
+               renamedProjectIds.Add(mergeRequest.Project_Id);
+            }
+         }
+         return renamedProjectIds;
       }
 
       async private Task<IEnumerable<MergeRequest>> fetchMergeRequestsAsync(SearchQueryCollection queries)
@@ -136,7 +163,7 @@ namespace mrHelper.GitLabClient.Loaders
       }
 
       async private Task<Dictionary<ProjectKey, IEnumerable<MergeRequest>>> groupMergeRequests(
-         IEnumerable<MergeRequest> mergeRequests)
+         IEnumerable<MergeRequest> mergeRequests, IEnumerable<int> renamedProjectIds)
       {
          Exception exception = null;
          var groupedMergeRequests = new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
@@ -149,8 +176,18 @@ namespace mrHelper.GitLabClient.Loaders
 
             try
             {
-               ProjectKey? project = await resolveProject(keyValuePair.Key);
-               groupedMergeRequests.Add(project.Value, keyValuePair.Value);
+               ProjectKey project;
+               int projectId = keyValuePair.Key;
+               ProjectKey? projectKeyOpt = GlobalCache.GetProjectKey(_hostname, projectId);
+               if (projectKeyOpt.HasValue && !renamedProjectIds.Contains(projectId))
+               {
+                  project = projectKeyOpt.Value;
+               }
+               else
+               {
+                  project = await resolveProject(projectId);
+               }
+               groupedMergeRequests.Add(project, keyValuePair.Value);
             }
             catch (BaseLoaderException ex)
             {
@@ -182,14 +219,8 @@ namespace mrHelper.GitLabClient.Loaders
          return grouped;
       }
 
-      async private Task<ProjectKey?> resolveProject(int projectId)
+      async private Task<ProjectKey> resolveProject(int projectId)
       {
-         ProjectKey? projectKeyOpt = GlobalCache.GetProjectKey(_hostname, projectId);
-         if (projectKeyOpt.HasValue)
-         {
-            return projectKeyOpt.Value;
-         }
-
          Project project = await call(() => _operator.GetProjectAsync(projectId.ToString()),
             String.Format("Cancelled resolving project with Id \"{0}\"", projectId),
             String.Format("Cannot load project with Id \"{0}\"", projectId));
@@ -200,27 +231,14 @@ namespace mrHelper.GitLabClient.Loaders
 
       private static bool isForbiddenProjectException(BaseLoaderException ex)
       {
-         System.Net.HttpWebResponse response = getWebResponse(ex);
+         System.Net.HttpWebResponse response = ex.WebResponse;
          return response != null && response.StatusCode == System.Net.HttpStatusCode.Forbidden;
       }
 
       private static bool isNotFoundProjectException(BaseLoaderException ex)
       {
-         System.Net.HttpWebResponse response = getWebResponse(ex);
+         System.Net.HttpWebResponse response = ex.WebResponse;
          return response != null && response.StatusCode == System.Net.HttpStatusCode.NotFound;
-      }
-
-      private static System.Net.HttpWebResponse getWebResponse(BaseLoaderException ex)
-      {
-         if (ex.InnerException?.InnerException is GitLabRequestException rx)
-         {
-            if (rx.InnerException is System.Net.WebException wx)
-            {
-               System.Net.HttpWebResponse response = wx.Response as System.Net.HttpWebResponse;
-               return response;
-            }
-         }
-         return null;
       }
 
       private readonly string _hostname;

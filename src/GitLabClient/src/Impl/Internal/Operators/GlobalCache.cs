@@ -79,6 +79,8 @@ namespace mrHelper.GitLabClient.Operators
             _projectKeys[hostname] = new Dictionary<int, ProjectKey>();
          }
          _projectKeys[hostname][projectId] = projectKey;
+
+         amendProjectListCacheRecord(hostname, projectId, projectKey);
       }
 
       static internal IEnumerable<Project> GetProjects(string hostname)
@@ -89,6 +91,36 @@ namespace mrHelper.GitLabClient.Operators
       static internal void SetProjects(string hostname, IEnumerable<Project> projects)
       {
          _projects[hostname] = projects.ToArray();
+      }
+
+      private static void amendProjectListCacheRecord(string hostname, int projectId, ProjectKey projectKey)
+      {
+         if (_projects == null || !_projects.ContainsKey(hostname))
+         {
+            return;
+         }
+
+         Project cachedProject = _projects[hostname].FirstOrDefault(project => project.Id == projectId);
+         if (cachedProject == null)
+         {
+            return;
+         }
+
+         ProjectKey keyOfcachedProject = new ProjectKey(hostname, cachedProject.Path_With_Namespace);
+         if (keyOfcachedProject.Equals(projectKey))
+         {
+            return;
+         }
+
+         List<Project> newList = _projects[hostname].ToList();
+         newList.RemoveAll(project =>
+         {
+            ProjectKey cmpKey = new ProjectKey(hostname, project.Path_With_Namespace);
+            return cmpKey.Equals(keyOfcachedProject);
+         });
+         newList.Add(new Project(cachedProject.Id, projectKey.ProjectName, cachedProject.Merge_Method));
+         newList.Sort((a, b) => String.Compare(a.Path_With_Namespace, b.Path_With_Namespace));
+         _projects[hostname] = newList;
       }
 
       static internal IEnumerable<User> GetUsers(string hostname)

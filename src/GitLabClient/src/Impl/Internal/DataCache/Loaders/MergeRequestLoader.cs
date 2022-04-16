@@ -8,6 +8,12 @@ using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Loaders
 {
+   internal class RenamedProjectException : BaseLoaderException
+   {
+      public RenamedProjectException()
+         : base(String.Empty, null) { }
+   }
+
    internal class MergeRequestLoader : BaseDataCacheLoader, IMergeRequestLoader
    {
       internal MergeRequestLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater, bool updateOnlyOpened,
@@ -24,11 +30,7 @@ namespace mrHelper.GitLabClient.Loaders
       {
          bool fetchOnlyOpenMergeRequests = _updateOnlyOpened;
 
-         MergeRequest mergeRequest = await call(
-            () => _operator.GetMergeRequestAsync(mrk.ProjectKey.ProjectName, mrk.IId, true),
-            String.Format("Cancelled loading MR with IId {0}", mrk.IId),
-            String.Format("Cannot load merge request with IId {0}", mrk.IId));
-
+         MergeRequest mergeRequest = await fetchMergeRequest(mrk);
          if (mergeRequest != null && (!fetchOnlyOpenMergeRequests || mergeRequest.State == "opened"))
          {
             MergeRequest cachedMergeRequest = _cacheUpdater.Cache.GetMergeRequest(mrk);
@@ -45,6 +47,25 @@ namespace mrHelper.GitLabClient.Loaders
             {
                await _approvalLoader.LoadApprovals(dummyArray);
             }
+         }
+      }
+
+      private async Task<MergeRequest> fetchMergeRequest(MergeRequestKey mrk)
+      {
+         try
+         {
+            return await call(
+               () => _operator.GetMergeRequestAsync(mrk.ProjectKey.ProjectName, mrk.IId, true),
+               String.Format("Cancelled loading MR with IId {0}", mrk.IId),
+               String.Format("Cannot load merge request with IId {0}", mrk.IId));
+         }
+         catch (BaseLoaderException ex)
+         {
+            if (ex.WebResponse?.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+               throw new RenamedProjectException();
+            }
+            throw;
          }
       }
 
