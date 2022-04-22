@@ -40,6 +40,7 @@ namespace mrHelper.Common.Constants
 
       public static int FullContextSize = 20000;
 
+      public static string ExcludeLabelPrefix = "!";
       public static string AuthorLabelPrefix = "#";
       public static string GitLabLabelPrefix = "@";
       public static string HighPriorityLabel = "high-priority";
@@ -62,7 +63,7 @@ namespace mrHelper.Common.Constants
          { "Brown", "Chocolate", "Salmon",
            "Red", "Tomato", "Coral", "Orange",
            "Dark Khaki", "Khaki", "Gold", "Yellow",
-           "Dark Gray", "Gray", "Silver",
+           "Dark Gray", "Gray", "Silver", "Whitesmoke",
            "Green", "Pale Green", "Spring Green", "Lime",
            "Dodger Blue", "Aqua", "Light Cyan", "Light Sky Blue",
            "Misty Rose", "Lavender", "Magenta", "Violet", "Orchid" };

@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using mrHelper.Common.Constants;
+using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Helpers
@@ -288,20 +289,24 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      internal static string[] GetDisplayFilterKeywords(UserDefinedSettings settings)
+      internal static KeywordCollection GetDisplayFilterKeywords(UserDefinedSettings settings)
       {
-         return settings.DisplayFilter
-            .Split(',')
-            .Select(x => x.Trim(' '))
-            .ToArray();
+         return KeywordCollection.FromString(settings.DisplayFilter);
       }
 
-      internal static string[] GetDisplayFilterRecentKeywords(UserDefinedSettings settings)
+      internal static void SetDisplayFilterKeywords(UserDefinedSettings settings, KeywordCollection collection)
       {
-         return settings.DisplayFilterRecent
-            .Split(',')
-            .Select(x => x.Trim(' '))
-            .ToArray();
+         settings.DisplayFilter = collection.ToString();
+      }
+
+      internal static KeywordCollection GetDisplayFilterRecentKeywords(UserDefinedSettings settings)
+      {
+         return KeywordCollection.FromString(settings.DisplayFilterRecent);
+      }
+
+      internal static void SetDisplayFilterRecentKeywords(UserDefinedSettings settings, KeywordCollection collection)
+      {
+         settings.DisplayFilterRecent = collection.ToString();
       }
 
       internal class StringToBooleanCollection : List<Tuple<string, bool>>

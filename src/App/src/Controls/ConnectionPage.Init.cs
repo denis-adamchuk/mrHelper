@@ -71,9 +71,9 @@ namespace mrHelper.App.Controls
 
       private void initializeWork()
       {
-         textBoxDisplayFilter.Text = Program.Settings.DisplayFilter;
+         setFilterText(Program.Settings.DisplayFilter);
          checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
-         textBoxDisplayFilterRecent.Text = Program.Settings.DisplayFilterRecent;
+         setRecentFilterText(Program.Settings.DisplayFilterRecent);
          checkBoxDisplayFilterRecent.Checked = Program.Settings.DisplayFilterRecentEnabled;
 
          preparePageToStart();
@@ -196,6 +196,7 @@ namespace mrHelper.App.Controls
             muteSelectedMergeRequestUntilTomorrow,
             muteSelectedMergeRequestUntilMonday,
             unMuteSelectedMergeRequest,
+            toggleSelectedMergeRequestExclusion,
             showDiscussionsForSelectedMergeRequest));
 
          foreach (EDataCacheType mode in new EDataCacheType[] { EDataCacheType.Recent, EDataCacheType.Search })
@@ -213,6 +214,7 @@ namespace mrHelper.App.Controls
                null,
                null,
                null,
+               mode == EDataCacheType.Search ? (null as Action) : toggleSelectedMergeRequestExclusion,
                showDiscussionsForSelectedMergeRequest));
          }
       }

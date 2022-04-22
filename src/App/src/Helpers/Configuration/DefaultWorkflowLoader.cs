@@ -75,7 +75,7 @@ namespace mrHelper.App.Helpers
          StringToBooleanCollection labels = new StringToBooleanCollection();
          if (Program.Settings.DisplayFilterEnabled)
          {
-            foreach (string keyword in GetDisplayFilterKeywords(Program.Settings))
+            foreach (string keyword in GetDisplayFilterKeywords(Program.Settings).ToArray())
             {
                string adjustedKeyword = keyword;
                if (keyword.StartsWith(Constants.GitLabLabelPrefix)

@@ -18,7 +18,7 @@ namespace mrHelper.App.Controls
          Action onDiscussions, Action onRefreshList, Action onRefresh, Action onEdit,
          Action onMerge, Action onClose, Action onDiffToBase, Action onDiffDefault,
          Action onMuteUntilTomorrow, Action onMuteUntilMonday, Action onUnmute,
-         Action onDefault)
+         Action onExclude, Action onDefault)
       {
          _discussionsItem = addItem(onDiscussions, "&Discussions", onDiscussions == onDefault);
 
@@ -58,6 +58,13 @@ namespace mrHelper.App.Controls
             "Don't &highlight until Monday", onMuteUntilMonday == onDefault);
          _unmuteItem = addItem(onUnmute, "Restore high&light", onUnmute == onDefault);
 
+         if (onExclude != null)
+         {
+            addSeparator();
+         }
+
+         _excludeItem = addItem(onExclude, "Hi&de/Unhi&de", onExclude == onDefault);
+
          _operationController = operationController;
       }
 
@@ -87,6 +94,11 @@ namespace mrHelper.App.Controls
       public void SetUnmuteActionEnabled(bool enabled)
       {
          _isUnmuteActionEnabled = enabled;
+      }
+
+      public void SetExcludeAbilityState(bool canBeExcluded)
+      {
+         _canBeExcluded = canBeExcluded;
       }
 
       public void DisableAll()
@@ -159,6 +171,11 @@ namespace mrHelper.App.Controls
          {
             _unmuteItem.Enabled = _isUnmuteActionEnabled && !_disabledAll;
          }
+
+         if (_excludeItem != null)
+         {
+            _excludeItem.Text = _canBeExcluded ? "Hi&de" : "Unhi&de";
+         }
       }
 
       private readonly IOperationController _operationController;
@@ -170,11 +187,13 @@ namespace mrHelper.App.Controls
       private readonly ToolStripItem _muteUntilTomorrowItem;
       private readonly ToolStripItem _muteUntilMondayItem;
       private readonly ToolStripItem _unmuteItem;
+      private readonly ToolStripItem _excludeItem;
       private readonly ToolStripMenuItem _diffToolItem;
       private readonly ToolStripMenuItem _diffToBaseItem;
       private readonly ToolStripMenuItem _discussionsItem;
       private bool _disabledAll;
       private bool _isUnmuteActionEnabled;
+      private bool _canBeExcluded;
    }
 }
 

@@ -10,13 +10,19 @@ namespace mrHelper.App.Helpers
    internal class ColorSchemeItem
    {
       internal ColorSchemeItem(string name, string displayName,
-         IEnumerable<string> conditions, Color color, Color factoryColor)
+         IEnumerable<string> conditions, Color color, Color factoryColor, bool affectSummary)
       {
          Name = name;
          DisplayName = displayName;
          Conditions = conditions;
          Color = color;
          FactoryColor = factoryColor;
+         AffectSummary = affectSummary;
+      }
+
+      internal ColorSchemeItem CloneWithDifferentColor(Color color)
+      {
+         return new ColorSchemeItem(Name, DisplayName, Conditions, color, Color, AffectSummary);
       }
 
       internal string Name { get; }
@@ -24,6 +30,7 @@ namespace mrHelper.App.Helpers
       internal IEnumerable<string> Conditions { get; }
       internal Color Color { get; }
       internal Color FactoryColor { get; }
+      internal bool AffectSummary { get; }
    }
 
    /// <summary>
@@ -44,14 +51,8 @@ namespace mrHelper.App.Helpers
 
       internal ColorSchemeItem GetColor(string name)
       {
-         var item = _colors.SelectMany(g => g.Value).FirstOrDefault(i => i.Name == name);
-         if (item == null)
-         {
-            return null;
-         }
-
-         Color color = getCustomColor(name) ?? item.Color;
-         return new ColorSchemeItem(item.Name, item.DisplayName, item.Conditions, color, item.Color);
+         ColorSchemeItem item = _colors.SelectMany(g => g.Value).FirstOrDefault(i => i.Name == name);
+         return item?.CloneWithDifferentColor(getCustomColor(name) ?? item.Color);
       }
 
       internal ColorSchemeItem[] GetColors(string groupName)
@@ -61,11 +62,7 @@ namespace mrHelper.App.Helpers
             return Array.Empty<ColorSchemeItem>();
          }
          return _colors[groupName]
-            .Select(item =>
-            {
-               Color color = getCustomColor(item.Name) ?? item.Color;
-               return new ColorSchemeItem(item.Name, item.DisplayName, item.Conditions, color, item.Color);
-            })
+            .Select(item => item.CloneWithDifferentColor(getCustomColor(item.Name) ?? item.Color))
             .ToArray();
       }
 
@@ -113,9 +110,10 @@ namespace mrHelper.App.Helpers
       }
 
       private void initializeColor(string groupName, string name, string displayName,
-         IEnumerable<string> conditions, Color color)
+         IEnumerable<string> conditions, Color color, bool affectSummary)
       {
-         ColorSchemeItem newItem = new ColorSchemeItem(name, displayName, conditions, color, color);
+         ColorSchemeItem newItem = new ColorSchemeItem(name, displayName, conditions,
+            color, color, affectSummary);
          if (!_colors.ContainsKey(groupName))
          {
             _colors.Add(groupName, new List<ColorSchemeItem>());
@@ -148,7 +146,7 @@ namespace mrHelper.App.Helpers
                Color? colorOpt = readColorFromText(i.Factory);
                if (colorOpt.HasValue)
                {
-                  initializeColor(g.Group, i.Name, i.Display_Name, i.Conditions, colorOpt.Value);
+                  initializeColor(g.Group, i.Name, i.Display_Name, i.Conditions, colorOpt.Value, i.AffectSummary);
                }
             }
          }
@@ -203,6 +201,9 @@ namespace mrHelper.App.Helpers
 
          [JsonProperty]
          public string Factory { get; protected set; }
+
+         [JsonProperty]
+         public bool AffectSummary { get; protected set; }
       }
 
       private class ColorGroup

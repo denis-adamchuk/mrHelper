@@ -780,16 +780,26 @@ namespace mrHelper.App.Controls
 
       // Filter
 
+      private void setFilterText(string text)
+      {
+         textBoxDisplayFilter.Text = text;
+      }
+
+      private void setRecentFilterText(string text)
+      {
+         textBoxDisplayFilterRecent.Text = text;
+      }
+
       private void onTextBoxDisplayFilterUpdate(EDataCacheType type)
       {
          switch (type)
          {
             case EDataCacheType.Live:
-               Program.Settings.DisplayFilter = textBoxDisplayFilter.Text;
+               setFilter(type, textBoxDisplayFilter.Text);
                break;
 
             case EDataCacheType.Recent:
-               Program.Settings.DisplayFilterRecent = textBoxDisplayFilterRecent.Text;
+               setFilter(type, textBoxDisplayFilterRecent.Text);
                break;
 
             case EDataCacheType.Search:
@@ -799,6 +809,25 @@ namespace mrHelper.App.Controls
          }
 
          applyFilterChange(type);
+      }
+
+      private void setFilter(EDataCacheType type, string text)
+      {
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               Program.Settings.DisplayFilter = text;
+               break;
+
+            case EDataCacheType.Recent:
+               Program.Settings.DisplayFilterRecent = text;
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               return;
+         }
       }
 
       private void onCheckBoxDisplayFilterUpdate(EDataCacheType type, bool enabled)

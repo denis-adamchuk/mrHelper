@@ -7,78 +7,79 @@ using System.Collections.Generic;
 
 namespace mrHelper.GitLabClient
 {
-   public struct MergeRequestFilterState : IEquatable<MergeRequestFilterState>
+   public struct KeywordCollection
    {
-      public MergeRequestFilterState(string[] keywords, bool enabled)
+      public KeywordCollection(KeywordCollection collection)
       {
-         Keywords = keywords;
-         Enabled = enabled;
+         _data = collection._data.ToArray();
       }
 
-      public string[] Keywords { get; }
-      public bool Enabled { get; }
-
-      public override bool Equals(object obj)
+      public bool IsExcluded(string text)
       {
-         return obj is MergeRequestFilterState state && Equals(state);
+         string exclusionRule = getExclusionRule(text);
+         return _data.Any(keyword => String.Compare(keyword, exclusionRule) == 0);
       }
 
-      public bool Equals(MergeRequestFilterState other)
+      public KeywordCollection AddToExclusions(string text)
       {
-         return Enumerable.SequenceEqual(Keywords, other.Keywords) &&
-                Enabled == other.Enabled;
+         string exclusionRule = getExclusionRule(text);
+         return new KeywordCollection(_data.Append(exclusionRule).ToArray() ?? new string[] { exclusionRule });
       }
 
-      public override int GetHashCode()
+      public KeywordCollection RemoveFromExclusions(string text)
       {
-         throw new NotImplementedException();
-      }
-   }
-
-   public class MergeRequestFilter : IMergeRequestFilterChecker
-   {
-      public MergeRequestFilter(MergeRequestFilterState initialState)
-      {
-         Filter = initialState;
+         string exclusionRule = getExclusionRule(text);
+         return new KeywordCollection(_data.Where(rule => rule != exclusionRule).ToArray());
       }
 
-      public MergeRequestFilterState Filter
+      public static KeywordCollection FromString(string text)
       {
-         get
+         if (String.IsNullOrWhiteSpace(text))
          {
-            return _filter;
+            return new KeywordCollection(Array.Empty<string>());
          }
-         set
-         {
-            MergeRequestFilterState oldFilter = _filter;
-            _filter = value;
 
-            bool needUpdate =
-                  oldFilter.Enabled != _filter.Enabled
-               || oldFilter.Enabled && _filter.Enabled && !oldFilter.Keywords.SequenceEqual(_filter.Keywords);
-
-            if (needUpdate)
-            {
-               FilterChanged?.Invoke();
-            }
-         }
+         return new KeywordCollection(text
+            .Split(',')
+            .Select(x => x.Trim(' '))
+            .ToArray());
       }
 
-      public event Action FilterChanged;
-
-      public bool DoesMatchFilter(MergeRequest mergeRequest)
+      public override string ToString() 
       {
-         if (!Filter.Enabled)
+         return String.Join(", ", _data);
+      }
+
+      public string[] ToArray()
+      {
+         return _data.ToArray();
+      }
+
+      internal bool DoesMatchFilter(MergeRequest mergeRequest)
+      {
+         if (!_data.Any())
          {
             return true;
          }
 
-         if (Filter.Keywords == null || (Filter.Keywords.Length == 1 && Filter.Keywords[0] == String.Empty))
+         if (_data.Length == 1 && _data[0] == String.Empty)
          {
             return true;
          }
 
-         foreach (string item in Filter.Keywords)
+         if (IsExcluded(mergeRequest.Id.ToString()))
+         {
+            return false;
+         }
+
+         IEnumerable<string> nonExclusions = _data
+            .Where(keyword => !keyword.StartsWith(Constants.ExcludeLabelPrefix));
+         if (!nonExclusions.Any())
+         {
+            return true;
+         }
+
+         foreach (string item in nonExclusions)
          {
             if (item.StartsWith(Constants.AuthorLabelPrefix))
             {
@@ -111,6 +112,74 @@ namespace mrHelper.GitLabClient
          }
 
          return false;
+      }
+
+      private static string getExclusionRule(string text)
+      {
+         return String.Format("{0}{1}", Constants.ExcludeLabelPrefix, text);
+      }
+
+      private KeywordCollection(string[] data)
+      {
+         _data = data.ToArray();
+      }
+
+      private readonly string[] _data;
+   }
+
+   public struct MergeRequestFilterState : IEquatable<MergeRequestFilterState>
+   {
+      public MergeRequestFilterState(KeywordCollection keywords, bool enabled)
+      {
+         Keywords = new KeywordCollection(keywords);
+         Enabled = enabled;
+      }
+
+      public KeywordCollection Keywords { get; }
+      public bool Enabled { get; }
+
+      public override bool Equals(object obj)
+      {
+         throw new NotImplementedException();
+      }
+
+      public bool Equals(MergeRequestFilterState other)
+      {
+         throw new NotImplementedException();
+      }
+
+      public override int GetHashCode()
+      {
+         throw new NotImplementedException();
+      }
+   }
+
+   public class MergeRequestFilter : IMergeRequestFilterChecker
+   {
+      public MergeRequestFilter(MergeRequestFilterState initialState)
+      {
+         Filter = initialState;
+      }
+
+      public MergeRequestFilterState Filter
+      {
+         get
+         {
+            return _filter;
+         }
+         set
+         {
+            MergeRequestFilterState oldFilter = _filter;
+            _filter = value;
+            FilterChanged?.Invoke();
+         }
+      }
+
+      public event Action FilterChanged;
+
+      public bool DoesMatchFilter(MergeRequest mergeRequest)
+      {
+         return !Filter.Enabled || Filter.Keywords.DoesMatchFilter(mergeRequest);
       }
 
       private MergeRequestFilterState _filter;

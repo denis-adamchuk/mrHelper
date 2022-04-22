@@ -458,7 +458,9 @@ namespace mrHelper.App.Controls
 
       internal Color? GetSummaryColor()
       {
-         return getMergeRequestCollectionColor(excludeMuted(getMatchingFilterMergeRequests()));
+         IEnumerable<ColorSchemeItem> colorSchemeItems = _colorScheme?.GetColors("MergeRequests")
+            .Where(item => item.AffectSummary);
+         return getMergeRequestCollectionColor(excludeMuted(getMatchingFilterMergeRequests()), colorSchemeItems);
       }
 
       protected override void Dispose(bool disposing)
@@ -596,7 +598,8 @@ namespace mrHelper.App.Controls
 
          bool isSelected = e.Item.Selected;
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
-         Color backgroundColor = getMergeRequestColor(fmk, Color.Transparent, true);
+         Color defaultColor = Color.Transparent;
+         Color backgroundColor = isMuted(fmk) ? defaultColor : getMergeRequestColor(fmk, defaultColor);
          WinFormsHelpers.FillRectangle(e, bounds, backgroundColor, isSelected);
 
          ColumnType columnType = getColumnType(e.SubItem);
@@ -628,7 +631,9 @@ namespace mrHelper.App.Controls
          }
          else if (isSelected && columnType == ColumnType.Labels)
          {
-            using (Brush brush = new SolidBrush(getMergeRequestColor(fmk, SystemColors.Window, true)))
+            Color defaultLabelColor = SystemColors.Window;
+            Color color = isMuted(fmk) ? defaultLabelColor : getMergeRequestColor(fmk, defaultColor);
+            using (Brush brush = new SolidBrush(color))
             {
                e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
             }
@@ -711,6 +716,7 @@ namespace mrHelper.App.Controls
          {
             contextMenu.EnableAll();
             contextMenu.SetUnmuteActionEnabled(isMuted(selectedMergeRequest.Value));
+            contextMenu.SetExcludeAbilityState(!isExplicitlyExcluded(selectedMergeRequest.Value));
          }
          contextMenu.UpdateItemState();
 
@@ -732,7 +738,7 @@ namespace mrHelper.App.Controls
          float ellipseY = (textSize.Height - ellipseHeight) / 2;
          if (bounds.Width > ellipseX + ellipseWidth)
          {
-            using (Brush ellipseBrush = new SolidBrush(getMergeRequestColor(fmk, Color.Transparent, false)))
+            using (Brush ellipseBrush = new SolidBrush(getMergeRequestColor(fmk, Color.Transparent)))
             {
                RectangleF ellipseRect = new RectangleF(
                   bounds.X + ellipseX, bounds.Y + ellipseY, ellipseWidth, ellipseHeight);
@@ -741,18 +747,18 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private Color getMergeRequestColor(FullMergeRequestKey fmk, Color defaultColor, bool ignoreMuted)
+      private Color getMergeRequestColor(FullMergeRequestKey fmk, Color defaultColor)
       {
          IEnumerable<FullMergeRequestKey> mergeRequests = isSummaryKey(fmk)
             ? getMatchingFilterProjectItems(fmk.ProjectKey)
             : new List<FullMergeRequestKey>{ fmk };
-         mergeRequests = ignoreMuted ? excludeMuted(mergeRequests) : mergeRequests;
-         return getMergeRequestCollectionColor(mergeRequests) ?? defaultColor;
+         ColorSchemeItem[] colorSchemeItems = _colorScheme?.GetColors("MergeRequests");
+         return getMergeRequestCollectionColor(mergeRequests, colorSchemeItems) ?? defaultColor;
       }
 
-      private Color? getMergeRequestCollectionColor(IEnumerable<FullMergeRequestKey> keys)
+      private Color? getMergeRequestCollectionColor(IEnumerable<FullMergeRequestKey> keys,
+         IEnumerable<ColorSchemeItem> colorSchemeItems)
       {
-         ColorSchemeItem[] colorSchemeItems = _colorScheme?.GetColors("MergeRequests");
          return colorSchemeItems?
             .FirstOrDefault(colorSchemeItem =>
             {
@@ -771,7 +777,8 @@ namespace mrHelper.App.Controls
             .Select(item => item.User) ?? Array.Empty<User>();
          IEnumerable<string> labels = fmk.MergeRequest.Labels;
          User author = fmk.MergeRequest.Author;
-         return GitLabClient.Helpers.CheckConditions(conditions, approvedBy, labels, author);
+         bool isExcluded = !wouldMatchFilter(fmk.MergeRequest);
+         return GitLabClient.Helpers.CheckConditions(conditions, approvedBy, labels, author, isExcluded);
       }
 
       private Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
@@ -948,6 +955,19 @@ namespace mrHelper.App.Controls
       private bool doesMatchFilter(MergeRequest mergeRequest)
       {
          return _mergeRequestFilter?.DoesMatchFilter(mergeRequest) ?? true;
+      }
+
+      private bool wouldMatchFilter(MergeRequest mergeRequest)
+      {
+         if (_mergeRequestFilter == null)
+         {
+            return true;
+         }
+
+         MergeRequestFilterState filterState = new MergeRequestFilterState(
+            _mergeRequestFilter.Filter.Keywords, true);
+         MergeRequestFilter filter = new MergeRequestFilter(filterState);
+         return filter.DoesMatchFilter(mergeRequest);
       }
 
       private ListViewItem createListViewMergeRequestItem(FullMergeRequestKey fmk)
@@ -1238,6 +1258,11 @@ namespace mrHelper.App.Controls
          return _mutedMergeRequests.Data
             .Any(mrk => mrk.Key.IId == fmk.MergeRequest.IId
                      && mrk.Key.ProjectKey.Equals(fmk.ProjectKey));
+      }
+
+      private bool isExplicitlyExcluded(FullMergeRequestKey fmk)
+      {
+         return _mergeRequestFilter.Filter.Keywords.IsExcluded(fmk.MergeRequest.Id.ToString());
       }
 
       private void onUnmuteTimerTick(object sender, EventArgs e)

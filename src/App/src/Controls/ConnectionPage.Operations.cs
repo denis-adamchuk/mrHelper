@@ -122,7 +122,6 @@ namespace mrHelper.App.Controls
 
       private void muteSelectedMergeRequestUntilMonday()
       {
-
          EDataCacheType type = getCurrentTabDataCacheType();
          getListView(type).MuteSelectedMergeRequestFor(TimeUtils.GetTimeTillMonday());
       }
@@ -131,6 +130,54 @@ namespace mrHelper.App.Controls
       {
          EDataCacheType type = getCurrentTabDataCacheType();
          getListView(type).UnmuteSelectedMergeRequest();
+      }
+
+      private void toggleSelectedMergeRequestExclusion()
+      {
+         MergeRequest mergeRequest = getMergeRequest(null);
+         if (mergeRequest == null)
+         {
+            return;
+         }
+
+         KeywordCollection keywords;
+         Action<UserDefinedSettings, KeywordCollection> fnSaveKeywordsToConfig;
+         Action<string> fnSetKeywordsToUI;
+         EDataCacheType type = getCurrentTabDataCacheType();
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               keywords = _mergeRequestFilter.Filter.Keywords;
+               fnSaveKeywordsToConfig = ConfigurationHelper.SetDisplayFilterKeywords;
+               fnSetKeywordsToUI = setFilterText;
+               break;
+
+            case EDataCacheType.Recent:
+               keywords = _mergeRequestFilterRecent.Filter.Keywords;
+               fnSaveKeywordsToConfig = ConfigurationHelper.SetDisplayFilterRecentKeywords;
+               fnSetKeywordsToUI = setRecentFilterText;
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               return;
+         }
+
+         Trace.TraceInformation("[ConnectionPage] Toggling exclusion for MR with Id {0}...", mergeRequest.Id);
+
+         KeywordCollection newKeywords;
+         string text = mergeRequest.Id.ToString();
+         if (keywords.IsExcluded(text))
+         {
+            newKeywords = keywords.RemoveFromExclusions(text);
+         }
+         else
+         {
+            newKeywords = keywords.AddToExclusions(text);
+         }
+         fnSaveKeywordsToConfig(Program.Settings, newKeywords);
+         fnSetKeywordsToUI(newKeywords.ToString());
       }
 
       private string getSourceBranchTemplate()
