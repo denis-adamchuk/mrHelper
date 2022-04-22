@@ -283,7 +283,7 @@ namespace mrHelper.StorageSupport
 
       private Task<Comparison> fetchSingleComparisonAsync(string baseSha, string headSha)
       {
-         return _repositoryAccessor.Compare(baseSha, headSha, _fileStorage.ComparisonCache);
+         return _repositoryAccessor?.Compare(baseSha, headSha, _fileStorage.ComparisonCache);
       }
 
       private async Task processComparisonsAsync(bool isAwaitedUpdate,
