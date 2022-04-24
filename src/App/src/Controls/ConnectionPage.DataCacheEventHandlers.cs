@@ -112,7 +112,9 @@ namespace mrHelper.App.Controls
                requestUpdates(EDataCacheType.Live, mrk, new[] {
                   Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
                   Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
-
+            }
+            else if (e.RemovedFromCache)
+            {
                if (CurrentUser != null && CurrentUser.Id == e.FullMergeRequestKey.MergeRequest.Author.Id)
                {
                   ensureMergeRequestInRecentDataCache(mrk);
