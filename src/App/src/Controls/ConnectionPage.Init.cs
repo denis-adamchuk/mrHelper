@@ -71,10 +71,6 @@ namespace mrHelper.App.Controls
 
       private void initializeWork()
       {
-         setFilterText(Program.Settings.DisplayFilter);
-         checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
-         setRecentFilterText(Program.Settings.DisplayFilterRecent);
-         checkBoxDisplayFilterRecent.Checked = Program.Settings.DisplayFilterRecentEnabled;
 
          preparePageToStart();
 
@@ -132,6 +128,8 @@ namespace mrHelper.App.Controls
             new System.Windows.Forms.SplitterEventHandler(this.splitContainer_SplitterMoved);
          revisionSplitContainerSite.RevisionBrowser.SelectionChanged +=
             new System.EventHandler(this.revisionBrowser_SelectionChanged);
+
+         readFilterFromConfig();
       }
 
       private void startRedrawTimer()

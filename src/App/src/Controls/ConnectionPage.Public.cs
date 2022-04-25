@@ -35,6 +35,7 @@ namespace mrHelper.App.Controls
       {
          _isActivePage = true;
          switchMode(EDataCacheType.Live);
+         readFilterFromConfig();
       }
 
       internal void Deactivate()

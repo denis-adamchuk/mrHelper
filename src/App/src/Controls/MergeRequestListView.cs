@@ -632,7 +632,7 @@ namespace mrHelper.App.Controls
          else if (isSelected && columnType == ColumnType.Labels)
          {
             Color defaultLabelColor = SystemColors.Window;
-            Color color = isMuted(fmk) ? defaultLabelColor : getMergeRequestColor(fmk, defaultColor);
+            Color color = isMuted(fmk) ? defaultLabelColor : getMergeRequestColor(fmk, defaultLabelColor);
             using (Brush brush = new SolidBrush(color))
             {
                e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);

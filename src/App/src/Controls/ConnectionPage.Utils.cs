@@ -782,12 +782,30 @@ namespace mrHelper.App.Controls
 
       private void setFilterText(string text)
       {
-         textBoxDisplayFilter.Text = text;
+         textBoxDisplayFilter.SetTextImmediately(text);
       }
 
       private void setRecentFilterText(string text)
       {
-         textBoxDisplayFilterRecent.Text = text;
+         textBoxDisplayFilterRecent.SetTextImmediately(text);
+      }
+
+      private void setFilterState(bool state)
+      {
+         checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
+      }
+
+      private void setRecentFilterState(bool state)
+      {
+         checkBoxDisplayFilterRecent.Checked = Program.Settings.DisplayFilterRecentEnabled;
+      }
+
+      private void readFilterFromConfig()
+      {
+         setFilterText(Program.Settings.DisplayFilter);
+         setFilterState(Program.Settings.DisplayFilterEnabled);
+         setRecentFilterText(Program.Settings.DisplayFilterRecent);
+         setRecentFilterState(Program.Settings.DisplayFilterRecentEnabled);
       }
 
       private void onTextBoxDisplayFilterUpdate(EDataCacheType type)

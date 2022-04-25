@@ -132,28 +132,49 @@ namespace mrHelper.App.Controls
          getListView(type).UnmuteSelectedMergeRequest();
       }
 
+      private KeywordCollection getKeywordCollection(EDataCacheType type)
+      {
+         KeywordCollection keywords;
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               keywords = _mergeRequestFilter.Filter.Keywords;
+               break;
+
+            case EDataCacheType.Recent:
+               keywords = _mergeRequestFilterRecent.Filter.Keywords;
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               return KeywordCollection.FromString(String.Empty);
+         }
+         return keywords;
+      }
+
       private void toggleSelectedMergeRequestExclusion()
       {
-         MergeRequest mergeRequest = getMergeRequest(null);
+         toggleMergeRequestExclusion(getCurrentTabDataCacheType(), getMergeRequest(null));
+      }
+
+      private void toggleMergeRequestExclusion(EDataCacheType type, MergeRequest mergeRequest)
+      {
          if (mergeRequest == null)
          {
             return;
          }
 
-         KeywordCollection keywords;
          Action<UserDefinedSettings, KeywordCollection> fnSaveKeywordsToConfig;
          Action<string> fnSetKeywordsToUI;
-         EDataCacheType type = getCurrentTabDataCacheType();
          switch (type)
          {
             case EDataCacheType.Live:
-               keywords = _mergeRequestFilter.Filter.Keywords;
                fnSaveKeywordsToConfig = ConfigurationHelper.SetDisplayFilterKeywords;
                fnSetKeywordsToUI = setFilterText;
                break;
 
             case EDataCacheType.Recent:
-               keywords = _mergeRequestFilterRecent.Filter.Keywords;
                fnSaveKeywordsToConfig = ConfigurationHelper.SetDisplayFilterRecentKeywords;
                fnSetKeywordsToUI = setRecentFilterText;
                break;
@@ -168,6 +189,7 @@ namespace mrHelper.App.Controls
 
          KeywordCollection newKeywords;
          string text = mergeRequest.Id.ToString();
+         KeywordCollection keywords = getKeywordCollection(type);
          if (keywords.IsExcluded(text))
          {
             newKeywords = keywords.RemoveFromExclusions(text);

@@ -16,6 +16,13 @@ namespace mrHelper.CommonControls.Controls
          _delayedInputTimer.Elapsed += (_, e) => base.OnTextChanged(e);
       }
 
+      public void SetTextImmediately(string text)
+      {
+         _applyImmediately = true;
+         Text = text;
+         _applyImmediately = false;
+      }
+
       /// <summary> 
       /// Clean up any resources being used.
       /// </summary>
@@ -28,6 +35,12 @@ namespace mrHelper.CommonControls.Controls
 
       protected override void OnTextChanged(EventArgs e)
       {
+         if (_applyImmediately)
+         {
+            base.OnTextChanged(e);
+            return;
+         }
+
          if (_delayedInputTimer.Enabled)
          {
             _delayedInputTimer.Stop();
@@ -36,6 +49,7 @@ namespace mrHelper.CommonControls.Controls
       }
 
       private readonly System.Timers.Timer _delayedInputTimer;
+      private bool _applyImmediately;
 
       private static readonly int DelayPeriod = 250; // ms
    }
