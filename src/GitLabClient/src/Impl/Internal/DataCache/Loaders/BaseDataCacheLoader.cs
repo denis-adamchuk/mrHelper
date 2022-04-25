@@ -12,9 +12,7 @@ namespace mrHelper.GitLabClient.Loaders
       internal BaseLoaderException(string message, Exception innerException)
          : base(message, innerException) { }
 
-      internal System.Net.HttpWebResponse WebResponse => getWebResponse();
-
-      private System.Net.HttpWebResponse getWebResponse()
+      internal System.Net.HttpWebResponse GetWebResponse()
       {
          if (InnerException?.InnerException is GitLabRequestException rx)
          {

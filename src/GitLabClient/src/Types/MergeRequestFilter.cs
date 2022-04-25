@@ -23,7 +23,7 @@ namespace mrHelper.GitLabClient
       public KeywordCollection AddToExclusions(string text)
       {
          string exclusionRule = getExclusionRule(text);
-         return new KeywordCollection(_data.Append(exclusionRule).ToArray() ?? new string[] { exclusionRule });
+         return new KeywordCollection(_data.Append(exclusionRule).ToArray());
       }
 
       public KeywordCollection RemoveFromExclusions(string text)

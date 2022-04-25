@@ -19,7 +19,11 @@ using static mrHelper.App.Helpers.ConfigurationHelper;
 
 namespace mrHelper.App.Interprocess
 {
-   public class SubmitFailedException : Exception { }
+   internal class SubmitFailedException : Exception
+   {
+      internal SubmitFailedException(Exception innerException)
+         : base("Submit failed", innerException) { }
+   }
 
    internal class DiffCallHandler
    {
@@ -432,12 +436,12 @@ namespace mrHelper.App.Interprocess
             }
             else
             {
-               throw new SubmitFailedException();
+               throw new SubmitFailedException(ex);
             }
          }
-         catch (DiscussionCreatorException)
+         catch (DiscussionCreatorException ex)
          {
-            throw new SubmitFailedException();
+            throw new SubmitFailedException(ex);
          }
       }
 

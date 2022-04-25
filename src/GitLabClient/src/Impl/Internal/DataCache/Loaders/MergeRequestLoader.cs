@@ -10,8 +10,8 @@ namespace mrHelper.GitLabClient.Loaders
 {
    internal class RenamedProjectException : BaseLoaderException
    {
-      public RenamedProjectException()
-         : base(String.Empty, null) { }
+      public RenamedProjectException(Exception innerException)
+         : base(String.Empty, innerException) { }
    }
 
    internal class MergeRequestLoader : BaseDataCacheLoader, IMergeRequestLoader
@@ -61,9 +61,9 @@ namespace mrHelper.GitLabClient.Loaders
          }
          catch (BaseLoaderException ex)
          {
-            if (ex.WebResponse?.StatusCode == System.Net.HttpStatusCode.NotFound)
+            if (ex.GetWebResponse()?.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-               throw new RenamedProjectException();
+               throw new RenamedProjectException(ex);
             }
             throw;
          }

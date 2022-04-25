@@ -231,13 +231,13 @@ namespace mrHelper.GitLabClient.Loaders
 
       private static bool isForbiddenProjectException(BaseLoaderException ex)
       {
-         System.Net.HttpWebResponse response = ex.WebResponse;
+         System.Net.HttpWebResponse response = ex.GetWebResponse();
          return response != null && response.StatusCode == System.Net.HttpStatusCode.Forbidden;
       }
 
       private static bool isNotFoundProjectException(BaseLoaderException ex)
       {
-         System.Net.HttpWebResponse response = ex.WebResponse;
+         System.Net.HttpWebResponse response = ex.GetWebResponse();
          return response != null && response.StatusCode == System.Net.HttpStatusCode.NotFound;
       }
 
