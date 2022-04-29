@@ -20,16 +20,20 @@ namespace mrHelper.GitLabClient
          return _data.Any(keyword => String.Compare(keyword, exclusionRule) == 0);
       }
 
-      public KeywordCollection AddToExclusions(string text)
+      public IEnumerable<string> GetExcluded()
       {
-         string exclusionRule = getExclusionRule(text);
-         return new KeywordCollection(_data.Append(exclusionRule).ToArray());
+         return _data
+            .Where(keyword => keyword.StartsWith(Constants.ExcludeLabelPrefix))
+            .Select(keyword => keyword.Substring(Constants.ExcludeLabelPrefix.Length))
+            .Where(keyword => !String.IsNullOrWhiteSpace(keyword));
       }
 
-      public KeywordCollection RemoveFromExclusions(string text)
+      public KeywordCollection CloneWithToggledExclusion(string text)
       {
          string exclusionRule = getExclusionRule(text);
-         return new KeywordCollection(_data.Where(rule => rule != exclusionRule).ToArray());
+         return IsExcluded(text)
+            ? new KeywordCollection(_data.Where(rule => rule != exclusionRule).ToArray())
+            : new KeywordCollection(_data.Append(exclusionRule).ToArray());
       }
 
       public static KeywordCollection FromString(string text)

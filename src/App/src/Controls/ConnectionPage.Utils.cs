@@ -158,6 +158,37 @@ namespace mrHelper.App.Controls
             : new Nullable<MergeRequestKey>();
       }
 
+      private bool isMergeRequestCached(EDataCacheType type, int mergeRequestId)
+      {
+         IMergeRequestCache mergeRequestCache = getDataCache(type)?.MergeRequestCache;
+         return mergeRequestCache != null && mergeRequestCache.GetProjects()
+            .SelectMany(projectKey => mergeRequestCache.GetMergeRequests(projectKey))
+            .Any(mergeRequest => mergeRequest.Id == mergeRequestId);
+      }
+
+      private bool isMergeRequestHidden(EDataCacheType type, MergeRequest mergeRequest)
+      {
+         return mergeRequest != null && isMergeRequestHidden(type, mergeRequest.Id);
+      }
+
+      private bool isMergeRequestHidden(EDataCacheType type, int mergeRequestId)
+      {
+         return getHiddenMergeRequestIds(type).Any(id => mergeRequestId == id);
+      }
+
+      private IEnumerable<int> getHiddenMergeRequestIds(EDataCacheType type)
+      {
+         return getKeywordCollection(type).GetExcluded()
+            .Where(keyword => int.TryParse(keyword, out int _))
+            .Select(keyword => int.Parse(keyword));
+      }
+
+      private IEnumerable<int> selectNotCachedMergeRequestIds(EDataCacheType type,
+         IEnumerable<int> mergeRequestIds)
+      {
+         return mergeRequestIds.Where(id => !isMergeRequestCached(type, id));
+      }
+
       // List View
 
       private void initializeListViewGroups(EDataCacheType mode)

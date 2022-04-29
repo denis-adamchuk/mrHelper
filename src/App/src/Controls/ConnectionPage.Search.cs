@@ -125,6 +125,10 @@ namespace mrHelper.App.Controls
 
          addOperationRecord("List of recently reviewed merge requests has been loaded");
 
+         IEnumerable<int> hiddenMergeRequestIds = getHiddenMergeRequestIds(EDataCacheType.Recent);
+         IEnumerable<int> oldHiddenIds = selectNotCachedMergeRequestIds(EDataCacheType.Recent, hiddenMergeRequestIds);
+         toggleMergeRequestExclusion(EDataCacheType.Recent, oldHiddenIds);
+
          // current mode may have changed during 'await'
          if (getCurrentTabDataCacheType() == EDataCacheType.Recent)
          {

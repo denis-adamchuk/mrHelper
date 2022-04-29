@@ -227,9 +227,7 @@ namespace mrHelper.App.Controls
          MergeRequest mergeRequest = getDataCache(dataCacheType)?.MergeRequestCache?.GetMergeRequest(mrk);
          if (mergeRequest != null)
          {
-            string text = mergeRequest.Id.ToString();
-            KeywordCollection keywords = getKeywordCollection(dataCacheType);
-            if (keywords.IsExcluded(text))
+            if (isMergeRequestHidden(dataCacheType, mergeRequest))
             {
                if (MessageBox.Show("Merge Request is hidden by filters and cannot be opened. Do you want to unhide it?",
                      "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question,

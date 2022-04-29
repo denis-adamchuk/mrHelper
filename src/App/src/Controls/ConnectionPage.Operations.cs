@@ -164,7 +164,18 @@ namespace mrHelper.App.Controls
          {
             return;
          }
+         toggleMergeRequestExclusion(type, mergeRequest.Id);
+      }
 
+      private void toggleMergeRequestExclusion(EDataCacheType type, IEnumerable<int> mergeRequestIds)
+      {
+         mergeRequestIds
+            .ToList()
+            .ForEach(id => toggleMergeRequestExclusion(type, id));
+      }
+
+      private void toggleMergeRequestExclusion(EDataCacheType type, int mergeRequestId)
+      {
          Action<UserDefinedSettings, KeywordCollection> fnSaveKeywordsToConfig;
          Action<string> fnSetKeywordsToUI;
          switch (type)
@@ -185,19 +196,10 @@ namespace mrHelper.App.Controls
                return;
          }
 
-         Trace.TraceInformation("[ConnectionPage] Toggling exclusion for MR with Id {0}...", mergeRequest.Id);
+         Trace.TraceInformation("[ConnectionPage] Toggling exclusion for MR with Id {0}...", mergeRequestId);
 
-         KeywordCollection newKeywords;
-         string text = mergeRequest.Id.ToString();
-         KeywordCollection keywords = getKeywordCollection(type);
-         if (keywords.IsExcluded(text))
-         {
-            newKeywords = keywords.RemoveFromExclusions(text);
-         }
-         else
-         {
-            newKeywords = keywords.AddToExclusions(text);
-         }
+         KeywordCollection newKeywords = getKeywordCollection(type)
+            .CloneWithToggledExclusion(mergeRequestId.ToString());
          fnSaveKeywordsToConfig(Program.Settings, newKeywords);
          fnSetKeywordsToUI(newKeywords.ToString());
       }

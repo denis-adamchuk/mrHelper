@@ -125,6 +125,10 @@ namespace mrHelper.App.Controls
                cleanupReviewedMergeRequests(new MergeRequestKey[] { mrk });
             }
          }
+         if (e.RemovedFromCache && isMergeRequestHidden(type, e.FullMergeRequestKey.MergeRequest))
+         {
+            toggleMergeRequestExclusion(type, e.FullMergeRequestKey.MergeRequest);
+         }
 
          updateMergeRequestList(type);
          if (e.Details || e.Commits || e.Labels)

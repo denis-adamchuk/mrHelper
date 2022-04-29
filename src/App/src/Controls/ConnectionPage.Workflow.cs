@@ -250,6 +250,10 @@ namespace mrHelper.App.Controls
          cleanupReviewedMergeRequests(closedReviewed);
          loadRecentMergeRequests();
 
+         IEnumerable<int> hiddenMergeRequestIds = getHiddenMergeRequestIds(EDataCacheType.Live);
+         IEnumerable<int> oldHiddenIds = selectNotCachedMergeRequestIds(EDataCacheType.Live, hiddenMergeRequestIds);
+         toggleMergeRequestExclusion(EDataCacheType.Live, oldHiddenIds);
+
          updateMergeRequestList(EDataCacheType.Live);
          CanReloadAllChanged?.Invoke(this);
          addOperationRecord("Loading merge requests has completed");
