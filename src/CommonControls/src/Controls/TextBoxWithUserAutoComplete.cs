@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.CommonControls.Controls
@@ -32,6 +34,84 @@ namespace mrHelper.CommonControls.Controls
 
          public string Name { get; }
          public string Username { get; }
+      }
+
+      // Compares user names and full names so that it look like Gitlab Web UI auto-completion
+      class UserComparer : IComparer<User>
+      {
+         public UserComparer(string substr)
+         {
+            _substr = substr;
+         }
+
+         public int Compare(User x, User y)
+         {
+            bool xMatchesFullname = StringUtils.ContainsNoCase(x.Name, _substr);
+            bool xMatchesUsername = StringUtils.ContainsNoCase(x.Username, _substr);
+            bool yMatchesFullname = StringUtils.ContainsNoCase(y.Name, _substr);
+            bool yMatchesUsername = StringUtils.ContainsNoCase(y.Username, _substr);
+
+            // Not all cases are implemented
+            Debug.Assert(xMatchesFullname || xMatchesUsername);
+            Debug.Assert(yMatchesFullname || yMatchesUsername);
+
+            if (xMatchesFullname && yMatchesFullname)
+            {
+               if (xMatchesUsername)
+               {
+                  if (yMatchesUsername)
+                  {
+                     return String.Compare(x.Username, y.Username, StringComparison.CurrentCultureIgnoreCase);
+                  }
+                  else
+                  {
+                     return -1;
+                  }
+               }
+               else
+               {
+                  if (yMatchesUsername)
+                  {
+                     return 1;
+                  }
+                  else
+                  {
+                     return String.Compare(x.Username, y.Username, StringComparison.CurrentCultureIgnoreCase);
+                  }
+               }
+            }
+            else if (xMatchesFullname && !yMatchesFullname)
+            {
+               if (!xMatchesUsername && yMatchesUsername)
+               {
+                  return 1;
+               }
+               else if (xMatchesUsername && yMatchesUsername)
+               {
+                  return -1;
+               }
+            }
+            else if (!xMatchesFullname && yMatchesFullname)
+            {
+               if (xMatchesUsername && !yMatchesUsername)
+               {
+                  return -1;
+               }
+               else if (xMatchesUsername && yMatchesUsername)
+               {
+                  return 1;
+               }
+            }
+            else if (!xMatchesFullname && !yMatchesFullname)
+            {
+               return String.Compare(x.Username, y.Username, StringComparison.CurrentCultureIgnoreCase);
+            }
+
+            Debug.Assert(false);
+            return 0;
+         }
+
+         private string _substr;
       }
 
       public enum HidingReason
@@ -233,12 +313,11 @@ namespace mrHelper.CommonControls.Controls
             return;
          }
 
-         bool doesWordContainWord(string container, string containee) =>
-               container.ToLower().Contains(containee.ToLower());
-
+         UserComparer comparer = new UserComparer(currentWordInfo.Word);
          object[] objects = _users?
-            .Where(user => doesWordContainWord(user.Name, currentWordInfo.Word)
-                        || doesWordContainWord(user.Username, currentWordInfo.Word))
+            .Where(user => StringUtils.ContainsNoCase(user.Name, currentWordInfo.Word)
+                        || StringUtils.ContainsNoCase(user.Username, currentWordInfo.Word))
+            .OrderBy(user => user, comparer)
             .Cast<object>()
             .ToArray() ?? Array.Empty<object>();
          if (objects.Length == 0)

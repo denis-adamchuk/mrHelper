@@ -85,6 +85,10 @@
       <Project>{31433881-1f90-4513-9970-8b27cd635328}</Project>
       <Name>mrHelper.CommonNative</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Common\mrHelper.Common.csproj">
+      <Project>{5D0CE433-F70E-448E-B9F5-ECCB7ABD880A}</Project>
+      <Name>mrHelper.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="WindowsAPICodePack-Shell">
