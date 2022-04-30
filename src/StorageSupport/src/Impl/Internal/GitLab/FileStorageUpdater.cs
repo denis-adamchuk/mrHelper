@@ -164,7 +164,14 @@ namespace mrHelper.StorageSupport
             }
 
             await suspendProcessingOfNonAwaitedUpdate(isAwaitedUpdate);
-            Comparison comparison = await fetchSingleComparisonAsync(baseToHeadInfo.Base.Sha, baseToHeadInfo.Head.Sha);
+            Task<Comparison> fetchTask = fetchSingleComparison(baseToHeadInfo.Base.Sha, baseToHeadInfo.Head.Sha);
+            if (fetchTask == null || _isDisposed)
+            {
+               cancelled = true;
+               return;
+            }
+
+            Comparison comparison = await fetchTask;
             if (comparison == null || _isDisposed)
             {
                cancelled = true;
@@ -281,7 +288,7 @@ namespace mrHelper.StorageSupport
          await TaskUtils.WhileAsync(() => !isAwaitedUpdate && _activeAwaitedUpdateRequestCount > 0);
       }
 
-      private Task<Comparison> fetchSingleComparisonAsync(string baseSha, string headSha)
+      private Task<Comparison> fetchSingleComparison(string baseSha, string headSha)
       {
          return _repositoryAccessor?.Compare(baseSha, headSha, _fileStorage.ComparisonCache);
       }
