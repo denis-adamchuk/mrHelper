@@ -19,7 +19,10 @@ namespace mrHelper.CommonControls.Controls
 
       private void onCopyLinkClicked(object sender, EventArgs e)
       {
-         Clipboard.SetText(Text);
+         if (!String.IsNullOrWhiteSpace(Text))
+         {
+            Clipboard.SetText(Text);
+         }
       }
 
       protected override void Dispose(bool disposing)
