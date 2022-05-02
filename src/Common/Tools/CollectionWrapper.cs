@@ -37,16 +37,6 @@ namespace mrHelper.Common.Tools
          }
       }
 
-      public bool TryGetValue(TKey key, out TValue value)
-      {
-         return _data.TryGetValue(key, out value);
-      }
-
-      public bool ContainsKey(TKey key)
-      {
-         return _data.ContainsKey(key);
-      }
-
       public void Remove(TKey key)
       {
          if (_data.Remove(key))
@@ -96,11 +86,6 @@ namespace mrHelper.Common.Tools
       {
          _data.Add(key);
          _onChange();
-      }
-
-      public bool Contains(TKey key)
-      {
-         return _data.Contains(key);
       }
 
       public void Remove(TKey key)

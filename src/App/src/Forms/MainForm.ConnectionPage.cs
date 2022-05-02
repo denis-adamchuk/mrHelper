@@ -119,6 +119,8 @@ namespace mrHelper.App.Forms
 
       private void createConnectionPages()
       {
+         // need to load old-style Filter once
+         UserDefinedSettings.OldFilterSettings oldFilter = Program.Settings.LoadDisplayFilterAndRemoveProperty();
          tabControlHost.SuspendLayout();
          foreach (string hostname in getHostList())
          {
@@ -126,9 +128,10 @@ namespace mrHelper.App.Forms
                _recentMergeRequests, _reviewedRevisions, _lastMergeRequestsByHosts,
                _newMergeRequestDialogStatesByHosts, _collapsedProjectsLive,
                _collapsedProjectsRecent, _collapsedProjectsSearch, _mutedMergeRequests,
+               _filtersByHostsLive, _filtersByHostsRecent,
                _keywords, _trayIcon, toolTip,
                _integratedInGitExtensions,
-               _integratedInSourceTree, _colorScheme);
+               _integratedInSourceTree, _colorScheme, oldFilter);
             subscribeToConnectionPage(connectionPage);
             ConnectionTabPage tabPage = new ConnectionTabPage(hostname, connectionPage);
             tabControlHost.TabPages.Add(tabPage);

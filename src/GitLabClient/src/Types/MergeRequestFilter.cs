@@ -131,31 +131,16 @@ namespace mrHelper.GitLabClient
       private readonly string[] _data;
    }
 
-   public struct MergeRequestFilterState : IEquatable<MergeRequestFilterState>
+   public struct MergeRequestFilterState
    {
-      public MergeRequestFilterState(KeywordCollection keywords, bool enabled)
+      public MergeRequestFilterState(string keywords, bool enabled)
       {
-         Keywords = new KeywordCollection(keywords);
+         Keywords = KeywordCollection.FromString(keywords);
          Enabled = enabled;
       }
 
       public KeywordCollection Keywords { get; }
       public bool Enabled { get; }
-
-      public override bool Equals(object obj)
-      {
-         throw new NotImplementedException();
-      }
-
-      public bool Equals(MergeRequestFilterState other)
-      {
-         throw new NotImplementedException();
-      }
-
-      public override int GetHashCode()
-      {
-         throw new NotImplementedException();
-      }
    }
 
    public class MergeRequestFilter : IMergeRequestFilterChecker

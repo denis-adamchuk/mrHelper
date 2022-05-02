@@ -31,20 +31,9 @@ namespace mrHelper.App.Helpers
       private static readonly string RemindAboutAvailableNewVersionKeyName      = "RemindAboutAvailableNewVersion";
       private static readonly bool   RemindAboutAvailableNewVersionDefaultValue = true;
 
-      private static readonly string CheckedLabelsFilterKeyName = "CheckedLabelsFilter";
-      private static readonly bool   CheckedLabelsFilterDefaultValue = false;
+      private static readonly string CheckedLabelsFilterKeyName = "CheckedLabelsFilter"; // deprecated
 
-      private static readonly string LastUsedLabelsKeyName = "LastUsedLabels";
-      private static readonly string LastUsedLabelsDefaultValue = "";
-
-      private static readonly string CheckedLabelsFilterRecentKeyName = "CheckedLabelsFilterRecent";
-      private static readonly bool   CheckedLabelsFilterRecentDefaultValue = false;
-
-      private static readonly string LastUsedLabelsRecentKeyName = "LastUsedLabelsRecent";
-      private static readonly string LastUsedLabelsRecentDefaultValue = "";
-
-      private static readonly string ShowPublicOnlyKeyName = "ShowPublicOnly";
-      private static readonly bool   ShowPublicOnlyDefaultValue = true;
+      private static readonly string LastUsedLabelsKeyName = "LastUsedLabels"; // deprecated
 
       private static readonly string UpdateManagerExtendedLoggingKeyName = "UpdateManagerExtendedLogging";
       private static readonly bool   UpdateManagerExtendedLoggingDefaultValue = false;

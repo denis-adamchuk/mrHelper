@@ -11,6 +11,7 @@ using mrHelper.GitLabClient;
 using static mrHelper.App.Helpers.ConfigurationHelper;
 using mrHelper.Common.Constants;
 using mrHelper.CustomActions;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Controls
 {
@@ -166,17 +167,17 @@ namespace mrHelper.App.Controls
             .Any(mergeRequest => mergeRequest.Id == mergeRequestId);
       }
 
-      private bool isMergeRequestHidden(EDataCacheType type, MergeRequest mergeRequest)
+      private bool isMergeRequestExcluded(EDataCacheType type, MergeRequest mergeRequest)
       {
-         return mergeRequest != null && isMergeRequestHidden(type, mergeRequest.Id);
+         return mergeRequest != null && isMergeRequestExcluded(type, mergeRequest.Id);
       }
 
-      private bool isMergeRequestHidden(EDataCacheType type, int mergeRequestId)
+      private bool isMergeRequestExcluded(EDataCacheType type, int mergeRequestId)
       {
-         return getHiddenMergeRequestIds(type).Any(id => mergeRequestId == id);
+         return getExcludedMergeRequestIds(type).Any(id => mergeRequestId == id);
       }
 
-      private IEnumerable<int> getHiddenMergeRequestIds(EDataCacheType type)
+      private IEnumerable<int> getExcludedMergeRequestIds(EDataCacheType type)
       {
          return getKeywordCollection(type).GetExcluded()
             .Where(keyword => int.TryParse(keyword, out int _))
@@ -254,7 +255,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         if (_lastMergeRequestsByHosts.TryGetValue(HostName, out MergeRequestKey lastMrk))
+         if (_lastMergeRequestsByHosts.Data.TryGetValue(HostName, out MergeRequestKey lastMrk))
          {
             if (listView.IsGroupCollapsed(lastMrk.ProjectKey))
             {
@@ -289,20 +290,28 @@ namespace mrHelper.App.Controls
          switch (mode)
          {
             case EDataCacheType.Live:
-               if (listView.Items.Count > 0 || Program.Settings.DisplayFilterEnabled)
                {
-                  enableMergeRequestFilterControls(mode, true);
-                  listView.Enabled = true;
+                  bool isFilterEnabled = _filtersByHostsLive.Data.ContainsKey(HostName)
+                                      && _filtersByHostsLive[HostName].Enabled;
+                  if (listView.Items.Count > 0 || isFilterEnabled)
+                  {
+                     enableMergeRequestFilterControls(mode, true);
+                     listView.Enabled = true;
+                  }
+                  SummaryColorChanged?.Invoke(this);
+                  onLiveMergeRequestListRefreshed();
                }
-               SummaryColorChanged?.Invoke(this);
-               onLiveMergeRequestListRefreshed();
                break;
 
             case EDataCacheType.Recent:
-               if (listView.Items.Count > 0 || Program.Settings.DisplayFilterRecentEnabled)
                {
-                  enableMergeRequestFilterControls(mode, true);
-                  listView.Enabled = true;
+                  bool isFilterEnabled = _filtersByHostsRecent.Data.ContainsKey(HostName)
+                                      && _filtersByHostsRecent[HostName].Enabled;
+                  if (listView.Items.Count > 0 || isFilterEnabled)
+                  {
+                     enableMergeRequestFilterControls(mode, true);
+                     listView.Enabled = true;
+                  }
                }
                break;
 
@@ -811,84 +820,87 @@ namespace mrHelper.App.Controls
 
       // Filter
 
-      private void setFilterText(string text)
+      private void moveFilterFromConfigToStorage(UserDefinedSettings.OldFilterSettings oldFilter)
       {
-         textBoxDisplayFilter.SetTextImmediately(text);
+         if (oldFilter != null && !_filtersByHostsLive.Data.ContainsKey(HostName))
+         {
+            _filtersByHostsLive[HostName] = new MergeRequestFilterState(oldFilter.Item2, oldFilter.Item1);
+            Trace.TraceInformation(
+               "[ConnectionPage] Moved filter to storage. State={0}, Keywords={1}, HostName={2}",
+               _filtersByHostsLive[HostName].Enabled, _filtersByHostsLive[HostName].Keywords.ToString(), HostName);
+         }
       }
 
-      private void setRecentFilterText(string text)
-      {
-         textBoxDisplayFilterRecent.SetTextImmediately(text);
-      }
-
-      private void setFilterState(bool state)
-      {
-         checkBoxDisplayFilter.Checked = Program.Settings.DisplayFilterEnabled;
-      }
-
-      private void setRecentFilterState(bool state)
-      {
-         checkBoxDisplayFilterRecent.Checked = Program.Settings.DisplayFilterRecentEnabled;
-      }
-
-      private void readFilterFromConfig()
-      {
-         setFilterText(Program.Settings.DisplayFilter);
-         setFilterState(Program.Settings.DisplayFilterEnabled);
-         setRecentFilterText(Program.Settings.DisplayFilterRecent);
-         setRecentFilterState(Program.Settings.DisplayFilterRecentEnabled);
-      }
-
-      private void onTextBoxDisplayFilterUpdate(EDataCacheType type)
+      private void setFilterText(EDataCacheType type, string text)
       {
          switch (type)
          {
             case EDataCacheType.Live:
-               setFilter(type, textBoxDisplayFilter.Text);
+               textBoxDisplayFilter.SetTextImmediately(text);
                break;
 
             case EDataCacheType.Recent:
-               setFilter(type, textBoxDisplayFilterRecent.Text);
+               textBoxDisplayFilterRecent.SetTextImmediately(text);
                break;
 
             case EDataCacheType.Search:
             default:
                Debug.Assert(false);
-               return;
+               break;
          }
+      }
 
+      private void setFilterState(EDataCacheType type, bool state)
+      {
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               checkBoxDisplayFilter.Checked = state;
+               break;
+
+            case EDataCacheType.Recent:
+               checkBoxDisplayFilterRecent.Checked = state;
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               break;
+         }
+      }
+
+      private void prepareFilterControls()
+      {
+         foreach (EDataCacheType type in new EDataCacheType[] { EDataCacheType.Live, EDataCacheType.Recent })
+         {
+            setFilterText(type, readFilterKeywordsForHost(type));
+            setFilterState(type, readFilterStateForHost(type));
+         }
+      }
+
+      private void onTextBoxDisplayFilterUpdate(EDataCacheType type, string text)
+      {
+         writeFilterKeywordsForHost(type, text);
          applyFilterChange(type);
-      }
-
-      private void setFilter(EDataCacheType type, string text)
-      {
-         switch (type)
-         {
-            case EDataCacheType.Live:
-               Program.Settings.DisplayFilter = text;
-               break;
-
-            case EDataCacheType.Recent:
-               Program.Settings.DisplayFilterRecent = text;
-               break;
-
-            case EDataCacheType.Search:
-            default:
-               Debug.Assert(false);
-               return;
-         }
       }
 
       private void onCheckBoxDisplayFilterUpdate(EDataCacheType type, bool enabled)
       {
+         writeFilterStateForHost(type, enabled);
+         applyFilterChange(type);
+      }
+
+      private void writeFilterKeywordsForHost(EDataCacheType type, string text)
+      {
+         DictionaryWrapper<string, MergeRequestFilterState> filtersByHosts;
          switch (type)
          {
             case EDataCacheType.Live:
-               Program.Settings.DisplayFilterEnabled = enabled;
+               filtersByHosts = _filtersByHostsLive;
                break;
 
             case EDataCacheType.Recent:
-               Program.Settings.DisplayFilterRecentEnabled = enabled;
+               filtersByHosts = _filtersByHostsRecent;
                break;
 
             case EDataCacheType.Search:
@@ -897,7 +909,76 @@ namespace mrHelper.App.Controls
                return;
          }
 
-         applyFilterChange(type);
+         bool isEnabled = filtersByHosts.Data.ContainsKey(HostName) && filtersByHosts[HostName].Enabled;
+         filtersByHosts[HostName] = new MergeRequestFilterState(text, isEnabled);
+      }
+
+      private string readFilterKeywordsForHost(EDataCacheType type)
+      {
+         DictionaryWrapper<string, MergeRequestFilterState> filtersByHosts;
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               filtersByHosts = _filtersByHostsLive;
+               break;
+
+            case EDataCacheType.Recent:
+               filtersByHosts = _filtersByHostsRecent;
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               return String.Empty;
+         }
+
+         return filtersByHosts.Data.ContainsKey(HostName) ? filtersByHosts[HostName].Keywords.ToString() : String.Empty;
+      }
+
+      private void writeFilterStateForHost(EDataCacheType type, bool enabled)
+      {
+         DictionaryWrapper<string, MergeRequestFilterState> filtersByHosts;
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               filtersByHosts = _filtersByHostsLive;
+               break;
+
+            case EDataCacheType.Recent:
+               filtersByHosts = _filtersByHostsRecent;
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               return;
+         }
+
+         string keywords = filtersByHosts.Data.ContainsKey(HostName) ?
+            filtersByHosts[HostName].Keywords.ToString() : String.Empty;
+         filtersByHosts[HostName] = new MergeRequestFilterState(keywords, enabled);
+      }
+
+      private bool readFilterStateForHost(EDataCacheType type)
+      {
+         DictionaryWrapper<string, MergeRequestFilterState> filtersByHosts;
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               filtersByHosts = _filtersByHostsLive;
+               break;
+
+            case EDataCacheType.Recent:
+               filtersByHosts = _filtersByHostsRecent;
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               return false;
+         }
+
+         return filtersByHosts.Data.ContainsKey(HostName) && filtersByHosts[HostName].Enabled;
       }
 
       private void applyFilterChange(EDataCacheType type)
@@ -924,7 +1005,6 @@ namespace mrHelper.App.Controls
                break;
          }
       }
-
 
       // Misc
 

@@ -111,7 +111,7 @@ namespace mrHelper.CommonControls.Controls
             return 0;
          }
 
-         private string _substr;
+         private readonly string _substr;
       }
 
       public enum HidingReason

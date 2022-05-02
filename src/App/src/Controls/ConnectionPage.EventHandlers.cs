@@ -14,22 +14,22 @@ namespace mrHelper.App.Controls
    {
       private void textBoxDisplayFilter_TextChanged(object sender, EventArgs e)
       {
-         onTextBoxDisplayFilterUpdate(EDataCacheType.Live);
+         onTextBoxDisplayFilterUpdate(EDataCacheType.Live, textBoxDisplayFilter.Text);
       }
 
       private void textBoxDisplayFilter_Leave(object sender, EventArgs e)
       {
-         onTextBoxDisplayFilterUpdate(EDataCacheType.Live);
+         onTextBoxDisplayFilterUpdate(EDataCacheType.Live, textBoxDisplayFilter.Text);
       }
 
       private void textBoxDisplayFilterRecent_TextChanged(object sender, EventArgs e)
       {
-         onTextBoxDisplayFilterUpdate(EDataCacheType.Recent);
+         onTextBoxDisplayFilterUpdate(EDataCacheType.Recent, textBoxDisplayFilterRecent.Text);
       }
 
       private void textBoxDisplayFilterRecent_Leave(object sender, EventArgs e)
       {
-         onTextBoxDisplayFilterUpdate(EDataCacheType.Recent);
+         onTextBoxDisplayFilterUpdate(EDataCacheType.Recent, textBoxDisplayFilterRecent.Text);
       }
 
       private void checkBoxDisplayFilter_CheckedChanged(object sender, EventArgs e)

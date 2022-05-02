@@ -424,6 +424,12 @@ namespace mrHelper.App.Forms
             .Save(_collapsedProjectsSearch.Data);
          new PersistentStateSaveHelper("MutedMergeRequests_" + Constants.LiveListViewName, writer)
             .Save(_mutedMergeRequests.Data);
+         new PersistentStateSaveHelper("FiltersByHostsLive", writer).Save(_filtersByHostsLive.Data
+            .ToDictionary(item => item.Key,
+                          item => new Tuple<bool, string>(item.Value.Enabled, item.Value.Keywords.ToString())));
+         new PersistentStateSaveHelper("FiltersByHostsRecent", writer).Save(_filtersByHostsRecent.Data
+            .ToDictionary(item => item.Key,
+                          item => new Tuple<bool, string>(item.Value.Enabled, item.Value.Keywords.ToString())));
       }
 
       private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
@@ -495,6 +501,24 @@ namespace mrHelper.App.Forms
          if (mutedMergeRequests != null)
          {
             _mutedMergeRequests.Assign(mutedMergeRequests);
+         }
+
+         new PersistentStateLoadHelper("FiltersByHostsLive", reader).
+            Load(out Dictionary<string, Tuple<bool, string>> filtersByHostsLive);
+         if (filtersByHostsLive != null)
+         {
+            _filtersByHostsLive.Assign(filtersByHostsLive
+               .ToDictionary(item => item.Key,
+                             item => new MergeRequestFilterState(item.Value.Item2, item.Value.Item1)));
+         }
+
+         new PersistentStateLoadHelper("FiltersByHostsRecent", reader).
+            Load(out Dictionary<string, Tuple<bool, string>> filtersByHostsRecent);
+         if (filtersByHostsRecent != null)
+         {
+            _filtersByHostsRecent.Assign(filtersByHostsRecent
+               .ToDictionary(item => item.Key,
+                             item => new MergeRequestFilterState(item.Value.Item2, item.Value.Item1)));
          }
       }
    }

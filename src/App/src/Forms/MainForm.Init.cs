@@ -56,6 +56,8 @@ namespace mrHelper.App.Forms
          _collapsedProjectsRecent = new HashSetWrapper<Common.Interfaces.ProjectKey>(saveState);
          _collapsedProjectsSearch = new HashSetWrapper<Common.Interfaces.ProjectKey>(saveState);
          _mutedMergeRequests = new DictionaryWrapper<MergeRequestKey, DateTime>(saveState);
+         _filtersByHostsLive = new DictionaryWrapper<string, MergeRequestFilterState>(saveState);
+         _filtersByHostsRecent = new DictionaryWrapper<string, MergeRequestFilterState>(saveState);
       }
 
       private void initializeWork()

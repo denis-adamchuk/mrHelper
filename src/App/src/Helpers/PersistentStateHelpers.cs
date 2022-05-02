@@ -109,6 +109,22 @@ namespace mrHelper.App.Helpers
          }
       }
 
+      internal void Load(out Dictionary<string, Tuple<bool, string>> values)
+      {
+         values = readObjectAsDict(_reader, _recordName)?
+            .ToDictionary(
+               item => item.Key,
+               item =>
+               {
+                  string[] splitted = (item.Value as string).Split('|');
+                  if (splitted.Length == 2 && bool.TryParse(splitted[0], out bool item1))
+                  {
+                     return new Tuple<bool, string>(item1, splitted[1]);
+                  }
+                  return new Tuple<bool, string>(false, String.Empty);
+               });
+      }
+
       private static int loadIId(string keyAsText)
       {
          return int.TryParse(keyAsText, out int parsedIId) ? parsedIId : 0;
@@ -235,6 +251,15 @@ namespace mrHelper.App.Helpers
                + "|" + item.Value.IsBranchDeletionNeeded.ToString()
                + "|" + item.Value.IsSquashNeeded.ToString()
                + "|" + String.Join(";", item.Value.FavoriteProjects));
+         _writer.Set(_recordName, valuesSerialized);
+      }
+
+      internal void Save(IReadOnlyDictionary<string, Tuple<bool, string>> values)
+      {
+         Dictionary<string, string> valuesSerialized = values
+            .ToDictionary(
+               item => item.Key,
+               item => item.Value.Item1.ToString() + "|" + item.Value.Item2);
          _writer.Set(_recordName, valuesSerialized);
       }
 

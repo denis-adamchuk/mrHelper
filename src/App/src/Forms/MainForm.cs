@@ -65,6 +65,8 @@ namespace mrHelper.App.Forms
       private HashSetWrapper<ProjectKey> _collapsedProjectsRecent;
       private HashSetWrapper<ProjectKey> _collapsedProjectsSearch;
       private DictionaryWrapper<MergeRequestKey, DateTime> _mutedMergeRequests;
+      private DictionaryWrapper<string, MergeRequestFilterState> _filtersByHostsLive;
+      private DictionaryWrapper<string, MergeRequestFilterState> _filtersByHostsRecent;
 
       private readonly List<string> _operationRecordHistory = new List<string>();
 

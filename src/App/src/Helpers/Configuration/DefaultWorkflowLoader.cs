@@ -66,47 +66,16 @@ namespace mrHelper.App.Helpers
          return new StringToBooleanCollection();
       }
 
-      internal async static Task<StringToBooleanCollection> GetDefaultUsersForHost(
+      internal async static Task<string> GetDefaultUserForHost(
          GitLabInstance gitLabInstance, User currentUser)
       {
          UserAccessor userAccessor = new Shortcuts(gitLabInstance).GetUserAccessor();
-
-         bool migratedLabels = false;
-         StringToBooleanCollection labels = new StringToBooleanCollection();
-         if (Program.Settings.DisplayFilterEnabled)
-         {
-            foreach (string keyword in GetDisplayFilterKeywords(Program.Settings).ToArray())
-            {
-               string adjustedKeyword = keyword;
-               if (keyword.StartsWith(Constants.GitLabLabelPrefix)
-                || keyword.StartsWith(Constants.AuthorLabelPrefix))
-               {
-                  adjustedKeyword = keyword.Substring(1);
-               }
-               User user = await userAccessor.SearchUserByUsernameAsync(adjustedKeyword);
-               if (user != null)
-               {
-                  if (!labels.Any(x => x.Item1 == user.Username))
-                  {
-                     labels.Add(new Tuple<string, bool>(user.Username, true));
-                     migratedLabels |= true;
-                  }
-               }
-            }
-         }
 
          if (currentUser == null)
          {
             currentUser = await userAccessor.GetCurrentUserAsync();
          }
-         if (currentUser != null)
-         {
-            if (!labels.Any(x => x.Item1 == currentUser.Username))
-            {
-               labels.Add(new Tuple<string, bool>(currentUser.Username, true));
-            }
-         }
-         return labels;
+         return currentUser != null ? currentUser.Username : null;
       }
    }
 }

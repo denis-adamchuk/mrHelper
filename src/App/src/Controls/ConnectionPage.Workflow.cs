@@ -250,9 +250,14 @@ namespace mrHelper.App.Controls
          cleanupReviewedMergeRequests(closedReviewed);
          loadRecentMergeRequests();
 
-         IEnumerable<int> hiddenMergeRequestIds = getHiddenMergeRequestIds(EDataCacheType.Live);
-         IEnumerable<int> oldHiddenIds = selectNotCachedMergeRequestIds(EDataCacheType.Live, hiddenMergeRequestIds);
-         toggleMergeRequestExclusion(EDataCacheType.Live, oldHiddenIds);
+         IEnumerable<int> excludedMergeRequestIds = getExcludedMergeRequestIds(EDataCacheType.Live);
+         IEnumerable<int> oldExcludedIds = selectNotCachedMergeRequestIds(EDataCacheType.Live, excludedMergeRequestIds);
+         if (oldExcludedIds.Any())
+         {
+            Trace.TraceInformation("[ConnectionPage] Excluded Merge Requests are no longer in the cache {1}: {0}",
+               String.Join(", ", oldExcludedIds), getDataCacheName(getDataCache(EDataCacheType.Live)));
+            toggleMergeRequestExclusion(EDataCacheType.Live, oldExcludedIds);
+         }
 
          updateMergeRequestList(EDataCacheType.Live);
          CanReloadAllChanged?.Invoke(this);
@@ -312,17 +317,17 @@ namespace mrHelper.App.Controls
 
       async private Task initializeLabelListIfEmpty()
       {
-         // this is helpful on the first start when users/projects are empty
-         // this is also helpful on upgrade from old versions where "users" were not supported
          if (ConfigurationHelper.GetUsersForHost(HostName, Program.Settings).Any())
          {
             return;
          }
 
+         // on the first start users/projects are empty
          addOperationRecord("Preparing workflow to the first launch has started");
-         StringToBooleanCollection labels =
-            await DefaultWorkflowLoader.GetDefaultUsersForHost(_gitLabInstance, CurrentUser);
-         ConfigurationHelper.SetUsersForHost(HostName, labels, Program.Settings);
+         string username = await DefaultWorkflowLoader.GetDefaultUserForHost(_gitLabInstance, CurrentUser);
+         Tuple<string, bool>[] collection = new Tuple<string, bool>[] { new Tuple<string, bool>(username, true) };
+         StringToBooleanCollection users = new StringToBooleanCollection(collection);
+         ConfigurationHelper.SetUsersForHost(HostName, users, Program.Settings);
          addOperationRecord("Workflow has been prepared to the first launch");
       }
 

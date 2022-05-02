@@ -14,6 +14,7 @@ using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace mrHelper.App.Controls
 {
+
    internal partial class ConnectionPage
    {
       public ConnectionPage(
@@ -26,12 +27,15 @@ namespace mrHelper.App.Controls
          HashSetWrapper<ProjectKey> collapsedProjectsRecent,
          HashSetWrapper<ProjectKey> collapsedProjectsSearch,
          DictionaryWrapper<MergeRequestKey, DateTime> mutedMergeRequests,
+         DictionaryWrapper<string, MergeRequestFilterState> filtersByHostsLive,
+         DictionaryWrapper<string, MergeRequestFilterState> filtersByHostsRecent,
          IEnumerable<string> keywords,
          TrayIcon trayIcon,
          ToolTip toolTip,
          bool integratedInGitExtensions,
          bool integratedInSourceTree,
-         ColorScheme colorScheme)
+         ColorScheme colorScheme,
+         UserDefinedSettings.OldFilterSettings oldFilter)
       {
          HostName = hostname;
          _keywords = keywords;
@@ -44,6 +48,8 @@ namespace mrHelper.App.Controls
          _reviewedRevisions = reviewedRevisions;
          _lastMergeRequestsByHosts = lastMergeRequestsByHosts;
          _newMergeRequestDialogStatesByHosts = newMergeRequestDialogStatesByHosts;
+         _filtersByHostsLive = filtersByHostsLive;
+         _filtersByHostsRecent = filtersByHostsRecent;
 
          InitializeComponent();
          updateSplitterOrientation();
@@ -67,11 +73,12 @@ namespace mrHelper.App.Controls
          _colorScheme = colorScheme;
          _colorScheme.Changed += onColorSchemeChanged;
          forEachListView(listView => listView.SetColorScheme(_colorScheme));
+
+         moveFilterFromConfigToStorage(oldFilter);
       }
 
       private void initializeWork()
       {
-
          preparePageToStart();
 
          createLiveDataCacheAndDependencies();
@@ -129,7 +136,7 @@ namespace mrHelper.App.Controls
          revisionSplitContainerSite.RevisionBrowser.SelectionChanged +=
             new System.EventHandler(this.revisionBrowser_SelectionChanged);
 
-         readFilterFromConfig();
+         prepareFilterControls();
       }
 
       private void startRedrawTimer()
@@ -155,28 +162,28 @@ namespace mrHelper.App.Controls
 
       private MergeRequestFilterState createMergeRequestFilterState(EDataCacheType type)
       {
+         DictionaryWrapper<string, MergeRequestFilterState> filtersByHosts;
          switch (type)
          {
             case EDataCacheType.Live:
-               return new MergeRequestFilterState
-               (
-                  ConfigurationHelper.GetDisplayFilterKeywords(Program.Settings),
-                  Program.Settings.DisplayFilterEnabled
-               );
+               filtersByHosts = _filtersByHostsLive;
+               break;
 
             case EDataCacheType.Recent:
-               return new MergeRequestFilterState
-               (
-                  ConfigurationHelper.GetDisplayFilterRecentKeywords(Program.Settings),
-                  Program.Settings.DisplayFilterRecentEnabled
-               );
+               filtersByHosts = _filtersByHostsRecent;
+               break;
 
             case EDataCacheType.Search:
             default:
                Debug.Assert(false);
-               break;
+               return default(MergeRequestFilterState);
          }
-         return default(MergeRequestFilterState);
+
+         if (!filtersByHosts.Data.ContainsKey(HostName))
+         {
+            filtersByHosts.Add(HostName, new MergeRequestFilterState(String.Empty, false));
+         }
+         return filtersByHosts[HostName];
       }
 
       private void createListViewContextMenu()

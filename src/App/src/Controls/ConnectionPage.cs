@@ -51,6 +51,8 @@ namespace mrHelper.App.Controls
       private readonly DictionaryWrapper<string, NewMergeRequestProperties> _newMergeRequestDialogStatesByHosts;
       private readonly List<MergeRequestKey> _mergeRequestsUpdatingByUserRequest = new List<MergeRequestKey>();
       private readonly Dictionary<MergeRequestKey, string> _latestStorageUpdateStatus = new Dictionary<MergeRequestKey, string>();
+      private readonly DictionaryWrapper<string, MergeRequestFilterState> _filtersByHostsLive;
+      private readonly DictionaryWrapper<string, MergeRequestFilterState> _filtersByHostsRecent;
 
       private Shortcuts _shortcuts;
       private GitLabInstance _gitLabInstance;

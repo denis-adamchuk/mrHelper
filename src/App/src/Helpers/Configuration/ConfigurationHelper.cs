@@ -289,26 +289,6 @@ namespace mrHelper.App.Helpers
          }
       }
 
-      internal static KeywordCollection GetDisplayFilterKeywords(UserDefinedSettings settings)
-      {
-         return KeywordCollection.FromString(settings.DisplayFilter);
-      }
-
-      internal static void SetDisplayFilterKeywords(UserDefinedSettings settings, KeywordCollection collection)
-      {
-         settings.DisplayFilter = collection.ToString();
-      }
-
-      internal static KeywordCollection GetDisplayFilterRecentKeywords(UserDefinedSettings settings)
-      {
-         return KeywordCollection.FromString(settings.DisplayFilterRecent);
-      }
-
-      internal static void SetDisplayFilterRecentKeywords(UserDefinedSettings settings, KeywordCollection collection)
-      {
-         settings.DisplayFilterRecent = collection.ToString();
-      }
-
       internal class StringToBooleanCollection : List<Tuple<string, bool>>
       {
          internal StringToBooleanCollection()

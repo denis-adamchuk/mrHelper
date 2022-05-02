@@ -125,8 +125,10 @@ namespace mrHelper.App.Controls
                cleanupReviewedMergeRequests(new MergeRequestKey[] { mrk });
             }
          }
-         if (e.RemovedFromCache && isMergeRequestHidden(type, e.FullMergeRequestKey.MergeRequest))
+         if (e.RemovedFromCache && isMergeRequestExcluded(type, e.FullMergeRequestKey.MergeRequest))
          {
+            Trace.TraceInformation("[ConnectionPage] Excluded MR {0} was removed from cache {1}",
+               e.FullMergeRequestKey.MergeRequest.Id, getDataCacheName(getDataCache(type)));
             toggleMergeRequestExclusion(type, e.FullMergeRequestKey.MergeRequest);
          }
 

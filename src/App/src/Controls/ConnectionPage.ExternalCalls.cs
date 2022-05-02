@@ -120,7 +120,7 @@ namespace mrHelper.App.Controls
          {
             if (isCached(mode))
             {
-               if (unhideFilteredMergeRequest(mode, mrk))
+               if (unhideFilteredMergeRequest(mode))
                {
                   if (switchTabAndSelectMergeRequest(mode, mrk))
                   {
@@ -184,7 +184,7 @@ namespace mrHelper.App.Controls
             if (dataCache.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
             {
                // If it is cached, it is probably hidden by filters and user might want to un-hide it.
-               if (!unhideFilteredMergeRequest(EDataCacheType.Live, mrk))
+               if (!unhideFilteredMergeRequest(EDataCacheType.Live))
                {
                   return false; // user decided to not un-hide merge request
                }
@@ -220,26 +220,9 @@ namespace mrHelper.App.Controls
          switchTabAndSelectMergeRequest(EDataCacheType.Search, mrk);
       }
 
-      private bool unhideFilteredMergeRequest(EDataCacheType dataCacheType, MergeRequestKey mrk)
+      private bool unhideFilteredMergeRequest(EDataCacheType dataCacheType)
       {
          Trace.TraceInformation("[ConnectionPage] Notify user that MR is hidden");
-
-         MergeRequest mergeRequest = getDataCache(dataCacheType)?.MergeRequestCache?.GetMergeRequest(mrk);
-         if (mergeRequest != null)
-         {
-            if (isMergeRequestHidden(dataCacheType, mergeRequest))
-            {
-               if (MessageBox.Show("Merge Request is hidden by filters and cannot be opened. Do you want to unhide it?",
-                     "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question,
-                     MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification) != DialogResult.Yes)
-               {
-                  Trace.TraceInformation("[ConnectionPage] User decided not to unhide MR");
-                  return false;
-               }
-               toggleMergeRequestExclusion(dataCacheType, mergeRequest);
-               return true;
-            }
-         }
 
          if (MessageBox.Show("Merge Request is hidden by filters and cannot be opened. Do you want to switch off Filter?",
                "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question,

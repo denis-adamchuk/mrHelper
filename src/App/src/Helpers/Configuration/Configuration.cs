@@ -61,6 +61,21 @@ namespace mrHelper.App.Helpers
          return String.Empty;
       }
 
+      public class OldFilterSettings : Tuple<bool, string>
+      {
+         public OldFilterSettings(bool item1, string item2) : base(item1, item2)
+         {
+         }
+      }
+
+      public OldFilterSettings LoadDisplayFilterAndRemoveProperty()
+      {
+         bool b = getBoolValue(CheckedLabelsFilterKeyName, false, true);
+         string uniqueString = Guid.NewGuid().ToString();
+         string s = getValue(LastUsedLabelsKeyName, uniqueString, true);
+         return s == uniqueString ? null : new OldFilterSettings(b, s);
+      }
+
       public int GetRevisionCountToKeep() => RevisionsToKeep;
 
       public int GetComparisonCountToKeep() => ComparisonsToKeep;
@@ -149,9 +164,9 @@ namespace mrHelper.App.Helpers
          setValue(keyName, RawDictionaryStringHelper.SerializeRawDictionaryString(value));
       }
 
-      private bool getBoolValue(string key, bool defaultValue)
+      private bool getBoolValue(string key, bool defaultValue, bool remove = false)
       {
-         return bool.TryParse(getValue(key, boolToString(defaultValue)), out bool result) ? result : defaultValue;
+         return bool.TryParse(getValue(key, boolToString(defaultValue), remove), out bool result) ? result : defaultValue;
       }
 
       private void setBoolValue(string key, bool value)
@@ -169,8 +184,21 @@ namespace mrHelper.App.Helpers
          setValue(key, value.ToString());
       }
 
-      private string getValue(string key, string defaultValue)
+      private string getValue(string key, string defaultValue, bool remove = false)
       {
+         if (remove)
+         {
+            if (!_config.AppSettings.Settings.AllKeys.Contains(key))
+            {
+               return defaultValue;
+            }
+
+            string value = _config.AppSettings.Settings[key].Value;
+            _config.AppSettings.Settings.Remove(key);
+            update();
+            return value;
+         }
+
          KeyValueConfigurationElement currentValue = _config.AppSettings.Settings[key];
          if (currentValue != null && !currentValue.Value.StartsWith(DefaultValuePrefix))
          {

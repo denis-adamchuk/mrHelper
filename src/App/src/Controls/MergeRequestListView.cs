@@ -965,7 +965,7 @@ namespace mrHelper.App.Controls
          }
 
          MergeRequestFilterState filterState = new MergeRequestFilterState(
-            _mergeRequestFilter.Filter.Keywords, true);
+            _mergeRequestFilter.Filter.Keywords.ToString(), true);
          MergeRequestFilter filter = new MergeRequestFilter(filterState);
          return filter.DoesMatchFilter(mergeRequest);
       }
@@ -1156,7 +1156,7 @@ namespace mrHelper.App.Controls
 
       private bool isGroupCollapsed(ProjectKey projectKey)
       {
-         return _collapsedProjects.Contains(projectKey);
+         return _collapsedProjects.Data.Contains(projectKey);
       }
 
       private bool isGroupCollapsed(ListViewGroup group)
@@ -1166,7 +1166,7 @@ namespace mrHelper.App.Controls
 
       private void setGroupCollapsing(ProjectKey projectKey, bool collapse)
       {
-         bool isCollapsed = _collapsedProjects.Contains(projectKey);
+         bool isCollapsed = _collapsedProjects.Data.Contains(projectKey);
          if (isCollapsed == collapse)
          {
             return;
@@ -1229,7 +1229,7 @@ namespace mrHelper.App.Controls
             return false;
          }
 
-         if (!_mutedMergeRequests.ContainsKey(mrk))
+         if (!_mutedMergeRequests.Data.ContainsKey(mrk))
          {
             return false;
          }

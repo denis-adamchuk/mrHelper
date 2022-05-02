@@ -155,6 +155,7 @@ namespace mrHelper.App.Controls
 
       private void toggleSelectedMergeRequestExclusion()
       {
+         Trace.TraceInformation("[ConnectionPage] Toggling exclusion for selected MR...");
          toggleMergeRequestExclusion(getCurrentTabDataCacheType(), getMergeRequest(null));
       }
 
@@ -176,32 +177,13 @@ namespace mrHelper.App.Controls
 
       private void toggleMergeRequestExclusion(EDataCacheType type, int mergeRequestId)
       {
-         Action<UserDefinedSettings, KeywordCollection> fnSaveKeywordsToConfig;
-         Action<string> fnSetKeywordsToUI;
-         switch (type)
-         {
-            case EDataCacheType.Live:
-               fnSaveKeywordsToConfig = ConfigurationHelper.SetDisplayFilterKeywords;
-               fnSetKeywordsToUI = setFilterText;
-               break;
-
-            case EDataCacheType.Recent:
-               fnSaveKeywordsToConfig = ConfigurationHelper.SetDisplayFilterRecentKeywords;
-               fnSetKeywordsToUI = setRecentFilterText;
-               break;
-
-            case EDataCacheType.Search:
-            default:
-               Debug.Assert(false);
-               return;
-         }
-
-         Trace.TraceInformation("[ConnectionPage] Toggling exclusion for MR with Id {0}...", mergeRequestId);
-
          KeywordCollection newKeywords = getKeywordCollection(type)
             .CloneWithToggledExclusion(mergeRequestId.ToString());
-         fnSaveKeywordsToConfig(Program.Settings, newKeywords);
-         fnSetKeywordsToUI(newKeywords.ToString());
+         writeFilterKeywordsForHost(type, newKeywords.ToString());
+         setFilterText(type, newKeywords.ToString());
+
+         Trace.TraceInformation("[ConnectionPage] Toggled exclusion for MR with Id {0}, new state - {1}",
+            mergeRequestId, isMergeRequestExcluded(type, mergeRequestId) ? "excluded" : "not excluded");
       }
 
       private string getSourceBranchTemplate()
@@ -392,7 +374,7 @@ namespace mrHelper.App.Controls
          addOperationRecord(String.Format("Merge Request !{0} has been created in project {1}",
             mrkOpt.Value.IId, parameters.ProjectKey.ProjectName));
 
-         string[] currentFavoriteProjects = _newMergeRequestDialogStatesByHosts.ContainsKey(HostName)
+         string[] currentFavoriteProjects = _newMergeRequestDialogStatesByHosts.Data.ContainsKey(HostName)
             ? _newMergeRequestDialogStatesByHosts[HostName].FavoriteProjects
             : Array.Empty<string>();
 

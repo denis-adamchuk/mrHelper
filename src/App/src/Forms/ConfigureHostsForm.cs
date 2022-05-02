@@ -207,11 +207,13 @@ namespace mrHelper.App.Forms
 
       private async Task loadUsersForHost(string hostname)
       {
-         var users = ConfigurationHelper.GetUsersForHost(hostname, Program.Settings);
+         StringToBooleanCollection users = ConfigurationHelper.GetUsersForHost(hostname, Program.Settings);
          if (!users.Any())
          {
             GitLabInstance gitLabInstance = new GitLabInstance(hostname, this, this);
-            users = await DefaultWorkflowLoader.GetDefaultUsersForHost(gitLabInstance, null);
+            string username = await DefaultWorkflowLoader.GetDefaultUserForHost(gitLabInstance, null);
+            Tuple<string, bool>[] collection = new Tuple<string, bool>[] { new Tuple<string, bool>(username, true) };
+            users = new StringToBooleanCollection(collection);
          }
          setUsersForHost(hostname, users);
       }

@@ -55,36 +55,6 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(RemindAboutAvailableNewVersionKeyName, value);
       }
 
-      public bool DisplayFilterEnabled
-      {
-         get => getBoolValue(CheckedLabelsFilterKeyName, CheckedLabelsFilterDefaultValue);
-         set => setBoolValue(CheckedLabelsFilterKeyName, value);
-      }
-
-      public bool DisplayFilterRecentEnabled
-      {
-         get => getBoolValue(CheckedLabelsFilterRecentKeyName, CheckedLabelsFilterRecentDefaultValue);
-         set => setBoolValue(CheckedLabelsFilterRecentKeyName, value);
-      }
-
-      public string DisplayFilter
-      {
-         get => getValue(LastUsedLabelsKeyName, LastUsedLabelsDefaultValue);
-         set => setValue(LastUsedLabelsKeyName, value);
-      }
-
-      public string DisplayFilterRecent
-      {
-         get => getValue(LastUsedLabelsRecentKeyName, LastUsedLabelsRecentDefaultValue);
-         set => setValue(LastUsedLabelsRecentKeyName, value);
-      }
-
-      public bool ShowPublicOnly
-      {
-         get => getBoolValue(ShowPublicOnlyKeyName, ShowPublicOnlyDefaultValue);
-         set => setBoolValue(ShowPublicOnlyKeyName, value);
-      }
-
       public bool UpdateManagerExtendedLogging
       {
          get => getBoolValue(UpdateManagerExtendedLoggingKeyName, UpdateManagerExtendedLoggingDefaultValue);
