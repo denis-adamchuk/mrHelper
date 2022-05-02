@@ -193,10 +193,14 @@ namespace mrHelper.App.Helpers
                return defaultValue;
             }
 
-            string value = _config.AppSettings.Settings[key].Value;
-            _config.AppSettings.Settings.Remove(key);
-            update();
-            return value;
+            KeyValueConfigurationElement value = _config.AppSettings.Settings[key];
+            if (value != null)
+            {
+               _config.AppSettings.Settings.Remove(key);
+               update();
+               return value.Value;
+            }
+            return defaultValue;
          }
 
          KeyValueConfigurationElement currentValue = _config.AppSettings.Settings[key];

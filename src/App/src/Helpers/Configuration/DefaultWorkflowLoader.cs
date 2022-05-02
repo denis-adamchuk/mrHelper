@@ -75,7 +75,7 @@ namespace mrHelper.App.Helpers
          {
             currentUser = await userAccessor.GetCurrentUserAsync();
          }
-         return currentUser != null ? currentUser.Username : null;
+         return currentUser?.Username;
       }
    }
 }
