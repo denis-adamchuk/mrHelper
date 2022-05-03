@@ -1,4 +1,4 @@
-call ".\set-env.bat"
+::call ".\set-env.bat"
 
 cd ..\bin\Release
 

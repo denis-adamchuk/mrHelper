@@ -70,10 +70,10 @@ namespace mrHelper.App.Helpers
 
       public OldFilterSettings LoadDisplayFilterAndRemoveProperty()
       {
-         bool b = getBoolValue(CheckedLabelsFilterKeyName, false, true);
+         bool b = getBoolValue(CheckedLabelsFilterKeyName, false, RemoveValue.Yes);
          string uniqueString = Guid.NewGuid().ToString();
-         string s = getValue(LastUsedLabelsKeyName, uniqueString, true);
-         return s == uniqueString ? null : new OldFilterSettings(b, s);
+         string s = getValue(LastUsedLabelsKeyName, uniqueString, RemoveValue.Yes);
+         return s == uniqueString || String.IsNullOrWhiteSpace(s) ? null : new OldFilterSettings(b, s);
       }
 
       public int GetRevisionCountToKeep() => RevisionsToKeep;
@@ -164,7 +164,7 @@ namespace mrHelper.App.Helpers
          setValue(keyName, RawDictionaryStringHelper.SerializeRawDictionaryString(value));
       }
 
-      private bool getBoolValue(string key, bool defaultValue, bool remove = false)
+      private bool getBoolValue(string key, bool defaultValue, RemoveValue remove = RemoveValue.No)
       {
          return bool.TryParse(getValue(key, boolToString(defaultValue), remove), out bool result) ? result : defaultValue;
       }
@@ -184,32 +184,33 @@ namespace mrHelper.App.Helpers
          setValue(key, value.ToString());
       }
 
-      private string getValue(string key, string defaultValue, bool remove = false)
+      enum RemoveValue
       {
-         if (remove)
-         {
-            if (!_config.AppSettings.Settings.AllKeys.Contains(key))
-            {
-               return defaultValue;
-            }
+         Yes,
+         No
+      }
 
-            KeyValueConfigurationElement value = _config.AppSettings.Settings[key];
-            if (value != null)
-            {
-               _config.AppSettings.Settings.Remove(key);
-               update();
-               return value.Value;
-            }
-            return defaultValue;
-         }
-
+      private string getValue(string key, string defaultValue, RemoveValue remove = RemoveValue.No)
+      {
          KeyValueConfigurationElement currentValue = _config.AppSettings.Settings[key];
          if (currentValue != null && !currentValue.Value.StartsWith(DefaultValuePrefix))
          {
+            if (remove == RemoveValue.Yes)
+            {
+               removeValue(key);
+            }
             return currentValue.Value;
          }
 
-         setValue(key, DefaultValuePrefix + defaultValue);
+         if (remove == RemoveValue.Yes)
+         {
+            removeValue(key);
+         }
+         else
+         {
+            Debug.Assert(remove == RemoveValue.No);
+            setValue(key, DefaultValuePrefix + defaultValue);
+         }
          return defaultValue;
       }
 
@@ -247,6 +248,16 @@ namespace mrHelper.App.Helpers
          {
             onPropertyChanged(key);
          }
+      }
+
+      private void removeValue(string key)
+      {
+         if (!_config.AppSettings.Settings.AllKeys.Contains(key))
+         {
+            return;
+         }
+         _config.AppSettings.Settings.Remove(key);
+         update();
       }
 
       private bool needLogValueChange(string key)
