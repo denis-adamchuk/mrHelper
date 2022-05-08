@@ -146,7 +146,7 @@ namespace mrHelper.App.Helpers
                Color? colorOpt = readColorFromText(i.Factory);
                if (colorOpt.HasValue)
                {
-                  initializeColor(g.Group, i.Name, i.Display_Name, i.Conditions, colorOpt.Value, i.AffectSummary);
+                  initializeColor(g.Group, i.Name, i.Display_Name, i.Conditions, colorOpt.Value, i.Affect_Summary);
                }
             }
          }
@@ -203,7 +203,7 @@ namespace mrHelper.App.Helpers
          public string Factory { get; protected set; }
 
          [JsonProperty]
-         public bool AffectSummary { get; protected set; }
+         public bool Affect_Summary { get; protected set; }
       }
 
       private class ColorGroup
