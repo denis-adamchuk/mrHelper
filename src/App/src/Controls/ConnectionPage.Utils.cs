@@ -871,6 +871,10 @@ namespace mrHelper.App.Controls
 
       private void prepareFilterControls()
       {
+         // This is a hack to create a Handle of textBoxDisplayFilterRecent.
+         // Without handle OnTextChanged is not called.
+         IntPtr _ = textBoxDisplayFilterRecent.Handle;
+
          foreach (EDataCacheType type in new EDataCacheType[] { EDataCacheType.Live, EDataCacheType.Recent })
          {
             setFilterText(type, readFilterKeywordsForHost(type));

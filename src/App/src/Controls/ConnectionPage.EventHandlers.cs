@@ -17,17 +17,7 @@ namespace mrHelper.App.Controls
          onTextBoxDisplayFilterUpdate(EDataCacheType.Live, textBoxDisplayFilter.Text);
       }
 
-      private void textBoxDisplayFilter_Leave(object sender, EventArgs e)
-      {
-         onTextBoxDisplayFilterUpdate(EDataCacheType.Live, textBoxDisplayFilter.Text);
-      }
-
       private void textBoxDisplayFilterRecent_TextChanged(object sender, EventArgs e)
-      {
-         onTextBoxDisplayFilterUpdate(EDataCacheType.Recent, textBoxDisplayFilterRecent.Text);
-      }
-
-      private void textBoxDisplayFilterRecent_Leave(object sender, EventArgs e)
       {
          onTextBoxDisplayFilterUpdate(EDataCacheType.Recent, textBoxDisplayFilterRecent.Text);
       }

@@ -3,7 +3,7 @@ using System.Windows.Forms;
 
 namespace mrHelper.CommonControls.Controls
 {
-   public partial class DelayedTextBox : TextBox
+   public partial class DelayedTextBox : RichTextBox
    {
       public DelayedTextBox()
       {

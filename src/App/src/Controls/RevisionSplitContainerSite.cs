@@ -23,7 +23,6 @@ namespace mrHelper.App.Controls
       public RevisionSplitContainerSite()
       {
          InitializeComponent();
-         applyRevisionPreviewStyle();
       }
 
       internal void Initialize(
@@ -35,6 +34,7 @@ namespace mrHelper.App.Controls
          _getRepositoryAccessor = getRepositoryAccessor;
          _getReviewedRevisions = getReviewedRevisions;
 
+         applyRevisionPreviewStyle();
          Program.Settings.FlatRevisionPreviewChanged += applyRevisionPreviewStyle;
       }
 

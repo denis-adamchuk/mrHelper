@@ -84,8 +84,7 @@ namespace mrHelper.App.Controls
          this.tabControlMode = new mrHelper.App.Controls.PlainTabControl();
          this.tabPageLive = new System.Windows.Forms.TabPage();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
-         this.textBoxDisplayFilter = new mrHelper.CommonControls.Controls.DelayedTextBox();
-         this.textBoxDisplayFilterRecent = new mrHelper.CommonControls.Controls.DelayedTextBox();
+         this.textBoxDisplayFilter = new mrHelper.App.Controls.FilterTextBox();
          this.listViewLiveMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -100,7 +99,6 @@ namespace mrHelper.App.Controls
          this.columnHeaderRefreshTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.checkBoxDisplayFilter = new System.Windows.Forms.CheckBox();
-         this.checkBoxDisplayFilterRecent = new System.Windows.Forms.CheckBox();
          this.tabPageSearch = new System.Windows.Forms.TabPage();
          this.groupBoxSearchMergeRequest = new System.Windows.Forms.GroupBox();
          this.linkLabelNewSearch = new System.Windows.Forms.LinkLabel();
@@ -116,6 +114,8 @@ namespace mrHelper.App.Controls
          this.columnHeaderFoundActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageRecent = new System.Windows.Forms.TabPage();
          this.groupBoxRecentMergeRequest = new System.Windows.Forms.GroupBox();
+         this.textBoxDisplayFilterRecent = new mrHelper.App.Controls.FilterTextBox();
+         this.checkBoxDisplayFilterRecent = new System.Windows.Forms.CheckBox();
          this.textBoxRecentMergeRequestsHint = new System.Windows.Forms.TextBox();
          this.listViewRecentMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
          this.columnHeaderRecentIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -224,22 +224,13 @@ namespace mrHelper.App.Controls
          this.textBoxDisplayFilter.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
          this.textBoxDisplayFilter.Location = new System.Drawing.Point(60, 17);
+         this.textBoxDisplayFilter.Multiline = false;
          this.textBoxDisplayFilter.Name = "textBoxDisplayFilter";
+         this.textBoxDisplayFilter.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
          this.textBoxDisplayFilter.Size = new System.Drawing.Size(776, 20);
          this.textBoxDisplayFilter.TabIndex = 1;
+         this.textBoxDisplayFilter.Text = "";
          this.textBoxDisplayFilter.TextChanged += new System.EventHandler(this.textBoxDisplayFilter_TextChanged);
-         this.textBoxDisplayFilter.Leave += new System.EventHandler(this.textBoxDisplayFilter_Leave);
-         // 
-         // textBoxDisplayFilterRecent
-         // 
-         this.textBoxDisplayFilterRecent.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-         this.textBoxDisplayFilterRecent.Location = new System.Drawing.Point(60, 17);
-         this.textBoxDisplayFilterRecent.Name = "textBoxDisplayFilterRecent";
-         this.textBoxDisplayFilterRecent.Size = new System.Drawing.Size(776, 20);
-         this.textBoxDisplayFilterRecent.TabIndex = 1;
-         this.textBoxDisplayFilterRecent.TextChanged += new System.EventHandler(this.textBoxDisplayFilterRecent_TextChanged);
-         this.textBoxDisplayFilterRecent.Leave += new System.EventHandler(this.textBoxDisplayFilterRecent_Leave);
          // 
          // listViewLiveMergeRequests
          // 
@@ -267,6 +258,7 @@ namespace mrHelper.App.Controls
          this.listViewLiveMergeRequests.Location = new System.Drawing.Point(3, 46);
          this.listViewLiveMergeRequests.MultiSelect = false;
          this.listViewLiveMergeRequests.Name = "listViewLiveMergeRequests";
+         this.listViewLiveMergeRequests.OwnerDraw = true;
          this.listViewLiveMergeRequests.Size = new System.Drawing.Size(833, 567);
          this.listViewLiveMergeRequests.TabIndex = 3;
          this.listViewLiveMergeRequests.Tag = "DesignTimeName";
@@ -276,73 +268,73 @@ namespace mrHelper.App.Controls
          // 
          // columnHeaderIId
          // 
-         this.columnHeaderIId.Tag = ColumnType.IId;
+         this.columnHeaderIId.Tag = mrHelper.App.Controls.ColumnType.IId;
          this.columnHeaderIId.Text = "IId";
          this.columnHeaderIId.Width = 40;
          // 
          // columnHeaderAuthor
          // 
-         this.columnHeaderAuthor.Tag = ColumnType.Author;
+         this.columnHeaderAuthor.Tag = mrHelper.App.Controls.ColumnType.Author;
          this.columnHeaderAuthor.Text = "Author";
          this.columnHeaderAuthor.Width = 110;
          // 
          // columnHeaderTitle
          // 
-         this.columnHeaderTitle.Tag = ColumnType.Title;
+         this.columnHeaderTitle.Tag = mrHelper.App.Controls.ColumnType.Title;
          this.columnHeaderTitle.Text = "Title";
          this.columnHeaderTitle.Width = 400;
          // 
          // columnHeaderLabels
          // 
-         this.columnHeaderLabels.Tag = ColumnType.Labels;
+         this.columnHeaderLabels.Tag = mrHelper.App.Controls.ColumnType.Labels;
          this.columnHeaderLabels.Text = "Labels";
          this.columnHeaderLabels.Width = 180;
          // 
          // columnHeaderSize
          // 
-         this.columnHeaderSize.Tag = ColumnType.Size;
+         this.columnHeaderSize.Tag = mrHelper.App.Controls.ColumnType.Size;
          this.columnHeaderSize.Text = "Size";
          this.columnHeaderSize.Width = 100;
          // 
          // columnHeaderJira
          // 
-         this.columnHeaderJira.Tag = ColumnType.Jira;
+         this.columnHeaderJira.Tag = mrHelper.App.Controls.ColumnType.Jira;
          this.columnHeaderJira.Text = "Jira";
          this.columnHeaderJira.Width = 80;
          // 
          // columnHeaderTotalTime
          // 
-         this.columnHeaderTotalTime.Tag = ColumnType.TotalTime;
+         this.columnHeaderTotalTime.Tag = mrHelper.App.Controls.ColumnType.TotalTime;
          this.columnHeaderTotalTime.Text = "Total Time";
          this.columnHeaderTotalTime.Width = 70;
          // 
          // columnHeaderResolved
          // 
-         this.columnHeaderResolved.Tag = ColumnType.Resolved;
+         this.columnHeaderResolved.Tag = mrHelper.App.Controls.ColumnType.Resolved;
          this.columnHeaderResolved.Text = "Resolved";
          this.columnHeaderResolved.Width = 65;
          // 
          // columnHeaderSourceBranch
          // 
-         this.columnHeaderSourceBranch.Tag = ColumnType.SourceBranch;
+         this.columnHeaderSourceBranch.Tag = mrHelper.App.Controls.ColumnType.SourceBranch;
          this.columnHeaderSourceBranch.Text = "Source Branch";
          this.columnHeaderSourceBranch.Width = 100;
          // 
          // columnHeaderTargetBranch
          // 
-         this.columnHeaderTargetBranch.Tag = ColumnType.TargetBranch;
+         this.columnHeaderTargetBranch.Tag = mrHelper.App.Controls.ColumnType.TargetBranch;
          this.columnHeaderTargetBranch.Text = "Target Branch";
          this.columnHeaderTargetBranch.Width = 100;
          // 
          // columnHeaderRefreshTime
          // 
-         this.columnHeaderRefreshTime.Tag = ColumnType.RefreshTime;
+         this.columnHeaderRefreshTime.Tag = mrHelper.App.Controls.ColumnType.RefreshTime;
          this.columnHeaderRefreshTime.Text = "Refreshed";
          this.columnHeaderRefreshTime.Width = 90;
          // 
          // columnHeaderActivities
          // 
-         this.columnHeaderActivities.Tag = ColumnType.Activities;
+         this.columnHeaderActivities.Tag = mrHelper.App.Controls.ColumnType.Activities;
          this.columnHeaderActivities.Text = "Activities";
          this.columnHeaderActivities.Width = 90;
          // 
@@ -357,18 +349,6 @@ namespace mrHelper.App.Controls
          this.checkBoxDisplayFilter.Text = "Filter";
          this.checkBoxDisplayFilter.UseVisualStyleBackColor = true;
          this.checkBoxDisplayFilter.CheckedChanged += new System.EventHandler(this.checkBoxDisplayFilter_CheckedChanged);
-         // 
-         // checkBoxDisplayFilterRecent
-         // 
-         this.checkBoxDisplayFilterRecent.AutoSize = true;
-         this.checkBoxDisplayFilterRecent.Location = new System.Drawing.Point(6, 19);
-         this.checkBoxDisplayFilterRecent.MinimumSize = new System.Drawing.Size(48, 0);
-         this.checkBoxDisplayFilterRecent.Name = "checkBoxDisplayFilterRecent";
-         this.checkBoxDisplayFilterRecent.Size = new System.Drawing.Size(48, 17);
-         this.checkBoxDisplayFilterRecent.TabIndex = 0;
-         this.checkBoxDisplayFilterRecent.Text = "Filter";
-         this.checkBoxDisplayFilterRecent.UseVisualStyleBackColor = true;
-         this.checkBoxDisplayFilterRecent.CheckedChanged += new System.EventHandler(this.checkBoxDisplayFilterRecent_CheckedChanged);
          // 
          // tabPageSearch
          // 
@@ -428,6 +408,7 @@ namespace mrHelper.App.Controls
          this.listViewFoundMergeRequests.Location = new System.Drawing.Point(3, 32);
          this.listViewFoundMergeRequests.MultiSelect = false;
          this.listViewFoundMergeRequests.Name = "listViewFoundMergeRequests";
+         this.listViewFoundMergeRequests.OwnerDraw = true;
          this.listViewFoundMergeRequests.Size = new System.Drawing.Size(833, 581);
          this.listViewFoundMergeRequests.TabIndex = 3;
          this.listViewFoundMergeRequests.Tag = "DesignTimeName";
@@ -437,55 +418,55 @@ namespace mrHelper.App.Controls
          // 
          // columnHeaderFoundIId
          // 
-         this.columnHeaderFoundIId.Tag = ColumnType.IId;
+         this.columnHeaderFoundIId.Tag = mrHelper.App.Controls.ColumnType.IId;
          this.columnHeaderFoundIId.Text = "IId";
          this.columnHeaderFoundIId.Width = 40;
          // 
          // columnHeaderFoundState
          // 
-         this.columnHeaderFoundState.Tag = ColumnType.State;
+         this.columnHeaderFoundState.Tag = mrHelper.App.Controls.ColumnType.State;
          this.columnHeaderFoundState.Text = "State";
          this.columnHeaderFoundState.Width = 80;
          // 
          // columnHeaderFoundAuthor
          // 
-         this.columnHeaderFoundAuthor.Tag = ColumnType.Author;
+         this.columnHeaderFoundAuthor.Tag = mrHelper.App.Controls.ColumnType.Author;
          this.columnHeaderFoundAuthor.Text = "Author";
          this.columnHeaderFoundAuthor.Width = 110;
          // 
          // columnHeaderFoundTitle
          // 
-         this.columnHeaderFoundTitle.Tag = ColumnType.Title;
+         this.columnHeaderFoundTitle.Tag = mrHelper.App.Controls.ColumnType.Title;
          this.columnHeaderFoundTitle.Text = "Title";
          this.columnHeaderFoundTitle.Width = 400;
          // 
          // columnHeaderFoundLabels
          // 
-         this.columnHeaderFoundLabels.Tag = ColumnType.Labels;
+         this.columnHeaderFoundLabels.Tag = mrHelper.App.Controls.ColumnType.Labels;
          this.columnHeaderFoundLabels.Text = "Labels";
          this.columnHeaderFoundLabels.Width = 180;
          // 
          // columnHeaderFoundJira
          // 
-         this.columnHeaderFoundJira.Tag = ColumnType.Jira;
+         this.columnHeaderFoundJira.Tag = mrHelper.App.Controls.ColumnType.Jira;
          this.columnHeaderFoundJira.Text = "Jira";
          this.columnHeaderFoundJira.Width = 80;
          // 
          // columnHeaderFoundSourceBranch
          // 
-         this.columnHeaderFoundSourceBranch.Tag = ColumnType.SourceBranch;
+         this.columnHeaderFoundSourceBranch.Tag = mrHelper.App.Controls.ColumnType.SourceBranch;
          this.columnHeaderFoundSourceBranch.Text = "Source Branch";
          this.columnHeaderFoundSourceBranch.Width = 100;
          // 
          // columnHeaderFoundTargetBranch
          // 
-         this.columnHeaderFoundTargetBranch.Tag = ColumnType.TargetBranch;
+         this.columnHeaderFoundTargetBranch.Tag = mrHelper.App.Controls.ColumnType.TargetBranch;
          this.columnHeaderFoundTargetBranch.Text = "Target Branch";
          this.columnHeaderFoundTargetBranch.Width = 100;
          // 
          // columnHeaderFoundActivities
          // 
-         this.columnHeaderFoundActivities.Tag = ColumnType.Activities;
+         this.columnHeaderFoundActivities.Tag = mrHelper.App.Controls.ColumnType.Activities;
          this.columnHeaderFoundActivities.Text = "Activities";
          this.columnHeaderFoundActivities.Width = 90;
          // 
@@ -514,6 +495,31 @@ namespace mrHelper.App.Controls
          this.groupBoxRecentMergeRequest.TabIndex = 5;
          this.groupBoxRecentMergeRequest.TabStop = false;
          this.groupBoxRecentMergeRequest.Text = "Recent Merge Requests";
+         // 
+         // textBoxDisplayFilterRecent
+         // 
+         this.textBoxDisplayFilterRecent.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.textBoxDisplayFilterRecent.Location = new System.Drawing.Point(60, 17);
+         this.textBoxDisplayFilterRecent.Multiline = false;
+         this.textBoxDisplayFilterRecent.Name = "textBoxDisplayFilterRecent";
+         this.textBoxDisplayFilterRecent.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
+         this.textBoxDisplayFilterRecent.Size = new System.Drawing.Size(776, 20);
+         this.textBoxDisplayFilterRecent.TabIndex = 1;
+         this.textBoxDisplayFilterRecent.Text = "";
+         this.textBoxDisplayFilterRecent.TextChanged += new System.EventHandler(this.textBoxDisplayFilterRecent_TextChanged);
+         // 
+         // checkBoxDisplayFilterRecent
+         // 
+         this.checkBoxDisplayFilterRecent.AutoSize = true;
+         this.checkBoxDisplayFilterRecent.Location = new System.Drawing.Point(6, 19);
+         this.checkBoxDisplayFilterRecent.MinimumSize = new System.Drawing.Size(48, 0);
+         this.checkBoxDisplayFilterRecent.Name = "checkBoxDisplayFilterRecent";
+         this.checkBoxDisplayFilterRecent.Size = new System.Drawing.Size(48, 17);
+         this.checkBoxDisplayFilterRecent.TabIndex = 0;
+         this.checkBoxDisplayFilterRecent.Text = "Filter";
+         this.checkBoxDisplayFilterRecent.UseVisualStyleBackColor = true;
+         this.checkBoxDisplayFilterRecent.CheckedChanged += new System.EventHandler(this.checkBoxDisplayFilterRecent_CheckedChanged);
          // 
          // textBoxRecentMergeRequestsHint
          // 
@@ -551,6 +557,7 @@ namespace mrHelper.App.Controls
          this.listViewRecentMergeRequests.Location = new System.Drawing.Point(3, 73);
          this.listViewRecentMergeRequests.MultiSelect = false;
          this.listViewRecentMergeRequests.Name = "listViewRecentMergeRequests";
+         this.listViewRecentMergeRequests.OwnerDraw = true;
          this.listViewRecentMergeRequests.Size = new System.Drawing.Size(833, 540);
          this.listViewRecentMergeRequests.TabIndex = 4;
          this.listViewRecentMergeRequests.Tag = "DesignTimeName";
@@ -560,55 +567,55 @@ namespace mrHelper.App.Controls
          // 
          // columnHeaderRecentIId
          // 
-         this.columnHeaderRecentIId.Tag = ColumnType.IId;
+         this.columnHeaderRecentIId.Tag = mrHelper.App.Controls.ColumnType.IId;
          this.columnHeaderRecentIId.Text = "IId";
          this.columnHeaderRecentIId.Width = 40;
          // 
          // columnHeaderRecentState
          // 
-         this.columnHeaderRecentState.Tag = ColumnType.State;
+         this.columnHeaderRecentState.Tag = mrHelper.App.Controls.ColumnType.State;
          this.columnHeaderRecentState.Text = "State";
          this.columnHeaderRecentState.Width = 80;
          // 
          // columnHeaderRecentAuthor
          // 
-         this.columnHeaderRecentAuthor.Tag = ColumnType.Author;
+         this.columnHeaderRecentAuthor.Tag = mrHelper.App.Controls.ColumnType.Author;
          this.columnHeaderRecentAuthor.Text = "Author";
          this.columnHeaderRecentAuthor.Width = 110;
          // 
          // columnHeaderRecentTitle
          // 
-         this.columnHeaderRecentTitle.Tag = ColumnType.Title;
+         this.columnHeaderRecentTitle.Tag = mrHelper.App.Controls.ColumnType.Title;
          this.columnHeaderRecentTitle.Text = "Title";
          this.columnHeaderRecentTitle.Width = 400;
          // 
          // columnHeaderRecentLabels
          // 
-         this.columnHeaderRecentLabels.Tag = ColumnType.Labels;
+         this.columnHeaderRecentLabels.Tag = mrHelper.App.Controls.ColumnType.Labels;
          this.columnHeaderRecentLabels.Text = "Labels";
          this.columnHeaderRecentLabels.Width = 180;
          // 
          // columnHeaderRecentJira
          // 
-         this.columnHeaderRecentJira.Tag = ColumnType.Jira;
+         this.columnHeaderRecentJira.Tag = mrHelper.App.Controls.ColumnType.Jira;
          this.columnHeaderRecentJira.Text = "Jira";
          this.columnHeaderRecentJira.Width = 80;
          // 
          // columnHeaderRecentSourceBranch
          // 
-         this.columnHeaderRecentSourceBranch.Tag = ColumnType.SourceBranch;
+         this.columnHeaderRecentSourceBranch.Tag = mrHelper.App.Controls.ColumnType.SourceBranch;
          this.columnHeaderRecentSourceBranch.Text = "Source Branch";
          this.columnHeaderRecentSourceBranch.Width = 100;
          // 
          // columnHeaderRecentTargetBranch
          // 
-         this.columnHeaderRecentTargetBranch.Tag = ColumnType.TargetBranch;
+         this.columnHeaderRecentTargetBranch.Tag = mrHelper.App.Controls.ColumnType.TargetBranch;
          this.columnHeaderRecentTargetBranch.Text = "Target Branch";
          this.columnHeaderRecentTargetBranch.Width = 100;
          // 
          // columnHeaderRecentActivities
          // 
-         this.columnHeaderRecentActivities.Tag = ColumnType.Activities;
+         this.columnHeaderRecentActivities.Tag = mrHelper.App.Controls.ColumnType.Activities;
          this.columnHeaderRecentActivities.Text = "Activities";
          this.columnHeaderRecentActivities.Width = 90;
          // 
@@ -651,7 +658,7 @@ namespace mrHelper.App.Controls
          this.groupBoxSelectedMR.TabStop = false;
          this.groupBoxSelectedMR.Text = "Merge Request";
          // 
-         // splitContainerSiteDescription
+         // descriptionSplitContainerSite
          // 
          this.descriptionSplitContainerSite.Dock = System.Windows.Forms.DockStyle.Fill;
          this.descriptionSplitContainerSite.Location = new System.Drawing.Point(3, 16);
@@ -728,8 +735,7 @@ namespace mrHelper.App.Controls
       private PlainTabControl tabControlMode;
       private System.Windows.Forms.TabPage tabPageLive;
       private System.Windows.Forms.GroupBox groupBoxSelectMergeRequest;
-      private CommonControls.Controls.DelayedTextBox textBoxDisplayFilter;
-      private CommonControls.Controls.DelayedTextBox textBoxDisplayFilterRecent;
+      private mrHelper.App.Controls.FilterTextBox textBoxDisplayFilterRecent;
       private App.Controls.MergeRequestListView listViewLiveMergeRequests;
       private System.Windows.Forms.ColumnHeader columnHeaderIId;
       private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
@@ -777,5 +783,6 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.LinkLabel linkLabelNewSearch;
       private DescriptionSplitContainerSite descriptionSplitContainerSite;
       private RevisionSplitContainerSite revisionSplitContainerSite;
+      private mrHelper.App.Controls.FilterTextBox textBoxDisplayFilter;
    }
 }
