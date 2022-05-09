@@ -965,7 +965,7 @@ namespace mrHelper.App.Controls
          }
 
          MergeRequestFilterState filterState = new MergeRequestFilterState(
-            _mergeRequestFilter.Filter.Keywords.ToString(), true);
+            _mergeRequestFilter.Filter.Keywords.ToString(), FilterState.Enabled);
          MergeRequestFilter filter = new MergeRequestFilter(filterState);
          return filter.DoesMatchFilter(mergeRequest);
       }

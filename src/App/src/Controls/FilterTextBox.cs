@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.App.Controls
@@ -6,7 +7,7 @@ namespace mrHelper.App.Controls
    class FilterTextBox : DelayedTextBox
    {
       private static System.Drawing.Color NormalTextColor = System.Drawing.Color.Black;
-      private static System.Drawing.Color ExcludedTextColor = System.Drawing.Color.Gray;
+      private static System.Drawing.Color ExcludedTextColor = System.Drawing.Color.LightGray;
 
       protected override void OnTextChanged(EventArgs e)
       {
@@ -20,6 +21,7 @@ namespace mrHelper.App.Controls
          SuspendLayout();
          int prevSelectionStart = SelectionStart;
          int prevSelectionLength = SelectionLength;
+         System.Drawing.Color prevSelectionColor = SelectionColor;
 
          // paint text with in black
          SelectionStart = 0;
@@ -31,19 +33,21 @@ namespace mrHelper.App.Controls
          string[] words = Text.Split(',');
          foreach (string word in words)
          {
-            SelectionStart = index;
-            SelectionLength = word.Length;
-            if (word.TrimStart(' ').StartsWith(Common.Constants.Constants.ExcludeLabelPrefix))
+            bool isThereCommaAfterWord = !ReferenceEquals(word, words.Last());
+            int commaCount = isThereCommaAfterWord ? 1 : 0;
+            if (word.Trim(' ').StartsWith(Common.Constants.Constants.ExcludeLabelPrefix))
             {
+               SelectionStart = index;
+               SelectionLength = word.Length + commaCount;
                SelectionColor = ExcludedTextColor;
             }
-            index += word.Length + 1; // + comma
+            index += word.Length + commaCount;
          }
 
          // restore state
          SelectionStart = prevSelectionStart;
          SelectionLength = prevSelectionLength;
-         SelectionColor = NormalTextColor;
+         SelectionColor = prevSelectionColor;
          ResumeLayout();
       }
    }

@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Linq;
+using System.Diagnostics;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.Common.Tools;
 using mrHelper.Common.Constants;
-using System.Collections.Generic;
 
 namespace mrHelper.GitLabClient
 {
@@ -61,12 +62,7 @@ namespace mrHelper.GitLabClient
 
       internal bool DoesMatchFilter(MergeRequest mergeRequest)
       {
-         if (!_data.Any())
-         {
-            return true;
-         }
-
-         if (_data.Length == 1 && _data[0] == String.Empty)
+         if (!_data.Any() || (_data.Length == 1 && _data[0] == String.Empty))
          {
             return true;
          }
@@ -131,16 +127,23 @@ namespace mrHelper.GitLabClient
       private readonly string[] _data;
    }
 
+   public enum FilterState
+   {
+      Enabled,
+      Disabled,
+      ShowHiddenOnly
+   }
+
    public struct MergeRequestFilterState
    {
-      public MergeRequestFilterState(string keywords, bool enabled)
+      public MergeRequestFilterState(string keywords, FilterState state)
       {
          Keywords = KeywordCollection.FromString(keywords);
-         Enabled = enabled;
+         State = state;
       }
 
       public KeywordCollection Keywords { get; }
-      public bool Enabled { get; }
+      public FilterState State { get; }
    }
 
    public class MergeRequestFilter : IMergeRequestFilterChecker
@@ -168,7 +171,21 @@ namespace mrHelper.GitLabClient
 
       public bool DoesMatchFilter(MergeRequest mergeRequest)
       {
-         return !Filter.Enabled || Filter.Keywords.DoesMatchFilter(mergeRequest);
+         switch (Filter.State)
+         {
+            case FilterState.Enabled:
+               return Filter.Keywords.DoesMatchFilter(mergeRequest);
+
+            case FilterState.Disabled:
+               return true;
+
+            case FilterState.ShowHiddenOnly:
+               return Filter.Keywords.IsExcluded(mergeRequest.Id.ToString());
+
+            default:
+               Debug.Assert(false);
+               return true;
+         }
       }
 
       private MergeRequestFilterState _filter;

@@ -146,6 +146,9 @@
     <Compile Include="src\Controls\ConnectionTabPage.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\FilterStateComboBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\FilterTextBox.cs">
       <SubType>Component</SubType>
     </Compile>

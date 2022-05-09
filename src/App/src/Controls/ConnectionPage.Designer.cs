@@ -98,7 +98,6 @@ namespace mrHelper.App.Controls
          this.columnHeaderTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRefreshTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-         this.checkBoxDisplayFilter = new System.Windows.Forms.CheckBox();
          this.tabPageSearch = new System.Windows.Forms.TabPage();
          this.groupBoxSearchMergeRequest = new System.Windows.Forms.GroupBox();
          this.linkLabelNewSearch = new System.Windows.Forms.LinkLabel();
@@ -115,7 +114,6 @@ namespace mrHelper.App.Controls
          this.tabPageRecent = new System.Windows.Forms.TabPage();
          this.groupBoxRecentMergeRequest = new System.Windows.Forms.GroupBox();
          this.textBoxDisplayFilterRecent = new mrHelper.App.Controls.FilterTextBox();
-         this.checkBoxDisplayFilterRecent = new System.Windows.Forms.CheckBox();
          this.textBoxRecentMergeRequestsHint = new System.Windows.Forms.TextBox();
          this.listViewRecentMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
          this.columnHeaderRecentIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -133,6 +131,8 @@ namespace mrHelper.App.Controls
          this.linkLabelConnectedTo = new mrHelper.CommonControls.Controls.LinkLabelEx();
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
          this.revisionSplitContainerSite = new mrHelper.App.Controls.RevisionSplitContainerSite();
+         this.comboBoxFilter = new FilterStateComboBox();
+         this.comboBoxFilterRecent = new FilterStateComboBox();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainerPrimary)).BeginInit();
          this.splitContainerPrimary.Panel1.SuspendLayout();
          this.splitContainerPrimary.Panel2.SuspendLayout();
@@ -208,9 +208,9 @@ namespace mrHelper.App.Controls
          // 
          // groupBoxSelectMergeRequest
          // 
+         this.groupBoxSelectMergeRequest.Controls.Add(this.comboBoxFilter);
          this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxDisplayFilter);
          this.groupBoxSelectMergeRequest.Controls.Add(this.listViewLiveMergeRequests);
-         this.groupBoxSelectMergeRequest.Controls.Add(this.checkBoxDisplayFilter);
          this.groupBoxSelectMergeRequest.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(3, 3);
          this.groupBoxSelectMergeRequest.Name = "groupBoxSelectMergeRequest";
@@ -223,11 +223,11 @@ namespace mrHelper.App.Controls
          // 
          this.textBoxDisplayFilter.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.textBoxDisplayFilter.Location = new System.Drawing.Point(60, 17);
+         this.textBoxDisplayFilter.Location = new System.Drawing.Point(130, 17);
          this.textBoxDisplayFilter.Multiline = false;
          this.textBoxDisplayFilter.Name = "textBoxDisplayFilter";
          this.textBoxDisplayFilter.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
-         this.textBoxDisplayFilter.Size = new System.Drawing.Size(776, 20);
+         this.textBoxDisplayFilter.Size = new System.Drawing.Size(706, 20);
          this.textBoxDisplayFilter.TabIndex = 1;
          this.textBoxDisplayFilter.Text = "";
          this.textBoxDisplayFilter.TextChanged += new System.EventHandler(this.textBoxDisplayFilter_TextChanged);
@@ -337,18 +337,6 @@ namespace mrHelper.App.Controls
          this.columnHeaderActivities.Tag = mrHelper.App.Controls.ColumnType.Activities;
          this.columnHeaderActivities.Text = "Activities";
          this.columnHeaderActivities.Width = 90;
-         // 
-         // checkBoxDisplayFilter
-         // 
-         this.checkBoxDisplayFilter.AutoSize = true;
-         this.checkBoxDisplayFilter.Location = new System.Drawing.Point(6, 19);
-         this.checkBoxDisplayFilter.MinimumSize = new System.Drawing.Size(48, 0);
-         this.checkBoxDisplayFilter.Name = "checkBoxDisplayFilter";
-         this.checkBoxDisplayFilter.Size = new System.Drawing.Size(48, 17);
-         this.checkBoxDisplayFilter.TabIndex = 0;
-         this.checkBoxDisplayFilter.Text = "Filter";
-         this.checkBoxDisplayFilter.UseVisualStyleBackColor = true;
-         this.checkBoxDisplayFilter.CheckedChanged += new System.EventHandler(this.checkBoxDisplayFilter_CheckedChanged);
          // 
          // tabPageSearch
          // 
@@ -484,8 +472,8 @@ namespace mrHelper.App.Controls
          // 
          // groupBoxRecentMergeRequest
          // 
+         this.groupBoxRecentMergeRequest.Controls.Add(this.comboBoxFilterRecent);
          this.groupBoxRecentMergeRequest.Controls.Add(this.textBoxDisplayFilterRecent);
-         this.groupBoxRecentMergeRequest.Controls.Add(this.checkBoxDisplayFilterRecent);
          this.groupBoxRecentMergeRequest.Controls.Add(this.textBoxRecentMergeRequestsHint);
          this.groupBoxRecentMergeRequest.Controls.Add(this.listViewRecentMergeRequests);
          this.groupBoxRecentMergeRequest.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -500,26 +488,24 @@ namespace mrHelper.App.Controls
          // 
          this.textBoxDisplayFilterRecent.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.textBoxDisplayFilterRecent.Location = new System.Drawing.Point(60, 17);
+         this.textBoxDisplayFilterRecent.Location = new System.Drawing.Point(130, 17);
          this.textBoxDisplayFilterRecent.Multiline = false;
          this.textBoxDisplayFilterRecent.Name = "textBoxDisplayFilterRecent";
          this.textBoxDisplayFilterRecent.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
-         this.textBoxDisplayFilterRecent.Size = new System.Drawing.Size(776, 20);
+         this.textBoxDisplayFilterRecent.Size = new System.Drawing.Size(706, 20);
          this.textBoxDisplayFilterRecent.TabIndex = 1;
          this.textBoxDisplayFilterRecent.Text = "";
          this.textBoxDisplayFilterRecent.TextChanged += new System.EventHandler(this.textBoxDisplayFilterRecent_TextChanged);
          // 
-         // checkBoxDisplayFilterRecent
+         // comboBoxFilterRecent
          // 
-         this.checkBoxDisplayFilterRecent.AutoSize = true;
-         this.checkBoxDisplayFilterRecent.Location = new System.Drawing.Point(6, 19);
-         this.checkBoxDisplayFilterRecent.MinimumSize = new System.Drawing.Size(48, 0);
-         this.checkBoxDisplayFilterRecent.Name = "checkBoxDisplayFilterRecent";
-         this.checkBoxDisplayFilterRecent.Size = new System.Drawing.Size(48, 17);
-         this.checkBoxDisplayFilterRecent.TabIndex = 0;
-         this.checkBoxDisplayFilterRecent.Text = "Filter";
-         this.checkBoxDisplayFilterRecent.UseVisualStyleBackColor = true;
-         this.checkBoxDisplayFilterRecent.CheckedChanged += new System.EventHandler(this.checkBoxDisplayFilterRecent_CheckedChanged);
+         this.comboBoxFilterRecent.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxFilterRecent.FormattingEnabled = true;
+         this.comboBoxFilterRecent.Location = new System.Drawing.Point(3, 17);
+         this.comboBoxFilterRecent.Name = "comboBoxFilterRecent";
+         this.comboBoxFilterRecent.Size = new System.Drawing.Size(120, 21);
+         this.comboBoxFilterRecent.TabIndex = 4;
+         this.comboBoxFilterRecent.SelectionChangeCommitted += new System.EventHandler(this.comboBoxFilterRecent_SelectionChangeCommitted);
          // 
          // textBoxRecentMergeRequestsHint
          // 
@@ -698,6 +684,16 @@ namespace mrHelper.App.Controls
          this.revisionSplitContainerSite.Size = new System.Drawing.Size(322, 273);
          this.revisionSplitContainerSite.TabIndex = 0;
          // 
+         // comboBoxFilter
+         // 
+         this.comboBoxFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxFilter.FormattingEnabled = true;
+         this.comboBoxFilter.Location = new System.Drawing.Point(3, 17);
+         this.comboBoxFilter.Name = "comboBoxFilter";
+         this.comboBoxFilter.Size = new System.Drawing.Size(120, 21);
+         this.comboBoxFilter.TabIndex = 4;
+         this.comboBoxFilter.SelectionChangeCommitted += new System.EventHandler(this.comboBoxFilter_SelectionChangeCommitted);
+         // 
          // ConnectionPage
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -749,8 +745,6 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ColumnHeader columnHeaderTargetBranch;
       private System.Windows.Forms.ColumnHeader columnHeaderRefreshTime;
       private System.Windows.Forms.ColumnHeader columnHeaderActivities;
-      private System.Windows.Forms.CheckBox checkBoxDisplayFilter;
-      private System.Windows.Forms.CheckBox checkBoxDisplayFilterRecent;
       private System.Windows.Forms.TabPage tabPageSearch;
       private System.Windows.Forms.GroupBox groupBoxSearchMergeRequest;
       private App.Controls.MergeRequestListView listViewFoundMergeRequests;
@@ -784,5 +778,7 @@ namespace mrHelper.App.Controls
       private DescriptionSplitContainerSite descriptionSplitContainerSite;
       private RevisionSplitContainerSite revisionSplitContainerSite;
       private mrHelper.App.Controls.FilterTextBox textBoxDisplayFilter;
+      private FilterStateComboBox comboBoxFilter;
+      private FilterStateComboBox comboBoxFilterRecent;
    }
 }

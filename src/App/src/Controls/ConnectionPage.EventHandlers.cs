@@ -22,14 +22,14 @@ namespace mrHelper.App.Controls
          onTextBoxDisplayFilterUpdate(EDataCacheType.Recent, textBoxDisplayFilterRecent.Text);
       }
 
-      private void checkBoxDisplayFilter_CheckedChanged(object sender, EventArgs e)
+      private void comboBoxFilter_SelectionChangeCommitted(object sender, EventArgs e)
       {
-         onCheckBoxDisplayFilterUpdate(EDataCacheType.Live, (sender as CheckBox).Checked);
+         onCheckBoxDisplayFilterUpdate(EDataCacheType.Live, comboBoxFilter.GetSelected());
       }
 
-      private void checkBoxDisplayFilterRecent_CheckedChanged(object sender, EventArgs e)
+      private void comboBoxFilterRecent_SelectionChangeCommitted(object sender, EventArgs e)
       {
-         onCheckBoxDisplayFilterUpdate(EDataCacheType.Recent, (sender as CheckBox).Checked);
+         onCheckBoxDisplayFilterUpdate(EDataCacheType.Recent, comboBoxFilterRecent.GetSelected());
       }
 
       private void listViewMergeRequests_ContentChanged(object sender)

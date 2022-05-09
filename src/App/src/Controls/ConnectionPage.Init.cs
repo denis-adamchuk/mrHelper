@@ -181,7 +181,7 @@ namespace mrHelper.App.Controls
 
          if (!filtersByHosts.Data.ContainsKey(HostName))
          {
-            filtersByHosts.Add(HostName, new MergeRequestFilterState(String.Empty, false));
+            filtersByHosts.Add(HostName, new MergeRequestFilterState(String.Empty, FilterState.Disabled));
          }
          return filtersByHosts[HostName];
       }

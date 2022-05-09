@@ -426,10 +426,10 @@ namespace mrHelper.App.Forms
             .Save(_mutedMergeRequests.Data);
          new PersistentStateSaveHelper("FiltersByHostsLive", writer).Save(_filtersByHostsLive.Data
             .ToDictionary(item => item.Key,
-                          item => new Tuple<bool, string>(item.Value.Enabled, item.Value.Keywords.ToString())));
+                          item => new Tuple<string, string>(item.Value.State.ToString(), item.Value.Keywords.ToString())));
          new PersistentStateSaveHelper("FiltersByHostsRecent", writer).Save(_filtersByHostsRecent.Data
             .ToDictionary(item => item.Key,
-                          item => new Tuple<bool, string>(item.Value.Enabled, item.Value.Keywords.ToString())));
+                          item => new Tuple<string, string>(item.Value.State.ToString(), item.Value.Keywords.ToString())));
       }
 
       private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
@@ -504,22 +504,33 @@ namespace mrHelper.App.Forms
          }
 
          new PersistentStateLoadHelper("FiltersByHostsLive", reader).
-            Load(out Dictionary<string, Tuple<bool, string>> filtersByHostsLive);
+            Load(out Dictionary<string, Tuple<string, string>> filtersByHostsLive);
          if (filtersByHostsLive != null)
          {
             _filtersByHostsLive.Assign(filtersByHostsLive
                .ToDictionary(item => item.Key,
-                             item => new MergeRequestFilterState(item.Value.Item2, item.Value.Item1)));
+                             item => new MergeRequestFilterState(item.Value.Item2, readFilterState(item))));
          }
 
          new PersistentStateLoadHelper("FiltersByHostsRecent", reader).
-            Load(out Dictionary<string, Tuple<bool, string>> filtersByHostsRecent);
+            Load(out Dictionary<string, Tuple<string, string>> filtersByHostsRecent);
          if (filtersByHostsRecent != null)
          {
             _filtersByHostsRecent.Assign(filtersByHostsRecent
                .ToDictionary(item => item.Key,
-                             item => new MergeRequestFilterState(item.Value.Item2, item.Value.Item1)));
+                             item => new MergeRequestFilterState(item.Value.Item2, readFilterState(item))));
          }
+      }
+
+      private static FilterState readFilterState(KeyValuePair<string, Tuple<string, string>> item)
+      {
+         FilterState filterState = FilterState.Disabled;
+         if (!Enum.TryParse(item.Value.Item1, out filterState)
+           && bool.TryParse(item.Value.Item1, out bool oldStyleValue)) // before 2.7.7
+         {
+            filterState = oldStyleValue ? FilterState.Enabled : FilterState.Disabled;
+         }
+         return filterState;
       }
    }
 }

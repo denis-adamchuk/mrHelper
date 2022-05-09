@@ -232,19 +232,7 @@ namespace mrHelper.App.Controls
             return false;
          }
 
-         switch (dataCacheType)
-         {
-            case EDataCacheType.Live:
-               checkBoxDisplayFilter.Checked = false;
-               break;
-            case EDataCacheType.Recent:
-               checkBoxDisplayFilterRecent.Checked = false;
-               break;
-            case EDataCacheType.Search:
-            default:
-               Debug.Assert(false);
-               break;
-         }
+         setFilterState(dataCacheType, FilterState.Disabled);
          return true;
       }
 
