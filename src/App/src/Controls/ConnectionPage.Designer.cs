@@ -269,7 +269,7 @@ namespace mrHelper.App.Controls
          // columnHeaderIId
          // 
          this.columnHeaderIId.Tag = mrHelper.App.Controls.ColumnType.IId;
-         this.columnHeaderIId.Text = "IId";
+         this.columnHeaderIId.Text = "IId (Id)";
          this.columnHeaderIId.Width = 40;
          // 
          // columnHeaderAuthor
@@ -407,7 +407,7 @@ namespace mrHelper.App.Controls
          // columnHeaderFoundIId
          // 
          this.columnHeaderFoundIId.Tag = mrHelper.App.Controls.ColumnType.IId;
-         this.columnHeaderFoundIId.Text = "IId";
+         this.columnHeaderFoundIId.Text = "IId (Id)";
          this.columnHeaderFoundIId.Width = 40;
          // 
          // columnHeaderFoundState

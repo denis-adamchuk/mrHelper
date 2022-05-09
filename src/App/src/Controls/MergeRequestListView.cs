@@ -902,6 +902,11 @@ namespace mrHelper.App.Controls
       private string getJiraTaskUrl(MergeRequest mergeRequest) => GitLabClient.Helpers.GetJiraTaskUrl(
          mergeRequest, Program.ServiceManager.GetJiraServiceUrl());
 
+      private string getId(MergeRequest mergeRequest)
+      {
+         return String.Format("{0}\r\n({1})", mergeRequest.IId, mergeRequest.Id);
+      }
+
       private void recalcRowHeightForMergeRequestListView()
       {
          if (Items.Count == 0)
@@ -999,7 +1004,7 @@ namespace mrHelper.App.Controls
          };
 
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, mr.IId);
-         setSubItemTag(item, ColumnType.IId, x => mr.IId.ToString(), () => mr.Web_Url);
+         setSubItemTag(item, ColumnType.IId, x => getId(mr), () => mr.Web_Url);
          setSubItemTag(item, ColumnType.Author, x => author, () => String.Empty);
          setSubItemTag(item, ColumnType.Title, x => mr.Title, () => String.Empty);
          setSubItemTag(item, ColumnType.Labels, x => labels[x], () => String.Empty);
