@@ -232,7 +232,8 @@ namespace mrHelper.App.Controls
             return false;
          }
 
-         setFilterState(dataCacheType, FilterState.Disabled);
+         setFilterState(dataCacheType, FilterState.Disabled); // does not fire SelectionChangeCommited event
+         onCheckBoxDisplayFilterUpdate(dataCacheType, FilterState.Disabled);
          return true;
       }
 

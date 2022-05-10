@@ -129,8 +129,8 @@ namespace mrHelper.GitLabClient
 
    public enum FilterState
    {
-      Enabled,
       Disabled,
+      Enabled,
       ShowHiddenOnly
    }
 

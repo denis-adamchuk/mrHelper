@@ -836,6 +836,10 @@ namespace mrHelper.App.Controls
 
       private void setFilterText(EDataCacheType type, string text)
       {
+         Trace.TraceInformation(
+            "[ConnectionPage] setFilterText({0}, \"{1}\"), HostName={2}",
+            getDataCacheName(getDataCache(type)), text, HostName);
+
          switch (type)
          {
             case EDataCacheType.Live:
@@ -855,6 +859,10 @@ namespace mrHelper.App.Controls
 
       private void setFilterState(EDataCacheType type, FilterState state)
       {
+         Trace.TraceInformation(
+            "[ConnectionPage] onCheckBoxDisplayFilterUpdate({0}, {1}), HostName={2}",
+            getDataCacheName(getDataCache(type)), state.ToString(), HostName);
+
          switch (type)
          {
             case EDataCacheType.Live:
@@ -875,7 +883,7 @@ namespace mrHelper.App.Controls
       private void prepareFilterControls()
       {
          // This is a hack to create a Handle of textBoxDisplayFilterRecent.
-         // Without handle OnTextChanged is not called.
+         // OnTextChanged() method is not called from setFilterText() if Handle is not created.
          IntPtr _ = textBoxDisplayFilterRecent.Handle;
 
          foreach (EDataCacheType type in new EDataCacheType[] { EDataCacheType.Live, EDataCacheType.Recent })
@@ -887,12 +895,20 @@ namespace mrHelper.App.Controls
 
       private void onTextBoxDisplayFilterUpdate(EDataCacheType type, string text)
       {
+         Trace.TraceInformation(
+            "[ConnectionPage] onTextBoxDisplayFilterUpdate({0}, \"{1}\"), HostName={2}",
+            getDataCacheName(getDataCache(type)), text, HostName);
+
          writeFilterKeywordsForHost(type, text);
          applyFilterChange(type);
       }
 
       private void onCheckBoxDisplayFilterUpdate(EDataCacheType type, FilterState state)
       {
+         Trace.TraceInformation(
+            "[ConnectionPage] onCheckBoxDisplayFilterUpdate({0}, {1}), HostName={2}",
+            getDataCacheName(getDataCache(type)), state.ToString(), HostName);
+
          writeFilterStateForHost(type, state);
          applyFilterChange(type);
       }

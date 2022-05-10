@@ -426,10 +426,12 @@ namespace mrHelper.App.Forms
             .Save(_mutedMergeRequests.Data);
          new PersistentStateSaveHelper("FiltersByHostsLive", writer).Save(_filtersByHostsLive.Data
             .ToDictionary(item => item.Key,
-                          item => new Tuple<string, string>(item.Value.State.ToString(), item.Value.Keywords.ToString())));
+                          item => new Tuple<string, string>(item.Value.State.ToString(),
+                                                            item.Value.Keywords.ToString())));
          new PersistentStateSaveHelper("FiltersByHostsRecent", writer).Save(_filtersByHostsRecent.Data
             .ToDictionary(item => item.Key,
-                          item => new Tuple<string, string>(item.Value.State.ToString(), item.Value.Keywords.ToString())));
+                          item => new Tuple<string, string>(item.Value.State.ToString(),
+                                                            item.Value.Keywords.ToString())));
       }
 
       private void onPersistentStorageDeserialize(IPersistentStateGetter reader)
