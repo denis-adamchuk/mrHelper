@@ -904,7 +904,8 @@ namespace mrHelper.App.Controls
 
       private string getId(MergeRequest mergeRequest)
       {
-         return String.Format("{0}\r\n({1})", mergeRequest.IId, mergeRequest.Id);
+         return Program.Settings.ShowHiddenMergeRequestIds
+            ? String.Format("{0}\r\n({1})", mergeRequest.IId, mergeRequest.Id) : String.Format("{0}", mergeRequest.IId);
       }
 
       private void recalcRowHeightForMergeRequestListView()

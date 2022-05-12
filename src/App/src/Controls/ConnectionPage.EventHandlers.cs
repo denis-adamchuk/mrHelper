@@ -14,12 +14,12 @@ namespace mrHelper.App.Controls
    {
       private void textBoxDisplayFilter_TextChanged(object sender, EventArgs e)
       {
-         onTextBoxDisplayFilterUpdate(EDataCacheType.Live, textBoxDisplayFilter.Text);
+         onTextBoxDisplayFilterUpdate(EDataCacheType.Live, textBoxDisplayFilter.GetFullText());
       }
 
       private void textBoxDisplayFilterRecent_TextChanged(object sender, EventArgs e)
       {
-         onTextBoxDisplayFilterUpdate(EDataCacheType.Recent, textBoxDisplayFilterRecent.Text);
+         onTextBoxDisplayFilterUpdate(EDataCacheType.Recent, textBoxDisplayFilterRecent.GetFullText());
       }
 
       private void comboBoxFilter_SelectionChangeCommitted(object sender, EventArgs e)

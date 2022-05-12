@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Windows.Forms;
 using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.App.Controls
@@ -9,10 +10,34 @@ namespace mrHelper.App.Controls
       private static System.Drawing.Color NormalTextColor = System.Drawing.Color.Black;
       private static System.Drawing.Color ExcludedTextColor = System.Drawing.Color.LightGray;
 
+      public override string Text
+      {
+         get
+         {
+            return _visibleText;
+         }
+         set
+         {
+            setVisibleText(value);
+            setHiddenText(value);
+            base.Text = _visibleText;
+         }
+      }
+
+      public string GetFullText()
+      {
+         return String.Format("{0}{1}{2}", _visibleText, _hiddenText.Length > 0 ? ", " : String.Empty, _hiddenText);
+      }
+
       protected override void OnTextChanged(EventArgs e)
       {
-         applySpecialColoring();
          base.OnTextChanged(e);
+         setVisibleText(base.Text);
+         if (base.Text != _visibleText)
+         {
+            base.Text = _visibleText;
+         }
+         applySpecialColoring();
       }
 
       private void applySpecialColoring()
@@ -50,6 +75,44 @@ namespace mrHelper.App.Controls
          SelectionColor = prevSelectionColor;
          ResumeLayout();
       }
+
+      private void setVisibleText(string text)
+      {
+         string getVisibleText() =>
+            String.Join(",", text.Split(',').Where(word => !isExcluded(word)).ToArray());
+
+         if (!Program.Settings.ShowHiddenMergeRequestIds)
+         {
+            _visibleText = getVisibleText();
+         }
+         else
+         {
+            _visibleText = text;
+         }
+      }
+
+      private void setHiddenText(string text)
+      {
+         string getHiddenText() =>
+            String.Join(",", text.Split(',').Where(word => isExcluded(word)).ToArray());
+
+         if (!Program.Settings.ShowHiddenMergeRequestIds)
+         {
+            _hiddenText = getHiddenText();
+         }
+         else
+         {
+            _hiddenText = String.Empty;
+         }
+      }
+
+      private bool isExcluded(string word)
+      {
+         return word.Trim(' ').StartsWith(Common.Constants.Constants.ExcludeLabelPrefix);
+      }
+
+      private string _visibleText;
+      private string _hiddenText;
    }
 }
 

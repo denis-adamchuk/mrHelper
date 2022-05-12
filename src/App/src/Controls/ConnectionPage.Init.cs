@@ -69,6 +69,7 @@ namespace mrHelper.App.Controls
 
          Program.Settings.MainWindowLayoutChanged += onMainWindowLayoutChanged;
          Program.Settings.WordWrapLongRowsChanged += onWrapLongRowsChanged;
+         Program.Settings.ShowHiddenMergeRequestIdsChanged += onShowHiddenMergeRequestIdsChanged;
 
          _colorScheme = colorScheme;
          _colorScheme.Changed += onColorSchemeChanged;
@@ -100,8 +101,8 @@ namespace mrHelper.App.Controls
 
       private void preparePageToStart()
       {
-         preparePageControlsToStart();
          createMessageFiltersFromSettings();
+         preparePageControlsToStart();
       }
 
       private void preparePageControlsToStart()
@@ -153,14 +154,14 @@ namespace mrHelper.App.Controls
 
       private void createMessageFiltersFromSettings()
       {
-         _mergeRequestFilter = new MergeRequestFilter(createMergeRequestFilterState(EDataCacheType.Live));
+         _mergeRequestFilter = new MergeRequestFilter(getOrCreateMergeRequestFilterState(EDataCacheType.Live));
          _mergeRequestFilter.FilterChanged += () => updateMergeRequestList(EDataCacheType.Live);
 
-         _mergeRequestFilterRecent = new MergeRequestFilter(createMergeRequestFilterState(EDataCacheType.Recent));
+         _mergeRequestFilterRecent = new MergeRequestFilter(getOrCreateMergeRequestFilterState(EDataCacheType.Recent));
          _mergeRequestFilterRecent.FilterChanged += () => updateMergeRequestList(EDataCacheType.Recent);
       }
 
-      private MergeRequestFilterState createMergeRequestFilterState(EDataCacheType type)
+      private MergeRequestFilterState getOrCreateMergeRequestFilterState(EDataCacheType type)
       {
          DictionaryWrapper<string, MergeRequestFilterState> filtersByHosts;
          switch (type)

@@ -114,6 +114,7 @@ namespace mrHelper.App.Forms
          this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
          this.disableSplitterRestrictionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.wrapLongRowsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+         this.showHiddenMergeRequestIdsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.flatRevisionPreviewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
          this.layoutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -531,6 +532,7 @@ namespace mrHelper.App.Forms
             this.toolStripSeparator6,
             this.disableSplitterRestrictionsToolStripMenuItem,
             this.wrapLongRowsToolStripMenuItem,
+            this.showHiddenMergeRequestIdsToolStripMenuItem,
             this.flatRevisionPreviewToolStripMenuItem,
             this.toolStripSeparator7,
             this.layoutToolStripMenuItem,
@@ -573,6 +575,14 @@ namespace mrHelper.App.Forms
          this.wrapLongRowsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
          this.wrapLongRowsToolStripMenuItem.Text = "Wrap long rows";
          this.wrapLongRowsToolStripMenuItem.CheckedChanged += new System.EventHandler(this.checkBoxWordWrapLongRows_CheckedChanged);
+         // 
+         // showHiddenMergeRequestIdsToolStripMenuItem
+         // 
+         this.showHiddenMergeRequestIdsToolStripMenuItem.CheckOnClick = true;
+         this.showHiddenMergeRequestIdsToolStripMenuItem.Name = "showHiddenMergeRequestIdsToolStripMenuItem";
+         this.showHiddenMergeRequestIdsToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+         this.showHiddenMergeRequestIdsToolStripMenuItem.Text = "Show hidden merge requests in Filter";
+         this.showHiddenMergeRequestIdsToolStripMenuItem.CheckedChanged += new System.EventHandler(this.checkBoxShowHiddenMergeRequestIds_CheckedChanged);
          // 
          // flatRevisionPreviewToolStripMenuItem
          // 
@@ -1059,6 +1069,7 @@ namespace mrHelper.App.Forms
       private ToolStripSeparator toolStripSeparator7;
       private ToolStripMenuItem disableSplitterRestrictionsToolStripMenuItem;
       private ToolStripMenuItem wrapLongRowsToolStripMenuItem;
+      private ToolStripMenuItem showHiddenMergeRequestIdsToolStripMenuItem;
       private ToolStripMenuItem flatRevisionPreviewToolStripMenuItem;
       private ToolStripMenuItem helpToolStripMenuItem;
       private ToolStripMenuItem sendFeedbackToolStripMenuItem;

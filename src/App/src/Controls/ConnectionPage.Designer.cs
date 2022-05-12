@@ -50,6 +50,7 @@ namespace mrHelper.App.Controls
 
          Program.Settings.MainWindowLayoutChanged -= onMainWindowLayoutChanged;
          Program.Settings.WordWrapLongRowsChanged -= onWrapLongRowsChanged;
+         Program.Settings.ShowHiddenMergeRequestIdsChanged -= onShowHiddenMergeRequestIdsChanged;
 
          finalizeWork();
 
@@ -223,11 +224,11 @@ namespace mrHelper.App.Controls
          // 
          this.textBoxDisplayFilter.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.textBoxDisplayFilter.Location = new System.Drawing.Point(130, 17);
+         this.textBoxDisplayFilter.Location = new System.Drawing.Point(150, 17);
          this.textBoxDisplayFilter.Multiline = false;
          this.textBoxDisplayFilter.Name = "textBoxDisplayFilter";
          this.textBoxDisplayFilter.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
-         this.textBoxDisplayFilter.Size = new System.Drawing.Size(706, 20);
+         this.textBoxDisplayFilter.Size = new System.Drawing.Size(686, 20);
          this.textBoxDisplayFilter.TabIndex = 1;
          this.textBoxDisplayFilter.Text = "";
          this.textBoxDisplayFilter.TextChanged += new System.EventHandler(this.textBoxDisplayFilter_TextChanged);
@@ -269,7 +270,7 @@ namespace mrHelper.App.Controls
          // columnHeaderIId
          // 
          this.columnHeaderIId.Tag = mrHelper.App.Controls.ColumnType.IId;
-         this.columnHeaderIId.Text = "IId (Id)";
+         this.columnHeaderIId.Text = "IId";
          this.columnHeaderIId.Width = 40;
          // 
          // columnHeaderAuthor
@@ -407,7 +408,7 @@ namespace mrHelper.App.Controls
          // columnHeaderFoundIId
          // 
          this.columnHeaderFoundIId.Tag = mrHelper.App.Controls.ColumnType.IId;
-         this.columnHeaderFoundIId.Text = "IId (Id)";
+         this.columnHeaderFoundIId.Text = "IId";
          this.columnHeaderFoundIId.Width = 40;
          // 
          // columnHeaderFoundState
@@ -488,11 +489,11 @@ namespace mrHelper.App.Controls
          // 
          this.textBoxDisplayFilterRecent.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.textBoxDisplayFilterRecent.Location = new System.Drawing.Point(130, 17);
+         this.textBoxDisplayFilterRecent.Location = new System.Drawing.Point(150, 17);
          this.textBoxDisplayFilterRecent.Multiline = false;
          this.textBoxDisplayFilterRecent.Name = "textBoxDisplayFilterRecent";
          this.textBoxDisplayFilterRecent.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
-         this.textBoxDisplayFilterRecent.Size = new System.Drawing.Size(706, 20);
+         this.textBoxDisplayFilterRecent.Size = new System.Drawing.Size(686, 20);
          this.textBoxDisplayFilterRecent.TabIndex = 1;
          this.textBoxDisplayFilterRecent.Text = "";
          this.textBoxDisplayFilterRecent.TextChanged += new System.EventHandler(this.textBoxDisplayFilterRecent_TextChanged);
@@ -503,7 +504,7 @@ namespace mrHelper.App.Controls
          this.comboBoxFilterRecent.FormattingEnabled = true;
          this.comboBoxFilterRecent.Location = new System.Drawing.Point(3, 17);
          this.comboBoxFilterRecent.Name = "comboBoxFilterRecent";
-         this.comboBoxFilterRecent.Size = new System.Drawing.Size(120, 21);
+         this.comboBoxFilterRecent.Size = new System.Drawing.Size(140, 21);
          this.comboBoxFilterRecent.TabIndex = 4;
          this.comboBoxFilterRecent.SelectionChangeCommitted += new System.EventHandler(this.comboBoxFilterRecent_SelectionChangeCommitted);
          // 
@@ -690,7 +691,7 @@ namespace mrHelper.App.Controls
          this.comboBoxFilter.FormattingEnabled = true;
          this.comboBoxFilter.Location = new System.Drawing.Point(3, 17);
          this.comboBoxFilter.Name = "comboBoxFilter";
-         this.comboBoxFilter.Size = new System.Drawing.Size(120, 21);
+         this.comboBoxFilter.Size = new System.Drawing.Size(140, 21);
          this.comboBoxFilter.TabIndex = 4;
          this.comboBoxFilter.SelectionChangeCommitted += new System.EventHandler(this.comboBoxFilter_SelectionChangeCommitted);
          // 

@@ -132,27 +132,6 @@ namespace mrHelper.App.Controls
          getListView(type).UnmuteSelectedMergeRequest();
       }
 
-      private KeywordCollection getKeywordCollection(EDataCacheType type)
-      {
-         KeywordCollection keywords;
-         switch (type)
-         {
-            case EDataCacheType.Live:
-               keywords = _mergeRequestFilter.Filter.Keywords;
-               break;
-
-            case EDataCacheType.Recent:
-               keywords = _mergeRequestFilterRecent.Filter.Keywords;
-               break;
-
-            case EDataCacheType.Search:
-            default:
-               Debug.Assert(false);
-               return KeywordCollection.FromString(String.Empty);
-         }
-         return keywords;
-      }
-
       private void toggleSelectedMergeRequestExclusion()
       {
          Trace.TraceInformation("[ConnectionPage] Toggling exclusion for selected MR...");
@@ -173,17 +152,6 @@ namespace mrHelper.App.Controls
          mergeRequestIds
             .ToList()
             .ForEach(id => toggleMergeRequestExclusion(type, id));
-      }
-
-      private void toggleMergeRequestExclusion(EDataCacheType type, int mergeRequestId)
-      {
-         KeywordCollection newKeywords = getKeywordCollection(type)
-            .CloneWithToggledExclusion(mergeRequestId.ToString());
-         writeFilterKeywordsForHost(type, newKeywords.ToString());
-         setFilterText(type, newKeywords.ToString());
-
-         Trace.TraceInformation("[ConnectionPage] Toggled exclusion for MR with Id {0}, new state - {1}",
-            mergeRequestId, isMergeRequestExcluded(type, mergeRequestId) ? "excluded" : "not excluded");
       }
 
       private string getSourceBranchTemplate()

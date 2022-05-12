@@ -818,6 +818,12 @@ namespace mrHelper.App.Controls
          revisionSplitContainerSite.SplitContainer.ResumeLayout();
       }
 
+      void onShowHiddenMergeRequestIdsChanged()
+      {
+         prepareFilterControls();
+         updateMergeRequestList(getCurrentTabDataCacheType());
+      }
+
       // Filter
 
       private void moveFilterFromConfigToStorage(UserDefinedSettings.OldFilterSettings oldFilter)
@@ -834,10 +840,10 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void setFilterText(EDataCacheType type, string text)
+      private void setFilterTextUI(EDataCacheType type, string text)
       {
          Trace.TraceInformation(
-            "[ConnectionPage] setFilterText({0}, \"{1}\"), HostName={2}",
+            "[ConnectionPage] setFilterTextUI({0}, \"{1}\"), HostName={2}",
             getDataCacheName(getDataCache(type)), text, HostName);
 
          switch (type)
@@ -857,10 +863,10 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void setFilterState(EDataCacheType type, FilterState state)
+      private void setFilterStateUI(EDataCacheType type, FilterState state)
       {
          Trace.TraceInformation(
-            "[ConnectionPage] onCheckBoxDisplayFilterUpdate({0}, {1}), HostName={2}",
+            "[ConnectionPage] setFilterStateUI({0}, {1}), HostName={2}",
             getDataCacheName(getDataCache(type)), state.ToString(), HostName);
 
          switch (type)
@@ -882,14 +888,19 @@ namespace mrHelper.App.Controls
 
       private void prepareFilterControls()
       {
+         int getHiddenCount(EDataCacheType type) => getExcludedMergeRequestIds(type).Count();
+         comboBoxFilter.Initialize(() => getHiddenCount(EDataCacheType.Live));
+         comboBoxFilterRecent.Initialize(() => getHiddenCount(EDataCacheType.Recent));
+
          // This is a hack to create a Handle of textBoxDisplayFilterRecent.
          // OnTextChanged() method is not called from setFilterText() if Handle is not created.
          IntPtr _ = textBoxDisplayFilterRecent.Handle;
 
          foreach (EDataCacheType type in new EDataCacheType[] { EDataCacheType.Live, EDataCacheType.Recent })
          {
-            setFilterText(type, readFilterKeywordsForHost(type));
-            setFilterState(type, readFilterStateForHost(type));
+            setFilterTextUI(type, readFilterKeywordsForHost(type));
+            setFilterStateUI(type, readFilterStateForHost(type));
+            updateHiddenCountInComboBox(type);
          }
       }
 
@@ -901,6 +912,7 @@ namespace mrHelper.App.Controls
 
          writeFilterKeywordsForHost(type, text);
          applyFilterChange(type);
+         updateHiddenCountInComboBox(type);
       }
 
       private void onCheckBoxDisplayFilterUpdate(EDataCacheType type, FilterState state)
@@ -936,6 +948,25 @@ namespace mrHelper.App.Controls
             ? value.State
             : FilterState.Disabled;
          filtersByHosts[HostName] = new MergeRequestFilterState(text, state);
+      }
+
+      private void updateHiddenCountInComboBox(EDataCacheType type)
+      {
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               comboBoxFilter.RefreshItems();
+               break;
+
+            case EDataCacheType.Recent:
+               comboBoxFilterRecent.RefreshItems();
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               break;
+         }
       }
 
       private string readFilterKeywordsForHost(EDataCacheType type)
@@ -984,6 +1015,40 @@ namespace mrHelper.App.Controls
          filtersByHosts[HostName] = new MergeRequestFilterState(keywords, state);
       }
 
+      private void toggleMergeRequestExclusion(EDataCacheType type, int mergeRequestId)
+      {
+         KeywordCollection newKeywords = getKeywordCollection(type)
+            .CloneWithToggledExclusion(mergeRequestId.ToString());
+         setFilterTextUI(type, newKeywords.ToString());
+         writeFilterKeywordsForHost(type, newKeywords.ToString());
+         applyFilterChange(type);
+         updateHiddenCountInComboBox(type);
+
+         Trace.TraceInformation("[ConnectionPage] Toggled exclusion for MR with Id {0}, new state - {1}",
+            mergeRequestId, isMergeRequestExcluded(type, mergeRequestId) ? "excluded" : "not excluded");
+      }
+
+      private KeywordCollection getKeywordCollection(EDataCacheType type)
+      {
+         KeywordCollection keywords;
+         switch (type)
+         {
+            case EDataCacheType.Live:
+               keywords = _mergeRequestFilter.Filter.Keywords;
+               break;
+
+            case EDataCacheType.Recent:
+               keywords = _mergeRequestFilterRecent.Filter.Keywords;
+               break;
+
+            case EDataCacheType.Search:
+            default:
+               Debug.Assert(false);
+               return KeywordCollection.FromString(String.Empty);
+         }
+         return keywords;
+      }
+
       private FilterState readFilterStateForHost(EDataCacheType type)
       {
          DictionaryWrapper<string, MergeRequestFilterState> filtersByHosts;
@@ -1014,14 +1079,14 @@ namespace mrHelper.App.Controls
             case EDataCacheType.Live:
                if (_mergeRequestFilter != null)
                {
-                  _mergeRequestFilter.Filter = createMergeRequestFilterState(EDataCacheType.Live);
+                  _mergeRequestFilter.Filter = getOrCreateMergeRequestFilterState(EDataCacheType.Live);
                }
                break;
 
             case EDataCacheType.Recent:
                if (_mergeRequestFilterRecent != null)
                {
-                  _mergeRequestFilterRecent.Filter = createMergeRequestFilterState(EDataCacheType.Recent);
+                  _mergeRequestFilterRecent.Filter = getOrCreateMergeRequestFilterState(EDataCacheType.Recent);
                }
                break;
 

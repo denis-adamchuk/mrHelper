@@ -232,7 +232,7 @@ namespace mrHelper.App.Controls
             return false;
          }
 
-         setFilterState(dataCacheType, FilterState.Disabled); // does not fire SelectionChangeCommited event
+         setFilterStateUI(dataCacheType, FilterState.Disabled); // does not fire SelectionChangeCommited event
          onCheckBoxDisplayFilterUpdate(dataCacheType, FilterState.Disabled);
          return true;
       }

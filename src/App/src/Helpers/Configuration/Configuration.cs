@@ -378,6 +378,10 @@ namespace mrHelper.App.Helpers
          {
             FlatRevisionPreviewChanged?.Invoke();
          }
+         else if (keyName == ShowHiddenMergeRequestIdsKeyName)
+         {
+            ShowHiddenMergeRequestIdsChanged?.Invoke();
+         }
       }
 
       private readonly Configuration _config;

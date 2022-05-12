@@ -29,6 +29,7 @@ namespace mrHelper.App.Forms
          disableSplitterRestrictionsToolStripMenuItem.Checked = Program.Settings.DisableSplitterRestrictions;
          showNewDiscussionOnTopOfAllApplicationsToolStripMenuItem.Checked = Program.Settings.NewDiscussionIsTopMostForm;
          wrapLongRowsToolStripMenuItem.Checked = Program.Settings.WordWrapLongRows;
+         showHiddenMergeRequestIdsToolStripMenuItem.Checked = Program.Settings.ShowHiddenMergeRequestIds;
          flatRevisionPreviewToolStripMenuItem.Checked = Program.Settings.FlatRevisionPreview;
 
          setAutoSelectionModeChangeRadioValue();
@@ -345,6 +346,14 @@ namespace mrHelper.App.Forms
          if (!_loadingConfiguration)
          {
             Program.Settings.WordWrapLongRows = value;
+         }
+      }
+
+      private void applyShowHiddenMergeRequestIds(bool value)
+      {
+         if (!_loadingConfiguration)
+         {
+            Program.Settings.ShowHiddenMergeRequestIds = value;
          }
       }
 

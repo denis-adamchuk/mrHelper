@@ -159,6 +159,13 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(ShowWarningOnReloadListKeyName, value);
       }
 
+      public bool ShowHiddenMergeRequestIds
+      {
+         get => getBoolValue(ShowHiddenMergeRequestIdsKeyName, ShowHiddenMergeRequestIdsDefaultValue);
+         set => setBoolValue(ShowHiddenMergeRequestIdsKeyName, value);
+      }
+      public event Action ShowHiddenMergeRequestIdsChanged;
+
       public bool ShowWarningOnCreateMergeRequest
       {
          get => getBoolValue(ShowWarningOnCreateMergeRequestKeyName, ShowWarningOnCreateMergeRequestDefaultValue);

@@ -15,6 +15,11 @@ namespace mrHelper.App.Controls
          }
       }
 
+      public void Initialize(Func<int> fnGetHiddenCount)
+      {
+         _fnGetHiddenCount = fnGetHiddenCount;
+      }
+
       public FilterState GetSelected()
       {
          return (FilterState)SelectedItem;
@@ -33,13 +38,19 @@ namespace mrHelper.App.Controls
          Debug.Assert(false);
       }
 
+      public new void RefreshItems()
+      {
+         // Refresh text of combo box items
+         base.RefreshItems();
+      }
+
       protected override void OnFormat(ListControlConvertEventArgs e)
       {
          e.Value = getString((FilterState)e.ListItem);
          base.OnFormat(e);
       }
 
-      private static string getString(FilterState filterState)
+      private string getString(FilterState filterState)
       {
          switch (filterState)
          {
@@ -48,11 +59,15 @@ namespace mrHelper.App.Controls
             case FilterState.Disabled:
                return "Show all";
             case FilterState.ShowHiddenOnly:
-               return "Show hidden only";
+               string text = "Show hidden only";
+               return String.Format("{0} ({1})", text,
+                  _fnGetHiddenCount?.Invoke().ToString() ?? String.Empty);
          }
          Debug.Assert(false);
          return String.Empty;
       }
+
+      private Func<int> _fnGetHiddenCount;
    }
 }
 

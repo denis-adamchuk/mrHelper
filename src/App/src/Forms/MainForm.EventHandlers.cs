@@ -288,6 +288,11 @@ namespace mrHelper.App.Forms
          applyWordWrapLongRows((sender as ToolStripMenuItem).Checked);
       }
 
+      private void checkBoxShowHiddenMergeRequestIds_CheckedChanged(object sender, EventArgs e)
+      {
+         applyShowHiddenMergeRequestIds((sender as ToolStripMenuItem).Checked);
+      }
+
       private void checkBoxFlatRevisionPreview_CheckedChanged(object sender, EventArgs e)
       {
          applyFlatRevisionPreview((sender as ToolStripMenuItem).Checked);

@@ -104,6 +104,9 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowWarningOnReloadListKeyName      = "ShowWarningOnReloadList";
       private static readonly bool   ShowWarningOnReloadListDefaultValue = true;
 
+      private static readonly string ShowHiddenMergeRequestIdsKeyName      = "ShowHiddenMergeRequestIds";
+      private static readonly bool   ShowHiddenMergeRequestIdsDefaultValue = false;
+
       private static readonly string ShowWarningOnCreateMergeRequestKeyName      = "ShowWarningOnCreateMergeRequest";
       private static readonly bool   ShowWarningOnCreateMergeRequestDefaultValue = true;
 
