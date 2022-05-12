@@ -1267,7 +1267,7 @@ namespace mrHelper.App.Controls
 
       private bool isExplicitlyExcluded(FullMergeRequestKey fmk)
       {
-         return _mergeRequestFilter.Filter.Keywords.IsExcluded(fmk.MergeRequest.Id.ToString());
+         return _mergeRequestFilter?.Filter.Keywords.IsExcluded(fmk.MergeRequest.Id.ToString()) ?? false;
       }
 
       private void onUnmuteTimerTick(object sender, EventArgs e)
