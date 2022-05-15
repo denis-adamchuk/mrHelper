@@ -458,9 +458,8 @@ namespace mrHelper.App.Controls
 
       internal Color? GetSummaryColor()
       {
-         IEnumerable<ColorSchemeItem> colorSchemeItems = _colorScheme?.GetColors("MergeRequests")
-            .Where(item => item.AffectSummary);
-         return getMergeRequestCollectionColor(excludeMuted(getMatchingFilterMergeRequests()), colorSchemeItems);
+         IEnumerable<FullMergeRequestKey> keys = excludeMuted(getAllMergeRequests());
+         return getMergeRequestCollectionColor(keys, EColorSchemeItemsKind.Preview);
       }
 
       protected override void Dispose(bool disposing)
@@ -615,10 +614,7 @@ namespace mrHelper.App.Controls
             using (Font font = new Font(e.Item.ListView.Font, fontStyle))
             {
                e.Graphics.DrawString(text, font, Brushes.Blue, bounds, format);
-               if (isMuted(fmk))
-               {
-                  drawEllipseForIId(e.Graphics, format, bounds, fmk, font);
-               }
+               drawEllipseForIId(e.Graphics, format, bounds, fmk, font);
             }
          }
          else if (isClickable)
@@ -738,7 +734,8 @@ namespace mrHelper.App.Controls
          float ellipseY = (textSize.Height - ellipseHeight) / 2;
          if (bounds.Width > ellipseX + ellipseWidth)
          {
-            using (Brush ellipseBrush = new SolidBrush(getMergeRequestColor(fmk, Color.Transparent)))
+            Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
+            using (Brush ellipseBrush = new SolidBrush(color))
             {
                RectangleF ellipseRect = new RectangleF(
                   bounds.X + ellipseX, bounds.Y + ellipseY, ellipseWidth, ellipseHeight);
@@ -747,18 +744,41 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private Color getMergeRequestColor(FullMergeRequestKey fmk, Color defaultColor)
+      enum EColorSchemeItemsKind
+      {
+         All,
+         Preview
+      }
+
+      private IEnumerable<ColorSchemeItem> getColorSchemeItems(EColorSchemeItemsKind kind)
+      {
+         switch (kind)
+         {
+            case EColorSchemeItemsKind.All:
+               return _colorScheme?.GetColors("MergeRequests");
+
+            case EColorSchemeItemsKind.Preview:
+               return getColorSchemeItems(EColorSchemeItemsKind.All).Where(item => item.UseForPreview);
+
+            default:
+               Debug.Assert(false);
+               break;
+         }
+         return Array.Empty<ColorSchemeItem>();
+      }
+
+      private Color getMergeRequestColor(FullMergeRequestKey fmk, Color defaultColor,
+         EColorSchemeItemsKind kind = EColorSchemeItemsKind.All)
       {
          IEnumerable<FullMergeRequestKey> mergeRequests = isSummaryKey(fmk)
             ? getMatchingFilterProjectItems(fmk.ProjectKey)
             : new List<FullMergeRequestKey>{ fmk };
-         ColorSchemeItem[] colorSchemeItems = _colorScheme?.GetColors("MergeRequests");
-         return getMergeRequestCollectionColor(mergeRequests, colorSchemeItems) ?? defaultColor;
+         return getMergeRequestCollectionColor(mergeRequests, kind) ?? defaultColor;
       }
 
-      private Color? getMergeRequestCollectionColor(IEnumerable<FullMergeRequestKey> keys,
-         IEnumerable<ColorSchemeItem> colorSchemeItems)
+      private Color? getMergeRequestCollectionColor(IEnumerable<FullMergeRequestKey> keys, EColorSchemeItemsKind kind)
       {
+         var colorSchemeItems = getColorSchemeItems(kind);
          return colorSchemeItems?
             .FirstOrDefault(colorSchemeItem =>
             {
@@ -956,6 +976,13 @@ namespace mrHelper.App.Controls
          return Groups
             .Cast<ListViewGroup>()
             .SelectMany(group => getMatchingFilterProjectItems(getGroupProjectKey(group)));
+      }
+
+      private IEnumerable<FullMergeRequestKey> getAllMergeRequests()
+      {
+         return Groups
+            .Cast<ListViewGroup>()
+            .SelectMany(group => getAllProjectItems(getGroupProjectKey(group)));
       }
 
       private bool doesMatchFilter(MergeRequest mergeRequest)

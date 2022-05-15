@@ -10,19 +10,19 @@ namespace mrHelper.App.Helpers
    internal class ColorSchemeItem
    {
       internal ColorSchemeItem(string name, string displayName,
-         IEnumerable<string> conditions, Color color, Color factoryColor, bool affectSummary)
+         IEnumerable<string> conditions, Color color, Color factoryColor, bool useForPreview)
       {
          Name = name;
          DisplayName = displayName;
          Conditions = conditions;
          Color = color;
          FactoryColor = factoryColor;
-         AffectSummary = affectSummary;
+         UseForPreview = useForPreview;
       }
 
       internal ColorSchemeItem CloneWithDifferentColor(Color color)
       {
-         return new ColorSchemeItem(Name, DisplayName, Conditions, color, Color, AffectSummary);
+         return new ColorSchemeItem(Name, DisplayName, Conditions, color, Color, UseForPreview);
       }
 
       internal string Name { get; }
@@ -30,7 +30,7 @@ namespace mrHelper.App.Helpers
       internal IEnumerable<string> Conditions { get; }
       internal Color Color { get; }
       internal Color FactoryColor { get; }
-      internal bool AffectSummary { get; }
+      internal bool UseForPreview { get; }
    }
 
    /// <summary>
@@ -110,10 +110,10 @@ namespace mrHelper.App.Helpers
       }
 
       private void initializeColor(string groupName, string name, string displayName,
-         IEnumerable<string> conditions, Color color, bool affectSummary)
+         IEnumerable<string> conditions, Color color, bool useForPreview)
       {
          ColorSchemeItem newItem = new ColorSchemeItem(name, displayName, conditions,
-            color, color, affectSummary);
+            color, color, useForPreview);
          if (!_colors.ContainsKey(groupName))
          {
             _colors.Add(groupName, new List<ColorSchemeItem>());
@@ -146,7 +146,7 @@ namespace mrHelper.App.Helpers
                Color? colorOpt = readColorFromText(i.Factory);
                if (colorOpt.HasValue)
                {
-                  initializeColor(g.Group, i.Name, i.Display_Name, i.Conditions, colorOpt.Value, i.Affect_Summary);
+                  initializeColor(g.Group, i.Name, i.Display_Name, i.Conditions, colorOpt.Value, i.Use_For_Preview);
                }
             }
          }
@@ -203,7 +203,7 @@ namespace mrHelper.App.Helpers
          public string Factory { get; protected set; }
 
          [JsonProperty]
-         public bool Affect_Summary { get; protected set; }
+         public bool Use_For_Preview { get; protected set; }
       }
 
       private class ColorGroup

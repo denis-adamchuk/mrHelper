@@ -52,16 +52,27 @@ namespace mrHelper.App.Controls
 
       private string getString(FilterState filterState)
       {
+         int hiddenCount = _fnGetHiddenCount?.Invoke() ?? 0;
          switch (filterState)
          {
-            case FilterState.Enabled:
-               return "Show selected";
             case FilterState.Disabled:
                return "Show all";
+
+            case FilterState.Enabled:
+               {
+                  string text = "Matching only";
+                  if (hiddenCount == 0)
+                  {
+                     return text;
+                  }
+                  return String.Format("{0} (hidden: {1})", text, hiddenCount.ToString());
+               }
+
             case FilterState.ShowHiddenOnly:
-               string text = "Show hidden only";
-               return String.Format("{0} ({1})", text,
-                  _fnGetHiddenCount?.Invoke().ToString() ?? String.Empty);
+               {
+                  string text = "Hidden only";
+                  return text;
+               }
          }
          Debug.Assert(false);
          return String.Empty;

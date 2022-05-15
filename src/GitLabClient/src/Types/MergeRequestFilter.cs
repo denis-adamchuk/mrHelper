@@ -72,9 +72,9 @@ namespace mrHelper.GitLabClient
             return false;
          }
 
-         IEnumerable<string> nonExclusions = _data
-            .Where(keyword => !keyword.StartsWith(Constants.ExcludeLabelPrefix));
-         if (!nonExclusions.Any())
+         string[] nonExclusions = _data
+            .Where(keyword => !keyword.StartsWith(Constants.ExcludeLabelPrefix)).ToArray();
+         if (!nonExclusions.Any() || (nonExclusions.Length == 1 && nonExclusions[0] == String.Empty))
          {
             return true;
          }
