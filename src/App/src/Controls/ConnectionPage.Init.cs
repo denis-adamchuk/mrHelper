@@ -58,12 +58,15 @@ namespace mrHelper.App.Controls
          listViewLiveMergeRequests.SetCollapsedProjects(collapsedProjectsLive);
          listViewLiveMergeRequests.SetMutedMergeRequests(mutedMergeRequests);
          listViewLiveMergeRequests.SetOpenMergeRequestUrlCallback(openBrowserForMergeRequest);
+         listViewLiveMergeRequests.Initialize(hostname);
 
          listViewFoundMergeRequests.SetIdentity(Constants.SearchListViewName);
          listViewFoundMergeRequests.SetCollapsedProjects(collapsedProjectsSearch);
+         listViewFoundMergeRequests.Initialize(hostname);
 
          listViewRecentMergeRequests.SetIdentity(Constants.RecentListViewName);
          listViewRecentMergeRequests.SetCollapsedProjects(collapsedProjectsRecent);
+         listViewRecentMergeRequests.Initialize(hostname);
 
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 

@@ -88,6 +88,7 @@ namespace mrHelper.App.Controls
          this.textBoxDisplayFilter = new mrHelper.App.Controls.FilterTextBox();
          this.listViewLiveMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderColor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -99,11 +100,13 @@ namespace mrHelper.App.Controls
          this.columnHeaderTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRefreshTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderProject = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageSearch = new System.Windows.Forms.TabPage();
          this.groupBoxSearchMergeRequest = new System.Windows.Forms.GroupBox();
          this.linkLabelNewSearch = new System.Windows.Forms.LinkLabel();
          this.listViewFoundMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
          this.columnHeaderFoundIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundColor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -112,12 +115,14 @@ namespace mrHelper.App.Controls
          this.columnHeaderFoundSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundProject = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageRecent = new System.Windows.Forms.TabPage();
          this.groupBoxRecentMergeRequest = new System.Windows.Forms.GroupBox();
          this.textBoxDisplayFilterRecent = new mrHelper.App.Controls.FilterTextBox();
          this.textBoxRecentMergeRequestsHint = new System.Windows.Forms.TextBox();
          this.listViewRecentMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
          this.columnHeaderRecentIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRecentColor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -126,6 +131,7 @@ namespace mrHelper.App.Controls
          this.columnHeaderRecentSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentTargetBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentActivities = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRecentProject = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.splitContainerSecondary = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectedMR = new System.Windows.Forms.GroupBox();
          this.descriptionSplitContainerSite = new mrHelper.App.Controls.DescriptionSplitContainerSite();
@@ -241,6 +247,7 @@ namespace mrHelper.App.Controls
             | System.Windows.Forms.AnchorStyles.Right)));
          this.listViewLiveMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeaderIId,
+            this.columnHeaderColor,
             this.columnHeaderAuthor,
             this.columnHeaderTitle,
             this.columnHeaderLabels,
@@ -251,10 +258,11 @@ namespace mrHelper.App.Controls
             this.columnHeaderSourceBranch,
             this.columnHeaderTargetBranch,
             this.columnHeaderRefreshTime,
-            this.columnHeaderActivities});
+            this.columnHeaderActivities,
+            this.columnHeaderProject});
          this.listViewLiveMergeRequests.FullRowSelect = true;
-         this.listViewLiveMergeRequests.GridLines = true;
-         this.listViewLiveMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+         this.listViewLiveMergeRequests.GridLines = false;
+         this.listViewLiveMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Clickable;
          this.listViewLiveMergeRequests.HideSelection = false;
          this.listViewLiveMergeRequests.Location = new System.Drawing.Point(3, 46);
          this.listViewLiveMergeRequests.MultiSelect = false;
@@ -272,6 +280,12 @@ namespace mrHelper.App.Controls
          this.columnHeaderIId.Tag = mrHelper.App.Controls.ColumnType.IId;
          this.columnHeaderIId.Text = "IId";
          this.columnHeaderIId.Width = 40;
+         // 
+         // columnHeaderColor
+         // 
+         this.columnHeaderColor.Tag = mrHelper.App.Controls.ColumnType.Color;
+         this.columnHeaderColor.Text = "Color";
+         this.columnHeaderColor.Width = 20;
          // 
          // columnHeaderAuthor
          // 
@@ -339,6 +353,12 @@ namespace mrHelper.App.Controls
          this.columnHeaderActivities.Text = "Activities";
          this.columnHeaderActivities.Width = 90;
          // 
+         // columnHeaderProject
+         // 
+         this.columnHeaderProject.Tag = mrHelper.App.Controls.ColumnType.Project;
+         this.columnHeaderProject.Text = "Project";
+         this.columnHeaderProject.Width = 130;
+         // 
          // tabPageSearch
          // 
          this.tabPageSearch.AutoScroll = true;
@@ -382,6 +402,7 @@ namespace mrHelper.App.Controls
             | System.Windows.Forms.AnchorStyles.Right)));
          this.listViewFoundMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeaderFoundIId,
+            this.columnHeaderFoundColor,
             this.columnHeaderFoundState,
             this.columnHeaderFoundAuthor,
             this.columnHeaderFoundTitle,
@@ -389,10 +410,11 @@ namespace mrHelper.App.Controls
             this.columnHeaderFoundJira,
             this.columnHeaderFoundSourceBranch,
             this.columnHeaderFoundTargetBranch,
-            this.columnHeaderFoundActivities});
+            this.columnHeaderFoundActivities,
+            this.columnHeaderFoundProject});
          this.listViewFoundMergeRequests.FullRowSelect = true;
-         this.listViewFoundMergeRequests.GridLines = true;
-         this.listViewFoundMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+         this.listViewFoundMergeRequests.GridLines = false;
+         this.listViewFoundMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Clickable;
          this.listViewFoundMergeRequests.HideSelection = false;
          this.listViewFoundMergeRequests.Location = new System.Drawing.Point(3, 32);
          this.listViewFoundMergeRequests.MultiSelect = false;
@@ -410,6 +432,12 @@ namespace mrHelper.App.Controls
          this.columnHeaderFoundIId.Tag = mrHelper.App.Controls.ColumnType.IId;
          this.columnHeaderFoundIId.Text = "IId";
          this.columnHeaderFoundIId.Width = 40;
+         // 
+         // columnHeaderFoundColor
+         // 
+         this.columnHeaderFoundColor.Tag = mrHelper.App.Controls.ColumnType.Color;
+         this.columnHeaderFoundColor.Text = "Color";
+         this.columnHeaderFoundColor.Width = 20;
          // 
          // columnHeaderFoundState
          // 
@@ -458,6 +486,12 @@ namespace mrHelper.App.Controls
          this.columnHeaderFoundActivities.Tag = mrHelper.App.Controls.ColumnType.Activities;
          this.columnHeaderFoundActivities.Text = "Activities";
          this.columnHeaderFoundActivities.Width = 90;
+         // 
+         // columnHeaderFoundProject
+         // 
+         this.columnHeaderFoundProject.Tag = mrHelper.App.Controls.ColumnType.Project;
+         this.columnHeaderFoundProject.Text = "Project";
+         this.columnHeaderFoundProject.Width = 130;
          // 
          // tabPageRecent
          // 
@@ -529,6 +563,7 @@ namespace mrHelper.App.Controls
             | System.Windows.Forms.AnchorStyles.Right)));
          this.listViewRecentMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeaderRecentIId,
+            this.columnHeaderRecentColor,
             this.columnHeaderRecentState,
             this.columnHeaderRecentAuthor,
             this.columnHeaderRecentTitle,
@@ -536,10 +571,11 @@ namespace mrHelper.App.Controls
             this.columnHeaderRecentJira,
             this.columnHeaderRecentSourceBranch,
             this.columnHeaderRecentTargetBranch,
-            this.columnHeaderRecentActivities});
+            this.columnHeaderRecentActivities,
+            this.columnHeaderRecentProject});
          this.listViewRecentMergeRequests.FullRowSelect = true;
-         this.listViewRecentMergeRequests.GridLines = true;
-         this.listViewRecentMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+         this.listViewRecentMergeRequests.GridLines = false;
+         this.listViewRecentMergeRequests.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Clickable;
          this.listViewRecentMergeRequests.HideSelection = false;
          this.listViewRecentMergeRequests.Location = new System.Drawing.Point(3, 73);
          this.listViewRecentMergeRequests.MultiSelect = false;
@@ -557,6 +593,12 @@ namespace mrHelper.App.Controls
          this.columnHeaderRecentIId.Tag = mrHelper.App.Controls.ColumnType.IId;
          this.columnHeaderRecentIId.Text = "IId";
          this.columnHeaderRecentIId.Width = 40;
+         // 
+         // columnHeaderRecentColor
+         // 
+         this.columnHeaderRecentColor.Tag = mrHelper.App.Controls.ColumnType.Color;
+         this.columnHeaderRecentColor.Text = "Color";
+         this.columnHeaderRecentColor.Width = 20;
          // 
          // columnHeaderRecentState
          // 
@@ -605,6 +647,12 @@ namespace mrHelper.App.Controls
          this.columnHeaderRecentActivities.Tag = mrHelper.App.Controls.ColumnType.Activities;
          this.columnHeaderRecentActivities.Text = "Activities";
          this.columnHeaderRecentActivities.Width = 90;
+         // 
+         // columnHeaderRecentProject
+         // 
+         this.columnHeaderRecentProject.Tag = mrHelper.App.Controls.ColumnType.Project;
+         this.columnHeaderRecentProject.Text = "Project";
+         this.columnHeaderRecentProject.Width = 130;
          // 
          // splitContainerSecondary
          // 
@@ -735,6 +783,7 @@ namespace mrHelper.App.Controls
       private mrHelper.App.Controls.FilterTextBox textBoxDisplayFilterRecent;
       private App.Controls.MergeRequestListView listViewLiveMergeRequests;
       private System.Windows.Forms.ColumnHeader columnHeaderIId;
+      private System.Windows.Forms.ColumnHeader columnHeaderColor;
       private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
       private System.Windows.Forms.ColumnHeader columnHeaderTitle;
       private System.Windows.Forms.ColumnHeader columnHeaderLabels;
@@ -746,10 +795,12 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ColumnHeader columnHeaderTargetBranch;
       private System.Windows.Forms.ColumnHeader columnHeaderRefreshTime;
       private System.Windows.Forms.ColumnHeader columnHeaderActivities;
+      private System.Windows.Forms.ColumnHeader columnHeaderProject;
       private System.Windows.Forms.TabPage tabPageSearch;
       private System.Windows.Forms.GroupBox groupBoxSearchMergeRequest;
       private App.Controls.MergeRequestListView listViewFoundMergeRequests;
       private System.Windows.Forms.ColumnHeader columnHeaderFoundIId;
+      private System.Windows.Forms.ColumnHeader columnHeaderFoundColor;
       private System.Windows.Forms.ColumnHeader columnHeaderFoundState;
       private System.Windows.Forms.ColumnHeader columnHeaderFoundAuthor;
       private System.Windows.Forms.ColumnHeader columnHeaderFoundTitle;
@@ -758,11 +809,13 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ColumnHeader columnHeaderFoundSourceBranch;
       private System.Windows.Forms.ColumnHeader columnHeaderFoundTargetBranch;
       private System.Windows.Forms.ColumnHeader columnHeaderFoundActivities;
+      private System.Windows.Forms.ColumnHeader columnHeaderFoundProject;
       private System.Windows.Forms.TabPage tabPageRecent;
       private System.Windows.Forms.GroupBox groupBoxRecentMergeRequest;
       private System.Windows.Forms.TextBox textBoxRecentMergeRequestsHint;
       private App.Controls.MergeRequestListView listViewRecentMergeRequests;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentIId;
+      private System.Windows.Forms.ColumnHeader columnHeaderRecentColor;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentState;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentAuthor;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentTitle;
@@ -771,6 +824,7 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ColumnHeader columnHeaderRecentSourceBranch;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentTargetBranch;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentActivities;
+      private System.Windows.Forms.ColumnHeader columnHeaderRecentProject;
       private System.Windows.Forms.SplitContainer splitContainerSecondary;
       private System.Windows.Forms.GroupBox groupBoxSelectedMR;
       private System.Windows.Forms.GroupBox groupBoxSelectRevisions;

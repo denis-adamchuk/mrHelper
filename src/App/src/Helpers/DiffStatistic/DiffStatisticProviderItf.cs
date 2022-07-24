@@ -7,20 +7,20 @@ namespace mrHelper.App.Helpers
    {
       internal DiffStatistic(int files, int insertions, int deletions)
       {
-         _filesChanged = files;
-         _insertions = insertions;
-         _deletions = deletions;
+         FilesChanged = files;
+         Insertions = insertions;
+         Deletions = deletions;
       }
 
-      public override string ToString()
+      internal string Format()
       {
-         string fileNumber = String.Format("{0} {1}", _filesChanged, _filesChanged > 1 ? "files" : "file");
-         return String.Format("+ {1} / - {2}\n{0}", fileNumber, _insertions, _deletions);
+         string fileNumber = String.Format("{0} {1}", FilesChanged, FilesChanged > 1 ? "files" : "file");
+         return String.Format("+ {1} / - {2}\n{0}", fileNumber, Insertions, Deletions);
       }
 
-      private readonly int _filesChanged;
-      private readonly int _insertions;
-      private readonly int _deletions;
+      internal readonly int FilesChanged;
+      internal readonly int Insertions;
+      internal readonly int Deletions;
    }
 
    internal interface IDiffStatisticProvider
