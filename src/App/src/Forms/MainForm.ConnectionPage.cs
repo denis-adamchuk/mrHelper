@@ -13,10 +13,23 @@ using GitLabSharp;
 using mrHelper.GitLabClient;
 using mrHelper.Common.Exceptions;
 
+namespace mrHelper.App.Forms.Helpers
+{
+   internal interface ITimeTrackerHolder
+   {
+      ITimeTracker GetTimeTracker();
+   }
+}
+
 namespace mrHelper.App.Forms
 {
-   internal partial class MainForm
+   internal partial class MainForm : Helpers.ITimeTrackerHolder
    {
+      public ITimeTracker GetTimeTracker()
+      {
+         return _timeTracker;
+      }
+
       public string GetCurrentHostName()
       {
          return getCurrentConnectionPage()?.GetCurrentHostName();
@@ -131,7 +144,7 @@ namespace mrHelper.App.Forms
                _filtersByHostsLive, _filtersByHostsRecent,
                _keywords, _trayIcon, toolTip,
                _integratedInGitExtensions,
-               _integratedInSourceTree, _colorScheme, oldFilter);
+               _integratedInSourceTree, _colorScheme, oldFilter, this);
             subscribeToConnectionPage(connectionPage);
             ConnectionTabPage tabPage = new ConnectionTabPage(hostname, connectionPage);
             tabControlHost.TabPages.Add(tabPage);

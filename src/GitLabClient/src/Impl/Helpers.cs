@@ -54,13 +54,13 @@ namespace mrHelper.GitLabClient
       }
 
       public static bool CheckConditions(IEnumerable<string> conditions,
-         IEnumerable<User> approvedBy, IEnumerable<string> labels, User author, bool isExcluded)
+         IEnumerable<User> approvedBy, IEnumerable<string> labels, User author, bool isExcluded, bool isTrackingTime)
       {
-         return conditions.All(cond => checkCondition(cond, approvedBy, labels, author, isExcluded));
+         return conditions.All(cond => checkCondition(cond, approvedBy, labels, author, isExcluded, isTrackingTime));
       }
 
       private static bool checkCondition(string condition,
-         IEnumerable<User> approvedBy, IEnumerable<string> labels, User author, bool isExcluded)
+         IEnumerable<User> approvedBy, IEnumerable<string> labels, User author, bool isExcluded, bool isTrackingTime)
       {
          if (String.IsNullOrEmpty(condition))
          {
@@ -98,6 +98,10 @@ namespace mrHelper.GitLabClient
          else if (conditionName == "IsExcluded")
          {
             return isExpected == (String.Compare(conditionValue, isExcluded.ToString(), true) == 0);
+         }
+         else if (conditionName == "IsTrackingTime")
+         {
+            return isExpected == (String.Compare(conditionValue, isTrackingTime.ToString(), true) == 0);
          }
 
          Debug.Assert(false);

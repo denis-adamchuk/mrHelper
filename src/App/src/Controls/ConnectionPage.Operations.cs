@@ -292,6 +292,13 @@ namespace mrHelper.App.Controls
          }
       }
 
+      private bool isTrackingTime(MergeRequestKey mrk)
+      {
+         return _timeTrackerHolder != null
+             && _timeTrackerHolder.GetTimeTracker() != null
+             && _timeTrackerHolder.GetTimeTracker().MergeRequest.Equals(mrk);
+      }
+
       private void addCommentForSelectedMergeRequest()
       {
          BeginInvoke(new Action(async () =>

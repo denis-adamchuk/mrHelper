@@ -44,6 +44,7 @@ namespace mrHelper.App.Controls
       private MergeRequestFilter _mergeRequestFilterRecent;
       private readonly System.Windows.Forms.ToolTip _toolTip;
       private Forms.EditSearchQueryFormState _prevSearchQuery;
+      private readonly ITimeTrackerHolder _timeTrackerHolder;
 
       private readonly DictionaryWrapper<MergeRequestKey, DateTime> _recentMergeRequests;
       private readonly DictionaryWrapper<MergeRequestKey, HashSet<string>> _reviewedRevisions;

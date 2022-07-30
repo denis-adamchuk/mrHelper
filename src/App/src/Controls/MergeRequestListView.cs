@@ -309,6 +309,11 @@ namespace mrHelper.App.Controls
          _openMergeRequestUrlCallback = callback;
       }
 
+      internal void SetTimeTrackingCheckingCallback(Func<MergeRequestKey, bool> callback)
+      {
+         _timeTrackingCheckingCallback = callback;
+      }
+
       internal void SetColorScheme(ColorScheme colorScheme)
       {
          _colorScheme = colorScheme;
@@ -1103,7 +1108,8 @@ namespace mrHelper.App.Controls
          IEnumerable<string> labels = fmk.MergeRequest.Labels;
          User author = fmk.MergeRequest.Author;
          bool isExcluded = !wouldMatchFilter(fmk.MergeRequest);
-         return GitLabClient.Helpers.CheckConditions(conditions, approvedBy, labels, author, isExcluded);
+         bool isTrackingTime = _timeTrackingCheckingCallback(mrk);
+         return GitLabClient.Helpers.CheckConditions(conditions, approvedBy, labels, author, isExcluded, isTrackingTime);
       }
 
       private Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
@@ -1773,6 +1779,7 @@ namespace mrHelper.App.Controls
       private string _identity;
       private Action<MergeRequestKey, string> _openMergeRequestUrlCallback;
       private string _hostname;
+      private Func<MergeRequestKey, bool> _timeTrackingCheckingCallback;
       private static readonly int MaxListViewRows = 3;
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
 

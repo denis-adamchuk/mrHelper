@@ -36,7 +36,7 @@ namespace mrHelper.App.Forms
          _timeTrackingTimer.Start();
 
          // Reset and start stopwatch
-         _timeTracker = getTimeTracker();
+         _timeTracker = createTimeTracker();
          if (_timeTracker == null)
          {
             return;
@@ -47,9 +47,9 @@ namespace mrHelper.App.Forms
          onTimerStarted();
       }
 
-      private ITimeTracker getTimeTracker()
+      private ITimeTracker createTimeTracker()
       {
-         return getCurrentConnectionPage()?.GetTimeTracker();
+         return getCurrentConnectionPage()?.CreateTimeTracker();
       }
 
       private void onTimeTrackingTimer(object sender, EventArgs e)
@@ -165,8 +165,9 @@ namespace mrHelper.App.Forms
          toolStripButtonStartStopTimer.Image = Properties.Resources.stop_24x24;
          pullCustomActionToolBar();
 
-         updateTrayAndTaskBar();
          addOperationRecord("Time tracking has started");
+         onSummaryColorChanged(getCurrentConnectionPage());
+         Invalidate(true);
       }
 
       private void onTimerStopped()
@@ -180,7 +181,8 @@ namespace mrHelper.App.Forms
          toolStripButtonStartStopTimer.Image = Properties.Resources.play_24x24;
          pullCustomActionToolBar();
 
-         updateTrayAndTaskBar();
+         onSummaryColorChanged(getCurrentConnectionPage());
+         Invalidate(true);
 
          Debug.Assert(!_applicationUpdateNotificationPostponedTillTimerStop
                    || !_applicationUpdateReminderPostponedTillTimerStop); // cannot have both enabled
