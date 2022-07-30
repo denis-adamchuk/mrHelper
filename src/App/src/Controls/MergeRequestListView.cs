@@ -130,7 +130,7 @@ namespace mrHelper.App.Controls
 
       private ColumnType getSortedByColumn()
       {
-         const ColumnType DefaultColumnTypeForSorting = ColumnType.Project;
+         const ColumnType DefaultColumnTypeForSorting = ColumnType.Color;
 
          string columnTypeName = Program.Settings != null ?
             ConfigurationHelper.GetSortedByColumn(Program.Settings, getIdentity()) : null;
@@ -1009,9 +1009,11 @@ namespace mrHelper.App.Controls
 
       private void ContextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
       {
+         bool clickAtHeader = Items.Count < 1 || Items[0].Position.Y > PointToClient(Cursor.Position).Y;
+
          MergeRequestListViewContextMenu contextMenu = ((MergeRequestListViewContextMenu)(sender));
          FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
-         if (selectedMergeRequest == null)
+         if (clickAtHeader || selectedMergeRequest == null)
          {
             contextMenu.DisableAll();
          }

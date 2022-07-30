@@ -205,13 +205,13 @@ namespace mrHelper.App.Helpers
       private static readonly bool   Notifications_Service_DefaultValue = false;
 
       private static readonly string ListViewMergeRequestsSortedByColumnNameKeyName       = "LVMR_SortedByColumnName";
-      private static readonly string ListViewMergeRequestsSortedByColumnNameDefaultValue  = "Project";
+      private static readonly string ListViewMergeRequestsSortedByColumnNameDefaultValue  = "Color";
 
       private static readonly string ListViewFoundMergeRequestsSortedByColumnNameKeyName       = "LVFMR_SortedByColumnName";
-      private static readonly string ListViewFoundMergeRequestsSortedByColumnNameDefaultValue  = "Project";
+      private static readonly string ListViewFoundMergeRequestsSortedByColumnNameDefaultValue  = "Color";
 
       private static readonly string ListViewRecentMergeRequestsSortedByColumnNameKeyName       = "LVRMR_SortedByColumnName";
-      private static readonly string ListViewRecentMergeRequestsSortedByColumnNameDefaultValue  = "Project";
+      private static readonly string ListViewRecentMergeRequestsSortedByColumnNameDefaultValue  = "Color";
 
       private static readonly string ListViewMergeRequestsSortingDirectionKeyName       = "LVMR_SortingDirection";
       private static readonly string ListViewMergeRequestsSortingDirectionDefaultValue  = "Descending";
