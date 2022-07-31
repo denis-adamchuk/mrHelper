@@ -100,6 +100,26 @@ namespace mrHelper.CommonNative
          public IntPtr lpData;
       }
 
+      public const int WM_NOTIFY = 0x004E;
+      public const int HDN_DIVIDERDBLCLICKA = 0;
+
+      [StructLayout(LayoutKind.Sequential)]
+      public struct NMHDR
+      {
+         public IntPtr hwndFrom;
+         public int idFrom;
+         public int code;
+      }
+
+      [StructLayout(LayoutKind.Sequential)]
+      public class NMHEADER
+      {
+         public NMHDR nmhdr;
+         public int iItem = 0;
+         public int iButton = 0;
+         public IntPtr pItem = IntPtr.Zero;    // HDITEM*
+      }
+
       /// <summary>
       /// Sends the specified message to a window or windows.
       /// </summary>

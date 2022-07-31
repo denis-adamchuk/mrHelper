@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using static System.Windows.Forms.ListViewItem;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.App.Controls
 {
@@ -51,9 +52,9 @@ namespace mrHelper.App.Controls
          }
          _lastMouseLocation = mouseLocation;
 
+         CancelIfNeeded(_listView.PointToScreen(mouseLocation));
          ListViewHitTestInfo hit = _listView.HitTest(mouseLocation);
-         CancelIfNeeded(hit);
-         if (!isCellHit(hit))
+         if (!isAnyCellHit(hit))
          {
             return;
          }
@@ -88,9 +89,11 @@ namespace mrHelper.App.Controls
          }
       }
 
-      public void CancelIfNeeded(ListViewHitTestInfo hit)
+      public void CancelIfNeeded(Point screenPosition)
       {
-         if (isCellHit(hit))
+         bool atHeader = WinFormsHelpers.TestListViewHeaderHit(_listView, screenPosition);
+         bool atListView = isAnyCellHit(_listView.HitTest(_listView.PointToClient(screenPosition)));
+         if (atListView && !atHeader)
          {
             return;
          }
@@ -179,7 +182,7 @@ namespace mrHelper.App.Controls
          return exceedsWidth || exceedsHeight;
       }
 
-      private static bool isCellHit(ListViewHitTestInfo hit) => hit.Item != null && hit.SubItem != null;
+      private static bool isAnyCellHit(ListViewHitTestInfo hit) => hit.Item != null && hit.SubItem != null;
       private bool isTooltipShown() => _toolTipShown;
       private bool isTooltipScheduled() => _toolTipScheduled;
 

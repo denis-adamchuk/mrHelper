@@ -7,7 +7,6 @@ using System.Linq;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
-using static mrHelper.App.Helpers.ConfigurationHelper;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
@@ -16,6 +15,7 @@ using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.CommonNative;
 using mrHelper.GitLabClient;
+using static mrHelper.App.Helpers.ConfigurationHelper;
 using ListViewSubItemInfo = mrHelper.App.Controls.MergeRequestListViewSubItemInfo;
 
 namespace mrHelper.App.Controls
@@ -39,6 +39,8 @@ namespace mrHelper.App.Controls
 
    internal partial class MergeRequestListView : ListViewEx
    {
+      internal static int DefaultColorColumnWidth = 20;
+
       internal event Action<ListView> ContentChanged;
 
       public MergeRequestListView()
@@ -767,8 +769,7 @@ namespace mrHelper.App.Controls
       protected override void OnMouseLeave(EventArgs e)
       {
          // this callback is called not only when mouse leaves the list view so let's check if we need to cancel tooltip
-         ListViewHitTestInfo hit = HitTest(this.PointToClient(Cursor.Position));
-         _toolTip.CancelIfNeeded(hit);
+         _toolTip.CancelIfNeeded(Cursor.Position);
 
          base.OnMouseLeave(e);
       }
@@ -832,6 +833,54 @@ namespace mrHelper.App.Controls
          {
             saveColumnWidths();
          }
+      }
+      protected override void WndProc(ref Message rMessage)
+      {
+         if (rMessage.Msg == NativeMethods.WM_NOTIFY)
+         {
+            var nMHEADER = (NativeMethods.NMHEADER)rMessage.GetLParam(typeof(NativeMethods.NMHEADER));
+            if (nMHEADER != null
+             && nMHEADER.nmhdr.code == NativeMethods.HDN_DIVIDERDBLCLICKA
+             && Columns != null
+             && Columns.Count > 0
+             && nMHEADER.iItem < Columns.Count)
+            {
+               ColumnHeader c = Columns[nMHEADER.iItem];
+               using (Graphics g = CreateGraphics())
+               {
+                  ColumnType? columnType = getColumnTypeByName(c.Text);
+                  if (columnType.HasValue)
+                  {
+                     if (columnType == ColumnType.Color)
+                     {
+                        c.Width = DefaultColorColumnWidth;
+                        return;
+                     }
+
+                     bool isSortedByThisColumn = getSortedByColumn() == columnType.Value;
+                     FontStyle fontStyle = isSortedByThisColumn ? FontStyle.Bold : FontStyle.Regular;
+                     using (Font columnHeaderFont = new Font(Font, fontStyle))
+                     {
+                        StringFormat noTrimmingFormat = new StringFormat() { Trimming = StringTrimming.None };
+
+                        float columnHeaderWidth = g.MeasureString(c.Text, columnHeaderFont,
+                           MaxAllowedWidth, noTrimmingFormat).Width;
+
+                        float maxSubItemWidth = Items
+                           .Cast<ListViewItem>()
+                           .Select(item => getSubItem(item, columnType.Value))
+                           .Max(subItem => g.MeasureString(((ListViewSubItemInfo)subItem.Tag).Text, Font,
+                              MaxAllowedWidth, noTrimmingFormat).Width);
+
+                        c.Width = Convert.ToInt32(Math.Ceiling(Math.Max(columnHeaderWidth, maxSubItemWidth)));
+                        return;
+                     }
+                  }
+               }
+            }
+         }
+
+         base.WndProc(ref rMessage);
       }
 
       protected override void OnColumnReordered(ColumnReorderedEventArgs e)
@@ -906,22 +955,10 @@ namespace mrHelper.App.Controls
          };
          string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
          bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
-         if (columnType == ColumnType.IId)
+         if (columnType == ColumnType.Color)
          {
-            FontStyle fontStyle = isClickable ? FontStyle.Underline : FontStyle.Regular;
-            using (Font font = new Font(e.Item.ListView.Font, fontStyle))
-            {
-               e.Graphics.DrawString(text, font, Brushes.Blue, bounds, format);
-            }
-         }
-         else if (columnType == ColumnType.Color)
-         {
-            FontStyle fontStyle = isClickable ? FontStyle.Underline : FontStyle.Regular;
-            using (Font font = new Font(e.Item.ListView.Font, fontStyle))
-            {
-               Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
-               drawEllipseForIId(e.Graphics, bounds, color, font, null);
-            }
+            Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
+            drawEllipseForIId(e.Graphics, bounds, color, e.Item.ListView.Font, null);
          }
          else if (isClickable)
          {
@@ -1009,11 +1046,9 @@ namespace mrHelper.App.Controls
 
       private void ContextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
       {
-         bool clickAtHeader = Items.Count < 1 || Items[0].Position.Y > PointToClient(Cursor.Position).Y;
-
          MergeRequestListViewContextMenu contextMenu = ((MergeRequestListViewContextMenu)(sender));
          FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
-         if (clickAtHeader || selectedMergeRequest == null)
+         if (WinFormsHelpers.TestListViewHeaderHit(this, Cursor.Position) || selectedMergeRequest == null)
          {
             contextMenu.DisableAll();
          }
@@ -1381,7 +1416,7 @@ namespace mrHelper.App.Controls
          item.SubItems[columnHeader.Index].Tag = subItemInfo;
       }
 
-      private object getSubItemTag(ListViewItem item, ColumnType columnType)
+      private ListViewItem.ListViewSubItem getSubItem(ListViewItem item, ColumnType columnType)
       {
          ColumnHeader columnHeader = getColumnByType(columnType);
          if (columnHeader == null)
@@ -1389,7 +1424,12 @@ namespace mrHelper.App.Controls
             return null;
          }
 
-         return item.SubItems[columnHeader.Index].Tag;
+         return item.SubItems[columnHeader.Index];
+      }
+
+      private object getSubItemTag(ListViewItem item, ColumnType columnType)
+      {
+         return getSubItem(item, columnType)?.Tag;
       }
 
       private void setListViewSubItemsTagsForSummary(ListViewItem item, FullMergeRequestKey fmk)
@@ -1405,7 +1445,7 @@ namespace mrHelper.App.Controls
             Program.ServiceManager.GetUnimportantSuffices(), currentUser);
          Dictionary<bool, string> labels = new Dictionary<bool, string>
          {
-            [false] = groupedLabels.Any() ? "See all labels in tooltip" : String.Empty,
+            [false] = groupedLabels.Any() ? AllListViewRowsHint : String.Empty,
             [true] = StringUtils.JoinSubstrings(groupedLabels.OrderBy(group => group))
          };
 
@@ -1709,7 +1749,8 @@ namespace mrHelper.App.Controls
          switch (columnType)
          {
             case ColumnType.Labels:
-               return getText(subItem).Contains(MoreListViewRowsHint);
+               return getText(subItem).Contains(MoreListViewRowsHint)
+                   || getText(subItem).Contains(AllListViewRowsHint);
             case ColumnType.Activities:
                return true;
          }
@@ -1784,8 +1825,11 @@ namespace mrHelper.App.Controls
       private Func<MergeRequestKey, bool> _timeTrackingCheckingCallback;
       private static readonly int MaxListViewRows = 3;
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
+      private static readonly string AllListViewRowsHint = "See all labels in tooltip";
 
       private static readonly int GroupHeaderHeight = 20; // found experimentally
+
+      private static readonly int MaxAllowedWidth = 1000;
 
       private static readonly int UnmuteTimerInterval = 60 * 1000; // 1 minute
       private readonly Timer _unmuteTimer = new Timer

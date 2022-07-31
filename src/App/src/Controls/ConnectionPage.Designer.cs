@@ -285,7 +285,7 @@ namespace mrHelper.App.Controls
          // 
          this.columnHeaderColor.Tag = mrHelper.App.Controls.ColumnType.Color;
          this.columnHeaderColor.Text = "Color";
-         this.columnHeaderColor.Width = 20;
+         this.columnHeaderColor.Width = MergeRequestListView.DefaultColorColumnWidth;
          // 
          // columnHeaderAuthor
          // 
@@ -437,7 +437,7 @@ namespace mrHelper.App.Controls
          // 
          this.columnHeaderFoundColor.Tag = mrHelper.App.Controls.ColumnType.Color;
          this.columnHeaderFoundColor.Text = "Color";
-         this.columnHeaderFoundColor.Width = 20;
+         this.columnHeaderFoundColor.Width = MergeRequestListView.DefaultColorColumnWidth;
          // 
          // columnHeaderFoundState
          // 
@@ -598,7 +598,7 @@ namespace mrHelper.App.Controls
          // 
          this.columnHeaderRecentColor.Tag = mrHelper.App.Controls.ColumnType.Color;
          this.columnHeaderRecentColor.Text = "Color";
-         this.columnHeaderRecentColor.Width = 20;
+         this.columnHeaderRecentColor.Width = MergeRequestListView.DefaultColorColumnWidth;
          // 
          // columnHeaderRecentState
          // 

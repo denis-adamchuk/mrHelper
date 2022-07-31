@@ -12,6 +12,12 @@ namespace mrHelper.CommonControls.Tools
 {
    public static class WinFormsHelpers
    {
+      public static bool TestListViewHeaderHit(ListView listView, Point screenPosition)
+      {
+         return listView.Items.Count < 1
+             || listView.Items[0].Position.Y > listView.PointToClient(screenPosition).Y;
+      }
+
       public static void SetListViewRowHeight(ListView listView, int maxLineCount)
       {
          // It is expected to use font size in pixels here
