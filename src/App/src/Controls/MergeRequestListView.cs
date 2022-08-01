@@ -34,7 +34,7 @@ namespace mrHelper.App.Controls
          return _comparisonFunction(item1, item2);
       }
 
-      private Func<ListViewItem, ListViewItem, int> _comparisonFunction;
+      private readonly Func<ListViewItem, ListViewItem, int> _comparisonFunction;
    }
 
    internal partial class MergeRequestListView : ListViewEx
@@ -63,203 +63,6 @@ namespace mrHelper.App.Controls
          }
 
          applySortModeFromConfiguration();
-      }
-
-      private void setSortedByColumn(ColumnType columnType)
-      {
-         bool prevNeedShowGroups = needShowGroups();
-         if (getSortedByColumn() == columnType)
-         {
-            SortingDirection sortingDirection = getSortingDirection();
-            sortingDirection = sortingDirection == SortingDirection.Ascending ?
-               SortingDirection.Descending : SortingDirection.Ascending;
-            ConfigurationHelper.SetSortingDirection(Program.Settings, sortingDirection, getIdentity());
-         }
-         else
-         {
-            ColumnHeader columnHeader = getColumnByType(columnType);
-            ConfigurationHelper.SetSortedByColumn(Program.Settings, columnHeader.Text, getIdentity());
-         }
-
-         if (prevNeedShowGroups != needShowGroups())
-         {
-            if (needShowGroups())
-            {
-               createGroups();
-            }
-            else
-            {
-               Groups.Clear();
-            }
-            Items.Clear();
-            UpdateItems();
-         }
-
-         applySortModeFromConfiguration();
-         ensureSelectionIsVisible();
-         Invalidate(true);
-      }
-
-      private void applySortModeFromConfiguration()
-      {
-         var comparisonFunction = getComparisonFunction(getSortedByColumn(), getSortingDirection());
-         ListViewItemSorter = new ListViewItemComparer(comparisonFunction);
-      }
-
-      private void createGroups()
-      {
-         Debug.Assert(needShowGroups());
-         IEnumerable<string> projectNames = ConfigurationHelper.GetEnabledProjects(_hostname, Program.Settings);
-         foreach (string projectName in projectNames)
-         {
-            ProjectKey projectKey = new ProjectKey(_hostname, projectName);
-            createGroupForProject(projectKey, false);
-         }
-      }
-
-      private ColumnType? getColumnTypeByName(string columnTypeName)
-      {
-         if (columnTypeName == null)
-         {
-            return new ColumnType?();
-         }
-
-         ColumnHeader columnHeader = Columns
-            .Cast<ColumnHeader>()
-            .SingleOrDefault(x => x.Text == columnTypeName);
-         return columnHeader == null ? new ColumnType?() : (ColumnType)columnHeader.Tag;
-      }
-
-      private ColumnType getSortedByColumn()
-      {
-         const ColumnType DefaultColumnTypeForSorting = ColumnType.Color;
-
-         string columnTypeName = Program.Settings != null ?
-            ConfigurationHelper.GetSortedByColumn(Program.Settings, getIdentity()) : null;
-         ColumnType? columnType = getColumnTypeByName(columnTypeName);
-         return columnType == null ? DefaultColumnTypeForSorting : columnType.Value;
-      }
-
-      private SortingDirection getSortingDirection()
-      {
-         const SortingDirection DefaultSortingDirection = SortingDirection.Descending;
-
-         return Program.Settings == null
-            ? DefaultSortingDirection
-            : ConfigurationHelper.GetSortingDirection(Program.Settings, getIdentity());
-      }
-
-      private bool needShowGroups()
-      {
-         return getSortedByColumn() == ColumnType.Project;
-      }
-
-      int compare(ListViewItem item1, ListViewItem item2, ColumnType columnType)
-      {
-         FullMergeRequestKey fmk1 = ((FullMergeRequestKey)item1.Tag);
-         FullMergeRequestKey fmk2 = ((FullMergeRequestKey)item2.Tag);
-         if (fmk1.MergeRequest == null)
-         {
-            return fmk2.MergeRequest == null ? 0 : -1;
-         }
-         else if (fmk2.MergeRequest == null)
-         {
-            return 1;
-         }
-
-         MergeRequestKey mrk1 = new MergeRequestKey(fmk1.ProjectKey, fmk1.MergeRequest.IId);
-         MergeRequestKey mrk2 = new MergeRequestKey(fmk2.ProjectKey, fmk2.MergeRequest.IId);
-         switch (columnType)
-         {
-            case ColumnType.IId:
-               {
-                  if (mrk1.IId == mrk2.IId)
-                  {
-                     Debug.Assert(fmk1.MergeRequest.Id != fmk2.MergeRequest.Id);
-                     return fmk1.MergeRequest.Id > fmk2.MergeRequest.Id ? 1 : -1;
-                  }
-                  return mrk1.IId > mrk2.IId ? 1 : -1;
-               }
-
-            case ColumnType.Activities:
-               {
-                  DateTime latestActivity1 = getLatestCommitTime(mrk1).HasValue
-                     ? getLatestCommitTime(mrk1).Value : fmk1.MergeRequest.Created_At;
-                  DateTime latestActivity2 = getLatestCommitTime(mrk2).HasValue
-                     ? getLatestCommitTime(mrk2).Value : fmk2.MergeRequest.Created_At;
-                  return latestActivity1 == latestActivity2 ? 0 : (latestActivity1 > latestActivity2 ? 1 : -1);
-               }
-
-            case ColumnType.Color:
-               {
-                  int colorOrder1 = getColorOrder(fmk1);
-                  int colorOrder2 = getColorOrder(fmk2);
-                  return colorOrder1 == colorOrder2 ? 0 : (colorOrder1 > colorOrder2 ? 1 : -1);
-               }
-
-            case ColumnType.Size:
-               {
-                  DiffStatistic? diffStatistic1 = _diffStatisticProvider?.GetStatistic(mrk1, out string _);
-                  DiffStatistic? diffStatistic2 = _diffStatisticProvider?.GetStatistic(mrk2, out string _);
-                  if (diffStatistic1.HasValue && diffStatistic2.HasValue)
-                  {
-                     int size1 = diffStatistic1.Value.Insertions + diffStatistic1.Value.Deletions;
-                     int size2 = diffStatistic2.Value.Insertions + diffStatistic2.Value.Deletions;
-                     return size1 == size2 ? 0 : (size1 > size2 ? 1 : -1);
-                  }
-                  return diffStatistic1.HasValue ? 1 : (diffStatistic2.HasValue ? -1 : 0);
-               }
-
-            case ColumnType.TotalTime:
-               {
-                  double? totalTime1 = _dataCache?.TotalTimeCache?.GetTotalTime(mrk1).Amount?.TotalSeconds;
-                  double? totalTime2 = _dataCache?.TotalTimeCache?.GetTotalTime(mrk2).Amount?.TotalSeconds;
-                  if (totalTime1.HasValue && totalTime2.HasValue)
-                  {
-                     return totalTime1 == totalTime2 ? 0 : (totalTime1 > totalTime2 ? 1 : -1);
-                  }
-                  return totalTime1.HasValue ? 1 : (totalTime2.HasValue ? -1 : 0);
-               }
-
-            default:
-               {
-                  ListViewSubItemInfo key1 = (ListViewSubItemInfo)getSubItemTag(item1, columnType);
-                  ListViewSubItemInfo key2 = (ListViewSubItemInfo)getSubItemTag(item2, columnType);
-                  return String.Compare(key1.Text, key2.Text, StringComparison.OrdinalIgnoreCase);
-               }
-         }
-      }
-
-      private Func<ListViewItem, ListViewItem, int> getComparisonFunction(
-         ColumnType columnType, SortingDirection sortingDirection)
-      {
-         columnType = needShowGroups() ? ColumnType.IId : columnType;
-         return (item1, item2) =>
-         {
-            ListViewSubItemInfo key1 = (ListViewSubItemInfo)getSubItemTag(item1, columnType);
-            ListViewSubItemInfo key2 = (ListViewSubItemInfo)getSubItemTag(item2, columnType);
-            if (key1 == null)
-            {
-               return key2 == null ? 0 : -1;
-            }
-            else if (key2 == null)
-            {
-               return 1;
-            }
-            int comparisonResult = compare(item1, item2, columnType);
-            if (comparisonResult == 0)
-            {
-               if (columnType == ColumnType.Color)
-               {
-                  comparisonResult = -compare(item1, item2, ColumnType.Author);
-               }
-               else
-               {
-                  comparisonResult = compare(item1, item2, ColumnType.IId);
-               }
-            }
-            return sortingDirection == SortingDirection.Ascending ? comparisonResult : -comparisonResult;
-         };
       }
 
       internal void SetDiffStatisticProvider(IDiffStatisticProvider diffStatisticProvider)
@@ -834,48 +637,19 @@ namespace mrHelper.App.Controls
             saveColumnWidths();
          }
       }
+
       protected override void WndProc(ref Message rMessage)
       {
          if (rMessage.Msg == NativeMethods.WM_NOTIFY)
          {
-            var nMHEADER = (NativeMethods.NMHEADER)rMessage.GetLParam(typeof(NativeMethods.NMHEADER));
-            if (nMHEADER != null
-             && nMHEADER.nmhdr.code == NativeMethods.HDN_DIVIDERDBLCLICKA
-             && Columns != null
-             && Columns.Count > 0
-             && nMHEADER.iItem < Columns.Count)
+            var notifMsg = (NativeMethods.NMHEADER)rMessage.GetLParam(typeof(NativeMethods.NMHEADER));
+            if (notifMsg != null && notifMsg.nmhdr.code == NativeMethods.HDN_DIVIDERDBLCLICKA)
             {
-               ColumnHeader c = Columns[nMHEADER.iItem];
-               using (Graphics g = CreateGraphics())
+               int columnIndex = notifMsg.iItem;
+               bool isValidColumnIndex = Columns != null && Columns.Count > 0 && columnIndex < Columns.Count;
+               if (isValidColumnIndex && autoResizeColumnHeaderWidth(Columns[columnIndex]))
                {
-                  ColumnType? columnType = getColumnTypeByName(c.Text);
-                  if (columnType.HasValue)
-                  {
-                     if (columnType == ColumnType.Color)
-                     {
-                        c.Width = DefaultColorColumnWidth;
-                        return;
-                     }
-
-                     bool isSortedByThisColumn = getSortedByColumn() == columnType.Value;
-                     FontStyle fontStyle = isSortedByThisColumn ? FontStyle.Bold : FontStyle.Regular;
-                     using (Font columnHeaderFont = new Font(Font, fontStyle))
-                     {
-                        StringFormat noTrimmingFormat = new StringFormat() { Trimming = StringTrimming.None };
-
-                        float columnHeaderWidth = g.MeasureString(c.Text, columnHeaderFont,
-                           MaxAllowedWidth, noTrimmingFormat).Width;
-
-                        float maxSubItemWidth = Items
-                           .Cast<ListViewItem>()
-                           .Select(item => getSubItem(item, columnType.Value))
-                           .Max(subItem => g.MeasureString(((ListViewSubItemInfo)subItem.Tag).Text, Font,
-                              MaxAllowedWidth, noTrimmingFormat).Width);
-
-                        c.Width = Convert.ToInt32(Math.Ceiling(Math.Max(columnHeaderWidth, maxSubItemWidth)));
-                        return;
-                     }
-                  }
+                  return; // We did it. Do not pass message to default WndProc.
                }
             }
          }
@@ -910,9 +684,7 @@ namespace mrHelper.App.Controls
          }
 
          bool isSortedByThisColumn = e.ColumnIndex == getColumnByType(getSortedByColumn()).Index;
-         FontStyle fontStyle = isSortedByThisColumn ? FontStyle.Bold : FontStyle.Regular;
-
-         using (Font font = new Font(e.Font, fontStyle))
+         using (Font font = getColumnHeaderFont(isSortedByThisColumn))
          {
             if (e.ColumnIndex == getColumnByType(ColumnType.Color).Index)
             {
@@ -1416,7 +1188,7 @@ namespace mrHelper.App.Controls
          item.SubItems[columnHeader.Index].Tag = subItemInfo;
       }
 
-      private ListViewItem.ListViewSubItem getSubItem(ListViewItem item, ColumnType columnType)
+      private ListViewSubItemInfo getSubItemTag(ListViewItem item, ColumnType columnType)
       {
          ColumnHeader columnHeader = getColumnByType(columnType);
          if (columnHeader == null)
@@ -1424,12 +1196,7 @@ namespace mrHelper.App.Controls
             return null;
          }
 
-         return item.SubItems[columnHeader.Index];
-      }
-
-      private object getSubItemTag(ListViewItem item, ColumnType columnType)
-      {
-         return getSubItem(item, columnType)?.Tag;
+         return (ListViewSubItemInfo)item.SubItems[columnHeader.Index]?.Tag;
       }
 
       private void setListViewSubItemsTagsForSummary(ListViewItem item, FullMergeRequestKey fmk)
@@ -1799,6 +1566,245 @@ namespace mrHelper.App.Controls
          UrlHelper.OpenBrowser(info.Url);
       }
 
+      private bool autoResizeColumnHeaderWidth(ColumnHeader column)
+      {
+         ColumnType? columnType = getColumnTypeByName(column.Text);
+         if (columnType.HasValue)
+         {
+            column.Width = columnType == ColumnType.Color ? DefaultColorColumnWidth :
+               getColumnWidthByContent(column, columnType);
+            return true;
+         }
+         return false;
+      }
+
+      private int getColumnWidthByContent(ColumnHeader c, ColumnType? columnType)
+      {
+         const int MaxAllowedColumnWidth = 1000;
+
+         using (Graphics g = CreateGraphics())
+         {
+            StringFormat noTrimmingFormat = new StringFormat() { Trimming = StringTrimming.None };
+
+            float headerWidth = 0;
+            using (Font headerFont = getColumnHeaderFont(getSortedByColumn() == columnType.Value))
+            {
+               headerWidth = g.MeasureString(c.Text, headerFont, MaxAllowedColumnWidth, noTrimmingFormat).Width;
+            }
+
+            Font contentFont = this.Font;
+            float widestContentWidth = Items
+               .Cast<ListViewItem>()
+               .Select(item => getSubItemTag(item, columnType.Value))
+               .Max(subItem => g.MeasureString(subItem.Text, contentFont, MaxAllowedColumnWidth, noTrimmingFormat).Width);
+
+            return Convert.ToInt32(Math.Ceiling(Math.Max(headerWidth, widestContentWidth)));
+         }
+      }
+
+      private Font getColumnHeaderFont(bool isSortedByThisColumn)
+      {
+         FontStyle fontStyle = !isSortedByThisColumn ? FontStyle.Regular : FontStyle.Bold;
+         return new Font(this.Font, fontStyle);
+      }
+
+      private void setSortedByColumn(ColumnType columnType)
+      {
+         bool prevNeedShowGroups = needShowGroups();
+         if (getSortedByColumn() == columnType)
+         {
+            SortingDirection sortingDirection = getSortingDirection();
+            sortingDirection = sortingDirection == SortingDirection.Ascending ?
+               SortingDirection.Descending : SortingDirection.Ascending;
+            ConfigurationHelper.SetSortingDirection(Program.Settings, sortingDirection, getIdentity());
+         }
+         else
+         {
+            ColumnHeader columnHeader = getColumnByType(columnType);
+            ConfigurationHelper.SetSortedByColumn(Program.Settings, columnHeader.Text, getIdentity());
+         }
+
+         if (prevNeedShowGroups != needShowGroups())
+         {
+            if (needShowGroups())
+            {
+               createGroups();
+            }
+            else
+            {
+               Groups.Clear();
+            }
+            Items.Clear();
+            UpdateItems();
+         }
+
+         applySortModeFromConfiguration();
+         ensureSelectionIsVisible();
+         Invalidate(true);
+      }
+
+      private void applySortModeFromConfiguration()
+      {
+         var comparisonFunction = getComparisonFunction(getSortedByColumn(), getSortingDirection());
+         ListViewItemSorter = new ListViewItemComparer(comparisonFunction);
+      }
+
+      private void createGroups()
+      {
+         Debug.Assert(needShowGroups());
+         IEnumerable<string> projectNames = ConfigurationHelper.GetEnabledProjects(_hostname, Program.Settings);
+         foreach (string projectName in projectNames)
+         {
+            ProjectKey projectKey = new ProjectKey(_hostname, projectName);
+            createGroupForProject(projectKey, false);
+         }
+      }
+
+      private ColumnType? getColumnTypeByName(string columnTypeName)
+      {
+         if (columnTypeName == null)
+         {
+            return new ColumnType?();
+         }
+
+         ColumnHeader columnHeader = Columns
+            .Cast<ColumnHeader>()
+            .SingleOrDefault(x => x.Text == columnTypeName);
+         return columnHeader == null ? new ColumnType?() : (ColumnType)columnHeader.Tag;
+      }
+
+      private ColumnType getSortedByColumn()
+      {
+         const ColumnType DefaultColumnTypeForSorting = ColumnType.Color;
+
+         string columnTypeName = Program.Settings != null ?
+            ConfigurationHelper.GetSortedByColumn(Program.Settings, getIdentity()) : null;
+         ColumnType? columnType = getColumnTypeByName(columnTypeName);
+         return columnType == null ? DefaultColumnTypeForSorting : columnType.Value;
+      }
+
+      private SortingDirection getSortingDirection()
+      {
+         const SortingDirection DefaultSortingDirection = SortingDirection.Descending;
+
+         return Program.Settings == null
+            ? DefaultSortingDirection
+            : ConfigurationHelper.GetSortingDirection(Program.Settings, getIdentity());
+      }
+
+      private bool needShowGroups()
+      {
+         return getSortedByColumn() == ColumnType.Project;
+      }
+
+      private int compare(ListViewItem item1, ListViewItem item2, ColumnType columnType)
+      {
+         FullMergeRequestKey fmk1 = ((FullMergeRequestKey)item1.Tag);
+         FullMergeRequestKey fmk2 = ((FullMergeRequestKey)item2.Tag);
+         if (fmk1.MergeRequest == null)
+         {
+            return fmk2.MergeRequest == null ? 0 : -1;
+         }
+         else if (fmk2.MergeRequest == null)
+         {
+            return 1;
+         }
+
+         MergeRequestKey mrk1 = new MergeRequestKey(fmk1.ProjectKey, fmk1.MergeRequest.IId);
+         MergeRequestKey mrk2 = new MergeRequestKey(fmk2.ProjectKey, fmk2.MergeRequest.IId);
+         switch (columnType)
+         {
+            case ColumnType.IId:
+               {
+                  if (mrk1.IId == mrk2.IId)
+                  {
+                     Debug.Assert(fmk1.MergeRequest.Id != fmk2.MergeRequest.Id);
+                     return fmk1.MergeRequest.Id > fmk2.MergeRequest.Id ? 1 : -1;
+                  }
+                  return mrk1.IId > mrk2.IId ? 1 : -1;
+               }
+
+            case ColumnType.Activities:
+               {
+                  DateTime latestActivity1 = getLatestCommitTime(mrk1).HasValue
+                     ? getLatestCommitTime(mrk1).Value : fmk1.MergeRequest.Created_At;
+                  DateTime latestActivity2 = getLatestCommitTime(mrk2).HasValue
+                     ? getLatestCommitTime(mrk2).Value : fmk2.MergeRequest.Created_At;
+                  return latestActivity1 == latestActivity2 ? 0 : (latestActivity1 > latestActivity2 ? 1 : -1);
+               }
+
+            case ColumnType.Color:
+               {
+                  int colorOrder1 = getColorOrder(fmk1);
+                  int colorOrder2 = getColorOrder(fmk2);
+                  return colorOrder1 == colorOrder2 ? 0 : (colorOrder1 > colorOrder2 ? 1 : -1);
+               }
+
+            case ColumnType.Size:
+               {
+                  DiffStatistic? diffStatistic1 = _diffStatisticProvider?.GetStatistic(mrk1, out string _);
+                  DiffStatistic? diffStatistic2 = _diffStatisticProvider?.GetStatistic(mrk2, out string _);
+                  if (diffStatistic1.HasValue && diffStatistic2.HasValue)
+                  {
+                     int size1 = diffStatistic1.Value.Insertions + diffStatistic1.Value.Deletions;
+                     int size2 = diffStatistic2.Value.Insertions + diffStatistic2.Value.Deletions;
+                     return size1 == size2 ? 0 : (size1 > size2 ? 1 : -1);
+                  }
+                  return diffStatistic1.HasValue ? 1 : (diffStatistic2.HasValue ? -1 : 0);
+               }
+
+            case ColumnType.TotalTime:
+               {
+                  double? totalTime1 = _dataCache?.TotalTimeCache?.GetTotalTime(mrk1).Amount?.TotalSeconds;
+                  double? totalTime2 = _dataCache?.TotalTimeCache?.GetTotalTime(mrk2).Amount?.TotalSeconds;
+                  if (totalTime1.HasValue && totalTime2.HasValue)
+                  {
+                     return totalTime1 == totalTime2 ? 0 : (totalTime1 > totalTime2 ? 1 : -1);
+                  }
+                  return totalTime1.HasValue ? 1 : (totalTime2.HasValue ? -1 : 0);
+               }
+
+            default:
+               {
+                  ListViewSubItemInfo key1 = getSubItemTag(item1, columnType);
+                  ListViewSubItemInfo key2 = getSubItemTag(item2, columnType);
+                  return String.Compare(key1.Text, key2.Text, StringComparison.OrdinalIgnoreCase);
+               }
+         }
+      }
+
+      private Func<ListViewItem, ListViewItem, int> getComparisonFunction(
+         ColumnType columnType, SortingDirection sortingDirection)
+      {
+         columnType = needShowGroups() ? ColumnType.IId : columnType;
+         return (item1, item2) =>
+         {
+            ListViewSubItemInfo key1 = getSubItemTag(item1, columnType);
+            ListViewSubItemInfo key2 = getSubItemTag(item2, columnType);
+            if (key1 == null)
+            {
+               return key2 == null ? 0 : -1;
+            }
+            else if (key2 == null)
+            {
+               return 1;
+            }
+            int comparisonResult = compare(item1, item2, columnType);
+            if (comparisonResult == 0)
+            {
+               if (columnType == ColumnType.Color)
+               {
+                  comparisonResult = -compare(item1, item2, ColumnType.Author);
+               }
+               else
+               {
+                  comparisonResult = compare(item1, item2, ColumnType.IId);
+               }
+            }
+            return sortingDirection == SortingDirection.Ascending ? comparisonResult : -comparisonResult;
+         };
+      }
+
       private static Cursor getCursor(ListViewHitTestInfo hit)
       {
          if (hit.SubItem != null)
@@ -1828,8 +1834,6 @@ namespace mrHelper.App.Controls
       private static readonly string AllListViewRowsHint = "See all labels in tooltip";
 
       private static readonly int GroupHeaderHeight = 20; // found experimentally
-
-      private static readonly int MaxAllowedWidth = 1000;
 
       private static readonly int UnmuteTimerInterval = 60 * 1000; // 1 minute
       private readonly Timer _unmuteTimer = new Timer
