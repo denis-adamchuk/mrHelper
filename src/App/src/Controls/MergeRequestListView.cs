@@ -638,14 +638,13 @@ namespace mrHelper.App.Controls
          }
       }
 
-      protected override void WndProc(ref Message rMessage)
+      protected override void WndProc(ref Message message)
       {
-         if (rMessage.Msg == NativeMethods.WM_NOTIFY)
+         if (message.Msg == NativeMethods.WM_NOTIFY)
          {
-            var notifMsg = (NativeMethods.NMHEADER)rMessage.GetLParam(typeof(NativeMethods.NMHEADER));
-            if (notifMsg != null && notifMsg.nmhdr.code == NativeMethods.HDN_DIVIDERDBLCLICKA)
+            if (Win32Tools.IsDoubleClickOnDivider(WinFormsHelpers.GetNotifyMessageHeader(message)))
             {
-               int columnIndex = notifMsg.iItem;
+               int columnIndex = WinFormsHelpers.GetHeaderControlNotifyMessage(message).iItem;
                bool isValidColumnIndex = Columns != null && Columns.Count > 0 && columnIndex < Columns.Count;
                if (isValidColumnIndex && autoResizeColumnHeaderWidth(Columns[columnIndex]))
                {
@@ -654,7 +653,7 @@ namespace mrHelper.App.Controls
             }
          }
 
-         base.WndProc(ref rMessage);
+         base.WndProc(ref message);
       }
 
       protected override void OnColumnReordered(ColumnReorderedEventArgs e)

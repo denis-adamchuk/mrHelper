@@ -117,6 +117,26 @@ namespace mrHelper.CommonNative
          NativeMethods.SendMessage(hWnd, NativeMethods.LVM_SCROLL, IntPtr.Zero, (IntPtr)position);
       }
 
+      public static bool IsDoubleClickOnDivider(NativeMethods.NMHDR notif)
+      {
+         return notif != null
+            && (notif.code == NativeMethods.HDN_DIVIDERDBLCLICKA
+             || notif.code == NativeMethods.HDN_DIVIDERDBLCLICKW);
+      }
+
+      public static int GetListViewHeaderHeight(IntPtr listViewHandle)
+      {
+         IntPtr hwnd = NativeMethods.SendMessage(listViewHandle, NativeMethods.LVM_GETHEADER, IntPtr.Zero, IntPtr.Zero);
+         if (hwnd != null)
+         {
+            if (NativeMethods.GetWindowRect(hwnd, out NativeMethods.RECT rect))
+            {
+               return rect.Bottom - rect.Top;
+            }
+         }
+         return 0;
+      }
+
       private static void restoreWindow(IntPtr window)
       {
          int nCmdShow = NativeMethods.SW_SHOWNORMAL;

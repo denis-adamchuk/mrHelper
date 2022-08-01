@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using Microsoft.WindowsAPICodePack.Taskbar;
+using mrHelper.CommonNative;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,8 +15,18 @@ namespace mrHelper.CommonControls.Tools
    {
       public static bool TestListViewHeaderHit(ListView listView, Point screenPosition)
       {
-         return listView.Items.Count < 1
-             || listView.Items[0].Position.Y > listView.PointToClient(screenPosition).Y;
+         int headerHeight = Win32Tools.GetListViewHeaderHeight(listView.Handle);
+         return listView.PointToClient(screenPosition).Y <= headerHeight;
+      }
+
+      public static NativeMethods.NMHDR GetNotifyMessageHeader(Message msg)
+      {
+         return (NativeMethods.NMHDR)msg.GetLParam(typeof(NativeMethods.NMHDR));
+      }
+
+      public static NativeMethods.NMHEADER GetHeaderControlNotifyMessage(Message msg)
+      {
+         return (NativeMethods.NMHEADER)msg.GetLParam(typeof(NativeMethods.NMHEADER));
       }
 
       public static void SetListViewRowHeight(ListView listView, int maxLineCount)
