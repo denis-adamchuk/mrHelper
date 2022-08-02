@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using static System.Windows.Forms.ListViewItem;
 using mrHelper.CommonControls.Tools;
+using mrHelper.CommonNative;
 
 namespace mrHelper.App.Controls
 {
@@ -89,12 +90,22 @@ namespace mrHelper.App.Controls
          }
       }
 
+      // optimization: header height obtaining requires a sync call
+      private int _headerHeight = 0;
+
       public void CancelIfNeeded(Point screenPosition)
       {
-         bool atHeader = WinFormsHelpers.TestListViewHeaderHit(_listView, screenPosition);
+         // optimization -- see conditions in Cancel()
+         if (_headerHeight == 0)
+         {
+            _headerHeight = Win32Tools.GetListViewHeaderHeight(_listView.Handle);
+         }
+
+         bool atHeader = _listView.PointToClient(screenPosition).Y <= _headerHeight;
          bool atListView = isAnyCellHit(_listView.HitTest(_listView.PointToClient(screenPosition)));
          if (atListView && !atHeader)
          {
+            // don't cancel when screenPosition is within ListView (except its Header part)
             return;
          }
 
