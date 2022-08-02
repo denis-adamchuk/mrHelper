@@ -869,7 +869,8 @@ namespace mrHelper.App.Controls
       enum EColorSchemeItemsKind
       {
          All,
-         Preview
+         Preview,
+         Sorting
       }
 
       private IEnumerable<ColorSchemeItem> getColorSchemeItems(EColorSchemeItemsKind kind)
@@ -881,6 +882,9 @@ namespace mrHelper.App.Controls
 
             case EColorSchemeItemsKind.Preview:
                return getColorSchemeItems(EColorSchemeItemsKind.All).Where(item => item.UseForPreview);
+
+            case EColorSchemeItemsKind.Sorting:
+               return getColorSchemeItems(EColorSchemeItemsKind.All).Where(item => item.UseForSorting);
 
             default:
                Debug.Assert(false);
@@ -1187,8 +1191,8 @@ namespace mrHelper.App.Controls
 
       private int getColorOrder(FullMergeRequestKey fmk)
       {
-         ColorSchemeItem[] items = getColorSchemeItems(EColorSchemeItemsKind.Preview).ToArray();
-         Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
+         Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Sorting);
+         ColorSchemeItem[] items = getColorSchemeItems(EColorSchemeItemsKind.Sorting).ToArray();
          for (int iColor = 0; iColor < items.Length; ++iColor)
          {
             if (color == items[iColor].Color)
