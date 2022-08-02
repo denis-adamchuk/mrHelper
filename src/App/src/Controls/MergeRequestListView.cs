@@ -302,6 +302,8 @@ namespace mrHelper.App.Controls
 
       internal void UpdateItems()
       {
+         initColorOrderCache();
+
          if (needShowGroups())
          {
             updateItemsWithGroups();
@@ -311,6 +313,8 @@ namespace mrHelper.App.Controls
             updateItemsWithoutGroups();
          }
          Sort();
+
+         clearColorOrderCache();
       }
 
       internal void updateItemsWithoutGroups()
@@ -1160,6 +1164,27 @@ namespace mrHelper.App.Controls
          setSubItemTag(item, ColumnType.Project, x => fmk.ProjectKey.ProjectName);
       }
 
+      private Dictionary<ListViewItem, int> _colorOrderCache = new Dictionary<ListViewItem, int>();
+      private int getColorOrder(ListViewItem item)
+      {
+         return _colorOrderCache.TryGetValue(item, out int value)
+            ? value : getColorOrder(((FullMergeRequestKey)item.Tag));
+      }
+
+      private void initColorOrderCache()
+      {
+         foreach (ListViewItem item in Items)
+         {
+            int colorOrder = getColorOrder(item);
+            _colorOrderCache[item] = colorOrder;
+         }
+      }
+
+      private void clearColorOrderCache()
+      {
+         _colorOrderCache.Clear();
+      }
+
       private int getColorOrder(FullMergeRequestKey fmk)
       {
          ColorSchemeItem[] items = getColorSchemeItems(EColorSchemeItemsKind.Preview).ToArray();
@@ -1734,8 +1759,8 @@ namespace mrHelper.App.Controls
 
             case ColumnType.Color:
                {
-                  int colorOrder1 = getColorOrder(fmk1);
-                  int colorOrder2 = getColorOrder(fmk2);
+                  int colorOrder1 = getColorOrder(item1);
+                  int colorOrder2 = getColorOrder(item2);
                   return colorOrder1 == colorOrder2 ? 0 : (colorOrder1 > colorOrder2 ? 1 : -1);
                }
 
