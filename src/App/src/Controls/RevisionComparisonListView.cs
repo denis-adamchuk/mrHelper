@@ -47,8 +47,7 @@ namespace mrHelper.App.Controls
       protected override void OnMouseLeave(EventArgs e)
       {
          // this callback is called not only when mouse leaves the list view so let's check if we need to cancel tooltip
-         ListViewHitTestInfo hit = HitTest(this.PointToClient(Cursor.Position));
-         _toolTip.CancelIfNeeded(hit);
+         _toolTip.CancelIfNeeded(Cursor.Position);
 
          base.OnMouseLeave(e);
       }

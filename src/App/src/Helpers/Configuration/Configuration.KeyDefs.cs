@@ -204,6 +204,24 @@ namespace mrHelper.App.Helpers
       private static readonly string Notifications_Service_KeyName      = "Notifications_Service";
       private static readonly bool   Notifications_Service_DefaultValue = false;
 
+      private static readonly string ListViewMergeRequestsSortedByColumnNameKeyName       = "LVMR_SortedByColumnName";
+      private static readonly string ListViewMergeRequestsSortedByColumnNameDefaultValue  = "Color";
+
+      private static readonly string ListViewFoundMergeRequestsSortedByColumnNameKeyName       = "LVFMR_SortedByColumnName";
+      private static readonly string ListViewFoundMergeRequestsSortedByColumnNameDefaultValue  = "Color";
+
+      private static readonly string ListViewRecentMergeRequestsSortedByColumnNameKeyName       = "LVRMR_SortedByColumnName";
+      private static readonly string ListViewRecentMergeRequestsSortedByColumnNameDefaultValue  = "Color";
+
+      private static readonly string ListViewMergeRequestsSortingDirectionKeyName       = "LVMR_SortingDirection";
+      private static readonly string ListViewMergeRequestsSortingDirectionDefaultValue  = "Descending";
+
+      private static readonly string ListViewFoundMergeRequestsSortingDirectionKeyName       = "LVFMR_SortingDirection";
+      private static readonly string ListViewFoundMergeRequestsSortingDirectionDefaultValue  = "Descending";
+
+      private static readonly string ListViewRecentMergeRequestsSortingDirectionKeyName       = "LVRMR_SortingDirection";
+      private static readonly string ListViewRecentMergeRequestsSortingDirectionDefaultValue  = "Descending";
+
       private static readonly string ListViewMergeRequestsColumnWidthsKeyName           = "LVMR_ColWidths";
       private static readonly string ListViewMergeRequestsColumnWidthsDefaultValue      = String.Empty;
       private static readonly int    ListViewMergeRequestsSingleColumnWidthDefaultValue = 100;

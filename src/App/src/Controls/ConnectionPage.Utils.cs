@@ -192,20 +192,6 @@ namespace mrHelper.App.Controls
 
       // List View
 
-      private void initializeListViewGroups(EDataCacheType mode)
-      {
-         Controls.MergeRequestListView listView = getListView(mode);
-         listView.Items.Clear();
-         listView.Groups.Clear();
-
-         IEnumerable<string> projectnames = ConfigurationHelper.GetEnabledProjects(HostName, Program.Settings);
-         IEnumerable<ProjectKey> projectKeys = projectnames.Select(name => new ProjectKey(HostName, name));
-         foreach (ProjectKey projectKey in projectKeys)
-         {
-            listView.CreateGroupForProject(projectKey, false);
-         }
-      }
-
       private void onDataCacheSelectionChanged()
       {
          forEachListView(listView => listView.DeselectAllListViewItems());
@@ -284,7 +270,6 @@ namespace mrHelper.App.Controls
          }
 
          MergeRequestListView listView = getListView(mode);
-         listView.UpdateGroups();
          listView.UpdateItems();
 
          switch (mode)

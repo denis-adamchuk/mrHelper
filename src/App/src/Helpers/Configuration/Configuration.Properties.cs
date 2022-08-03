@@ -345,6 +345,18 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(Notifications_Service_KeyName, value);
       }
 
+      public string ListViewMergeRequestsSortingDirection
+      {
+         get => getValue(ListViewMergeRequestsSortingDirectionKeyName, ListViewMergeRequestsSortingDirectionDefaultValue);
+         set => setValue(ListViewMergeRequestsSortingDirectionKeyName, value);
+      }
+
+      public string ListViewMergeRequestsSortedByColumnName
+      {
+         get => getValue(ListViewMergeRequestsSortedByColumnNameKeyName, ListViewMergeRequestsSortedByColumnNameDefaultValue);
+         set => setValue(ListViewMergeRequestsSortedByColumnNameKeyName, value);
+      }
+
       public Dictionary<string, int> ListViewMergeRequestsColumnWidths
       {
          get => getStringToIntDictionary(ListViewMergeRequestsColumnWidthsKeyName,
@@ -363,6 +375,18 @@ namespace mrHelper.App.Helpers
          set => setStringToIntDictionary(ListViewMergeRequestsDisplayIndicesKeyName, value);
       }
 
+      public string ListViewFoundMergeRequestsSortingDirection
+      {
+         get => getValue(ListViewFoundMergeRequestsSortingDirectionKeyName, ListViewFoundMergeRequestsSortingDirectionDefaultValue);
+         set => setValue(ListViewFoundMergeRequestsSortingDirectionKeyName, value);
+      }
+
+      public string ListViewFoundMergeRequestsSortedByColumnName
+      {
+         get => getValue(ListViewFoundMergeRequestsSortedByColumnNameKeyName, ListViewFoundMergeRequestsSortedByColumnNameDefaultValue);
+         set => setValue(ListViewFoundMergeRequestsSortedByColumnNameKeyName, value);
+      }
+
       public Dictionary<string, int> ListViewFoundMergeRequestsColumnWidths
       {
          get => getStringToIntDictionary(ListViewFoundMergeRequestsColumnWidthsKeyName,
@@ -379,6 +403,18 @@ namespace mrHelper.App.Helpers
                                          -1,
                                          -1);
          set => setStringToIntDictionary(ListViewFoundMergeRequestsDisplayIndicesKeyName, value);
+      }
+
+      public string ListViewRecentMergeRequestsSortingDirection
+      {
+         get => getValue(ListViewRecentMergeRequestsSortingDirectionKeyName, ListViewRecentMergeRequestsSortingDirectionDefaultValue);
+         set => setValue(ListViewRecentMergeRequestsSortingDirectionKeyName, value);
+      }
+
+      public string ListViewRecentMergeRequestsSortedByColumnName
+      {
+         get => getValue(ListViewRecentMergeRequestsSortedByColumnNameKeyName, ListViewRecentMergeRequestsSortedByColumnNameDefaultValue);
+         set => setValue(ListViewRecentMergeRequestsSortedByColumnNameKeyName, value);
       }
 
       public Dictionary<string, int> ListViewRecentMergeRequestsColumnWidths

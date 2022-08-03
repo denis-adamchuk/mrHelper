@@ -14,7 +14,6 @@ using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace mrHelper.App.Controls
 {
-
    internal partial class ConnectionPage
    {
       public ConnectionPage(
@@ -35,7 +34,8 @@ namespace mrHelper.App.Controls
          bool integratedInGitExtensions,
          bool integratedInSourceTree,
          ColorScheme colorScheme,
-         UserDefinedSettings.OldFilterSettings oldFilter)
+         UserDefinedSettings.OldFilterSettings oldFilter,
+         ITimeTrackerHolder timeTrackerHolder)
       {
          HostName = hostname;
          _keywords = keywords;
@@ -43,6 +43,7 @@ namespace mrHelper.App.Controls
          _integratedInGitExtensions = integratedInGitExtensions;
          _integratedInSourceTree = integratedInSourceTree;
          _toolTip = toolTip;
+         _timeTrackerHolder = timeTrackerHolder;
 
          _recentMergeRequests = recentMergeRequests;
          _reviewedRevisions = reviewedRevisions;
@@ -58,12 +59,18 @@ namespace mrHelper.App.Controls
          listViewLiveMergeRequests.SetCollapsedProjects(collapsedProjectsLive);
          listViewLiveMergeRequests.SetMutedMergeRequests(mutedMergeRequests);
          listViewLiveMergeRequests.SetOpenMergeRequestUrlCallback(openBrowserForMergeRequest);
+         listViewLiveMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
+         listViewLiveMergeRequests.Initialize(hostname);
 
          listViewFoundMergeRequests.SetIdentity(Constants.SearchListViewName);
          listViewFoundMergeRequests.SetCollapsedProjects(collapsedProjectsSearch);
+         listViewFoundMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
+         listViewFoundMergeRequests.Initialize(hostname);
 
          listViewRecentMergeRequests.SetIdentity(Constants.RecentListViewName);
          listViewRecentMergeRequests.SetCollapsedProjects(collapsedProjectsRecent);
+         listViewRecentMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
+         listViewRecentMergeRequests.Initialize(hostname);
 
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
 

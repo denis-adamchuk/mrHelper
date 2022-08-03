@@ -157,10 +157,10 @@ namespace mrHelper.App.Controls
             coll.Select(item => String.IsNullOrEmpty(item) ? String.Empty : _expressionResolver.Resolve(item));
 
          IEnumerable<string> resolvedVisibleIf = resolveCollection(command.VisibleIf.Split(','));
-         var isVisible = GitLabClient.Helpers.CheckConditions(resolvedVisibleIf, approvedBy, labels, author, false);
+         var isVisible = GitLabClient.Helpers.CheckConditions(resolvedVisibleIf, approvedBy, labels, author, false, false);
 
          IEnumerable<string> resolvedEnabledIf = resolveCollection(command.EnabledIf.Split(','));
-         var isEnabled = GitLabClient.Helpers.CheckConditions(resolvedEnabledIf, approvedBy, labels, author, false);
+         var isEnabled = GitLabClient.Helpers.CheckConditions(resolvedEnabledIf, approvedBy, labels, author, false, false);
 
          return new CommandState(isEnabled, isVisible);
       }
@@ -276,7 +276,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      internal ITimeTracker GetTimeTracker()
+      internal ITimeTracker CreateTimeTracker()
       {
          MergeRequestKey? mrkOpt = getMergeRequestKey(null);
          if (!mrkOpt.HasValue)

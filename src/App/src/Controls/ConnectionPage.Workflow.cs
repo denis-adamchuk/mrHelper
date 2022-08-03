@@ -228,7 +228,7 @@ namespace mrHelper.App.Controls
 
       private void onLiveDataCacheConnecting(string hostname)
       {
-         initializeListViewGroups(EDataCacheType.Live);
+         getListView(EDataCacheType.Live).Items.Clear();
 
          addOperationRecord(String.Format("Loading merge requests from {0} has started", hostname));
 

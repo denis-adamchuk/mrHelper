@@ -5,6 +5,7 @@ namespace mrHelper.App.Controls
    public enum ColumnType
    {
       IId,
+      Color,
       Author,
       Title,
       Labels,
@@ -16,7 +17,8 @@ namespace mrHelper.App.Controls
       State,
       Resolved,
       RefreshTime,
-      Activities
+      Activities,
+      Project
    }
 
    public class MergeRequestListViewSubItemInfo
@@ -28,9 +30,9 @@ namespace mrHelper.App.Controls
          ColumnType = columnType;
       }
 
-      public bool Clickable => _getUrl() != String.Empty;
-      public string Text => _getText(false);
-      public string Url => _getUrl();
+      public bool Clickable => Url != String.Empty;
+      public string Text => _getText?.Invoke(false) ?? String.Empty;
+      public string Url => _getUrl?.Invoke() ?? String.Empty;
       public string TooltipText => !String.IsNullOrWhiteSpace(Url) ? Url : _getText(true);
       public ColumnType ColumnType { get; }
 

@@ -100,6 +100,29 @@ namespace mrHelper.CommonNative
          public IntPtr lpData;
       }
 
+      public const int WM_NOTIFY = 0x004E;
+
+      // https://referencesource.microsoft.com/#System.Windows.Forms/winforms/Managed/System/WinForms/NativeMethods.cs,7acb2432aa13375f
+      public const int HDN_DIVIDERDBLCLICKA = -305;
+      public const int HDN_DIVIDERDBLCLICKW = -325;
+
+      [StructLayout(LayoutKind.Sequential)]
+      public class NMHDR
+      {
+         public IntPtr hwndFrom;
+         public int idFrom;
+         public int code;
+      }
+
+      [StructLayout(LayoutKind.Sequential)]
+      public class NMHEADER
+      {
+         public NMHDR nmhdr;
+         public int iItem = 0;
+         public int iButton = 0;
+         public IntPtr pItem = IntPtr.Zero;    // HDITEM*
+      }
+
       /// <summary>
       /// Sends the specified message to a window or windows.
       /// </summary>
@@ -228,6 +251,7 @@ namespace mrHelper.CommonNative
 
       internal const int LVM_FIRST = 0x1000;
       internal const int LVM_SCROLL = LVM_FIRST + 20;
+      internal const int LVM_GETHEADER = LVM_FIRST + 31;
       internal const int SBS_HORZ = 0;
       internal const int SBS_VERT = 1;
 
@@ -236,6 +260,18 @@ namespace mrHelper.CommonNative
 
       [DllImport("user32.dll")]
       public static extern bool LockWindowUpdate(IntPtr Handle);
+
+      [Serializable, StructLayout(LayoutKind.Sequential)]
+      public struct RECT 
+      {
+          public int Left;
+          public int Top;
+          public int Right;
+          public int Bottom;
+      }
+
+      [DllImport("user32.dll")]
+      public static extern bool GetWindowRect(IntPtr Handle, out RECT rect);
 
       /// <summary>
       /// A set of constants to handle window activation

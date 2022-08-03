@@ -15,62 +15,54 @@ using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.CommonNative;
 using mrHelper.GitLabClient;
+using static mrHelper.App.Helpers.ConfigurationHelper;
 using ListViewSubItemInfo = mrHelper.App.Controls.MergeRequestListViewSubItemInfo;
 
 namespace mrHelper.App.Controls
 {
    class ListViewItemComparer : IComparer
    {
-      public ListViewItemComparer()
+      public ListViewItemComparer(Func<ListViewItem, ListViewItem, int> comparisonFunction)
       {
+         this._comparisonFunction = comparisonFunction;
       }
 
       public int Compare(object x, object y)
       {
          ListViewItem item1 = x as ListViewItem;
          ListViewItem item2 = y as ListViewItem;
-         FullMergeRequestKey key1 = (FullMergeRequestKey)item1.Tag;
-         FullMergeRequestKey key2 = (FullMergeRequestKey)item2.Tag;
-         if (key1.MergeRequest == null && key2.MergeRequest == null)
-         {
-            return 0;
-         }
-         else if (key1.MergeRequest == null && key2.MergeRequest != null)
-         {
-            return -1;
-         }
-         else if (key1.MergeRequest != null && key2.MergeRequest == null)
-         {
-            return 1;
-         }
-         Debug.Assert(key1.MergeRequest != null && key2.MergeRequest != null);
-         int id1 = key1.MergeRequest.Id;
-         int id2 = key2.MergeRequest.Id;
-         if (id1 > id2)
-         {
-            return -1;
-         }
-         if (id1 < id2)
-         {
-            return 1;
-         }
-         return 0;
+         return _comparisonFunction(item1, item2);
       }
+
+      private readonly Func<ListViewItem, ListViewItem, int> _comparisonFunction;
    }
 
    internal partial class MergeRequestListView : ListViewEx
    {
+      internal static int DefaultColorColumnWidth = 20;
+
       internal event Action<ListView> ContentChanged;
 
       public MergeRequestListView()
       {
-         ListViewItemSorter = new ListViewItemComparer();
          OwnerDraw = true;
          _toolTip = new ListViewToolTip(this,
             getText, getToolTipText, getSubItemStringFormatFlags, getBounds, getForceShowToolTip);
          Tag = "DesignTimeName";
          _unmuteTimer.Tick += onUnmuteTimerTick;
          cleanUpMutedMergeRequests();
+      }
+
+      internal void Initialize(string hostname)
+      {
+         _hostname = hostname;
+
+         if (needShowGroups())
+         {
+            createGroups();
+         }
+
+         applySortModeFromConfiguration();
       }
 
       internal void SetDiffStatisticProvider(IDiffStatisticProvider diffStatisticProvider)
@@ -120,6 +112,11 @@ namespace mrHelper.App.Controls
       internal void SetOpenMergeRequestUrlCallback(Action<MergeRequestKey, string> callback)
       {
          _openMergeRequestUrlCallback = callback;
+      }
+
+      internal void SetTimeTrackingCheckingCallback(Func<MergeRequestKey, bool> callback)
+      {
+         _timeTrackingCheckingCallback = callback;
       }
 
       internal void SetColorScheme(ColorScheme colorScheme)
@@ -204,33 +201,44 @@ namespace mrHelper.App.Controls
             return false;
          }
 
-         // selected an item from the proper group
-         foreach (ListViewGroup group in Groups)
+         if (needShowGroups())
          {
-            if (mrk.Value.ProjectKey.MatchProject(group.Name) && group.Items.Count > 0)
+            // selected an item from the proper group
+            foreach (ListViewGroup group in Groups)
             {
-               group.Items[0].Selected = true;
-               ensureSelectionIsVisible();
-               return true;
+               if (mrk.Value.ProjectKey.MatchProject(group.Name) && group.Items.Count > 0)
+               {
+                  group.Items[0].Selected = true;
+                  ensureSelectionIsVisible();
+                  return true;
+               }
+            }
+
+            // select whatever
+            foreach (ListViewGroup group in Groups)
+            {
+               if (group.Items.Count > 0)
+               {
+                  group.Items[0].Selected = true;
+                  ensureSelectionIsVisible();
+                  return true;
+               }
             }
          }
-
-         // select whatever
-         foreach (ListViewGroup group in Groups)
+         else if (Items.Count > 0)
          {
-            if (group.Items.Count > 0)
-            {
-               group.Items[0].Selected = true;
-               ensureSelectionIsVisible();
-               return true;
-            }
+            Items[0].Selected = true;
+            ensureSelectionIsVisible();
+            return true;
          }
 
          return false;
       }
 
-      internal void CreateGroupForProject(ProjectKey projectKey, bool isSortNeeded)
+      internal void createGroupForProject(ProjectKey projectKey, bool isSortNeeded)
       {
+         Debug.Assert(needShowGroups());
+
          ListViewGroup group = new ListViewGroup(projectKey.ProjectName, projectKey.ProjectName)
          {
             Tag = projectKey
@@ -256,15 +264,15 @@ namespace mrHelper.App.Controls
          Groups.Insert(indexToInsert, group);
       }
 
-      internal void UpdateGroups()
+      internal void updateGroups()
       {
-         IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
-         if (mergeRequestCache == null)
+         if (!needShowGroups())
          {
             return;
          }
 
-         BeginUpdate();
+         IMergeRequestCache mergeRequestCache = _dataCache.MergeRequestCache;
+         Debug.Assert(mergeRequestCache != null);
 
          // Add missing project groups
          IEnumerable<ProjectKey> allProjects = mergeRequestCache.GetProjects();
@@ -272,7 +280,7 @@ namespace mrHelper.App.Controls
          {
             if (!Groups.Cast<ListViewGroup>().Any(x => projectKey.Equals((ProjectKey)(x.Tag))))
             {
-               CreateGroupForProject(projectKey, true);
+               createGroupForProject(projectKey, true);
             }
          }
 
@@ -285,8 +293,6 @@ namespace mrHelper.App.Controls
                Groups.Remove(group);
             }
          }
-
-         EndUpdate();
       }
 
       internal bool IsGroupCollapsed(ProjectKey projectKey)
@@ -295,6 +301,75 @@ namespace mrHelper.App.Controls
       }
 
       internal void UpdateItems()
+      {
+         initColorOrderCache();
+
+         if (needShowGroups())
+         {
+            updateItemsWithGroups();
+         }
+         else
+         {
+            updateItemsWithoutGroups();
+         }
+         Sort();
+
+         clearColorOrderCache();
+      }
+
+      internal void updateItemsWithoutGroups()
+      {
+         IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
+         if (mergeRequestCache == null)
+         {
+            return;
+         }
+
+         BeginUpdate();
+
+         // Add missing merge requests and update existing ones
+         foreach (FullMergeRequestKey fmk in getAllMergeRequests())
+         {
+            ListViewItem item = Items.Cast<ListViewItem>().FirstOrDefault(
+               x => ((FullMergeRequestKey)x.Tag).Equals(fmk)); // item=`null` if not found
+            if (item == null)
+            {
+               item = createListViewMergeRequestItem(fmk);
+               Items.Add(item);
+            }
+            else
+            {
+               item.Tag = fmk;
+            }
+            setListViewSubItemsTags(item, fmk);
+         }
+
+         // Remove deleted merge requests
+         for (int index = Items.Count - 1; index >= 0; --index)
+         {
+            FullMergeRequestKey fmk = (FullMergeRequestKey)Items[index].Tag;
+            if (!getAllProjectItemsFromCache(fmk.ProjectKey).Any(x => x.MergeRequest.IId == fmk.MergeRequest.IId))
+            {
+               Items.RemoveAt(index);
+            }
+         }
+
+         // Hide filtered ones
+         for (int index = Items.Count - 1; index >= 0; --index)
+         {
+            FullMergeRequestKey fmk = (FullMergeRequestKey)Items[index].Tag;
+            if (!doesMatchFilter(fmk.MergeRequest))
+            {
+               Items.RemoveAt(index);
+            }
+         }
+
+         recalcRowHeightForMergeRequestListView();
+
+         EndUpdate();
+      }
+
+      internal void updateItemsWithGroups()
       {
          IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
          if (mergeRequestCache == null)
@@ -306,6 +381,8 @@ namespace mrHelper.App.Controls
 
          BeginUpdate();
 
+         updateGroups();
+
          // Add missing merge requests and update existing ones
          foreach (ProjectKey projectKey in projectKeys)
          {
@@ -313,7 +390,7 @@ namespace mrHelper.App.Controls
             {
                continue;
             }
-            foreach (FullMergeRequestKey fmk in getAllProjectItems(projectKey))
+            foreach (FullMergeRequestKey fmk in getAllProjectItemsFromCache(projectKey))
             {
                ListViewItem item = Items.Cast<ListViewItem>().FirstOrDefault(
                   x => ((FullMergeRequestKey)x.Tag).Equals(fmk)); // item=`null` if not found
@@ -358,7 +435,7 @@ namespace mrHelper.App.Controls
                FullMergeRequestKey fmk = new FullMergeRequestKey(getGroupProjectKey(group), null);
                ListViewItem item = createListViewMergeRequestItem(fmk);
                Items.Add(item);
-               setListViewSubItemsTagsForSummary(item);
+               setListViewSubItemsTagsForSummary(item, fmk);
             }
          }
 
@@ -367,7 +444,7 @@ namespace mrHelper.App.Controls
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)Items[index].Tag;
             if (!isGroupCollapsed(fmk.ProjectKey)
-             && !getAllProjectItems(fmk.ProjectKey).Any(x => x.MergeRequest.IId == fmk.MergeRequest.IId))
+             && !getAllProjectItemsFromCache(fmk.ProjectKey).Any(x => x.MergeRequest.IId == fmk.MergeRequest.IId))
             {
                Items.RemoveAt(index);
             }
@@ -499,8 +576,7 @@ namespace mrHelper.App.Controls
       protected override void OnMouseLeave(EventArgs e)
       {
          // this callback is called not only when mouse leaves the list view so let's check if we need to cancel tooltip
-         ListViewHitTestInfo hit = HitTest(this.PointToClient(Cursor.Position));
-         _toolTip.CancelIfNeeded(hit);
+         _toolTip.CancelIfNeeded(Cursor.Position);
 
          base.OnMouseLeave(e);
       }
@@ -516,14 +592,17 @@ namespace mrHelper.App.Controls
 
       protected override void OnMouseDown(MouseEventArgs e)
       {
-         int headerHeight = LogicalToDeviceUnits(GroupHeaderHeight);
          ListViewHitTestInfo testAtCursor = HitTest(e.Location);
-         ListViewHitTestInfo testBelowCursor = HitTest(e.Location.X, e.Location.Y + headerHeight);
-         if (testAtCursor.Item == null && testBelowCursor.Item != null)
+         if (needShowGroups())
          {
-            ProjectKey projectKey = getGroupProjectKey(testBelowCursor.Item.Group);
-            setGroupCollapsing(projectKey, !isGroupCollapsed(projectKey));
-            return;
+            int headerHeight = LogicalToDeviceUnits(GroupHeaderHeight);
+            ListViewHitTestInfo testBelowCursor = HitTest(e.Location.X, e.Location.Y + headerHeight);
+            if (testAtCursor.Item == null && testBelowCursor.Item != null)
+            {
+               ProjectKey projectKey = getGroupProjectKey(testBelowCursor.Item.Group);
+               setGroupCollapsing(projectKey, !isGroupCollapsed(projectKey));
+               return;
+            }
          }
          onUrlClick(testAtCursor);
          base.OnMouseDown(e);
@@ -536,7 +615,7 @@ namespace mrHelper.App.Controls
          {
             GetContextMenu()?.LaunchDefaultAction();
          }
-         else
+         else if (needShowGroups())
          {
             ListViewHitTestInfo testAtCursor = HitTest(e.Location);
             ProjectKey projectKey = getGroupProjectKey(testAtCursor.Item.Group);
@@ -547,6 +626,13 @@ namespace mrHelper.App.Controls
          }
       }
 
+      protected override void OnColumnClick(ColumnClickEventArgs e)
+      {
+         base.OnColumnClick(e);
+         ColumnType columnType = (ColumnType)Columns[e.Column].Tag;
+         setSortedByColumn(columnType);
+      }
+
       protected override void OnColumnWidthChanged(ColumnWidthChangedEventArgs e)
       {
          base.OnColumnWidthChanged(e);
@@ -554,6 +640,24 @@ namespace mrHelper.App.Controls
          {
             saveColumnWidths();
          }
+      }
+
+      protected override void WndProc(ref Message message)
+      {
+         if (message.Msg == NativeMethods.WM_NOTIFY)
+         {
+            if (Win32Tools.IsDoubleClickOnDivider(WinFormsHelpers.GetNotifyMessageHeader(message)))
+            {
+               int columnIndex = WinFormsHelpers.GetHeaderControlNotifyMessage(message).iItem;
+               bool isValidColumnIndex = Columns != null && Columns.Count > 0 && columnIndex < Columns.Count;
+               if (isValidColumnIndex && autoResizeColumnHeaderWidth(Columns[columnIndex]))
+               {
+                  return; // We did it. Do not pass message to default WndProc.
+               }
+            }
+         }
+
+         base.WndProc(ref message);
       }
 
       protected override void OnColumnReordered(ColumnReorderedEventArgs e)
@@ -577,7 +681,25 @@ namespace mrHelper.App.Controls
       protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
       {
          base.OnDrawColumnHeader(e);
-         e.DrawDefault = true;
+         if (e.Header.ListView == null)
+         {
+            return;
+         }
+
+         bool isSortedByThisColumn = e.ColumnIndex == getColumnByType(getSortedByColumn()).Index;
+         using (Font font = getColumnHeaderFont(isSortedByThisColumn))
+         {
+            if (e.ColumnIndex == getColumnByType(ColumnType.Color).Index)
+            {
+               Color? penColor = isSortedByThisColumn ? Color.Black : new Color?();
+               Color fillColor = GetSummaryColor() ?? Color.Gray;
+               drawEllipseForIId(e.Graphics, e.Bounds, fillColor, font, penColor);
+            }
+            else
+            {
+               e.Graphics.DrawString(e.Header.Text, font, Brushes.Black, e.Bounds);
+            }
+         }
       }
 
       protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
@@ -608,14 +730,10 @@ namespace mrHelper.App.Controls
          };
          string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
          bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
-         if (columnType == ColumnType.IId)
+         if (columnType == ColumnType.Color)
          {
-            FontStyle fontStyle = isClickable ? FontStyle.Underline : FontStyle.Regular;
-            using (Font font = new Font(e.Item.ListView.Font, fontStyle))
-            {
-               e.Graphics.DrawString(text, font, Brushes.Blue, bounds, format);
-               drawEllipseForIId(e.Graphics, format, bounds, fmk, font);
-            }
+            Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
+            drawEllipseForIId(e.Graphics, bounds, color, e.Item.ListView.Font, null);
          }
          else if (isClickable)
          {
@@ -661,7 +779,8 @@ namespace mrHelper.App.Controls
             || columnType == ColumnType.SourceBranch
             || columnType == ColumnType.TargetBranch
             || columnType == ColumnType.Jira
-            || columnType == ColumnType.Author;
+            || columnType == ColumnType.Author
+            || columnType == ColumnType.Project;
          bool needWordWrap = isWrappableColumnItem && Program.Settings.WordWrapLongRows;
          return needWordWrap ? StringFormatFlags.LineLimit : StringFormatFlags.NoWrap;
       }
@@ -704,7 +823,7 @@ namespace mrHelper.App.Controls
       {
          MergeRequestListViewContextMenu contextMenu = ((MergeRequestListViewContextMenu)(sender));
          FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
-         if (selectedMergeRequest == null)
+         if (WinFormsHelpers.TestListViewHeaderHit(this, Cursor.Position) || selectedMergeRequest == null)
          {
             contextMenu.DisableAll();
          }
@@ -719,27 +838,30 @@ namespace mrHelper.App.Controls
          _toolTip.Cancel();
       }
 
-      private void drawEllipseForIId(Graphics g, StringFormat format,
-         Rectangle bounds, FullMergeRequestKey fmk, Font font)
+      private void drawEllipseForIId(Graphics g, Rectangle bounds, Color fillColor, Font font, Color? penColor)
       {
-         int longestIId = getMatchingFilterMergeRequests()
-            .OrderBy(mrk => mrk.MergeRequest.IId)
-            .LastOrDefault().MergeRequest?.IId ?? 0;
-         SizeF textSize = g.MeasureString(longestIId.ToString(), font, bounds.Width, format);
+         SizeF textSize = g.MeasureString("A", font, bounds.Width);
          float ellipseWidth = (float)(textSize.Height - 0.30 * textSize.Height); // 30% less
          float ellipseHeight = ellipseWidth;
          float ellipsePaddingX = 5;
-         float ellipseOffsetX = textSize.Width;
+         float ellipseOffsetX = 0;
          float ellipseX = ellipseOffsetX + ellipsePaddingX;
          float ellipseY = (textSize.Height - ellipseHeight) / 2;
          if (bounds.Width > ellipseX + ellipseWidth)
          {
-            Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
-            using (Brush ellipseBrush = new SolidBrush(color))
+            using (Brush ellipseBrush = new SolidBrush(fillColor))
             {
                RectangleF ellipseRect = new RectangleF(
                   bounds.X + ellipseX, bounds.Y + ellipseY, ellipseWidth, ellipseHeight);
                g.FillEllipse(ellipseBrush, ellipseRect);
+
+               if (penColor.HasValue)
+               {
+                  using (Pen ellipsePen = new Pen(penColor.Value, 2))
+                  {
+                     g.DrawEllipse(ellipsePen, ellipseRect);
+                  }
+               }
             }
          }
       }
@@ -747,7 +869,8 @@ namespace mrHelper.App.Controls
       enum EColorSchemeItemsKind
       {
          All,
-         Preview
+         Preview,
+         Sorting
       }
 
       private IEnumerable<ColorSchemeItem> getColorSchemeItems(EColorSchemeItemsKind kind)
@@ -759,6 +882,9 @@ namespace mrHelper.App.Controls
 
             case EColorSchemeItemsKind.Preview:
                return getColorSchemeItems(EColorSchemeItemsKind.All).Where(item => item.UseForPreview);
+
+            case EColorSchemeItemsKind.Sorting:
+               return getColorSchemeItems(EColorSchemeItemsKind.All).Where(item => item.UseForSorting);
 
             default:
                Debug.Assert(false);
@@ -798,7 +924,8 @@ namespace mrHelper.App.Controls
          IEnumerable<string> labels = fmk.MergeRequest.Labels;
          User author = fmk.MergeRequest.Author;
          bool isExcluded = !wouldMatchFilter(fmk.MergeRequest);
-         return GitLabClient.Helpers.CheckConditions(conditions, approvedBy, labels, author, isExcluded);
+         bool isTrackingTime = _timeTrackingCheckingCallback(mrk);
+         return GitLabClient.Helpers.CheckConditions(conditions, approvedBy, labels, author, isExcluded, isTrackingTime);
       }
 
       private Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
@@ -857,7 +984,7 @@ namespace mrHelper.App.Controls
          }
 
          DiffStatistic? diffStatistic = _diffStatisticProvider.GetStatistic(key, out string errMsg);
-         return diffStatistic?.ToString() ?? errMsg;
+         return diffStatistic?.Format() ?? errMsg;
       }
 
       private string getTotalTimeText(MergeRequestKey key, User author)
@@ -957,7 +1084,7 @@ namespace mrHelper.App.Controls
             .SingleOrDefault(x => (ColumnType)x.Tag == columnType);
       }
 
-      private IEnumerable<FullMergeRequestKey> getAllProjectItems(ProjectKey projectKey)
+      private IEnumerable<FullMergeRequestKey> getAllProjectItemsFromCache(ProjectKey projectKey)
       {
          return _dataCache?
             .MergeRequestCache?
@@ -968,21 +1095,13 @@ namespace mrHelper.App.Controls
 
       private IEnumerable<FullMergeRequestKey> getMatchingFilterProjectItems(ProjectKey projectKey)
       {
-         return getAllProjectItems(projectKey).Where(fmk => doesMatchFilter(fmk.MergeRequest));
-      }
-
-      private IEnumerable<FullMergeRequestKey> getMatchingFilterMergeRequests()
-      {
-         return Groups
-            .Cast<ListViewGroup>()
-            .SelectMany(group => getMatchingFilterProjectItems(getGroupProjectKey(group)));
+         return getAllProjectItemsFromCache(projectKey).Where(fmk => doesMatchFilter(fmk.MergeRequest));
       }
 
       private IEnumerable<FullMergeRequestKey> getAllMergeRequests()
       {
-         return Groups
-            .Cast<ListViewGroup>()
-            .SelectMany(group => getAllProjectItems(getGroupProjectKey(group)));
+         return _dataCache?.MergeRequestCache?.GetProjects()
+            .SelectMany(projectKey => getAllProjectItemsFromCache(projectKey)) ?? Array.Empty<FullMergeRequestKey>();
       }
 
       private bool doesMatchFilter(MergeRequest mergeRequest)
@@ -1005,7 +1124,7 @@ namespace mrHelper.App.Controls
 
       private ListViewItem createListViewMergeRequestItem(FullMergeRequestKey fmk)
       {
-         ListViewGroup group = Groups[fmk.ProjectKey.ProjectName];
+         ListViewGroup group = needShowGroups() ? Groups[fmk.ProjectKey.ProjectName] : null;
          string[] subitems = Enumerable.Repeat(String.Empty, Columns.Count).ToArray();
          ListViewItem item = new ListViewItem(subitems, group)
          {
@@ -1033,21 +1152,59 @@ namespace mrHelper.App.Controls
 
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, mr.IId);
          setSubItemTag(item, ColumnType.IId, x => getId(mr), () => mr.Web_Url);
-         setSubItemTag(item, ColumnType.Author, x => author, () => String.Empty);
-         setSubItemTag(item, ColumnType.Title, x => mr.Title, () => String.Empty);
-         setSubItemTag(item, ColumnType.Labels, x => labels[x], () => String.Empty);
-         setSubItemTag(item, ColumnType.Size, x => getSize(mrk), () => String.Empty);
+         setSubItemTag(item, ColumnType.Color);
+         setSubItemTag(item, ColumnType.Author, x => author);
+         setSubItemTag(item, ColumnType.Title, x => mr.Title);
+         setSubItemTag(item, ColumnType.Labels, x => labels[x]);
+         setSubItemTag(item, ColumnType.Size, x => getSize(mrk));
          setSubItemTag(item, ColumnType.Jira, x => getJiraTask(mr), () => getJiraTaskUrl(mr));
-         setSubItemTag(item, ColumnType.TotalTime, x => getTotalTimeText(mrk, mr.Author), () => String.Empty);
-         setSubItemTag(item, ColumnType.SourceBranch, x => mr.Source_Branch, () => String.Empty);
-         setSubItemTag(item, ColumnType.TargetBranch, x => mr.Target_Branch, () => String.Empty);
-         setSubItemTag(item, ColumnType.State, x => mr.State, () => String.Empty);
-         setSubItemTag(item, ColumnType.Resolved, x => getDiscussionCount(mrk), () => String.Empty);
-         setSubItemTag(item, ColumnType.RefreshTime, x => getRefreshed(mrk, x), () => String.Empty);
-         setSubItemTag(item, ColumnType.Activities, x => getActivities(mr.Created_At, mrk, x), () => String.Empty);
+         setSubItemTag(item, ColumnType.TotalTime, x => getTotalTimeText(mrk, mr.Author));
+         setSubItemTag(item, ColumnType.SourceBranch, x => mr.Source_Branch);
+         setSubItemTag(item, ColumnType.TargetBranch, x => mr.Target_Branch);
+         setSubItemTag(item, ColumnType.State, x => mr.State);
+         setSubItemTag(item, ColumnType.Resolved, x => getDiscussionCount(mrk));
+         setSubItemTag(item, ColumnType.RefreshTime, x => getRefreshed(mrk, x));
+         setSubItemTag(item, ColumnType.Activities, x => getActivities(mr.Created_At, mrk, x));
+         setSubItemTag(item, ColumnType.Project, x => fmk.ProjectKey.ProjectName);
       }
 
-      private void setSubItemTag(ListViewItem item, ColumnType columnType, Func<bool, string> p1, Func<string> p2)
+      private Dictionary<ListViewItem, int> _colorOrderCache = new Dictionary<ListViewItem, int>();
+      private int getColorOrder(ListViewItem item)
+      {
+         return _colorOrderCache.TryGetValue(item, out int value)
+            ? value : getColorOrder(((FullMergeRequestKey)item.Tag));
+      }
+
+      private void initColorOrderCache()
+      {
+         foreach (ListViewItem item in Items)
+         {
+            int colorOrder = getColorOrder(item);
+            _colorOrderCache[item] = colorOrder;
+         }
+      }
+
+      private void clearColorOrderCache()
+      {
+         _colorOrderCache.Clear();
+      }
+
+      private int getColorOrder(FullMergeRequestKey fmk)
+      {
+         Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Sorting);
+         ColorSchemeItem[] items = getColorSchemeItems(EColorSchemeItemsKind.Sorting).ToArray();
+         for (int iColor = 0; iColor < items.Length; ++iColor)
+         {
+            if (color == items[iColor].Color)
+            {
+               return items.Length - iColor;
+            }
+         }
+         return -1;
+      }
+
+      private void setSubItemTag(ListViewItem item, ColumnType columnType,
+         Func<bool, string> p1 = null, Func<string> p2 = null)
       {
          ColumnHeader columnHeader = getColumnByType(columnType);
          if (columnHeader == null)
@@ -1059,8 +1216,20 @@ namespace mrHelper.App.Controls
          item.SubItems[columnHeader.Index].Tag = subItemInfo;
       }
 
-      private void setListViewSubItemsTagsForSummary(ListViewItem item)
+      private ListViewSubItemInfo getSubItemTag(ListViewItem item, ColumnType columnType)
       {
+         ColumnHeader columnHeader = getColumnByType(columnType);
+         if (columnHeader == null)
+         {
+            return null;
+         }
+
+         return (ListViewSubItemInfo)item.SubItems[columnHeader.Index]?.Tag;
+      }
+
+      private void setListViewSubItemsTagsForSummary(ListViewItem item, FullMergeRequestKey fmk)
+      {
+         Debug.Assert(needShowGroups());
          Debug.Assert(isSummaryItem(item));
 
          IEnumerable<FullMergeRequestKey> fullKeys = getMatchingFilterProjectItems(getGroupProjectKey(item.Group));
@@ -1071,14 +1240,14 @@ namespace mrHelper.App.Controls
             Program.ServiceManager.GetUnimportantSuffices(), currentUser);
          Dictionary<bool, string> labels = new Dictionary<bool, string>
          {
-            [false] = groupedLabels.Any() ? "See all labels in tooltip" : String.Empty,
+            [false] = groupedLabels.Any() ? AllListViewRowsHint : String.Empty,
             [true] = StringUtils.JoinSubstrings(groupedLabels.OrderBy(group => group))
          };
 
          Dictionary<bool, string> titles = new Dictionary<bool, string>
          {
             [false] = String.Format("{0} item(s)", fullKeys.Count()),
-            [true] = StringUtils.JoinSubstrings(fullKeys.Select(fmk => fmk.MergeRequest.Title).OrderBy(title => title))
+            [true] = StringUtils.JoinSubstrings(fullKeys.Select(x => x.MergeRequest.Title).OrderBy(title => title))
          };
 
          IEnumerable<string> allAuthors = fullKeys.Select(key => key.MergeRequest.Author.Name);
@@ -1113,19 +1282,21 @@ namespace mrHelper.App.Controls
             [true] = StringUtils.JoinSubstrings(distinctTargetBranches.OrderBy(branch => branch))
          };
 
-         setSubItemTag(item, ColumnType.IId, x => String.Empty, () => String.Empty);
-         setSubItemTag(item, ColumnType.Author, x => authors[x], () => String.Empty);
-         setSubItemTag(item, ColumnType.Title, x => titles[x], () => String.Empty);
-         setSubItemTag(item, ColumnType.Labels, x => labels[x], () => String.Empty);
-         setSubItemTag(item, ColumnType.Size, x => String.Empty, () => String.Empty);
-         setSubItemTag(item, ColumnType.Jira, x => jiraTasks[x], () => String.Empty);
-         setSubItemTag(item, ColumnType.TotalTime, x => String.Empty, () => String.Empty);
-         setSubItemTag(item, ColumnType.SourceBranch, x => sourceBranches[x], () => String.Empty);
-         setSubItemTag(item, ColumnType.TargetBranch, x => targetBranches[x], () => String.Empty);
-         setSubItemTag(item, ColumnType.State, x => String.Empty, () => String.Empty);
-         setSubItemTag(item, ColumnType.Resolved, x => String.Empty, () => String.Empty);
-         setSubItemTag(item, ColumnType.RefreshTime, x => String.Empty, () => String.Empty);
-         setSubItemTag(item, ColumnType.Activities, x => String.Empty, () => String.Empty);
+         setSubItemTag(item, ColumnType.IId);
+         setSubItemTag(item, ColumnType.Color);
+         setSubItemTag(item, ColumnType.Author, x => authors[x]);
+         setSubItemTag(item, ColumnType.Title, x => titles[x]);
+         setSubItemTag(item, ColumnType.Labels, x => labels[x]);
+         setSubItemTag(item, ColumnType.Size);
+         setSubItemTag(item, ColumnType.Jira, x => jiraTasks[x]);
+         setSubItemTag(item, ColumnType.TotalTime);
+         setSubItemTag(item, ColumnType.SourceBranch, x => sourceBranches[x]);
+         setSubItemTag(item, ColumnType.TargetBranch, x => targetBranches[x]);
+         setSubItemTag(item, ColumnType.State);
+         setSubItemTag(item, ColumnType.Resolved);
+         setSubItemTag(item, ColumnType.RefreshTime);
+         setSubItemTag(item, ColumnType.Activities);
+         setSubItemTag(item, ColumnType.Project, x => getGroupProjectKey(item.Group).ProjectName);
       }
 
       private void setColumnWidths(Dictionary<string, int> widths)
@@ -1189,7 +1360,7 @@ namespace mrHelper.App.Controls
 
       private bool isGroupCollapsed(ProjectKey projectKey)
       {
-         return _collapsedProjects.Data.Contains(projectKey);
+         return needShowGroups() && _collapsedProjects.Data.Contains(projectKey);
       }
 
       private bool isGroupCollapsed(ListViewGroup group)
@@ -1373,7 +1544,8 @@ namespace mrHelper.App.Controls
          switch (columnType)
          {
             case ColumnType.Labels:
-               return getText(subItem).Contains(MoreListViewRowsHint);
+               return getText(subItem).Contains(MoreListViewRowsHint)
+                   || getText(subItem).Contains(AllListViewRowsHint);
             case ColumnType.Activities:
                return true;
          }
@@ -1422,6 +1594,243 @@ namespace mrHelper.App.Controls
          UrlHelper.OpenBrowser(info.Url);
       }
 
+      private bool autoResizeColumnHeaderWidth(ColumnHeader column)
+      {
+         ColumnType? columnType = getColumnTypeByName(column.Text);
+         if (columnType.HasValue)
+         {
+            column.Width = columnType == ColumnType.Color ? DefaultColorColumnWidth :
+               getColumnWidthByContent(column, columnType);
+            return true;
+         }
+         return false;
+      }
+
+      private int getColumnWidthByContent(ColumnHeader c, ColumnType? columnType)
+      {
+         const int MaxAllowedColumnWidth = 1000;
+
+         using (Graphics g = CreateGraphics())
+         {
+            StringFormat noTrimmingFormat = new StringFormat() { Trimming = StringTrimming.None };
+
+            float headerWidth = 0;
+            using (Font headerFont = getColumnHeaderFont(getSortedByColumn() == columnType.Value))
+            {
+               headerWidth = g.MeasureString(c.Text, headerFont, MaxAllowedColumnWidth, noTrimmingFormat).Width;
+            }
+
+            Font contentFont = this.Font;
+            float widestContentWidth = Items
+               .Cast<ListViewItem>()
+               .Select(item => getSubItemTag(item, columnType.Value))
+               .Max(subItem => g.MeasureString(subItem.Text, contentFont, MaxAllowedColumnWidth, noTrimmingFormat).Width);
+
+            return Convert.ToInt32(Math.Ceiling(Math.Max(headerWidth, widestContentWidth)));
+         }
+      }
+
+      private Font getColumnHeaderFont(bool isSortedByThisColumn)
+      {
+         FontStyle fontStyle = !isSortedByThisColumn ? FontStyle.Regular : FontStyle.Bold;
+         return new Font(this.Font, fontStyle);
+      }
+
+      private void setSortedByColumn(ColumnType columnType)
+      {
+         bool prevNeedShowGroups = needShowGroups();
+         if (getSortedByColumn() == columnType)
+         {
+            SortingDirection sortingDirection = getSortingDirection();
+            sortingDirection = sortingDirection == SortingDirection.Ascending ?
+               SortingDirection.Descending : SortingDirection.Ascending;
+            ConfigurationHelper.SetSortingDirection(Program.Settings, sortingDirection, getIdentity());
+         }
+         else
+         {
+            ColumnHeader columnHeader = getColumnByType(columnType);
+            ConfigurationHelper.SetSortedByColumn(Program.Settings, columnHeader.Text, getIdentity());
+         }
+
+         if (prevNeedShowGroups != needShowGroups())
+         {
+            if (needShowGroups())
+            {
+               createGroups();
+            }
+            else
+            {
+               Groups.Clear();
+            }
+            Items.Clear();
+            UpdateItems();
+         }
+
+         applySortModeFromConfiguration();
+         ensureSelectionIsVisible();
+         Invalidate(true);
+      }
+
+      private void applySortModeFromConfiguration()
+      {
+         var comparisonFunction = getComparisonFunction(getSortedByColumn(), getSortingDirection());
+         ListViewItemSorter = new ListViewItemComparer(comparisonFunction);
+      }
+
+      private void createGroups()
+      {
+         Debug.Assert(needShowGroups());
+         IEnumerable<string> projectNames = ConfigurationHelper.GetEnabledProjects(_hostname, Program.Settings);
+         foreach (string projectName in projectNames)
+         {
+            ProjectKey projectKey = new ProjectKey(_hostname, projectName);
+            createGroupForProject(projectKey, false);
+         }
+      }
+
+      private ColumnType? getColumnTypeByName(string columnTypeName)
+      {
+         if (columnTypeName == null)
+         {
+            return new ColumnType?();
+         }
+
+         ColumnHeader columnHeader = Columns
+            .Cast<ColumnHeader>()
+            .SingleOrDefault(x => x.Text == columnTypeName);
+         return columnHeader == null ? new ColumnType?() : (ColumnType)columnHeader.Tag;
+      }
+
+      private ColumnType getSortedByColumn()
+      {
+         const ColumnType DefaultColumnTypeForSorting = ColumnType.Color;
+
+         string columnTypeName = Program.Settings != null ?
+            ConfigurationHelper.GetSortedByColumn(Program.Settings, getIdentity()) : null;
+         ColumnType? columnType = getColumnTypeByName(columnTypeName);
+         return columnType == null ? DefaultColumnTypeForSorting : columnType.Value;
+      }
+
+      private SortingDirection getSortingDirection()
+      {
+         const SortingDirection DefaultSortingDirection = SortingDirection.Descending;
+
+         return Program.Settings == null
+            ? DefaultSortingDirection
+            : ConfigurationHelper.GetSortingDirection(Program.Settings, getIdentity());
+      }
+
+      private bool needShowGroups()
+      {
+         return getSortedByColumn() == ColumnType.Project;
+      }
+
+      private int compare(ListViewItem item1, ListViewItem item2, ColumnType columnType)
+      {
+         FullMergeRequestKey fmk1 = ((FullMergeRequestKey)item1.Tag);
+         FullMergeRequestKey fmk2 = ((FullMergeRequestKey)item2.Tag);
+         if (fmk1.MergeRequest == null)
+         {
+            return fmk2.MergeRequest == null ? 0 : -1;
+         }
+         else if (fmk2.MergeRequest == null)
+         {
+            return 1;
+         }
+
+         MergeRequestKey mrk1 = new MergeRequestKey(fmk1.ProjectKey, fmk1.MergeRequest.IId);
+         MergeRequestKey mrk2 = new MergeRequestKey(fmk2.ProjectKey, fmk2.MergeRequest.IId);
+         switch (columnType)
+         {
+            case ColumnType.IId:
+               {
+                  if (mrk1.IId == mrk2.IId)
+                  {
+                     Debug.Assert(fmk1.MergeRequest.Id != fmk2.MergeRequest.Id);
+                     return fmk1.MergeRequest.Id > fmk2.MergeRequest.Id ? 1 : -1;
+                  }
+                  return mrk1.IId > mrk2.IId ? 1 : -1;
+               }
+
+            case ColumnType.Activities:
+               {
+                  DateTime latestActivity1 = getLatestCommitTime(mrk1) ?? fmk1.MergeRequest.Created_At;
+                  DateTime latestActivity2 = getLatestCommitTime(mrk2) ?? fmk2.MergeRequest.Created_At;
+                  return latestActivity1 == latestActivity2 ? 0 : (latestActivity1 > latestActivity2 ? 1 : -1);
+               }
+
+            case ColumnType.Color:
+               {
+                  int colorOrder1 = getColorOrder(item1);
+                  int colorOrder2 = getColorOrder(item2);
+                  return colorOrder1 == colorOrder2 ? 0 : (colorOrder1 > colorOrder2 ? 1 : -1);
+               }
+
+            case ColumnType.Size:
+               {
+                  DiffStatistic? diffStatistic1 = _diffStatisticProvider?.GetStatistic(mrk1, out string _);
+                  DiffStatistic? diffStatistic2 = _diffStatisticProvider?.GetStatistic(mrk2, out string _);
+                  if (diffStatistic1.HasValue && diffStatistic2.HasValue)
+                  {
+                     int size1 = diffStatistic1.Value.Insertions + diffStatistic1.Value.Deletions;
+                     int size2 = diffStatistic2.Value.Insertions + diffStatistic2.Value.Deletions;
+                     return size1 == size2 ? 0 : (size1 > size2 ? 1 : -1);
+                  }
+                  return diffStatistic1.HasValue ? 1 : (diffStatistic2.HasValue ? -1 : 0);
+               }
+
+            case ColumnType.TotalTime:
+               {
+                  double? totalTime1 = _dataCache?.TotalTimeCache?.GetTotalTime(mrk1).Amount?.TotalSeconds;
+                  double? totalTime2 = _dataCache?.TotalTimeCache?.GetTotalTime(mrk2).Amount?.TotalSeconds;
+                  if (totalTime1.HasValue && totalTime2.HasValue)
+                  {
+                     return totalTime1 == totalTime2 ? 0 : (totalTime1 > totalTime2 ? 1 : -1);
+                  }
+                  return totalTime1.HasValue ? 1 : (totalTime2.HasValue ? -1 : 0);
+               }
+
+            default:
+               {
+                  ListViewSubItemInfo key1 = getSubItemTag(item1, columnType);
+                  ListViewSubItemInfo key2 = getSubItemTag(item2, columnType);
+                  return String.Compare(key1.Text, key2.Text, StringComparison.OrdinalIgnoreCase);
+               }
+         }
+      }
+
+      private Func<ListViewItem, ListViewItem, int> getComparisonFunction(
+         ColumnType columnType, SortingDirection sortingDirection)
+      {
+         columnType = needShowGroups() ? ColumnType.IId : columnType;
+         return (item1, item2) =>
+         {
+            ListViewSubItemInfo key1 = getSubItemTag(item1, columnType);
+            ListViewSubItemInfo key2 = getSubItemTag(item2, columnType);
+            if (key1 == null)
+            {
+               return key2 == null ? 0 : -1;
+            }
+            else if (key2 == null)
+            {
+               return 1;
+            }
+            int comparisonResult = compare(item1, item2, columnType);
+            if (comparisonResult == 0)
+            {
+               if (columnType == ColumnType.Color)
+               {
+                  comparisonResult = -compare(item1, item2, ColumnType.Author);
+               }
+               else
+               {
+                  comparisonResult = compare(item1, item2, ColumnType.IId);
+               }
+            }
+            return sortingDirection == SortingDirection.Ascending ? comparisonResult : -comparisonResult;
+         };
+      }
+
       private static Cursor getCursor(ListViewHitTestInfo hit)
       {
          if (hit.SubItem != null)
@@ -1444,8 +1853,11 @@ namespace mrHelper.App.Controls
       private ExpressionResolver _expressionResolver;
       private string _identity;
       private Action<MergeRequestKey, string> _openMergeRequestUrlCallback;
+      private string _hostname;
+      private Func<MergeRequestKey, bool> _timeTrackingCheckingCallback;
       private static readonly int MaxListViewRows = 3;
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
+      private static readonly string AllListViewRowsHint = "See all labels in tooltip";
 
       private static readonly int GroupHeaderHeight = 20; // found experimentally
 

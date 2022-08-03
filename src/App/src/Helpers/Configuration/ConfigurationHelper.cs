@@ -359,6 +359,84 @@ namespace mrHelper.App.Helpers
       internal static bool IsOldProjectBasedWorkflowSelected(UserDefinedSettings settings)
          => settings.WorkflowType == "Projects";
 
+      internal enum SortingDirection
+      {
+         Ascending,
+         Descending
+      }
+
+      internal static SortingDirection GetSortingDirection(UserDefinedSettings settings, string listViewName)
+      {
+         const SortingDirection DefaultSortingDirection = SortingDirection.Descending;
+         if (listViewName == Constants.LiveListViewName)
+         {
+            return Enum.TryParse<SortingDirection>(
+               settings.ListViewMergeRequestsSortingDirection, out var result) ? result : DefaultSortingDirection;
+         }
+         else if (listViewName == Constants.SearchListViewName)
+         {
+            return Enum.TryParse<SortingDirection>(
+               settings.ListViewFoundMergeRequestsSortingDirection, out var result) ? result : DefaultSortingDirection;
+         }
+         else if (listViewName == Constants.RecentListViewName)
+         {
+            return Enum.TryParse<SortingDirection>(
+               settings.ListViewRecentMergeRequestsSortingDirection, out var result) ? result : DefaultSortingDirection;
+         }
+         Debug.Assert(false);
+         return DefaultSortingDirection;
+      }
+
+      internal static void SetSortingDirection(UserDefinedSettings settings, SortingDirection direction, string listViewName)
+      {
+         if (listViewName == Constants.LiveListViewName)
+         {
+            settings.ListViewMergeRequestsSortingDirection = direction.ToString();
+         }
+         else if (listViewName == Constants.SearchListViewName)
+         {
+            settings.ListViewFoundMergeRequestsSortingDirection = direction.ToString();
+         }
+         else if (listViewName == Constants.RecentListViewName)
+         {
+            settings.ListViewRecentMergeRequestsSortingDirection = direction.ToString();
+         }
+      }
+
+      internal static string GetSortedByColumn(UserDefinedSettings settings, string listViewName)
+      {
+         if (listViewName == Constants.LiveListViewName)
+         {
+            return settings.ListViewMergeRequestsSortedByColumnName;
+         }
+         else if (listViewName == Constants.SearchListViewName)
+         {
+            return settings.ListViewFoundMergeRequestsSortedByColumnName;
+         }
+         else if (listViewName == Constants.RecentListViewName)
+         {
+            return settings.ListViewRecentMergeRequestsSortedByColumnName;
+         }
+         Debug.Assert(false);
+         return null;
+      }
+
+      internal static void SetSortedByColumn(UserDefinedSettings settings, string columnName, string listViewName)
+      {
+         if (listViewName == Constants.LiveListViewName)
+         {
+            settings.ListViewMergeRequestsSortedByColumnName = columnName;
+         }
+         else if (listViewName == Constants.SearchListViewName)
+         {
+            settings.ListViewFoundMergeRequestsSortedByColumnName = columnName;
+         }
+         else if (listViewName == Constants.RecentListViewName)
+         {
+            settings.ListViewRecentMergeRequestsSortedByColumnName = columnName;
+         }
+      }
+
       internal static Dictionary<string, int> GetColumnWidths(UserDefinedSettings settings, string listViewName)
       {
          if (listViewName == Constants.LiveListViewName)
