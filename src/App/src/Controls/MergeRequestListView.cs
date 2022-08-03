@@ -271,7 +271,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         IMergeRequestCache mergeRequestCache = _dataCache?.MergeRequestCache;
+         IMergeRequestCache mergeRequestCache = _dataCache.MergeRequestCache;
          Debug.Assert(mergeRequestCache != null);
 
          // Add missing project groups
@@ -1754,10 +1754,8 @@ namespace mrHelper.App.Controls
 
             case ColumnType.Activities:
                {
-                  DateTime latestActivity1 = getLatestCommitTime(mrk1).HasValue
-                     ? getLatestCommitTime(mrk1).Value : fmk1.MergeRequest.Created_At;
-                  DateTime latestActivity2 = getLatestCommitTime(mrk2).HasValue
-                     ? getLatestCommitTime(mrk2).Value : fmk2.MergeRequest.Created_At;
+                  DateTime latestActivity1 = getLatestCommitTime(mrk1) ?? fmk1.MergeRequest.Created_At;
+                  DateTime latestActivity2 = getLatestCommitTime(mrk2) ?? fmk2.MergeRequest.Created_At;
                   return latestActivity1 == latestActivity2 ? 0 : (latestActivity1 > latestActivity2 ? 1 : -1);
                }
 
