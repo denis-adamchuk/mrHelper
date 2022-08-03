@@ -102,9 +102,10 @@ namespace mrHelper.CommonNative
 
       public const int WM_NOTIFY = 0x004E;
 
-      // https://referencesource.microsoft.com/#System.Windows.Forms/winforms/Managed/System/WinForms/NativeMethods.cs,7acb2432aa13375f
-      public const int HDN_DIVIDERDBLCLICKA = -305;
-      public const int HDN_DIVIDERDBLCLICKW = -325;
+      // from CommCtrl.h
+      public const int HDN_FIRST = -300;
+      public const int HDN_DIVIDERDBLCLICKA = HDN_FIRST - 5;
+      public const int HDN_DIVIDERDBLCLICKW = HDN_FIRST - 25;
 
       [StructLayout(LayoutKind.Sequential)]
       public class NMHDR
@@ -249,6 +250,7 @@ namespace mrHelper.CommonNative
       // Delegate type to be used as the Handler Routine for SCCH
       public delegate Boolean ConsoleCtrlDelegate(uint CtrlType);
 
+      // from CommCtrl.h
       internal const int LVM_FIRST = 0x1000;
       internal const int LVM_SCROLL = LVM_FIRST + 20;
       internal const int LVM_GETHEADER = LVM_FIRST + 31;
