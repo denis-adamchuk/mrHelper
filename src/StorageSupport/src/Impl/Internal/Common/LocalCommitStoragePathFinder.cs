@@ -69,7 +69,7 @@ namespace mrHelper.StorageSupport
       private static string cookRepositoryName(string parentFolder, ProjectKey projectKey,
          LocalCommitStorageType type)
       {
-         Debug.Assert(projectKey.ProjectName.Count(x => x == '/') == 1);
+         Debug.Assert(projectKey.ProjectName.Any(x => x == '/'));
          string defaultName = getDefaultPath(projectKey, type, 1);
          string defaultPath = Path.Combine(parentFolder, defaultName);
 

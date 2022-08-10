@@ -17,7 +17,7 @@ namespace mrHelper.App.Forms.Helpers
 
       public async Task<string> CanAddItem(string item, IEnumerable<string> currentItems)
       {
-         if (item.Count(x => x == '/') != 1)
+         if (!item.Any(x => x == '/'))
          {
             MessageBox.Show("Wrong format of project name. It should include a group name too.",
                "Project will not be added", MessageBoxButtons.OK, MessageBoxIcon.Warning);
