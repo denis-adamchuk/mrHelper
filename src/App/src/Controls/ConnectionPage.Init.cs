@@ -126,7 +126,6 @@ namespace mrHelper.App.Controls
          forEachListView(listView => listView.SetCurrentUserGetter(() => CurrentUser));
          forEachListView(listView => listView.ContentChanged += listViewMergeRequests_ContentChanged);
 
-         linkLabelConnectedTo.Text = String.Empty;
          linkLabelConnectedTo.SetLinkLabelClicked(openBrowserForSelectedMergeRequest);
 
          descriptionSplitContainerSite.Initialize(_keywords, _mdPipeline);

@@ -692,6 +692,7 @@ namespace mrHelper.App.Controls
          if (!fmkOpt.HasValue)
          {
             linkLabelConnectedTo.Text = String.Empty;
+            linkLabelConnectedTo.Links.Clear();
          }
          else
          {
