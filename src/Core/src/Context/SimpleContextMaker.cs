@@ -25,7 +25,7 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException, ContextMakingException.
       /// </summary>
-      public DiffContext GetContext(DiffPosition position, ContextDepth depth, UnchangedLinePolicy unchangedLinePolicy)
+      public DiffContext GetContext(DiffPosition position, ContextDepth depth, int offset, UnchangedLinePolicy unchangedLinePolicy)
       {
          if (!Context.Helpers.IsValidPosition(position))
          {
@@ -68,15 +68,17 @@ namespace mrHelper.Core.Context
                linenumber.ToString(), position.ToString()));
          }
 
-         return createDiffContext(linenumber, contents, isRightSideContext, depth);
+         return createDiffContext(linenumber, contents, isRightSideContext, depth, offset);
       }
 
       // isRightSideContext is true when linenumber and sha correspond to the right side
       // linenumber is one-based
       private DiffContext createDiffContext(int linenumber, IEnumerable<string> contents, bool isRightSideContext,
-         ContextDepth depth)
+         ContextDepth depth, int offset)
       {
-         int startLineNumber = Math.Max(1, linenumber - depth.Up);
+         Helpers.CalculateLineRange(linenumber, contents.Count(), depth, offset,
+            out int startLineNumber, out int _);
+
          int selectedIndex = linenumber - startLineNumber;
          List<DiffContext.Line> lines = new List<DiffContext.Line>();
 

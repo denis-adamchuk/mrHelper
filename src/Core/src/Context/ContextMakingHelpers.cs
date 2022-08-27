@@ -58,5 +58,41 @@ namespace mrHelper.Core.Context
       {
          return depth.Up <= depth.Down && Math.Min(depth.Up, depth.Down) >= 0;
       }
+
+      public static void CalculateLineRange(int linenumber, int contextLength, ContextDepth depth, int offset,
+         out int startLineNumber, out int endLineNumber)
+      {
+         int calcStart() => Math.Max(1, linenumber - depth.Up) + offset;
+         int calcEnd() => Math.Min(contextLength, linenumber + depth.Down) + offset;
+
+         if (offset == 0)
+         {
+            startLineNumber = calcStart();
+            endLineNumber = calcEnd();
+         }
+         else if (offset > 0)
+         {
+            startLineNumber = int.MaxValue;
+            endLineNumber = int.MaxValue;
+            while (endLineNumber > contextLength)
+            {
+               startLineNumber = calcStart();
+               endLineNumber = calcEnd();
+               --offset;
+            }
+         }
+         else
+         {
+            startLineNumber = int.MinValue;
+            endLineNumber = int.MinValue;
+            while (startLineNumber < 1)
+            {
+               startLineNumber = calcStart();
+               endLineNumber = calcEnd();
+               ++offset;
+            }
+         }
+      }
    }
 }
+

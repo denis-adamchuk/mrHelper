@@ -1,4 +1,5 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 
 namespace mrHelper.CommonControls.Controls
 {
@@ -16,23 +17,43 @@ namespace mrHelper.CommonControls.Controls
          ResizeRedraw = true;
       }
 
+      private class MyToolStripControlHost : ToolStripControlHost
+      {
+         public MyToolStripControlHost(Control c, Action<Control> onHostedControlResize) : base(c)
+         {
+            _onHostedControlResize = onHostedControlResize;
+         }
+
+         protected override void OnHostedControlResize(EventArgs e)
+         {
+            base.OnHostedControlResize(e);
+            _onHostedControlResize?.Invoke(Control);
+         }
+
+         private Action<Control> _onHostedControlResize;
+      }
+
       public void SetContent(System.Windows.Forms.Control content, Padding padding)
       {
          Items.Clear();
 
          Padding = padding;
+         onResize(content);
 
-         System.Drawing.Size contentSize = new System.Drawing.Size(
-            content.Size.Width + padding.Horizontal, content.Size.Height + padding.Vertical);
-         System.Drawing.Size contentMinimumSize = new System.Drawing.Size(
-            content.MinimumSize.Width + padding.Horizontal, content.MinimumSize.Height + padding.Vertical);
-
-         MinimumSize = contentMinimumSize;
-         MaximumSize = contentSize;
-         Size = contentSize;
-
-         ToolStripControlHost host = new System.Windows.Forms.ToolStripControlHost(content);
+         ToolStripControlHost host = new MyToolStripControlHost(content, onResize);
          Items.Add(host);
+      }
+
+      private void onResize(Control hostedControl)
+      {
+         System.Drawing.Size hostedControlSize = new System.Drawing.Size(
+            hostedControl.Size.Width + Padding.Horizontal, hostedControl.Size.Height + Padding.Vertical);
+         System.Drawing.Size hostedControlMinimumSize = new System.Drawing.Size(
+            hostedControl.MinimumSize.Width + Padding.Horizontal, hostedControl.MinimumSize.Height + Padding.Vertical);
+
+         MinimumSize = hostedControlMinimumSize;
+         MaximumSize = hostedControlSize;
+         Size = hostedControlSize;
       }
    }
 }

@@ -10,7 +10,7 @@ namespace mrHelper.Core.Context
    /// </summary>
    public struct DiffContext : IEquatable<DiffContext>
    {
-      public DiffContext(IEnumerable<Line> lines, int selectedIndex)
+      public DiffContext(IEnumerable<Line> lines, int? selectedIndex)
       {
          Lines = lines;
          SelectedIndex = selectedIndex;
@@ -105,7 +105,7 @@ namespace mrHelper.Core.Context
 
       public IEnumerable<Line> Lines { get; }
 
-      public int SelectedIndex { get; }
+      public int? SelectedIndex { get; }
 
       public override bool Equals(object obj)
       {
@@ -183,7 +183,8 @@ namespace mrHelper.Core.Context
 
    public interface IContextMaker
    {
-      DiffContext GetContext(DiffPosition position, ContextDepth depth, UnchangedLinePolicy unchangedLinePolicy);
+      DiffContext GetContext(DiffPosition position, ContextDepth depth, int offset,
+         UnchangedLinePolicy unchangedLinePolicy);
    }
 }
 

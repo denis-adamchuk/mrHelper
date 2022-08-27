@@ -25,7 +25,8 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException, ContextMakingException.
       /// </summary>
-      public DiffContext GetContext(DiffPosition position, ContextDepth depth, UnchangedLinePolicy unchangedLinePolicy)
+      public DiffContext GetContext(DiffPosition position, ContextDepth depth, int offset,
+         UnchangedLinePolicy unchangedLinePolicy)
       {
          if (!Context.Helpers.IsValidPosition(position))
          {
@@ -58,7 +59,7 @@ namespace mrHelper.Core.Context
                   linenumber.ToString(), position.ToString()));
             }
 
-            return createDiffContext(linenumber, isRightSideContext, context, depth);
+            return createDiffContext(linenumber, isRightSideContext, context, depth, offset);
          }
          catch (FullContextDiffProviderException ex)
          {
@@ -69,10 +70,10 @@ namespace mrHelper.Core.Context
       // isRightSideContext is true when linenumber corresponds to the right side (sha2).
       // linenumber is one-based
       private DiffContext createDiffContext(int linenumber, bool isRightSideContext, FullContextDiff context,
-         ContextDepth depth)
+         ContextDepth depth, int offset)
       {
-         int startLineNumber = Math.Max(1, linenumber - depth.Up);
-         int endLineNumber = linenumber + depth.Down;
+          Helpers.CalculateLineRange(linenumber, context.Left.Count, depth, offset,
+             out int startLineNumber, out int endLineNumber);
 
          SparsedListIterator<string> itLeft = context.Left.Begin();
          SparsedListIterator<string> itRight = context.Right.Begin();
@@ -88,7 +89,7 @@ namespace mrHelper.Core.Context
          }
 
          int iContextLine = 0;
-         int selectedIndex = 0;
+         int? selectedIndex = new int?();
          List<DiffContext.Line> lines = new List<DiffContext.Line>();
 
          while (true)

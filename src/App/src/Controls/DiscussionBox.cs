@@ -233,7 +233,14 @@ namespace mrHelper.App.Controls
          {
             return;
          }
+         
+         void setPopupWindowText(string text)
+         {
+            _popupContext.Text = text;
+            resizeLimitedWidthHtmlPanel(_popupContext, _panelContext.Width);
+         }
 
+         int currentOffset = 0;
          Debug.Assert(_popupContext == null); // it should have been disposed and reset when popup window closes
          _popupContext = new HtmlPanel
          {
@@ -242,9 +249,20 @@ namespace mrHelper.App.Controls
             Font = Font,
             Tag = note
          };
+         _popupContext.MouseWheel += (sender2, e2) =>
+         {
+            int step = e2.Delta > 0 ? -1 : 1;
+            int newOffset = currentOffset;
+            newOffset += step;
+            string text = getPopupDiffContextText(_popupContext, _popupDiffContextDepth, newOffset);
+            if (text != _popupContext.Text)
+            {
+               setPopupWindowText(text);
+               currentOffset = newOffset;
+            }
+         };
 
-         setPopupDiffContextText(_popupContext);
-         resizeLimitedWidthHtmlPanel(_popupContext, _panelContext.Width);
+         setPopupWindowText(getPopupDiffContextText(_popupContext, _popupDiffContextDepth, currentOffset));
 
          _popupWindow.SetContent(_popupContext, PopupContextPadding);
          showPopupWindow();
@@ -290,7 +308,7 @@ namespace mrHelper.App.Controls
          DiffContext? context;
          try
          {
-            context = getContext(_panelContextMaker, position, _diffContextDepth);
+            context = getContext(_panelContextMaker, position, _diffContextDepth, 0);
          }
          catch (Exception ex)
          {
@@ -338,10 +356,12 @@ namespace mrHelper.App.Controls
       {
          Point ptScreen = PointToScreen(new Point(_panelContext.Location.X, _panelContext.Location.Y));
          _popupWindow.Show(ptScreen);
+         _showMoreContextHint?.Show();
       }
 
       private void onPopupWindowClosed(object sender, ToolStripDropDownClosedEventArgs e)
       {
+         _showMoreContextHint?.Hide();
          disposePopupContext();
       }
 
@@ -364,6 +384,9 @@ namespace mrHelper.App.Controls
 
          _showMoreContext = createShowMoreContext(Discussion.Notes.First());
          Controls.Add(_showMoreContext);
+
+         _showMoreContextHint = createShowMoreContextHint();
+         Controls.Add(_showMoreContextHint);
 
          _copyToClipboard = createCopyToClipboard(Discussion.Notes.First());
          enableCopyToClipboard();
@@ -415,7 +438,7 @@ namespace mrHelper.App.Controls
             htmlPanel.Height = 0;
          }
 
-         string html = getFormattedHtml(_panelContextMaker, position, _diffContextDepth, fontSizePx, 2, true);
+         string html = getFormattedHtml(_panelContextMaker, position, _diffContextDepth, fontSizePx, 2, true, 0);
          htmlPanel.Text = html;
 
          if (htmlPanel.Visible)
@@ -424,7 +447,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void setPopupDiffContextText(Control popupContextControl)
+      private string getPopupDiffContextText(Control popupContextControl, ContextDepth depth, int offset)
       {
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(popupContextControl);
 
@@ -432,15 +455,11 @@ namespace mrHelper.App.Controls
          Debug.Assert(note.Type == "DiffNote");
          DiffPosition position = PositionConverter.Convert(note.Position);
 
-         Debug.Assert(popupContextControl is HtmlPanel);
-         HtmlPanel htmlPanel = popupContextControl as HtmlPanel;
-
-         htmlPanel.Text = getFormattedHtml(_popupContextMaker, position,
-            _popupDiffContextDepth, fontSizePx, 2, true);
+         return getFormattedHtml(_popupContextMaker, position, depth, fontSizePx, 2, true, offset);
       }
 
       private string getFormattedHtml(IContextMaker contextMaker, DiffPosition position, ContextDepth depth,
-         double fontSizePx, int rowsVPaddingPx, bool fullWidth)
+         double fontSizePx, int rowsVPaddingPx, bool fullWidth, int offset)
       {
          if (contextMaker == null)
          {
@@ -450,7 +469,7 @@ namespace mrHelper.App.Controls
          string errorMessage = "Cannot render HTML context.";
          try
          {
-            DiffContext context = getContext(contextMaker, position, depth);
+            DiffContext context = getContext(contextMaker, position, depth, offset);
             return DiffContextFormatter.GetHtml(context, fontSizePx, rowsVPaddingPx, fullWidth);
          }
          catch (ArgumentException ex)
@@ -464,15 +483,15 @@ namespace mrHelper.App.Controls
          return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
       }
 
-      private DiffContext getContext(IContextMaker contextMaker, DiffPosition position, ContextDepth depth)
+      private DiffContext getContext(IContextMaker contextMaker, DiffPosition position, ContextDepth depth, int offset)
       {
          try
          {
-            return contextMaker.GetContext(position, depth, UnchangedLinePolicy.TakeFromRight);
+            return contextMaker.GetContext(position, depth, offset, UnchangedLinePolicy.TakeFromRight);
          }
          catch (ContextMakingException) // fallback
          {
-            return _simpleContextMaker.GetContext(position, depth, UnchangedLinePolicy.TakeFromRight);
+            return _simpleContextMaker.GetContext(position, depth, offset, UnchangedLinePolicy.TakeFromRight);
          }
       }
 
@@ -542,11 +561,24 @@ namespace mrHelper.App.Controls
          LinkLabel linkLabel = new LinkLabel()
          {
             AutoSize = true,
-            Text = "Show more context",
+            Text = "Show scrollable context",
             BorderStyle = BorderStyle.None
          };
          linkLabel.Click += onShowMoreContextClick;
          return linkLabel;
+      }
+
+      private Control createShowMoreContextHint()
+      {
+         Label label = new Label()
+         {
+            AutoSize = true,
+            Text = "Scroll up/down with mouse wheel",
+            ForeColor = Color.Olive,
+            BorderStyle = BorderStyle.None,
+            Visible = false
+         };
+         return label;
       }
 
       private Control createCopyToClipboard(DiscussionNote firstNote)
@@ -1118,9 +1150,10 @@ namespace mrHelper.App.Controls
          if (_textboxFilename != null)
          {
             _textboxFilename.Width = getDiffContextWidth(width)
+               - (_showMoreContextHint == null ? 0 : _showMoreContextHint.Width)
                - (_showMoreContext == null ? 0 : _showMoreContext.Width)
                - (_copyToClipboard == null ? 0 : _copyToClipboard.Width)
-               - (_copyToClipboard == null && _showMoreContext == null ? 0 : 50);
+               - (_copyToClipboard == null && _showMoreContextHint == null && _showMoreContext == null ? 0 : 50);
             _textboxFilename.Height = (_textboxFilename as TextBoxEx).FullPreferredHeight;
          }
 
@@ -1163,6 +1196,24 @@ namespace mrHelper.App.Controls
             if (_panelContext != null)
             {
                _panelContext.Location = contextPos;
+
+               if (_showMoreContextHint != null)
+               {
+                  _showMoreContextHint.Location = new Point(
+                     _panelContext.Location.X + _panelContext.Width - _showMoreContextHint.Width, 0);
+
+                  if (_showMoreContext != null)
+                  {
+                     _showMoreContextHint.Location = new Point(
+                        _showMoreContextHint.Location.X - _showMoreContext.Width - 20, _showMoreContextHint.Location.Y);
+                  }
+
+                  if (_copyToClipboard != null)
+                  {
+                     _showMoreContextHint.Location = new Point(
+                        _showMoreContextHint.Location.X - _copyToClipboard.Width - 20, _showMoreContextHint.Location.Y);
+                  }
+               }
 
                if (_showMoreContext != null)
                {
@@ -1210,6 +1261,24 @@ namespace mrHelper.App.Controls
          {
             _panelContext.Location = controlPos;
             controlPos.Offset(0, _panelContext.Height + 5);
+
+            if (_showMoreContextHint != null)
+            {
+               _showMoreContextHint.Location = new Point(
+                  _panelContext.Location.X + _panelContext.Width - _showMoreContextHint.Width, 0);
+
+               if (_showMoreContext != null)
+               {
+                  _showMoreContextHint.Location = new Point(
+                     _showMoreContextHint.Location.X - _showMoreContext.Width - 20, _showMoreContextHint.Location.Y);
+               }
+
+               if (_copyToClipboard != null)
+               {
+                  _showMoreContextHint.Location = new Point(
+                     _showMoreContextHint.Location.X - _copyToClipboard.Width - 20, _showMoreContextHint.Location.Y);
+               }
+            }
 
             if (_showMoreContext != null)
             {
@@ -1696,6 +1765,7 @@ namespace mrHelper.App.Controls
       private readonly Padding PopupContextPadding = new Padding(2, 1, 2, 3);
 
       private Control _textboxFilename;
+      private Control _showMoreContextHint;
       private Control _showMoreContext;
       private Control _copyToClipboard;
       private Control _panelContext;

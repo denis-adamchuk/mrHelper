@@ -237,7 +237,7 @@ namespace mrHelper.App.Interprocess
          try
          {
             T maker = (T)Activator.CreateInstance(typeof(T), _git);
-            return maker.GetContext(position, DiffContextDepth, policy);
+            return maker.GetContext(position, DiffContextDepth, 0, policy);
          }
          catch (ArgumentException ex)
          {
