@@ -808,7 +808,8 @@ namespace mrHelper.App.Controls
 
          Debug.Assert(noteControl is HtmlPanel);
 
-         string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
+         string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath,
+            _specialDiscussionNoteMarkdownPipeline, noteControl);
          if (Program.Settings.EmulateNativeLineBreaksInDiscussions)
          {
             body = body
@@ -843,7 +844,8 @@ namespace mrHelper.App.Controls
 
          Debug.Assert(noteControl is HtmlPanel);
 
-         string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath, _specialDiscussionNoteMarkdownPipeline);
+         string body = MarkDownUtils.ConvertToHtml(note.Body, _imagePath,
+            _specialDiscussionNoteMarkdownPipeline, noteControl);
          noteControl.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
 
          if (noteControl.Visible)

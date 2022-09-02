@@ -381,12 +381,12 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private string convertTextToHtml(string text)
+      private string convertTextToHtml(string text, Control control)
       {
          string hostname = _mergeRequestKey.ProjectKey.HostName;
          string projectname = _mergeRequestKey.ProjectKey.ProjectName;
          string prefix = StringUtils.GetGitLabAttachmentPrefix(hostname, projectname);
-         string html = MarkDownUtils.ConvertToHtml(text, prefix, _mdPipeline);
+         string html = MarkDownUtils.ConvertToHtml(text, prefix, _mdPipeline, control);
          return String.Format(MarkDownUtils.HtmlPageTemplate, html);
       }
 

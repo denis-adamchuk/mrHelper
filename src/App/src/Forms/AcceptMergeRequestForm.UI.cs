@@ -229,7 +229,7 @@ namespace mrHelper.App.Forms
 
       private void updateControls()
       {
-         htmlPanelTitle.Text = convertTextToHtml(_title);
+         htmlPanelTitle.Text = convertTextToHtml(_title, htmlPanelTitle);
          labelAuthor.Text = _author?.Name ?? String.Empty;
          labelProject.Text = _mergeRequestKey.ProjectKey.ProjectName;
          labelSourceBranch.Text = _sourceBranchName;

@@ -1,9 +1,11 @@
 using Markdig;
-using Markdig.Extensions;
 using Markdig.Extensions.Tables;
 using Markdig.Extensions.JiraLinks;
-using mrHelper.Common.Interfaces;
 using System;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
+using System.Collections.Generic;
 
 namespace mrHelper.Common.Tools
 {
@@ -36,7 +38,8 @@ namespace mrHelper.Common.Tools
          }
       }
 
-      public static string ConvertToHtml(string text, string uploadsPrefix, Markdig.MarkdownPipeline pipeline)
+      public static string ConvertToHtml(string text, string uploadsPrefix,
+         Markdig.MarkdownPipeline pipeline, Control control)
       {
          if (String.IsNullOrEmpty(text))
          {
@@ -46,10 +49,11 @@ namespace mrHelper.Common.Tools
          // fix #319, most likely this is just a workaround for Markdig bug
          text = text.Replace("<details>", "").Replace("</details>", "");
 
-         return System.Net.WebUtility
+         string html = System.Net.WebUtility
             .HtmlDecode(Markdig.Markdown.ToHtml(System.Net.WebUtility.HtmlEncode(text), pipeline))
             .Replace("<a href=\"/uploads/", String.Format("<a href=\"{0}/uploads/", uploadsPrefix))
             .Replace("<img src=\"/uploads/", String.Format("<img src=\"{0}/uploads/", uploadsPrefix));
+         return HtmlUtils.AddWidthAttributeToCodeElements(html, new WidthCalculator(control).CalculateWidth);
       }
    }
 }

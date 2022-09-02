@@ -54,6 +54,9 @@ namespace mrHelper.App
       [STAThread]
       private static void Main()
       {
+         Common.Tools.HtmlUtils.Test_AddWidthAttributeToCodeElements();
+         Common.Tools.HtmlUtils.Test_CalcWidthAttributeToCodeElements();
+
          try
          {
             Settings = new UserDefinedSettings();

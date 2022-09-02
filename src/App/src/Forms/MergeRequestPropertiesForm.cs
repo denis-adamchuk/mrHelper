@@ -256,7 +256,7 @@ namespace mrHelper.App.Forms
       protected void setTitle(string title)
       {
          _title = title;
-         htmlPanelTitle.Text = convertTextToHtml(title);
+         htmlPanelTitle.Text = convertTextToHtml(title, htmlPanelTitle);
          updateControls();
       }
 
@@ -268,7 +268,7 @@ namespace mrHelper.App.Forms
       protected void setDescription(string description)
       {
          _description = description;
-         htmlPanelDescription.Text = convertTextToHtml(description);
+         htmlPanelDescription.Text = convertTextToHtml(description, htmlPanelDescription);
          updateControls();
       }
 
@@ -377,10 +377,10 @@ namespace mrHelper.App.Forms
          buttonSubmit.Enabled = allDetailsLoaded && !String.IsNullOrEmpty(getTitle());
       }
 
-      private string convertTextToHtml(string text)
+      private string convertTextToHtml(string text, Control control)
       {
          string prefix = StringUtils.GetGitLabAttachmentPrefix(_hostname, getProjectName());
-         string html = MarkDownUtils.ConvertToHtml(text, prefix, _mdPipeline);
+         string html = MarkDownUtils.ConvertToHtml(text, prefix, _mdPipeline, control);
          return String.Format(MarkDownUtils.HtmlPageTemplate, html);
       }
 

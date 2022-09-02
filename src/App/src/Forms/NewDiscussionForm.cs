@@ -522,7 +522,7 @@ namespace mrHelper.App.Forms
             Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(previewPanel));
 
          var pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
-         string body = MarkDownUtils.ConvertToHtml(text, String.Empty, pipeline);
+         string body = MarkDownUtils.ConvertToHtml(text, String.Empty, pipeline, previewPanel);
          previewPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
       }
 
@@ -669,7 +669,6 @@ namespace mrHelper.App.Forms
          buttonPrevRelatedDiscussion.Enabled = allowScrollBackward;
          buttonNextRelatedDiscussion.Enabled = allowScrollForward;
 
-         htmlPanelPreview.Enabled = areRelatedDisussionsAvailable;
          labelRelatedDiscussionAuthor.Visible = areRelatedDisussionsAvailable;
 
          updateRelatedThreadsGroupBoxVisibility();

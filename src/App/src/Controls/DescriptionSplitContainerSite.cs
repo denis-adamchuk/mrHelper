@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
 using mrHelper.Common.Tools;
@@ -66,12 +67,14 @@ namespace mrHelper.App.Controls
             FullMergeRequestKey fmk = _currentMergeRequest.Value;
 
             string rawTitle = !String.IsNullOrEmpty(fmk.MergeRequest.Title) ? fmk.MergeRequest.Title : "Title is empty";
-            string title = MarkDownUtils.ConvertToHtml(rawTitle, String.Empty, _mdPipeline);
+            string title = MarkDownUtils.ConvertToHtml(rawTitle, String.Empty, _mdPipeline,
+               richTextBoxMergeRequestDescription);
 
             string rawDescription = !String.IsNullOrEmpty(fmk.MergeRequest.Description)
                ? fmk.MergeRequest.Description : "Description is empty";
             string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey);
-            string description = MarkDownUtils.ConvertToHtml(rawDescription, uploadsPrefix, _mdPipeline);
+            string description = MarkDownUtils.ConvertToHtml(rawDescription, uploadsPrefix, _mdPipeline,
+               richTextBoxMergeRequestDescription);
 
             string body = String.Format("<b>Title</b><br>{0}<br><b>Description</b><br>{1}", title, description);
             richTextBoxMergeRequestDescription.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
@@ -120,12 +123,17 @@ namespace mrHelper.App.Controls
          foreach (Discussion discussion in discussions)
          {
             DiscussionNote note = discussion.Notes.First();
-            string noteBody = MarkDownUtils.ConvertToHtml(note.Body, uploadsPrefix, _mdPipeline);
+            string noteBody = MarkDownUtils.ConvertToHtml(note.Body, uploadsPrefix, _mdPipeline, htmlPanelAuthorComments);
+            int? optColumnWidth = HtmlUtils.CalcMaximumPreElementWidth(noteBody,
+               new WidthCalculator(htmlPanelAuthorComments).CalculateWidth);
+            string styleWidth = optColumnWidth.HasValue ?
+               String.Format("style=\"width:{0}px;\"", optColumnWidth.Value) : String.Empty;
             string noteRow = String.Format(
-               "<tr><td class=\"no-border no-bg\"><div><i>{0} ({1})</i></div><div>{2}</div></td></tr><br>",
+               "<tr><td {3} class=\"no-border no-bg\"><div><i>{0} ({1})</i></div><div>{2}</div></td></tr><br>",
                TimeUtils.DateTimeToStringAgo(note.Created_At),
                TimeUtils.DateTimeToString(note.Created_At),
-               noteBody);
+               noteBody,
+               styleWidth);
             builder.Append(noteRow);
          }
          builder.Append("</table></tbody>");
