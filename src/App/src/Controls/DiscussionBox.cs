@@ -53,8 +53,8 @@ namespace mrHelper.App.Controls
          if (git != null)
          {
             _panelContextMaker = new EnhancedContextMaker(git);
-            _popupContextMaker = new CombinedContextMaker(git);
             _simpleContextMaker = new SimpleContextMaker(git);
+            _popupContextMaker = _simpleContextMaker;
          }
          _colorScheme = colorScheme;
          _colorScheme.Changed += onColorSchemeChanged;
@@ -357,11 +357,19 @@ namespace mrHelper.App.Controls
          Point ptScreen = PointToScreen(new Point(_panelContext.Location.X, _panelContext.Location.Y));
          _popupWindow.Show(ptScreen);
          _showMoreContextHint?.Show();
+         if (_showMoreContext != null)
+         {
+            _showMoreContext.Enabled = false;
+         }
       }
 
       private void onPopupWindowClosed(object sender, ToolStripDropDownClosedEventArgs e)
       {
          _showMoreContextHint?.Hide();
+         if (_showMoreContext != null)
+         {
+            _showMoreContext.Enabled = true;
+         }
          disposePopupContext();
       }
 
