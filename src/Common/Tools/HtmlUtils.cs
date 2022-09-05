@@ -11,13 +11,37 @@ namespace mrHelper.Common.Tools
       private const string close_token_PRE = "</pre>";
       private const string open_code_token = "<code>";
       private const string close_code_token = "</code>";
+      private const string image_token = "<img";
+
+      public static string WrapImageIntoTables(string html)
+      {
+         return forEachUnaryToken(html, image_token,
+            (result, iFirstCharOfOpenToken, iFirstCharOfCloseToken) =>
+         {
+            string prefix = "<table><tr><td>";
+            string suffix = "</td></tr></table>";
+            if (iFirstCharOfOpenToken - prefix.Length >= 0
+             && result.Substring(iFirstCharOfOpenToken - prefix.Length, prefix.Length) == prefix
+             && iFirstCharOfCloseToken + 2 + suffix.Length < result.Length
+             && result.Substring(iFirstCharOfCloseToken + 2, suffix.Length) == suffix)
+            {
+               return result;
+            }
+            return String.Format("{0}{1}{2}{3}{4}",
+               result.Substring(0, iFirstCharOfOpenToken),
+               prefix,
+               result.Substring(iFirstCharOfOpenToken, iFirstCharOfCloseToken - iFirstCharOfOpenToken + 2),
+               suffix,
+               result.Substring(iFirstCharOfCloseToken + 2));
+         });
+      }
 
       /// <summary>
       /// For "<pre><code>something</code></pre>" calculates width of "something" in pixels
       /// </summary>
-      public static int CalcMaximumPreElementWidth(string html, Func<string, int> fnWidthCalculator)
+      public static int? CalcMaximumPreElementWidth(string html, Func<string, int> fnWidthCalculator)
       {
-         int maxWidth = 0;
+         int? maxWidth = new int?();
          forEachToken(html, open_token_PRE, close_token_PRE,
             (result, iNextCharAfterOpenToken, iFirstCharOfMatchingCloseToken) =>
          {
@@ -27,7 +51,10 @@ namespace mrHelper.Common.Tools
             }
             int? width = getWidthInsidePRE(result, iNextCharAfterOpenToken, iFirstCharOfMatchingCloseToken,
                fnWidthCalculator);
-            maxWidth = width.HasValue ? Math.Max(maxWidth, width.Value) : maxWidth;
+            if (width.HasValue)
+            {
+               maxWidth = maxWidth.HasValue ? Math.Max(maxWidth.Value, width.Value) : width;
+            }
             return result;
          });
          return maxWidth;
@@ -173,14 +200,84 @@ namespace mrHelper.Common.Tools
          return result;
       }
 
+      // TODO This algorithm is pretty inefficient and can be optimized.
+      private static string forEachUnaryToken(string body, string openToken,
+         Func<string, int, int, string> fn)
+      {
+         if (!body.Contains(openToken))
+         {
+            return body;
+         }
+
+         List<Tuple<int, int>> getTokenPositions(string token, string text)
+         {
+            List<Tuple<int, int>> positions = new List<Tuple<int, int>>();
+            void addPosition(int i, int j)
+            {
+               if (i != -1 && j != -1)
+               {
+                  positions.Add(new Tuple<int, int>(i, j));
+               }
+            }
+
+            int iPosition = text.IndexOf(token, 0);
+            int jPosition = text.IndexOf("/>", iPosition + 1);
+            addPosition(iPosition, jPosition);
+            while (iPosition != -1 && jPosition != -1)
+            {
+               iPosition = text.IndexOf(token, jPosition + 1);
+               jPosition = text.IndexOf("/>", iPosition + 1);
+               addPosition(iPosition, jPosition);
+            }
+
+            return positions;
+         }
+
+         List<Tuple<int, int>> tokenPositions = getTokenPositions(openToken, body);
+
+         int iCurrentPosition = 0;
+         string result = body;
+         while (true)
+         {
+            // apply fn
+            int iFirstCharOfOpenToken = tokenPositions[iCurrentPosition].Item1;
+            int iFirstCharOfCloseToken = tokenPositions[iCurrentPosition].Item2;
+            result = fn(result, iFirstCharOfOpenToken, iFirstCharOfCloseToken);
+
+            // recalculate indices
+            List<Tuple<int, int>> tokenPositionsNew = getTokenPositions(openToken, result);
+
+            // check if we need to start from scratch or stop
+            if (!tokenPositionsNew.SequenceEqual(tokenPositions))
+            {
+               if (tokenPositionsNew.Count == 0 || iCurrentPosition == tokenPositionsNew.Count - 1)
+               {
+                  break;
+               }
+               iCurrentPosition = 0;
+               tokenPositions = tokenPositionsNew;
+               continue;
+            }
+
+            // prepare to next iteration
+            iCurrentPosition = iCurrentPosition + 1;
+            if (iCurrentPosition > tokenPositions.Count - 1)
+            {
+               break;
+            }
+         }
+
+         return result;
+      }
+
       public static void Test_CalcWidthAttributeToCodeElements()
       {
          int calcWidth(string s) => s.Length;
 
          // empty
-         Debug.Assert(0 == CalcMaximumPreElementWidth("", calcWidth));
-         Debug.Assert(0 == CalcMaximumPreElementWidth("0", calcWidth));
-         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre></pre>", calcWidth));
+         Debug.Assert(null == CalcMaximumPreElementWidth("", calcWidth));
+         Debug.Assert(null == CalcMaximumPreElementWidth("0", calcWidth));
+         Debug.Assert(null == CalcMaximumPreElementWidth("<pre></pre>", calcWidth));
          Debug.Assert(0 == CalcMaximumPreElementWidth("1<pre><code></code></pre>1", calcWidth));
 
          // 1
@@ -204,13 +301,13 @@ namespace mrHelper.Common.Tools
                                                        "ABC<pre><code>012345678901234567890123456789012345678901234567890123456789</code></pre>DEF", calcWidth));
 
          // no <code> or </code>
-         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre>123</pre>", calcWidth));
-         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre><code>123</pre>", calcWidth)); //-V3050
+         Debug.Assert(null == CalcMaximumPreElementWidth("<pre>123</pre>", calcWidth));
+         Debug.Assert(null == CalcMaximumPreElementWidth("<pre><code>123</pre>", calcWidth)); //-V3050
 
          // bad
-         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre>123", calcWidth));
-         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre><code>1<pre><code>2<pre><code>3</code></pre>4<code>5</pre></code>6</code></pre>7</code></pre>", calcWidth)); //-V3050
-         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre><code>1<pre><code>2<code>3</code></pre>4<pre><code>5</pre></code>6</code></pre>7</code></pre>", calcWidth)); //-V3050
+         Debug.Assert(null == CalcMaximumPreElementWidth("<pre>123", calcWidth));
+         Debug.Assert(null == CalcMaximumPreElementWidth("<pre><code>1<pre><code>2<pre><code>3</code></pre>4<code>5</pre></code>6</code></pre>7</code></pre>", calcWidth)); //-V3050
+         Debug.Assert(null == CalcMaximumPreElementWidth("<pre><code>1<pre><code>2<code>3</code></pre>4<pre><code>5</pre></code>6</code></pre>7</code></pre>", calcWidth)); //-V3050
       }
 
       public static void Test_AddWidthAttributeToCodeElements()
@@ -263,6 +360,24 @@ namespace mrHelper.Common.Tools
             AddWidthAttributeToCodeElements("<pre><code>1<pre><code>2<pre><code>3</code></pre>4<code>5</pre></code>6</code></pre>7</code></pre>", calcWidth)); //-V3050
          Debug.Assert(                      "<pre><code>1<pre><code>2<code>3</code></pre>4<pre><code>5</pre></code>6</code></pre>7</code></pre>" == //-V3050
             AddWidthAttributeToCodeElements("<pre><code>1<pre><code>2<code>3</code></pre>4<pre><code>5</pre></code>6</code></pre>7</code></pre>", calcWidth)); //-V3050
+      }
+
+      public static void Test_WrapImageIntoTables()
+      {
+         // empty
+         Debug.Assert(                         ""
+            == WrapImageIntoTables(""));
+
+         // one
+         Debug.Assert("<table><tr><td><img src=\"abc\"/></td></tr></table>"
+            == WrapImageIntoTables("<img src=\"abc\"/>"));
+
+         // one in <p>
+         Debug.Assert("<p><table><tr><td><img src=\"UntitledImage.png\"/></td></tr></table></p>" == WrapImageIntoTables("<p><img src=\"UntitledImage.png\"/></p>"));
+
+         // two
+         Debug.Assert("<table><tr><td><img src=\"UntitledImage.png\"/></td></tr></table>def<table><tr><td><img src=\"ghi\"/></td></tr></table>"
+            == WrapImageIntoTables("<img src=\"UntitledImage.png\"/>def<img src=\"ghi\"/>"));
       }
    }
 }

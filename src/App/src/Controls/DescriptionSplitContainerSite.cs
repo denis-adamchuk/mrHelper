@@ -136,7 +136,7 @@ namespace mrHelper.App.Controls
                styleWidth);
             builder.Append(noteRow);
          }
-         builder.Append("</table></tbody>");
+         builder.Append("</tbody></table>");
          return builder.ToString();
       }
 

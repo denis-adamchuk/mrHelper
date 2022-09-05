@@ -56,6 +56,7 @@ namespace mrHelper.App
       {
          Common.Tools.HtmlUtils.Test_AddWidthAttributeToCodeElements();
          Common.Tools.HtmlUtils.Test_CalcWidthAttributeToCodeElements();
+         Common.Tools.HtmlUtils.Test_WrapImageIntoTables();
 
          try
          {

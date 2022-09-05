@@ -34,7 +34,7 @@ namespace mrHelper.Common.Tools
       {
          get
          {
-            return "<html><head></head><body><div> {0} </div></body></html>";
+            return "<html><head></head><body class=\"no-border no-bg\"><div class=\"no-border no-bg\"> {0} </div></body></html>";
          }
       }
 
@@ -53,7 +53,8 @@ namespace mrHelper.Common.Tools
             .HtmlDecode(Markdig.Markdown.ToHtml(System.Net.WebUtility.HtmlEncode(text), pipeline))
             .Replace("<a href=\"/uploads/", String.Format("<a href=\"{0}/uploads/", uploadsPrefix))
             .Replace("<img src=\"/uploads/", String.Format("<img src=\"{0}/uploads/", uploadsPrefix));
-         return HtmlUtils.AddWidthAttributeToCodeElements(html, new WidthCalculator(control).CalculateWidth);
+         html = HtmlUtils.AddWidthAttributeToCodeElements(html, new WidthCalculator(control).CalculateWidth);
+         return HtmlUtils.WrapImageIntoTables(html);
       }
    }
 }
