@@ -205,12 +205,12 @@ namespace mrHelper.Common.Tools
 
          // no <code> or </code>
          Debug.Assert(0 == CalcMaximumPreElementWidth("<pre>123</pre>", calcWidth));
-         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre><code>123</pre>", calcWidth));
+         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre><code>123</pre>", calcWidth)); //-V3050
 
          // bad
          Debug.Assert(0 == CalcMaximumPreElementWidth("<pre>123", calcWidth));
-         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre><code>1<pre><code>2<pre><code>3</code></pre>4<code>5</pre></code>6</code></pre>7</code></pre>", calcWidth));
-         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre><code>1<pre><code>2<code>3</code></pre>4<pre><code>5</pre></code>6</code></pre>7</code></pre>", calcWidth));
+         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre><code>1<pre><code>2<pre><code>3</code></pre>4<code>5</pre></code>6</code></pre>7</code></pre>", calcWidth)); //-V3050
+         Debug.Assert(0 == CalcMaximumPreElementWidth("<pre><code>1<pre><code>2<code>3</code></pre>4<pre><code>5</pre></code>6</code></pre>7</code></pre>", calcWidth)); //-V3050
       }
 
       public static void Test_AddWidthAttributeToCodeElements()
@@ -255,14 +255,14 @@ namespace mrHelper.Common.Tools
 
          // no <code> or </code>
          Debug.Assert("<pre>123</pre>" == AddWidthAttributeToCodeElements("<pre>123</pre>", calcWidth));
-         Debug.Assert("<pre><code>123</pre>" == AddWidthAttributeToCodeElements("<pre><code>123</pre>", calcWidth));
+         Debug.Assert("<pre><code>123</pre>" == AddWidthAttributeToCodeElements("<pre><code>123</pre>", calcWidth)); //-V3050
 
          // bad
          Debug.Assert("<pre>123" == AddWidthAttributeToCodeElements("<pre>123", calcWidth));
-         Debug.Assert(                      "<pre><code>1<pre><code>2<pre><code>3</code></pre>4<code>5</pre></code>6</code></pre>7</code></pre>" ==
-            AddWidthAttributeToCodeElements("<pre><code>1<pre><code>2<pre><code>3</code></pre>4<code>5</pre></code>6</code></pre>7</code></pre>", calcWidth));
-         Debug.Assert(                      "<pre><code>1<pre><code>2<code>3</code></pre>4<pre><code>5</pre></code>6</code></pre>7</code></pre>" ==
-            AddWidthAttributeToCodeElements("<pre><code>1<pre><code>2<code>3</code></pre>4<pre><code>5</pre></code>6</code></pre>7</code></pre>", calcWidth));
+         Debug.Assert(                      "<pre><code>1<pre><code>2<pre><code>3</code></pre>4<code>5</pre></code>6</code></pre>7</code></pre>" == //-V3050
+            AddWidthAttributeToCodeElements("<pre><code>1<pre><code>2<pre><code>3</code></pre>4<code>5</pre></code>6</code></pre>7</code></pre>", calcWidth)); //-V3050
+         Debug.Assert(                      "<pre><code>1<pre><code>2<code>3</code></pre>4<pre><code>5</pre></code>6</code></pre>7</code></pre>" == //-V3050
+            AddWidthAttributeToCodeElements("<pre><code>1<pre><code>2<code>3</code></pre>4<pre><code>5</pre></code>6</code></pre>7</code></pre>", calcWidth)); //-V3050
       }
    }
 }
