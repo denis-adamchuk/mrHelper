@@ -692,12 +692,13 @@ namespace mrHelper.App.Controls
          if (!fmkOpt.HasValue)
          {
             linkLabelConnectedTo.Text = String.Empty;
-            linkLabelConnectedTo.Links.Clear();
+            linkLabelConnectedTo.LinkArea = new LinkArea();
          }
          else
          {
             FullMergeRequestKey fmk = fmkOpt.Value;
             linkLabelConnectedTo.Text = fmk.MergeRequest.Web_Url;
+            linkLabelConnectedTo.LinkArea = new LinkArea(0, linkLabelConnectedTo.Text.Length);
          }
          _toolTip.SetToolTip(linkLabelConnectedTo, linkLabelConnectedTo.Text);
       }
