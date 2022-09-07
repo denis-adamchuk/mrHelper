@@ -33,7 +33,7 @@ namespace mrHelper.GitLabClient.Operators
                async () =>
                   (IEnumerable<User>)await client.RunAsync(
                      async (gl) =>
-                        await  gl.Users.SearchTaskAsync(name))));
+                        await gl.Users.SearchTaskAsync(name))));
          if (!users.Any())
          {
             return null;

@@ -158,9 +158,12 @@ namespace mrHelper.GitLabClient
          MergeRequestManager mergeRequestManager = new MergeRequestManager(
             _cacheContext, cacheUpdater, hostname, hostProperties, queryCollection, networkOperationStatusListener,
             isApprovalStatusSupported);
+
+         AvatarLoader avatarLoaderForDiscussionManager = new AvatarLoader(_operator, cacheUpdater);
          DiscussionManager discussionManager = new DiscussionManager(
             _cacheContext, hostname, hostProperties, user, mergeRequestManager,
-            modificationNotifier, networkOperationStatusListener);
+            modificationNotifier, networkOperationStatusListener, avatarLoaderForDiscussionManager);
+
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
             hostname, hostProperties, user, discussionManager, modificationNotifier, networkOperationStatusListener);
 

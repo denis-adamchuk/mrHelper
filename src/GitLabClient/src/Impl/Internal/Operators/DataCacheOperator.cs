@@ -19,6 +19,13 @@ namespace mrHelper.GitLabClient.Operators
          INetworkOperationStatusListener networkOperationStatusListener)
          : base(host, settings, networkOperationStatusListener)
       {
+         AvatarOperator = new AvatarOperator(host, settings, networkOperationStatusListener);
+      }
+
+      public new void Dispose()
+      {
+         base.Dispose();
+         AvatarOperator.Dispose();
       }
 
       internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchQuery searchQuery)
@@ -173,6 +180,8 @@ namespace mrHelper.GitLabClient.Operators
                         async (gl) =>
                            await gl.Users.LoadAllTaskAsync())));
       }
+
+      internal AvatarOperator AvatarOperator { get; }
    }
 }
 

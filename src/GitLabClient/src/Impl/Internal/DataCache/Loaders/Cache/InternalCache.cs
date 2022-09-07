@@ -138,6 +138,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          _approvals[mrk] = approvals;
       }
 
+      internal void SetAvatar(int userId, byte[] avatar)
+      {
+         _avatars[userId] = avatar;
+      }
+
       /// <summary>
       /// Updates a merge request
       /// </summary>
@@ -183,6 +188,9 @@ namespace mrHelper.GitLabClient.Loaders.Cache
 
       // maps Merge Request to its approval configuration
       private readonly Dictionary<MergeRequestKey, MergeRequestApprovalConfiguration> _approvals;
+
+      // maps User Id to its avatar
+      private readonly Dictionary<int, byte[]> _avatars;
    }
 }
 

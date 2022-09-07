@@ -44,6 +44,9 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="src\Impl\Accessors\GitLabVersionAccessor.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Loaders\AvatarLoader.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Loaders\AvatarLoaderItf.cs" />
+    <Compile Include="src\Impl\Internal\Operators\AvatarOperator.cs" />
     <Compile Include="src\Interfaces\ComparisonCacheItf.cs" />
     <Compile Include="src\Impl\ConnectionChecker.cs" />
     <Compile Include="src\Impl\Helpers.cs" />

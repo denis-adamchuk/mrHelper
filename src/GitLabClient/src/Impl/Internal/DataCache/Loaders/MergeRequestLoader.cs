@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.GitLabClient.Loaders.Cache;
@@ -23,6 +21,7 @@ namespace mrHelper.GitLabClient.Loaders
          _cacheUpdater = cacheUpdater;
          _versionLoader = new VersionLoader(op, cacheUpdater);
          _approvalLoader = isApprovalStatusSupported ? new ApprovalLoader(op, cacheUpdater) : null;
+         _avatarLoader = new AvatarLoader(op, cacheUpdater);
          _updateOnlyOpened = updateOnlyOpened;
       }
 
@@ -47,6 +46,8 @@ namespace mrHelper.GitLabClient.Loaders
             {
                await _approvalLoader.LoadApprovals(dummyArray);
             }
+
+            await _avatarLoader.LoadAvatars(dummyArray);
          }
       }
 
@@ -72,6 +73,7 @@ namespace mrHelper.GitLabClient.Loaders
       private readonly bool _updateOnlyOpened;
       private readonly IVersionLoader _versionLoader;
       private readonly IApprovalLoader _approvalLoader;
+      private readonly IAvatarLoader _avatarLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
    }
 }

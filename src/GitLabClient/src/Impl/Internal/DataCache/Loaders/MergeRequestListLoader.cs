@@ -23,6 +23,7 @@ namespace mrHelper.GitLabClient.Loaders
          _cacheUpdater = cacheUpdater;
          _versionLoader = new VersionLoader(_operator, cacheUpdater);
          _approvalLoader = isApprovalStatusSupported ? new ApprovalLoader(_operator, cacheUpdater) : null;
+         _avatarLoader = new AvatarLoader(op, cacheUpdater);
          _callbacks = callbacks;
          _queryCollection = queryCollection;
       }
@@ -33,11 +34,15 @@ namespace mrHelper.GitLabClient.Loaders
          IEnumerable<MergeRequestKey> updatedMergeRequests = getUpdatedMergeRequestKeys(mergeRequests);
          _cacheUpdater.UpdateMergeRequests(mergeRequests);
          await _versionLoader.LoadVersionsAndCommits(updatedMergeRequests);
+
+         IEnumerable<MergeRequestKey> mergeRequestKeys = getAllMergeRequestKeys(mergeRequests);
          if (_approvalLoader != null)
          {
             // Note: GitLab (13.6) does not changed Updated_At when approval is revoked
-            await _approvalLoader.LoadApprovals(getAllMergeRequestKeys(mergeRequests));
+            await _approvalLoader.LoadApprovals(mergeRequestKeys);
          }
+
+         await _avatarLoader.LoadAvatars(mergeRequestKeys);
       }
 
       private IEnumerable<MergeRequestKey> getUpdatedMergeRequestKeys(
@@ -244,6 +249,7 @@ namespace mrHelper.GitLabClient.Loaders
       private readonly string _hostname;
       private readonly IVersionLoader _versionLoader;
       private readonly IApprovalLoader _approvalLoader;
+      private readonly IAvatarLoader _avatarLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
       private readonly DataCacheCallbacks _callbacks;
       private readonly SearchQueryCollection _queryCollection;
