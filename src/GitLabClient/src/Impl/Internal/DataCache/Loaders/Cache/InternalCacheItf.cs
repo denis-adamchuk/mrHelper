@@ -41,6 +41,8 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       /// Return a list of approvals of a specified merge request
       /// </summary>
       MergeRequestApprovalConfiguration GetApprovals(MergeRequestKey mrk);
+
+      byte[] GetAvatar(int userId);
    }
 }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
@@ -20,36 +21,38 @@ namespace mrHelper.GitLabClient.Loaders
 
       async public Task LoadAvatars(IEnumerable<MergeRequestKey> mergeRequestKeys)
       {
-         Exception exception = null;
-         async Task loadAvatarsLocal(MergeRequestKey mrk)
-         {
-            if (exception != null)
-            {
-               return;
-            }
-
-            try
-            {
-               await loadAvatarsAsync(mrk);
-            }
-            catch (BaseLoaderException ex)
-            {
-               exception = ex;
-            }
-         }
-
-         await TaskUtils.RunConcurrentFunctionsAsync(mergeRequestKeys, x => loadAvatarsLocal(x),
-            () => Constants.AvatarLoaderMergeRequestBatchLimits, () => exception != null);
-         if (exception != null)
-         {
-            throw exception;
-         }
+         IEnumerable<User> authors = extractAuthors(mergeRequestKeys);
+         await loadAvatarsForUsersAsync(authors, Constants.AvatarLoaderUserBatchLimits);
       }
 
       async public Task LoadAvatars(IEnumerable<Discussion> discussions)
       {
+         IEnumerable<User> authors = extractAuthors(discussions);
+         await loadAvatarsForUsersAsync(authors, Constants.AvatarLoaderForDiscussionsUserBatchLimits);
+      }
+
+      private static IEnumerable<User> extractAuthors(IEnumerable<Discussion> discussions)
+      {
+         return discussions
+            .SelectMany(discussion => discussion.Notes)
+            .Select(note => note.Author)
+            .GroupBy(user => user.Id)
+            .Select(group => group.First());
+      }
+
+      private IEnumerable<User> extractAuthors(IEnumerable<MergeRequestKey> mergeRequestKeys)
+      {
+         return mergeRequestKeys
+            .Select(mrk => _cacheUpdater.Cache.GetMergeRequest(mrk))
+            .Select(mr => mr.Author)
+            .GroupBy(user => user.Id)
+            .Select(group => group.First());
+      }
+
+      async private Task loadAvatarsForUsersAsync(IEnumerable<User> users, TaskUtils.BatchLimits batchLimits)
+      {
          Exception exception = null;
-         async Task loadAvatarsLocal(Discussion discussion)
+         async Task loadAvatarsLocal(User user)
          {
             if (exception != null)
             {
@@ -58,7 +61,7 @@ namespace mrHelper.GitLabClient.Loaders
 
             try
             {
-               await loadAvatarsAsync(discussion);
+               await loadAvatarForUserAsync(user);
             }
             catch (BaseLoaderException ex)
             {
@@ -66,27 +69,11 @@ namespace mrHelper.GitLabClient.Loaders
             }
          }
 
-         await TaskUtils.RunConcurrentFunctionsAsync(discussions, x => loadAvatarsLocal(x),
-            () => Constants.AvatarLoaderMergeRequestBatchLimits, () => exception != null);
+         await TaskUtils.RunConcurrentFunctionsAsync(users, x => loadAvatarsLocal(x),
+            () => batchLimits, () => exception != null);
          if (exception != null)
          {
             throw exception;
-         }
-      }
-
-
-      async private Task loadAvatarsAsync(MergeRequestKey mrk)
-      {
-         MergeRequest mr = _cacheUpdater.Cache.GetMergeRequest(mrk);
-         await loadAvatarForUserAsync(mr.Author);
-      }
-
-
-      async private Task loadAvatarsAsync(Discussion discussion)
-      {
-         foreach (DiscussionNote note in discussion.Notes)
-         {
-            await loadAvatarForUserAsync(note.Author);
          }
       }
 

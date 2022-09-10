@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -407,6 +408,56 @@ namespace mrHelper.CommonControls.Tools
             }
          }
          return bitmap;
+      }
+
+      public static Image ImageFromByteArray(byte[] bytes)
+      {
+         using (MemoryStream ms = new MemoryStream(bytes))
+         {
+            Image returnImage = Image.FromStream(ms);
+            return returnImage;
+         }
+      }
+
+      public static Image ClipRectToCircle(Image srcImage, Color backGround)
+      {
+         if (srcImage.Width != srcImage.Height)
+         {
+            return null;
+         }
+
+         PointF center = new PointF(srcImage.Width / 2, srcImage.Height / 2);
+         float radius = srcImage.Width / 2;
+         return ClipToCircle(srcImage, center, radius, backGround);
+      }
+
+      // https://stackoverflow.com/a/47205281
+      public static Image ClipToCircle(Image srcImage, PointF center, float radius, Color backGround)
+      {
+         Image dstImage = new Bitmap(srcImage.Width, srcImage.Height, srcImage.PixelFormat);
+
+         using (Graphics g = Graphics.FromImage(dstImage))
+         {
+            // enables smoothing of the edge of the circle (less pixelated)
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            // fills background color
+            using (Brush brush = new SolidBrush(backGround))
+            {
+               g.FillRectangle(brush, 0, 0, dstImage.Width, dstImage.Height);
+            }
+
+            // adds the new ellipse & draws the image again 
+            using (GraphicsPath path = new GraphicsPath())
+            {
+               RectangleF r = new RectangleF(center.X - radius, center.Y - radius, radius * 2, radius * 2);
+               path.AddEllipse(r);
+               g.SetClip(path);
+               g.DrawImage(srcImage, 0, 0);
+            }
+
+            return dstImage;
+         }
       }
 
       public static void PerformClick(Tuple<Button, bool>[] buttonsToClick)

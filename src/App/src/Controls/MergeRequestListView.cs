@@ -752,6 +752,19 @@ namespace mrHelper.App.Controls
                e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
             }
          }
+         else if (columnType == ColumnType.Author)
+         {
+            byte[] avatar = _dataCache.AvatarCache.GetAvatar(fmk.MergeRequest.Author);
+            Color avatarBackgroundColor = isMuted(fmk) ? Color.White : getMergeRequestColor(fmk, defaultColor);
+            avatarBackgroundColor = isSelected ? SystemColors.Highlight : avatarBackgroundColor;
+            RectangleF imageRect = drawAvatar(e.Graphics, e.Bounds, avatar, avatarBackgroundColor);
+            int textPaddingX = 10;
+            RectangleF textRect = new RectangleF(
+               bounds.X + imageRect.Width + textPaddingX, bounds.Y,
+               bounds.Width - imageRect.Width - textPaddingX, bounds.Height);
+            Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+            e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, textRect, format);
+         }
          else if (columnType == ColumnType.Resolved)
          {
             using (Brush brush = new SolidBrush(getDiscussionCountColor(fmk, isSelected)))
@@ -865,6 +878,38 @@ namespace mrHelper.App.Controls
             }
          }
       }
+
+      private RectangleF drawAvatar(Graphics g, Rectangle bounds, byte[] avatar, Color backgroundColor)
+      {
+         using (System.IO.MemoryStream ms = new System.IO.MemoryStream(avatar))
+         {
+            using (Image image = Image.FromStream(ms))
+            {
+               int rowHeight = bounds.Height;
+               float imageWidth = (float)(rowHeight - 0.05 * rowHeight); // 5% less
+               float imageHeight = imageWidth;
+               float imagePaddingX = 10;
+               float imageX = imagePaddingX;
+               float imageY = (rowHeight - imageHeight) / 2;
+               try
+               {
+                  using (Image circleImage = WinFormsHelpers.ClipRectToCircle(image, backgroundColor))
+                  {
+                     RectangleF imageRect = new RectangleF(
+                        bounds.X + imageX, bounds.Y + imageY, imageWidth, imageHeight);
+                     g.DrawImage(circleImage, imageRect);
+                     return imageRect;
+                  }
+               }
+               catch (Exception ex)
+               {
+                  ExceptionHandlers.Handle("", ex);
+                  return new RectangleF();
+               }
+            }
+         }
+      }
+
 
       enum EColorSchemeItemsKind
       {

@@ -125,6 +125,8 @@ namespace mrHelper.GitLabClient
 
       public IUserCache UserCache => _internal?.UserCache;
 
+      public IAvatarCache AvatarCache => _internal?.AvatarCache;
+
       public DataCacheConnectionContext ConnectionContext { get; private set; }
 
       private void reset()
@@ -173,14 +175,17 @@ namespace mrHelper.GitLabClient
             IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
             projectCache = new ProjectCache(loader, _cacheContext, hostname);
          }
+
          UserCache userCache = null;
          if (_cacheContext.SupportUserCache)
          {
             IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
             userCache = new UserCache(userListLoader, _cacheContext, hostname);
          }
+
+         AvatarCache avatarCache = new AvatarCache(cacheUpdater.Cache);
          return new DataCacheInternal(mergeRequestManager, discussionManager,
-            timeTrackingManager, projectCache, userCache);
+            timeTrackingManager, projectCache, userCache, avatarCache);
       }
 
       private bool _isConnecting;
