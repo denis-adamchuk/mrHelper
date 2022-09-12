@@ -43,7 +43,8 @@ namespace mrHelper.App.Controls
          MergeRequestKey mergeRequestKey,
          User mergeRequestAuthor,
          User currentUser,
-         DiscussionLayout discussionLayout)
+         DiscussionLayout discussionLayout,
+         AvatarImageCache avatarImageCache)
       {
          _shortcuts = shortcuts;
          _git = git;
@@ -51,6 +52,7 @@ namespace mrHelper.App.Controls
          _mergeRequestKey = mergeRequestKey;
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
+         _avatarImageCache = avatarImageCache;
 
          _discussionSort = discussionSort;
          _discussionSort.SortStateChanged += onSortStateChanged;
@@ -226,7 +228,8 @@ namespace mrHelper.App.Controls
                _discussionLayout.DiffContextPosition,
                _discussionLayout.DiscussionColumnWidth,
                _discussionLayout.NeedShiftReplies,
-               _discussionLayout.DiffContextDepth)
+               _discussionLayout.DiffContextDepth,
+               _avatarImageCache)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -454,6 +457,7 @@ namespace mrHelper.App.Controls
       }
 
       private User _currentUser;
+      private AvatarImageCache _avatarImageCache;
       private MergeRequestKey _mergeRequestKey;
       private User _mergeRequestAuthor;
       private IGitCommandService _git;

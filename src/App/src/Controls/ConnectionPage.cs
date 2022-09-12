@@ -40,6 +40,8 @@ namespace mrHelper.App.Controls
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
       private ExpressionResolver _expressionResolver;
+      private Dictionary<EDataCacheType, AvatarImageCache> _avatarImageCache =
+         new Dictionary<EDataCacheType, AvatarImageCache>();
       private MergeRequestFilter _mergeRequestFilter;
       private MergeRequestFilter _mergeRequestFilterRecent;
       private readonly System.Windows.Forms.ToolTip _toolTip;

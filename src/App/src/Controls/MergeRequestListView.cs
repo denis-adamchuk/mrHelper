@@ -129,6 +129,11 @@ namespace mrHelper.App.Controls
          _expressionResolver = expressionResolver;
       }
 
+      internal void SetAvatarImageCache(AvatarImageCache avatarImageCache)
+      {
+         _avatarImageCache = avatarImageCache;
+      }
+
       internal void DisableListView()
       {
          Enabled = false;
@@ -754,11 +759,13 @@ namespace mrHelper.App.Controls
          }
          else if (columnType == ColumnType.Author)
          {
-            byte[] avatar = _dataCache.AvatarCache.GetAvatar(fmk.MergeRequest.Author);
             Color avatarBackgroundColor = isMuted(fmk) ? Color.White : getMergeRequestColor(fmk, defaultColor);
             avatarBackgroundColor = isSelected ? SystemColors.Highlight : avatarBackgroundColor;
-            RectangleF imageRect = drawAvatar(e.Graphics, e.Bounds, avatar, avatarBackgroundColor);
-            int textPaddingX = 10;
+            Image avatar = _avatarImageCache.GetAvatar(fmk.MergeRequest.Author, avatarBackgroundColor);
+            Rectangle imageRect = drawAvatar(e.Graphics, e.Bounds, avatar);
+            AvatarWidth = imageRect.Width;
+
+            int textPaddingX = AvatarPaddingRight;
             RectangleF textRect = new RectangleF(
                bounds.X + imageRect.Width + textPaddingX, bounds.Y,
                bounds.Width - imageRect.Width - textPaddingX, bounds.Height);
@@ -857,9 +864,8 @@ namespace mrHelper.App.Controls
          float ellipseWidth = (float)(textSize.Height - 0.30 * textSize.Height); // 30% less
          float ellipseHeight = ellipseWidth;
          float ellipsePaddingX = 5;
-         float ellipseOffsetX = 0;
-         float ellipseX = ellipseOffsetX + ellipsePaddingX;
-         float ellipseY = (textSize.Height - ellipseHeight) / 2;
+         float ellipseX = ellipsePaddingX;
+         float ellipseY = (bounds.Height - ellipseHeight) / 2;
          if (bounds.Width > ellipseX + ellipseWidth)
          {
             using (Brush ellipseBrush = new SolidBrush(fillColor))
@@ -879,37 +885,20 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private RectangleF drawAvatar(Graphics g, Rectangle bounds, byte[] avatar, Color backgroundColor)
+      private Rectangle drawAvatar(Graphics g, Rectangle bounds, Image avatar)
       {
-         using (System.IO.MemoryStream ms = new System.IO.MemoryStream(avatar))
-         {
-            using (Image image = Image.FromStream(ms))
-            {
-               int rowHeight = bounds.Height;
-               float imageWidth = (float)(rowHeight - 0.05 * rowHeight); // 5% less
-               float imageHeight = imageWidth;
-               float imagePaddingX = 10;
-               float imageX = imagePaddingX;
-               float imageY = (rowHeight - imageHeight) / 2;
-               try
-               {
-                  using (Image circleImage = WinFormsHelpers.ClipRectToCircle(image, backgroundColor))
-                  {
-                     RectangleF imageRect = new RectangleF(
-                        bounds.X + imageX, bounds.Y + imageY, imageWidth, imageHeight);
-                     g.DrawImage(circleImage, imageRect);
-                     return imageRect;
-                  }
-               }
-               catch (Exception ex)
-               {
-                  ExceptionHandlers.Handle("", ex);
-                  return new RectangleF();
-               }
-            }
-         }
+         int rowHeight = bounds.Height;
+         int imageWidth = (int)Math.Ceiling(rowHeight - 0.05 * rowHeight); // 5% less
+         int imageHeight = imageWidth;
+         int imagePaddingX = AvatarPaddingLeft;
+         int imageX = imagePaddingX;
+         int imageY = (rowHeight - imageHeight) / 2;
+         Rectangle imageRect = new Rectangle(bounds.X + imageX, bounds.Y + imageY, imageWidth, imageHeight);
+         g.DrawImage(avatar, imageRect);
+         return imageRect;
       }
 
+      private int AvatarWidth { get; set; }
 
       enum EColorSchemeItemsKind
       {
@@ -1641,18 +1630,39 @@ namespace mrHelper.App.Controls
 
       private bool autoResizeColumnHeaderWidth(ColumnHeader column)
       {
-         ColumnType? columnType = getColumnTypeByName(column.Text);
-         if (columnType.HasValue)
+         int? width = getColumnAutoWidth(column);
+         if (width.HasValue)
          {
-            column.Width = columnType == ColumnType.Color ? DefaultColorColumnWidth :
-               getColumnWidthByContent(column, columnType);
-            return true;
+            column.Width = width.Value;
          }
-         return false;
+         return width.HasValue;
       }
 
-      private int getColumnWidthByContent(ColumnHeader c, ColumnType? columnType)
+      private int? getColumnAutoWidth(ColumnHeader column)
       {
+         ColumnType? columnType = getColumnTypeByName(column.Text);
+         if (!columnType.HasValue)
+         {
+            return new int?();
+         }
+
+         switch (columnType.Value)
+         {
+            case ColumnType.Color:
+               return DefaultColorColumnWidth;
+
+            case ColumnType.Author:
+               return getColumnAutoWidthByContent(column) + AvatarPaddingLeft + AvatarPaddingRight + AvatarWidth;
+         }
+         return getColumnAutoWidthByContent(column);
+      }
+
+      private int getColumnAutoWidthByContent(ColumnHeader column)
+      {
+         ColumnType? columnTypeOpt = getColumnTypeByName(column.Text);
+         Debug.Assert(columnTypeOpt.HasValue);
+         ColumnType columnType = columnTypeOpt.Value;
+
          const int MaxAllowedColumnWidth = 1000;
 
          using (Graphics g = CreateGraphics())
@@ -1660,15 +1670,15 @@ namespace mrHelper.App.Controls
             StringFormat noTrimmingFormat = new StringFormat() { Trimming = StringTrimming.None };
 
             float headerWidth = 0;
-            using (Font headerFont = getColumnHeaderFont(getSortedByColumn() == columnType.Value))
+            using (Font headerFont = getColumnHeaderFont(getSortedByColumn() == columnType))
             {
-               headerWidth = g.MeasureString(c.Text, headerFont, MaxAllowedColumnWidth, noTrimmingFormat).Width;
+               headerWidth = g.MeasureString(column.Text, headerFont, MaxAllowedColumnWidth, noTrimmingFormat).Width;
             }
 
             Font contentFont = this.Font;
             float widestContentWidth = Items
                .Cast<ListViewItem>()
-               .Select(item => getSubItemTag(item, columnType.Value))
+               .Select(item => getSubItemTag(item, columnType))
                .Max(subItem => g.MeasureString(subItem.Text, contentFont, MaxAllowedColumnWidth, noTrimmingFormat).Width);
 
             return Convert.ToInt32(Math.Ceiling(Math.Max(headerWidth, widestContentWidth)));
@@ -1900,11 +1910,15 @@ namespace mrHelper.App.Controls
       private Action<MergeRequestKey, string> _openMergeRequestUrlCallback;
       private string _hostname;
       private Func<MergeRequestKey, bool> _timeTrackingCheckingCallback;
+      private AvatarImageCache _avatarImageCache;
       private static readonly int MaxListViewRows = 3;
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
       private static readonly string AllListViewRowsHint = "See all labels in tooltip";
 
       private static readonly int GroupHeaderHeight = 20; // found experimentally
+
+      private static readonly int AvatarPaddingLeft = 10;
+      private static readonly int AvatarPaddingRight = 20;
 
       private static readonly int UnmuteTimerInterval = 60 * 1000; // 1 minute
       private readonly Timer _unmuteTimer = new Timer

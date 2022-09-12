@@ -574,7 +574,8 @@ namespace mrHelper.App.Controls
             DiscussionsForm discussionsForm = new DiscussionsForm(
                git, currentUser, mrk, discussions, title, author, _colorScheme,
                discussionLoader, discussionHelper, webUrl, _shortcuts, GetCustomActionList(),
-               cmd => isCommandEnabledInDiscussionsView(mrk, cmd), () => reloadByDiscussionsViewRequest(mrk))
+               cmd => isCommandEnabledInDiscussionsView(mrk, cmd), () => reloadByDiscussionsViewRequest(mrk),
+               _avatarImageCache[getCurrentTabDataCacheType()])
             {
                Tag = mrk
             };

@@ -72,6 +72,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\AvatarPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\ConnectionPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -263,6 +266,7 @@
     <Compile Include="src\Helpers\Configuration\RawDictionaryStringHelper.cs" />
     <Compile Include="src\Helpers\GitLab\AsyncDiscussionHelper.cs" />
     <Compile Include="src\Helpers\GitLab\AsyncDiscussionLoader.cs" />
+    <Compile Include="src\Helpers\GitLab\AvatarImageCache.cs" />
     <Compile Include="src\Helpers\GitLab\TimeTrackingHelpers.cs" />
     <Compile Include="src\Forms\NewMergeRequestForm.cs">
       <SubType>Form</SubType>

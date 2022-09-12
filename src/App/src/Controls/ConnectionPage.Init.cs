@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -10,7 +11,6 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
-using TheArtOfDev.HtmlRenderer.WinForms;
 
 namespace mrHelper.App.Controls
 {
@@ -92,10 +92,10 @@ namespace mrHelper.App.Controls
          createLiveDataCacheAndDependencies();
          subscribeToLiveDataCache();
 
-         createSearchDataCache();
+         createSearchDataCacheAndDependencies();
          subscribeToSearchDataCache();
 
-         createRecentDataCache();
+         createRecentDataCacheAndDependencies();
          subscribeToRecentDataCache();
       }
 
@@ -287,6 +287,9 @@ namespace mrHelper.App.Controls
 
          _eventFilter = new EventFilter(Program.Settings, dataCache, _mergeRequestFilter);
          _userNotifier = new UserNotifier(dataCache, _eventFilter, _trayIcon);
+
+         _avatarImageCache[EDataCacheType.Live] = new AvatarImageCache(dataCache);
+         getListView(EDataCacheType.Live).SetAvatarImageCache(_avatarImageCache[EDataCacheType.Live]);
       }
 
       private void subscribeToLiveDataCache()
@@ -299,12 +302,26 @@ namespace mrHelper.App.Controls
 
       private void disposeLiveDataCacheDependencies()
       {
+         _avatarImageCache[EDataCacheType.Live]?.Dispose();
+         _avatarImageCache.Remove(EDataCacheType.Live);
          _userNotifier?.Dispose();
          _userNotifier = null;
          _eventFilter?.Dispose();
          _eventFilter = null;
          _expressionResolver?.Dispose();
          _expressionResolver = null;
+      }
+
+      private void disposeSearchDataCacheDependencies()
+      {
+         _avatarImageCache[EDataCacheType.Search]?.Dispose();
+         _avatarImageCache.Remove(EDataCacheType.Search);
+      }
+
+      private void disposeRecentDataCacheDependencies()
+      {
+         _avatarImageCache[EDataCacheType.Recent]?.Dispose();
+         _avatarImageCache.Remove(EDataCacheType.Recent);
       }
 
       private void subscribeToLiveDataCacheInternalEvents()
@@ -393,13 +410,16 @@ namespace mrHelper.App.Controls
          return null;
       }
 
-      private void createSearchDataCache()
+      private void createSearchDataCacheAndDependencies()
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Search", new DataCacheCallbacks(null, null),
             getDataCacheUpdateRules(EDataCacheType.Search), false, false);
          _searchDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Search).SetDataCache(_searchDataCache);
+
+         _avatarImageCache[EDataCacheType.Search] = new AvatarImageCache(_searchDataCache);
+         getListView(EDataCacheType.Search).SetAvatarImageCache(_avatarImageCache[EDataCacheType.Search]);
       }
 
       private void subscribeToSearchDataCacheInternalEvents()
@@ -460,7 +480,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void createRecentDataCache()
+      private void createRecentDataCacheAndDependencies()
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilterRecent, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Recent", new DataCacheCallbacks(null, null),
@@ -468,6 +488,9 @@ namespace mrHelper.App.Controls
          _recentDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Recent).SetDataCache(_recentDataCache);
          getListView(EDataCacheType.Recent).SetFilter(_mergeRequestFilterRecent);
+
+         _avatarImageCache[EDataCacheType.Recent] = new AvatarImageCache(_recentDataCache);
+         getListView(EDataCacheType.Recent).SetAvatarImageCache(_avatarImageCache[EDataCacheType.Recent]);
       }
 
       private void subscribeToRecentDataCacheInternalEvents()

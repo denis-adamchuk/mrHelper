@@ -38,7 +38,8 @@ namespace mrHelper.App.Controls
          ConfigurationHelper.DiffContextPosition diffContextPosition,
          ConfigurationHelper.DiscussionColumnWidth discussionColumnWidth,
          bool needShiftReplies,
-         ContextDepth diffContextDepth)
+         ContextDepth diffContextDepth,
+         AvatarImageCache avatarImageCache)
       {
          Discussion = discussion;
 
@@ -47,6 +48,7 @@ namespace mrHelper.App.Controls
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
+         _avatarImageCache = avatarImageCache;
 
          _diffContextDepth = diffContextDepth;
          _popupDiffContextDepth = new ContextDepth(5, 5);
@@ -630,6 +632,7 @@ namespace mrHelper.App.Controls
          {
             Controls.Add(noteContainer.NoteInfo);
             Controls.Add(noteContainer.NoteContent);
+            Controls.Add(noteContainer.NoteAvatar);
          }
          return getNoteContainers().Any();
       }
@@ -724,16 +727,16 @@ namespace mrHelper.App.Controls
 
       private NoteContainer createNoteContainer(Control parent, DiscussionNote note, bool discussionResolved)
       {
-         NoteContainer noteContainer = new NoteContainer
+         NoteContainer noteContainer = new NoteContainer();
+         noteContainer.NoteInfo = new Label
          {
-            NoteInfo = new Label
-            {
-               Text = getNoteInformation(note),
-               AutoSize = true
-            }
+            Text = getNoteInformation(note),
+            AutoSize = true
          };
          noteContainer.NoteInfo.Invalidated += (_, __) =>
             noteContainer.NoteInfo.Text = getNoteInformation(note);
+
+         noteContainer.NoteAvatar = new AvatarPanel(_avatarImageCache.GetAvatar(note.Author, this.BackColor));
 
          if (!isServiceDiscussionNote(note))
          {
@@ -1122,9 +1125,10 @@ namespace mrHelper.App.Controls
          }
 
          int noteWidthInUnits = getNoteWidthInUnits();
-         return isColumnWidthFixed
+         int noteWidth = isColumnWidthFixed
             ? Math.Min(noteWidthInUnits * Convert.ToInt32(Font.Size), getMaxFixedWidth())
             : width * noteWidthInUnits / 100;
+         return noteWidth;
       }
 
       private int getDiffContextWidth(int width)
@@ -1139,17 +1143,23 @@ namespace mrHelper.App.Controls
 
       private void resizeBoxContent(int width)
       {
-         IEnumerable<Control> noteContentControls = getNoteContainers().Select(container => container.NoteContent);
-         foreach (Control noteControl in noteContentControls)
+         IEnumerable<NoteContainer> noteContainers = getNoteContainers();
+         foreach (NoteContainer noteContainer in noteContainers)
          {
-            bool needShrinkNote = noteControl != noteContentControls.First();
+            bool needShrinkNote = noteContainer != noteContainers.First();
             int noteWidthDelta = needShrinkNote ? getNoteRepliesPadding(width) : 0;
 
+            int noteAvatarHeight = noteContainer.NoteInfo.Height * 2;
+            int noteAvatarWidth = noteAvatarHeight;
+            noteContainer.NoteAvatar.Size = new Size(noteAvatarWidth, noteAvatarHeight);
+
+            Control noteControl = noteContainer.NoteContent;
             HtmlPanel htmlPanel = noteControl as HtmlPanel;
             DiscussionNote note = getNoteFromControl(noteControl);
             if (note != null && !isServiceDiscussionNote(note))
             {
-               resizeLimitedWidthHtmlPanel(htmlPanel, getNoteWidth(width) - noteWidthDelta);
+               int limitedWidth = getNoteWidth(width) - noteWidthDelta - AvatarPaddingRight - noteAvatarWidth;
+               resizeLimitedWidthHtmlPanel(htmlPanel, limitedWidth);
             }
             else
             {
@@ -1320,13 +1330,17 @@ namespace mrHelper.App.Controls
             bool needOffsetNote = noteContainer != noteContainers.First();
             int noteHorzOffset = needOffsetNote ? getNoteRepliesPadding(width) : 0;
 
+            Point noteAvatarPos = controlPos;
+            noteAvatarPos.Offset(noteHorzOffset, 0);
+            noteContainer.NoteAvatar.Location = noteAvatarPos;
+
             Point noteInfoPos = controlPos;
-            noteInfoPos.Offset(noteHorzOffset, 0);
+            noteInfoPos.Offset(noteHorzOffset + AvatarPaddingRight + noteContainer.NoteAvatar.Width, 0);
             noteContainer.NoteInfo.Location = noteInfoPos;
             controlPos.Offset(0, noteContainer.NoteInfo.Height + 2);
 
             Point noteContentPos = controlPos;
-            noteContentPos.Offset(noteHorzOffset, 0);
+            noteContentPos.Offset(noteHorzOffset + AvatarPaddingRight + noteContainer.NoteAvatar.Width, 0);
             noteContainer.NoteContent.Location = noteContentPos;
             controlPos.Offset(0, noteContainer.NoteContent.Height + 5);
          }
@@ -1774,6 +1788,8 @@ namespace mrHelper.App.Controls
 
       private readonly Padding PopupContextPadding = new Padding(2, 1, 2, 3);
 
+      private readonly int AvatarPaddingRight = 10;
+
       private Control _textboxFilename;
       private Control _showMoreContextHint;
       private Control _showMoreContext;
@@ -1784,13 +1800,14 @@ namespace mrHelper.App.Controls
       {
          public Control NoteInfo;
          public Control NoteContent;
+         public Control NoteAvatar;
       }
       private IEnumerable<NoteContainer> _noteContainers;
 
       private readonly User _mergeRequestAuthor;
       private readonly User _currentUser;
       private readonly string _imagePath;
-
+      private readonly AvatarImageCache _avatarImageCache;
       private ContextDepth _diffContextDepth;
       private readonly ContextDepth _popupDiffContextDepth;
       private readonly IContextMaker _panelContextMaker;

@@ -16,12 +16,21 @@ namespace mrHelper.App.Forms
    internal partial class DiscussionsForm : CustomFontForm, ICommandCallback
    {
       public DiscussionsForm(
-         IGitCommandService git, User currentUser, MergeRequestKey mrk, IEnumerable<Discussion> discussions,
-         string mergeRequestTitle, User mergeRequestAuthor,
-         ColorScheme colorScheme, AsyncDiscussionLoader discussionLoader, AsyncDiscussionHelper discussionHelper,
-         string webUrl, Shortcuts shortcuts,
-         IEnumerable<ICommand> commands, Func<ICommand, CommandState> isCommandEnabled,
-         Action onRefresh)
+         IGitCommandService git,
+         User currentUser,
+         MergeRequestKey mrk,
+         IEnumerable<Discussion> discussions,
+         string mergeRequestTitle,
+         User mergeRequestAuthor,
+         ColorScheme colorScheme,
+         AsyncDiscussionLoader discussionLoader,
+         AsyncDiscussionHelper discussionHelper,
+         string webUrl,
+         Shortcuts shortcuts,
+         IEnumerable<ICommand> commands,
+         Func<ICommand, CommandState> isCommandEnabled,
+         Action onRefresh,
+         AvatarImageCache avatarImageCache)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -57,7 +66,7 @@ namespace mrHelper.App.Forms
 
          // Includes making some boxes visible. This does not paint them because their parent (Form) is hidden so far.
          discussionPanel.Initialize(discussionSort, displayFilter, discussionLoader, discussions,
-            shortcuts, git, colorScheme, mrk, mergeRequestAuthor, currentUser, discussionLayout);
+            shortcuts, git, colorScheme, mrk, mergeRequestAuthor, currentUser, discussionLayout, avatarImageCache);
          discussionPanel.ContentMismatchesFilter += showReapplyFilter;
          discussionPanel.ContentMatchesFilter += hideReapplyFilter;
          if (discussionPanel.DiscussionCount < 1)

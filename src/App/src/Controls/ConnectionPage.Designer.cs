@@ -37,6 +37,7 @@ namespace mrHelper.App.Controls
             listView.SetColorScheme(null);
             listView.SetFilter(null);
             listView.SetExpressionResolver(null);
+            listView.SetAvatarImageCache(null);
          }
 
          // Clear RevisionBrowser and let it drop ContextMenuStrip
@@ -57,6 +58,8 @@ namespace mrHelper.App.Controls
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
          disposeLiveDataCacheDependencies();
+         disposeSearchDataCacheDependencies();
+         disposeRecentDataCacheDependencies();
 
          resetLostConnectionInfo();
 

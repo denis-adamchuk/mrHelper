@@ -434,12 +434,12 @@ namespace mrHelper.CommonControls.Tools
       // https://stackoverflow.com/a/47205281
       public static Image ClipToCircle(Image srcImage, PointF center, float radius, Color backGround)
       {
-         Image dstImage = new Bitmap(srcImage.Width, srcImage.Height, srcImage.PixelFormat);
+         Bitmap dstImage = new Bitmap(srcImage.Width, srcImage.Height, srcImage.PixelFormat);
 
          using (Graphics g = Graphics.FromImage(dstImage))
          {
             // enables smoothing of the edge of the circle (less pixelated)
-            g.SmoothingMode = SmoothingMode.AntiAlias;
+            //g.SmoothingMode = SmoothingMode.AntiAlias;
 
             // fills background color
             using (Brush brush = new SolidBrush(backGround))
