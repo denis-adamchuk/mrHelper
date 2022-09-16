@@ -95,9 +95,10 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         // Unwrap a wrapped span (i.e. undo HihghlightFragment).
+         // Unwrap a wrapped span (i.e. undo HighlightFragment).
          // Don't reset HighlightState to remember a place where highlighting was located in order to continue search.
-         (Parent as DiscussionBox).setDiscussionNoteText(this, note);
+         // Note: Parent can be null if a note was deleted.
+         (Parent as DiscussionBox)?.setDiscussionNoteText(this, note);
       }
 
       protected override void OnMouseDown(MouseEventArgs e)
