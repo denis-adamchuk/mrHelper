@@ -246,7 +246,6 @@ namespace mrHelper.App.Controls
          Debug.Assert(_popupContext == null); // it should have been disposed and reset when popup window closes
          _popupContext = new HtmlPanel
          {
-            BorderStyle = BorderStyle.FixedSingle,
             TabStop = false,
             Font = Font,
             Tag = note
@@ -259,7 +258,9 @@ namespace mrHelper.App.Controls
             string text = getPopupDiffContextText(_popupContext, _popupDiffContextDepth, newOffset);
             if (text != _popupContext.Text)
             {
+               _popupContext.SuspendLayout();
                setPopupWindowText(text);
+               _popupContext.ResumeLayout();
                currentOffset = newOffset;
             }
          };
@@ -415,7 +416,6 @@ namespace mrHelper.App.Controls
 
          Control diffContextControl = new HtmlPanel
          {
-            BorderStyle = BorderStyle.FixedSingle,
             TabStop = false,
             Tag = firstNote,
             Parent = this
@@ -448,7 +448,7 @@ namespace mrHelper.App.Controls
             htmlPanel.Height = 0;
          }
 
-         string html = getFormattedHtml(_panelContextMaker, position, _diffContextDepth, fontSizePx, 2, true, 0);
+         string html = getFormattedHtml(_panelContextMaker, position, _diffContextDepth, fontSizePx, 0, 0);
          htmlPanel.Text = html;
 
          if (htmlPanel.Visible)
@@ -465,11 +465,11 @@ namespace mrHelper.App.Controls
          Debug.Assert(note.Type == "DiffNote");
          DiffPosition position = PositionConverter.Convert(note.Position);
 
-         return getFormattedHtml(_popupContextMaker, position, depth, fontSizePx, 2, true, offset);
+         return getFormattedHtml(_popupContextMaker, position, depth, fontSizePx, 0, offset);
       }
 
       private string getFormattedHtml(IContextMaker contextMaker, DiffPosition position, ContextDepth depth,
-         double fontSizePx, int rowsVPaddingPx, bool fullWidth, int offset)
+         double fontSizePx, int rowsVPaddingPx, int offset)
       {
          if (contextMaker == null)
          {
@@ -480,7 +480,7 @@ namespace mrHelper.App.Controls
          try
          {
             DiffContext context = getContext(contextMaker, position, depth, offset);
-            return DiffContextFormatter.GetHtml(context, fontSizePx, rowsVPaddingPx, fullWidth);
+            return DiffContextFormatter.GetHtml(context, fontSizePx, rowsVPaddingPx, true);
          }
          catch (ArgumentException ex)
          {
@@ -736,7 +736,11 @@ namespace mrHelper.App.Controls
          noteContainer.NoteInfo.Invalidated += (_, __) =>
             noteContainer.NoteInfo.Text = getNoteInformation(note);
 
-         noteContainer.NoteAvatar = new AvatarPanel(_avatarImageCache.GetAvatar(note.Author, this.BackColor));
+         noteContainer.NoteAvatar = new PictureBox
+         {
+            Image = _avatarImageCache.GetAvatar(note.Author, this.BackColor),
+            SizeMode = PictureBoxSizeMode.StretchImage
+         };
 
          if (!isServiceDiscussionNote(note))
          {
@@ -744,7 +748,6 @@ namespace mrHelper.App.Controls
             {
                AutoScroll = false,
                BackColor = getNoteColor(note),
-               BorderStyle = BorderStyle.FixedSingle,
                Tag = note,
                Parent = this,
                IsContextMenuEnabled = false
@@ -769,7 +772,6 @@ namespace mrHelper.App.Controls
             Control noteControl = new HtmlPanel
             {
                BackColor = getNoteColor(note),
-               BorderStyle = BorderStyle.FixedSingle,
                Tag = note,
                Parent = this
             };
@@ -1050,6 +1052,7 @@ namespace mrHelper.App.Controls
          resizeBoxContent(width);
          repositionBoxContent(width);
          resizeBox(width);
+         makeRoundBorders();
          _previousWidth = width;
       }
 
@@ -1149,7 +1152,7 @@ namespace mrHelper.App.Controls
             bool needShrinkNote = noteContainer != noteContainers.First();
             int noteWidthDelta = needShrinkNote ? getNoteRepliesPadding(width) : 0;
 
-            int noteAvatarHeight = noteContainer.NoteInfo.Height * 2;
+            int noteAvatarHeight = (int)Math.Ceiling(noteContainer.NoteInfo.Height * 2.25);
             int noteAvatarWidth = noteAvatarHeight;
             noteContainer.NoteAvatar.Size = new Size(noteAvatarWidth, noteAvatarHeight);
 
@@ -1330,20 +1333,47 @@ namespace mrHelper.App.Controls
             bool needOffsetNote = noteContainer != noteContainers.First();
             int noteHorzOffset = needOffsetNote ? getNoteRepliesPadding(width) : 0;
 
-            Point noteAvatarPos = controlPos;
-            noteAvatarPos.Offset(noteHorzOffset, 0);
-            noteContainer.NoteAvatar.Location = noteAvatarPos;
+            {
+               Point noteAvatarPos = controlPos;
+               noteAvatarPos.Offset(noteHorzOffset, AvatarPaddingTop);
+               noteContainer.NoteAvatar.Location = noteAvatarPos;
+            }
 
-            Point noteInfoPos = controlPos;
-            noteInfoPos.Offset(noteHorzOffset + AvatarPaddingRight + noteContainer.NoteAvatar.Width, 0);
-            noteContainer.NoteInfo.Location = noteInfoPos;
+            {
+               Point noteInfoPos = controlPos;
+               noteInfoPos.Offset(noteHorzOffset + AvatarPaddingRight + noteContainer.NoteAvatar.Width, 0);
+               noteContainer.NoteInfo.Location = noteInfoPos;
+            }
             controlPos.Offset(0, noteContainer.NoteInfo.Height + 2);
 
-            Point noteContentPos = controlPos;
-            noteContentPos.Offset(noteHorzOffset + AvatarPaddingRight + noteContainer.NoteAvatar.Width, 0);
-            noteContainer.NoteContent.Location = noteContentPos;
+            {
+               Point noteContentPos = controlPos;
+               noteContentPos.Offset(noteHorzOffset + AvatarPaddingRight + noteContainer.NoteAvatar.Width, 0);
+               noteContainer.NoteContent.Location = noteContentPos;
+            }
             controlPos.Offset(0, noteContainer.NoteContent.Height + 5);
          }
+      }
+
+      private void makeRoundBorders()
+      {
+         int radius = 10;
+
+         List<Control> controls = new List<Control>();
+         if (_panelContext != null)
+         {
+            controls.Add(_panelContext);
+         }
+         controls.AddRange(getNoteContainers().Where(nc => nc.NoteContent != null).Select(nc => nc.NoteContent));
+         controls.ForEach(control =>
+         {
+            bool isHorizontalScrollVisible = (control as ScrollableControl)?.HorizontalScroll.Visible ?? false;
+            using (System.Drawing.Drawing2D.GraphicsPath path = WinFormsHelpers.GetRoundRectagle(
+               control.ClientRectangle, radius, isHorizontalScrollVisible))
+            {
+               control.Region = new Region(path);
+            }
+         });
       }
 
       private void resizeBox(int width)
@@ -1788,6 +1818,7 @@ namespace mrHelper.App.Controls
 
       private readonly Padding PopupContextPadding = new Padding(2, 1, 2, 3);
 
+      private readonly int AvatarPaddingTop = 5;
       private readonly int AvatarPaddingRight = 10;
 
       private Control _textboxFilename;

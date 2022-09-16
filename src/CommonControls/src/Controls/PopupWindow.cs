@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Drawing;
 using System.Windows.Forms;
+using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.CommonControls.Controls
 {
@@ -9,12 +12,13 @@ namespace mrHelper.CommonControls.Controls
    /// </summary>
    public class PopupWindow : System.Windows.Forms.ToolStripDropDown
    {
-      public PopupWindow(bool autoClose = false)
+      public PopupWindow(bool autoClose, int? borderRadius)
       {
          AutoSize = false;
          AutoClose = autoClose;
          DoubleBuffered = true;
          ResizeRedraw = true;
+         _borderRadius = borderRadius;
       }
 
       private class MyToolStripControlHost : ToolStripControlHost
@@ -55,6 +59,32 @@ namespace mrHelper.CommonControls.Controls
          MaximumSize = hostedControlSize;
          Size = hostedControlSize;
       }
+
+      private void recreateRegion()
+      {
+         Debug.Assert(_borderRadius.HasValue);
+         int radius = _borderRadius.Value;
+         using (System.Drawing.Drawing2D.GraphicsPath path =
+            WinFormsHelpers.GetRoundRectagle(ClientRectangle, radius, HScroll))
+         {
+            Region = new Region(path);
+         }
+         Invalidate();
+      }
+
+      protected override void OnSizeChanged(EventArgs e)
+      {
+         base.OnSizeChanged(e);
+
+         if (_prevSize != Size && _borderRadius.HasValue)
+         {
+            recreateRegion();
+         }
+         _prevSize = Size;
+      }
+
+      private readonly int? _borderRadius;
+      private SizeF _prevSize = new SizeF();
    }
 }
 

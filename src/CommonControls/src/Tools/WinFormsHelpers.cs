@@ -419,28 +419,15 @@ namespace mrHelper.CommonControls.Tools
          }
       }
 
+      // inspired by https://stackoverflow.com/a/47205281
       public static Image ClipRectToCircle(Image srcImage, Color backGround)
       {
-         if (srcImage.Width != srcImage.Height)
-         {
-            return null;
-         }
-
-         PointF center = new PointF(srcImage.Width / 2, srcImage.Height / 2);
-         float radius = srcImage.Width / 2;
-         return ClipToCircle(srcImage, center, radius, backGround);
-      }
-
-      // https://stackoverflow.com/a/47205281
-      public static Image ClipToCircle(Image srcImage, PointF center, float radius, Color backGround)
-      {
-         Bitmap dstImage = new Bitmap(srcImage.Width, srcImage.Height, srcImage.PixelFormat);
+         int dstImageWidth = Math.Min(srcImage.Width, srcImage.Height);
+         int dstImageHeight = dstImageWidth;
+         Bitmap dstImage = new Bitmap(dstImageWidth, dstImageHeight, srcImage.PixelFormat);
 
          using (Graphics g = Graphics.FromImage(dstImage))
          {
-            // enables smoothing of the edge of the circle (less pixelated)
-            //g.SmoothingMode = SmoothingMode.AntiAlias;
-
             // fills background color
             using (Brush brush = new SolidBrush(backGround))
             {
@@ -450,13 +437,68 @@ namespace mrHelper.CommonControls.Tools
             // adds the new ellipse & draws the image again 
             using (GraphicsPath path = new GraphicsPath())
             {
+               PointF center = new PointF(dstImage.Width / 2, dstImage.Height / 2);
+               float radius = dstImage.Width / 2;
+
                RectangleF r = new RectangleF(center.X - radius, center.Y - radius, radius * 2, radius * 2);
                path.AddEllipse(r);
                g.SetClip(path);
-               g.DrawImage(srcImage, 0, 0);
+
+               int imgX = (dstImage.Width - srcImage.Width) / 2;
+               int imgY = (dstImage.Height - srcImage.Height) / 2;
+               g.DrawImage(srcImage, imgX, imgY);
             }
 
             return dstImage;
+         }
+      }
+
+      public static GraphicsPath GetRoundRectagle(Rectangle bounds, int radius, bool isHScrollVisible)
+      {
+         GraphicsPath path = new GraphicsPath();
+         if (!isHScrollVisible)
+         {
+            path.StartFigure();
+            path.AddArc(bounds.Left, bounds.Top, radius, radius, 180, 90);
+            path.AddArc(bounds.Right - radius, bounds.Top, radius, radius, 270, 90);
+            path.AddArc(bounds.Right - radius, bounds.Bottom - radius, radius, radius, 0, 90);
+            path.AddArc(bounds.Left, bounds.Bottom - radius, radius, radius, 90, 90);
+            path.CloseFigure();
+         }
+         else
+         {
+            int hScrollHeight = SystemInformation.HorizontalScrollBarHeight;
+            PointF topLeft = new PointF(bounds.Left, bounds.Top);
+            PointF bottomLeft = new PointF(bounds.Left, bounds.Bottom + hScrollHeight);
+            PointF bottomRight = new PointF(bounds.Right, bounds.Bottom + hScrollHeight);
+            PointF topRight = new PointF(bounds.Right, bounds.Top);
+            PointF topLeft2 = new PointF(topLeft.X, topLeft.Y + radius);
+            PointF topRight2 = new PointF(topRight.X, topRight.Y + radius);
+            PointF topLeft3 = new PointF(topLeft.X + radius, topLeft.Y);
+            PointF topRight3 = new PointF(topRight.X - radius, topRight.Y);
+
+            path.AddArc(topLeft.X, topLeft.Y, radius, radius, 180, 90);
+            path.AddLine(topLeft3, topRight3);
+            path.AddArc(topRight3.X, topRight3.Y, radius, radius, 270, 90);
+            path.AddLine(topRight2, bottomRight);
+            path.AddLine(bottomRight, bottomLeft);
+            path.AddLine(bottomLeft, topLeft2);
+         }
+         return path;
+      }
+
+      public class BorderlessRenderer : ToolStripProfessionalRenderer
+      {
+         public BorderlessRenderer()
+         {
+            // Remove extra padding
+            RoundedEdges = false;
+         }
+
+         protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+         {
+            // Suppress base class functionality to not draw borders
+            // base.OnRenderToolStripBorder(e);
          }
       }
 

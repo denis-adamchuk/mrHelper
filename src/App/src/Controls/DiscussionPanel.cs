@@ -53,6 +53,8 @@ namespace mrHelper.App.Controls
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
          _avatarImageCache = avatarImageCache;
+         _popupWindow.Renderer = new CommonControls.Tools.WinFormsHelpers.BorderlessRenderer();
+         _popupWindow.DropShadowEnabled = false;
 
          _discussionSort = discussionSort;
          _discussionSort.SortStateChanged += onSortStateChanged;
@@ -480,7 +482,9 @@ namespace mrHelper.App.Controls
          InitialDelay = 300,
          // BaseStylesheet = Don't specify anything here because users' HTML <style> override it
       };
-      private readonly PopupWindow _popupWindow = new PopupWindow(true);
+      private static readonly int PopupWindowBorderRadius = 10;
+      private readonly PopupWindow _popupWindow = new PopupWindow(autoClose: true,
+         borderRadius: PopupWindowBorderRadius);
 
       private static readonly int RedrawTimerInterval = 1000 * 60; // 1 minute
 

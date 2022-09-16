@@ -350,7 +350,7 @@ namespace mrHelper.CommonControls.Controls
 
       private void createPopupWindow(ListBox listBox)
       {
-         _popupWindow = new PopupWindow();
+         _popupWindow = new PopupWindow(autoClose: false, borderRadius: null);
          _popupWindow.SetContent(listBox, PopupWindowPadding);
       }
 
