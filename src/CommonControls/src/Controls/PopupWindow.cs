@@ -63,12 +63,7 @@ namespace mrHelper.CommonControls.Controls
       private void recreateRegion()
       {
          Debug.Assert(_borderRadius.HasValue);
-         int radius = _borderRadius.Value;
-         using (System.Drawing.Drawing2D.GraphicsPath path =
-            WinFormsHelpers.GetRoundRectagle(ClientRectangle, radius, HScroll))
-         {
-            Region = new Region(path);
-         }
+         Region = WinFormsHelpers.GetRoundedRegion(ClientRectangle, _borderRadius.Value, HScroll);
          Invalidate();
       }
 

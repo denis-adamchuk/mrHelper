@@ -239,7 +239,7 @@ namespace mrHelper.App.Controls
          void setPopupWindowText(string text)
          {
             _popupContext.Text = text;
-            resizeLimitedWidthHtmlPanel(_popupContext, _panelContext.Width);
+            resizeLimitedWidthHtmlPanel(_popupContext, _panelContext.Width, DiffContextExtraHeight);
          }
 
          int currentOffset = 0;
@@ -453,7 +453,7 @@ namespace mrHelper.App.Controls
 
          if (htmlPanel.Visible)
          {
-            resizeLimitedWidthHtmlPanel(htmlPanel, prevWidth);
+            resizeLimitedWidthHtmlPanel(htmlPanel, prevWidth, DiffContextExtraHeight);
          }
       }
 
@@ -742,11 +742,18 @@ namespace mrHelper.App.Controls
             SizeMode = PictureBoxSizeMode.StretchImage
          };
 
+         void updateStylesheet(HtmlPanel htmlPanel)
+         {
+            htmlPanel.BaseStylesheet = String.Format(
+               "{0} body div {{ font-size: {1}px; padding-left: {2}px; padding-right: {3}px; }}",
+               Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(htmlPanel),
+               NoteHtmlPaddingLeft, NoteHtmlPaddingRight);
+         }
+
          if (!isServiceDiscussionNote(note))
          {
             Control noteControl = new SearchableHtmlPanel(parent as IHighlightListener)
             {
-               AutoScroll = false,
                BackColor = getNoteColor(note),
                Tag = note,
                Parent = this,
@@ -791,13 +798,6 @@ namespace mrHelper.App.Controls
          return noteContainer;
       }
 
-      private void updateStylesheet(HtmlPanel htmlPanel)
-      {
-         htmlPanel.BaseStylesheet = String.Format(
-            "{0} body div {{ font-size: {1}px; padding-left: 4px; padding-right: {2}px; }}",
-            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(htmlPanel), 20);
-      }
-
       private void updateNoteTooltip(Control noteControl, DiscussionNote note)
       {
          _htmlTooltip.SetToolTip(noteControl, getNoteTooltipHtml(noteControl, note));
@@ -836,7 +836,7 @@ namespace mrHelper.App.Controls
 
          if (noteControl.Visible)
          {
-            resizeLimitedWidthHtmlPanel(noteControl as HtmlPanel, prevWidth);
+            resizeLimitedWidthHtmlPanel(noteControl as HtmlPanel, prevWidth, NormalNoteExtraHeight);
          }
       }
 
@@ -849,6 +849,7 @@ namespace mrHelper.App.Controls
          }
 
          // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
+         int prevWidth = noteControl.Width;
          if (noteControl.Visible)
          {
             noteControl.Width = 0;
@@ -863,18 +864,27 @@ namespace mrHelper.App.Controls
 
          if (noteControl.Visible)
          {
-            resizeFullSizeHtmlPanel(noteControl as HtmlPanel);
+            resizeFullSizeHtmlPanel(noteControl as HtmlPanel, prevWidth, ServiceNoteExtraWidth, ServiceNoteExtraHeight);
          }
       }
 
-      private void resizeFullSizeHtmlPanel(HtmlPanel htmlPanel)
+      private void resizeFullSizeHtmlPanel(HtmlPanel htmlPanel, int maxWidth, int extraWidth, int extraHeight)
       {
+         // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
+         htmlPanel.Width = 0;
+         htmlPanel.Height = 0;
+
          // Use computed size as the control size. Height must be set BEFORE Width.
-         htmlPanel.Height = htmlPanel.AutoScrollMinSize.Height + 2;
-         htmlPanel.Width = htmlPanel.AutoScrollMinSize.Width + 2;
+         htmlPanel.Height = htmlPanel.AutoScrollMinSize.Height + extraHeight;
+         htmlPanel.Width = htmlPanel.AutoScrollMinSize.Width + extraWidth;
+
+         if (htmlPanel.Width > maxWidth)
+         {
+            resizeLimitedWidthHtmlPanel(htmlPanel, maxWidth, extraHeight);
+         }
       }
 
-      private void resizeLimitedWidthHtmlPanel(HtmlPanel htmlPanel, int width)
+      private void resizeLimitedWidthHtmlPanel(HtmlPanel htmlPanel, int width, int extraHeight)
       {
          // Turn on AutoScroll to obtain relevant HorizontalScroll visibility property values after width change
          htmlPanel.AutoScroll = true;
@@ -883,17 +893,17 @@ namespace mrHelper.App.Controls
          htmlPanel.Width = width;
 
          // Check if horizontal scroll bar is needed if we have the specified width
-         int extraHeight = htmlPanel.HorizontalScroll.Visible ? SystemInformation.HorizontalScrollBarHeight : 0;
+         int horzScrollBarHeight = htmlPanel.HorizontalScroll.Visible ? SystemInformation.HorizontalScrollBarHeight : 0;
 
          // Turn off AutoScroll to avoid recalculating of AutoScrollMinSize on Height change.
          // htmlPanel must think that no scroll bars are needed to return full actual size.
          htmlPanel.AutoScroll = false;
 
          // Change height to the full actual size, leave a space for a horizontal scroll bar if needed
-         htmlPanel.Height = htmlPanel.AutoScrollMinSize.Height + 2 + extraHeight;
+         htmlPanel.Height = htmlPanel.AutoScrollMinSize.Height + horzScrollBarHeight + extraHeight;
 
          // To enable scroll bars, AutoScroll property must be on
-         htmlPanel.AutoScroll = extraHeight > 0;
+         htmlPanel.AutoScroll = horzScrollBarHeight > 0;
       }
 
       private bool isServiceDiscussionNote(DiscussionNote note)
@@ -1162,11 +1172,12 @@ namespace mrHelper.App.Controls
             if (note != null && !isServiceDiscussionNote(note))
             {
                int limitedWidth = getNoteWidth(width) - noteWidthDelta - AvatarPaddingRight - noteAvatarWidth;
-               resizeLimitedWidthHtmlPanel(htmlPanel, limitedWidth);
+               resizeLimitedWidthHtmlPanel(htmlPanel, limitedWidth, NormalNoteExtraHeight);
             }
             else
             {
-               resizeFullSizeHtmlPanel(htmlPanel);
+               int limitedWidth = getNoteWidth(width) - noteWidthDelta - AvatarPaddingRight - noteAvatarWidth;
+               resizeFullSizeHtmlPanel(htmlPanel, limitedWidth, ServiceNoteExtraWidth, ServiceNoteExtraHeight);
             }
          }
 
@@ -1182,7 +1193,7 @@ namespace mrHelper.App.Controls
 
          if (_panelContext != null)
          {
-            resizeLimitedWidthHtmlPanel(_panelContext as HtmlPanel, getDiffContextWidth(width));
+            resizeLimitedWidthHtmlPanel(_panelContext as HtmlPanel, getDiffContextWidth(width), DiffContextExtraHeight);
          }
       }
 
@@ -1367,12 +1378,9 @@ namespace mrHelper.App.Controls
          controls.AddRange(getNoteContainers().Where(nc => nc.NoteContent != null).Select(nc => nc.NoteContent));
          controls.ForEach(control =>
          {
+            Rectangle bounds = control.ClientRectangle;
             bool isHorizontalScrollVisible = (control as ScrollableControl)?.HorizontalScroll.Visible ?? false;
-            using (System.Drawing.Drawing2D.GraphicsPath path = WinFormsHelpers.GetRoundRectagle(
-               control.ClientRectangle, radius, isHorizontalScrollVisible))
-            {
-               control.Region = new Region(path);
-            }
+            control.Region = WinFormsHelpers.GetRoundedRegion(bounds, radius, isHorizontalScrollVisible);
          });
       }
 
@@ -1820,6 +1828,13 @@ namespace mrHelper.App.Controls
 
       private readonly int AvatarPaddingTop = 5;
       private readonly int AvatarPaddingRight = 10;
+
+      private readonly int ServiceNoteExtraWidth = 4;
+      private readonly int ServiceNoteExtraHeight = 4;
+      private readonly int NormalNoteExtraHeight = 2;
+      private readonly int DiffContextExtraHeight = 0;
+      private readonly int NoteHtmlPaddingLeft = 4;
+      private readonly int NoteHtmlPaddingRight = 20;
 
       private Control _textboxFilename;
       private Control _showMoreContextHint;

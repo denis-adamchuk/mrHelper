@@ -453,7 +453,7 @@ namespace mrHelper.CommonControls.Tools
          }
       }
 
-      public static GraphicsPath GetRoundRectagle(Rectangle bounds, int radius, bool isHScrollVisible)
+      private static GraphicsPath getRoundRectagle(Rectangle bounds, int radius, bool isHScrollVisible)
       {
          GraphicsPath path = new GraphicsPath();
          if (!isHScrollVisible)
@@ -485,6 +485,24 @@ namespace mrHelper.CommonControls.Tools
             path.AddLine(bottomLeft, topLeft2);
          }
          return path;
+      }
+
+      // inspired by https://stackoverflow.com/a/32991419
+      public static Region GetRoundedRegion(Rectangle bounds, int radius, bool isHScrollVisible)
+      {
+         if (isHScrollVisible)
+         {
+            using (System.Drawing.Drawing2D.GraphicsPath path = getRoundRectagle(
+               bounds, radius, isHScrollVisible: true))
+            {
+               return new Region(path);
+            }
+         }
+         else
+         {
+            return Region.FromHrgn(NativeMethods.CreateRoundRectRgn(
+               bounds.Left, bounds.Top, bounds.Right, bounds.Bottom, radius, radius));
+         }
       }
 
       public class BorderlessRenderer : ToolStripProfessionalRenderer
