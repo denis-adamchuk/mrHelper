@@ -1824,7 +1824,7 @@ namespace mrHelper.App.Controls
       };
       private int? _previousWidth;
 
-      private readonly Padding PopupContextPadding = new Padding(2, 1, 2, 3);
+      private readonly Padding PopupContextPadding = new Padding(0, 0, 0, 0);
 
       private readonly int AvatarPaddingTop = 5;
       private readonly int AvatarPaddingRight = 10;

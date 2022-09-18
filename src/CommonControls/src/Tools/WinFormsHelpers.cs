@@ -468,14 +468,14 @@ namespace mrHelper.CommonControls.Tools
          else
          {
             int hScrollHeight = SystemInformation.HorizontalScrollBarHeight;
-            PointF topLeft = new PointF(bounds.Left, bounds.Top);
-            PointF bottomLeft = new PointF(bounds.Left, bounds.Bottom + hScrollHeight);
-            PointF bottomRight = new PointF(bounds.Right, bounds.Bottom + hScrollHeight);
-            PointF topRight = new PointF(bounds.Right, bounds.Top);
-            PointF topLeft2 = new PointF(topLeft.X, topLeft.Y + radius);
-            PointF topRight2 = new PointF(topRight.X, topRight.Y + radius);
-            PointF topLeft3 = new PointF(topLeft.X + radius, topLeft.Y);
-            PointF topRight3 = new PointF(topRight.X - radius, topRight.Y);
+            Point topLeft = new Point(bounds.Left, bounds.Top);
+            Point bottomLeft = new Point(bounds.Left, bounds.Bottom + hScrollHeight);
+            Point bottomRight = new Point(bounds.Right, bounds.Bottom + hScrollHeight);
+            Point topRight = new Point(bounds.Right, bounds.Top);
+            Point topLeft2 = new Point(topLeft.X, topLeft.Y + radius);
+            Point topRight2 = new Point(topRight.X, topRight.Y + radius);
+            Point topLeft3 = new Point(topLeft.X + radius, topLeft.Y);
+            Point topRight3 = new Point(topRight.X - radius, topRight.Y);
 
             path.AddArc(topLeft.X, topLeft.Y, radius, radius, 180, 90);
             path.AddLine(topLeft3, topRight3);
@@ -501,7 +501,7 @@ namespace mrHelper.CommonControls.Tools
          else
          {
             return Region.FromHrgn(NativeMethods.CreateRoundRectRgn(
-               bounds.Left, bounds.Top, bounds.Right, bounds.Bottom, radius, radius));
+               bounds.Left, bounds.Top, bounds.Right + 1, bounds.Bottom, radius, radius));
          }
       }
 

@@ -26,6 +26,7 @@ namespace mrHelper.CommonControls.Controls
          public MyToolStripControlHost(Control c, Action<Control> onHostedControlResize) : base(c)
          {
             _onHostedControlResize = onHostedControlResize;
+            Margin = new Padding(0, 0, 0, 0);
          }
 
          protected override void OnHostedControlResize(EventArgs e)
