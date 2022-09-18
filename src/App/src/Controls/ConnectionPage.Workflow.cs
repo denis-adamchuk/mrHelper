@@ -151,10 +151,6 @@ namespace mrHelper.App.Controls
          {
             throw new CannotLoadCurentUserException(HostName);
          }
-         /*
-         var x = await _shortcuts?.GetUserAccessor().GetAvatarAsync(CurrentUser);
-         Console.WriteLine(x);
-         */
       }
 
       private void checkApprovalSupport()
