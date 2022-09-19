@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
@@ -231,7 +232,9 @@ namespace mrHelper.App.Controls
                _discussionLayout.DiscussionColumnWidth,
                _discussionLayout.NeedShiftReplies,
                _discussionLayout.DiffContextDepth,
-               _avatarImageCache)
+               _avatarImageCache,
+               _pathWithoutScrollBarCache,
+               _pathWithScrollBarCache)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -288,11 +291,10 @@ namespace mrHelper.App.Controls
 
       private void repositionControls()
       {
-         // If Vertical Scroll is visible, its width is already excluded from ClientSize.Width
-         int vscrollWidth = VerticalScroll.Visible ? 0 : SystemInformation.VerticalScrollBarWidth;
-
          // Discussion box can take all the width except scroll bar
-         int clientWidth = ClientSize.Width - vscrollWidth;
+         bool isVertScrollVisible = VerticalScroll.Visible;
+         int vscrollWidth = isVertScrollVisible ? SystemInformation.VerticalScrollBarWidth : 0;
+         int clientWidth = Bounds.Width - vscrollWidth;
 
          int topOffset = 0;
          Size previousBoxSize = new Size();
@@ -318,6 +320,11 @@ namespace mrHelper.App.Controls
 
             previousBoxLocation = location;
             previousBoxSize = box.Size;
+
+            if (isVertScrollVisible != VerticalScroll.Visible)
+            {
+               break;
+            }
          }
       }
 
@@ -493,6 +500,11 @@ namespace mrHelper.App.Controls
       {
          Interval = RedrawTimerInterval
       };
+
+      private Dictionary<Rectangle, GraphicsPath> _pathWithScrollBarCache =
+         new Dictionary<Rectangle, GraphicsPath>();
+      private Dictionary<Rectangle, GraphicsPath> _pathWithoutScrollBarCache =
+         new Dictionary<Rectangle, GraphicsPath>();
    }
 }
 

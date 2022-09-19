@@ -19,6 +19,7 @@ using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
+using System.Drawing.Drawing2D;
 
 namespace mrHelper.App.Controls
 {
@@ -39,7 +40,9 @@ namespace mrHelper.App.Controls
          ConfigurationHelper.DiscussionColumnWidth discussionColumnWidth,
          bool needShiftReplies,
          ContextDepth diffContextDepth,
-         AvatarImageCache avatarImageCache)
+         AvatarImageCache avatarImageCache,
+         Dictionary<Rectangle, GraphicsPath> pathWithoutScrollBarCache,
+         Dictionary<Rectangle, GraphicsPath> pathWithScrollBarCache)
       {
          Discussion = discussion;
 
@@ -49,6 +52,8 @@ namespace mrHelper.App.Controls
          _currentUser = currentUser;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
          _avatarImageCache = avatarImageCache;
+         _pathWithoutScrollBarCache = pathWithoutScrollBarCache;
+         _pathWithScrollBarCache = pathWithScrollBarCache;
 
          _diffContextDepth = diffContextDepth;
          _popupDiffContextDepth = new ContextDepth(5, 5);
@@ -1378,9 +1383,21 @@ namespace mrHelper.App.Controls
          controls.AddRange(getNoteContainers().Where(nc => nc.NoteContent != null).Select(nc => nc.NoteContent));
          controls.ForEach(control =>
          {
-            Rectangle bounds = control.ClientRectangle;
             bool isHorizontalScrollVisible = (control as ScrollableControl)?.HorizontalScroll.Visible ?? false;
-            control.Region = WinFormsHelpers.GetRoundedRegion(bounds, radius, isHorizontalScrollVisible);
+            GraphicsPath pathToUse = null;
+            Rectangle bounds = control.ClientRectangle;
+            Dictionary<Rectangle, GraphicsPath> cache =
+               isHorizontalScrollVisible ? _pathWithScrollBarCache : _pathWithoutScrollBarCache;
+            if (cache.TryGetValue(bounds, out GraphicsPath region))
+            {
+               pathToUse = region;
+            }
+            else
+            {
+               pathToUse = WinFormsHelpers.GetRoundedPath(bounds, radius, isHorizontalScrollVisible);
+               cache[bounds] = pathToUse;
+            }
+            control.Region = new Region(pathToUse);
          });
       }
 
@@ -1854,6 +1871,8 @@ namespace mrHelper.App.Controls
       private readonly User _currentUser;
       private readonly string _imagePath;
       private readonly AvatarImageCache _avatarImageCache;
+      private readonly Dictionary<Rectangle, GraphicsPath> _pathWithoutScrollBarCache;
+      private readonly Dictionary<Rectangle, GraphicsPath> _pathWithScrollBarCache;
       private ContextDepth _diffContextDepth;
       private readonly ContextDepth _popupDiffContextDepth;
       private readonly IContextMaker _panelContextMaker;
