@@ -28,7 +28,7 @@ namespace mrHelper.App.Controls
       internal DiscussionBox(
          Control parent,
          GitLabClient.SingleDiscussionAccessor accessor, IGitCommandService git,
-         User currentUser, ProjectKey projectKey, Discussion discussion,
+         User currentUser, MergeRequestKey mergeRequestKey, Discussion discussion,
          User mergeRequestAuthor,
          ColorScheme colorScheme,
          Action<DiscussionBox> onContentChanging,
@@ -43,7 +43,8 @@ namespace mrHelper.App.Controls
          AvatarImageCache avatarImageCache,
          Dictionary<Rectangle, GraphicsPath> pathWithoutScrollBarCache,
          Dictionary<Rectangle, GraphicsPath> pathWithScrollBarCache,
-         string webUrl)
+         string webUrl,
+         Func<int, bool> onNoteSelectionRequest)
       {
          Discussion = discussion;
 
@@ -51,7 +52,8 @@ namespace mrHelper.App.Controls
          _editor = accessor.GetDiscussionEditor();
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
-         _imagePath = StringUtils.GetUploadsPrefix(projectKey);
+         _mergeRequestKey = mergeRequestKey;
+         _imagePath = StringUtils.GetUploadsPrefix(mergeRequestKey.ProjectKey);
          _avatarImageCache = avatarImageCache;
          _pathWithoutScrollBarCache = pathWithoutScrollBarCache;
          _pathWithScrollBarCache = pathWithScrollBarCache;
@@ -82,6 +84,7 @@ namespace mrHelper.App.Controls
             onContentChanged?.Invoke(this);
          };
          _onControlGotFocus = onControlGotFocus;
+         _onNoteSelectionRequest = onNoteSelectionRequest;
 
          _htmlTooltip = htmlTooltip;
          _popupWindow = popupWindow;
@@ -122,6 +125,25 @@ namespace mrHelper.App.Controls
       internal bool HasNotes => getNoteContainers().Any();
 
       internal Discussion Discussion { get; private set; }
+
+      internal bool SelectNote(int noteId)
+      {
+         IEnumerable<Control> noteControls = getNoteContainers()
+            .Select(container => container.NoteContent)
+            .Where(noteControl => noteControl != null);
+
+         foreach (Control noteControl in noteControls)
+         {
+            DiscussionNote note = getNoteFromControl(noteControl);
+            if (note.Id == noteId)
+            {
+               noteControl.Focus();
+               return true;
+            }
+         }
+
+         return false;
+      }
 
       internal void RefreshTimeStamps()
       {
@@ -239,6 +261,23 @@ namespace mrHelper.App.Controls
       private void noteControl_LostFocus(object sender, EventArgs e)
       {
          ((Control)(sender)).Invalidate();
+      }
+
+      private void noteControl_LinkClicked(object sender, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlLinkClickedEventArgs e)
+      {
+         if (e.Link.StartsWith(_webUrl) && e.Link.Length > _webUrl.Length + 1)
+         {
+            string noteIdString = e.Link.Substring(_webUrl.Length + 1); // + 1 to remove #
+            if (int.TryParse(noteIdString, out int noteId))
+            {
+               if (_onNoteSelectionRequest.Invoke(noteId))
+               {
+                  e.Handled = true;
+                  return;
+               }
+            }
+         }
+         e.Handled = false;
       }
 
       private void Control_GotFocus(object sender, EventArgs e)
@@ -795,7 +834,7 @@ namespace mrHelper.App.Controls
 
          if (!isServiceDiscussionNote(note))
          {
-            Control noteControl = new SearchableHtmlPanel(parent as IHighlightListener)
+            HtmlPanel noteControl = new SearchableHtmlPanel(parent as IHighlightListener)
             {
                BackColor = getNoteColor(note),
                Tag = note,
@@ -812,6 +851,7 @@ namespace mrHelper.App.Controls
                updateNoteTooltip(noteControl, getNoteFromControl(noteControl));
             };
             noteControl.Paint += noteControl_Paint;
+            noteControl.LinkClicked += noteControl_LinkClicked;
 
             updateStylesheet(noteControl as HtmlPanel);
             setDiscussionNoteText(noteControl, note);
@@ -821,7 +861,7 @@ namespace mrHelper.App.Controls
          }
          else
          {
-            Control noteControl = new HtmlPanel
+            HtmlPanel noteControl = new HtmlPanel
             {
                BackColor = getNoteColor(note),
                Tag = note,
@@ -835,6 +875,7 @@ namespace mrHelper.App.Controls
                setServiceDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
             };
             noteControl.Paint += noteControl_Paint;
+            noteControl.LinkClicked += noteControl_LinkClicked;
 
             updateStylesheet(noteControl as HtmlPanel);
             setServiceDiscussionNoteText(noteControl, note);
@@ -1945,6 +1986,7 @@ namespace mrHelper.App.Controls
 
       private readonly User _mergeRequestAuthor;
       private readonly User _currentUser;
+      private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _imagePath;
       private readonly AvatarImageCache _avatarImageCache;
       private readonly Dictionary<Rectangle, GraphicsPath> _pathWithoutScrollBarCache;
@@ -1967,6 +2009,7 @@ namespace mrHelper.App.Controls
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;
       private readonly Action<Control> _onControlGotFocus;
+      private readonly Func<int, bool> _onNoteSelectionRequest;
       private readonly HtmlToolTipEx _htmlTooltip;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }

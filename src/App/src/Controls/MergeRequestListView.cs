@@ -1656,7 +1656,10 @@ namespace mrHelper.App.Controls
                return DefaultColorColumnWidth;
 
             case ColumnType.Avatar:
-               return getAvatarRectangle().Width;
+               {
+                  Rectangle avatarRectangle = getAvatarRectangle();
+                  return avatarRectangle.X + avatarRectangle.Width;
+               }
          }
          return getColumnAutoWidthByContent(column);
       }

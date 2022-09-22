@@ -80,17 +80,7 @@ namespace mrHelper.App.Controls
       public void OnHighlighted(Control control)
       {
          control.Focus();
-
-         Point controlLocationAtScreen = control.PointToScreen(new Point(0, -5));
-         Point controlLocationAtForm = PointToClient(controlLocationAtScreen);
-
-         if (!ClientRectangle.Contains(controlLocationAtForm))
-         {
-            int x = AutoScrollPosition.X;
-            int y = VerticalScroll.Value + controlLocationAtForm.Y;
-            Point newPosition = new Point(x, y);
-            AutoScrollPosition = newPosition;
-         }
+         scrollToControl(control);
       }
 
       internal int DiscussionCount => getAllBoxes().Count();
@@ -106,6 +96,20 @@ namespace mrHelper.App.Controls
       protected override System.Drawing.Point ScrollToControl(System.Windows.Forms.Control activeControl)
       {
          return this.AutoScrollPosition; // https://stackoverflow.com/a/9428480
+      }
+
+      private void scrollToControl(Control control)
+      {
+         Point controlLocationAtScreen = control.PointToScreen(new Point(0, -5));
+         Point controlLocationAtForm = PointToClient(controlLocationAtScreen);
+
+         if (!ClientRectangle.Contains(controlLocationAtForm))
+         {
+            int x = AutoScrollPosition.X;
+            int y = VerticalScroll.Value + controlLocationAtForm.Y;
+            Point newPosition = new Point(x, y);
+            AutoScrollPosition = newPosition;
+         }
       }
 
       protected override void OnVisibleChanged(EventArgs e)
@@ -223,6 +227,17 @@ namespace mrHelper.App.Controls
          _mostRecentFocusedDiscussionControl = sender;
       }
 
+      bool onNoteSelectionRequest(int noteId)
+      {
+         DiscussionBox boxWithNote = getVisibleAndSortedBoxes().FirstOrDefault(box => box.SelectNote(noteId));
+         if (boxWithNote != null)
+         {
+            scrollToControl(boxWithNote);
+            return true;
+         }
+         return false;
+      }
+
       private void createDiscussionBoxes(IEnumerable<Discussion> discussions)
       {
          foreach (Discussion discussion in discussions)
@@ -230,7 +245,7 @@ namespace mrHelper.App.Controls
             SingleDiscussionAccessor accessor = _shortcuts.GetSingleDiscussionAccessor(
                _mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
-               _mergeRequestKey.ProjectKey, discussion, _mergeRequestAuthor,
+               _mergeRequestKey, discussion, _mergeRequestAuthor,
                _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
                onControlGotFocus, _htmlTooltip, _popupWindow,
                _discussionLayout.DiffContextPosition,
@@ -240,7 +255,8 @@ namespace mrHelper.App.Controls
                _avatarImageCache,
                _pathWithoutScrollBarCache,
                _pathWithScrollBarCache,
-               _webUrl)
+               _webUrl,
+               onNoteSelectionRequest)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
