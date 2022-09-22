@@ -170,6 +170,7 @@ namespace mrHelper.App.Controls
             box.SetDiffContextDepth(_discussionLayout.DiffContextDepth);
          }
          PerformLayout();
+         AdjustFormScrollbars(true);
       }
 
       private void onNeedShiftRepliesChanged()
@@ -188,6 +189,7 @@ namespace mrHelper.App.Controls
             box.SetDiscussionColumnWidth(_discussionLayout.DiscussionColumnWidth);
          }
          PerformLayout();
+         AdjustFormScrollbars(true);
       }
 
       private void onDiffContextPositionChanged()
@@ -197,6 +199,7 @@ namespace mrHelper.App.Controls
             box.SetDiffContextPosition(_discussionLayout.DiffContextPosition);
          }
          PerformLayout();
+         AdjustFormScrollbars(true);
       }
 
       private void onSortStateChanged()
