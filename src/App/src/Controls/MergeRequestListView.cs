@@ -759,13 +759,18 @@ namespace mrHelper.App.Controls
          }
          else if (columnType == ColumnType.Author)
          {
-            Color avatarBackgroundColor = isMuted(fmk) ? Color.White : getMergeRequestColor(fmk, defaultColor);
-            avatarBackgroundColor = isSelected ? SystemColors.Highlight : avatarBackgroundColor;
-            Image avatar = _avatarImageCache.GetAvatar(fmk.MergeRequest.Author, avatarBackgroundColor);
-            Rectangle imageRect = drawAvatar(e.Graphics, e.Bounds, avatar);
-            AvatarWidth = imageRect.Width;
+            Rectangle imageRect = new Rectangle();
+            int textPaddingX = 0;
+            if (!isSummaryItem(e.Item))
+            {
+               Color avatarBackgroundColor = isMuted(fmk) ? Color.White : getMergeRequestColor(fmk, Color.White);
+               avatarBackgroundColor = isSelected ? SystemColors.Highlight : avatarBackgroundColor;
+               Image avatar = _avatarImageCache.GetAvatar(fmk.MergeRequest.Author, avatarBackgroundColor);
+               imageRect = drawAvatar(e.Graphics, e.Bounds, avatar);
+               AvatarWidth = imageRect.Width;
+               textPaddingX = AvatarPaddingRight;
+            }
 
-            int textPaddingX = AvatarPaddingRight;
             RectangleF textRect = new RectangleF(
                bounds.X + imageRect.Width + textPaddingX, bounds.Y,
                bounds.Width - imageRect.Width - textPaddingX, bounds.Height);
