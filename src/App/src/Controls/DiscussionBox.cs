@@ -42,7 +42,8 @@ namespace mrHelper.App.Controls
          ContextDepth diffContextDepth,
          AvatarImageCache avatarImageCache,
          Dictionary<Rectangle, GraphicsPath> pathWithoutScrollBarCache,
-         Dictionary<Rectangle, GraphicsPath> pathWithScrollBarCache)
+         Dictionary<Rectangle, GraphicsPath> pathWithScrollBarCache,
+         string webUrl)
       {
          Discussion = discussion;
 
@@ -54,6 +55,7 @@ namespace mrHelper.App.Controls
          _avatarImageCache = avatarImageCache;
          _pathWithoutScrollBarCache = pathWithoutScrollBarCache;
          _pathWithScrollBarCache = pathWithScrollBarCache;
+         _webUrl = webUrl;
 
          _diffContextDepth = diffContextDepth;
          _popupDiffContextDepth = new ContextDepth(5, 5);
@@ -228,6 +230,17 @@ namespace mrHelper.App.Controls
          await onToggleResolveDiscussionAsync();
       }
 
+      private void noteControl_GotFocus(object sender, EventArgs e)
+      {
+         ((Control)(sender)).Invalidate();
+         Control_GotFocus(sender, e);
+      }
+
+      private void noteControl_LostFocus(object sender, EventArgs e)
+      {
+         ((Control)(sender)).Invalidate();
+      }
+
       private void Control_GotFocus(object sender, EventArgs e)
       {
          _onControlGotFocus?.Invoke(sender as Control);
@@ -276,7 +289,7 @@ namespace mrHelper.App.Controls
          showPopupWindow();
       }
 
-      private void onCopyToClipboardContextClick(object sender, EventArgs e)
+      private void onCopyToClipboardClick(object sender, EventArgs e)
       {
          DiscussionNote note = _panelContext == null ? null : getNoteFromControl(_panelContext);
          if (note == null || note.Position == null)
@@ -290,10 +303,25 @@ namespace mrHelper.App.Controls
          Clipboard.SetText(noteAsText);
 
          disableCopyToClipboard();
-         scheduleCopyToClipboardStateChange();
+         scheduleOneShotTimer(enableCopyToClipboard);
       }
 
-      private void scheduleCopyToClipboardStateChange()
+      private void onCopyNoteLinkToClipboardClick(Control noteLink)
+      {
+         DiscussionNote note = noteLink.Tag as DiscussionNote;
+         if (note == null)
+         {
+            return;
+         }
+
+         string noteUrl = String.Format("{0}#{1}", _webUrl, note.Id);
+         Clipboard.SetText(noteUrl);
+
+         noteLink.Enabled = false;
+         scheduleOneShotTimer(() => noteLink.Enabled = true);
+      }
+
+      private static void scheduleOneShotTimer(Action onTimer)
       {
          int CopyToClipboardTimerInterval = 500; // 0.5 second
          Timer copyToClipboardTimer = new Timer
@@ -304,7 +332,7 @@ namespace mrHelper.App.Controls
          {
             copyToClipboardTimer.Stop();
             copyToClipboardTimer.Dispose();
-            enableCopyToClipboard();
+            onTimer?.Invoke();
          };
          copyToClipboardTimer.Start();
       }
@@ -609,7 +637,7 @@ namespace mrHelper.App.Controls
             Text = "Copy to clipboard",
             BorderStyle = BorderStyle.None
          };
-         linkLabel.Click += onCopyToClipboardContextClick;
+         linkLabel.Click += onCopyToClipboardClick;
          return linkLabel;
       }
 
@@ -638,6 +666,7 @@ namespace mrHelper.App.Controls
             Controls.Add(noteContainer.NoteInfo);
             Controls.Add(noteContainer.NoteContent);
             Controls.Add(noteContainer.NoteAvatar);
+            Controls.Add(noteContainer.NoteLink);
          }
          return getNoteContainers().Any();
       }
@@ -747,6 +776,15 @@ namespace mrHelper.App.Controls
             SizeMode = PictureBoxSizeMode.StretchImage
          };
 
+         noteContainer.NoteLink = new LinkLabel()
+         {
+            AutoSize = true,
+            Text = "Copy link",
+            BorderStyle = BorderStyle.None,
+            Tag = note
+         };
+         noteContainer.NoteLink.Click += (s, e) => onCopyNoteLinkToClipboardClick(noteContainer.NoteLink);
+
          void updateStylesheet(HtmlPanel htmlPanel)
          {
             htmlPanel.BaseStylesheet = String.Format(
@@ -764,7 +802,8 @@ namespace mrHelper.App.Controls
                Parent = this,
                IsContextMenuEnabled = false
             };
-            noteControl.GotFocus += Control_GotFocus;
+            noteControl.GotFocus += noteControl_GotFocus;
+            noteControl.LostFocus += noteControl_LostFocus;
             noteControl.ContextMenu = createContextMenuForDiscussionNote(note, noteControl, discussionResolved);
             noteControl.FontChanged += (sender, e) =>
             {
@@ -772,6 +811,7 @@ namespace mrHelper.App.Controls
                setDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
                updateNoteTooltip(noteControl, getNoteFromControl(noteControl));
             };
+            noteControl.Paint += noteControl_Paint;
 
             updateStylesheet(noteControl as HtmlPanel);
             setDiscussionNoteText(noteControl, note);
@@ -787,12 +827,14 @@ namespace mrHelper.App.Controls
                Tag = note,
                Parent = this
             };
-            noteControl.GotFocus += Control_GotFocus;
+            noteControl.GotFocus += noteControl_GotFocus;
+            noteControl.LostFocus += noteControl_LostFocus;
             noteControl.FontChanged += (sender, e) =>
             {
                updateStylesheet(noteControl as HtmlPanel);
                setServiceDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
             };
+            noteControl.Paint += noteControl_Paint;
 
             updateStylesheet(noteControl as HtmlPanel);
             setServiceDiscussionNoteText(noteControl, note);
@@ -1360,6 +1402,12 @@ namespace mrHelper.App.Controls
                noteInfoPos.Offset(noteHorzOffset + AvatarPaddingRight + noteContainer.NoteAvatar.Width, 0);
                noteContainer.NoteInfo.Location = noteInfoPos;
             }
+
+            {
+               Point noteLinkPos = controlPos;
+               noteLinkPos.X = getNoteWidth(width) - noteContainer.NoteLink.Width;
+               noteContainer.NoteLink.Location = noteLinkPos;
+            }
             controlPos.Offset(0, noteContainer.NoteInfo.Height + 2);
 
             {
@@ -1373,8 +1421,6 @@ namespace mrHelper.App.Controls
 
       private void makeRoundBorders()
       {
-         int radius = 10;
-
          List<Control> controls = new List<Control>();
          if (_panelContext != null)
          {
@@ -1383,22 +1429,51 @@ namespace mrHelper.App.Controls
          controls.AddRange(getNoteContainers().Where(nc => nc.NoteContent != null).Select(nc => nc.NoteContent));
          controls.ForEach(control =>
          {
-            bool isHorizontalScrollVisible = (control as ScrollableControl)?.HorizontalScroll.Visible ?? false;
-            GraphicsPath pathToUse = null;
             Rectangle bounds = control.ClientRectangle;
-            Dictionary<Rectangle, GraphicsPath> cache =
-               isHorizontalScrollVisible ? _pathWithScrollBarCache : _pathWithoutScrollBarCache;
-            if (cache.TryGetValue(bounds, out GraphicsPath region))
-            {
-               pathToUse = region;
-            }
-            else
-            {
-               pathToUse = WinFormsHelpers.GetRoundedPath(bounds, radius, isHorizontalScrollVisible);
-               cache[bounds] = pathToUse;
-            }
-            control.Region = new Region(pathToUse);
+            bool isHorizontalScrollVisible = (control as ScrollableControl)?.HorizontalScroll.Visible ?? false;
+            control.Region = new Region(getRoundedPath(bounds, isHorizontalScrollVisible));
          });
+      }
+
+      private void noteControl_Paint(object sender, PaintEventArgs e)
+      {
+         drawBorders(sender as Control, e.Graphics);
+      }
+
+      private void drawBorders(Control control, Graphics graphics)
+      {
+         if (control.Focused)
+         {
+            using (Pen pen = new Pen(Color.Black, 2.0f))
+            {
+               Rectangle bounds = control.ClientRectangle;
+               bounds.X += 1;
+               bounds.Y += 1;
+               bounds.Width -= 2;
+               bounds.Height -= 2;
+               bool isHorizontalScrollVisible = (control as ScrollableControl)?.HorizontalScroll.Visible ?? false;
+               graphics.DrawPath(pen, getRoundedPath(bounds, isHorizontalScrollVisible));
+            }
+         }
+      }
+
+      private GraphicsPath getRoundedPath(Rectangle bounds, bool isHorizontalScrollVisible)
+      {
+         int radius = 10;
+
+         GraphicsPath pathToUse;
+         Dictionary<Rectangle, GraphicsPath> cache =
+            isHorizontalScrollVisible ? _pathWithScrollBarCache : _pathWithoutScrollBarCache;
+         if (cache.TryGetValue(bounds, out GraphicsPath path))
+         {
+            pathToUse = path;
+         }
+         else
+         {
+            pathToUse = WinFormsHelpers.GetRoundedPath(bounds, radius, isHorizontalScrollVisible);
+            cache[bounds] = pathToUse;
+         }
+         return pathToUse;
       }
 
       private void resizeBox(int width)
@@ -1864,6 +1939,7 @@ namespace mrHelper.App.Controls
          public Control NoteInfo;
          public Control NoteContent;
          public Control NoteAvatar;
+         public Control NoteLink;
       }
       private IEnumerable<NoteContainer> _noteContainers;
 
@@ -1873,6 +1949,7 @@ namespace mrHelper.App.Controls
       private readonly AvatarImageCache _avatarImageCache;
       private readonly Dictionary<Rectangle, GraphicsPath> _pathWithoutScrollBarCache;
       private readonly Dictionary<Rectangle, GraphicsPath> _pathWithScrollBarCache;
+      private readonly string _webUrl;
       private ContextDepth _diffContextDepth;
       private readonly ContextDepth _popupDiffContextDepth;
       private readonly IContextMaker _panelContextMaker;

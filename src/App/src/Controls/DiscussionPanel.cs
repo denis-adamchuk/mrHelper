@@ -45,7 +45,8 @@ namespace mrHelper.App.Controls
          User mergeRequestAuthor,
          User currentUser,
          DiscussionLayout discussionLayout,
-         AvatarImageCache avatarImageCache)
+         AvatarImageCache avatarImageCache,
+         string webUrl)
       {
          _shortcuts = shortcuts;
          _git = git;
@@ -56,6 +57,7 @@ namespace mrHelper.App.Controls
          _avatarImageCache = avatarImageCache;
          _popupWindow.Renderer = new CommonControls.Tools.WinFormsHelpers.BorderlessRenderer();
          _popupWindow.DropShadowEnabled = false;
+         _webUrl = webUrl;
 
          _discussionSort = discussionSort;
          _discussionSort.SortStateChanged += onSortStateChanged;
@@ -237,7 +239,8 @@ namespace mrHelper.App.Controls
                _discussionLayout.DiffContextDepth,
                _avatarImageCache,
                _pathWithoutScrollBarCache,
-               _pathWithScrollBarCache)
+               _pathWithScrollBarCache,
+               _webUrl)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -475,7 +478,7 @@ namespace mrHelper.App.Controls
       private IGitCommandService _git;
       private ColorScheme _colorScheme;
       private Shortcuts _shortcuts;
-
+      private string _webUrl;
       private DiscussionSort _discussionSort;
       private DiscussionFilter _displayFilter; // filters out discussions by user preferences
       private DiscussionLayout _discussionLayout;

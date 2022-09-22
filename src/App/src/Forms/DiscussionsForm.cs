@@ -66,7 +66,8 @@ namespace mrHelper.App.Forms
 
          // Includes making some boxes visible. This does not paint them because their parent (Form) is hidden so far.
          discussionPanel.Initialize(discussionSort, displayFilter, discussionLoader, discussions,
-            shortcuts, git, colorScheme, mrk, mergeRequestAuthor, currentUser, discussionLayout, avatarImageCache);
+            shortcuts, git, colorScheme, mrk, mergeRequestAuthor, currentUser, discussionLayout, avatarImageCache,
+            webUrl);
          discussionPanel.ContentMismatchesFilter += showReapplyFilter;
          discussionPanel.ContentMatchesFilter += hideReapplyFilter;
          if (discussionPanel.DiscussionCount < 1)
