@@ -757,25 +757,15 @@ namespace mrHelper.App.Controls
                e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
             }
          }
-         else if (columnType == ColumnType.Author)
+         else if (columnType == ColumnType.Avatar)
          {
-            Rectangle imageRect = new Rectangle();
-            int textPaddingX = 0;
             if (!isSummaryItem(e.Item))
             {
                Color avatarBackgroundColor = isMuted(fmk) ? Color.White : getMergeRequestColor(fmk, Color.White);
                avatarBackgroundColor = isSelected ? SystemColors.Highlight : avatarBackgroundColor;
                Image avatar = _avatarImageCache.GetAvatar(fmk.MergeRequest.Author, avatarBackgroundColor);
-               imageRect = drawAvatar(e.Graphics, e.Bounds, avatar);
-               AvatarWidth = imageRect.Width;
-               textPaddingX = AvatarPaddingRight;
+               drawAvatar(e.Graphics, e.Bounds, avatar);
             }
-
-            RectangleF textRect = new RectangleF(
-               bounds.X + imageRect.Width + textPaddingX, bounds.Y,
-               bounds.Width - imageRect.Width - textPaddingX, bounds.Height);
-            Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
-            e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, textRect, format);
          }
          else if (columnType == ColumnType.Resolved)
          {
@@ -890,20 +880,25 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private Rectangle drawAvatar(Graphics g, Rectangle bounds, Image avatar)
+      private void drawAvatar(Graphics g, Rectangle bounds, Image avatar)
       {
-         int rowHeight = bounds.Height;
-         int imageWidth = (int)Math.Ceiling(rowHeight - 0.05 * rowHeight); // 5% less
-         int imageHeight = imageWidth;
-         int imagePaddingX = AvatarPaddingLeft;
-         int imageX = imagePaddingX;
-         int imageY = (rowHeight - imageHeight) / 2;
-         Rectangle imageRect = new Rectangle(bounds.X + imageX, bounds.Y + imageY, imageWidth, imageHeight);
+         Rectangle avatarRect = getAvatarRectangle();
+         Rectangle imageRect = new Rectangle(
+            bounds.X + avatarRect.X, bounds.Y + avatarRect.Y, avatarRect.Width, avatarRect.Height);
          g.DrawImage(avatar, imageRect);
-         return imageRect;
       }
 
-      private int AvatarWidth { get; set; }
+      private Rectangle getAvatarRectangle()
+      {
+         int rowHeight = WinFormsHelpers.GetListViewRowHeight(this);
+         int imageWidth = (int)Math.Ceiling(rowHeight - 0.05 * rowHeight); // 5% less
+         int imageHeight = imageWidth;
+         int imagePaddingX = AvatarPaddingX;
+         int imageX = imagePaddingX;
+         int imageY = (rowHeight - imageHeight) / 2;
+         Rectangle avatarRect = new Rectangle(imageX, imageY, imageWidth, imageHeight);
+         return avatarRect;
+      }
 
       enum EColorSchemeItemsKind
       {
@@ -1192,6 +1187,7 @@ namespace mrHelper.App.Controls
          MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, mr.IId);
          setSubItemTag(item, ColumnType.IId, x => getId(mr), () => mr.Web_Url);
          setSubItemTag(item, ColumnType.Color);
+         setSubItemTag(item, ColumnType.Avatar, x => author);
          setSubItemTag(item, ColumnType.Author, x => author);
          setSubItemTag(item, ColumnType.Title, x => mr.Title);
          setSubItemTag(item, ColumnType.Labels, x => labels[x]);
@@ -1323,6 +1319,7 @@ namespace mrHelper.App.Controls
 
          setSubItemTag(item, ColumnType.IId);
          setSubItemTag(item, ColumnType.Color);
+         setSubItemTag(item, ColumnType.Avatar);
          setSubItemTag(item, ColumnType.Author, x => authors[x]);
          setSubItemTag(item, ColumnType.Title, x => titles[x]);
          setSubItemTag(item, ColumnType.Labels, x => labels[x]);
@@ -1579,7 +1576,8 @@ namespace mrHelper.App.Controls
 
       private bool getForceShowToolTip(ListViewItem.ListViewSubItem subItem)
       {
-         ColumnType columnType = (subItem.Tag as ListViewSubItemInfo).ColumnType;
+         ListViewSubItemInfo info = (subItem.Tag as ListViewSubItemInfo);
+         ColumnType columnType = info.ColumnType;
          switch (columnType)
          {
             case ColumnType.Labels:
@@ -1588,7 +1586,8 @@ namespace mrHelper.App.Controls
             case ColumnType.Activities:
                return true;
          }
-         return false;
+         bool containsUrl = !String.IsNullOrWhiteSpace(info.Url);
+         return containsUrl;
       }
 
       private static bool isSummaryKey(FullMergeRequestKey fmk)
@@ -1656,8 +1655,8 @@ namespace mrHelper.App.Controls
             case ColumnType.Color:
                return DefaultColorColumnWidth;
 
-            case ColumnType.Author:
-               return getColumnAutoWidthByContent(column) + AvatarPaddingLeft + AvatarPaddingRight + AvatarWidth;
+            case ColumnType.Avatar:
+               return getAvatarRectangle().Width;
          }
          return getColumnAutoWidthByContent(column);
       }
@@ -1850,6 +1849,9 @@ namespace mrHelper.App.Controls
                   return totalTime1.HasValue ? 1 : (totalTime2.HasValue ? -1 : 0);
                }
 
+            case ColumnType.Avatar:
+               return compare(item1, item2, ColumnType.Author);
+
             default:
                {
                   ListViewSubItemInfo key1 = getSubItemTag(item1, columnType);
@@ -1922,8 +1924,7 @@ namespace mrHelper.App.Controls
 
       private static readonly int GroupHeaderHeight = 20; // found experimentally
 
-      private static readonly int AvatarPaddingLeft = 10;
-      private static readonly int AvatarPaddingRight = 20;
+      private static readonly int AvatarPaddingX = 10;
 
       private static readonly int UnmuteTimerInterval = 60 * 1000; // 1 minute
       private readonly Timer _unmuteTimer = new Timer

@@ -18,7 +18,7 @@ namespace mrHelper.App.Controls
          Action onDiscussions, Action onRefreshList, Action onRefresh, Action onEdit,
          Action onMerge, Action onClose, Action onDiffToBase, Action onDiffDefault,
          Action onMuteUntilTomorrow, Action onMuteUntilMonday, Action onUnmute,
-         Action onExclude, Action onDefault)
+         Action onExclude, Action onOpenAuthorProfile, Action onDefault)
       {
          _discussionsItem = addItem(onDiscussions, "&Discussions", onDiscussions == onDefault);
 
@@ -64,6 +64,8 @@ namespace mrHelper.App.Controls
          }
 
          _excludeItem = addItem(onExclude, "Hi&de/Unhi&de", onExclude == onDefault);
+
+         _openAuthorProfileItem = addItem(onOpenAuthorProfile, "Open author profile...", onOpenAuthorProfile == onDefault);
 
          _operationController = operationController;
       }
@@ -176,6 +178,11 @@ namespace mrHelper.App.Controls
          {
             _excludeItem.Text = _canBeExcluded ? "Hi&de" : "Unhi&de";
          }
+
+         if (_openAuthorProfileItem != null)
+         {
+            _openAuthorProfileItem.Enabled = !_disabledAll;
+         }
       }
 
       private readonly IOperationController _operationController;
@@ -191,6 +198,7 @@ namespace mrHelper.App.Controls
       private readonly ToolStripMenuItem _diffToolItem;
       private readonly ToolStripMenuItem _diffToBaseItem;
       private readonly ToolStripMenuItem _discussionsItem;
+      private readonly ToolStripMenuItem _openAuthorProfileItem;
       private bool _disabledAll;
       private bool _isUnmuteActionEnabled;
       private bool _canBeExcluded;

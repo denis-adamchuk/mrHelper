@@ -209,6 +209,7 @@ namespace mrHelper.App.Controls
             muteSelectedMergeRequestUntilMonday,
             unMuteSelectedMergeRequest,
             toggleSelectedMergeRequestExclusion,
+            openSelectedAuthorProfile,
             showDiscussionsForSelectedMergeRequest));
 
          foreach (EDataCacheType mode in new EDataCacheType[] { EDataCacheType.Recent, EDataCacheType.Search })
@@ -227,6 +228,7 @@ namespace mrHelper.App.Controls
                null,
                null,
                mode == EDataCacheType.Search ? (null as Action) : toggleSelectedMergeRequestExclusion,
+               openSelectedAuthorProfile,
                showDiscussionsForSelectedMergeRequest));
          }
       }

@@ -50,6 +50,11 @@ namespace mrHelper.CommonControls.Tools
          listView.SmallImageList = imgList;
       }
 
+      public static int GetListViewRowHeight(ListView listView)
+      {
+         return listView?.SmallImageList?.ImageSize.Height ?? 0; 
+      }
+
       public static void CloseAllFormsExceptOne(string exceptionalFormName)
       {
          for (int iForm = Application.OpenForms.Count - 1; iForm >= 0; --iForm)

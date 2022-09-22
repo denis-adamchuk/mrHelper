@@ -138,6 +138,21 @@ namespace mrHelper.App.Controls
          toggleMergeRequestExclusion(getCurrentTabDataCacheType(), getMergeRequest(null));
       }
 
+      private void openSelectedAuthorProfile()
+      {
+         Trace.TraceInformation("[ConnectionPage] Open selected author profile...");
+         openAuthorProfile(getMergeRequest(null));
+      }
+
+      private void openAuthorProfile(MergeRequest mergeRequest)
+      {
+         if (mergeRequest == null)
+         {
+            return;
+         }
+         UrlHelper.OpenBrowser(mergeRequest.Author.Web_Url);
+      }
+
       private void toggleMergeRequestExclusion(EDataCacheType type, MergeRequest mergeRequest)
       {
          if (mergeRequest == null)
