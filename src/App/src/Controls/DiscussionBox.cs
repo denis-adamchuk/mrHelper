@@ -13,7 +13,6 @@ using mrHelper.App.Helpers;
 using mrHelper.Core.Context;
 using mrHelper.Core.Matching;
 using mrHelper.Common.Tools;
-using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
@@ -23,6 +22,14 @@ using System.Drawing.Drawing2D;
 
 namespace mrHelper.App.Controls
 {
+   internal enum ENoteSelectionRequest
+   {
+      First,
+      Last,
+      Prev,
+      Next
+   }
+
    internal class DiscussionBox : Panel
    {
       internal DiscussionBox(
@@ -44,7 +51,8 @@ namespace mrHelper.App.Controls
          Dictionary<Rectangle, GraphicsPath> pathWithoutScrollBarCache,
          Dictionary<Rectangle, GraphicsPath> pathWithScrollBarCache,
          string webUrl,
-         Func<int, bool> onNoteSelectionRequest)
+         Func<int, bool> onSelectNoteById,
+         Action<ENoteSelectionRequest, DiscussionBox> onSelectNoteByPosition)
       {
          Discussion = discussion;
 
@@ -84,7 +92,8 @@ namespace mrHelper.App.Controls
             onContentChanged?.Invoke(this);
          };
          _onControlGotFocus = onControlGotFocus;
-         _onNoteSelectionRequest = onNoteSelectionRequest;
+         _onSelectNoteById = onSelectNoteById;
+         _onSelectNoteByPosition = onSelectNoteByPosition;
 
          _htmlTooltip = htmlTooltip;
          _popupWindow = popupWindow;
@@ -143,6 +152,48 @@ namespace mrHelper.App.Controls
          }
 
          return false;
+      }
+
+      internal void SelectNote(ENoteSelectionRequest eNoteSelectionRequest)
+      {
+         IEnumerable<Control> noteControls = getNoteContainers()
+            .Select(container => container.NoteContent)
+            .Where(noteControl => noteControl != null);
+         NoteContainer current = getNoteContainers()
+            .FirstOrDefault(noteContainer => noteContainer.NoteContent.Focused);
+
+         switch (eNoteSelectionRequest)
+         {
+            case ENoteSelectionRequest.Prev:
+               if (current.Prev != null)
+               {
+                  current.Prev.NoteContent.Focus();
+               }
+               else
+               {
+                  _onSelectNoteByPosition.Invoke(ENoteSelectionRequest.Prev, this);
+               }
+               break;
+
+            case ENoteSelectionRequest.Next:
+               if (current.Next != null)
+               {
+                  current.Next.NoteContent.Focus();
+               }
+               else
+               {
+                  _onSelectNoteByPosition.Invoke(ENoteSelectionRequest.Next, this);
+               }
+               break;
+
+            case ENoteSelectionRequest.First:
+               noteControls.First().Focus();
+               break;
+
+            case ENoteSelectionRequest.Last:
+               noteControls.Last().Focus();
+               break;
+         }
       }
 
       internal void RefreshTimeStamps()
@@ -265,12 +316,15 @@ namespace mrHelper.App.Controls
 
       private void noteControl_LinkClicked(object sender, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlLinkClickedEventArgs e)
       {
-         if (e.Link.StartsWith(_webUrl) && e.Link.Length > _webUrl.Length + 1)
+         string url = e.Link;
+         if (GitLabSharp.UrlParser.IsValidNoteUrl(url))
          {
-            string noteIdString = e.Link.Substring(_webUrl.Length + 1); // + 1 to remove #
-            if (int.TryParse(noteIdString, out int noteId))
+            GitLabSharp.UrlParser.ParsedNoteUrl parsed = GitLabSharp.UrlParser.ParseNoteUrl(url);
+            if (StringUtils.GetHostWithPrefix(parsed.Host) == _mergeRequestKey.ProjectKey.HostName
+             && parsed.Project == _mergeRequestKey.ProjectKey.ProjectName
+             && parsed.IId == _mergeRequestKey.IId)
             {
-               if (_onNoteSelectionRequest.Invoke(noteId))
+               if (_onSelectNoteById.Invoke(parsed.NoteId))
                {
                   e.Handled = true;
                   return;
@@ -278,6 +332,20 @@ namespace mrHelper.App.Controls
             }
          }
          e.Handled = false;
+      }
+
+      private void noteControl_KeyDown(KeyEventArgs e)
+      {
+         switch (e.KeyCode)
+         {
+            case Keys.Up:
+               SelectNote(ENoteSelectionRequest.Prev);
+               break;
+
+            case Keys.Down:
+               SelectNote(ENoteSelectionRequest.Next);
+               break;
+         }
       }
 
       private void Control_GotFocus(object sender, EventArgs e)
@@ -745,13 +813,22 @@ namespace mrHelper.App.Controls
             .Cast<DiscussionNote>()
             .All(note => !note.Resolvable || note.Resolved);
 
-         List<NoteContainer> boxes = new List<NoteContainer>();
+         List<NoteContainer> containers = new List<NoteContainer>();
          IEnumerable<DiscussionNote> notes = allNotes.Where(item => shouldCreateNoteContainer(item));
+
+         NoteContainer prev = null;
          foreach (DiscussionNote note in notes)
          {
-            boxes.Add(createNoteContainer(parent, note, discussionResolved));
+            NoteContainer noteContainer = createNoteContainer(parent, note, discussionResolved);
+            if (prev != null)
+            {
+               noteContainer.Prev = prev;
+               noteContainer.Prev.Next = noteContainer;
+            }
+            prev = noteContainer;
+            containers.Add(noteContainer);
          }
-         return boxes;
+         return containers;
       }
 
       private bool isIndividualSystem()
@@ -852,6 +929,7 @@ namespace mrHelper.App.Controls
             };
             noteControl.Paint += noteControl_Paint;
             noteControl.LinkClicked += noteControl_LinkClicked;
+            noteControl.KeyDown += (s, e) => noteControl_KeyDown(e);
 
             updateStylesheet(noteControl as HtmlPanel);
             setDiscussionNoteText(noteControl, note);
@@ -876,6 +954,7 @@ namespace mrHelper.App.Controls
             };
             noteControl.Paint += noteControl_Paint;
             noteControl.LinkClicked += noteControl_LinkClicked;
+            noteControl.KeyDown += (s, e) => noteControl_KeyDown(e);
 
             updateStylesheet(noteControl as HtmlPanel);
             setServiceDiscussionNoteText(noteControl, note);
@@ -1981,6 +2060,8 @@ namespace mrHelper.App.Controls
          public Control NoteContent;
          public Control NoteAvatar;
          public Control NoteLink;
+         public NoteContainer Prev;
+         public NoteContainer Next;
       }
       private IEnumerable<NoteContainer> _noteContainers;
 
@@ -2009,7 +2090,8 @@ namespace mrHelper.App.Controls
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;
       private readonly Action<Control> _onControlGotFocus;
-      private readonly Func<int, bool> _onNoteSelectionRequest;
+      private readonly Func<int, bool> _onSelectNoteById;
+      private readonly Action<ENoteSelectionRequest, DiscussionBox> _onSelectNoteByPosition;
       private readonly HtmlToolTipEx _htmlTooltip;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }

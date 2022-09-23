@@ -135,26 +135,31 @@ namespace mrHelper.App.Controls
 
       internal void ProcessKeyDown(KeyEventArgs e)
       {
+         void selectFirstBoxOnScreen() =>
+            getVisibleAndSortedBoxes().FirstOrDefault(box => box.Location.Y > 0)?.Focus();
+
          if (e.KeyCode == Keys.Home)
          {
-            AutoScrollPosition = new Point(AutoScrollPosition.X, VerticalScroll.Minimum);
+            onSelectNoteByPosition(ENoteSelectionRequest.First, null /* does not matter */);
             e.Handled = true;
          }
          else if (e.KeyCode == Keys.End)
          {
-            AutoScrollPosition = new Point(AutoScrollPosition.X, VerticalScroll.Maximum);
+            onSelectNoteByPosition(ENoteSelectionRequest.Last, null /* does not matter */);
             e.Handled = true;
          }
          else if (e.KeyCode == Keys.PageUp)
          {
             AutoScrollPosition = new Point(AutoScrollPosition.X,
                Math.Max(VerticalScroll.Minimum, VerticalScroll.Value - VerticalScroll.LargeChange));
+            selectFirstBoxOnScreen();
             e.Handled = true;
          }
          else if (e.KeyCode == Keys.PageDown)
          {
             AutoScrollPosition = new Point(AutoScrollPosition.X,
                Math.Min(VerticalScroll.Maximum, VerticalScroll.Value + VerticalScroll.LargeChange));
+            selectFirstBoxOnScreen();
             e.Handled = true;
          }
       }
@@ -227,7 +232,7 @@ namespace mrHelper.App.Controls
          _mostRecentFocusedDiscussionControl = sender;
       }
 
-      bool onNoteSelectionRequest(int noteId)
+      bool onSelectNoteById(int noteId)
       {
          DiscussionBox boxWithNote = getVisibleAndSortedBoxes().FirstOrDefault(box => box.SelectNote(noteId));
          if (boxWithNote != null)
@@ -236,6 +241,48 @@ namespace mrHelper.App.Controls
             return true;
          }
          return false;
+      }
+
+      void onSelectNoteByPosition(ENoteSelectionRequest request, DiscussionBox current)
+      {
+         IEnumerable<DiscussionBox> boxes = getVisibleAndSortedBoxes();
+         List<DiscussionBox> boxList = boxes.ToList();
+
+         int iNewIndex = -1;
+         ENoteSelectionRequest newRequest;
+
+         switch (request)
+         {
+            case ENoteSelectionRequest.First:
+               iNewIndex = 0;
+               newRequest = ENoteSelectionRequest.First;
+               break;
+
+            case ENoteSelectionRequest.Last:
+               iNewIndex = boxList.Count - 1;
+               newRequest = ENoteSelectionRequest.Last;
+               break;
+
+            case ENoteSelectionRequest.Prev:
+               iNewIndex = boxList.IndexOf(current) - 1;
+               newRequest = ENoteSelectionRequest.Last;
+               break;
+
+            case ENoteSelectionRequest.Next:
+               iNewIndex = boxList.IndexOf(current) + 1;
+               newRequest = ENoteSelectionRequest.First;
+               break;
+
+            default:
+               return;
+         }
+
+         if (iNewIndex >= 0 && iNewIndex < boxList.Count)
+         {
+            DiscussionBox box = boxList[iNewIndex];
+            box.SelectNote(newRequest);
+            scrollToControl(box);
+         }
       }
 
       private void createDiscussionBoxes(IEnumerable<Discussion> discussions)
@@ -256,7 +303,8 @@ namespace mrHelper.App.Controls
                _pathWithoutScrollBarCache,
                _pathWithScrollBarCache,
                _webUrl,
-               onNoteSelectionRequest)
+               onSelectNoteById,
+               onSelectNoteByPosition)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
