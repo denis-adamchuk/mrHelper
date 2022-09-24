@@ -155,6 +155,9 @@
     <Compile Include="src\Controls\HostToolbarItem.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\HtmlPanelEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\HtmlToolTipEx.cs">
       <SubType>Component</SubType>
     </Compile>

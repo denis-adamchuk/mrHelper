@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
@@ -10,6 +9,7 @@ using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
 using mrHelper.App.Helpers.GitLab;
 using mrHelper.CommonControls.Controls;
+using mrHelper.CommonControls.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
 using static mrHelper.App.Helpers.ConfigurationHelper;
@@ -135,8 +135,17 @@ namespace mrHelper.App.Controls
 
       internal void ProcessKeyDown(KeyEventArgs e)
       {
-         void selectFirstBoxOnScreen() =>
-            getVisibleAndSortedBoxes().FirstOrDefault(box => box.Location.Y > 0)?.Focus();
+         void selectFirstBoxOnScreen()
+         {
+            IEnumerable<DiscussionBox> notes = getVisibleAndSortedBoxes();
+            foreach (DiscussionBox box in notes)
+            {
+               if (box.SelectTopVisibleNote())
+               {
+                  break;
+               }
+            }
+         }
 
          if (e.KeyCode == Keys.Home)
          {
@@ -230,6 +239,24 @@ namespace mrHelper.App.Controls
       void onControlGotFocus(Control sender)
       {
          _mostRecentFocusedDiscussionControl = sender;
+         _currentSelectedNote?.Invalidate();
+
+         if (sender is HtmlPanelEx htmlPanelEx && htmlPanelEx.NeedShowBorder && sender != _currentSelectedNote)
+         {
+            if (_currentSelectedNote != null)
+            {
+               _currentSelectedNote.ShowBorder = false;
+               _currentSelectedNote.Invalidate();
+            }
+            _currentSelectedNote = htmlPanelEx;
+            _currentSelectedNote.ShowBorder = true;
+            _currentSelectedNote.Invalidate();
+         }
+      }
+
+      void onRestoreFocus()
+      {
+         _mostRecentFocusedDiscussionControl?.Focus();
       }
 
       bool onSelectNoteById(int noteId)
@@ -294,14 +321,13 @@ namespace mrHelper.App.Controls
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
                _mergeRequestKey, discussion, _mergeRequestAuthor,
                _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
-               onControlGotFocus, _htmlTooltip, _popupWindow,
+               onControlGotFocus, onRestoreFocus, _htmlTooltip, _popupWindow,
                _discussionLayout.DiffContextPosition,
                _discussionLayout.DiscussionColumnWidth,
                _discussionLayout.NeedShiftReplies,
                _discussionLayout.DiffContextDepth,
                _avatarImageCache,
-               _pathWithoutScrollBarCache,
-               _pathWithScrollBarCache,
+               _pathCache,
                _webUrl,
                onSelectNoteById,
                onSelectNoteByPosition)
@@ -571,10 +597,8 @@ namespace mrHelper.App.Controls
          Interval = RedrawTimerInterval
       };
 
-      private Dictionary<Rectangle, GraphicsPath> _pathWithScrollBarCache =
-         new Dictionary<Rectangle, GraphicsPath>();
-      private Dictionary<Rectangle, GraphicsPath> _pathWithoutScrollBarCache =
-         new Dictionary<Rectangle, GraphicsPath>();
+      private RoundedPathCache _pathCache = new RoundedPathCache(10);
+      private HtmlPanelEx _currentSelectedNote;
    }
 }
 

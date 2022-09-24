@@ -1,5 +1,6 @@
 ﻿using GitLabSharp.Entities;
 using mrHelper.CommonControls.Controls;
+using mrHelper.CommonControls.Tools;
 using System;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
@@ -55,10 +56,10 @@ namespace mrHelper.App.Controls
       private readonly IHighlightListener _highlightListener;
    }
 
-   internal class SearchableHtmlPanel : HtmlPanel, ITextControl
+   internal class SearchableHtmlPanel : HtmlPanelEx, ITextControl
    {
-      internal SearchableHtmlPanel(IHighlightListener highlightListener)
-         : base()
+      internal SearchableHtmlPanel(IHighlightListener highlightListener, RoundedPathCache pathCache)
+         : base(pathCache, true)
       {
          /// Disable async image loading.
          /// Given feature prevents showing full-size images because their size are unknown

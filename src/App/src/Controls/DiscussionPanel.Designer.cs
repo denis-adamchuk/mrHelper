@@ -38,10 +38,7 @@ namespace mrHelper.App.Controls
 
          _popupWindow.Dispose();
 
-         _pathWithoutScrollBarCache.Concat(_pathWithScrollBarCache)
-            .Select(kv => kv.Value)
-            .ToList()
-            .ForEach(p => p.Dispose());
+         _pathCache.Dispose();
 
          base.Dispose(disposing);
       }
