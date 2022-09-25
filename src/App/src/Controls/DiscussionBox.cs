@@ -323,13 +323,13 @@ namespace mrHelper.App.Controls
 
       private void noteControl_GotFocus(object sender, EventArgs e)
       {
-         ((Control)(sender)).Invalidate();
          Control_GotFocus(sender, e);
+         (sender as Control).Invalidate();
       }
 
       private void noteControl_LostFocus(object sender, EventArgs e)
       {
-         ((Control)(sender)).Invalidate();
+         (sender as Control).Invalidate();
       }
 
       private void noteControl_LinkClicked(object sender, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlLinkClickedEventArgs e)
@@ -680,7 +680,8 @@ namespace mrHelper.App.Controls
             Multiline = true,
             WordWrap = false,
             BorderStyle = BorderStyle.None,
-            ForeColor = getFileNameColor(firstNote.Position)
+            ForeColor = getFileNameColor(firstNote.Position),
+            TabStop = false
          };
          textBox.GotFocus += Control_GotFocus;
          return textBox;
@@ -904,7 +905,8 @@ namespace mrHelper.App.Controls
          noteContainer.NoteInfo = new Label
          {
             Text = getNoteInformation(note),
-            AutoSize = true
+            AutoSize = true,
+            TabStop = false
          };
          noteContainer.NoteInfo.Invalidated += (_, __) =>
             noteContainer.NoteInfo.Text = getNoteInformation(note);
@@ -942,7 +944,8 @@ namespace mrHelper.App.Controls
                Parent = this,
                IsContextMenuEnabled = false
             };
-            noteControl.GotFocus += Control_GotFocus;
+            noteControl.GotFocus += noteControl_GotFocus;
+            noteControl.LostFocus += noteControl_LostFocus;
             noteControl.ContextMenu = createContextMenuForDiscussionNote(note, noteControl, discussionResolved);
             noteControl.FontChanged += (sender, e) =>
             {
@@ -967,7 +970,8 @@ namespace mrHelper.App.Controls
                Tag = note,
                Parent = this
             };
-            noteControl.GotFocus += Control_GotFocus;
+            noteControl.GotFocus += noteControl_GotFocus;
+            noteControl.LostFocus += noteControl_LostFocus;
             noteControl.FontChanged += (sender, e) =>
             {
                updateStylesheet(noteControl as HtmlPanel);

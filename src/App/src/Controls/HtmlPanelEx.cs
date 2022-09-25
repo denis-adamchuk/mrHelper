@@ -38,11 +38,20 @@ namespace mrHelper.App.Controls
          }
       }
 
+      protected override void OnMouseWheel(MouseEventArgs e)
+      {
+         if (NeedShowBorder)
+         {
+            Invalidate(); // invalidate the entire surface of the control in order to redraw borders
+         }
+         base.OnMouseWheel(e);
+      }
+
       protected override void OnScroll(ScrollEventArgs se)
       {
          if (NeedShowBorder)
          {
-            Invalidate();
+            Invalidate(); // invalidate the entire surface of the control in order to redraw borders
          }
          base.OnScroll(se);
       }

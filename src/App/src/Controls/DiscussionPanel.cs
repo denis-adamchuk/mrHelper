@@ -224,8 +224,19 @@ namespace mrHelper.App.Controls
 
       private void onSortStateChanged()
       {
+         int? selectedNoteId = new int?();
+         if (_currentSelectedNote != null)
+         {
+            selectedNoteId = ((DiscussionNote)(_currentSelectedNote.Tag)).Id;
+         }
+
          PerformLayout(); // Recalculate locations of child controls
          ContentChanged?.Invoke();
+
+         if (selectedNoteId.HasValue)
+         {
+            onSelectNoteById(selectedNoteId.Value);
+         }
       }
 
       private void onFilterChanged()
@@ -239,18 +250,15 @@ namespace mrHelper.App.Controls
       void onControlGotFocus(Control sender)
       {
          _mostRecentFocusedDiscussionControl = sender;
-         _currentSelectedNote?.Invalidate();
 
          if (sender is HtmlPanelEx htmlPanelEx && htmlPanelEx.NeedShowBorder && sender != _currentSelectedNote)
          {
             if (_currentSelectedNote != null)
             {
                _currentSelectedNote.ShowBorder = false;
-               _currentSelectedNote.Invalidate();
             }
             _currentSelectedNote = htmlPanelEx;
             _currentSelectedNote.ShowBorder = true;
-            _currentSelectedNote.Invalidate();
          }
       }
 
