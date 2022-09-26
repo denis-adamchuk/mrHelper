@@ -49,7 +49,7 @@ namespace mrHelper.App.Controls
          return connect(exceptionHandler);
       }
 
-      internal Task ConnectToUrl(string url, UrlParser.ParsedMergeRequestUrl parsedUrl)
+      internal Task ConnectToUrl<T>(string url, T parsedUrl)
       {
          return connectToUrlAsyncInternal(url, parsedUrl);
       }

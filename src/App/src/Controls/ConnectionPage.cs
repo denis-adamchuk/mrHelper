@@ -85,6 +85,8 @@ namespace mrHelper.App.Controls
          internal DateTime TimeStamp { get; }
       }
       private LostConnectionInfo? _lostConnectionInfo;
+
+      private readonly Action<string> _onOpenUrl;
    }
 }
 

@@ -8,6 +8,7 @@ using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
 using mrHelper.App.Helpers.GitLab;
+using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.GitLabClient;
@@ -46,7 +47,8 @@ namespace mrHelper.App.Controls
          User currentUser,
          DiscussionLayout discussionLayout,
          AvatarImageCache avatarImageCache,
-         string webUrl)
+         string webUrl,
+         Action<string> onSelectNoteByUrl)
       {
          _shortcuts = shortcuts;
          _git = git;
@@ -58,6 +60,7 @@ namespace mrHelper.App.Controls
          _popupWindow.Renderer = new CommonControls.Tools.WinFormsHelpers.BorderlessRenderer();
          _popupWindow.DropShadowEnabled = false;
          _webUrl = webUrl;
+         _onSelectNoteByUrl = onSelectNoteByUrl;
 
          _discussionSort = discussionSort;
          _discussionSort.SortStateChanged += onSortStateChanged;
@@ -81,6 +84,17 @@ namespace mrHelper.App.Controls
       {
          control.Focus();
          scrollToControl(control);
+      }
+
+      internal bool SelectNoteById(int noteId)
+      {
+         DiscussionBox boxWithNote = getVisibleAndSortedBoxes().FirstOrDefault(box => box.SelectNote(noteId));
+         if (boxWithNote != null)
+         {
+            scrollToControl(boxWithNote);
+            return true;
+         }
+         return false;
       }
 
       internal int DiscussionCount => getAllBoxes().Count();
@@ -235,7 +249,7 @@ namespace mrHelper.App.Controls
 
          if (selectedNoteId.HasValue)
          {
-            onSelectNoteById(selectedNoteId.Value);
+            SelectNoteById(selectedNoteId.Value);
          }
       }
 
@@ -247,7 +261,7 @@ namespace mrHelper.App.Controls
          ContentChanged?.Invoke();
       }
 
-      void onControlGotFocus(Control sender)
+      private void onControlGotFocus(Control sender)
       {
          _mostRecentFocusedDiscussionControl = sender;
 
@@ -262,23 +276,26 @@ namespace mrHelper.App.Controls
          }
       }
 
-      void onRestoreFocus()
+      private void onRestoreFocus()
       {
          _mostRecentFocusedDiscussionControl?.Focus();
       }
 
-      bool onSelectNoteById(int noteId)
+      private void onSelectNoteByUrl(string url)
       {
-         DiscussionBox boxWithNote = getVisibleAndSortedBoxes().FirstOrDefault(box => box.SelectNote(noteId));
-         if (boxWithNote != null)
+         UrlParser.ParsedNoteUrl parsed = UrlParser.ParseNoteUrl(url);
+         if (StringUtils.GetHostWithPrefix(parsed.Host) == _mergeRequestKey.ProjectKey.HostName
+          && parsed.Project == _mergeRequestKey.ProjectKey.ProjectName
+          && parsed.IId == _mergeRequestKey.IId)
          {
-            scrollToControl(boxWithNote);
-            return true;
+            SelectNoteById(parsed.NoteId);
+            return;
          }
-         return false;
+
+         _onSelectNoteByUrl(url);
       }
 
-      void onSelectNoteByPosition(ENoteSelectionRequest request, DiscussionBox current)
+      private void onSelectNoteByPosition(ENoteSelectionRequest request, DiscussionBox current)
       {
          IEnumerable<DiscussionBox> boxes = getVisibleAndSortedBoxes();
          List<DiscussionBox> boxList = boxes.ToList();
@@ -337,7 +354,7 @@ namespace mrHelper.App.Controls
                _avatarImageCache,
                _pathCache,
                _webUrl,
-               onSelectNoteById,
+               onSelectNoteByUrl,
                onSelectNoteByPosition)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
@@ -577,6 +594,7 @@ namespace mrHelper.App.Controls
       private ColorScheme _colorScheme;
       private Shortcuts _shortcuts;
       private string _webUrl;
+      private Action<string> _onSelectNoteByUrl;
       private DiscussionSort _discussionSort;
       private DiscussionFilter _displayFilter; // filters out discussions by user preferences
       private DiscussionLayout _discussionLayout;

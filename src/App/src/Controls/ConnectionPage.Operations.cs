@@ -463,7 +463,9 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void showDiscussionsForSelectedMergeRequest()
+      private void showDiscussionsForSelectedMergeRequest() => showDiscussionsForSelectedMergeRequest(null);
+
+      private void showDiscussionsForSelectedMergeRequest(int? noteId = null)
       {
          BeginInvoke(new Action(async () =>
          {
@@ -475,11 +477,14 @@ namespace mrHelper.App.Controls
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.Web_Url);
+            await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.Web_Url, noteId);
          }));
       }
 
-      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string webUrl)
+      private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string webUrl) =>
+         showDiscussionsFormAsync(mrk, title, author, webUrl, null);
+
+      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string webUrl, int? noteId)
       {
          Debug.Assert(HostName != String.Empty);
          Debug.Assert(CurrentUser != null);
@@ -510,7 +515,7 @@ namespace mrHelper.App.Controls
          {
             return;
          }
-         showDiscussionForm(dataCache, storage, currentUser, mrk, discussions, title, author, webUrl);
+         showDiscussionForm(dataCache, storage, currentUser, mrk, discussions, title, author, webUrl, noteId);
       }
 
       async private Task<bool> prepareStorageForDiscussionsForm(MergeRequestKey mrk,
@@ -537,7 +542,7 @@ namespace mrHelper.App.Controls
       }
 
       private void showDiscussionForm(DataCache dataCache, ILocalCommitStorage storage, User currentUser,
-         MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author, string webUrl)
+         MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author, string webUrl, int? noteId)
       {
          if (currentUser == null || discussions == null || author == null || currentUser.Id == 0)
          {
@@ -551,6 +556,11 @@ namespace mrHelper.App.Controls
          {
             existingDiscussionsForm.Restore();
             Trace.TraceInformation(String.Format("[ConnectionPage] Activated an existing Discussions view for MR {0}", mrk.IId));
+            if (noteId.HasValue)
+            {
+               Trace.TraceInformation(String.Format("[ConnectionPage] Selecting note with Id {0}", noteId.Value));
+               existingDiscussionsForm.SelectNote(noteId.Value);
+            }
             return;
          }
 
@@ -590,7 +600,7 @@ namespace mrHelper.App.Controls
                git, currentUser, mrk, discussions, title, author, _colorScheme,
                discussionLoader, discussionHelper, webUrl, _shortcuts, GetCustomActionList(),
                cmd => isCommandEnabledInDiscussionsView(mrk, cmd), () => reloadByDiscussionsViewRequest(mrk),
-               _avatarImageCache[getCurrentTabDataCacheType()])
+               _avatarImageCache[getCurrentTabDataCacheType()], _onOpenUrl)
             {
                Tag = mrk
             };
@@ -613,6 +623,12 @@ namespace mrHelper.App.Controls
 
          addOperationRecord("Discussions view has opened");
          ensureMergeRequestInRecentDataCache(mrk);
+
+         if (noteId.HasValue)
+         {
+            Trace.TraceInformation(String.Format("[ConnectionPage] Selecting note with Id {0}", noteId.Value));
+            form.SelectNote(noteId.Value);
+         }
       }
 
       private void onColorSchemeChanged()

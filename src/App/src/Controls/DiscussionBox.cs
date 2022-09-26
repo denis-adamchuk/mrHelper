@@ -50,7 +50,7 @@ namespace mrHelper.App.Controls
          AvatarImageCache avatarImageCache,
          RoundedPathCache pathCache,
          string webUrl,
-         Func<int, bool> onSelectNoteById,
+         Action<string> onSelectNoteByUrl,
          Action<ENoteSelectionRequest, DiscussionBox> onSelectNoteByPosition)
       {
          Discussion = discussion;
@@ -91,7 +91,7 @@ namespace mrHelper.App.Controls
          };
          _onControlGotFocus = onControlGotFocus;
          _onRestoreFocus = onRestoreFocus;
-         _onSelectNoteById = onSelectNoteById;
+         _onSelectNoteUrl = onSelectNoteByUrl;
          _onSelectNoteByPosition = onSelectNoteByPosition;
 
          _htmlTooltip = htmlTooltip;
@@ -336,17 +336,9 @@ namespace mrHelper.App.Controls
          string url = e.Link;
          if (UrlParser.IsValidNoteUrl(url))
          {
-            UrlParser.ParsedNoteUrl parsed = UrlParser.ParseNoteUrl(url);
-            if (StringUtils.GetHostWithPrefix(parsed.Host) == _mergeRequestKey.ProjectKey.HostName
-             && parsed.Project == _mergeRequestKey.ProjectKey.ProjectName
-             && parsed.IId == _mergeRequestKey.IId)
-            {
-               if (_onSelectNoteById.Invoke(parsed.NoteId))
-               {
-                  e.Handled = true;
-                  return;
-               }
-            }
+            _onSelectNoteUrl.Invoke(url);
+            e.Handled = true;
+            return;
          }
          e.Handled = false;
       }
@@ -2072,7 +2064,7 @@ namespace mrHelper.App.Controls
       private readonly Action _onContentChanged;
       private readonly Action<Control> _onControlGotFocus;
       private readonly Action _onRestoreFocus;
-      private readonly Func<int, bool> _onSelectNoteById;
+      private readonly Action<string> _onSelectNoteUrl;
       private readonly Action<ENoteSelectionRequest, DiscussionBox> _onSelectNoteByPosition;
       private readonly HtmlToolTipEx _htmlTooltip;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;

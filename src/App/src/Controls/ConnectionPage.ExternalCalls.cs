@@ -50,33 +50,43 @@ namespace mrHelper.App.Controls
          createNewMergeRequest(HostName, CurrentUser, initialProperties, fullProjectList, fullUserList, false);
       }
 
-      async private Task connectToUrlAsyncInternal(string url, UrlParser.ParsedMergeRequestUrl parsedUrl)
+      async private Task connectToUrlAsyncInternal<T>(string url, T parsedUrl)
       {
          MergeRequestKey mrk = parseUrlIntoMergeRequestKey(parsedUrl);
 
-         // First, try to select a MR from lists of visible MRs
-         bool tryOpenAtLiveTab = true;
-         switch (trySelectMergeRequest(mrk))
+         try
          {
-            case SelectionResult.NotFound:
-               break;
-            case SelectionResult.Selected:
-               addOperationRecord("Merge Request was found in cache and selected");
-               return;
-            case SelectionResult.Hidden:
-               tryOpenAtLiveTab = false;
-               break;
+            // First, try to select a MR from lists of visible MRs
+            bool tryOpenAtLiveTab = true;
+            switch (trySelectMergeRequest(mrk))
+            {
+               case SelectionResult.NotFound:
+                  break;
+               case SelectionResult.Selected:
+                  addOperationRecord("Merge Request was found in cache and selected");
+                  return;
+               case SelectionResult.Hidden:
+                  tryOpenAtLiveTab = false;
+                  break;
+            }
+
+            Debug.Assert(getDataCache(EDataCacheType.Live)?.ConnectionContext != null);
+
+            // If MR is not found at the Live tab at all or user rejected to unhide it,
+            // don't try to open it at the Live tab.
+            // Otherwise, check if requested MR match workflow filters.
+            tryOpenAtLiveTab = tryOpenAtLiveTab && (await checkLiveDataCacheFilterAsync(mrk, url));
+            if (!tryOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url))
+            {
+               await openUrlAtSearchTabAsync(mrk);
+            }
          }
-
-         Debug.Assert(getDataCache(EDataCacheType.Live)?.ConnectionContext != null);
-
-         // If MR is not found at the Live tab at all or user rejected to unhide it,
-         // don't try to open it at the Live tab.
-         // Otherwise, check if requested MR match workflow filters.
-         tryOpenAtLiveTab = tryOpenAtLiveTab && (await checkLiveDataCacheFilterAsync(mrk, url));
-         if (!tryOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url))
+         finally
          {
-            await openUrlAtSearchTabAsync(mrk);
+            if (parsedUrl is UrlParser.ParsedNoteUrl noteUrl)
+            {
+               showDiscussionsForSelectedMergeRequest(noteUrl.NoteId);
+            }
          }
       }
 
@@ -254,7 +264,7 @@ namespace mrHelper.App.Controls
          return GitLabClient.Helpers.DoesMatchSearchQuery(queries, mergeRequest, mrk.ProjectKey);
       }
 
-      private MergeRequestKey parseUrlIntoMergeRequestKey(UrlParser.ParsedMergeRequestUrl parsedUrl)
+      private MergeRequestKey parseUrlIntoMergeRequestKey(dynamic parsedUrl)
       {
          return new MergeRequestKey(new ProjectKey(parsedUrl.Host, parsedUrl.Project), parsedUrl.IId);
       }

@@ -35,7 +35,8 @@ namespace mrHelper.App.Controls
          bool integratedInSourceTree,
          ColorScheme colorScheme,
          UserDefinedSettings.OldFilterSettings oldFilter,
-         ITimeTrackerHolder timeTrackerHolder)
+         ITimeTrackerHolder timeTrackerHolder,
+         Action<string> onOpenUrl)
       {
          HostName = hostname;
          _keywords = keywords;
@@ -44,13 +45,13 @@ namespace mrHelper.App.Controls
          _integratedInSourceTree = integratedInSourceTree;
          _toolTip = toolTip;
          _timeTrackerHolder = timeTrackerHolder;
-
          _recentMergeRequests = recentMergeRequests;
          _reviewedRevisions = reviewedRevisions;
          _lastMergeRequestsByHosts = lastMergeRequestsByHosts;
          _newMergeRequestDialogStatesByHosts = newMergeRequestDialogStatesByHosts;
          _filtersByHostsLive = filtersByHostsLive;
          _filtersByHostsRecent = filtersByHostsRecent;
+         _onOpenUrl = onOpenUrl;
 
          InitializeComponent();
          updateSplitterOrientation();

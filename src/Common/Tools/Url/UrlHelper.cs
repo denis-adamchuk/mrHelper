@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
-using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
 
 namespace mrHelper.Common.Tools
@@ -19,6 +18,20 @@ namespace mrHelper.Common.Tools
          string url = trimPrefix(originalUrl);
 
          List<Exception> exceptions = new List<Exception>();
+         try
+         {
+            UrlParser.ParsedNoteUrl originalParsed = UrlParser.ParseNoteUrl(url);
+            UrlParser.ParsedNoteUrl noteUrl = new UrlParser.ParsedNoteUrl(
+               StringUtils.GetHostWithPrefix(originalParsed.Host), originalParsed.Project,
+               originalParsed.IId, originalParsed.NoteId);
+            return noteUrl;
+         }
+         catch (UriFormatException ex)
+         {
+            // ok, let's try another parser
+            exceptions.Add(ex);
+         }
+
          try
          {
             UrlParser.ParsedMergeRequestUrl originalParsed = UrlParser.ParseMergeRequestUrl(url);

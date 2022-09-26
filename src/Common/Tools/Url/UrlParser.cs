@@ -53,7 +53,6 @@ namespace mrHelper.Common.Tools
          }
       }
 
-
       public struct ParsedNoteUrl
       {
          public ParsedNoteUrl(string host, string project, int iid, int noteId)
