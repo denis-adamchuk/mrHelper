@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
-using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
-using mrHelper.Common.Tools;
+using mrHelper.Common.Constants;
 
-namespace mrHelper.App.Helpers
+namespace mrHelper.Common.Tools
 {
    public struct ParsedNewMergeRequestUrl
    {
@@ -108,7 +107,7 @@ namespace mrHelper.App.Helpers
 
       private static IEnumerable<string> findTargetBranch(string path, string remoteSourceBranch)
       {
-         for (int iDepth = 0; iDepth < Constants.MaxCommitDepth; ++iDepth)
+         for (int iDepth = 0; iDepth < Constants.Constants.MaxCommitDepth; ++iDepth)
          {
             string sha = String.Format("{0}{1}", remoteSourceBranch, new string('^', iDepth));
             IEnumerable<string> refs = GitTools.GetRemotePointsAt(path, sha)

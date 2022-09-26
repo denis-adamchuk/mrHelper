@@ -588,7 +588,7 @@ namespace mrHelper.App.Forms
             {
                onDiffCommand(argumentString);
             }
-            else if (App.Helpers.UrlHelper.Parse(arguments[0], getSourceBranchTemplates()) != null)
+            else if (Common.Tools.UrlHelper.Parse(arguments[0], getSourceBranchTemplates()) != null)
             {
                // put the string into the queue if Parse() considered it a valid url
                onOpenCommand(arguments[0]);

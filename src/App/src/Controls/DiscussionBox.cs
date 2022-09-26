@@ -18,7 +18,6 @@ using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
-using System.Drawing.Drawing2D;
 
 namespace mrHelper.App.Controls
 {
@@ -335,9 +334,9 @@ namespace mrHelper.App.Controls
       private void noteControl_LinkClicked(object sender, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlLinkClickedEventArgs e)
       {
          string url = e.Link;
-         if (GitLabSharp.UrlParser.IsValidNoteUrl(url))
+         if (UrlParser.IsValidNoteUrl(url))
          {
-            GitLabSharp.UrlParser.ParsedNoteUrl parsed = GitLabSharp.UrlParser.ParseNoteUrl(url);
+            UrlParser.ParsedNoteUrl parsed = UrlParser.ParseNoteUrl(url);
             if (StringUtils.GetHostWithPrefix(parsed.Host) == _mergeRequestKey.ProjectKey.HostName
              && parsed.Project == _mergeRequestKey.ProjectKey.ProjectName
              && parsed.IId == _mergeRequestKey.IId)

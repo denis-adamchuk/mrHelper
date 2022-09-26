@@ -56,7 +56,7 @@ namespace mrHelper.App.Forms
          string helpUrl = Program.ServiceManager.GetHelpUrl();
          if (helpUrl != String.Empty)
          {
-            UrlHelper.OpenBrowser(helpUrl);
+            Common.Tools.UrlHelper.OpenBrowser(helpUrl);
          }
       }
 

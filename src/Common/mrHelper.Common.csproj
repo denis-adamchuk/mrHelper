@@ -97,6 +97,10 @@
     <Compile Include="Tools\SparsedList\SparsedList.cs" />
     <Compile Include="Tools\SparsedList\SparsedListIterator.cs" />
     <Compile Include="Tools\SparsedList\SparsedListUtils.cs" />
+    <Compile Include="Tools\Url\NewMergeRequestUrlParser.cs" />
+    <Compile Include="Tools\Url\UrlConnectionException.cs" />
+    <Compile Include="Tools\Url\UrlHelper.cs" />
+    <Compile Include="Tools\Url\UrlParser.cs" />
     <Compile Include="Tools\WidthCalculator.cs" />
   </ItemGroup>
   <ItemGroup>

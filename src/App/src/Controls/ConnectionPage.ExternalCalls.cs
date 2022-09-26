@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;

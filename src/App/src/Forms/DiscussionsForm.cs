@@ -82,7 +82,7 @@ namespace mrHelper.App.Forms
 
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);
-         linkLabelGitLabURL.SetLinkLabelClicked(UrlHelper.OpenBrowser);
+         linkLabelGitLabURL.SetLinkLabelClicked(Common.Tools.UrlHelper.OpenBrowser);
 
          Text = DefaultCaption;
          MainMenuStrip = discussionMenu.MenuStrip;
