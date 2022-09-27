@@ -1540,7 +1540,7 @@ namespace mrHelper.App.Controls
 
             {
                Point noteLinkPos = controlPos;
-               noteLinkPos.X = getNoteWidth(width) - noteContainer.NoteLink.Width;
+               noteLinkPos.X += getNoteWidth(width) - noteContainer.NoteLink.Width;
                noteContainer.NoteLink.Location = noteLinkPos;
             }
             controlPos.Offset(0, noteContainer.NoteInfo.Height + 2);

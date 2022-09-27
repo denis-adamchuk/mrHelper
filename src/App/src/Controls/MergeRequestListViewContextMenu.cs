@@ -65,6 +65,11 @@ namespace mrHelper.App.Controls
 
          _excludeItem = addItem(onExclude, "Hi&de/Unhi&de", onExclude == onDefault);
 
+         if (onOpenAuthorProfile != null)
+         {
+            addSeparator();
+         }
+
          _openAuthorProfileItem = addItem(onOpenAuthorProfile, "Open author profile...", onOpenAuthorProfile == onDefault);
 
          _operationController = operationController;
