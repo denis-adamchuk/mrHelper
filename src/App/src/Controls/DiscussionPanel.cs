@@ -86,12 +86,22 @@ namespace mrHelper.App.Controls
          scrollToControl(control);
       }
 
-      internal bool SelectNoteById(int noteId)
+      internal enum ESelectStyle
+      {
+         Normal,
+         Flickering
+      };
+
+      internal bool SelectNoteById(int noteId, ESelectStyle selectStyle)
       {
          DiscussionBox boxWithNote = getVisibleAndSortedBoxes().FirstOrDefault(box => box.SelectNote(noteId));
          if (boxWithNote != null)
          {
             scrollToControl(boxWithNote);
+            if (selectStyle == ESelectStyle.Flickering)
+            {
+               _currentSelectedNote?.FlickBorder();
+            }
             return true;
          }
          return false;
@@ -249,7 +259,7 @@ namespace mrHelper.App.Controls
 
          if (selectedNoteId.HasValue)
          {
-            SelectNoteById(selectedNoteId.Value);
+            SelectNoteById(selectedNoteId.Value, ESelectStyle.Normal);
          }
       }
 
@@ -265,14 +275,14 @@ namespace mrHelper.App.Controls
       {
          _mostRecentFocusedDiscussionControl = sender;
 
-         if (sender is HtmlPanelEx htmlPanelEx && htmlPanelEx.NeedShowBorder && sender != _currentSelectedNote)
+         if (sender is HtmlPanelEx htmlPanelEx && htmlPanelEx.IsBorderSupported && sender != _currentSelectedNote)
          {
             if (_currentSelectedNote != null)
             {
-               _currentSelectedNote.ShowBorder = false;
+               _currentSelectedNote.ShowBorderWhenNotFocused = false;
             }
             _currentSelectedNote = htmlPanelEx;
-            _currentSelectedNote.ShowBorder = true;
+            _currentSelectedNote.ShowBorderWhenNotFocused = true;
          }
       }
 
@@ -288,7 +298,7 @@ namespace mrHelper.App.Controls
           && parsed.Project == _mergeRequestKey.ProjectKey.ProjectName
           && parsed.IId == _mergeRequestKey.IId)
          {
-            SelectNoteById(parsed.NoteId);
+            SelectNoteById(parsed.NoteId, ESelectStyle.Flickering);
             return;
          }
 
