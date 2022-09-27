@@ -22,6 +22,7 @@ namespace mrHelper.App.Controls
       ITextControl[] Controls { get; }
       ITextControl ActiveControl { get; }
       event Action ContentChanged;
+      void OnSearchResults(IEnumerable<TextSearchResult> results, bool showFoundOnly);
    }
 
    public partial class DiscussionPanel : UserControl, ITextControlHost, IHighlightListener
@@ -78,6 +79,33 @@ namespace mrHelper.App.Controls
          _discussionLayout.DiffContextDepthChanged += onDiffContextDepthChanged;
 
          apply(discussions);
+      }
+
+      public void OnSearchResults(IEnumerable<TextSearchResult> results, bool showFoundOnly)
+      {
+         if (!showFoundOnly)
+         {
+            _foundBoxes = null;
+         }
+         else
+         {
+            IEnumerable<DiscussionNote> notes = results
+               .Select(result => result.Control)
+               .Distinct()
+               .Where(control => control is SearchableHtmlPanel)
+               .Cast<SearchableHtmlPanel>()
+               .Select(control => (DiscussionNote)(control.Tag))
+               .OrderBy(note => note.Id);
+
+            IEnumerable<DiscussionBox> boxes = getAllBoxes()
+               .Where(box => box.Discussion.Notes.Any(note => notes.Any(foundNote => foundNote.Id == note.Id)));
+
+            _foundBoxes = boxes;
+         }
+
+         SuspendLayout(); // Avoid repositioning child controls on each box visibility change
+         updateVisibilityOfBoxes();
+         ResumeLayout(true); // Place controls at their places
       }
 
       public void OnHighlighted(Control control)
@@ -573,6 +601,7 @@ namespace mrHelper.App.Controls
          // Cannot check Visible property because it might be temporarily unset to avoid flickering.
          _visibleBoxes = getAllBoxes()
             .Where(box => _displayFilter.DoesMatchFilter(box.Discussion))
+            .Where(box => isBoxAmongSearchResults(box))
             .ToArray(); // force immediate execution
          ContentMatchesFilter?.Invoke();
       }
@@ -584,9 +613,14 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         bool isAllowedToDisplay = _displayFilter.DoesMatchFilter(box.Discussion);
+         bool isAllowedToDisplay = _displayFilter.DoesMatchFilter(box.Discussion) && isBoxAmongSearchResults(box);
          // Note that the following does not change Visible property value until Form gets Visible itself
          box.Visible = isAllowedToDisplay;
+      }
+
+      private bool isBoxAmongSearchResults(DiscussionBox box)
+      {
+         return _foundBoxes == null || _foundBoxes.Contains(box);
       }
 
       private void onRedrawTimer(object sender, EventArgs e)
@@ -635,6 +669,7 @@ namespace mrHelper.App.Controls
 
       private RoundedPathCache _pathCache = new RoundedPathCache(10);
       private HtmlPanelEx _currentSelectedNote;
+      private IEnumerable<DiscussionBox> _foundBoxes;
    }
 }
 

@@ -68,6 +68,11 @@ namespace mrHelper.App.Controls
          buttonFindNext.PerformClick();
       }
 
+      private void checkBoxShowFoundOnly_CheckedChanged(object sender, EventArgs e)
+      {
+         restartSearch();
+      }
+
       private void onHostContentChanged()
       {
          restartSearch();
@@ -110,6 +115,7 @@ namespace mrHelper.App.Controls
          bool hasText = textBoxSearch.Text.Length > 0;
          buttonFindNext.Enabled = hasText;
          buttonFindPrev.Enabled = hasText;
+         checkBoxShowFoundOnly.Enabled = hasText;
       }
 
       private void highlightSearchResult(TextSearchResult? result)
@@ -134,6 +140,8 @@ namespace mrHelper.App.Controls
          {
             highlightSearchResult(result);
          }
+
+         _host.OnSearchResults(_textSearch.FindAll(), checkBoxShowFoundOnly.Checked);
       }
 
       private void restartSearch()
@@ -177,6 +185,7 @@ namespace mrHelper.App.Controls
          displayFoundCount(null);
          _textSearchResult?.Control.ClearHighlight();
          _textSearchResult = null;
+         _host.OnSearchResults(null, false);
       }
 
       private TextSearch _textSearch;

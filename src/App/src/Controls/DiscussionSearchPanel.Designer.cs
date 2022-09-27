@@ -36,6 +36,7 @@
       {
          this.components = new System.ComponentModel.Container();
          this.groupBox1 = new System.Windows.Forms.GroupBox();
+         this.checkBoxShowFoundOnly = new System.Windows.Forms.CheckBox();
          this.checkBoxCaseSensitive = new System.Windows.Forms.CheckBox();
          this.labelFoundCount = new System.Windows.Forms.Label();
          this.buttonFindPrev = new System.Windows.Forms.Button();
@@ -47,6 +48,7 @@
          // 
          // groupBox1
          // 
+         this.groupBox1.Controls.Add(this.checkBoxShowFoundOnly);
          this.groupBox1.Controls.Add(this.checkBoxCaseSensitive);
          this.groupBox1.Controls.Add(this.labelFoundCount);
          this.groupBox1.Controls.Add(this.buttonFindPrev);
@@ -57,9 +59,20 @@
          this.groupBox1.Margin = new System.Windows.Forms.Padding(0);
          this.groupBox1.Name = "groupBox1";
          this.groupBox1.Padding = new System.Windows.Forms.Padding(0);
-         this.groupBox1.Size = new System.Drawing.Size(671, 38);
+         this.groupBox1.Size = new System.Drawing.Size(746, 38);
          this.groupBox1.TabIndex = 0;
          this.groupBox1.TabStop = false;
+         // 
+         // checkBoxShowFoundOnly
+         // 
+         this.checkBoxShowFoundOnly.AutoSize = true;
+         this.checkBoxShowFoundOnly.Location = new System.Drawing.Point(360, 14);
+         this.checkBoxShowFoundOnly.Name = "checkBoxShowFoundOnly";
+         this.checkBoxShowFoundOnly.Size = new System.Drawing.Size(105, 17);
+         this.checkBoxShowFoundOnly.TabIndex = 5;
+         this.checkBoxShowFoundOnly.Text = "Show found only";
+         this.checkBoxShowFoundOnly.UseVisualStyleBackColor = true;
+         this.checkBoxShowFoundOnly.CheckedChanged += new System.EventHandler(this.checkBoxShowFoundOnly_CheckedChanged);
          // 
          // checkBoxCaseSensitive
          // 
@@ -75,7 +88,7 @@
          // labelFoundCount
          // 
          this.labelFoundCount.AutoSize = true;
-         this.labelFoundCount.Location = new System.Drawing.Point(538, 15);
+         this.labelFoundCount.Location = new System.Drawing.Point(649, 15);
          this.labelFoundCount.Name = "labelFoundCount";
          this.labelFoundCount.Size = new System.Drawing.Size(79, 13);
          this.labelFoundCount.TabIndex = 3;
@@ -84,7 +97,7 @@
          // 
          // buttonFindPrev
          // 
-         this.buttonFindPrev.Location = new System.Drawing.Point(441, 10);
+         this.buttonFindPrev.Location = new System.Drawing.Point(552, 10);
          this.buttonFindPrev.Name = "buttonFindPrev";
          this.buttonFindPrev.Size = new System.Drawing.Size(75, 23);
          this.buttonFindPrev.TabIndex = 2;
@@ -95,7 +108,7 @@
          // 
          // buttonFindNext
          // 
-         this.buttonFindNext.Location = new System.Drawing.Point(360, 10);
+         this.buttonFindNext.Location = new System.Drawing.Point(471, 10);
          this.buttonFindNext.Name = "buttonFindNext";
          this.buttonFindNext.Size = new System.Drawing.Size(75, 23);
          this.buttonFindNext.TabIndex = 1;
@@ -119,7 +132,7 @@
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
          this.Controls.Add(this.groupBox1);
          this.Name = "DiscussionSearchPanel";
-         this.Size = new System.Drawing.Size(671, 38);
+         this.Size = new System.Drawing.Size(746, 38);
          this.groupBox1.ResumeLayout(false);
          this.groupBox1.PerformLayout();
          this.ResumeLayout(false);
@@ -135,5 +148,6 @@
       private System.Windows.Forms.ToolTip toolTipSearchPanel;
       private System.Windows.Forms.Label labelFoundCount;
       private System.Windows.Forms.CheckBox checkBoxCaseSensitive;
+      private System.Windows.Forms.CheckBox checkBoxShowFoundOnly;
    }
 }
