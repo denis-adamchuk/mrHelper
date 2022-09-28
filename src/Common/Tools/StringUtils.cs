@@ -104,6 +104,11 @@ namespace mrHelper.Common.Tools
          return String.Format("{0}/{1}", StringUtils.GetHostWithPrefix(host), projectname);
       }
 
+      public static string GetNoteUrl(string mergeRequestWebUrl, int noteId)
+      {
+         return String.Format("{0}#{1}", mergeRequestWebUrl, noteId);
+      }
+
       public static string AddAtSignToLetterSubstring(string word)
       {
          if (String.IsNullOrEmpty(word))

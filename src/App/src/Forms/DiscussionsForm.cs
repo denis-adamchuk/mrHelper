@@ -91,7 +91,7 @@ namespace mrHelper.App.Forms
 
       internal void SelectNote(int noteId)
       {
-         discussionPanel.SelectNoteById(noteId, App.Controls.DiscussionPanel.ESelectStyle.Flickering);
+         discussionPanel.SelectNoteById(noteId, null, App.Controls.DiscussionPanel.ESelectStyle.Flickering);
       }
 
       internal void OnMergeRequestEvent()

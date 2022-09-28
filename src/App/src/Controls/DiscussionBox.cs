@@ -134,7 +134,7 @@ namespace mrHelper.App.Controls
 
       internal Discussion Discussion { get; private set; }
 
-      internal bool SelectNote(int noteId)
+      internal bool SelectNote(int noteId, int? prevNoteId)
       {
          IEnumerable<Control> noteControls = getNoteContainers()
             .Select(container => container.NoteContent)
@@ -146,6 +146,22 @@ namespace mrHelper.App.Controls
             if (note.Id == noteId)
             {
                noteControl.Focus();
+               if (prevNoteId.HasValue && prevNoteId.Value != noteId)
+               {
+                  NoteContainer noteContainer = getNoteContainers()
+                     .FirstOrDefault(container => container.NoteContent == noteControl);
+                  if (noteContainer != null)
+                  {
+                     LinkLabel noteBackLink = noteContainer.NoteBack as LinkLabel;
+                     noteBackLink.Visible = true;
+                     noteBackLink.LinkClicked += (s, e) =>
+                     {
+                        string prevNoteUrl = StringUtils.GetNoteUrl(_webUrl, prevNoteId.Value);
+                        _onSelectNoteUrl(prevNoteUrl);
+                        noteBackLink.Visible = false;
+                     };
+                  }
+               }
                return true;
             }
          }
@@ -432,7 +448,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         string noteUrl = String.Format("{0}#{1}", _webUrl, note.Id);
+         string noteUrl = StringUtils.GetNoteUrl(_webUrl, note.Id);
          Clipboard.SetText(noteUrl);
 
          _onRestoreFocus();
@@ -789,6 +805,7 @@ namespace mrHelper.App.Controls
             Controls.Add(noteContainer.NoteContent);
             Controls.Add(noteContainer.NoteAvatar);
             Controls.Add(noteContainer.NoteLink);
+            Controls.Add(noteContainer.NoteBack);
          }
          return getNoteContainers().Any();
       }
@@ -801,7 +818,11 @@ namespace mrHelper.App.Controls
             foreach (NoteContainer container in noteContainers)
             {
                Control control = Controls[iControl];
-               if (container.NoteContent == control || container.NoteInfo == control)
+               if (container.NoteContent == control
+                || container.NoteInfo == control
+                || container.NoteAvatar == control
+                || container.NoteLink == control
+                || container.NoteBack == control)
                {
                   control.Dispose();
                   Controls.Remove(control);
@@ -917,6 +938,17 @@ namespace mrHelper.App.Controls
             TabStop = false
          };
          noteContainer.NoteLink.Click += (s, e) => onCopyNoteLinkToClipboardClick(noteContainer.NoteLink);
+
+         noteContainer.NoteBack = new LinkLabel()
+         {
+            AutoSize = true,
+            Text = "Go back",
+            BorderStyle = BorderStyle.None,
+            Tag = note,
+            TabStop = false,
+            Visible = false
+         };
+         //noteContainer.NoteBack.Click += (s, e) => onCopyNoteLinkToClipboardClick(noteContainer.NoteBack);
 
          void updateStylesheet(HtmlPanel htmlPanel)
          {
@@ -1539,6 +1571,12 @@ namespace mrHelper.App.Controls
             }
 
             {
+               Point noteBackPos = controlPos;
+               noteBackPos.X += getNoteWidth(width) - noteContainer.NoteBack.Width - BackLinkPaddingRight - noteContainer.NoteLink.Width;
+               noteContainer.NoteBack.Location = noteBackPos;
+            }
+
+            {
                Point noteLinkPos = controlPos;
                noteLinkPos.X += getNoteWidth(width) - noteContainer.NoteLink.Width;
                noteContainer.NoteLink.Location = noteLinkPos;
@@ -2014,6 +2052,7 @@ namespace mrHelper.App.Controls
 
       private readonly int AvatarPaddingTop = 5;
       private readonly int AvatarPaddingRight = 10;
+      private readonly int BackLinkPaddingRight = 10;
 
       private readonly int ServiceNoteExtraWidth = 4;
       private readonly int ServiceNoteExtraHeight = 4;
@@ -2034,6 +2073,7 @@ namespace mrHelper.App.Controls
          public Control NoteContent;
          public Control NoteAvatar;
          public Control NoteLink;
+         public Control NoteBack;
          public NoteContainer Prev;
          public NoteContainer Next;
       }

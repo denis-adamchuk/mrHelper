@@ -120,9 +120,10 @@ namespace mrHelper.App.Controls
          Flickering
       };
 
-      internal bool SelectNoteById(int noteId, ESelectStyle selectStyle)
+      internal bool SelectNoteById(int noteId, int? prevNoteId, ESelectStyle selectStyle)
       {
-         DiscussionBox boxWithNote = getVisibleAndSortedBoxes().FirstOrDefault(box => box.SelectNote(noteId));
+         DiscussionBox boxWithNote = getVisibleAndSortedBoxes()
+            .FirstOrDefault(box => box.SelectNote(noteId, prevNoteId));
          if (boxWithNote != null)
          {
             scrollToControl(boxWithNote);
@@ -276,19 +277,20 @@ namespace mrHelper.App.Controls
 
       private void onSortStateChanged()
       {
-         int? selectedNoteId = new int?();
-         if (_currentSelectedNote != null)
-         {
-            selectedNoteId = ((DiscussionNote)(_currentSelectedNote.Tag)).Id;
-         }
+         int? selectedNoteId = getCurrentNote()?.Id;
 
          PerformLayout(); // Recalculate locations of child controls
          ContentChanged?.Invoke();
 
          if (selectedNoteId.HasValue)
          {
-            SelectNoteById(selectedNoteId.Value, ESelectStyle.Normal);
+            SelectNoteById(selectedNoteId.Value, null, ESelectStyle.Normal);
          }
+      }
+
+      private DiscussionNote getCurrentNote()
+      {
+         return _currentSelectedNote != null ? ((DiscussionNote)(_currentSelectedNote.Tag)) : null;
       }
 
       private void onFilterChanged()
@@ -327,7 +329,7 @@ namespace mrHelper.App.Controls
           && parsed.Project == _mergeRequestKey.ProjectKey.ProjectName
           && parsed.IId == _mergeRequestKey.IId)
          {
-            SelectNoteById(parsed.NoteId, ESelectStyle.Flickering);
+            SelectNoteById(parsed.NoteId, getCurrentNote()?.Id, ESelectStyle.Flickering);
             return;
          }
 
