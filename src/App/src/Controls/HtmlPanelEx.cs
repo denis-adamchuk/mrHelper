@@ -42,7 +42,7 @@ namespace mrHelper.App.Controls
       protected override void OnLostFocus(EventArgs e)
       {
          _borderColor = NotFocusedBorderColor;
-         base.OnGotFocus(e);
+         base.OnLostFocus(e);
       }
 
       protected override void OnPaint(PaintEventArgs e)
@@ -95,13 +95,11 @@ namespace mrHelper.App.Controls
                      _flickeringBorderColor = _flickeringColors[flickeringColorIndex];
                      Invalidate();
                      changeBorderColorDelayed(flickeringColorIndex + 1, intervalMs);
-                  }
-                  else
-                  {
-                     _flickeringBorderColor = null;
-                     Invalidate();
+                     return;
                   }
                }
+               _flickeringBorderColor = null;
+               Invalidate();
             });
          }
       }

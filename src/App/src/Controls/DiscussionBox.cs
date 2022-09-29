@@ -51,7 +51,9 @@ namespace mrHelper.App.Controls
          RoundedPathCache pathCache,
          string webUrl,
          Action<string> onSelectNoteByUrl,
-         Action<ENoteSelectionRequest, DiscussionBox> onSelectNoteByPosition)
+         Action<ENoteSelectionRequest, DiscussionBox> onSelectNoteByPosition,
+         Action onPrevNoteSelected,
+         Action onNextNoteSelected)
       {
          Discussion = discussion;
 
@@ -93,6 +95,8 @@ namespace mrHelper.App.Controls
          _onRestoreFocus = onRestoreFocus;
          _onSelectNoteUrl = onSelectNoteByUrl;
          _onSelectNoteByPosition = onSelectNoteByPosition;
+         _onPrevNoteSelected = onPrevNoteSelected;
+         _onNextNoteSelected = onNextNoteSelected;
 
          _htmlTooltip = htmlTooltip;
          _popupWindow = popupWindow;
@@ -177,7 +181,25 @@ namespace mrHelper.App.Controls
 
          foreach (Control noteControl in noteControls)
          {
-            if (noteControl.Parent.Location.Y + noteControl.Location.Y >= 0)
+            if (noteControl.Parent.Location.Y + noteControl.Location.Y > 0)
+            {
+               noteControl.Focus();
+               return true;
+            }
+         }
+
+         return false;
+      }
+
+      internal bool SelectBottomVisibleNote(int screenHeight)
+      {
+         IEnumerable<Control> noteControls = getNoteContainers()
+            .Select(container => container.NoteContent)
+            .Where(noteControl => noteControl != null);
+
+         foreach (Control noteControl in noteControls.Reverse())
+         {
+            if (noteControl.Parent.Location.Y + noteControl.Location.Y + noteControl.Height < screenHeight)
             {
                noteControl.Focus();
                return true;
@@ -201,6 +223,7 @@ namespace mrHelper.App.Controls
                if (current.Prev != null)
                {
                   current.Prev.NoteContent.Focus();
+                  _onPrevNoteSelected();
                }
                else
                {
@@ -212,6 +235,7 @@ namespace mrHelper.App.Controls
                if (current.Next != null)
                {
                   current.Next.NoteContent.Focus();
+                  _onNextNoteSelected();
                }
                else
                {
@@ -948,7 +972,6 @@ namespace mrHelper.App.Controls
             TabStop = false,
             Visible = false
          };
-         //noteContainer.NoteBack.Click += (s, e) => onCopyNoteLinkToClipboardClick(noteContainer.NoteBack);
 
          void updateStylesheet(HtmlPanel htmlPanel)
          {
@@ -2106,6 +2129,8 @@ namespace mrHelper.App.Controls
       private readonly Action _onRestoreFocus;
       private readonly Action<string> _onSelectNoteUrl;
       private readonly Action<ENoteSelectionRequest, DiscussionBox> _onSelectNoteByPosition;
+      private readonly Action _onPrevNoteSelected;
+      private readonly Action _onNextNoteSelected;
       private readonly HtmlToolTipEx _htmlTooltip;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }

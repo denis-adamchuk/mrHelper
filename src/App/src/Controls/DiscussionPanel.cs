@@ -111,7 +111,7 @@ namespace mrHelper.App.Controls
       public void OnHighlighted(Control control)
       {
          control.Focus();
-         scrollToControl(control);
+         scrollToControl(control, EScrollBehavior.ScrollToCenter);
       }
 
       internal enum ESelectStyle
@@ -126,7 +126,7 @@ namespace mrHelper.App.Controls
             .FirstOrDefault(box => box.SelectNote(noteId, prevNoteId));
          if (boxWithNote != null)
          {
-            scrollToControl(boxWithNote);
+            scrollToControl(_currentSelectedNote, EScrollBehavior.ScrollToCenter);
             if (selectStyle == ESelectStyle.Flickering)
             {
                _currentSelectedNote?.FlickBorder();
@@ -151,17 +151,72 @@ namespace mrHelper.App.Controls
          return this.AutoScrollPosition; // https://stackoverflow.com/a/9428480
       }
 
-      private void scrollToControl(Control control)
+      private enum EScrollBehavior
       {
-         Point controlLocationAtScreen = control.PointToScreen(new Point(0, -5));
-         Point controlLocationAtForm = PointToClient(controlLocationAtScreen);
+         FineScroll,
+         ScrollToCenter
+      }
 
-         if (!ClientRectangle.Contains(controlLocationAtForm))
+      private void scrollToControl(Control control, EScrollBehavior scrollBehavior)
+      {
+         void placeControlAtTop()
          {
+            Point newControlTopLocationAtScreen = control.PointToScreen(new Point(0, -FontHeight));
+            Point newControlTopLocationAtForm = PointToClient(newControlTopLocationAtScreen);
+
             int x = AutoScrollPosition.X;
-            int y = VerticalScroll.Value + controlLocationAtForm.Y;
+            int y = VerticalScroll.Value + newControlTopLocationAtForm.Y;
             Point newPosition = new Point(x, y);
             AutoScrollPosition = newPosition;
+         }
+
+         Point controlTopLocationAtScreen = control.PointToScreen(new Point(0, 0));
+         Point controlTopLocationAtForm = PointToClient(controlTopLocationAtScreen);
+
+         void placeControlAtBottom()
+         {
+            int newControlTop = control.Height - (ClientRectangle.Y + ClientRectangle.Height - controlTopLocationAtForm.Y);
+
+            int x = AutoScrollPosition.X;
+            int y = VerticalScroll.Value + newControlTop;
+            Point newPosition = new Point(x, y);
+            AutoScrollPosition = newPosition;
+         }
+
+         Point controlBottomLocationAtScreen = control.PointToScreen(new Point(0, control.Height));
+         Point controlBottomLocationAtForm = PointToClient(controlBottomLocationAtScreen);
+
+         switch (scrollBehavior)
+         {
+            case EScrollBehavior.FineScroll:
+               {
+                  bool isTopVisible = ClientRectangle.Contains(controlTopLocationAtForm);
+                  bool isBottomVisible = ClientRectangle.Contains(controlBottomLocationAtForm);
+                  if (!isTopVisible && !isBottomVisible)
+                  {
+                     if (controlBottomLocationAtForm.Y > ClientRectangle.Y + ClientRectangle.Height)
+                     {
+                        placeControlAtBottom();
+                     }
+                     else if (controlTopLocationAtForm.Y < ClientRectangle.Y)
+                     {
+                        placeControlAtTop();
+                     }
+                  }
+                  else if (!isTopVisible)
+                  {
+                     placeControlAtTop();
+                  }
+                  else if (!isBottomVisible)
+                  {
+                     placeControlAtBottom();
+                  }
+               }
+               break;
+
+            case EScrollBehavior.ScrollToCenter:
+               placeControlAtTop();
+               break;
          }
       }
 
@@ -186,6 +241,21 @@ namespace mrHelper.App.Controls
          base.OnVisibleChanged(e);
       }
 
+      protected override bool ProcessTabKey(bool forward)
+      {
+         if (!base.ProcessTabKey(forward))
+         {
+            return false;
+         }
+         
+         if (_currentSelectedNote != null)
+         {
+            scrollToControl(_currentSelectedNote, EScrollBehavior.FineScroll);
+         }
+
+         return true;
+      }
+
       internal void ProcessKeyDown(KeyEventArgs e)
       {
          void selectFirstBoxOnScreen()
@@ -194,6 +264,18 @@ namespace mrHelper.App.Controls
             foreach (DiscussionBox box in notes)
             {
                if (box.SelectTopVisibleNote())
+               {
+                  break;
+               }
+            }
+         }
+
+         void selectLastBoxOnScreen()
+         {
+            IEnumerable<DiscussionBox> notes = getVisibleAndSortedBoxes();
+            foreach (DiscussionBox box in notes.Reverse())
+            {
+               if (box.SelectBottomVisibleNote(ClientRectangle.Height))
                {
                   break;
                }
@@ -221,7 +303,7 @@ namespace mrHelper.App.Controls
          {
             AutoScrollPosition = new Point(AutoScrollPosition.X,
                Math.Min(VerticalScroll.Maximum, VerticalScroll.Value + VerticalScroll.LargeChange));
-            selectFirstBoxOnScreen();
+            selectLastBoxOnScreen();
             e.Handled = true;
          }
       }
@@ -333,7 +415,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         _onSelectNoteByUrl(url);
+         _onSelectNoteByUrl(url); // note belongs to another MR, need to open its own Discussions view
       }
 
       private void onSelectNoteByPosition(ENoteSelectionRequest request, DiscussionBox current)
@@ -374,12 +456,17 @@ namespace mrHelper.App.Controls
          {
             DiscussionBox box = boxList[iNewIndex];
             box.SelectNote(newRequest);
-            scrollToControl(box);
+            scrollToControl(_currentSelectedNote, EScrollBehavior.FineScroll);
          }
       }
 
       private void createDiscussionBoxes(IEnumerable<Discussion> discussions)
       {
+         void scrollToNoteUpDown()
+         {
+            scrollToControl(_currentSelectedNote, EScrollBehavior.FineScroll);
+         }
+
          foreach (Discussion discussion in discussions)
          {
             SingleDiscussionAccessor accessor = _shortcuts.GetSingleDiscussionAccessor(
@@ -396,7 +483,9 @@ namespace mrHelper.App.Controls
                _pathCache,
                _webUrl,
                onSelectNoteByUrl,
-               onSelectNoteByPosition)
+               onSelectNoteByPosition,
+               scrollToNoteUpDown,
+               scrollToNoteUpDown)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
