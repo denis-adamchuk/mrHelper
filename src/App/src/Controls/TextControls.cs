@@ -59,7 +59,7 @@ namespace mrHelper.App.Controls
    internal class SearchableHtmlPanel : HtmlPanelEx, ITextControl
    {
       internal SearchableHtmlPanel(IHighlightListener highlightListener, RoundedPathCache pathCache)
-         : base(pathCache, true)
+         : base(pathCache, true, true)
       {
          /// Disable async image loading.
          /// Given feature prevents showing full-size images because their size are unknown

@@ -8,13 +8,17 @@ namespace mrHelper.App.Controls
 {
    public class HtmlPanelEx : HtmlPanel
    {
-      public HtmlPanelEx(CommonControls.Tools.RoundedPathCache pathCache, bool isBorderSupported)
+      public HtmlPanelEx(CommonControls.Tools.RoundedPathCache pathCache,
+         bool isBorderSupported, bool scrollOnMouseWheel)
       {
          _pathCache = pathCache;
          IsBorderSupported = isBorderSupported;
+         ScrollOnMouseWheel = scrollOnMouseWheel;
       }
 
       public bool IsBorderSupported { get; }
+
+      public bool ScrollOnMouseWheel { get; }
 
       public bool ShowBorderWhenNotFocused { get; set; }
 
@@ -70,6 +74,27 @@ namespace mrHelper.App.Controls
             Invalidate(); // invalidate the entire surface of the control in order to redraw borders
          }
          base.OnScroll(se);
+      }
+
+      public event MouseEventHandler MouseWheelEx;
+
+      protected override void WndProc(ref Message m)
+      {
+         const int WM_MOUSEWHEEL = 0x020A;
+         if (m.Msg == WM_MOUSEWHEEL)
+         {
+            if (ScrollOnMouseWheel)
+            {
+               base.WndProc(ref m);
+            }
+            else
+            {
+               int delta = CommonNative.NativeMethods.GET_WHEEL_DELTA_WPARAM(m.WParam);
+               MouseWheelEx?.Invoke(this, new MouseEventArgs(MouseButtons.None, 0, 0, 0, delta));
+            }
+            return;
+         }
+         base.WndProc(ref m);
       }
 
       private bool needShowBorder()

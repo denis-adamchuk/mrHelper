@@ -418,13 +418,13 @@ namespace mrHelper.App.Controls
 
          int currentOffset = 0;
          Debug.Assert(_popupContext == null); // it should have been disposed and reset when popup window closes
-         _popupContext = new HtmlPanel
+         _popupContext = new HtmlPanelEx(_pathCache, false, false)
          {
             TabStop = false,
             Font = Font,
             Tag = note
          };
-         _popupContext.MouseWheel += (sender2, e2) =>
+         _popupContext.MouseWheelEx += (sender2, e2) =>
          {
             int step = e2.Delta > 0 ? -1 : 1;
             int newOffset = currentOffset;
@@ -606,7 +606,7 @@ namespace mrHelper.App.Controls
             return null;
          }
 
-         Control diffContextControl = new HtmlPanelEx(_pathCache, false)
+         Control diffContextControl = new HtmlPanelEx(_pathCache, false, true)
          {
             TabStop = false,
             Tag = firstNote,
@@ -1010,7 +1010,7 @@ namespace mrHelper.App.Controls
          }
          else
          {
-            HtmlPanel noteControl = new HtmlPanelEx(_pathCache, true)
+            HtmlPanel noteControl = new HtmlPanelEx(_pathCache, true, true)
             {
                BackColor = getNoteColor(note),
                Tag = note,
@@ -2121,7 +2121,7 @@ namespace mrHelper.App.Controls
       private ConfigurationHelper.DiscussionColumnWidth _discussionColumnWidth;
       private bool _needShiftReplies;
       private PopupWindow _popupWindow; // shared between other Discussion Boxes
-      private HtmlPanel _popupContext; // specific for this instance
+      private HtmlPanelEx _popupContext; // specific for this instance
       private readonly ColorScheme _colorScheme;
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;
