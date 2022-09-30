@@ -69,7 +69,7 @@ namespace mrHelper.App.Controls
          _highlightListener = highlightListener;
       }
 
-      string ITextControl.Text => removeCodeBlocks(getOriginalNote()).Body;
+      string ITextControl.Text => removeCodeBlocks(getOriginalNote())?.Body ?? String.Empty;
 
       public HighlightState HighlightState { get; private set; }
 
