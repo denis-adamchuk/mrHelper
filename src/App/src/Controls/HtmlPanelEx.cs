@@ -41,12 +41,14 @@ namespace mrHelper.App.Controls
       {
          _borderColor = FocusedBorderColor;
          base.OnGotFocus(e);
+         Invalidate();
       }
 
       protected override void OnLostFocus(EventArgs e)
       {
          _borderColor = NotFocusedBorderColor;
          base.OnLostFocus(e);
+         Invalidate();
       }
 
       protected override void OnPaint(PaintEventArgs e)

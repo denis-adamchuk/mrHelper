@@ -49,7 +49,7 @@ namespace mrHelper.App.Controls
          DiscussionLayout discussionLayout,
          AvatarImageCache avatarImageCache,
          string webUrl,
-         Action<string> onSelectNoteByUrl)
+         Action<string> selectExternalNoteByUrl)
       {
          _shortcuts = shortcuts;
          _git = git;
@@ -61,7 +61,7 @@ namespace mrHelper.App.Controls
          _popupWindow.Renderer = new CommonControls.Tools.WinFormsHelpers.BorderlessRenderer();
          _popupWindow.DropShadowEnabled = false;
          _webUrl = webUrl;
-         _onSelectNoteByUrl = onSelectNoteByUrl;
+         _selectExternalNoteByUrl = selectExternalNoteByUrl;
 
          _discussionSort = discussionSort;
          _discussionSort.SortStateChanged += onSortStateChanged;
@@ -111,8 +111,12 @@ namespace mrHelper.App.Controls
       public void OnHighlighted(Control control)
       {
          control.Focus();
-         scrollToControl(control, EScrollBehavior.ScrollToCenter);
+         scrollToControl(control, ExpectedControlPosition.TopEdge);
       }
+
+      public event Action ContentChanged;
+      public event Action ContentMismatchesFilter;
+      public event Action ContentMatchesFilter;
 
       internal enum ESelectStyle
       {
@@ -126,7 +130,6 @@ namespace mrHelper.App.Controls
             .FirstOrDefault(box => box.SelectNote(noteId, prevNoteId));
          if (boxWithNote != null)
          {
-            scrollToControl(_currentSelectedNote, EScrollBehavior.ScrollToCenter);
             if (selectStyle == ESelectStyle.Flickering)
             {
                _currentSelectedNote?.FlickBorder();
@@ -138,86 +141,63 @@ namespace mrHelper.App.Controls
 
       internal int DiscussionCount => getAllBoxes().Count();
 
+      internal void ProcessKeyDown(KeyEventArgs e)
+      {
+         void selectFirstBoxOnScreen()
+         {
+            foreach (DiscussionBox box in getVisibleAndSortedBoxes())
+            {
+               if (box.SelectTopVisibleNote())
+               {
+                  break;
+               }
+            }
+         }
+
+         void selectLastBoxOnScreen()
+         {
+            foreach (DiscussionBox box in getVisibleAndSortedBoxes().Reverse())
+            {
+               if (box.SelectBottomVisibleNote(ClientRectangle.Height))
+               {
+                  break;
+               }
+            }
+         }
+
+         if (e.KeyCode == Keys.Home)
+         {
+            selectNoteByPosition(ENoteSelectionRequest.First, null /* does not matter */);
+            e.Handled = true;
+         }
+         else if (e.KeyCode == Keys.End)
+         {
+            selectNoteByPosition(ENoteSelectionRequest.Last, null /* does not matter */);
+            e.Handled = true;
+         }
+         else if (e.KeyCode == Keys.PageUp)
+         {
+            AutoScrollPosition = new Point(AutoScrollPosition.X,
+               Math.Max(VerticalScroll.Minimum, VerticalScroll.Value - VerticalScroll.LargeChange));
+            selectFirstBoxOnScreen();
+            e.Handled = true;
+         }
+         else if (e.KeyCode == Keys.PageDown)
+         {
+            AutoScrollPosition = new Point(AutoScrollPosition.X,
+               Math.Min(VerticalScroll.Maximum, VerticalScroll.Value + VerticalScroll.LargeChange));
+            selectLastBoxOnScreen();
+            e.Handled = true;
+         }
+      }
+
       ITextControl[] ITextControlHost.Controls => getAllVisibleAndSortedTextControls().ToArray();
 
       ITextControl ITextControlHost.ActiveControl => ((_mostRecentFocusedDiscussionControl ?? ActiveControl) as ITextControl);
 
-      public event Action ContentChanged;
-      public event Action ContentMismatchesFilter;
-      public event Action ContentMatchesFilter;
-
       protected override System.Drawing.Point ScrollToControl(System.Windows.Forms.Control activeControl)
       {
          return this.AutoScrollPosition; // https://stackoverflow.com/a/9428480
-      }
-
-      private enum EScrollBehavior
-      {
-         FineScroll,
-         ScrollToCenter
-      }
-
-      private void scrollToControl(Control control, EScrollBehavior scrollBehavior)
-      {
-         void placeControlAtTop()
-         {
-            Point newControlTopLocationAtScreen = control.PointToScreen(new Point(0, -FontHeight));
-            Point newControlTopLocationAtForm = PointToClient(newControlTopLocationAtScreen);
-
-            int x = AutoScrollPosition.X;
-            int y = VerticalScroll.Value + newControlTopLocationAtForm.Y;
-            Point newPosition = new Point(x, y);
-            AutoScrollPosition = newPosition;
-         }
-
-         Point controlTopLocationAtScreen = control.PointToScreen(new Point(0, 0));
-         Point controlTopLocationAtForm = PointToClient(controlTopLocationAtScreen);
-
-         void placeControlAtBottom()
-         {
-            int newControlTop = control.Height - (ClientRectangle.Y + ClientRectangle.Height - controlTopLocationAtForm.Y);
-
-            int x = AutoScrollPosition.X;
-            int y = VerticalScroll.Value + newControlTop;
-            Point newPosition = new Point(x, y);
-            AutoScrollPosition = newPosition;
-         }
-
-         Point controlBottomLocationAtScreen = control.PointToScreen(new Point(0, control.Height));
-         Point controlBottomLocationAtForm = PointToClient(controlBottomLocationAtScreen);
-
-         switch (scrollBehavior)
-         {
-            case EScrollBehavior.FineScroll:
-               {
-                  bool isTopVisible = ClientRectangle.Contains(controlTopLocationAtForm);
-                  bool isBottomVisible = ClientRectangle.Contains(controlBottomLocationAtForm);
-                  if (!isTopVisible && !isBottomVisible)
-                  {
-                     if (controlBottomLocationAtForm.Y > ClientRectangle.Y + ClientRectangle.Height)
-                     {
-                        placeControlAtBottom();
-                     }
-                     else if (controlTopLocationAtForm.Y < ClientRectangle.Y)
-                     {
-                        placeControlAtTop();
-                     }
-                  }
-                  else if (!isTopVisible)
-                  {
-                     placeControlAtTop();
-                  }
-                  else if (!isBottomVisible)
-                  {
-                     placeControlAtBottom();
-                  }
-               }
-               break;
-
-            case EScrollBehavior.ScrollToCenter:
-               placeControlAtTop();
-               break;
-         }
       }
 
       protected override void OnVisibleChanged(EventArgs e)
@@ -248,64 +228,9 @@ namespace mrHelper.App.Controls
             return false;
          }
          
-         if (_currentSelectedNote != null)
-         {
-            scrollToControl(_currentSelectedNote, EScrollBehavior.FineScroll);
-         }
-
+         // _currentSelectedNote has been updated inside onControlGotFocus() called from ProcessTabKey()
+         scrollToControl(_currentSelectedNote, ExpectedControlPosition.Auto);
          return true;
-      }
-
-      internal void ProcessKeyDown(KeyEventArgs e)
-      {
-         void selectFirstBoxOnScreen()
-         {
-            IEnumerable<DiscussionBox> notes = getVisibleAndSortedBoxes();
-            foreach (DiscussionBox box in notes)
-            {
-               if (box.SelectTopVisibleNote())
-               {
-                  break;
-               }
-            }
-         }
-
-         void selectLastBoxOnScreen()
-         {
-            IEnumerable<DiscussionBox> notes = getVisibleAndSortedBoxes();
-            foreach (DiscussionBox box in notes.Reverse())
-            {
-               if (box.SelectBottomVisibleNote(ClientRectangle.Height))
-               {
-                  break;
-               }
-            }
-         }
-
-         if (e.KeyCode == Keys.Home)
-         {
-            onSelectNoteByPosition(ENoteSelectionRequest.First, null /* does not matter */);
-            e.Handled = true;
-         }
-         else if (e.KeyCode == Keys.End)
-         {
-            onSelectNoteByPosition(ENoteSelectionRequest.Last, null /* does not matter */);
-            e.Handled = true;
-         }
-         else if (e.KeyCode == Keys.PageUp)
-         {
-            AutoScrollPosition = new Point(AutoScrollPosition.X,
-               Math.Max(VerticalScroll.Minimum, VerticalScroll.Value - VerticalScroll.LargeChange));
-            selectFirstBoxOnScreen();
-            e.Handled = true;
-         }
-         else if (e.KeyCode == Keys.PageDown)
-         {
-            AutoScrollPosition = new Point(AutoScrollPosition.X,
-               Math.Min(VerticalScroll.Maximum, VerticalScroll.Value + VerticalScroll.LargeChange));
-            selectLastBoxOnScreen();
-            e.Handled = true;
-         }
       }
 
       private void onDiscussionsLoaded(IEnumerable<Discussion> discussions)
@@ -359,20 +284,9 @@ namespace mrHelper.App.Controls
 
       private void onSortStateChanged()
       {
-         int? selectedNoteId = getCurrentNote()?.Id;
-
          PerformLayout(); // Recalculate locations of child controls
          ContentChanged?.Invoke();
-
-         if (selectedNoteId.HasValue)
-         {
-            SelectNoteById(selectedNoteId.Value, null, ESelectStyle.Normal);
-         }
-      }
-
-      private DiscussionNote getCurrentNote()
-      {
-         return _currentSelectedNote != null ? ((DiscussionNote)(_currentSelectedNote.Tag)) : null;
+         scrollToControl(_currentSelectedNote, ExpectedControlPosition.TopEdge);
       }
 
       private void onFilterChanged()
@@ -381,9 +295,10 @@ namespace mrHelper.App.Controls
          updateVisibilityOfBoxes();
          ResumeLayout(true); // Place controls at their places
          ContentChanged?.Invoke();
+         scrollToControl(_currentSelectedNote, ExpectedControlPosition.TopEdge);
       }
 
-      private void onControlGotFocus(Control sender)
+      private void onDiscussionControlGotFocus(Control sender)
       {
          _mostRecentFocusedDiscussionControl = sender;
 
@@ -392,20 +307,22 @@ namespace mrHelper.App.Controls
             if (_currentSelectedNote != null)
             {
                _currentSelectedNote.ShowBorderWhenNotFocused = false;
-               _currentSelectedNote.Invalidate();
             }
             _currentSelectedNote = htmlPanelEx;
             _currentSelectedNote.ShowBorderWhenNotFocused = true;
          }
       }
 
-      private void onRestoreFocus()
+      private void setFocusToSavedDiscussionControl()
       {
          _mostRecentFocusedDiscussionControl?.Focus();
       }
 
-      private void onSelectNoteByUrl(string url)
+      private void selectNoteByUrl(string url)
       {
+         DiscussionNote getCurrentNote() =>
+            _currentSelectedNote != null ? ((DiscussionNote)(_currentSelectedNote.Tag)) : null;
+
          UrlParser.ParsedNoteUrl parsed = UrlParser.ParseNoteUrl(url);
          if (StringUtils.GetHostWithPrefix(parsed.Host) == _mergeRequestKey.ProjectKey.HostName
           && parsed.Project == _mergeRequestKey.ProjectKey.ProjectName
@@ -415,13 +332,12 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         _onSelectNoteByUrl(url); // note belongs to another MR, need to open its own Discussions view
+         _selectExternalNoteByUrl(url); // note belongs to another MR, need to open its own Discussions view
       }
 
-      private void onSelectNoteByPosition(ENoteSelectionRequest request, DiscussionBox current)
+      private void selectNoteByPosition(ENoteSelectionRequest request, DiscussionBox current)
       {
-         IEnumerable<DiscussionBox> boxes = getVisibleAndSortedBoxes();
-         List<DiscussionBox> boxList = boxes.ToList();
+         List<DiscussionBox> boxList = getVisibleAndSortedBoxes().ToList();
 
          int iNewIndex = -1;
          ENoteSelectionRequest newRequest;
@@ -454,27 +370,27 @@ namespace mrHelper.App.Controls
 
          if (iNewIndex >= 0 && iNewIndex < boxList.Count)
          {
-            DiscussionBox box = boxList[iNewIndex];
-            box.SelectNote(newRequest);
-            scrollToControl(_currentSelectedNote, EScrollBehavior.FineScroll);
+            boxList[iNewIndex].SelectNote(newRequest);
          }
       }
 
       private void createDiscussionBoxes(IEnumerable<Discussion> discussions)
       {
-         void scrollToNoteUpDown()
-         {
-            scrollToControl(_currentSelectedNote, EScrollBehavior.FineScroll);
-         }
+         void scrollToSelectedNote() => scrollToControl(_currentSelectedNote, ExpectedControlPosition.Auto);
 
          foreach (Discussion discussion in discussions)
          {
             SingleDiscussionAccessor accessor = _shortcuts.GetSingleDiscussionAccessor(
                _mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
-               _mergeRequestKey, discussion, _mergeRequestAuthor,
-               _colorScheme, onDiscussionBoxContentChanging, onDiscussionBoxContentChanged,
-               onControlGotFocus, onRestoreFocus, _htmlTooltip, _popupWindow,
+               _mergeRequestKey, discussion, _mergeRequestAuthor, _colorScheme,
+               onDiscussionBoxContentChanging,
+               onDiscussionBoxContentChanged,
+               onDiscussionControlGotFocus,
+               scrollToSelectedNote,
+               setFocusToSavedDiscussionControl,
+               _htmlTooltip,
+               _popupWindow,
                _discussionLayout.DiffContextPosition,
                _discussionLayout.DiscussionColumnWidth,
                _discussionLayout.NeedShiftReplies,
@@ -482,10 +398,8 @@ namespace mrHelper.App.Controls
                _avatarImageCache,
                _pathCache,
                _webUrl,
-               onSelectNoteByUrl,
-               onSelectNoteByPosition,
-               scrollToNoteUpDown,
-               scrollToNoteUpDown)
+               selectNoteByUrl,
+               selectNoteByPosition)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -722,6 +636,87 @@ namespace mrHelper.App.Controls
             .ForEach(box => box.RefreshTimeStamps());
       }
 
+      private enum ExpectedControlPosition
+      {
+         Auto,
+         TopEdge
+      }
+
+      private void scrollToControl(Control control, ExpectedControlPosition position)
+      {
+         if (control == null)
+         {
+            return;
+         }
+
+         void placeControlAtTop()
+         {
+            Point newControlTopLocationAtScreen = control.PointToScreen(new Point(0, -FontHeight));
+            Point newControlTopLocationAtForm = PointToClient(newControlTopLocationAtScreen);
+
+            int x = AutoScrollPosition.X;
+            int y = VerticalScroll.Value + newControlTopLocationAtForm.Y;
+            Point newPosition = new Point(x, y);
+            AutoScrollPosition = newPosition;
+         }
+
+         Point controlTopLocationAtScreen = control.PointToScreen(new Point(0, 0));
+         Point controlTopLocationAtForm = PointToClient(controlTopLocationAtScreen);
+
+         void placeControlAtBottom()
+         {
+            int newControlTop = control.Height - (ClientRectangle.Y + ClientRectangle.Height - controlTopLocationAtForm.Y);
+
+            int x = AutoScrollPosition.X;
+            int y = VerticalScroll.Value + newControlTop;
+            Point newPosition = new Point(x, y);
+            AutoScrollPosition = newPosition;
+         }
+
+         Point controlBottomLocationAtScreen = control.PointToScreen(new Point(0, control.Height));
+         Point controlBottomLocationAtForm = PointToClient(controlBottomLocationAtScreen);
+
+         switch (position)
+         {
+            case ExpectedControlPosition.Auto:
+               {
+                  bool isTopVisible = ClientRectangle.Contains(controlTopLocationAtForm);
+                  bool isBottomVisible = ClientRectangle.Contains(controlBottomLocationAtForm);
+                  if (!isTopVisible && !isBottomVisible)
+                  {
+                     if (controlBottomLocationAtForm.Y > ClientRectangle.Y + ClientRectangle.Height)
+                     {
+                        placeControlAtBottom();
+                     }
+                     else if (controlTopLocationAtForm.Y < ClientRectangle.Y)
+                     {
+                        placeControlAtTop();
+                     }
+                  }
+                  else if (!isTopVisible)
+                  {
+                     placeControlAtTop();
+                  }
+                  else if (!isBottomVisible)
+                  {
+                     placeControlAtBottom();
+                  }
+               }
+               break;
+
+            case ExpectedControlPosition.TopEdge:
+               {
+                  Point newControlTopLocationAtScreen = control.PointToScreen(new Point(0, 0));
+                  Point newControlTopLocationAtForm = PointToClient(newControlTopLocationAtScreen);
+                  if (!ClientRectangle.Contains(newControlTopLocationAtForm))
+                  {
+                     placeControlAtTop();
+                  }
+               }
+               break;
+         }
+      }
+
       private User _currentUser;
       private AvatarImageCache _avatarImageCache;
       private MergeRequestKey _mergeRequestKey;
@@ -730,7 +725,7 @@ namespace mrHelper.App.Controls
       private ColorScheme _colorScheme;
       private Shortcuts _shortcuts;
       private string _webUrl;
-      private Action<string> _onSelectNoteByUrl;
+      private Action<string> _selectExternalNoteByUrl;
       private DiscussionSort _discussionSort;
       private DiscussionFilter _displayFilter; // filters out discussions by user preferences
       private DiscussionLayout _discussionLayout;

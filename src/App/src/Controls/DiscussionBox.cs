@@ -40,7 +40,8 @@ namespace mrHelper.App.Controls
          Action<DiscussionBox> onContentChanging,
          Action<DiscussionBox> onContentChanged,
          Action<Control> onControlGotFocus,
-         Action onRestoreFocus,
+         Action onSetFocusToNoteProgramatically,
+         Action undoFocusChangedOnClick,
          HtmlToolTipEx htmlTooltip,
          PopupWindow popupWindow,
          ConfigurationHelper.DiffContextPosition diffContextPosition,
@@ -50,10 +51,8 @@ namespace mrHelper.App.Controls
          AvatarImageCache avatarImageCache,
          RoundedPathCache pathCache,
          string webUrl,
-         Action<string> onSelectNoteByUrl,
-         Action<ENoteSelectionRequest, DiscussionBox> onSelectNoteByPosition,
-         Action onPrevNoteSelected,
-         Action onNextNoteSelected)
+         Action<string> selectNoteByUrl,
+         Action<ENoteSelectionRequest, DiscussionBox> selectNoteByPosition)
       {
          Discussion = discussion;
 
@@ -92,11 +91,10 @@ namespace mrHelper.App.Controls
             onContentChanged?.Invoke(this);
          };
          _onControlGotFocus = onControlGotFocus;
-         _onRestoreFocus = onRestoreFocus;
-         _onSelectNoteUrl = onSelectNoteByUrl;
-         _onSelectNoteByPosition = onSelectNoteByPosition;
-         _onPrevNoteSelected = onPrevNoteSelected;
-         _onNextNoteSelected = onNextNoteSelected;
+         _onSetFocusToNoteProgramatically = onSetFocusToNoteProgramatically;
+         _undoFocusChangedOnClick = undoFocusChangedOnClick;
+         _selectNoteUrl = selectNoteByUrl;
+         _selectNoteByPosition = selectNoteByPosition;
 
          _htmlTooltip = htmlTooltip;
          _popupWindow = popupWindow;
@@ -140,34 +138,36 @@ namespace mrHelper.App.Controls
 
       internal bool SelectNote(int noteId, int? prevNoteId)
       {
-         IEnumerable<Control> noteControls = getNoteContainers()
-            .Select(container => container.NoteContent)
-            .Where(noteControl => noteControl != null);
-
-         foreach (Control noteControl in noteControls)
+         foreach (Control noteControl in getNoteContents())
          {
-            DiscussionNote note = getNoteFromControl(noteControl);
-            if (note.Id == noteId)
+            if (getNoteFromControl(noteControl).Id != noteId)
             {
-               noteControl.Focus();
-               if (prevNoteId.HasValue && prevNoteId.Value != noteId)
-               {
-                  NoteContainer noteContainer = getNoteContainers()
-                     .FirstOrDefault(container => container.NoteContent == noteControl);
-                  if (noteContainer != null)
-                  {
-                     LinkLabel noteBackLink = noteContainer.NoteBack as LinkLabel;
-                     noteBackLink.Visible = true;
-                     noteBackLink.LinkClicked += (s, e) =>
-                     {
-                        string prevNoteUrl = StringUtils.GetNoteUrl(_webUrl, prevNoteId.Value);
-                        _onSelectNoteUrl(prevNoteUrl);
-                        noteBackLink.Visible = false;
-                     };
-                  }
-               }
+               continue;
+            }
+
+            noteControl.Focus();
+            _onSetFocusToNoteProgramatically();
+            if (!prevNoteId.HasValue || prevNoteId.Value == noteId)
+            {
                return true;
             }
+
+            NoteContainer noteContainer = getNoteContainers()
+               .FirstOrDefault(container => container.NoteContent == noteControl);
+            if (noteContainer == null)
+            {
+               return true;
+            }
+
+            LinkLabel noteBackLink = noteContainer.NoteBack as LinkLabel;
+            noteBackLink.Visible = true;
+            noteBackLink.LinkClicked += (s, e) =>
+            {
+               string prevNoteUrl = StringUtils.GetNoteUrl(_webUrl, prevNoteId.Value);
+               _selectNoteUrl(prevNoteUrl);
+               noteBackLink.Visible = false;
+            };
+            return true;
          }
 
          return false;
@@ -175,80 +175,76 @@ namespace mrHelper.App.Controls
 
       internal bool SelectTopVisibleNote()
       {
-         IEnumerable<Control> noteControls = getNoteContainers()
-            .Select(container => container.NoteContent)
-            .Where(noteControl => noteControl != null);
-
-         foreach (Control noteControl in noteControls)
+         foreach (Control noteControl in getNoteContents())
          {
             if (noteControl.Parent.Location.Y + noteControl.Location.Y > 0)
             {
                noteControl.Focus();
+               _onSetFocusToNoteProgramatically();
                return true;
             }
          }
-
          return false;
       }
 
       internal bool SelectBottomVisibleNote(int screenHeight)
       {
-         IEnumerable<Control> noteControls = getNoteContainers()
-            .Select(container => container.NoteContent)
-            .Where(noteControl => noteControl != null);
-
-         foreach (Control noteControl in noteControls.Reverse())
+         foreach (Control noteControl in getNoteContents().Reverse())
          {
             if (noteControl.Parent.Location.Y + noteControl.Location.Y + noteControl.Height < screenHeight)
             {
                noteControl.Focus();
+               _onSetFocusToNoteProgramatically();
                return true;
             }
          }
-
          return false;
       }
 
       internal void SelectNote(ENoteSelectionRequest eNoteSelectionRequest)
       {
-         IEnumerable<Control> noteControls = getNoteContainers()
-            .Select(container => container.NoteContent)
-            .Where(noteControl => noteControl != null);
-         NoteContainer current = getNoteContainers()
-            .FirstOrDefault(noteContainer => noteContainer.NoteContent.Focused);
-
          switch (eNoteSelectionRequest)
          {
             case ENoteSelectionRequest.Prev:
-               if (current.Prev != null)
                {
-                  current.Prev.NoteContent.Focus();
-                  _onPrevNoteSelected();
-               }
-               else
-               {
-                  _onSelectNoteByPosition.Invoke(ENoteSelectionRequest.Prev, this);
+                  NoteContainer current = getNoteContainers()
+                     .FirstOrDefault(noteContainer => noteContainer.NoteContent.Focused);
+                  if (current.Prev != null)
+                  {
+                     current.Prev.NoteContent.Focus();
+                     _onSetFocusToNoteProgramatically();
+                  }
+                  else
+                  {
+                     _selectNoteByPosition.Invoke(ENoteSelectionRequest.Prev, this);
+                  }
                }
                break;
 
             case ENoteSelectionRequest.Next:
-               if (current.Next != null)
                {
-                  current.Next.NoteContent.Focus();
-                  _onNextNoteSelected();
-               }
-               else
-               {
-                  _onSelectNoteByPosition.Invoke(ENoteSelectionRequest.Next, this);
+                  NoteContainer current = getNoteContainers()
+                     .FirstOrDefault(noteContainer => noteContainer.NoteContent.Focused);
+                  if (current.Next != null)
+                  {
+                     current.Next.NoteContent.Focus();
+                     _onSetFocusToNoteProgramatically();
+                  }
+                  else
+                  {
+                     _selectNoteByPosition.Invoke(ENoteSelectionRequest.Next, this);
+                  }
                }
                break;
 
             case ENoteSelectionRequest.First:
-               noteControls.First().Focus();
+               getNoteContents().First().Focus();
+               _onSetFocusToNoteProgramatically();
                break;
 
             case ENoteSelectionRequest.Last:
-               noteControls.Last().Focus();
+               getNoteContents().Last().Focus();
+               _onSetFocusToNoteProgramatically();
                break;
          }
       }
@@ -360,23 +356,12 @@ namespace mrHelper.App.Controls
          await onToggleResolveDiscussionAsync();
       }
 
-      private void noteControl_GotFocus(object sender, EventArgs e)
-      {
-         Control_GotFocus(sender, e);
-         (sender as Control).Invalidate();
-      }
-
-      private void noteControl_LostFocus(object sender, EventArgs e)
-      {
-         (sender as Control).Invalidate();
-      }
-
       private void noteControl_LinkClicked(object sender, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlLinkClickedEventArgs e)
       {
          string url = e.Link;
          if (UrlParser.IsValidNoteUrl(url))
          {
-            _onSelectNoteUrl.Invoke(url);
+            _selectNoteUrl.Invoke(url);
             e.Handled = true;
             return;
          }
@@ -397,7 +382,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void Control_GotFocus(object sender, EventArgs e)
+      private void control_GotFocus(object sender, EventArgs e)
       {
          _onControlGotFocus?.Invoke(sender as Control);
       }
@@ -442,7 +427,7 @@ namespace mrHelper.App.Controls
          setPopupWindowText(getPopupDiffContextText(_popupContext, _popupDiffContextDepth, currentOffset));
 
          _popupWindow.SetContent(_popupContext, PopupContextPadding);
-         _onRestoreFocus();
+         _undoFocusChangedOnClick();
          showPopupWindow();
       }
 
@@ -459,7 +444,7 @@ namespace mrHelper.App.Controls
             getFileName(note.Position), contextAsText, note.Author.Name, note.Body);
          Clipboard.SetText(noteAsText);
 
-         _onRestoreFocus();
+         _undoFocusChangedOnClick();
          disableCopyToClipboard();
          scheduleOneShotTimer(enableCopyToClipboard);
       }
@@ -475,7 +460,7 @@ namespace mrHelper.App.Controls
          string noteUrl = StringUtils.GetNoteUrl(_webUrl, note.Id);
          Clipboard.SetText(noteUrl);
 
-         _onRestoreFocus();
+         _undoFocusChangedOnClick();
          noteLink.Enabled = false;
          scheduleOneShotTimer(() => noteLink.Enabled = true);
       }
@@ -612,7 +597,7 @@ namespace mrHelper.App.Controls
             Tag = firstNote,
             Parent = this
          };
-         diffContextControl.GotFocus += Control_GotFocus;
+         diffContextControl.GotFocus += control_GotFocus;
          diffContextControl.FontChanged += (sender, e) => setDiffContextText(diffContextControl);
 
          setDiffContextText(diffContextControl);
@@ -714,7 +699,7 @@ namespace mrHelper.App.Controls
             ForeColor = getFileNameColor(firstNote.Position),
             TabStop = false
          };
-         textBox.GotFocus += Control_GotFocus;
+         textBox.GotFocus += control_GotFocus;
          return textBox;
       }
 
@@ -862,6 +847,13 @@ namespace mrHelper.App.Controls
          return _noteContainers ?? Array.Empty<NoteContainer>();
       }
 
+      private IEnumerable<Control> getNoteContents()
+      {
+         return getNoteContainers()
+            .Select(container => container.NoteContent)
+            .Where(noteControl => noteControl != null);
+      }
+
       private IEnumerable<NoteContainer> createNoteContainers(Control parent, IEnumerable<DiscussionNote> allNotes)
       {
          if (parent == null)
@@ -990,8 +982,7 @@ namespace mrHelper.App.Controls
                Parent = this,
                IsContextMenuEnabled = false
             };
-            noteControl.GotFocus += noteControl_GotFocus;
-            noteControl.LostFocus += noteControl_LostFocus;
+            noteControl.GotFocus += control_GotFocus;
             noteControl.ContextMenu = createContextMenuForDiscussionNote(note, noteControl, discussionResolved);
             noteControl.FontChanged += (sender, e) =>
             {
@@ -1016,8 +1007,7 @@ namespace mrHelper.App.Controls
                Tag = note,
                Parent = this
             };
-            noteControl.GotFocus += noteControl_GotFocus;
-            noteControl.LostFocus += noteControl_LostFocus;
+            noteControl.GotFocus += control_GotFocus;
             noteControl.FontChanged += (sender, e) =>
             {
                updateStylesheet(noteControl as HtmlPanel);
@@ -1622,7 +1612,7 @@ namespace mrHelper.App.Controls
          {
             controls.Add(_panelContext);
          }
-         controls.AddRange(getNoteContainers().Where(nc => nc.NoteContent != null).Select(nc => nc.NoteContent));
+         controls.AddRange(getNoteContents());
          controls.ForEach(control =>
          {
             HtmlPanelEx htmlPanelEx = control as HtmlPanelEx;
@@ -1945,8 +1935,7 @@ namespace mrHelper.App.Controls
             }
          }
 
-         IEnumerable<Control> noteControls = getNoteContainers().Select(container => container.NoteContent);
-         foreach (Control noteControl in noteControls)
+         foreach (Control noteControl in getNoteContents())
          {
             disableNoteControl(noteControl);
          }
@@ -1997,16 +1986,13 @@ namespace mrHelper.App.Controls
          // To reposition new controls and unhide me back
          _onContentChanged?.Invoke();
          getNoteContainers().First().NoteContent.Focus();
+         _onSetFocusToNoteProgramatically();
       }
 
       private bool isDiscussionResolved()
       {
-         IEnumerable<Control> noteControls = getNoteContainers()
-            .Select(container => container.NoteContent)
-            .Where(noteControl => noteControl != null);
-
          bool result = true;
-         foreach (Control noteControl in noteControls)
+         foreach (Control noteControl in getNoteContents())
          {
             DiscussionNote note = getNoteFromControl(noteControl);
             if (note != null && note.Resolvable && !note.Resolved)
@@ -2015,7 +2001,6 @@ namespace mrHelper.App.Controls
                break;
             }
          }
-
          return result;
       }
 
@@ -2126,11 +2111,10 @@ namespace mrHelper.App.Controls
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;
       private readonly Action<Control> _onControlGotFocus;
-      private readonly Action _onRestoreFocus;
-      private readonly Action<string> _onSelectNoteUrl;
-      private readonly Action<ENoteSelectionRequest, DiscussionBox> _onSelectNoteByPosition;
-      private readonly Action _onPrevNoteSelected;
-      private readonly Action _onNextNoteSelected;
+      private readonly Action _undoFocusChangedOnClick;
+      private readonly Action<string> _selectNoteUrl;
+      private readonly Action<ENoteSelectionRequest, DiscussionBox> _selectNoteByPosition;
+      private readonly Action _onSetFocusToNoteProgramatically;
       private readonly HtmlToolTipEx _htmlTooltip;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }
