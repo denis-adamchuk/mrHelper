@@ -558,7 +558,7 @@ namespace mrHelper.App.Forms
          stylesheet = String.Empty;
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
          var getContext = isCurrentNoteNew() ? _getNewDiscussionDiffContext(position) : _getDiffContext(position);
-         return DiffContextFormatter.GetHtml(getContext, fontSizePx, 2, true);
+         return DiffContextFormatter.GetHtml(getContext, fontSizePx, 2, null);
       }
 
       private void updateControlState()

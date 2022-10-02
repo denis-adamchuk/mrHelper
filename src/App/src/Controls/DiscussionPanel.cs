@@ -13,6 +13,7 @@ using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
+using TheArtOfDev.HtmlRenderer.WinForms;
 using static mrHelper.App.Helpers.ConfigurationHelper;
 
 namespace mrHelper.App.Controls
@@ -399,7 +400,8 @@ namespace mrHelper.App.Controls
                _pathCache,
                _webUrl,
                selectNoteByUrl,
-               selectNoteByPosition)
+               selectNoteByPosition,
+               _htmlPanel)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -745,6 +747,7 @@ namespace mrHelper.App.Controls
       private static readonly int PopupWindowBorderRadius = 10;
       private readonly PopupWindow _popupWindow = new PopupWindow(autoClose: true,
          borderRadius: PopupWindowBorderRadius);
+      private readonly HtmlPanel _htmlPanel = new HtmlPanel() { Width = 1 };
 
       private static readonly int RedrawTimerInterval = 1000 * 60; // 1 minute
 

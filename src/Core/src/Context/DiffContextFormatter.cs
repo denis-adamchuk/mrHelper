@@ -12,7 +12,7 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException if DiffContext is invalid
       /// </summary>
-      public static string GetHtml(DiffContext context, double fontSizePx, int rowsVPaddingPx, bool fullWidth)
+      public static string GetHtml(DiffContext context, double fontSizePx, int rowsVPaddingPx, int? tableWidth)
       {
          if (!context.IsValid())
          {
@@ -20,6 +20,16 @@ namespace mrHelper.Core.Context
             return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
          }
 
+         return getHtml(getTable(context), fontSizePx, rowsVPaddingPx, tableWidth);
+      }
+
+      public static string GetHtml(string code, double fontSizePx, int rowsVPaddingPx, int? tableWidth)
+      {
+         return getHtml(getTable(code), fontSizePx, rowsVPaddingPx, tableWidth);
+      }
+
+      private static string getHtml(string table, double fontSizePx, int rowsVPaddingPx, int? tableWidth)
+      {
          return String.Format(
             @"<html>
                <head>
@@ -29,27 +39,27 @@ namespace mrHelper.Core.Context
                </head>
                <body>
                   {1}
-               <body>
+               </body>
              </html>",
-            getStylesheet(fontSizePx, rowsVPaddingPx, fullWidth), getTable(context));
+            getStylesheet(fontSizePx, rowsVPaddingPx, tableWidth), table);
       }
 
-      public static string getStylesheet(double fontSizePx, int rowsVPaddingPx, bool fullWidth)
+      private static string getStylesheet(double fontSizePx, int rowsVPaddingPx, int? tableWidth)
       {
-         return loadStylesFromCSS() + getCustomStyle(fontSizePx, rowsVPaddingPx, fullWidth);
+         return loadStylesFromCSS() + getCustomStyle(fontSizePx, rowsVPaddingPx, tableWidth);
+      }
+
+      static readonly string TableBegin = @"<table cellspacing=""0"" cellpadding=""0"">";
+      static readonly string TableEnd = @"</table>";
+
+      private static string getTable(string text)
+      {
+         return String.Format("{0} {1} {2}", TableBegin, getTableBody(text), TableEnd);
       }
 
       private static string getTable(DiffContext ctx)
       {
-         string commonBegin = @"
-                  <table cellspacing=""0"" cellpadding=""0"">
-                      <tbody>";
-
-         string commonEnd = @"
-                      </tbody>
-                   </table>";
-
-         return String.Format("{0} {1} {2}", commonBegin, getTableBody(ctx), commonEnd);
+         return String.Format("{0} {1} {2}", TableBegin, getTableBody(ctx), TableEnd);
       }
 
       private static string loadStylesFromCSS()
@@ -57,20 +67,30 @@ namespace mrHelper.Core.Context
          return mrHelper.Core.Properties.Resources.DiffContextCSS;
       }
 
-      private static string getCustomStyle(double fontSizePx, int rowsVPaddingPx, bool fullWidth)
+      private static string getCustomStyle(double fontSizePx, int rowsVPaddingPx, int? tableWidth)
       {
          return string.Format(@"
             table {{
                font-size: {0}px;
+               width: {2};
             }}
             td {{
                padding-top: {1}px;
                padding-bottom: {1}px;
-            }}
-            table {{
-               width: {2};
+               overflow: visible;
             }}",
-            fontSizePx, rowsVPaddingPx, fullWidth ? "100%" : "unset");
+            fontSizePx, rowsVPaddingPx, tableWidth.HasValue ? (tableWidth.Value.ToString() + "px") : "100%");
+      }
+
+      private static string getTableBody(string text)
+      {
+         StringBuilder body = new StringBuilder();
+         body.Append("<tr>");
+         body.Append("<td class=\"linenumbers\">999</td>");
+         body.Append("<td class=\"linenumbers\">999</td>");
+         body.AppendFormat("<td class=\"unchanged\">{0}</td>", text);
+         body.Append("</tr>");
+         return body.ToString();
       }
 
       private static string getTableBody(DiffContext ctx)
@@ -132,18 +152,7 @@ namespace mrHelper.Core.Context
 
       private static string getCode(DiffContext.Line line)
       {
-         if (line.Text.Length == 0)
-         {
-            return "<br";
-         }
-
-         // replace some special symbols such as '<' or '>'
-         string encodedText = System.Net.WebUtility.HtmlEncode(line.Text);
-
-         // replace spaces with &nbsp
-         return encodedText
-            .Replace("\t", "    ")   /* replace each TAB with four spaces */
-            .Replace(" ", "&nbsp;"); /* replace each SPACE with &nbsp; */
+         return Common.Tools.StringUtils.CodeToHtml(line.Text);
       }
    }
 }
