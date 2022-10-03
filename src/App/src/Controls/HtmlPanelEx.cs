@@ -83,17 +83,10 @@ namespace mrHelper.App.Controls
       protected override void WndProc(ref Message m)
       {
          const int WM_MOUSEWHEEL = 0x020A;
-         if (m.Msg == WM_MOUSEWHEEL)
+         if (m.Msg == WM_MOUSEWHEEL && !ScrollOnMouseWheel)
          {
-            if (ScrollOnMouseWheel)
-            {
-               base.WndProc(ref m);
-            }
-            else
-            {
-               int delta = CommonNative.NativeMethods.GET_WHEEL_DELTA_WPARAM(m.WParam);
-               MouseWheelEx?.Invoke(this, new MouseEventArgs(MouseButtons.None, 0, 0, 0, delta));
-            }
+            int delta = CommonNative.NativeMethods.GET_WHEEL_DELTA_WPARAM(m.WParam);
+            MouseWheelEx?.Invoke(this, new MouseEventArgs(MouseButtons.None, 0, 0, 0, delta));
             return;
          }
          base.WndProc(ref m);
