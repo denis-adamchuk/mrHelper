@@ -137,6 +137,21 @@ namespace mrHelper.App.Controls
             }
             return true;
          }
+
+         if (getAllBoxes().Any(box => box.HasNote(noteId)))
+         {
+            if (MessageBox.Show("Requested note is hidden by filters. Do you want to clear filters and highlight the note?",
+               "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+               _displayFilter.FilterState = DiscussionFilterState.Default;
+               if (getVisibleAndSortedBoxes().Any(box => box.HasNote(noteId)))
+               {
+                  return SelectNoteById(noteId, prevNoteId, ESelectStyle.Flickering);
+               }
+               Debug.Assert(false);
+            }
+         }
+
          return false;
       }
 

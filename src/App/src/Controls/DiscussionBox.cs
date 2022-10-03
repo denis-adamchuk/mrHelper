@@ -139,6 +139,11 @@ namespace mrHelper.App.Controls
 
       internal Discussion Discussion { get; private set; }
 
+      internal bool HasNote(int noteId)
+      {
+         return getNoteContents().Any(noteControl => getNoteFromControl(noteControl).Id == noteId);
+      }
+
       internal bool SelectNote(int noteId, int? prevNoteId)
       {
          foreach (Control noteControl in getNoteContents())

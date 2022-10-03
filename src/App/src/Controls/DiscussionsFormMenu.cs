@@ -60,6 +60,7 @@ namespace mrHelper.App.Controls
 
          _displayFilter = displayFilter;
          setDiscussionFilterStateInControls(_displayFilter.FilterState);
+         _displayFilter.FilterStateChanged += () => setDiscussionFilterStateInControls(_displayFilter.FilterState);
 
          _discussionLayout = discussionLayout;
          setDiscussionLayoutStateInControls();
