@@ -324,22 +324,6 @@ namespace mrHelper.Common.Tools
          return result;
       }
 
-      public static string CodeToHtml(string text)
-      {
-         if (text.Length == 0)
-         {
-            return "<br>";
-         }
-
-         // replace some special symbols such as '<' or '>'
-         string encodedText = System.Net.WebUtility.HtmlEncode(text);
-
-         // replace spaces with &nbsp
-         return encodedText
-            .Replace("\t", "    ")   /* replace each TAB with four spaces */
-            .Replace(" ", "&nbsp;"); /* replace each SPACE with &nbsp; */
-      }
-
       private static readonly string WorkInProgressPrefix = "WIP: ";
       private static readonly string DraftPrefix = "Draft: ";
    }

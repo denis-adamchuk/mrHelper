@@ -214,7 +214,7 @@ namespace mrHelper.App.Controls
       private void onDiffContextDepthCheckedChanged(object sender, EventArgs e)
       {
          ToolStripMenuItem checkBox = sender as ToolStripMenuItem;
-         if (!checkBox.Checked || !int.TryParse(checkBox.Text, out int diffContextDepthInteger))
+         if (_loadingConfiguration || !checkBox.Checked || !int.TryParse(checkBox.Text, out int diffContextDepthInteger))
          {
             return;
          }

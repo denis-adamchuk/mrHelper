@@ -85,7 +85,7 @@ namespace mrHelper.Core.Context
       private static string getTableBody(string text)
       {
          StringBuilder body = new StringBuilder();
-         body.Append("<tr>");
+         body.Append("<tr class=\"selected\">"); // emulate bold just in case
          body.Append("<td class=\"linenumbers\">999</td>");
          body.Append("<td class=\"linenumbers\">999</td>");
          body.AppendFormat("<td class=\"unchanged\">{0}</td>", text);
@@ -152,7 +152,23 @@ namespace mrHelper.Core.Context
 
       private static string getCode(DiffContext.Line line)
       {
-         return Common.Tools.StringUtils.CodeToHtml(line.Text);
+         return codeToHtml(line.Text);
+      }
+
+      private static string codeToHtml(string text)
+      {
+         if (text.Length == 0)
+         {
+            return "<br>";
+         }
+
+         // replace some special symbols such as '<' or '>'
+         string encodedText = System.Net.WebUtility.HtmlEncode(text);
+
+         // replace spaces with &nbsp
+         return encodedText
+            .Replace("\t", "    ")   /* replace each TAB with four spaces */
+            .Replace(" ", "&nbsp;"); /* replace each SPACE with &nbsp; */
       }
    }
 }

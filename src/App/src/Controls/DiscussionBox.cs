@@ -603,16 +603,18 @@ namespace mrHelper.App.Controls
             Parent = this
          };
          diffContextControl.GotFocus += control_GotFocus;
-         diffContextControl.FontChanged += (sender, e) => setDiffContextText(diffContextControl);
+         diffContextControl.FontChanged += (sender, e) => setDiffContextText(diffContextControl, true);
 
-         setDiffContextText(diffContextControl);
+         setDiffContextText(diffContextControl, false);
 
          return diffContextControl;
       }
 
-      private void setDiffContextText(Control diffContextControl)
+      private void setDiffContextText(Control diffContextControl, bool recalcIfNeeded)
       {
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(diffContextControl);
+         double expectedHeight = fontSizePx * (_diffContextDepth.Size + 1) + (_diffContextDepth.Size + 1) * 2;
+         int actualHeight = diffContextControl.Height;
 
          DiscussionNote note = getNoteFromControl(diffContextControl);
          Debug.Assert(note.Type == "DiffNote");
@@ -630,9 +632,11 @@ namespace mrHelper.App.Controls
             htmlPanel.Height = 0;
          }
 
+         bool recalcTableWidth = recalcIfNeeded && expectedHeight < actualHeight && prevWidth != 0;
          DiffContext? context = getContextSafe(_panelContextMaker, position, _diffContextDepth, 0);
+         int? tableWidth = recalcTableWidth ? estimateHtmlWidth(context.Value, fontSizePx, prevWidth) : new int?();
          string html = context.HasValue
-            ? getFormattedHtml(context.Value, fontSizePx, null)
+            ? getFormattedHtml(context.Value, fontSizePx, tableWidth)
             : getErrorHtml("Cannot create a diff context for discussion");
          htmlPanel.Text = html;
 
@@ -692,17 +696,17 @@ namespace mrHelper.App.Controls
       private int estimateHtmlWidth(DiffContext context, double fontSizePx, int minWidth)
       {
          string longestLine = context.Lines
-            .Select(line => StringUtils.CodeToHtml(line.Text))
+            .Select(line => line.Text)
             .OrderBy(line => line.Length)
             .LastOrDefault();
          if (longestLine != null)
          {
+            string html = DiffContextFormatter.GetHtml(longestLine, fontSizePx, 0, null);
             _htmlPanelForWidthCalculation.Width = minWidth;
             while (true)
             {
-               string html = DiffContextFormatter.GetHtml(longestLine, fontSizePx, 0, null);
                _htmlPanelForWidthCalculation.Text = html;
-               if (_htmlPanelForWidthCalculation.AutoScrollMinSize.Height <= fontSizePx + 2
+               if (_htmlPanelForWidthCalculation.AutoScrollMinSize.Height <= fontSizePx * 1.25
                 || _htmlPanelForWidthCalculation.Width >= 9999) // safety limit
                {
                   return Math.Max(_htmlPanelForWidthCalculation.AutoScrollMinSize.Width, minWidth);
@@ -1371,7 +1375,7 @@ namespace mrHelper.App.Controls
          _previousWidth = null;
          if (_panelContext != null)
          {
-            setDiffContextText(_panelContext);
+            setDiffContextText(_panelContext, true);
          }
       }
 
@@ -1475,6 +1479,7 @@ namespace mrHelper.App.Controls
          if (_panelContext != null)
          {
             resizeLimitedWidthHtmlPanel(_panelContext as HtmlPanel, getDiffContextWidth(width), DiffContextExtraHeight);
+            setDiffContextText(_panelContext, true);
          }
       }
 
