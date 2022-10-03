@@ -329,7 +329,10 @@ namespace mrHelper.App.Controls
           && parsed.Project == _mergeRequestKey.ProjectKey.ProjectName
           && parsed.IId == _mergeRequestKey.IId)
          {
-            SelectNoteById(parsed.NoteId, getCurrentNote()?.Id, ESelectStyle.Flickering);
+            if (SelectNoteById(parsed.NoteId, getCurrentNote()?.Id, ESelectStyle.Flickering))
+            {
+               scrollToControl(_currentSelectedNote, ExpectedControlPosition.ForceTopEdge);
+            }
             return;
          }
 
@@ -641,7 +644,8 @@ namespace mrHelper.App.Controls
       private enum ExpectedControlPosition
       {
          Auto,
-         TopEdge
+         TopEdge,
+         ForceTopEdge
       }
 
       private void scrollToControl(Control control, ExpectedControlPosition position)
@@ -715,6 +719,10 @@ namespace mrHelper.App.Controls
                      placeControlAtTop();
                   }
                }
+               break;
+
+            case ExpectedControlPosition.ForceTopEdge:
+               placeControlAtTop();
                break;
          }
       }
