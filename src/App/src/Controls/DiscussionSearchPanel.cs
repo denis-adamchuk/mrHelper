@@ -24,6 +24,7 @@ namespace mrHelper.App.Controls
          if (e.KeyCode == Keys.F && e.Modifiers.HasFlag(Keys.Control))
          {
             Focus();
+            textBoxSearch.SelectAll();
             e.Handled = true;
          }
          else if (e.KeyCode == Keys.F3)
