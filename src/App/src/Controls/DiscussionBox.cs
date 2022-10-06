@@ -55,6 +55,7 @@ namespace mrHelper.App.Controls
          Action<ENoteSelectionRequest, DiscussionBox> selectNoteByPosition,
          HtmlPanel htmlPanelForWidthCalculation)
       {
+         Font = parent.Font;
          Discussion = discussion;
 
          _accessor = accessor;
@@ -608,46 +609,46 @@ namespace mrHelper.App.Controls
             Parent = this
          };
          diffContextControl.GotFocus += control_GotFocus;
-         diffContextControl.FontChanged += (sender, e) => setDiffContextText(diffContextControl, true);
-
-         setDiffContextText(diffContextControl, false);
+         diffContextControl.FontChanged += (sender, e) => setDiffContextText(diffContextControl);
 
          return diffContextControl;
       }
 
-      private void setDiffContextText(Control diffContextControl, bool recalcIfNeeded)
+      private void setDiffContextText(Control diffContextControl, int? preferredWidth = null)
       {
-         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(diffContextControl);
-         double expectedHeight = fontSizePx * (_diffContextDepth.Size + 1) + (_diffContextDepth.Size + 1) * 2;
-         int actualHeight = diffContextControl.Height;
-
+         Debug.Assert(diffContextControl is HtmlPanel);
          DiscussionNote note = getNoteFromControl(diffContextControl);
          Debug.Assert(note.Type == "DiffNote");
          DiffPosition position = PositionConverter.Convert(note.Position);
+         DiffContext? context = getContextSafe(_panelContextMaker, position, _diffContextDepth, 0);
 
-         Debug.Assert(diffContextControl is HtmlPanel);
-         HtmlPanel htmlPanel = diffContextControl as HtmlPanel;
-
-         // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
-         int prevWidth = htmlPanel.Width;
-
-         if (htmlPanel.Visible)
+         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(diffContextControl);
+         double expectedHeight = fontSizePx * (_diffContextDepth.Size + 1) + (_diffContextDepth.Size + 1) * 2;
+         int actualHeight = diffContextControl.Height;
+         int actualWidth = preferredWidth ?? diffContextControl.Width;
+         if (actualWidth == 0)
          {
-            htmlPanel.Width = 0;
-            htmlPanel.Height = 0;
+            Debug.Assert(false);
+            return;
          }
 
-         bool recalcTableWidth = recalcIfNeeded && expectedHeight < actualHeight && prevWidth != 0;
-         DiffContext? context = getContextSafe(_panelContextMaker, position, _diffContextDepth, 0);
-         int? tableWidth = recalcTableWidth ? estimateHtmlWidth(context.Value, fontSizePx, prevWidth) : new int?();
+         bool recalcTableWidth = actualHeight == 0 || expectedHeight < actualHeight;
+         int? tableWidth = recalcTableWidth ? estimateHtmlWidth(context.Value, fontSizePx, actualWidth) : new int?();
          string html = context.HasValue
             ? getFormattedHtml(context.Value, fontSizePx, tableWidth)
             : getErrorHtml("Cannot create a diff context for discussion");
-         htmlPanel.Text = html;
 
-         if (htmlPanel.Visible)
+         // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
+         if (diffContextControl.Visible)
          {
-            resizeLimitedWidthHtmlPanel(htmlPanel, prevWidth, DiffContextExtraHeight);
+            diffContextControl.Width = 0;
+            diffContextControl.Height = 0;
+         }
+         diffContextControl.Text = html;
+
+         if (diffContextControl.Visible)
+         {
+            resizeLimitedWidthHtmlPanel(diffContextControl as HtmlPanel, actualWidth, DiffContextExtraHeight);
          }
       }
 
@@ -662,7 +663,7 @@ namespace mrHelper.App.Controls
          DiffContext? context = getContextSafe(_popupContextMaker, position, depth, offset);
          if (context != null)
          {
-            int? tableWidth = estimateHtmlWidth(context.Value, fontSizePx, minWidth);
+            int tableWidth = estimateHtmlWidth(context.Value, fontSizePx, minWidth);
             return getFormattedHtml(context.Value, fontSizePx, tableWidth);
          }
          return getErrorHtml("Cannot create a diff context for popup window");
@@ -700,6 +701,8 @@ namespace mrHelper.App.Controls
 
       private int estimateHtmlWidth(DiffContext context, double fontSizePx, int minWidth)
       {
+         Debug.Assert(minWidth >= 0);
+
          string longestLine = context.Lines
             .Select(line => line.Text)
             .OrderBy(line => line.Length)
@@ -1380,7 +1383,7 @@ namespace mrHelper.App.Controls
          _previousWidth = null;
          if (_panelContext != null)
          {
-            setDiffContextText(_panelContext, true);
+            setDiffContextText(_panelContext);
          }
       }
 
@@ -1483,8 +1486,7 @@ namespace mrHelper.App.Controls
 
          if (_panelContext != null)
          {
-            resizeLimitedWidthHtmlPanel(_panelContext as HtmlPanel, getDiffContextWidth(width), DiffContextExtraHeight);
-            setDiffContextText(_panelContext, true);
+            setDiffContextText(_panelContext, getDiffContextWidth(width));
          }
       }
 

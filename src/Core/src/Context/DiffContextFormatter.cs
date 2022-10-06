@@ -88,7 +88,7 @@ namespace mrHelper.Core.Context
          body.Append("<tr class=\"selected\">"); // emulate bold just in case
          body.Append("<td class=\"linenumbers\">999</td>");
          body.Append("<td class=\"linenumbers\">999</td>");
-         body.AppendFormat("<td class=\"unchanged\">{0}</td>", text);
+         body.AppendFormat("<td class=\"unchanged\">{0}</td>", System.Net.WebUtility.HtmlEncode(text));
          body.Append("</tr>");
          return body.ToString();
       }
