@@ -16,6 +16,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.CommonNative;
 using mrHelper.CommonControls.Tools;
 using TheArtOfDev.HtmlRenderer.WinForms;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -37,6 +38,7 @@ namespace mrHelper.App.Forms
       {
          InitializeComponent();
          this.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
+         htmlPanelContext.MouseWheelEx += panelScroll_MouseWheel;
 
          applyFont(Program.Settings.MainWindowFontSizeName);
          createWPFTextBox();
@@ -103,7 +105,12 @@ namespace mrHelper.App.Forms
          updateControlState();
       }
 
-      private void panelScroll_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+      private void panelScroll_MouseWheel(object sender, HtmlPanelEx.MouseWheelExArgs e)
+      {
+         WinFormsHelpers.ConvertMouseWheelToClick(buttonScrollDown, buttonScrollUp, e.Delta);
+      }
+
+      private void panelScroll_MouseWheel(object sender, MouseEventArgs e)
       {
          WinFormsHelpers.ConvertMouseWheelToClick(buttonScrollDown, buttonScrollUp, e.Delta);
       }
@@ -557,8 +564,10 @@ namespace mrHelper.App.Forms
       {
          stylesheet = String.Empty;
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
-         var getContext = isCurrentNoteNew() ? _getNewDiscussionDiffContext(position) : _getDiffContext(position);
-         return DiffContextFormatter.GetHtml(getContext, fontSizePx, 2, null);
+         DiffContext context = isCurrentNoteNew() ?
+            _getNewDiscussionDiffContext(position) : _getDiffContext(position);
+         int tableWidth = DiffContextHelpers.EstimateHtmlWidth(context, fontSizePx, htmlPanel.Width);
+         return DiffContextFormatter.GetHtml(context, fontSizePx, 1, tableWidth);
       }
 
       private void updateControlState()

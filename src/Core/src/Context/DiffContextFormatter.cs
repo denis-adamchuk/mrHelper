@@ -88,7 +88,7 @@ namespace mrHelper.Core.Context
          body.Append("<tr class=\"selected\">"); // emulate bold just in case
          body.Append("<td class=\"linenumbers\">999</td>");
          body.Append("<td class=\"linenumbers\">999</td>");
-         body.AppendFormat("<td class=\"unchanged\">{0}</td>", System.Net.WebUtility.HtmlEncode(text));
+         body.AppendFormat("<td class=\"unchanged\">{0}</td>", textToHtml(text));
          body.Append("</tr>");
          return body.ToString();
       }
@@ -152,10 +152,10 @@ namespace mrHelper.Core.Context
 
       private static string getCode(DiffContext.Line line)
       {
-         return codeToHtml(line.Text);
+         return textToHtml(line.Text);
       }
 
-      private static string codeToHtml(string text)
+      private static string textToHtml(string text)
       {
          if (text.Length == 0)
          {

@@ -52,8 +52,7 @@ namespace mrHelper.App.Controls
          RoundedPathCache pathCache,
          string webUrl,
          Action<string> selectNoteByUrl,
-         Action<ENoteSelectionRequest, DiscussionBox> selectNoteByPosition,
-         HtmlPanel htmlPanelForWidthCalculation)
+         Action<ENoteSelectionRequest, DiscussionBox> selectNoteByPosition)
       {
          Font = parent.Font;
          Discussion = discussion;
@@ -62,7 +61,6 @@ namespace mrHelper.App.Controls
          _editor = accessor.GetDiscussionEditor();
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
-         _mergeRequestKey = mergeRequestKey;
          _imagePath = StringUtils.GetUploadsPrefix(mergeRequestKey.ProjectKey);
          _avatarImageCache = avatarImageCache;
          _pathCache = pathCache;
@@ -101,7 +99,6 @@ namespace mrHelper.App.Controls
          _htmlTooltip = htmlTooltip;
          _popupWindow = popupWindow;
          _popupWindow.Closed += onPopupWindowClosed;
-         _htmlPanelForWidthCalculation = htmlPanelForWidthCalculation;
 
          _specialDiscussionNoteMarkdownPipeline =
             MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
@@ -116,7 +113,6 @@ namespace mrHelper.App.Controls
          disposePopupContext();
          _popupWindow.Closed -= onPopupWindowClosed;
          _popupWindow = null;
-         _htmlPanelForWidthCalculation = null;
 
          _colorScheme.Changed -= onColorSchemeChanged;
 
@@ -410,7 +406,19 @@ namespace mrHelper.App.Controls
             resizeLimitedWidthHtmlPanel(_popupContext, _panelContext.Width, DiffContextExtraHeight);
          }
 
+         string getPopupDiffContextText(Control control, DiffContext? ctx, int minWidth)
+         {
+            double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(control);
+            if (ctx.HasValue && ctx.Value.IsValid())
+            {
+               int tableWidth = DiffContextHelpers.EstimateHtmlWidth(ctx.Value, fontSizePx, minWidth);
+               return getFormattedHtml(ctx.Value, fontSizePx, tableWidth);
+            }
+            return getErrorHtml("Cannot create a diff ctx for popup window");
+         }
+
          int currentOffset = 0;
+         DiffPosition position = PositionConverter.Convert(note.Position);
          Debug.Assert(_popupContext == null); // it should have been disposed and reset when popup window closes
          _popupContext = new HtmlPanelEx(_pathCache, false, false)
          {
@@ -421,21 +429,18 @@ namespace mrHelper.App.Controls
          _popupContext.MouseWheelEx += (sender2, e2) =>
          {
             int step = e2.Delta > 0 ? -1 : 1;
-            int newOffset = currentOffset;
-            newOffset += step;
-            string text = getPopupDiffContextText(
-               _popupContext, _popupDiffContextDepth, newOffset, _panelContext.Width);
+            int newOffset = currentOffset + step;
+            DiffContext? newContext = getContextSafe(_popupContextMaker, position, newOffset, _popupDiffContextDepth);
+            string text = getPopupDiffContextText(_popupContext, newContext, _panelContext.Width);
             if (text != _popupContext.Text)
             {
-               _popupContext.SuspendLayout();
                setPopupWindowText(text);
-               _popupContext.ResumeLayout();
                currentOffset = newOffset;
             }
          };
 
-         setPopupWindowText(getPopupDiffContextText(
-            _popupContext, _popupDiffContextDepth, currentOffset, _panelContext.Width));
+         DiffContext? context = getContextSafe(_popupContextMaker, position, currentOffset, _popupDiffContextDepth);
+         setPopupWindowText(getPopupDiffContextText(_popupContext, context, _panelContext.Width));
 
          _popupWindow.SetContent(_popupContext, PopupContextPadding);
          _undoFocusChangedOnClick();
@@ -499,7 +504,7 @@ namespace mrHelper.App.Controls
          DiffContext? context;
          try
          {
-            context = getContextSafe(_panelContextMaker, position, _diffContextDepth, 0);
+            context = getContextSafe(_panelContextMaker, position, 0, _diffContextDepth);
          }
          catch (Exception ex)
          {
@@ -620,7 +625,7 @@ namespace mrHelper.App.Controls
          DiscussionNote note = getNoteFromControl(diffContextControl);
          Debug.Assert(note.Type == "DiffNote");
          DiffPosition position = PositionConverter.Convert(note.Position);
-         DiffContext? context = getContextSafe(_panelContextMaker, position, _diffContextDepth, 0);
+         DiffContext? context = getContextSafe(_panelContextMaker, position, 0, _diffContextDepth);
 
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(diffContextControl);
          double expectedHeight = fontSizePx * (_diffContextDepth.Size + 1) + (_diffContextDepth.Size + 1) * 2;
@@ -632,11 +637,18 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         bool recalcTableWidth = actualHeight == 0 || expectedHeight < actualHeight;
-         int? tableWidth = recalcTableWidth ? estimateHtmlWidth(context.Value, fontSizePx, actualWidth) : new int?();
-         string html = context.HasValue
-            ? getFormattedHtml(context.Value, fontSizePx, tableWidth)
-            : getErrorHtml("Cannot create a diff context for discussion");
+         string html;
+         if (!context.HasValue)
+         {
+            html = getErrorHtml("Cannot create a diff context for discussion");
+         }
+         else
+         {
+            bool recalcTableWidth = actualHeight == 0 || expectedHeight < actualHeight;
+            int? tableWidth = recalcTableWidth ?
+               DiffContextHelpers.EstimateHtmlWidth(context.Value, fontSizePx, actualWidth) : new int?();
+            html = getFormattedHtml(context.Value, fontSizePx, tableWidth);
+         }
 
          // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
          if (diffContextControl.Visible)
@@ -652,34 +664,28 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private string getPopupDiffContextText(Control popupContextControl, ContextDepth depth, int offset, int minWidth)
+      private DiffContext? getContextSafe(IContextMaker contextMaker,
+         DiffPosition position, int offset, ContextDepth depth)
       {
-         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(popupContextControl);
-
-         DiscussionNote note = getNoteFromControl(popupContextControl);
-         Debug.Assert(note.Type == "DiffNote");
-         DiffPosition position = PositionConverter.Convert(note.Position);
-
-         DiffContext? context = getContextSafe(_popupContextMaker, position, depth, offset);
-         if (context != null)
+         Debug.Assert(contextMaker != null);
+         if (position == null)
          {
-            int tableWidth = estimateHtmlWidth(context.Value, fontSizePx, minWidth);
-            return getFormattedHtml(context.Value, fontSizePx, tableWidth);
+            return null;
          }
-         return getErrorHtml("Cannot create a diff context for popup window");
-      }
 
-      private DiffContext? getContextSafe(IContextMaker contextMaker, DiffPosition position, ContextDepth depth, int offset)
-      {
          DiffContext getContext()
          {
             try
             {
                return contextMaker.GetContext(position, depth, offset, UnchangedLinePolicy.TakeFromRight);
             }
-            catch (ContextMakingException) // fallback
+            catch (Exception e) // fallback
             {
-               return _simpleContextMaker.GetContext(position, depth, offset, UnchangedLinePolicy.TakeFromRight);
+               if (e is ArgumentException || e is ContextMakingException)
+               {
+                  return _simpleContextMaker.GetContext(position, depth, offset, UnchangedLinePolicy.TakeFromRight);
+               }
+               throw;
             }
          }
 
@@ -697,36 +703,6 @@ namespace mrHelper.App.Controls
             ExceptionHandlers.Handle(errorMessage, ex);
          }
          return null;
-      }
-
-      private int estimateHtmlWidth(DiffContext context, double fontSizePx, int minWidth)
-      {
-         Debug.Assert(minWidth >= 0);
-
-         string longestLine = context.Lines
-            .Select(line => line.Text)
-            .OrderBy(line => line.Length)
-            .LastOrDefault();
-         if (longestLine != null)
-         {
-            string html = DiffContextFormatter.GetHtml(longestLine, fontSizePx, 0, null);
-            _htmlPanelForWidthCalculation.Width = minWidth;
-            while (true)
-            {
-               _htmlPanelForWidthCalculation.Text = html;
-               if (_htmlPanelForWidthCalculation.AutoScrollMinSize.Height <= fontSizePx * 1.25
-                || _htmlPanelForWidthCalculation.Width >= 9999) // safety limit
-               {
-                  return Math.Max(_htmlPanelForWidthCalculation.AutoScrollMinSize.Width, minWidth);
-               }
-               else
-               {
-                  _htmlPanelForWidthCalculation.Width = Convert.ToInt32(_htmlPanelForWidthCalculation.Width * 1.1);
-                  continue;
-               }
-            }
-         }
-         return minWidth;
       }
 
       private string getFormattedHtml(DiffContext context, double fontSizePx, int? tableWidth)
@@ -2155,7 +2131,6 @@ namespace mrHelper.App.Controls
 
       private readonly User _mergeRequestAuthor;
       private readonly User _currentUser;
-      private readonly MergeRequestKey _mergeRequestKey;
       private readonly string _imagePath;
       private readonly AvatarImageCache _avatarImageCache;
       private readonly RoundedPathCache _pathCache;
@@ -2173,7 +2148,6 @@ namespace mrHelper.App.Controls
       private bool _needShiftReplies;
       private PopupWindow _popupWindow; // shared between other Discussion Boxes
       private HtmlPanelEx _popupContext; // specific for this instance
-      private HtmlPanel _htmlPanelForWidthCalculation; // shared between other Discussion Boxes
 
       private readonly ColorScheme _colorScheme;
       private readonly Action _onContentChanging;

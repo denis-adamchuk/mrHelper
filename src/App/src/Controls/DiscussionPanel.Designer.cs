@@ -38,8 +38,6 @@ namespace mrHelper.App.Controls
 
          _popupWindow.Dispose();
 
-         _htmlPanel.Dispose();
-
          _pathCache.Dispose();
 
          base.Dispose(disposing);

@@ -418,8 +418,7 @@ namespace mrHelper.App.Controls
                _pathCache,
                _webUrl,
                selectNoteByUrl,
-               selectNoteByPosition,
-               _htmlPanel)
+               selectNoteByPosition)
             {
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
@@ -767,10 +766,10 @@ namespace mrHelper.App.Controls
          InitialDelay = 300,
          // BaseStylesheet = Don't specify anything here because users' HTML <style> override it
       };
+
       private static readonly int PopupWindowBorderRadius = 10;
       private readonly PopupWindow _popupWindow = new PopupWindow(autoClose: true,
          borderRadius: PopupWindowBorderRadius);
-      private readonly HtmlPanel _htmlPanel = new HtmlPanel() { Width = 1 };
 
       private static readonly int RedrawTimerInterval = 1000 * 60; // 1 minute
 
@@ -780,7 +779,8 @@ namespace mrHelper.App.Controls
          Interval = RedrawTimerInterval
       };
 
-      private RoundedPathCache _pathCache = new RoundedPathCache(10);
+      public static int DiffContextBorderRadius = 10;
+      private RoundedPathCache _pathCache = new RoundedPathCache(DiffContextBorderRadius);
       private HtmlPanelEx _currentSelectedNote;
       private IEnumerable<DiscussionBox> _foundBoxes;
    }

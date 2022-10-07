@@ -209,22 +209,9 @@ namespace mrHelper.App.Interprocess
       private MatchResult matchLineNumber(string leftPath, string rightPath, Core.Matching.DiffRefs refs,
          int lineNumber, bool isLeftSideLine, out string leftLineNumber, out string rightLineNumber)
       {
-         leftLineNumber = rightLineNumber = null;
-         LineNumberMatcher matcher = new LineNumberMatcher(_git);
-         try
-         {
-            matcher.Match(refs, leftPath, rightPath, lineNumber, isLeftSideLine, out leftLineNumber, out rightLineNumber);
-            return MatchResult.Success;
-         }
-         catch (ArgumentException ex)
-         {
-            ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
-         }
-         catch (MatchingException ex)
-         {
-            ExceptionHandlers.Handle("Cannot create DiffPosition", ex);
-         }
-         return MatchResult.Error;
+         bool r = PositionUtils.MatchLineNumber(_git, leftPath, rightPath, refs, lineNumber, isLeftSideLine,
+            out leftLineNumber, out rightLineNumber);
+         return r ? MatchResult.Success : MatchResult.Error;
       }
 
       private DiffContext getDiffContext<T>(DiffPosition position, UnchangedLinePolicy policy) where T : IContextMaker

@@ -1,4 +1,6 @@
-﻿namespace mrHelper.App.Forms
+﻿using mrHelper.App.Controls;
+
+namespace mrHelper.App.Forms
 {
    partial class NewDiscussionForm
    {
@@ -34,7 +36,7 @@
          this.textBoxFileName = new System.Windows.Forms.TextBox();
          this.buttonOK = new System.Windows.Forms.Button();
          this.panelHtmlContextCanvas = new System.Windows.Forms.Panel();
-         this.htmlPanelContext = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
+         this.htmlPanelContext = new HtmlPanelEx(null, false, false);
          this.textBoxDiscussionBodyHost = new System.Windows.Forms.Integration.ElementHost();
          this.buttonInsertCode = new System.Windows.Forms.Button();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
@@ -557,7 +559,7 @@
       private System.Windows.Forms.TabPage tabPageEdit;
       private System.Windows.Forms.TabPage tabPagePreview;
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelPreview;
-      private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelContext;
+      private HtmlPanelEx htmlPanelContext;
       private System.Windows.Forms.Label labelInvisibleCharactersHint;
       private System.Windows.Forms.Panel panelNavigation;
       private System.Windows.Forms.Button buttonPrev;

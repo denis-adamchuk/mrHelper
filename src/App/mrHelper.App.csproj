@@ -264,6 +264,7 @@
     <Compile Include="src\Helpers\CommandState.cs" />
     <Compile Include="src\Helpers\Configuration\DefaultWorkflowLoader.cs" />
     <Compile Include="src\Helpers\Configuration\RawDictionaryStringHelper.cs" />
+    <Compile Include="src\Helpers\DiffContextHelpers.cs" />
     <Compile Include="src\Helpers\GitLab\AsyncDiscussionHelper.cs" />
     <Compile Include="src\Helpers\GitLab\AsyncDiscussionLoader.cs" />
     <Compile Include="src\Helpers\GitLab\AvatarImageCache.cs" />

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Drawing;
+using System.Diagnostics;
 using System.Windows.Forms;
+using System.Drawing.Drawing2D;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using mrHelper.CommonControls.Tools;
 
@@ -14,6 +16,7 @@ namespace mrHelper.App.Controls
          _pathCache = pathCache;
          IsBorderSupported = isBorderSupported;
          ScrollOnMouseWheel = scrollOnMouseWheel;
+         Debug.Assert(!IsBorderSupported || _pathCache != null);
       }
 
       public bool IsBorderSupported { get; }
@@ -78,7 +81,14 @@ namespace mrHelper.App.Controls
          base.OnScroll(se);
       }
 
-      public event MouseEventHandler MouseWheelEx;
+      public struct MouseWheelExArgs
+      {
+         public MouseWheelExArgs(int delta) => Delta = delta;
+
+         public int Delta { get; }
+      }
+      public delegate void MouseWheelExHandler(object sender, MouseWheelExArgs e);
+      public event MouseWheelExHandler MouseWheelEx;
 
       protected override void WndProc(ref Message m)
       {
@@ -86,7 +96,7 @@ namespace mrHelper.App.Controls
          if (m.Msg == WM_MOUSEWHEEL && !ScrollOnMouseWheel)
          {
             int delta = CommonNative.NativeMethods.GET_WHEEL_DELTA_WPARAM(m.WParam);
-            MouseWheelEx?.Invoke(this, new MouseEventArgs(MouseButtons.None, 0, 0, 0, delta));
+            MouseWheelEx?.Invoke(this, new MouseWheelExArgs(delta));
             return;
          }
          base.WndProc(ref m);
