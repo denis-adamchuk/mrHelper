@@ -1,11 +1,10 @@
-﻿using System.Threading.Tasks;
-using GitLabSharp.Entities;
+﻿using System;
+using System.Threading.Tasks;
 using mrHelper.Common.Interfaces;
-using mrHelper.Common.Tools;
 
 namespace mrHelper.GitLabClient.Operators
 {
-   internal class AvatarOperator : BaseOperator
+   internal class AvatarOperator : BaseOperator, IDisposable
    {
       internal AvatarOperator(string hostname, IHostProperties hostProperties,
          INetworkOperationStatusListener networkOperationStatusListener)

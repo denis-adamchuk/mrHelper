@@ -468,8 +468,7 @@ namespace mrHelper.App.Controls
 
       private void onCopyNoteLinkToClipboardClick(Control noteLink)
       {
-         DiscussionNote note = noteLink.Tag as DiscussionNote;
-         if (note == null)
+         if (!(noteLink.Tag is DiscussionNote note))
          {
             return;
          }
@@ -1028,14 +1027,14 @@ namespace mrHelper.App.Controls
             noteControl.ContextMenu = createContextMenuForDiscussionNote(note, noteControl, discussionResolved);
             noteControl.FontChanged += (sender, e) =>
             {
-               updateStylesheet(noteControl as HtmlPanel);
+               updateStylesheet(noteControl);
                setDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
                updateNoteTooltip(noteControl, getNoteFromControl(noteControl));
             };
             noteControl.LinkClicked += noteControl_LinkClicked;
             noteControl.KeyDown += (s, e) => noteControl_KeyDown(e);
 
-            updateStylesheet(noteControl as HtmlPanel);
+            updateStylesheet(noteControl);
             setDiscussionNoteText(noteControl, note);
             updateNoteTooltip(noteControl, note);
 
@@ -1052,13 +1051,13 @@ namespace mrHelper.App.Controls
             noteControl.GotFocus += control_GotFocus;
             noteControl.FontChanged += (sender, e) =>
             {
-               updateStylesheet(noteControl as HtmlPanel);
+               updateStylesheet(noteControl);
                setServiceDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
             };
             noteControl.LinkClicked += noteControl_LinkClicked;
             noteControl.KeyDown += (s, e) => noteControl_KeyDown(e);
 
-            updateStylesheet(noteControl as HtmlPanel);
+            updateStylesheet(noteControl);
             setServiceDiscussionNoteText(noteControl, note);
 
             noteContainer.NoteContent = noteControl;

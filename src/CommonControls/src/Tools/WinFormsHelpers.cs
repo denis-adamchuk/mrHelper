@@ -443,7 +443,7 @@ namespace mrHelper.CommonControls.Tools
             using (GraphicsPath path = new GraphicsPath())
             {
                PointF center = new PointF(dstImage.Width / 2, dstImage.Height / 2);
-               float radius = dstImage.Width / 2;
+               float radius = (float)dstImage.Width / 2;
 
                RectangleF r = new RectangleF(center.X - radius, center.Y - radius, radius * 2, radius * 2);
                path.AddEllipse(r);

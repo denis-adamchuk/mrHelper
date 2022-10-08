@@ -110,7 +110,7 @@ namespace mrHelper.GitLabClient.Managers
             return;
          }
 
-         OneShotTimer oneShotTimer = new OneShotTimer(_timer?.SynchronizingObject, interval, mrk);
+         OneShotTimer oneShotTimer = new OneShotTimer(_timer.SynchronizingObject, interval, mrk);
          oneShotTimer.Elapsed +=
             async (s, e) =>
          {
