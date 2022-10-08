@@ -401,7 +401,7 @@ namespace mrHelper.App.Controls
          {
             SingleDiscussionAccessor accessor = _shortcuts.GetSingleDiscussionAccessor(
                _mergeRequestKey, discussion.Id);
-            DiscussionBox box = new DiscussionBox(this, accessor, _git, _currentUser,
+            DiscussionBox box = new DiscussionBox(accessor, _git, _currentUser,
                _mergeRequestKey, discussion, _mergeRequestAuthor, _colorScheme,
                onDiscussionBoxContentChanging,
                onDiscussionBoxContentChanged,
@@ -423,12 +423,11 @@ namespace mrHelper.App.Controls
                // Let new boxes be hidden to avoid flickering on repositioning
                Visible = false
             };
-            if (box.HasNotes)
+            Controls.Add(box);
+            box.Initialize(this);
+            if (!box.HasNotes)
             {
-               Controls.Add(box);
-            }
-            else
-            {
+               Controls.Remove(box);
                box.Dispose();
             }
          }

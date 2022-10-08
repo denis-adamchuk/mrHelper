@@ -32,7 +32,6 @@ namespace mrHelper.App.Controls
    internal class DiscussionBox : Panel
    {
       internal DiscussionBox(
-         Control parent,
          GitLabClient.SingleDiscussionAccessor accessor, IGitCommandService git,
          User currentUser, MergeRequestKey mergeRequestKey, Discussion discussion,
          User mergeRequestAuthor,
@@ -54,7 +53,6 @@ namespace mrHelper.App.Controls
          Action<string> selectNoteByUrl,
          Action<ENoteSelectionRequest, DiscussionBox> selectNoteByPosition)
       {
-         Font = parent.Font;
          Discussion = discussion;
 
          _accessor = accessor;
@@ -102,7 +100,10 @@ namespace mrHelper.App.Controls
 
          _specialDiscussionNoteMarkdownPipeline =
             MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
+      }
 
+      internal void Initialize(Control parent)
+      {
          onCreate(parent);
       }
 
@@ -614,7 +615,6 @@ namespace mrHelper.App.Controls
             Parent = this
          };
          diffContextControl.GotFocus += control_GotFocus;
-         diffContextControl.FontChanged += (sender, e) => setDiffContextText(diffContextControl);
 
          return diffContextControl;
       }
@@ -1431,7 +1431,7 @@ namespace mrHelper.App.Controls
             bool needShrinkNote = noteContainer != noteContainers.First();
             int noteWidthDelta = needShrinkNote ? getNoteRepliesPadding(width) : 0;
 
-            int noteAvatarHeight = (int)Math.Ceiling(noteContainer.NoteInfo.Height * 2.25);
+            int noteAvatarHeight = noteContainer.NoteInfo.Height * 2;
             int noteAvatarWidth = noteAvatarHeight;
             noteContainer.NoteAvatar.Size = new Size(noteAvatarWidth, noteAvatarHeight);
 
