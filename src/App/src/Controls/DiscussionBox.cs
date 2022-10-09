@@ -1748,13 +1748,12 @@ namespace mrHelper.App.Controls
          }
 
          string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
-         using (TextEditForm form = new EditNoteForm1(currentBody, _imagePath, null))
+         using (TextEditBaseForm form = new EditNoteForm(currentBody, _imagePath, null))
          {
             Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
             form.StartPosition = FormStartPosition.Manual;
             form.Location = locationAtScreen;
 
-            //actions.SetTextbox(form.TextBox);
             if (form.ShowDialog() == DialogResult.OK)
             {
                if (form.Body.Length == 0)
@@ -1779,7 +1778,7 @@ namespace mrHelper.App.Controls
          }
 
          string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
-         using (TextEditForm form = new ViewNoteForm1(currentBody, _imagePath))
+         using (TextEditBaseForm form = new ViewNoteForm(currentBody, _imagePath))
          {
             Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
             form.StartPosition = FormStartPosition.Manual;
@@ -1797,10 +1796,9 @@ namespace mrHelper.App.Controls
 
          bool isAlreadyResolved = isDiscussionResolved();
          string resolveText = String.Format("{0} Thread", (isAlreadyResolved ? "Unresolve" : "Resolve"));
-         using (ReplyOnDiscussionForm1 form = new ReplyOnDiscussionForm1(
+         using (ReplyOnDiscussionNoteForm form = new ReplyOnDiscussionNoteForm(
             resolveText, proposeUserToToggleResolveOnReply, _imagePath, null))
          {
-            //actions.SetTextbox(form.TextBox);
             if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
             {
                if (form.Body.Length == 0)

@@ -19,6 +19,9 @@
          }
          base.Dispose(disposing);
 
+         _popupWindow?.Close();
+         _popupWindow?.Dispose();
+
          _delayedHidingTimer?.Stop();
          _delayedHidingTimer?.Dispose();
       }

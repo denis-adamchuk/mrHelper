@@ -34,7 +34,6 @@ namespace mrHelper.CommonControls.Controls
          textBox = WPFHelpers.CreateWPFTextBox(textBoxHost, isReadOnly, text, multiline,
             isSpellCheckEnabled, softwareOnlyRenderMode);
          textBox.TextChanged += TextBox_TextChanged;
-         textBox.KeyDown += TextBox_KeyDown;
          textBox.LostFocus += TextBox_LostFocus;
          textBox.PreviewKeyDown += TextBox_PreviewKeyDown;
       }
@@ -70,13 +69,6 @@ namespace mrHelper.CommonControls.Controls
 
          public int Compare(AutoCompletionEntity x, AutoCompletionEntity y)
          {
-            if (x.Type != AutoCompletionEntity.EntityType.User
-             || y.Type != AutoCompletionEntity.EntityType.User)
-            {
-               Debug.Assert(false); // not implemented
-               return 0;
-            }
-
             bool xMatchesHint = StringUtils.ContainsNoCase(x.Hint, _substr);
             bool xMatchesName = StringUtils.ContainsNoCase(x.Name, _substr);
             bool yMatchesHint = StringUtils.ContainsNoCase(y.Hint, _substr);
@@ -175,32 +167,35 @@ namespace mrHelper.CommonControls.Controls
 
       private void TextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
       {
-         showAutoCompleteList();
-      }
-
-      private void TextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-      {
-         if (e.Key == System.Windows.Input.Key.Down)
+         if (_listBoxAutoComplete != null)
          {
-            activateAutoCompleteList();
+            refreshAutoCompleteList();
          }
          else
          {
-            // TODO - WHY?
-            // OnKeyDown(e);
+            showAutoCompleteList();
          }
       }
 
       private void TextBox_LostFocus(object sender, System.Windows.RoutedEventArgs e)
       {
-         hideAutoCompleteList();
+         if (_listBoxAutoComplete != null && !_listBoxAutoComplete.Focused)
+         {
+            hideAutoCompleteList();
+         }
       }
 
       private void TextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
       {
-         if (e.Key == System.Windows.Input.Key.Escape)
+         if (e.Key == System.Windows.Input.Key.Down)
+         {
+            activateAutoCompleteList();
+            e.Handled = true;
+         }
+         else if (e.Key == System.Windows.Input.Key.Escape)
          {
             hideAutoCompleteList();
+            e.Handled = true;
          }
       }
 
@@ -210,10 +205,12 @@ namespace mrHelper.CommonControls.Controls
          {
             applyAutoCompleteListSelection();
             hideAutoCompleteList();
+            e.Handled = true;
          }
          else if (e.KeyCode == Keys.Up && (sender as ListBox).SelectedIndex == 0)
          {
             hideAutoCompleteList();
+            e.Handled = true;
          }
       }
 
@@ -229,7 +226,10 @@ namespace mrHelper.CommonControls.Controls
             {
                applyAutoCompleteListSelection();
             }
-            hideAutoCompleteList();
+            else
+            {
+               hideAutoCompleteList();
+            }
          }
       }
 
@@ -252,12 +252,15 @@ namespace mrHelper.CommonControls.Controls
 
       private string format(AutoCompletionEntity entity)
       {
-         if (entity.Type != AutoCompletionEntity.EntityType.User)
+         switch (entity.Type)
          {
-            Debug.Assert(false); // not implemented
-            return entity.Name;
+            case AutoCompletionEntity.EntityType.User:
+               return String.Format("{0} ({1}{2})", entity.Hint, GitLabLabelPrefixChar, entity.Name);
+
+            default:
+               Debug.Assert(false);
+               return entity.Name;
          }
-         return String.Format("{0} ({1}{2})", entity.Hint, GitLabLabelPrefixChar, entity.Name);
       }
 
       /// <summary>
@@ -332,55 +335,68 @@ namespace mrHelper.CommonControls.Controls
          return new TextUtils.WordInfo(startPosition, trimmedWord);
       }
 
-      private void showAutoCompleteList()
+      private IEnumerable<AutoCompletionEntity> getMatchingEntities()
       {
-         hideAutoCompleteList();
-
          TextUtils.WordInfo currentWordInfo = getCurrentWord(textBox);
          if (!currentWordInfo.IsValid || currentWordInfo.Word.Length < 2)
          {
-            return;
+            return Array.Empty<AutoCompletionEntity>();
          }
 
          EntityComparer comparer = new EntityComparer(currentWordInfo.Word);
-         object[] objects = _autoCompletionEntities?
+         return _autoCompletionEntities?
             .Where(entity => StringUtils.ContainsNoCase(entity.Hint, currentWordInfo.Word)
                           || StringUtils.ContainsNoCase(entity.Name, currentWordInfo.Word))
-            .OrderBy(entity => entity, comparer)
-            .Cast<object>()
-            .ToArray() ?? Array.Empty<object>();
-         if (objects.Length == 0)
+            .OrderBy(entity => entity, comparer);
+      }
+
+      private void refreshAutoCompleteList()
+      {
+         Debug.Assert(_listBoxAutoComplete != null);
+         _listBoxAutoComplete.Items.Clear();
+
+         AutoCompletionEntity[] entities = getMatchingEntities().ToArray();
+         if (!entities.Any())
+         {
+            hideAutoCompleteList();
+            return;
+         }
+
+         fillListBox(_listBoxAutoComplete, entities);
+         resizeListBox(_listBoxAutoComplete, entities);
+      }
+
+      private void showAutoCompleteList()
+      {
+         Debug.Assert(_listBoxAutoComplete == null);
+
+         AutoCompletionEntity[] entities = getMatchingEntities().ToArray();
+         if (!entities.Any())
          {
             return;
          }
 
          ListBox listBox = createListBox();
-         fillListBox(listBox, objects);
-         resizeListBox(listBox, objects);
-         createPopupWindow(listBox);
+         fillListBox(listBox, entities);
+         resizeListBox(listBox, entities);
+         bindPopupWindowToListBox(listBox);
          showPopupWindow();
          _listBoxAutoComplete = listBox;
+      }
 
-         Focus();
+      private void bindPopupWindowToListBox(ListBox listBox)
+      {
+         _popupWindow.SetContent(listBox, PopupWindowPadding);
       }
 
       private void showPopupWindow()
       {
          TextUtils.WordInfo currentWordInfo = getCurrentWord(textBox);
-         if (!currentWordInfo.IsValid)
-         {
-            return;
-         }
+         Debug.Assert(currentWordInfo.IsValid);
 
-         var position = textBox.GetRectFromCharacterIndex(currentWordInfo.Start).TopLeft; //TopLeft?
-         Point pt = PointToScreen(new Point((int)position.X, (int)(position.Y + textBox.Height)));
+         System.Windows.Point position = textBox.GetRectFromCharacterIndex(currentWordInfo.Start).BottomLeft;
+         Point pt = PointToScreen(new Point((int)position.X, (int)(position.Y)));
          _popupWindow.Show(pt);
-      }
-
-      private void createPopupWindow(ListBox listBox)
-      {
-         _popupWindow = new PopupWindow(autoClose: false, borderRadius: null);
-         _popupWindow.SetContent(listBox, PopupWindowPadding);
       }
 
       private class ListBoxEx : ListBox
@@ -413,6 +429,10 @@ namespace mrHelper.CommonControls.Controls
          listBox.PreviewKeyDown += listBox_PreviewKeyDown;
          listBox.LostFocus += listBox_LostFocus;
          listBox.NCMouseButtonDown += listBox_NCMouseButtonDown;
+
+         // If we don't create control manually here, it is created on
+         // showPopupWindow() call and resets size to a default one.
+         listBox.CreateControl();
          return listBox;
       }
 
@@ -421,15 +441,14 @@ namespace mrHelper.CommonControls.Controls
          cancelDelayedHiding();
       }
 
-      private void fillListBox(ListBox listBox, object[] objects)
+      private void fillListBox(ListBox listBox, AutoCompletionEntity[] objects)
       {
-         listBox.Items.AddRange(objects);
+         listBox.Items.AddRange(objects.Cast<object>().ToArray());
       }
 
-      private void resizeListBox(ListBox listBox, object[] objects)
+      private void resizeListBox(ListBox listBox, AutoCompletionEntity[] objects)
       {
          AutoCompletionEntity longestObject = objects
-            .Cast<AutoCompletionEntity>()
             .OrderByDescending(e => format(e).Length).First();
          int preferredWidth = TextRenderer.MeasureText(format(longestObject), listBox.Font).Width;
          if (objects.Length > MaxRowsToShowInListBox)
@@ -440,8 +459,8 @@ namespace mrHelper.CommonControls.Controls
          // Cannot use listBox.ItemHeight because it does not change on high DPI
          int singleLineWithoutBorderHeight = TextRenderer.MeasureText(Alphabet, listBox.Font).Height;
          int calcPreferredHeight(int rows) => rows * singleLineWithoutBorderHeight;
-         listBox.Size = new Size(preferredWidth, calcPreferredHeight(objects.Length));
          listBox.MaximumSize = new Size(preferredWidth, calcPreferredHeight(MaxRowsToShowInListBox));
+         listBox.Size = new Size(preferredWidth, calcPreferredHeight(objects.Length));
       }
 
       private void activateAutoCompleteList()
@@ -456,11 +475,10 @@ namespace mrHelper.CommonControls.Controls
 
       private void hideAutoCompleteList()
       {
-         PopupWindow popupWindow = _popupWindow;
-         _popupWindow = null;
-         popupWindow?.Close();
-         popupWindow?.Dispose();
+         _popupWindow.Close();
          _listBoxAutoComplete = null;
+
+         Focus();
       }
 
       private void applyAutoCompleteListSelection()
@@ -472,6 +490,9 @@ namespace mrHelper.CommonControls.Controls
          }
 
          string substitutionWord = ((AutoCompletionEntity)(_listBoxAutoComplete.SelectedItem)).Name;
+
+         hideAutoCompleteList(); // Hide before Text change to avoid TextChange event handling
+
          textBox.Text = TextUtils.ReplaceWord(textBox.Text, currentWordInfo, substitutionWord);
          textBox.SelectionStart = currentWordInfo.Start + substitutionWord.Length;
       }
@@ -492,7 +513,8 @@ namespace mrHelper.CommonControls.Controls
       };
 
       private ListBox _listBoxAutoComplete;
-      private PopupWindow _popupWindow;
+      private PopupWindow _popupWindow =
+         new PopupWindow(autoClose: false, borderRadius: null);
       private IEnumerable<AutoCompletionEntity> _autoCompletionEntities;
 
       private static readonly Padding PopupWindowPadding = new Padding(1, 2, 1, 2);

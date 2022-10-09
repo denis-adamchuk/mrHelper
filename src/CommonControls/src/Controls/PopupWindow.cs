@@ -10,7 +10,7 @@ namespace mrHelper.CommonControls.Controls
    /// <summary>
    /// A simple popup window that can host any System.Windows.Forms.Control
    /// </summary>
-   public class PopupWindow : System.Windows.Forms.ToolStripDropDown
+   public class PopupWindow : System.Windows.Forms.ToolStripDropDown, IDisposable
    {
       public PopupWindow(bool autoClose, int? borderRadius)
       {
@@ -21,32 +21,64 @@ namespace mrHelper.CommonControls.Controls
          _borderRadius = borderRadius;
       }
 
+      protected override void Dispose(bool disposing)
+      {
+         dropSubscriptionOnSizeChange();
+         base.Dispose(disposing);
+      }
+
       private class MyToolStripControlHost : ToolStripControlHost
       {
-         public MyToolStripControlHost(Control c, Action<Control> onHostedControlResize) : base(c)
+         public MyToolStripControlHost(Control c) : base(c)
          {
-            _onHostedControlResize = onHostedControlResize;
             Margin = new Padding(0, 0, 0, 0);
          }
-
-         protected override void OnHostedControlResize(EventArgs e)
-         {
-            base.OnHostedControlResize(e);
-            _onHostedControlResize?.Invoke(Control);
-         }
-
-         private Action<Control> _onHostedControlResize;
       }
 
       public void SetContent(System.Windows.Forms.Control content, Padding padding)
       {
+         dropSubscriptionOnSizeChange();
          Items.Clear();
+
+         if (content == null)
+         {
+            return;
+         }
 
          Padding = padding;
          onResize(content);
 
-         ToolStripControlHost host = new MyToolStripControlHost(content, onResize);
+         ToolStripControlHost host = new MyToolStripControlHost(content);
          Items.Add(host);
+
+         content.SizeChanged += onHostedControlSizeChanged;
+      }
+
+      private Control getHostedControl()
+      {
+         if (Items.Count > 0 && Items[0] is MyToolStripControlHost hostedControl)
+         {
+            return hostedControl.Control;
+         }
+         return null;
+      }
+
+      private void dropSubscriptionOnSizeChange()
+      {
+         Control hostedControl = getHostedControl();
+         if (hostedControl != null)
+         {
+            hostedControl.SizeChanged -= onHostedControlSizeChanged;
+         }
+      }
+
+      private void onHostedControlSizeChanged(object sender, EventArgs e)
+      {
+         Control hostedControl = getHostedControl();
+         if (hostedControl != null)
+         {
+            onResize(hostedControl);
+         }
       }
 
       private void onResize(Control hostedControl)

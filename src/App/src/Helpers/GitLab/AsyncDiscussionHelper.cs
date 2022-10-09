@@ -38,7 +38,7 @@ namespace mrHelper.App.Helpers
 
       async private Task<bool> createDiscussion(Form parentForm, string title, Func<string, Task> funcCreator)
       {
-         using (TextEditForm form = new SimpleTextEditForm(title, String.Empty, true, _uploadsPrefix, _fullUserList))
+         using (TextEditBaseForm form = new SimpleTextEditForm(title, String.Empty, true, _uploadsPrefix, _fullUserList))
          {
             if (WinFormsHelpers.ShowDialogOnControl(form, parentForm) == DialogResult.OK)
             {

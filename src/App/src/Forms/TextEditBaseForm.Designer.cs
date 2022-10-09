@@ -1,6 +1,6 @@
 ﻿namespace mrHelper.App.Forms
 {
-   partial class TextEditForm
+   partial class TextEditBaseForm
    {
       /// <summary>
       /// Required designer variable.

@@ -40,6 +40,7 @@ namespace mrHelper.App.Forms
 
          buttonCancel.ConfirmationCondition = () => true;
 
+         textBoxSpecialNote.Init(false, String.Empty, false, false, true);
          if (users == null || !users.Any())
          {
             // This may happen when new MR creation is requested by URL and mrHelper is not launched.
@@ -108,7 +109,7 @@ namespace mrHelper.App.Forms
       {
          string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
          string formCaption = "Edit Merge Request title";
-         using (TextEditForm editTitleForm = new SimpleTextEditForm(formCaption, title, false, String.Empty, null))
+         using (TextEditBaseForm editTitleForm = new SimpleTextEditForm(formCaption, title, false, String.Empty, null))
          {
             if (WinFormsHelpers.ShowDialogOnControl(editTitleForm, this) == DialogResult.OK)
             {
@@ -122,7 +123,8 @@ namespace mrHelper.App.Forms
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
          string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName()));
-         using (TextEditForm editDescriptionForm = new SimpleTextEditForm(formCaption, description, true, uploadsPrefix, null))
+         using (TextEditBaseForm editDescriptionForm = new SimpleTextEditForm(
+            formCaption, description, true, uploadsPrefix, null))
          {
             if (WinFormsHelpers.ShowDialogOnControl(editDescriptionForm, this) == DialogResult.OK)
             {

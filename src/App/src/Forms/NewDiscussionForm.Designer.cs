@@ -155,9 +155,9 @@ namespace mrHelper.App.Forms
          // 
          textBoxDiscussionBody.Dock = System.Windows.Forms.DockStyle.Fill;;
          textBoxDiscussionBody.Location = new System.Drawing.Point(3, 3);
-         textBoxDiscussionBody.Name = "textBox";
+         textBoxDiscussionBody.Name = "textBoxDiscussionBody";
          textBoxDiscussionBody.Size = new System.Drawing.Size(586, 82);
-         textBoxDiscussionBody.TabIndex = 3;
+         textBoxDiscussionBody.TabIndex = 11;
          // 
          // buttonInsertCode
          // 
@@ -548,7 +548,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonOK;
       private System.Windows.Forms.TextBox textBoxFileName;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;
-        private System.Windows.Forms.Panel panelHtmlContextCanvas;
+      private System.Windows.Forms.Panel panelHtmlContextCanvas;
       private CommonControls.Controls.SmartTextBox textBoxDiscussionBody;
       private System.Windows.Forms.Button buttonInsertCode;
       private System.Windows.Forms.ToolTip toolTip;

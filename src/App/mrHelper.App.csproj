@@ -261,6 +261,9 @@
     </Compile>
     <Compile Include="src\Forms\EditSearchQueryFormState.cs" />
     <Compile Include="src\Forms\Helpers\DiscussionLayout.cs" />
+    <Compile Include="src\Forms\TextEditForms.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="src\Helpers\CommandState.cs" />
     <Compile Include="src\Helpers\Configuration\DefaultWorkflowLoader.cs" />
     <Compile Include="src\Helpers\Configuration\RawDictionaryStringHelper.cs" />
@@ -305,11 +308,11 @@
     <Compile Include="src\Forms\TimeSpanEditForm.Designer.cs">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\TextEditForm.cs">
+    <Compile Include="src\Forms\TextEditBaseForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\TextEditForm.Designer.cs">
-      <DependentUpon>TextEditForm.cs</DependentUpon>
+    <Compile Include="src\Forms\TextEditBaseForm.Designer.cs">
+      <DependentUpon>TextEditBaseForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\AddKnownHostForm.cs">
       <SubType>Form</SubType>
@@ -463,8 +466,8 @@
     <EmbeddedResource Include="src\Forms\TimeSpanEditForm.resx">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\TextEditForm.resx">
-      <DependentUpon>TextEditForm.cs</DependentUpon>
+    <EmbeddedResource Include="src\Forms\TextEditBaseForm.resx">
+      <DependentUpon>TextEditBaseForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\AddKnownHostForm.resx">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>

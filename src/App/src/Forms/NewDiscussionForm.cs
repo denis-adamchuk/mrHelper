@@ -42,7 +42,7 @@ namespace mrHelper.App.Forms
          htmlPanelContext.MouseWheelEx += panelScroll_MouseWheel;
 
          applyFont(Program.Settings.MainWindowFontSizeName);
-         createWPFTextBox(fullUserList);
+         initSmartTextBox(fullUserList);
          _groupBoxRelatedThreadsDefaultHeight = groupBoxRelated.Height;
          _diffContextDefaultHeight = panelHtmlContextCanvas.Height;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
@@ -250,10 +250,9 @@ namespace mrHelper.App.Forms
 
       async private void buttonReply_Click(object sender, EventArgs e)
       {
-         using (ReplyOnDiscussionForm2 form = new ReplyOnDiscussionForm2(_imagePath, null))
+         using (ReplyOnRelatedNoteForm form = new ReplyOnRelatedNoteForm(_imagePath, null))
          {
             form.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
-            //actions.SetTextbox(form.TextBox);
             if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
             {
                if (form.Body.Length == 0)
@@ -709,7 +708,7 @@ namespace mrHelper.App.Forms
          return _modifiedNoteTexts.Any() || _deletedNotes.Any();
       }
 
-      private void createWPFTextBox(IEnumerable<GitLabSharp.Entities.User> fullUserList)
+      private void initSmartTextBox(IEnumerable<GitLabSharp.Entities.User> fullUserList)
       {
          textBoxDiscussionBody.Init(false, String.Empty, true,
             !Program.Settings.DisableSpellChecker, Program.Settings.WPFSoftwareOnlyRenderMode);
