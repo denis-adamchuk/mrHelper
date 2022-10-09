@@ -293,7 +293,6 @@
     <Compile Include="src\Forms\Helpers\NewMergeRequestProperties.cs" />
     <Compile Include="src\Forms\Helpers\EditProjectsListViewCallback.cs" />
     <Compile Include="src\Forms\Helpers\EditUsersListViewCallback.cs" />
-    <Compile Include="src\Forms\Helpers\WPFHelpers.cs" />
     <Compile Include="src\Forms\AcceptMergeRequestForm.cs">
       <SubType>Form</SubType>
     </Compile>

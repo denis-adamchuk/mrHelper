@@ -37,7 +37,7 @@ namespace mrHelper.App.Forms
          this.buttonOK = new System.Windows.Forms.Button();
          this.panelHtmlContextCanvas = new System.Windows.Forms.Panel();
          this.htmlPanelContext = new HtmlPanelEx(null, false, false);
-         this.textBoxDiscussionBodyHost = new System.Windows.Forms.Integration.ElementHost();
+         this.textBoxDiscussionBody = new mrHelper.CommonControls.Controls.TextBoxWithUserAutoComplete();
          this.buttonInsertCode = new System.Windows.Forms.Button();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.buttonPrev = new System.Windows.Forms.Button();
@@ -151,15 +151,13 @@ namespace mrHelper.App.Forms
          this.htmlPanelContext.Text = null;
          this.htmlPanelContext.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelScroll_MouseWheel);
          // 
-         // textBoxDiscussionBodyHost
+         // textBoxDiscussionBody
          // 
-         this.textBoxDiscussionBodyHost.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.textBoxDiscussionBodyHost.Location = new System.Drawing.Point(3, 3);
-         this.textBoxDiscussionBodyHost.Name = "textBoxDiscussionBodyHost";
-         this.textBoxDiscussionBodyHost.Size = new System.Drawing.Size(710, 86);
-         this.textBoxDiscussionBodyHost.TabIndex = 11;
-         this.textBoxDiscussionBodyHost.Text = "textBoxDiscussionBodyHost";
-         this.textBoxDiscussionBodyHost.Child = null;
+         textBoxDiscussionBody.Dock = System.Windows.Forms.DockStyle.Fill;;
+         textBoxDiscussionBody.Location = new System.Drawing.Point(3, 3);
+         textBoxDiscussionBody.Name = "textBox";
+         textBoxDiscussionBody.Size = new System.Drawing.Size(586, 82);
+         textBoxDiscussionBody.TabIndex = 3;
          // 
          // buttonInsertCode
          // 
@@ -283,7 +281,7 @@ namespace mrHelper.App.Forms
          // 
          // tabPageEdit
          // 
-         this.tabPageEdit.Controls.Add(this.textBoxDiscussionBodyHost);
+         this.tabPageEdit.Controls.Add(this.textBoxDiscussionBody);
          this.tabPageEdit.Location = new System.Drawing.Point(4, 22);
          this.tabPageEdit.Name = "tabPageEdit";
          this.tabPageEdit.Padding = new System.Windows.Forms.Padding(3);
@@ -551,8 +549,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.TextBox textBoxFileName;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;
         private System.Windows.Forms.Panel panelHtmlContextCanvas;
-      private System.Windows.Controls.TextBox textBoxDiscussionBody;
-      private System.Windows.Forms.Integration.ElementHost textBoxDiscussionBodyHost;
+      private CommonControls.Controls.TextBoxWithUserAutoComplete textBoxDiscussionBody;
       private System.Windows.Forms.Button buttonInsertCode;
       private System.Windows.Forms.ToolTip toolTip;
       private System.Windows.Forms.TabControl tabControlMode;

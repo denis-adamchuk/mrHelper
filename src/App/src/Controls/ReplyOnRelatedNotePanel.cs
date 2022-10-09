@@ -11,29 +11,21 @@ namespace mrHelper.App.Controls
          InitializeComponent();
       }
 
-      public ReplyOnRelatedNotePanel(bool isCloseDialogChecked)
+      public ReplyOnRelatedNotePanel(bool isCloseDialogChecked, Action onInsertCode)
       {
          InitializeComponent();
          checkBoxCloseNewDiscussionDialog.Checked = isCloseDialogChecked;
-      }
-
-      internal void SetTextbox(System.Windows.Controls.TextBox textBox)
-      {
-         _textBox = textBox;
+         _onInsertCode = onInsertCode;
       }
 
       internal bool IsCloseDialogActionChecked => checkBoxCloseNewDiscussionDialog.Checked;
 
       private void buttonInsertCode_Click(object sender, EventArgs e)
       {
-         if (_textBox != null)
-         {
-            WPFHelpers.InsertCodePlaceholderIntoTextBox(_textBox);
-            _textBox.Focus();
-         }
+         _onInsertCode?.Invoke();
       }
 
-      private System.Windows.Controls.TextBox _textBox;
+      private readonly Action _onInsertCode;
    }
 }
 

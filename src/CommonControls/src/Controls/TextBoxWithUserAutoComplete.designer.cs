@@ -31,27 +31,24 @@
       /// </summary>
       private void InitializeComponent()
       {
-         this.textBoxAutoComplete = new System.Windows.Forms.RichTextBox();
+         this.textBoxHost = new System.Windows.Forms.Integration.ElementHost();
          this.SuspendLayout();
          // 
-         // textBoxAutoComplete
+         // textBoxHost
          // 
-         this.textBoxAutoComplete.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.textBoxAutoComplete.Location = new System.Drawing.Point(0, 0);
-         this.textBoxAutoComplete.Multiline = false;
-         this.textBoxAutoComplete.Name = "textBoxAutoComplete";
-         this.textBoxAutoComplete.Size = new System.Drawing.Size(271, 20);
-         this.textBoxAutoComplete.TabIndex = 0;
-         this.textBoxAutoComplete.TextChanged += new System.EventHandler(this.textBoxAutoComplete_TextChanged);
-         this.textBoxAutoComplete.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxAutoComplete_KeyDown);
-         this.textBoxAutoComplete.Leave += new System.EventHandler(this.textBoxAutoComplete_Leave);
-         this.textBoxAutoComplete.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.textBoxAutoComplete_PreviewKeyDown);
+         this.textBoxHost.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.textBoxHost.Location = new System.Drawing.Point(3, 3);
+         this.textBoxHost.Name = "textBoxHost";
+         this.textBoxHost.Size = new System.Drawing.Size(586, 82);
+         this.textBoxHost.TabIndex = 3;
+         this.textBoxHost.Text = "textBoxHost";
+         this.textBoxHost.Child = null;
          // 
          // TextBoxWithUserAutoComplete
          // 
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
          this.BackColor = System.Drawing.SystemColors.Control;
-         this.Controls.Add(this.textBoxAutoComplete);
+         this.Controls.Add(this.textBoxHost);
          this.Name = "TextBoxWithUserAutoComplete";
          this.Size = new System.Drawing.Size(271, 20);
          this.ResumeLayout(false);
@@ -60,6 +57,7 @@
       }
       #endregion
 
-      private System.Windows.Forms.RichTextBox textBoxAutoComplete;
+      private System.Windows.Forms.Integration.ElementHost textBoxHost;
+      private System.Windows.Controls.TextBox textBox;
    }
 }

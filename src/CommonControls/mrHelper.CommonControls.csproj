@@ -34,6 +34,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -43,6 +45,8 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Properties\SharedAssemblyInfo.cs">
@@ -76,10 +80,12 @@
     <Compile Include="src\Controls\ToolStripEx.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Tools\DynamicHelpers.cs" />
     <Compile Include="src\Tools\RadioButtonGroup.cs" />
     <Compile Include="src\Tools\RoundedPathCache.cs" />
     <Compile Include="src\Tools\StringUtils.cs" />
     <Compile Include="src\Tools\WinFormsHelpers.cs" />
+    <Compile Include="src\Tools\WPFHelpers.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CommonNative\mrHelper.CommonNative.csproj">
@@ -95,6 +101,11 @@
     <PackageReference Include="WindowsAPICodePack-Shell">
       <Version>1.1.1</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="src\Controls\TextBoxWithUserAutoComplete.resx">
+      <DependentUpon>TextBoxWithUserAutoComplete.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

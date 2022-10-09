@@ -1748,14 +1748,13 @@ namespace mrHelper.App.Controls
          }
 
          string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
-         NoteEditPanel actions = new NoteEditPanel();
-         using (TextEditForm form = new TextEditForm("Edit Discussion Note", currentBody, true, true, actions, _imagePath))
+         using (TextEditForm form = new EditNoteForm1(currentBody, _imagePath, null))
          {
             Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
             form.StartPosition = FormStartPosition.Manual;
             form.Location = locationAtScreen;
 
-            actions.SetTextbox(form.TextBox);
+            //actions.SetTextbox(form.TextBox);
             if (form.ShowDialog() == DialogResult.OK)
             {
                if (form.Body.Length == 0)
@@ -1780,7 +1779,7 @@ namespace mrHelper.App.Controls
          }
 
          string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
-         using (TextEditForm form = new TextEditForm("View Discussion Note", currentBody, false, true, null, _imagePath))
+         using (TextEditForm form = new ViewNoteForm1(currentBody, _imagePath))
          {
             Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
             form.StartPosition = FormStartPosition.Manual;
@@ -1798,10 +1797,10 @@ namespace mrHelper.App.Controls
 
          bool isAlreadyResolved = isDiscussionResolved();
          string resolveText = String.Format("{0} Thread", (isAlreadyResolved ? "Unresolve" : "Resolve"));
-         NoteEditPanel actions = new NoteEditPanel(resolveText, proposeUserToToggleResolveOnReply);
-         using (TextEditForm form = new TextEditForm("Reply to Discussion", "", true, true, actions, _imagePath))
+         using (ReplyOnDiscussionForm1 form = new ReplyOnDiscussionForm1(
+            resolveText, proposeUserToToggleResolveOnReply, _imagePath, null))
          {
-            actions.SetTextbox(form.TextBox);
+            //actions.SetTextbox(form.TextBox);
             if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
             {
                if (form.Body.Length == 0)
@@ -1812,7 +1811,7 @@ namespace mrHelper.App.Controls
                }
 
                string proposedBody = StringUtils.ConvertNewlineWindowsToUnix(form.Body);
-               await onReplyAsync(proposedBody, actions.IsResolveActionChecked);
+               await onReplyAsync(proposedBody, form.IsResolveActionChecked);
             }
          }
       }

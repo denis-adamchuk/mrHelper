@@ -322,8 +322,9 @@ namespace mrHelper.App.Controls
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
             DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
+            IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
-               mrk, mergeRequest.Title, CurrentUser, _shortcuts);
+               mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList);
             bool res = await discussionHelper.AddCommentAsync(WinFormsHelpers.FindMainForm());
             addOperationRecord(res ? "New comment has been added" : "Comment has not been added");
          }));
@@ -337,8 +338,9 @@ namespace mrHelper.App.Controls
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
             DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
+            IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
-               mrk, mergeRequest.Title, CurrentUser, _shortcuts);
+               mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList);
             bool res = await discussionHelper.AddThreadAsync(WinFormsHelpers.FindMainForm());
             addOperationRecord(res ? "A new discussion thread has been added" : "Discussion thread has not been added");
          }));
@@ -594,7 +596,9 @@ namespace mrHelper.App.Controls
                }
             }, this);
 
-            AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(mrk, title, currentUser, _shortcuts);
+            IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
+            AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
+               mrk, title, currentUser, _shortcuts, fullUserList);
 
             DiscussionsForm discussionsForm = new DiscussionsForm(
                git, currentUser, mrk, discussions, title, author, _colorScheme,

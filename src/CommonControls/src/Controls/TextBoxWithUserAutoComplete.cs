@@ -22,6 +22,17 @@ namespace mrHelper.CommonControls.Controls
             };
       }
 
+      public void Init(bool isReadOnly, string text, bool multiline,
+         bool isSpellCheckEnabled, bool softwareOnlyRenderMode)
+      {
+         textBox = WPFHelpers.CreateWPFTextBox(textBoxHost, isReadOnly, text, multiline,
+            isSpellCheckEnabled, softwareOnlyRenderMode);
+         textBox.TextChanged += TextBox_TextChanged;
+         textBox.KeyDown += TextBox_KeyDown;
+         textBox.LostFocus += TextBox_LostFocus;
+         textBox.PreviewKeyDown += TextBox_PreviewKeyDown;
+      }
+
       private static readonly char GitLabLabelPrefixChar = '@';
 
       public struct User
@@ -138,43 +149,36 @@ namespace mrHelper.CommonControls.Controls
          _users = users;
       }
 
-      public override string Text
-      {
-         get
-         {
-            return textBoxAutoComplete.Text;
-         }
-         set
-         {
-            textBoxAutoComplete.Text = value;
-         }
-      }
+      public override string Text => textBox.Text;
+      public int SelectionStart => textBox.SelectionStart;
+      public int SelectionLength => textBox.SelectionLength;
 
-      private void textBoxAutoComplete_TextChanged(object sender, EventArgs e)
+      private void TextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
       {
          showAutoCompleteList();
       }
 
-      private void textBoxAutoComplete_KeyDown(object sender, KeyEventArgs e)
+      private void TextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
       {
-         if (e.KeyCode == Keys.Down)
+         if (e.Key == System.Windows.Input.Key.Down)
          {
             activateAutoCompleteList();
          }
          else
          {
-            OnKeyDown(e);
+            // WHY?
+            // OnKeyDown(e);
          }
       }
 
-      private void textBoxAutoComplete_Leave(object sender, EventArgs e)
+      private void TextBox_LostFocus(object sender, System.Windows.RoutedEventArgs e)
       {
          hideAutoCompleteList();
       }
 
-      private void textBoxAutoComplete_PreviewKeyDown(object sender, System.Windows.Forms.PreviewKeyDownEventArgs e)
+      private void TextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
       {
-         if (e.KeyCode == Keys.Escape)
+         if (e.Key == System.Windows.Input.Key.Escape)
          {
             hideAutoCompleteList();
          }
@@ -242,7 +246,7 @@ namespace mrHelper.CommonControls.Controls
       /// - strings with letter-characters prior to '@'
       /// - strings where there is a non-letter character next to '@'
       /// </summary>
-      private TextUtils.WordInfo getCurrentWord(RichTextBox txt)
+      private TextUtils.WordInfo getCurrentWord(System.Windows.Controls.TextBox txt)
       {
          int selectionStartPosition = txt.SelectionStart - 1;
          TextUtils.WordInfo word = TextUtils.GetCurrentWord(txt.Text, selectionStartPosition);
@@ -307,7 +311,7 @@ namespace mrHelper.CommonControls.Controls
       {
          hideAutoCompleteList();
 
-         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
+         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBox);
          if (!currentWordInfo.IsValid || currentWordInfo.Word.Length < 2)
          {
             return;
@@ -337,14 +341,14 @@ namespace mrHelper.CommonControls.Controls
 
       private void showPopupWindow()
       {
-         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
+         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBox);
          if (!currentWordInfo.IsValid)
          {
             return;
          }
 
-         Point position = textBoxAutoComplete.GetPositionFromCharIndex(currentWordInfo.Start);
-         Point pt = PointToScreen(new Point(position.X, position.Y + textBoxAutoComplete.Height));
+         var position = textBox.GetRectFromCharacterIndex(currentWordInfo.Start).TopLeft; //TopLeft?
+         Point pt = PointToScreen(new Point((int)position.X, (int)(position.Y + textBox.Height)));
          _popupWindow.Show(pt);
       }
 
@@ -434,15 +438,15 @@ namespace mrHelper.CommonControls.Controls
 
       private void applyAutoCompleteListSelection()
       {
-         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBoxAutoComplete);
+         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBox);
          if (_listBoxAutoComplete.SelectedItem == null || !currentWordInfo.IsValid)
          {
             return;
          }
 
          string substitutionWord = ((User)(_listBoxAutoComplete.SelectedItem)).Username;
-         textBoxAutoComplete.Text = TextUtils.ReplaceWord(textBoxAutoComplete.Text, currentWordInfo, substitutionWord);
-         textBoxAutoComplete.SelectionStart = currentWordInfo.Start + substitutionWord.Length;
+         textBox.Text = TextUtils.ReplaceWord(textBox.Text, currentWordInfo, substitutionWord);
+         textBox.SelectionStart = currentWordInfo.Start + substitutionWord.Length;
       }
 
       private void cancelDelayedHiding()

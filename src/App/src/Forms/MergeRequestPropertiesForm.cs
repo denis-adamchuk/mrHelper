@@ -49,7 +49,7 @@ namespace mrHelper.App.Forms
          else
          {
             textBoxSpecialNote.SetUsers(users
-               .Select(user => new CommonControls.Controls.TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
+               .Select(user => new TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
          }
       }
 
@@ -75,7 +75,7 @@ namespace mrHelper.App.Forms
             string projectName = getProjectName();
             IEnumerable<User> users = await _projectAccessor.GetSingleProjectAccessor(projectName).GetUsersAsync();
             textBoxSpecialNote.SetUsers(users
-               .Select(user => new CommonControls.Controls.TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
+               .Select(user => new TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
          }));
       }
 
@@ -106,7 +106,7 @@ namespace mrHelper.App.Forms
       {
          string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
          string formCaption = "Edit Merge Request title";
-         using (TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, null, String.Empty))
+         using (TextEditForm editTitleForm = new SimpleTextEditForm(formCaption, title, false, String.Empty, null))
          {
             if (WinFormsHelpers.ShowDialogOnControl(editTitleForm, this) == DialogResult.OK)
             {
@@ -120,7 +120,7 @@ namespace mrHelper.App.Forms
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
          string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName()));
-         using (TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null, uploadsPrefix))
+         using (TextEditForm editDescriptionForm = new SimpleTextEditForm(formCaption, description, true, uploadsPrefix, null))
          {
             if (WinFormsHelpers.ShowDialogOnControl(editDescriptionForm, this) == DialogResult.OK)
             {

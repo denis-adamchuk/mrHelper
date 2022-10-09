@@ -34,14 +34,15 @@ namespace mrHelper.App.Forms
          Func<ReportedDiscussionNoteKey, string, Task> onReply,
          Func<ReportedDiscussionNoteKey?, DiffPosition, IEnumerable<ReportedDiscussionNote>> getRelatedDiscussions,
          Func<DiffPosition, DiffContext> getNewDiscussionDiffContext,
-         Func<DiffPosition, DiffContext> getDiffContext)
+         Func<DiffPosition, DiffContext> getDiffContext,
+         IEnumerable<GitLabSharp.Entities.User> fullUserList)
       {
          InitializeComponent();
          this.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
          htmlPanelContext.MouseWheelEx += panelScroll_MouseWheel;
 
          applyFont(Program.Settings.MainWindowFontSizeName);
-         createWPFTextBox();
+         createWPFTextBox(fullUserList);
          _groupBoxRelatedThreadsDefaultHeight = groupBoxRelated.Height;
          _diffContextDefaultHeight = panelHtmlContextCanvas.Height;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
@@ -128,15 +129,15 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void textBoxDiscussionBody_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+      private void textBoxDiscussionBody_KeyDown(object sender, KeyEventArgs e)
       {
-         if (e.Key == System.Windows.Input.Key.Enter && Control.ModifierKeys == Keys.Control)
+         if (e.KeyCode == Keys.Enter && e.Modifiers.HasFlag(Keys.Control))
          {
             buttonOK.PerformClick();
          }
       }
 
-      private void textBoxDiscussionBody_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+      private void textBoxDiscussionBody_TextChanged(object sender, EventArgs e)
       {
          saveNoteText(CurrentNoteIndex, textBoxDiscussionBody.Text);
          updateInvisibleCharactersHint();
@@ -145,7 +146,7 @@ namespace mrHelper.App.Forms
 
       private void buttonInsertCode_Click(object sender, EventArgs e)
       {
-         Helpers.WPFHelpers.InsertCodePlaceholderIntoTextBox(textBoxDiscussionBody);
+         DynamicHelpers.InsertCodePlaceholderIntoTextBox(textBoxDiscussionBody);
          textBoxDiscussionBody.Focus();
       }
 
@@ -249,11 +250,10 @@ namespace mrHelper.App.Forms
 
       async private void buttonReply_Click(object sender, EventArgs e)
       {
-         ReplyOnRelatedNotePanel actions = new ReplyOnRelatedNotePanel(true);
-         using (TextEditForm form = new TextEditForm("Reply on a Discussion", "", true, true, actions, _imagePath))
+         using (ReplyOnDiscussionForm2 form = new ReplyOnDiscussionForm2(_imagePath, null))
          {
             form.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
-            actions.SetTextbox(form.TextBox);
+            //actions.SetTextbox(form.TextBox);
             if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
             {
                if (form.Body.Length == 0)
@@ -263,7 +263,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               if (actions.IsCloseDialogActionChecked)
+               if (form.IsCloseDialogActionChecked)
                {
                   Hide();
                }
@@ -284,14 +284,14 @@ namespace mrHelper.App.Forms
                   MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
                      MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
 
-                  if (actions.IsCloseDialogActionChecked)
+                  if (form.IsCloseDialogActionChecked)
                   {
                      Show();
                   }
                   return;
                }
 
-               if (actions.IsCloseDialogActionChecked)
+               if (form.IsCloseDialogActionChecked)
                {
                   await checkAndSubmit();
                }
@@ -709,11 +709,14 @@ namespace mrHelper.App.Forms
          return _modifiedNoteTexts.Any() || _deletedNotes.Any();
       }
 
-      private void createWPFTextBox()
+      private void createWPFTextBox(IEnumerable<GitLabSharp.Entities.User> fullUserList)
       {
-         textBoxDiscussionBody = Helpers.WPFHelpers.CreateWPFTextBox(textBoxDiscussionBodyHost,
-            false, String.Empty, true, !Program.Settings.DisableSpellChecker,
-            Program.Settings.WPFSoftwareOnlyRenderMode);
+         textBoxDiscussionBody.Init(false, String.Empty, true,
+            !Program.Settings.DisableSpellChecker, Program.Settings.WPFSoftwareOnlyRenderMode);
+
+         textBoxDiscussionBody.SetUsers(fullUserList
+            .Select(user => new CommonControls.Controls.TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
+
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
          textBoxDiscussionBody.TextChanged += textBoxDiscussionBody_TextChanged;
       }
