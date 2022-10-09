@@ -37,7 +37,7 @@ namespace mrHelper.App.Forms
          this.buttonOK = new System.Windows.Forms.Button();
          this.panelHtmlContextCanvas = new System.Windows.Forms.Panel();
          this.htmlPanelContext = new HtmlPanelEx(null, false, false);
-         this.textBoxDiscussionBody = new mrHelper.CommonControls.Controls.TextBoxWithUserAutoComplete();
+         this.textBoxDiscussionBody = new mrHelper.CommonControls.Controls.SmartTextBox();
          this.buttonInsertCode = new System.Windows.Forms.Button();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.buttonPrev = new System.Windows.Forms.Button();
@@ -549,7 +549,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.TextBox textBoxFileName;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;
         private System.Windows.Forms.Panel panelHtmlContextCanvas;
-      private CommonControls.Controls.TextBoxWithUserAutoComplete textBoxDiscussionBody;
+      private CommonControls.Controls.SmartTextBox textBoxDiscussionBody;
       private System.Windows.Forms.Button buttonInsertCode;
       private System.Windows.Forms.ToolTip toolTip;
       private System.Windows.Forms.TabControl tabControlMode;

@@ -714,8 +714,9 @@ namespace mrHelper.App.Forms
          textBoxDiscussionBody.Init(false, String.Empty, true,
             !Program.Settings.DisableSpellChecker, Program.Settings.WPFSoftwareOnlyRenderMode);
 
-         textBoxDiscussionBody.SetUsers(fullUserList
-            .Select(user => new CommonControls.Controls.TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
+         textBoxDiscussionBody.SetAutoCompletionEntities(fullUserList
+            .Select(user => new CommonControls.Controls.SmartTextBox.AutoCompletionEntity(
+               user.Name, user.Username, CommonControls.Controls.SmartTextBox.AutoCompletionEntity.EntityType.User)));
 
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
          textBoxDiscussionBody.TextChanged += textBoxDiscussionBody_TextChanged;

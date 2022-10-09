@@ -48,24 +48,25 @@ namespace mrHelper.App.Forms
          }
          else
          {
-            textBoxSpecialNote.SetUsers(users
-               .Select(user => new TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
+            textBoxSpecialNote.SetAutoCompletionEntities(users
+               .Select(user => new SmartTextBox.AutoCompletionEntity(
+                  user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User)));
          }
       }
 
       private void MergeRequestPropertiesForm_Deactivate(object sender, EventArgs e)
       {
-         textBoxSpecialNote.HideAutoCompleteBox(TextBoxWithUserAutoComplete.HidingReason.FormDeactivation);
+         textBoxSpecialNote.HideAutoCompleteBox(SmartTextBox.HidingReason.FormDeactivation);
       }
 
       private void MergeRequestPropertiesForm_LocationChanged(object sender, EventArgs e)
       {
-         textBoxSpecialNote.HideAutoCompleteBox(TextBoxWithUserAutoComplete.HidingReason.FormMovedOrResized);
+         textBoxSpecialNote.HideAutoCompleteBox(SmartTextBox.HidingReason.FormMovedOrResized);
       }
 
       private void MergeRequestPropertiesForm_SizeChanged(object sender, EventArgs e)
       {
-         textBoxSpecialNote.HideAutoCompleteBox(TextBoxWithUserAutoComplete.HidingReason.FormMovedOrResized);
+         textBoxSpecialNote.HideAutoCompleteBox(SmartTextBox.HidingReason.FormMovedOrResized);
       }
 
       private void loadProjectUsersForAutoCompletion(object sender, EventArgs e)
@@ -74,8 +75,9 @@ namespace mrHelper.App.Forms
          {
             string projectName = getProjectName();
             IEnumerable<User> users = await _projectAccessor.GetSingleProjectAccessor(projectName).GetUsersAsync();
-            textBoxSpecialNote.SetUsers(users
-               .Select(user => new TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
+            textBoxSpecialNote.SetAutoCompletionEntities(users
+               .Select(user => new SmartTextBox.AutoCompletionEntity(
+                  user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User)));
          }));
       }
 

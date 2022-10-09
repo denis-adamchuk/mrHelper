@@ -9,9 +9,15 @@ using mrHelper.CommonControls.Tools;
 
 namespace mrHelper.CommonControls.Controls
 {
-   public partial class TextBoxWithUserAutoComplete : UserControl
+   /// <summary>
+   /// Supports:
+   /// - auto-completion
+   /// - spell checking
+   /// Note: WPF-based
+   /// </summary>
+   public partial class SmartTextBox : UserControl
    {
-      public TextBoxWithUserAutoComplete()
+      public SmartTextBox()
       {
          InitializeComponent();
          _delayedHidingTimer.Tick +=
@@ -35,44 +41,58 @@ namespace mrHelper.CommonControls.Controls
 
       private static readonly char GitLabLabelPrefixChar = '@';
 
-      public struct User
+      public struct AutoCompletionEntity
       {
-         public User(string name, string username)
+         public enum EntityType
          {
-            Name = name;
-            Username = username;
+            User
          }
 
+         public AutoCompletionEntity(string hint, string name, EntityType type)
+         {
+            Hint = hint;
+            Name = name;
+            Type = type;
+         }
+
+         public string Hint { get; }
          public string Name { get; }
-         public string Username { get; }
+         public EntityType Type { get; }
       }
 
-      // Compares user names and full names so that it look like Gitlab Web UI auto-completion
-      class UserComparer : IComparer<User>
+      // Compares names and hints so that it look like Gitlab Web UI auto-completion
+      private class EntityComparer : IComparer<AutoCompletionEntity>
       {
-         public UserComparer(string substr)
+         public EntityComparer(string substr)
          {
             _substr = substr;
          }
 
-         public int Compare(User x, User y)
+         public int Compare(AutoCompletionEntity x, AutoCompletionEntity y)
          {
-            bool xMatchesFullname = StringUtils.ContainsNoCase(x.Name, _substr);
-            bool xMatchesUsername = StringUtils.ContainsNoCase(x.Username, _substr);
-            bool yMatchesFullname = StringUtils.ContainsNoCase(y.Name, _substr);
-            bool yMatchesUsername = StringUtils.ContainsNoCase(y.Username, _substr);
+            if (x.Type != AutoCompletionEntity.EntityType.User
+             || y.Type != AutoCompletionEntity.EntityType.User)
+            {
+               Debug.Assert(false); // not implemented
+               return 0;
+            }
+
+            bool xMatchesHint = StringUtils.ContainsNoCase(x.Hint, _substr);
+            bool xMatchesName = StringUtils.ContainsNoCase(x.Name, _substr);
+            bool yMatchesHint = StringUtils.ContainsNoCase(y.Hint, _substr);
+            bool yMatchesName = StringUtils.ContainsNoCase(y.Name, _substr);
 
             // Not all cases are implemented
-            Debug.Assert(xMatchesFullname || xMatchesUsername);
-            Debug.Assert(yMatchesFullname || yMatchesUsername);
+            Debug.Assert(xMatchesHint || xMatchesName);
+            Debug.Assert(yMatchesHint || yMatchesName);
 
-            if (xMatchesFullname && yMatchesFullname)
+            if (xMatchesHint && yMatchesHint)
             {
-               if (xMatchesUsername)
+               if (xMatchesName)
                {
-                  if (yMatchesUsername)
+                  if (yMatchesName)
                   {
-                     return String.Compare(x.Username, y.Username, StringComparison.CurrentCultureIgnoreCase);
+                     return String.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase);
                   }
                   else
                   {
@@ -81,41 +101,41 @@ namespace mrHelper.CommonControls.Controls
                }
                else
                {
-                  if (yMatchesUsername)
+                  if (yMatchesName)
                   {
                      return 1;
                   }
                   else
                   {
-                     return String.Compare(x.Username, y.Username, StringComparison.CurrentCultureIgnoreCase);
+                     return String.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase);
                   }
                }
             }
-            else if (xMatchesFullname && !yMatchesFullname)
+            else if (xMatchesHint && !yMatchesHint)
             {
-               if (!xMatchesUsername && yMatchesUsername)
+               if (!xMatchesName && yMatchesName)
                {
                   return 1;
                }
-               else if (xMatchesUsername && yMatchesUsername)
+               else if (xMatchesName && yMatchesName)
                {
                   return -1;
                }
             }
-            else if (!xMatchesFullname && yMatchesFullname)
+            else if (!xMatchesHint && yMatchesHint)
             {
-               if (xMatchesUsername && !yMatchesUsername)
+               if (xMatchesName && !yMatchesName)
                {
                   return -1;
                }
-               else if (xMatchesUsername && yMatchesUsername)
+               else if (xMatchesName && yMatchesName)
                {
                   return 1;
                }
             }
-            else if (!xMatchesFullname && !yMatchesFullname)
+            else if (!xMatchesHint && !yMatchesHint)
             {
-               return String.Compare(x.Username, y.Username, StringComparison.CurrentCultureIgnoreCase);
+               return String.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase);
             }
 
             Debug.Assert(false);
@@ -144,9 +164,9 @@ namespace mrHelper.CommonControls.Controls
          hideAutoCompleteList();
       }
 
-      public void SetUsers(IEnumerable<User> users)
+      public void SetAutoCompletionEntities(IEnumerable<AutoCompletionEntity> entities)
       {
-         _users = users;
+         _autoCompletionEntities = entities;
       }
 
       public override string Text => textBox.Text;
@@ -166,7 +186,7 @@ namespace mrHelper.CommonControls.Controls
          }
          else
          {
-            // WHY?
+            // TODO - WHY?
             // OnKeyDown(e);
          }
       }
@@ -221,8 +241,8 @@ namespace mrHelper.CommonControls.Controls
 
       private void listBox_Format(object sender, ListControlConvertEventArgs e)
       {
-         User item = (User)(e.ListItem);
-         e.Value = formatUser(item);
+         AutoCompletionEntity item = (AutoCompletionEntity)(e.ListItem);
+         e.Value = format(item);
       }
 
       private void listBox_LostFocus(object sender, EventArgs e)
@@ -230,9 +250,14 @@ namespace mrHelper.CommonControls.Controls
          hideAutoCompleteList();
       }
 
-      private string formatUser(User user)
+      private string format(AutoCompletionEntity entity)
       {
-         return String.Format("{0} ({1}{2})", user.Name, GitLabLabelPrefixChar, user.Username);
+         if (entity.Type != AutoCompletionEntity.EntityType.User)
+         {
+            Debug.Assert(false); // not implemented
+            return entity.Name;
+         }
+         return String.Format("{0} ({1}{2})", entity.Hint, GitLabLabelPrefixChar, entity.Name);
       }
 
       /// <summary>
@@ -246,7 +271,7 @@ namespace mrHelper.CommonControls.Controls
       /// - strings with letter-characters prior to '@'
       /// - strings where there is a non-letter character next to '@'
       /// </summary>
-      private TextUtils.WordInfo getCurrentWord(System.Windows.Controls.TextBox txt)
+      private static TextUtils.WordInfo getCurrentWord(System.Windows.Controls.TextBox txt)
       {
          int selectionStartPosition = txt.SelectionStart - 1;
          TextUtils.WordInfo word = TextUtils.GetCurrentWord(txt.Text, selectionStartPosition);
@@ -317,11 +342,11 @@ namespace mrHelper.CommonControls.Controls
             return;
          }
 
-         UserComparer comparer = new UserComparer(currentWordInfo.Word);
-         object[] objects = _users?
-            .Where(user => StringUtils.ContainsNoCase(user.Name, currentWordInfo.Word)
-                        || StringUtils.ContainsNoCase(user.Username, currentWordInfo.Word))
-            .OrderBy(user => user, comparer)
+         EntityComparer comparer = new EntityComparer(currentWordInfo.Word);
+         object[] objects = _autoCompletionEntities?
+            .Where(entity => StringUtils.ContainsNoCase(entity.Hint, currentWordInfo.Word)
+                          || StringUtils.ContainsNoCase(entity.Name, currentWordInfo.Word))
+            .OrderBy(entity => entity, comparer)
             .Cast<object>()
             .ToArray() ?? Array.Empty<object>();
          if (objects.Length == 0)
@@ -403,8 +428,10 @@ namespace mrHelper.CommonControls.Controls
 
       private void resizeListBox(ListBox listBox, object[] objects)
       {
-         User longestObject = objects.Cast<User>().OrderByDescending(user => formatUser(user).Length).First();
-         int preferredWidth = TextRenderer.MeasureText(formatUser(longestObject), listBox.Font).Width;
+         AutoCompletionEntity longestObject = objects
+            .Cast<AutoCompletionEntity>()
+            .OrderByDescending(e => format(e).Length).First();
+         int preferredWidth = TextRenderer.MeasureText(format(longestObject), listBox.Font).Width;
          if (objects.Length > MaxRowsToShowInListBox)
          {
             preferredWidth += SystemInformation.VerticalScrollBarWidth;
@@ -444,7 +471,7 @@ namespace mrHelper.CommonControls.Controls
             return;
          }
 
-         string substitutionWord = ((User)(_listBoxAutoComplete.SelectedItem)).Username;
+         string substitutionWord = ((AutoCompletionEntity)(_listBoxAutoComplete.SelectedItem)).Name;
          textBox.Text = TextUtils.ReplaceWord(textBox.Text, currentWordInfo, substitutionWord);
          textBox.SelectionStart = currentWordInfo.Start + substitutionWord.Length;
       }
@@ -466,7 +493,7 @@ namespace mrHelper.CommonControls.Controls
 
       private ListBox _listBoxAutoComplete;
       private PopupWindow _popupWindow;
-      private IEnumerable<User> _users;
+      private IEnumerable<AutoCompletionEntity> _autoCompletionEntities;
 
       private static readonly Padding PopupWindowPadding = new Padding(1, 2, 1, 2);
       private static readonly int MaxRowsToShowInListBox = 5;

@@ -71,11 +71,11 @@
     <Compile Include="src\Controls\TextBoxEx.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="src\Controls\TextBoxWithUserAutoComplete.cs">
+    <Compile Include="src\Controls\SmartTextBox.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="src\Controls\TextBoxWithUserAutoComplete.designer.cs">
-      <DependentUpon>TextBoxWithUserAutoComplete.cs</DependentUpon>
+    <Compile Include="src\Controls\SmartTextBox.designer.cs">
+      <DependentUpon>SmartTextBox.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Controls\ToolStripEx.cs">
       <SubType>Component</SubType>
@@ -103,8 +103,8 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="src\Controls\TextBoxWithUserAutoComplete.resx">
-      <DependentUpon>TextBoxWithUserAutoComplete.cs</DependentUpon>
+    <EmbeddedResource Include="src\Controls\SmartTextBox.resx">
+      <DependentUpon>SmartTextBox.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

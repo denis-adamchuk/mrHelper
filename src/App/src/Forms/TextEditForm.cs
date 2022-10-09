@@ -142,8 +142,9 @@ namespace mrHelper.App.Forms
          textBox.Init(!editable, initialText, multiline,
             !Program.Settings.DisableSpellChecker, Program.Settings.WPFSoftwareOnlyRenderMode);
 
-         textBox.SetUsers(fullUserList
-            .Select(user => new TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
+         textBox.SetAutoCompletionEntities(fullUserList
+            .Select(user => new SmartTextBox.AutoCompletionEntity(
+               user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User)));
 
          textBox.KeyDown += textBox_KeyDown;
          textBox.TextChanged += textBox_TextChanged;

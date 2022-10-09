@@ -1,6 +1,6 @@
 ﻿namespace mrHelper.CommonControls.Controls
 {
-   partial class TextBoxWithUserAutoComplete
+   partial class SmartTextBox
    {
       /// <summary> 
       /// Required designer variable.

@@ -31,7 +31,7 @@
          this.components = new System.ComponentModel.Container();
          this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonOK = new System.Windows.Forms.Button();
-         this.textBox = new mrHelper.CommonControls.Controls.TextBoxWithUserAutoComplete();
+         this.textBox = new mrHelper.CommonControls.Controls.SmartTextBox();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.panelExtraActions = new System.Windows.Forms.Panel();
          this.tabControlMode = new System.Windows.Forms.TabControl();
@@ -172,7 +172,7 @@
       #endregion
       private System.Windows.Forms.Button buttonOK;
       private CommonControls.Controls.ConfirmCancelButton buttonCancel;
-      private CommonControls.Controls.TextBoxWithUserAutoComplete textBox;
+      private CommonControls.Controls.SmartTextBox textBox;
       private System.Windows.Forms.ToolTip toolTip;
       private System.Windows.Forms.Panel panelExtraActions;
       private System.Windows.Forms.TabControl tabControlMode;
