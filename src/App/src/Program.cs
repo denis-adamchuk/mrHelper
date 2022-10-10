@@ -280,7 +280,13 @@ namespace mrHelper.App
          int parentToolPID = -1;
          try
          {
-            string diffToolName = Path.GetFileNameWithoutExtension(createDiffTool().GetToolCommand());
+            string toolCommand = getDiffToolCommand();
+            if (toolCommand == null)
+            {
+               Trace.TraceError("Cannot obtain diff tool command");
+               return;
+            }
+            string diffToolName = Path.GetFileNameWithoutExtension(toolCommand);
             StorageSupport.LocalCommitStorageType type = ConfigurationHelper.GetPreferredStorageType(Settings);
             string toolProcessName = type == StorageSupport.LocalCommitStorageType.FileStorage ? diffToolName : "git";
             parentToolPID = getParentProcessId(context.CurrentProcess, toolProcessName);
@@ -372,32 +378,87 @@ namespace mrHelper.App
 
       private static bool integrateInDiffTool(string applicationFullPath)
       {
-         IIntegratedDiffTool diffTool = createDiffTool();
+         try
+         {
+            if (integrateInBC4(applicationFullPath) || integrateInBC3(applicationFullPath))
+            {
+               return true;
+            }
+            reportNotInstalledDiffTool();
+            return false;
+         }
+         finally
+         {
+            GitTools.TraceGitConfiguration();
+         }
+      }
+
+      private static void reportNotInstalledDiffTool()
+      {
+         string message =
+            "None of supported diff tools is installed. Application cannot start. Do you want to report this problem?";
+         if (MessageBox.Show(message, "Error", MessageBoxButtons.YesNo, MessageBoxIcon.Error) == DialogResult.Yes)
+         {
+            try
+            {
+               Program.FeedbackReporter.SendEMail("Merge Request Helper error report",
+                  "Application cannot start because non of supported diff tools is installed",
+                  Program.ServiceManager.GetBugReportEmail(),
+                  Constants.BugReportLogArchiveName,
+                  Constants.BugReportDumpArchiveName);
+            }
+            catch (FeedbackReporterException ex)
+            {
+               ExceptionHandlers.Handle("Cannot send a bug report", ex);
+            }
+         }
+      }
+
+      private static bool integrateInBC3(string applicationFullPath)
+      {
+         if (integrateInDiffTool(new BC3Tool(), applicationFullPath))
+         {
+            Program.Settings.DiffToolName = BC3Tool.Name;
+            Program.Settings.DiffToolPath = String.Empty;
+            return true;
+         }
+         return false;
+      }
+
+      private static bool integrateInBC4(string applicationFullPath)
+      {
+         string diffToolName = Program.Settings.DiffToolName;
+         string diffToolPath = Program.Settings.DiffToolPath;
+         bool checkPortable = diffToolName == BC4PortableTool.Name
+            && !String.IsNullOrWhiteSpace(diffToolPath) && System.IO.Directory.Exists(diffToolPath);
+         if (!checkPortable && integrateInDiffTool(new BC4Tool(), applicationFullPath))
+         {
+            Program.Settings.DiffToolName = BC4Tool.Name;
+            Program.Settings.DiffToolPath = String.Empty;
+            return true;
+         }
+         return checkPortable && integrateInDiffTool(new BC4PortableTool(diffToolPath), applicationFullPath);
+      }
+
+      private static bool integrateInDiffTool(IIntegratedDiffTool diffTool, string applicationFullPath)
+      {
          DiffToolIntegration integration = new DiffToolIntegration();
 
          try
          {
             integration.Integrate(diffTool, applicationFullPath);
          }
-         catch (DiffToolNotInstalledException)
+         catch (DiffToolNotInstalledException ex)
          {
-            string message = String.Format(
-               "{0} is not installed. It must be installed at least for the current user. Application cannot start",
-               diffTool.GetToolName());
-            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            ExceptionHandlers.Handle(String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()), ex);
             return false;
          }
          catch (DiffToolIntegrationException ex)
          {
             string message = String.Format("{0} integration failed. Application cannot start. See logs for details",
                diffTool.GetToolName());
-            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             ExceptionHandlers.Handle(String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()), ex);
             return false;
-         }
-         finally
-         {
-            GitTools.TraceGitConfiguration();
          }
 
          return true;
@@ -617,9 +678,23 @@ namespace mrHelper.App
          return true;
       }
 
-      static private IIntegratedDiffTool createDiffTool()
+      static private string getDiffToolCommand()
       {
-         return new BC3Tool();
+         string diffToolName = Program.Settings.DiffToolName;
+         if (diffToolName == BC3Tool.Name)
+         {
+            return BC3Tool.Command;
+         }
+         else if (diffToolName == BC4Tool.Name)
+         {
+            return BC4Tool.Command;
+         }
+         else if (diffToolName == BC4PortableTool.Name)
+         {
+            return BC4PortableTool.Command;
+         }
+         Debug.Assert(false);
+         return null;
       }
    }
 }

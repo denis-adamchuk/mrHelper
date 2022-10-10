@@ -44,6 +44,9 @@
       <Link>SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="src\CustomProtocol\CustomProtocol.cs" />
+    <Compile Include="src\DiffTool\BC4PortableTool.cs" />
+    <Compile Include="src\DiffTool\BCTool.cs" />
+    <Compile Include="src\DiffTool\BC4Tool.cs" />
     <Compile Include="src\DiffTool\BC3Tool.cs" />
     <Compile Include="src\DiffTool\DiffToolIntegration.cs" />
     <Compile Include="src\DiffTool\DiffToolIntegrationException.cs" />

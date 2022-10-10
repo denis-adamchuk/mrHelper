@@ -17,16 +17,15 @@ namespace mrHelper.Integration.DiffTool
       /// </summary>
       public void Integrate(IIntegratedDiffTool diffTool, string self)
       {
-         AppFinder.AppInfo appInfo = AppFinder.GetApplicationInfo(diffTool.GetToolRegistryNames());
-         if (appInfo == null || !isInstalled(appInfo.InstallPath))
+         string installLocation = diffTool.GetInstallLocation();
+         if (installLocation == null
+            || !System.IO.File.Exists(System.IO.Path.Combine(installLocation, diffTool.GetToolCommand())))
          {
             throw new DiffToolNotInstalledException("Diff tool not installed");
          }
+         Trace.TraceInformation(String.Format("Diff Tool installed at: {0}", installLocation));
 
-         string toolpath = appInfo.InstallPath;
-         Trace.TraceInformation(String.Format("Diff Tool installed at: {0}", toolpath));
-
-         registerInGit(diffTool, toolpath);
+         registerInGit(diffTool, installLocation);
 
          try
          {
@@ -80,11 +79,6 @@ namespace mrHelper.Integration.DiffTool
       {
          string value = getGitCommand(diffTool, toolpath);
          GitTools.SetConfigKeyValue(GitTools.ConfigScope.Global, Constants.GitDiffToolConfigKey, value, String.Empty);
-      }
-
-      public bool isInstalled(string toolpath)
-      {
-         return !String.IsNullOrEmpty(toolpath);
       }
 
       private string getGitCommand(IIntegratedDiffTool diffTool, string toolPath)

@@ -6,7 +6,7 @@
 
       string GetToolName();
 
-      string[] GetToolRegistryNames();
+      string GetInstallLocation();
 
       string GetToolCommand();
 

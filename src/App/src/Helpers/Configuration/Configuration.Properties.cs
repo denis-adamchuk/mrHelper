@@ -25,6 +25,18 @@ namespace mrHelper.App.Helpers
          set => setValue(LocalStorageFolderKeyName, value);
       }
 
+      public string DiffToolName
+      {
+         get => getValue(DiffToolNameKeyName, DiffToolNameDefaultValue);
+         set => setValue(DiffToolNameKeyName, value);
+      }
+
+      public string DiffToolPath
+      {
+         get => getValue(DiffToolPathKeyName, DiffToolPathDefaultValue);
+         set => setValue(DiffToolPathKeyName, value);
+      }
+
       public string AutoSelectionMode
       {
          get => getValue(AutoSelectionModeKeyName, AutoSelectionModeDefaultValue);

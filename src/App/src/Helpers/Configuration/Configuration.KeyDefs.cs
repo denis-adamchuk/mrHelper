@@ -16,6 +16,12 @@ namespace mrHelper.App.Helpers
       private static readonly string LocalStorageFolderKeyName      = "LocalGitFolder";
       private static readonly string LocalStorageFolderDefaultValue = PathFinder.DefaultStorage;
 
+      private static readonly string DiffToolNameKeyName      = "DiffToolName";
+      private static readonly string DiffToolNameDefaultValue = String.Empty;
+
+      private static readonly string DiffToolPathKeyName      = "DiffToolPath";
+      private static readonly string DiffToolPathDefaultValue = String.Empty;
+
       private static readonly string AutoSelectionModeKeyName      = "AutoSelectionMode";
       private static readonly string AutoSelectionModeDefaultValue = "LastVsLatest";
 
