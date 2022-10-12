@@ -50,7 +50,8 @@ namespace mrHelper.App.Controls
          DiscussionLayout discussionLayout,
          AvatarImageCache avatarImageCache,
          string webUrl,
-         Action<string> selectExternalNoteByUrl)
+         Action<string> selectExternalNoteByUrl,
+         IEnumerable<User> fullUserList)
       {
          _shortcuts = shortcuts;
          _git = git;
@@ -63,6 +64,7 @@ namespace mrHelper.App.Controls
          _popupWindow.DropShadowEnabled = false;
          _webUrl = webUrl;
          _selectExternalNoteByUrl = selectExternalNoteByUrl;
+         _fullUserList = fullUserList;
 
          _discussionSort = discussionSort;
          _discussionSort.SortStateChanged += onSortStateChanged;
@@ -417,6 +419,7 @@ namespace mrHelper.App.Controls
                _avatarImageCache,
                _pathCache,
                _webUrl,
+               _fullUserList,
                selectNoteByUrl,
                selectNoteByPosition)
             {
@@ -749,6 +752,7 @@ namespace mrHelper.App.Controls
       private Shortcuts _shortcuts;
       private string _webUrl;
       private Action<string> _selectExternalNoteByUrl;
+      private IEnumerable<User> _fullUserList;
       private DiscussionSort _discussionSort;
       private DiscussionFilter _displayFilter; // filters out discussions by user preferences
       private DiscussionLayout _discussionLayout;

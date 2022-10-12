@@ -604,7 +604,7 @@ namespace mrHelper.App.Controls
                git, currentUser, mrk, discussions, title, author, _colorScheme,
                discussionLoader, discussionHelper, webUrl, _shortcuts, GetCustomActionList(),
                cmd => isCommandEnabledInDiscussionsView(mrk, cmd), () => reloadByDiscussionsViewRequest(mrk),
-               _avatarImageCache[getCurrentTabDataCacheType()], _onOpenUrl)
+               _avatarImageCache[getCurrentTabDataCacheType()], _onOpenUrl, fullUserList)
             {
                Tag = mrk
             };

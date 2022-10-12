@@ -31,7 +31,8 @@ namespace mrHelper.App.Forms
          Func<ICommand, CommandState> isCommandEnabled,
          Action onRefresh,
          AvatarImageCache avatarImageCache,
-         Action<string> onSelectNoteByUrl)
+         Action<string> onSelectNoteByUrl,
+         IEnumerable<User> fullUserList)
       {
          _mergeRequestKey = mrk;
          _mergeRequestTitle = mergeRequestTitle;
@@ -68,7 +69,7 @@ namespace mrHelper.App.Forms
          // Includes making some boxes visible. This does not paint them because their parent (Form) is hidden so far.
          discussionPanel.Initialize(discussionSort, displayFilter, discussionLoader, discussions,
             shortcuts, git, colorScheme, mrk, mergeRequestAuthor, currentUser, discussionLayout, avatarImageCache,
-            webUrl, onSelectNoteByUrl);
+            webUrl, onSelectNoteByUrl, fullUserList);
          discussionPanel.ContentMismatchesFilter += showReapplyFilter;
          discussionPanel.ContentMatchesFilter += hideReapplyFilter;
          if (discussionPanel.DiscussionCount < 1)

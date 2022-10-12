@@ -50,6 +50,7 @@ namespace mrHelper.App.Controls
          AvatarImageCache avatarImageCache,
          RoundedPathCache pathCache,
          string webUrl,
+         IEnumerable<User> fullUserList,
          Action<string> selectNoteByUrl,
          Action<ENoteSelectionRequest, DiscussionBox> selectNoteByPosition)
       {
@@ -63,6 +64,7 @@ namespace mrHelper.App.Controls
          _avatarImageCache = avatarImageCache;
          _pathCache = pathCache;
          _webUrl = webUrl;
+         _fullUserList = fullUserList;
 
          _diffContextDepth = diffContextDepth;
          _popupDiffContextDepth = new ContextDepth(5, 5);
@@ -1748,7 +1750,7 @@ namespace mrHelper.App.Controls
          }
 
          string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
-         using (TextEditBaseForm form = new EditNoteForm(currentBody, _imagePath, null))
+         using (TextEditBaseForm form = new EditNoteForm(currentBody, _imagePath, _fullUserList))
          {
             Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
             form.StartPosition = FormStartPosition.Manual;
@@ -2131,6 +2133,7 @@ namespace mrHelper.App.Controls
       private readonly AvatarImageCache _avatarImageCache;
       private readonly RoundedPathCache _pathCache;
       private readonly string _webUrl;
+      private readonly IEnumerable<User> _fullUserList;
       private ContextDepth _diffContextDepth;
       private readonly ContextDepth _popupDiffContextDepth;
       private readonly IContextMaker _panelContextMaker;
