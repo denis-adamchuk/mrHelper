@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using System.Windows.Input;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
 
@@ -35,6 +36,7 @@ namespace mrHelper.CommonControls.Controls
             isSpellCheckEnabled, softwareOnlyRenderMode);
          textBox.TextChanged += TextBox_TextChanged;
          textBox.LostFocus += TextBox_LostFocus;
+         textBox.KeyDown += TextBox_KeyDown;
          textBox.PreviewKeyDown += TextBox_PreviewKeyDown;
       }
 
@@ -175,6 +177,7 @@ namespace mrHelper.CommonControls.Controls
          {
             showAutoCompleteList();
          }
+         OnTextChanged(e);
       }
 
       private void TextBox_LostFocus(object sender, System.Windows.RoutedEventArgs e)
@@ -185,21 +188,29 @@ namespace mrHelper.CommonControls.Controls
          }
       }
 
+      private void TextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+      {
+         OnKeyDown(new System.Windows.Forms.KeyEventArgs(WPFHelpers.GetKeysOnWPFKeyDown(e.Key)));
+      }
+
       private void TextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
       {
          if (e.Key == System.Windows.Input.Key.Down)
          {
-            activateAutoCompleteList();
-            e.Handled = true;
+            e.Handled = activateAutoCompleteList();
          }
          else if (e.Key == System.Windows.Input.Key.Escape)
          {
-            hideAutoCompleteList();
-            e.Handled = true;
+            e.Handled = hideAutoCompleteList();
+         }
+
+         if (!e.Handled)
+         {
+            OnPreviewKeyDown(new PreviewKeyDownEventArgs(WPFHelpers.GetKeysOnWPFKeyDown(e.Key)));
          }
       }
 
-      private void listBox_KeyDown(object sender, KeyEventArgs e)
+      private void listBox_KeyDown(object sender, System.Windows.Forms.KeyEventArgs e)
       {
          if (e.KeyCode == Keys.Return || e.KeyCode == Keys.Space)
          {
@@ -463,22 +474,29 @@ namespace mrHelper.CommonControls.Controls
          listBox.Size = new Size(preferredWidth, calcPreferredHeight(objects.Length));
       }
 
-      private void activateAutoCompleteList()
+      private bool activateAutoCompleteList()
       {
          if (_listBoxAutoComplete != null)
          {
             _listBoxAutoComplete.SelectedIndex = 0;
             _listBoxAutoComplete.Focus();
             cancelDelayedHiding(); // Focus() caused Form Deactivation and scheduled list box hiding, stop it
+            return true;
          }
+         return false;
       }
 
-      private void hideAutoCompleteList()
+      private bool hideAutoCompleteList()
       {
-         _popupWindow.Close();
-         _listBoxAutoComplete = null;
+         if (_listBoxAutoComplete != null)
+         {
+            _popupWindow.Close();
+            _listBoxAutoComplete = null;
 
-         Focus();
+            Focus();
+            return true;
+         }
+         return false;
       }
 
       private void applyAutoCompleteListSelection()
