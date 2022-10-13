@@ -163,9 +163,17 @@ namespace mrHelper.CommonControls.Controls
          _autoCompletionEntities = entities;
       }
 
-      public override string Text => textBox.Text;
-      public int SelectionStart => textBox.SelectionStart;
-      public int SelectionLength => textBox.SelectionLength;
+      public override string Text
+      {
+         get
+         {
+            return textBox.Text;
+         }
+         set
+         {
+            textBox.Text = value;
+         }
+      }
 
       private void TextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
       {
