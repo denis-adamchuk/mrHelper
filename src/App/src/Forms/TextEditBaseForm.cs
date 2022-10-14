@@ -7,13 +7,14 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
 using mrHelper.CommonControls.Controls;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Forms
 {
    internal abstract partial class TextEditBaseForm : CustomFontForm
    {
       internal TextEditBaseForm(string caption, string initialText, bool editable, bool multiline,
-         string uploadsPrefix, IEnumerable<User> fullUserList)
+         string uploadsPrefix, IEnumerable<User> fullUserList, AvatarImageCache avatarImageCache)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);
@@ -21,7 +22,7 @@ namespace mrHelper.App.Forms
          Text = caption;
          labelNoteAboutInvisibleCharacters.Text = Constants.WarningOnUnescapedMarkdown;
          _uploadsPrefix = uploadsPrefix;
-
+         _avatarImageCache = avatarImageCache;
          initSmartTextBox(initialText, editable, multiline, fullUserList);
 
          buttonCancel.ConfirmationCondition =
@@ -83,7 +84,8 @@ namespace mrHelper.App.Forms
 
          textBox.SetAutoCompletionEntities(fullUserList
             .Select(user => new SmartTextBox.AutoCompletionEntity(
-               user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User)));
+               user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User,
+               () => _avatarImageCache.GetAvatar(user, System.Drawing.Color.White))));
 
          textBox.KeyDown += textBox_KeyDown;
          textBox.TextChanged += textBox_TextChanged;
@@ -128,5 +130,6 @@ namespace mrHelper.App.Forms
 
       private static readonly int MaximumTextLengthTocancelWithoutConfirmation = 5;
       private readonly string _uploadsPrefix;
+      private readonly AvatarImageCache _avatarImageCache;
    }
 }

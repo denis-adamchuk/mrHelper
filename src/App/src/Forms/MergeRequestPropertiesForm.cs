@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Markdig;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
 using mrHelper.GitLabClient;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
@@ -17,7 +18,7 @@ namespace mrHelper.App.Forms
    internal abstract partial class MergeRequestPropertiesForm : CustomFontForm
    {
       internal MergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
-         bool isAllowedToChangeSource, IEnumerable<User> users)
+         bool isAllowedToChangeSource, IEnumerable<User> users, AvatarImageCache avatarImageCache)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);
@@ -31,6 +32,8 @@ namespace mrHelper.App.Forms
          _currentUser = currentUser;
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
          _isAllowedToChangeSource = isAllowedToChangeSource;
+         _fullUserList = users;
+         _avatarImageCache = avatarImageCache;
 
          string css = String.Format("{0}", mrHelper.App.Properties.Resources.Common_CSS);
          htmlPanelTitle.BaseStylesheet = css;
@@ -51,7 +54,8 @@ namespace mrHelper.App.Forms
          {
             textBoxSpecialNote.SetAutoCompletionEntities(users
                .Select(user => new SmartTextBox.AutoCompletionEntity(
-                  user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User)));
+                  user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User,
+                  () => _avatarImageCache.GetAvatar(user, System.Drawing.Color.White))));
          }
       }
 
@@ -78,7 +82,8 @@ namespace mrHelper.App.Forms
             IEnumerable<User> users = await _projectAccessor.GetSingleProjectAccessor(projectName).GetUsersAsync();
             textBoxSpecialNote.SetAutoCompletionEntities(users
                .Select(user => new SmartTextBox.AutoCompletionEntity(
-                  user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User)));
+                  user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User,
+                  () => _avatarImageCache.GetAvatar(user, System.Drawing.Color.White))));
          }));
       }
 
@@ -109,7 +114,7 @@ namespace mrHelper.App.Forms
       {
          string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
          string formCaption = "Edit Merge Request title";
-         using (TextEditBaseForm editTitleForm = new SimpleTextEditForm(formCaption, title, false, String.Empty, null))
+         using (TextEditBaseForm editTitleForm = new SimpleTextEditForm(formCaption, title, false, String.Empty, null, null)) // TODO Test @
          {
             if (WinFormsHelpers.ShowDialogOnControl(editTitleForm, this) == DialogResult.OK)
             {
@@ -122,9 +127,9 @@ namespace mrHelper.App.Forms
       {
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
-         string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName()));
+         string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName())); // TODO Test launched from GE and not
          using (TextEditBaseForm editDescriptionForm = new SimpleTextEditForm(
-            formCaption, description, true, uploadsPrefix, null))
+            formCaption, description, true, uploadsPrefix, _fullUserList, _avatarImageCache))
          {
             if (WinFormsHelpers.ShowDialogOnControl(editDescriptionForm, this) == DialogResult.OK)
             {
@@ -434,6 +439,8 @@ namespace mrHelper.App.Forms
 
       private readonly MarkdownPipeline _mdPipeline;
       private readonly bool _isAllowedToChangeSource;
+      private readonly IEnumerable<User> _fullUserList;
+      private readonly AvatarImageCache _avatarImageCache;
       private string _title;
       private string _description;
    }

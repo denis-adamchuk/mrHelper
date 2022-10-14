@@ -14,12 +14,13 @@ namespace mrHelper.App.Helpers
    internal class AsyncDiscussionHelper
    {
       internal AsyncDiscussionHelper(MergeRequestKey mrk, string title,
-         User currentUser, GitLab.Shortcuts shortcuts, IEnumerable<User> fullUserList)
+         User currentUser, GitLab.Shortcuts shortcuts, IEnumerable<User> fullUserList, AvatarImageCache avatarImageCache)
       {
          _creator = shortcuts.GetDiscussionCreator(mrk, currentUser);
          _uploadsPrefix = StringUtils.GetUploadsPrefix(mrk.ProjectKey);
          _title = title;
          _fullUserList = fullUserList;
+         _avatarImageCache = avatarImageCache;
       }
 
       internal Task<bool> AddCommentAsync(Form parentForm)
@@ -38,7 +39,8 @@ namespace mrHelper.App.Helpers
 
       async private Task<bool> createDiscussion(Form parentForm, string title, Func<string, Task> funcCreator)
       {
-         using (TextEditBaseForm form = new SimpleTextEditForm(title, String.Empty, true, _uploadsPrefix, _fullUserList))
+         using (TextEditBaseForm form = new SimpleTextEditForm(title, String.Empty, true, _uploadsPrefix,
+            _fullUserList, _avatarImageCache))
          {
             if (WinFormsHelpers.ShowDialogOnControl(form, parentForm) == DialogResult.OK)
             {
@@ -72,6 +74,7 @@ namespace mrHelper.App.Helpers
       private readonly string _uploadsPrefix;
       private readonly string _title;
       private readonly IEnumerable<User> _fullUserList;
+      private readonly AvatarImageCache _avatarImageCache;
    }
 }
 

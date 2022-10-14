@@ -49,16 +49,18 @@ namespace mrHelper.CommonControls.Controls
             User
          }
 
-         public AutoCompletionEntity(string hint, string name, EntityType type)
+         public AutoCompletionEntity(string hint, string name, EntityType type, Func<Image> getImage)
          {
             Hint = hint;
             Name = name;
             Type = type;
+            GetImage = getImage;
          }
 
          public string Hint { get; }
          public string Name { get; }
          public EntityType Type { get; }
+         public Func<Image> GetImage { get; }
       }
 
       // Compares names and hints so that it look like Gitlab Web UI auto-completion
@@ -439,7 +441,8 @@ namespace mrHelper.CommonControls.Controls
          ListBoxEx listBox = new ListBoxEx
          {
             BorderStyle = BorderStyle.None,
-            FormattingEnabled = true
+            FormattingEnabled = true,
+            //DrawMode = DrawMode.OwnerDrawFixed
          };
          listBox.Click += new System.EventHandler(listBox_Click);
          listBox.Font = this.Font;
@@ -448,11 +451,16 @@ namespace mrHelper.CommonControls.Controls
          listBox.PreviewKeyDown += listBox_PreviewKeyDown;
          listBox.LostFocus += listBox_LostFocus;
          listBox.NCMouseButtonDown += listBox_NCMouseButtonDown;
+         //listBox.DrawItem += ListBox_DrawItem;
 
          // If we don't create control manually here, it is created on
          // showPopupWindow() call and resets size to a default one.
          listBox.CreateControl();
          return listBox;
+      }
+
+      private void ListBox_DrawItem(object sender, DrawItemEventArgs e)
+      {
       }
 
       private void listBox_NCMouseButtonDown(object sender, EventArgs e)

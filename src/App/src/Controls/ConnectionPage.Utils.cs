@@ -98,6 +98,21 @@ namespace mrHelper.App.Controls
          return EDataCacheType.Live;
       }
 
+      private EDataCacheType getDataCacheType(DataCache dataCache)
+      {
+         if (dataCache == _recentDataCache)
+         {
+            return EDataCacheType.Recent;
+         }
+         else if (dataCache == _searchDataCache)
+         {
+            return EDataCacheType.Search;
+         }
+
+         Debug.Assert(dataCache == _liveDataCache);
+         return EDataCacheType.Live;
+      }
+
       private void forEachListView(Action<MergeRequestListView> action)
       {
          foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))

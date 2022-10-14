@@ -414,7 +414,7 @@ namespace mrHelper.App.Controls
             (mrk) => dataCache.DiscussionCache?.RequestUpdate(
                mrk, Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null),
             (mrk) => dataCache.DiscussionCache?.GetDiscussions(mrk) ?? Array.Empty<Discussion>(),
-            _shortcuts, fullUserList);
+            _shortcuts, fullUserList, _avatarImageCache[getDataCacheType(dataCache)]);
          handler.Handle(matchInfo, snapshot);
       }
 

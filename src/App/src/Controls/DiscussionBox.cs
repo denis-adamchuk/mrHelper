@@ -1750,7 +1750,7 @@ namespace mrHelper.App.Controls
          }
 
          string currentBody = StringUtils.ConvertNewlineUnixToWindows(note.Body);
-         using (TextEditBaseForm form = new EditNoteForm(currentBody, _imagePath, _fullUserList))
+         using (TextEditBaseForm form = new EditNoteForm(currentBody, _imagePath, _fullUserList, _avatarImageCache))
          {
             Point locationAtScreen = noteControl.PointToScreen(new Point(0, 0));
             form.StartPosition = FormStartPosition.Manual;
@@ -1799,7 +1799,7 @@ namespace mrHelper.App.Controls
          bool isAlreadyResolved = isDiscussionResolved();
          string resolveText = String.Format("{0} Thread", (isAlreadyResolved ? "Unresolve" : "Resolve"));
          using (ReplyOnDiscussionNoteForm form = new ReplyOnDiscussionNoteForm(
-            resolveText, proposeUserToToggleResolveOnReply, _imagePath, null))
+            resolveText, proposeUserToToggleResolveOnReply, _imagePath, _fullUserList, _avatarImageCache))
          {
             if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
             {

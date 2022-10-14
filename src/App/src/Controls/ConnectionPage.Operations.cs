@@ -187,7 +187,7 @@ namespace mrHelper.App.Controls
 
          using (MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
             _shortcuts.GetProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList,
-            sourceBranchesInUse, getSourceBranchTemplate(), showIntegrationHint))
+            sourceBranchesInUse, getSourceBranchTemplate(), showIntegrationHint, _avatarImageCache[EDataCacheType.Live]))
          {
             if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) != DialogResult.OK)
             {
@@ -321,10 +321,11 @@ namespace mrHelper.App.Controls
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
+            EDataCacheType mode = getCurrentTabDataCacheType();
+            DataCache dataCache = getDataCache(mode);
             IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
-               mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList);
+               mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList, _avatarImageCache[mode]);
             bool res = await discussionHelper.AddCommentAsync(WinFormsHelpers.FindMainForm());
             addOperationRecord(res ? "New comment has been added" : "Comment has not been added");
          }));
@@ -337,10 +338,11 @@ namespace mrHelper.App.Controls
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
+            EDataCacheType mode = getCurrentTabDataCacheType();
+            DataCache dataCache = getDataCache(mode);
             IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
-               mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList);
+               mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList, _avatarImageCache[mode]);
             bool res = await discussionHelper.AddThreadAsync(WinFormsHelpers.FindMainForm());
             addOperationRecord(res ? "A new discussion thread has been added" : "Discussion thread has not been added");
          }));
@@ -413,7 +415,8 @@ namespace mrHelper.App.Controls
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(dataCache.DiscussionCache, mrk);
          using (MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
-            _shortcuts.GetProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList))
+            _shortcuts.GetProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList,
+            _avatarImageCache[mode]))
          {
             if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) != DialogResult.OK)
             {
@@ -596,15 +599,16 @@ namespace mrHelper.App.Controls
                }
             }, this);
 
+            AvatarImageCache avatarImageCache = _avatarImageCache[getCurrentTabDataCacheType()];
             IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
-               mrk, title, currentUser, _shortcuts, fullUserList);
+               mrk, title, currentUser, _shortcuts, fullUserList, avatarImageCache);
 
             DiscussionsForm discussionsForm = new DiscussionsForm(
                git, currentUser, mrk, discussions, title, author, _colorScheme,
                discussionLoader, discussionHelper, webUrl, _shortcuts, GetCustomActionList(),
                cmd => isCommandEnabledInDiscussionsView(mrk, cmd), () => reloadByDiscussionsViewRequest(mrk),
-               _avatarImageCache[getCurrentTabDataCacheType()], _onOpenUrl, fullUserList)
+               avatarImageCache, _onOpenUrl, fullUserList)
             {
                Tag = mrk
             };

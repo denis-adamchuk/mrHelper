@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.GitLabClient;
 using mrHelper.Common.Exceptions;
@@ -18,8 +19,8 @@ namespace mrHelper.App.Forms
       internal NewMergeRequestForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
          NewMergeRequestProperties initialState, IEnumerable<Project> projects, IEnumerable<User> users,
          IEnumerable<ProjectBranchKey> sourceBranchesInUse, string sourceBranchTemplate,
-         bool showIntegrationHint)
-         : base(hostname, projectAccessor, currentUser, isAllowedToChangeSource(initialState), users)
+         bool showIntegrationHint, AvatarImageCache avatarImageCache)
+         : base(hostname, projectAccessor, currentUser, isAllowedToChangeSource(initialState), users, avatarImageCache)
       {
          _initialState = initialState;
          _projects = projects ?? throw new ArgumentException("projects argument cannot be null");

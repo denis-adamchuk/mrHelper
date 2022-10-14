@@ -17,6 +17,7 @@ using mrHelper.CommonNative;
 using mrHelper.CommonControls.Tools;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using mrHelper.App.Helpers;
+using System.Drawing;
 
 namespace mrHelper.App.Forms
 {
@@ -35,7 +36,8 @@ namespace mrHelper.App.Forms
          Func<ReportedDiscussionNoteKey?, DiffPosition, IEnumerable<ReportedDiscussionNote>> getRelatedDiscussions,
          Func<DiffPosition, DiffContext> getNewDiscussionDiffContext,
          Func<DiffPosition, DiffContext> getDiffContext,
-         IEnumerable<GitLabSharp.Entities.User> fullUserList)
+         IEnumerable<GitLabSharp.Entities.User> fullUserList,
+         AvatarImageCache avatarImageCache)
       {
          InitializeComponent();
          this.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
@@ -46,6 +48,7 @@ namespace mrHelper.App.Forms
          _groupBoxRelatedThreadsDefaultHeight = groupBoxRelated.Height;
          _diffContextDefaultHeight = panelHtmlContextCanvas.Height;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
+         _avatarImageCache = avatarImageCache;
 
          this.Text = Constants.StartNewThreadCaption;
          labelInvisibleCharactersHint.Text = Constants.WarningOnUnescapedMarkdown;
@@ -250,7 +253,7 @@ namespace mrHelper.App.Forms
 
       async private void buttonReply_Click(object sender, EventArgs e)
       {
-         using (ReplyOnRelatedNoteForm form = new ReplyOnRelatedNoteForm(_imagePath, null))
+         using (ReplyOnRelatedNoteForm form = new ReplyOnRelatedNoteForm(_imagePath, null, _avatarImageCache))
          {
             form.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
             if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
@@ -715,7 +718,8 @@ namespace mrHelper.App.Forms
 
          textBoxDiscussionBody.SetAutoCompletionEntities(fullUserList
             .Select(user => new CommonControls.Controls.SmartTextBox.AutoCompletionEntity(
-               user.Name, user.Username, CommonControls.Controls.SmartTextBox.AutoCompletionEntity.EntityType.User)));
+               user.Name, user.Username, CommonControls.Controls.SmartTextBox.AutoCompletionEntity.EntityType.User,
+               () => _avatarImageCache.GetAvatar(user, Color.White))));
 
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
          textBoxDiscussionBody.TextChanged += textBoxDiscussionBody_TextChanged;
@@ -979,6 +983,7 @@ namespace mrHelper.App.Forms
       private readonly int _groupBoxRelatedThreadsDefaultHeight;
       private readonly int _diffContextDefaultHeight;
       private readonly string _imagePath;
+      private readonly AvatarImageCache _avatarImageCache;
    }
 }
 
