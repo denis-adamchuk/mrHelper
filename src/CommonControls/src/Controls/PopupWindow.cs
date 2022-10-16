@@ -32,6 +32,7 @@ namespace mrHelper.CommonControls.Controls
          public MyToolStripControlHost(Control c) : base(c)
          {
             Margin = new Padding(0, 0, 0, 0);
+            AutoSize = false;
          }
       }
 

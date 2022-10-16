@@ -1,44 +1,46 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using mrHelper.Common.Interfaces;
 
 namespace mrHelper.GitLabClient.Operators
 {
-   internal class AvatarOperator : BaseOperator, IDisposable
+   internal class AvatarOperator : IDisposable
    {
-      internal AvatarOperator(string hostname, IHostProperties hostProperties,
-         INetworkOperationStatusListener networkOperationStatusListener)
-         : base(hostname, hostProperties, networkOperationStatusListener)
+      public void Dispose()
       {
-      }
+         foreach (var cts in _avatarCancellationToken)
+         {
+            cts.Cancel();
+            cts.Dispose();
+         }
 
-      public new void Dispose()
-      {
-         base.Dispose();
-         _avatarClient?.Dispose();
+         foreach (var cl in _avatarClient)
+         {
+            cl.Dispose();
+         }
       }
 
       async internal Task<byte[]> GetAvatarAsync(string avatarUrl)
       {
-         GitLabSharp.HttpClient httpClient = getHttpClientForAvatars();
-         return await httpClient.GetDataTaskAsync(avatarUrl);
+         return await getHttpClient().GetDataTaskAsync(avatarUrl);
       }
 
-      private GitLabSharp.HttpClient getHttpClientForAvatars()
+      private GitLabSharp.HttpClient getHttpClient()
       {
-         if (_avatarClient == null)
-         {
-            if (_avatarCancellationToken == null)
-            {
-               _avatarCancellationToken = new System.Threading.CancellationTokenSource();
-            }
-            _avatarClient = new GitLabSharp.HttpClient(Hostname, _avatarCancellationToken);
-         }
-         return _avatarClient;
+         System.Threading.CancellationTokenSource cancellationToken =
+            new System.Threading.CancellationTokenSource();
+         GitLabSharp.HttpClient httpClient =
+            new GitLabSharp.HttpClient(String.Empty, cancellationToken); // TODO !!
+
+         _avatarClient.Add(httpClient);
+         _avatarCancellationToken.Add(cancellationToken);
+
+         return httpClient;
       }
 
-      private System.Threading.CancellationTokenSource _avatarCancellationToken;
-      private GitLabSharp.HttpClient _avatarClient;
+      private List<System.Threading.CancellationTokenSource> _avatarCancellationToken =
+         new List<System.Threading.CancellationTokenSource>();
+      private List<GitLabSharp.HttpClient> _avatarClient = new List<GitLabSharp.HttpClient>();
    }
 }
 

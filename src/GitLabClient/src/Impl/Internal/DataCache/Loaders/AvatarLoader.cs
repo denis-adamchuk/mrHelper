@@ -10,13 +10,13 @@ using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Loaders
 {
-   internal class AvatarLoader : BaseDataCacheLoader, IAvatarLoader
+   internal class AvatarLoader : BaseLoader, IAvatarLoader
    {
-      internal AvatarLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater)
-         : base(op)
+      internal AvatarLoader(InternalCacheUpdater cacheUpdater)
       {
          _cacheUpdater = cacheUpdater;
          _diskCache = new DiskCache(PathFinder.AvatarStorage);
+         _avatarOperator = new AvatarOperator();
       }
 
       async public Task LoadAvatars(IEnumerable<MergeRequestKey> mergeRequestKeys)
@@ -29,6 +29,11 @@ namespace mrHelper.GitLabClient.Loaders
       {
          IEnumerable<User> authors = extractAuthors(discussions);
          await loadAvatarsForUsersAsync(authors, Constants.AvatarLoaderForDiscussionsUserBatchLimits);
+      }
+
+      async public Task LoadAvatars(IEnumerable<User> users)
+      {
+         await loadAvatarsForUsersAsync(users, Constants.AvatarLoaderForUsersUserBatchLimits);
       }
 
       private static IEnumerable<User> extractAuthors(IEnumerable<Discussion> discussions)
@@ -85,7 +90,7 @@ namespace mrHelper.GitLabClient.Loaders
          if (avatar == null)
          {
             avatar = await call(
-               () => _operator.AvatarOperator.GetAvatarAsync(avatarUrl),
+               () => _avatarOperator.GetAvatarAsync(avatarUrl),
                String.Format("Cancelled loading avatar for user with id {0}", userId),
                String.Format("Cannot load avatar for user with id {0}", userId));
             saveAvatarToDisk(avatarUrl, avatar);
@@ -97,7 +102,6 @@ namespace mrHelper.GitLabClient.Loaders
       {
          return CryptoHelper.GetHashString(avatarUrl);
       }
-
 
       private byte[] readAvatarFromDisk(string avatarUrl)
       {
@@ -126,6 +130,7 @@ namespace mrHelper.GitLabClient.Loaders
          }
       }
 
+      private readonly AvatarOperator _avatarOperator;
       private readonly InternalCacheUpdater _cacheUpdater;
       private readonly DiskCache _diskCache;
    }

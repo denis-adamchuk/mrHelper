@@ -150,8 +150,14 @@ namespace mrHelper.Common.Constants
 
       public static TaskUtils.BatchLimits AvatarLoaderForDiscussionsUserBatchLimits = new TaskUtils.BatchLimits
       {
-         Size = 20,
-         Delay = 100
+         Size = 10,
+         Delay = 1000
+      };
+
+      public static TaskUtils.BatchLimits AvatarLoaderForUsersUserBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 5,
+         Delay = 10000
       };
 
       // @{ Default properties for FileStorageUpdater (can be overridden by user in a configuration file)

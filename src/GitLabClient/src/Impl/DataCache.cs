@@ -161,7 +161,7 @@ namespace mrHelper.GitLabClient
             _cacheContext, cacheUpdater, hostname, hostProperties, queryCollection, networkOperationStatusListener,
             isApprovalStatusSupported);
 
-         AvatarLoader avatarLoaderForDiscussionManager = new AvatarLoader(_operator, cacheUpdater);
+         AvatarLoader avatarLoaderForDiscussionManager = new AvatarLoader(cacheUpdater);
          DiscussionManager discussionManager = new DiscussionManager(
             _cacheContext, hostname, hostProperties, user, mergeRequestManager,
             modificationNotifier, networkOperationStatusListener, avatarLoaderForDiscussionManager);
@@ -179,7 +179,8 @@ namespace mrHelper.GitLabClient
          UserCache userCache = null;
          if (_cacheContext.SupportUserCache)
          {
-            IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
+            AvatarLoader avatarLoaderForUserListLoader = new AvatarLoader(cacheUpdater);
+            IUserListLoader userListLoader = new UserListLoader(hostname, _operator, avatarLoaderForUserListLoader);
             userCache = new UserCache(userListLoader, _cacheContext, hostname);
          }
 

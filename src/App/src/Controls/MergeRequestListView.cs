@@ -440,7 +440,7 @@ namespace mrHelper.App.Controls
                FullMergeRequestKey fmk = new FullMergeRequestKey(getGroupProjectKey(group), null);
                ListViewItem item = createListViewMergeRequestItem(fmk);
                Items.Add(item);
-               setListViewSubItemsTagsForSummary(item, fmk);
+               setListViewSubItemsTagsForSummary(item);
             }
          }
 
@@ -1262,7 +1262,7 @@ namespace mrHelper.App.Controls
          return (ListViewSubItemInfo)item.SubItems[columnHeader.Index]?.Tag;
       }
 
-      private void setListViewSubItemsTagsForSummary(ListViewItem item, FullMergeRequestKey fmk)
+      private void setListViewSubItemsTagsForSummary(ListViewItem item)
       {
          Debug.Assert(needShowGroups());
          Debug.Assert(isSummaryItem(item));

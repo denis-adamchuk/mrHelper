@@ -7,10 +7,11 @@ namespace mrHelper.GitLabClient.Loaders
 {
    internal class UserListLoader : BaseDataCacheLoader, IUserListLoader
    {
-      public UserListLoader(string hostname, DataCacheOperator op)
+      public UserListLoader(string hostname, DataCacheOperator op, IAvatarLoader avatarLoader)
          : base(op)
       {
          _hostname = hostname;
+         _avatarLoader = avatarLoader;
       }
 
       async public Task Load()
@@ -21,6 +22,7 @@ namespace mrHelper.GitLabClient.Loaders
             if (users != null)
             {
                GlobalCache.SetUsers(_hostname, users);
+               await _avatarLoader.LoadAvatars(users);
             }
          }
       }
@@ -42,6 +44,7 @@ namespace mrHelper.GitLabClient.Loaders
       }
 
       private readonly string _hostname;
+      private readonly IAvatarLoader _avatarLoader;
       private static readonly HashSet<string> _loading = new HashSet<string>();
    }
 }

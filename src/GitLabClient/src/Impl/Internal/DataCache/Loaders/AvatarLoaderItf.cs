@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using GitLabSharp.Entities;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace mrHelper.GitLabClient.Loaders
@@ -7,7 +8,9 @@ namespace mrHelper.GitLabClient.Loaders
    {
       Task LoadAvatars(IEnumerable<MergeRequestKey> mergeRequestKeys);
 
-      Task LoadAvatars(IEnumerable<GitLabSharp.Entities.Discussion> discussions);
+      Task LoadAvatars(IEnumerable<Discussion> discussions);
+
+      Task LoadAvatars(IEnumerable<User> users);
    }
 }
 

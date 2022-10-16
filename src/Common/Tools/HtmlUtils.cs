@@ -260,7 +260,7 @@ namespace mrHelper.Common.Tools
             }
 
             // prepare to next iteration
-            iCurrentPosition = iCurrentPosition + 1;
+            iCurrentPosition++;
             if (iCurrentPosition > tokenPositions.Count - 1)
             {
                break;

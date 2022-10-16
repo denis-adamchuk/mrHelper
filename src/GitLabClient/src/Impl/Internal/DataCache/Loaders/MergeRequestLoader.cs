@@ -21,7 +21,7 @@ namespace mrHelper.GitLabClient.Loaders
          _cacheUpdater = cacheUpdater;
          _versionLoader = new VersionLoader(op, cacheUpdater);
          _approvalLoader = isApprovalStatusSupported ? new ApprovalLoader(op, cacheUpdater) : null;
-         _avatarLoader = new AvatarLoader(op, cacheUpdater);
+         _avatarLoader = new AvatarLoader(cacheUpdater);
          _updateOnlyOpened = updateOnlyOpened;
       }
 

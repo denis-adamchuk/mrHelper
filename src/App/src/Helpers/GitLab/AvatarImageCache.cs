@@ -42,7 +42,7 @@ namespace mrHelper.App.Helpers
          image = convertByteToImage(_dataCache.AvatarCache.GetAvatar(user), backgroundColor);
          if (image == null)
          {
-            return null;
+            return Properties.Resources.loading_transp_alpha;
          }
 
          _cached[key] = image;
@@ -81,16 +81,45 @@ namespace mrHelper.App.Helpers
 
       private DataCache _dataCache;
 
-      private struct Key
+      private struct Key : IEquatable<Key>
       {
          public Key(int userId, Color backgroundColo)
          {
             _userId = userId;
-            _backgroundColo = backgroundColo;
+            _backgroundColor = backgroundColo;
          }
 
-         int _userId;
-         Color _backgroundColo;
+         private int _userId;
+         private Color _backgroundColor;
+
+         public override bool Equals(object obj)
+         {
+            return obj is Key key && Equals(key);
+         }
+
+         public bool Equals(Key other)
+         {
+            return _userId == other._userId &&
+                   EqualityComparer<Color>.Default.Equals(_backgroundColor, other._backgroundColor);
+         }
+
+         public override int GetHashCode()
+         {
+            int hashCode = -1622434987;
+            hashCode = hashCode * -1521134295 + _userId.GetHashCode();
+            hashCode = hashCode * -1521134295 + _backgroundColor.GetHashCode();
+            return hashCode;
+         }
+
+         public static bool operator ==(Key left, Key right)
+         {
+            return left.Equals(right);
+         }
+
+         public static bool operator !=(Key left, Key right)
+         {
+            return !(left == right);
+         }
       }
       private readonly Dictionary<Key, Image> _cached = new Dictionary<Key, Image>();
    }

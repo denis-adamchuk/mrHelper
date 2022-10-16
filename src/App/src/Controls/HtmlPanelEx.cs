@@ -143,7 +143,7 @@ namespace mrHelper.App.Controls
 
       private void drawBorders(Control control, Graphics graphics)
       {
-         Color borderColor = _flickeringBorderColor.HasValue ? _flickeringBorderColor.Value : _borderColor;
+         Color borderColor = _flickeringBorderColor ?? _borderColor;
          using (Pen pen = new Pen(borderColor, 2.0f))
          {
             Rectangle bounds = control.ClientRectangle;

@@ -23,7 +23,7 @@ namespace mrHelper.GitLabClient.Loaders
          _cacheUpdater = cacheUpdater;
          _versionLoader = new VersionLoader(_operator, cacheUpdater);
          _approvalLoader = isApprovalStatusSupported ? new ApprovalLoader(_operator, cacheUpdater) : null;
-         _avatarLoader = new AvatarLoader(op, cacheUpdater);
+         _avatarLoader = new AvatarLoader(cacheUpdater);
          _callbacks = callbacks;
          _queryCollection = queryCollection;
       }

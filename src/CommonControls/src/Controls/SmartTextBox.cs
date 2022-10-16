@@ -424,6 +424,12 @@ namespace mrHelper.CommonControls.Controls
       {
          const int WM_NCLBUTTONDOWN = 0x00A1;
          const int WM_NCRBUTTONDOWN = 0x00A4;
+
+         public ListBoxEx()
+         {
+            DoubleBuffered = true;
+         }
+
          protected override void WndProc(ref Message m)
          {
             if (m.Msg == WM_NCLBUTTONDOWN || m.Msg == WM_NCRBUTTONDOWN)
@@ -441,17 +447,20 @@ namespace mrHelper.CommonControls.Controls
          ListBoxEx listBox = new ListBoxEx
          {
             BorderStyle = BorderStyle.None,
-            FormattingEnabled = true,
-            //DrawMode = DrawMode.OwnerDrawFixed
+            //FormattingEnabled = true,
+            DrawMode = DrawMode.OwnerDrawVariable,
+            Size = new Size(200, 200)
          };
          listBox.Click += new System.EventHandler(listBox_Click);
          listBox.Font = this.Font;
-         listBox.Format += new System.Windows.Forms.ListControlConvertEventHandler(listBox_Format);
+         //listBox.Format += new System.Windows.Forms.ListControlConvertEventHandler(listBox_Format);
          listBox.KeyDown += new System.Windows.Forms.KeyEventHandler(listBox_KeyDown);
          listBox.PreviewKeyDown += listBox_PreviewKeyDown;
          listBox.LostFocus += listBox_LostFocus;
          listBox.NCMouseButtonDown += listBox_NCMouseButtonDown;
-         //listBox.DrawItem += ListBox_DrawItem;
+         listBox.DrawItem += ListBox_DrawItem;
+         listBox.MeasureItem += ListBox_MeasureItem;
+         listBox.SizeChanged += ListBox_SizeChanged;
 
          // If we don't create control manually here, it is created on
          // showPopupWindow() call and resets size to a default one.
@@ -459,8 +468,46 @@ namespace mrHelper.CommonControls.Controls
          return listBox;
       }
 
+      private void ListBox_SizeChanged(object sender, EventArgs e)
+      {
+         Console.Write("");
+      }
+
+      private void ListBox_MeasureItem(object sender, MeasureItemEventArgs e)
+      {
+         ListBox listBox = sender as ListBox;
+         AutoCompletionEntity item = (AutoCompletionEntity)listBox.Items[e.Index];
+         string itemText = format(item);
+         SizeF textSize = e.Graphics.MeasureString(itemText, listBox.Font, listBox.Width);
+         int textWidth = (int)Math.Ceiling(textSize.Width);
+
+         e.ItemHeight = 32;
+         e.ItemWidth = textWidth + 32;
+      }
+
       private void ListBox_DrawItem(object sender, DrawItemEventArgs e)
       {
+         ListBox listBox = sender as ListBox;
+         AutoCompletionEntity item = (AutoCompletionEntity)listBox.Items[e.Index];
+         string itemText = format(item);
+         var imageRect = new Rectangle(e.Bounds.X, e.Bounds.Y, 32, 32);
+         var textRect = new Rectangle(e.Bounds.X + 32, e.Bounds.Y + (e.Bounds.Height - e.Font.Height) / 2, e.Bounds.Width - 32, e.Bounds.Height);
+
+         e.DrawBackground();
+         Image image = item.GetImage();
+         if (image != null)
+         {
+            e.Graphics.DrawImage(item.GetImage(), imageRect);
+         }
+         else
+         {
+            using (Brush b = new SolidBrush(Color.Gray))
+            {
+               e.Graphics.FillEllipse(b, imageRect);
+            }
+         }
+         e.Graphics.DrawString(itemText, e.Font, new SolidBrush(e.ForeColor), textRect);
+         e.DrawFocusRectangle();
       }
 
       private void listBox_NCMouseButtonDown(object sender, EventArgs e)
@@ -482,9 +529,10 @@ namespace mrHelper.CommonControls.Controls
          {
             preferredWidth += SystemInformation.VerticalScrollBarWidth;
          }
+         preferredWidth += 32;
 
          // Cannot use listBox.ItemHeight because it does not change on high DPI
-         int singleLineWithoutBorderHeight = TextRenderer.MeasureText(Alphabet, listBox.Font).Height;
+         int singleLineWithoutBorderHeight = 32;
          int calcPreferredHeight(int rows) => rows * singleLineWithoutBorderHeight;
          listBox.MaximumSize = new Size(preferredWidth, calcPreferredHeight(MaxRowsToShowInListBox));
          listBox.Size = new Size(preferredWidth, calcPreferredHeight(objects.Length));
@@ -553,9 +601,6 @@ namespace mrHelper.CommonControls.Controls
 
       private static readonly Padding PopupWindowPadding = new Padding(1, 2, 1, 2);
       private static readonly int MaxRowsToShowInListBox = 5;
-
-      private static readonly string Alphabet =
-         "ABCDEFGHIJKLMONPQRSTUVWXYZabcdefghijklmonpqrstuvwxyz1234567890!@#$%^&*()";
    }
 }
 

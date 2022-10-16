@@ -535,8 +535,7 @@ namespace mrHelper.App.Forms
 
       private static FilterState readFilterState(KeyValuePair<string, Tuple<string, string>> item)
       {
-         FilterState filterState = FilterState.Disabled;
-         if (!Enum.TryParse(item.Value.Item1, out filterState)
+         if (!Enum.TryParse(item.Value.Item1, out FilterState filterState)
            && bool.TryParse(item.Value.Item1, out bool oldStyleValue)) // before 2.7.7
          {
             filterState = oldStyleValue ? FilterState.Enabled : FilterState.Disabled;

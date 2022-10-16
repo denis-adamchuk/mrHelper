@@ -360,7 +360,7 @@ namespace mrHelper.App.Controls
       {
          List<DiscussionBox> boxList = getVisibleAndSortedBoxes().ToList();
 
-         int iNewIndex = -1;
+         int iNewIndex;
          ENoteSelectionRequest newRequest;
 
          switch (request)
