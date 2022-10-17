@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.StorageSupport;
@@ -29,6 +30,7 @@ namespace mrHelper.App.Forms
          Shortcuts shortcuts,
          IEnumerable<ICommand> commands,
          Func<ICommand, CommandState> isCommandEnabled,
+         Func<ICommand, Task> onCommand,
          Action onRefresh,
          AvatarImageCache avatarImageCache,
          Action<string> onSelectNoteByUrl,
@@ -80,7 +82,7 @@ namespace mrHelper.App.Forms
          searchPanel.Initialize(discussionPanel);
 
          discussionMenu.Initialize(discussionSort, displayFilter, discussionLayout,
-            discussionHelper, commands, this, applyFont, colorScheme, isCommandEnabled, onRefreshByUser);
+            discussionHelper, commands, this, applyFont, colorScheme, isCommandEnabled, onCommand, onRefreshByUser);
 
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);

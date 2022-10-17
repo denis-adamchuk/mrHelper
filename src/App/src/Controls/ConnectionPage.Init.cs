@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -11,6 +10,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
+using mrHelper.CustomActions;
 
 namespace mrHelper.App.Controls
 {
@@ -19,6 +19,7 @@ namespace mrHelper.App.Controls
       public ConnectionPage(
          string hostname,
          DictionaryWrapper<MergeRequestKey, DateTime> recentMergeRequests,
+         HashSetWrapper<MergeRequestKey> pinnedMergeRequests,
          DictionaryWrapper<MergeRequestKey, HashSet<string>> reviewedRevisions,
          DictionaryWrapper<string, MergeRequestKey> lastMergeRequestsByHosts,
          DictionaryWrapper<string, NewMergeRequestProperties> newMergeRequestDialogStatesByHosts,
@@ -36,7 +37,8 @@ namespace mrHelper.App.Controls
          ColorScheme colorScheme,
          UserDefinedSettings.OldFilterSettings oldFilter,
          ITimeTrackerHolder timeTrackerHolder,
-         Action<string> onOpenUrl)
+         Action<string> onOpenUrl,
+         Func<ICommand, MergeRequestKey, ConnectionPage, System.Threading.Tasks.Task> onCommand)
       {
          HostName = hostname;
          _keywords = keywords;
@@ -46,12 +48,14 @@ namespace mrHelper.App.Controls
          _toolTip = toolTip;
          _timeTrackerHolder = timeTrackerHolder;
          _recentMergeRequests = recentMergeRequests;
+         _pinnedMergeRequests = pinnedMergeRequests;
          _reviewedRevisions = reviewedRevisions;
          _lastMergeRequestsByHosts = lastMergeRequestsByHosts;
          _newMergeRequestDialogStatesByHosts = newMergeRequestDialogStatesByHosts;
          _filtersByHostsLive = filtersByHostsLive;
          _filtersByHostsRecent = filtersByHostsRecent;
          _onOpenUrl = onOpenUrl;
+         _onCommand = onCommand;
 
          InitializeComponent();
          updateSplitterOrientation();
@@ -61,16 +65,19 @@ namespace mrHelper.App.Controls
          listViewLiveMergeRequests.SetMutedMergeRequests(mutedMergeRequests);
          listViewLiveMergeRequests.SetOpenMergeRequestUrlCallback(openBrowserForMergeRequest);
          listViewLiveMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
+         listViewLiveMergeRequests.SetPinChecker(isPinned);
          listViewLiveMergeRequests.Initialize(hostname);
 
          listViewFoundMergeRequests.SetIdentity(Constants.SearchListViewName);
          listViewFoundMergeRequests.SetCollapsedProjects(collapsedProjectsSearch);
          listViewFoundMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
+         listViewFoundMergeRequests.SetPinChecker(isPinned);
          listViewFoundMergeRequests.Initialize(hostname);
 
          listViewRecentMergeRequests.SetIdentity(Constants.RecentListViewName);
          listViewRecentMergeRequests.SetCollapsedProjects(collapsedProjectsRecent);
          listViewRecentMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
+         listViewRecentMergeRequests.SetPinChecker(isPinned);
          listViewRecentMergeRequests.Initialize(hostname);
 
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
@@ -211,6 +218,7 @@ namespace mrHelper.App.Controls
             unMuteSelectedMergeRequest,
             toggleSelectedMergeRequestExclusion,
             openSelectedAuthorProfile,
+            toggleSelectedMergeRequestPinState,
             showDiscussionsForSelectedMergeRequest));
 
          foreach (EDataCacheType mode in new EDataCacheType[] { EDataCacheType.Recent, EDataCacheType.Search })
@@ -230,6 +238,7 @@ namespace mrHelper.App.Controls
                null,
                mode == EDataCacheType.Search ? (null as Action) : toggleSelectedMergeRequestExclusion,
                openSelectedAuthorProfile,
+               toggleSelectedMergeRequestPinState,
                showDiscussionsForSelectedMergeRequest));
          }
       }
@@ -386,25 +395,13 @@ namespace mrHelper.App.Controls
          switch (mode)
          {
             case EDataCacheType.Live:
-               // The idea is that:
-               // 1. Already cached MR that became closed remotely will not be removed from the cache
-               // 2. Open MR that are missing in the cache, will be added to the cache
-               // 3. Open MR that exist in the cache, will be updated
-               // 4. Non-cached MR that are closed remotely, will not be added to the cache even if directly requested by IId
-               bool updateOnlyOpened = true;
-               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
-                                               Program.Settings.AutoUpdatePeriodMs,
-                                               updateOnlyOpened);
-
             case EDataCacheType.Recent:
                return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
-                                               Program.Settings.AutoUpdatePeriodMs,
-                                               false);
+                                               Program.Settings.AutoUpdatePeriodMs);
 
             case EDataCacheType.Search:
                return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
-                                               int.MaxValue,
-                                               false);
+                                               int.MaxValue);
 
             default:
                Debug.Assert(false);

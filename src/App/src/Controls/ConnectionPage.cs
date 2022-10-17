@@ -49,6 +49,7 @@ namespace mrHelper.App.Controls
       private readonly ITimeTrackerHolder _timeTrackerHolder;
 
       private readonly DictionaryWrapper<MergeRequestKey, DateTime> _recentMergeRequests;
+      private readonly HashSetWrapper<MergeRequestKey> _pinnedMergeRequests;
       private readonly DictionaryWrapper<MergeRequestKey, HashSet<string>> _reviewedRevisions;
       private readonly DictionaryWrapper<string, MergeRequestKey> _lastMergeRequestsByHosts;
       private readonly DictionaryWrapper<string, NewMergeRequestProperties> _newMergeRequestDialogStatesByHosts;
@@ -87,6 +88,7 @@ namespace mrHelper.App.Controls
       private LostConnectionInfo? _lostConnectionInfo;
 
       private readonly Action<string> _onOpenUrl;
+      private readonly Func<ICommand, MergeRequestKey, ConnectionPage, System.Threading.Tasks.Task> _onCommand;
    }
 }
 

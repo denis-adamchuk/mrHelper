@@ -160,9 +160,6 @@
   <data name="link_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\toolbar\link_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="loading_transp" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\loading-transp.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="loading_transp_alpha" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\loading-transp-alpha.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -171,6 +168,9 @@
   </data>
   <data name="Penguin" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ny2020\penguin.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="pin_transparent_alpha" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\pin-transparent-alpha.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="play_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\toolbar\play_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

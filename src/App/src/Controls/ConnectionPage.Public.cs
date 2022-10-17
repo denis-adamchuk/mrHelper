@@ -129,12 +129,12 @@ namespace mrHelper.App.Controls
          {
             return new CommandState(false, false);
          }
-         CommandState? commandStateOpt = isCommandEnabledInDiscussionsView(
+         CommandState? commandStateOpt = isCommandEnabled(
             getCurrentTabDataCacheType(), mrk.Value, command);
          return commandStateOpt ?? new CommandState(false, false);
       }
 
-      private CommandState? isCommandEnabledInDiscussionsView(EDataCacheType mode, MergeRequestKey mrk, ICommand command)
+      private CommandState? isCommandEnabled(EDataCacheType mode, MergeRequestKey mrk, ICommand command)
       {
          DataCache dataCache = getDataCache(mode);
          MergeRequest mergeRequest = dataCache?.MergeRequestCache?.GetMergeRequest(mrk);
@@ -143,6 +143,7 @@ namespace mrHelper.App.Controls
             return null;
          }
 
+         bool isPinned = this.isPinned(mrk);
          User author = mergeRequest.Author;
          IEnumerable<string> labels = mergeRequest.Labels;
          IEnumerable<User> approvedBy = dataCache.MergeRequestCache.GetApprovals(mrk)?.Approved_By?
@@ -157,10 +158,12 @@ namespace mrHelper.App.Controls
             coll.Select(item => String.IsNullOrEmpty(item) ? String.Empty : _expressionResolver.Resolve(item));
 
          IEnumerable<string> resolvedVisibleIf = resolveCollection(command.VisibleIf.Split(','));
-         var isVisible = GitLabClient.Helpers.CheckConditions(resolvedVisibleIf, approvedBy, labels, author, false, false);
+         var isVisible = GitLabClient.Helpers.CheckConditions(
+            resolvedVisibleIf, approvedBy, labels, author, false, false, isPinned);
 
          IEnumerable<string> resolvedEnabledIf = resolveCollection(command.EnabledIf.Split(','));
-         var isEnabled = GitLabClient.Helpers.CheckConditions(resolvedEnabledIf, approvedBy, labels, author, false, false);
+         var isEnabled = GitLabClient.Helpers.CheckConditions(
+            resolvedEnabledIf, approvedBy, labels, author, false, false, isPinned);
 
          return new CommandState(isEnabled, isVisible);
       }
@@ -219,6 +222,11 @@ namespace mrHelper.App.Controls
       internal void ReloadSelected()
       {
          refreshSelectedMergeRequest();
+      }
+
+      internal void Pin(MergeRequestKey mrk)
+      {
+         pin(mrk);
       }
 
       internal void ReloadOne(MergeRequestKey mrk)

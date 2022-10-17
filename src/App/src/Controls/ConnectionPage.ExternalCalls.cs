@@ -99,8 +99,6 @@ namespace mrHelper.App.Controls
 
       private SelectionResult trySelectMergeRequest(MergeRequestKey mrk)
       {
-         bool isCached(EDataCacheType mode) => getDataCache(mode)?.MergeRequestCache?.GetMergeRequest(mrk) != null;
-
          // We want to check lists in specific order:
          EDataCacheType[] modes = new EDataCacheType[]
          {
@@ -110,7 +108,7 @@ namespace mrHelper.App.Controls
          };
 
          // Check if requested MR is cached
-         if (modes.All(mode => !isCached(mode)))
+         if (modes.All(mode => !isCached(mode, mrk)))
          {
             return SelectionResult.NotFound;
          }
@@ -118,7 +116,7 @@ namespace mrHelper.App.Controls
          // Try selecting an item which is not hidden by filters
          foreach (EDataCacheType mode in modes)
          {
-            if (isCached(mode) && switchTabAndSelectMergeRequest(mode, mrk))
+            if (isCached(mode, mrk) && switchTabAndSelectMergeRequest(mode, mrk))
             {
                return SelectionResult.Selected;
             }
@@ -127,7 +125,7 @@ namespace mrHelper.App.Controls
          // If we are here, requested MR is hidden on each tab where it is cached
          foreach (EDataCacheType mode in modes)
          {
-            if (isCached(mode))
+            if (isCached(mode, mrk))
             {
                if (unhideFilteredMergeRequest(mode))
                {

@@ -601,8 +601,8 @@ namespace mrHelper.CommonControls.Controls
          new PopupWindow(autoClose: false, borderRadius: null);
       private IEnumerable<AutoCompletionEntity> _autoCompletionEntities;
 
-      private static readonly int AutoCompletionItemHeight = 32;
-      private static readonly int AutoCompletionImageWidth = 28;
+      private static readonly int AutoCompletionItemHeight = 42;
+      private static readonly int AutoCompletionImageWidth = 40;
       private static readonly int AutoCompletionImageHeight = AutoCompletionImageWidth;
       private static readonly int AutoCompletionImageRightPadding = 10;
       private static readonly int ListBoxPaddingLeft = 5;

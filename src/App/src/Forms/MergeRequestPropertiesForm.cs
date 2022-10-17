@@ -114,7 +114,7 @@ namespace mrHelper.App.Forms
       {
          string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
          string formCaption = "Edit Merge Request title";
-         using (TextEditBaseForm editTitleForm = new SimpleTextEditForm(formCaption, title, false, String.Empty, null, null)) // TODO Test @
+         using (TextEditBaseForm editTitleForm = new SimpleTextEditForm(formCaption, title, false, String.Empty, null, null)) // TODO br_avatar Test @
          {
             if (WinFormsHelpers.ShowDialogOnControl(editTitleForm, this) == DialogResult.OK)
             {
@@ -127,7 +127,7 @@ namespace mrHelper.App.Forms
       {
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
-         string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName())); // TODO Test launched from GE and not
+         string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName())); // TODO br_avatar Test launched from GE and not
          using (TextEditBaseForm editDescriptionForm = new SimpleTextEditForm(
             formCaption, description, true, uploadsPrefix, _fullUserList, _avatarImageCache))
          {

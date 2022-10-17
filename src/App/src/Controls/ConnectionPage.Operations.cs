@@ -156,6 +156,30 @@ namespace mrHelper.App.Controls
          openAuthorProfile(getMergeRequest(null));
       }
 
+      private void toggleSelectedMergeRequestPinState()
+      {
+         EDataCacheType type = getCurrentTabDataCacheType();
+         FullMergeRequestKey? selectedMergeRequestOpt = getListView(type)?.GetSelectedMergeRequest();
+         if (selectedMergeRequestOpt == null)
+         {
+            return;
+         }
+
+         FullMergeRequestKey fullKey = selectedMergeRequestOpt.Value;
+         MergeRequestKey mrk = new MergeRequestKey(fullKey.ProjectKey, fullKey.MergeRequest.IId);
+         bool wasPinned = isPinned(mrk);
+         Trace.TraceInformation(String.Format(
+            "[ConnectionPage] Toggling pin state for selected MR (was pinned = {0}...", wasPinned.ToString()));
+         if (wasPinned)
+         {
+            unpin(mrk);
+         }
+         else
+         {
+            pin(mrk);
+         }
+      }
+
       private void openAuthorProfile(MergeRequest mergeRequest)
       {
          if (mergeRequest == null)
@@ -619,7 +643,9 @@ namespace mrHelper.App.Controls
             DiscussionsForm discussionsForm = new DiscussionsForm(
                git, currentUser, mrk, discussions, title, author, _colorScheme,
                discussionLoader, discussionHelper, webUrl, _shortcuts, GetCustomActionList(),
-               cmd => isCommandEnabledInDiscussionsView(mrk, cmd), () => reloadByDiscussionsViewRequest(mrk),
+               cmd => isCommandEnabledInDiscussionsView(cmd, mrk),
+               cmd => onCommandLaunchedFromDiscussionsView(cmd, mrk),
+               () => reloadByDiscussionsViewRequest(mrk),
                avatarImageCache, _onOpenUrl, fullUserList)
             {
                Tag = mrk

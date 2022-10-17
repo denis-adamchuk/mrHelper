@@ -423,6 +423,7 @@ namespace mrHelper.App.Forms
          new PersistentStateSaveHelper("SelectedHost", writer).Save(_defaultHostName);
          new PersistentStateSaveHelper("ReviewedCommits", writer).Save(_reviewedRevisions.Data);
          new PersistentStateSaveHelper("RecentMergeRequestsWithDateTime", writer).Save(_recentMergeRequests.Data);
+         new PersistentStateSaveHelper("PinnedMergeRequests", writer).Save(_pinnedMergeRequests.Data);
          new PersistentStateSaveHelper("MergeRequestsByHosts", writer).Save(_lastMergeRequestsByHosts.Data);
          new PersistentStateSaveHelper("NewMergeRequestDialogStatesByHosts", writer).Save(_newMergeRequestDialogStatesByHosts.Data);
          new PersistentStateSaveHelper("CollapsedProjects_" + Constants.LiveListViewName, writer)
@@ -470,6 +471,13 @@ namespace mrHelper.App.Forms
             // deprecated format
             var recentMergeRequests = mergeRequests.ToDictionary(item => item, item => DateTime.Now);
             _recentMergeRequests.Assign(recentMergeRequests);
+         }
+
+         new PersistentStateLoadHelper("PinnedMergeRequests", reader).Load(
+            out HashSet<MergeRequestKey> pinnedMergeRequests);
+         if (pinnedMergeRequests != null)
+         {
+            _pinnedMergeRequests.Assign(pinnedMergeRequests);
          }
 
          new PersistentStateLoadHelper("MergeRequestsByHosts", reader).

@@ -138,13 +138,13 @@ namespace mrHelper.App.Forms
          foreach (string hostname in getHostList())
          {
             ConnectionPage connectionPage = new ConnectionPage(hostname,
-               _recentMergeRequests, _reviewedRevisions, _lastMergeRequestsByHosts,
+               _recentMergeRequests, _pinnedMergeRequests, _reviewedRevisions, _lastMergeRequestsByHosts,
                _newMergeRequestDialogStatesByHosts, _collapsedProjectsLive,
                _collapsedProjectsRecent, _collapsedProjectsSearch, _mutedMergeRequests,
                _filtersByHostsLive, _filtersByHostsRecent,
                _keywords, _trayIcon, toolTip,
                _integratedInGitExtensions,
-               _integratedInSourceTree, _colorScheme, oldFilter, this, onOpenCommand);
+               _integratedInSourceTree, _colorScheme, oldFilter, this, onOpenCommand, onCommandAsync);
             subscribeToConnectionPage(connectionPage);
             ConnectionTabPage tabPage = new ConnectionTabPage(hostname, connectionPage);
             tabControlHost.TabPages.Add(tabPage);

@@ -99,6 +99,11 @@ namespace mrHelper.App.Controls
          }
       }
 
+      internal void SetPinChecker(Func<MergeRequestKey, bool> fnIsPinned)
+      {
+         _fnIsPinned = fnIsPinned;
+      }
+
       internal void SetDataCache(DataCache dataCache)
       {
          _dataCache = dataCache;
@@ -739,6 +744,11 @@ namespace mrHelper.App.Controls
          {
             Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
             drawEllipseForIId(e.Graphics, bounds, color, e.Item.ListView.Font, null);
+            if (isPinned(fmk))
+            {
+               drawImageForIId(e.Graphics, bounds, e.Item.ListView.Font, Properties.Resources.pin_transparent_alpha);
+
+            }
          }
          else if (isClickable)
          {
@@ -837,29 +847,31 @@ namespace mrHelper.App.Controls
       private void ContextMenuStrip_Opening(object sender, System.ComponentModel.CancelEventArgs e)
       {
          MergeRequestListViewContextMenu contextMenu = ((MergeRequestListViewContextMenu)(sender));
-         FullMergeRequestKey? selectedMergeRequest = GetSelectedMergeRequest();
-         if (WinFormsHelpers.TestListViewHeaderHit(this, Cursor.Position) || selectedMergeRequest == null)
+         FullMergeRequestKey? fmkOpt = GetSelectedMergeRequest();
+         if (WinFormsHelpers.TestListViewHeaderHit(this, Cursor.Position) || !fmkOpt.HasValue)
          {
             contextMenu.DisableAll();
          }
          else
          {
+            FullMergeRequestKey fmk = fmkOpt.Value;
             contextMenu.EnableAll();
-            contextMenu.SetUnmuteActionEnabled(isMuted(selectedMergeRequest.Value));
-            contextMenu.SetExcludeAbilityState(!isExplicitlyExcluded(selectedMergeRequest.Value));
+            contextMenu.SetUnmuteActionEnabled(isMuted(fmk));
+            contextMenu.SetExcludeAbilityState(!isExplicitlyExcluded(fmk));
+            contextMenu.SetPinAbilityState(!isPinned(fmk));
          }
          contextMenu.UpdateItemState();
 
          _toolTip.Cancel();
       }
 
-      private void drawEllipseForIId(Graphics g, Rectangle bounds, Color fillColor, Font font, Color? penColor)
+      private void drawEllipseForIId(Graphics g, Rectangle bounds, Color fillColor,
+         Font font, Color? penColor)
       {
          SizeF textSize = g.MeasureString("A", font, bounds.Width);
-         float ellipseWidth = (float)(textSize.Height - 0.30 * textSize.Height); // 30% less
+         float ellipseWidth = (float)(textSize.Height - 0.09 * textSize.Height); // 9% less
          float ellipseHeight = ellipseWidth;
-         float ellipsePaddingX = 5;
-         float ellipseX = ellipsePaddingX;
+         float ellipseX = (bounds.Width - ellipseWidth) / 2;
          float ellipseY = (bounds.Height - ellipseHeight) / 2;
          if (bounds.Width > ellipseX + ellipseWidth)
          {
@@ -877,6 +889,23 @@ namespace mrHelper.App.Controls
                   }
                }
             }
+         }
+      }
+
+      private void drawImageForIId(Graphics g, Rectangle bounds, Font font, Image image)
+      {
+         Debug.Assert(image != null);
+
+         SizeF textSize = g.MeasureString("A", font, bounds.Width);
+         float imageWidth = (float)(textSize.Height - 0.35 * textSize.Height); // 35% less
+         float imageHeight = imageWidth;
+         float imageX = (bounds.Width - imageWidth) / 2;
+         float imageY = (bounds.Height - imageHeight) / 2;
+         if (bounds.Width > imageX + imageWidth)
+         {
+            RectangleF imageRect = new RectangleF(
+               bounds.X + imageX, bounds.Y + imageY, imageWidth, imageHeight);
+            g.DrawImage(image, imageRect);
          }
       }
 
@@ -959,7 +988,9 @@ namespace mrHelper.App.Controls
          User author = fmk.MergeRequest.Author;
          bool isExcluded = !wouldMatchFilter(fmk.MergeRequest);
          bool isTrackingTime = _timeTrackingCheckingCallback(mrk);
-         return GitLabClient.Helpers.CheckConditions(conditions, approvedBy, labels, author, isExcluded, isTrackingTime);
+         bool isPinned = this.isPinned(fmk);
+         return GitLabClient.Helpers.CheckConditions(conditions, approvedBy, labels, author,
+            isExcluded, isTrackingTime, isPinned);
       }
 
       private Color getDiscussionCountColor(FullMergeRequestKey fmk, bool isSelected)
@@ -1787,6 +1818,17 @@ namespace mrHelper.App.Controls
          return getSortedByColumn() == ColumnType.Project;
       }
 
+      private bool isPinned(FullMergeRequestKey fmk)
+      {
+         if (_fnIsPinned == null || isGroupCollapsed(fmk.ProjectKey))
+         {
+            return false;
+         }
+
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         return _fnIsPinned(mrk);
+      }
+
       private int compare(ListViewItem item1, ListViewItem item2, ColumnType columnType)
       {
          FullMergeRequestKey fmk1 = ((FullMergeRequestKey)item1.Tag);
@@ -1799,6 +1841,8 @@ namespace mrHelper.App.Controls
          {
             return 1;
          }
+
+         int fallbackToIIdComparison() => compare(item1, item2, ColumnType.IId);
 
          MergeRequestKey mrk1 = new MergeRequestKey(fmk1.ProjectKey, fmk1.MergeRequest.IId);
          MergeRequestKey mrk2 = new MergeRequestKey(fmk2.ProjectKey, fmk2.MergeRequest.IId);
@@ -1818,14 +1862,21 @@ namespace mrHelper.App.Controls
                {
                   DateTime latestActivity1 = getLatestCommitTime(mrk1) ?? fmk1.MergeRequest.Created_At;
                   DateTime latestActivity2 = getLatestCommitTime(mrk2) ?? fmk2.MergeRequest.Created_At;
-                  return latestActivity1 == latestActivity2 ? 0 : (latestActivity1 > latestActivity2 ? 1 : -1);
+                  return latestActivity1 == latestActivity2 ? fallbackToIIdComparison()
+                      : (latestActivity1 > latestActivity2 ? 1 : -1);
                }
 
             case ColumnType.Color:
                {
+                  bool isPinned1 = isPinned(fmk1);
+                  bool isPinned2 = isPinned(fmk2);
+                  if (isPinned1 != isPinned2)
+                  {
+                     return isPinned1 ? 1 : -1;
+                  }
                   int colorOrder1 = getColorOrder(item1);
                   int colorOrder2 = getColorOrder(item2);
-                  return colorOrder1 == colorOrder2 ? 0 : (colorOrder1 > colorOrder2 ? 1 : -1);
+                  return colorOrder1 == colorOrder2 ? fallbackToIIdComparison() : (colorOrder1 > colorOrder2 ? 1 : -1);
                }
 
             case ColumnType.Size:
@@ -1836,9 +1887,9 @@ namespace mrHelper.App.Controls
                   {
                      int size1 = diffStatistic1.Value.Insertions + diffStatistic1.Value.Deletions;
                      int size2 = diffStatistic2.Value.Insertions + diffStatistic2.Value.Deletions;
-                     return size1 == size2 ? 0 : (size1 > size2 ? 1 : -1);
+                     return size1 == size2 ? fallbackToIIdComparison() : (size1 > size2 ? 1 : -1);
                   }
-                  return diffStatistic1.HasValue ? 1 : (diffStatistic2.HasValue ? -1 : 0);
+                  return diffStatistic1.HasValue ? 1 : (diffStatistic2.HasValue ? -1 : fallbackToIIdComparison());
                }
 
             case ColumnType.TotalTime:
@@ -1849,7 +1900,7 @@ namespace mrHelper.App.Controls
                   {
                      return totalTime1 == totalTime2 ? 0 : (totalTime1 > totalTime2 ? 1 : -1);
                   }
-                  return totalTime1.HasValue ? 1 : (totalTime2.HasValue ? -1 : 0);
+                  return totalTime1.HasValue ? 1 : (totalTime2.HasValue ? -1 : fallbackToIIdComparison());
                }
 
             case ColumnType.Avatar:
@@ -1859,7 +1910,8 @@ namespace mrHelper.App.Controls
                {
                   ListViewSubItemInfo key1 = getSubItemTag(item1, columnType);
                   ListViewSubItemInfo key2 = getSubItemTag(item2, columnType);
-                  return String.Compare(key1.Text, key2.Text, StringComparison.OrdinalIgnoreCase);
+                  int cmp = String.Compare(key1.Text, key2.Text, StringComparison.OrdinalIgnoreCase);
+                  return cmp == 0 ? fallbackToIIdComparison() : cmp;
                }
          }
       }
@@ -1921,6 +1973,7 @@ namespace mrHelper.App.Controls
       private string _hostname;
       private Func<MergeRequestKey, bool> _timeTrackingCheckingCallback;
       private AvatarImageCache _avatarImageCache;
+      private Func<MergeRequestKey, bool> _fnIsPinned;
       private static readonly int MaxListViewRows = 3;
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
       private static readonly string AllListViewRowsHint = "See all labels in tooltip";

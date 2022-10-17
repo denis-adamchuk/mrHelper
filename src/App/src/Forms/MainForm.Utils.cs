@@ -634,51 +634,57 @@ namespace mrHelper.App.Forms
                ImageScaling = ToolStripItemImageScaling.None,
                TextImageRelation = TextImageRelation.Overlay
             };
-            menuItem.Click += async (x, y) =>
+            menuItem.Click += (sender, e) =>
             {
                ConnectionPage connectionPage = getCurrentConnectionPage();
-               if (connectionPage == null)
+               if (connectionPage != null)
                {
-                  return;
-               }
-
-               MergeRequestKey mergeRequestKey = new MergeRequestKey(new ProjectKey(
-                  GetCurrentHostName(), GetCurrentProjectName()), GetCurrentMergeRequestIId());
-
-               addOperationRecord(String.Format("Command {0} execution has started", name));
-               try
-               {
-                  await command.Run(this);
-               }
-               catch (Exception ex) // Exception type does not matter
-               {
-                  string errorMessage = "Custom action failed";
-                  ExceptionHandlers.Handle(errorMessage, ex);
-                  MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                  addOperationRecord(String.Format("Command {0} failed", name));
-                  return;
-               }
-
-               string statusMessage = String.Format(
-                  "Command {0} execution has completed for merge request !{1} in project {2}",
-                  name, mergeRequestKey.IId, mergeRequestKey.ProjectKey.ProjectName);
-               addOperationRecord(statusMessage);
-               Trace.TraceInformation("[MainForm] EnabledIf: {0}", command.EnabledIf);
-               Trace.TraceInformation("[MainForm] VisibleIf: {0}", command.VisibleIf);
-
-               if (command.StopTimer)
-               {
-                  await stopTimeTrackingTimerAsync();
-               }
-
-               bool reload = command.Reload;
-               if (reload)
-               {
-                  connectionPage.ReloadOne(mergeRequestKey);
+                  MergeRequestKey mergeRequestKey = new MergeRequestKey(new ProjectKey(
+                     GetCurrentHostName(), GetCurrentProjectName()), GetCurrentMergeRequestIId());
+                  BeginInvoke(new Action(async () => await onCommandAsync(command, mergeRequestKey, connectionPage)));
                }
             };
             toolStripCustomActions.Items.Add(menuItem);
             id++;
+         }
+      }
+
+      private async Task onCommandAsync(ICommand command, MergeRequestKey mrk, ConnectionPage connectionPage)
+      {
+         addOperationRecord(String.Format("Command {0} execution has started", command.Name));
+         try
+         {
+            await command.Run(this);
+         }
+         catch (Exception ex) // Exception type does not matter
+         {
+            string errorMessage = "Custom action failed";
+            ExceptionHandlers.Handle(errorMessage, ex);
+            MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            addOperationRecord(String.Format("Command {0} failed", command.Name));
+            return;
+         }
+
+         string statusMessage = String.Format(
+            "Command {0} execution has completed for merge request !{1} in project {2}",
+            command.Name, mrk.IId, mrk.ProjectKey.ProjectName);
+         addOperationRecord(statusMessage);
+         Trace.TraceInformation("[MainForm] EnabledIf: {0}", command.EnabledIf);
+         Trace.TraceInformation("[MainForm] VisibleIf: {0}", command.VisibleIf);
+
+         if (command.StopTimer)
+         {
+            await stopTimeTrackingTimerAsync();
+         }
+
+         if (command.Pin)
+         {
+            connectionPage.Pin(mrk);
+         }
+
+         if (command.Reload)
+         {
+            connectionPage.ReloadOne(mrk);
          }
       }
 

@@ -58,6 +58,7 @@ namespace mrHelper.App.Forms
 
       private string _defaultHostName;
       private DictionaryWrapper<MergeRequestKey, DateTime> _recentMergeRequests;
+      private HashSetWrapper<MergeRequestKey> _pinnedMergeRequests;
       private DictionaryWrapper<MergeRequestKey, HashSet<string>> _reviewedRevisions;
       private DictionaryWrapper<string, MergeRequestKey> _lastMergeRequestsByHosts;
       private DictionaryWrapper<string, NewMergeRequestProperties> _newMergeRequestDialogStatesByHosts;

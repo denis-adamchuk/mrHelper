@@ -538,7 +538,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\loading.png" />
+    <None Include="Resources\pin-transparent-alpha.png" />
     <None Include="Resources\toolbar\thread_24x24.png" />
     <None Include="Resources\toolbar\create-new_24x24.png" />
     <None Include="Resources\toolbar\stop_24x24.png" />
@@ -553,7 +553,6 @@
     <None Include="Resources\toolbar\add-comment_24x24.png" />
     <None Include="Resources\gitlab-icon-stub-16x16.png" />
     <None Include="Resources\gitlab-icon-stub-16x16-border.png" />
-    <None Include="Resources\loading-transp.png" />
     <None Include="Resources\loading-transp-alpha.png" />
     <Content Include="Resources\ny2020\balls.png" />
     <Content Include="Resources\ny2020\happy_ny2002.png" />

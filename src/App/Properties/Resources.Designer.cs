@@ -233,16 +233,6 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap loading_transp {
-            get {
-                object obj = ResourceManager.GetObject("loading_transp", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap loading_transp_alpha {
             get {
                 object obj = ResourceManager.GetObject("loading_transp_alpha", resourceCulture);
@@ -273,6 +263,16 @@ namespace mrHelper.App.Properties {
         internal static System.Drawing.Bitmap Penguin {
             get {
                 object obj = ResourceManager.GetObject("Penguin", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap pin_transparent_alpha {
+            get {
+                object obj = ResourceManager.GetObject("pin_transparent_alpha", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

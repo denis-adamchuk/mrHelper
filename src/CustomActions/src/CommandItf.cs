@@ -15,6 +15,8 @@ namespace mrHelper.CustomActions
 
       string VisibleIf { get; }
 
+      bool Pin { get; }
+
       bool StopTimer { get; }
 
       bool Reload { get; }

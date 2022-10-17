@@ -361,7 +361,8 @@ namespace mrHelper.App.Controls
                })
             .ToArray();
 
-         return new SearchQueryCollection(queriesByUser.Concat(queriesByProjects));
+         IEnumerable<GitLabClient.SearchQuery> pinned = convertPinnedMergeRequestsToSearchQueries(HostName);
+         return new SearchQueryCollection(queriesByUser.Concat(queriesByProjects).Concat(pinned));
       }
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -431,6 +432,24 @@ namespace mrHelper.App.Controls
             requestUpdates(dataCache, null, PseudoTimerInterval,
                () => addOperationRecord("List refresh has completed"));
          }
+      }
+
+      private void updateLiveDataCacheQueryColletion()
+      {
+         SearchQueryCollection collection = buildQueryCollection();
+         getDataCache(EDataCacheType.Live)?.ConnectionContext?.QueryCollection.Assign(collection.Queries);
+      }
+
+      private IEnumerable<GitLabClient.SearchQuery> convertPinnedMergeRequestsToSearchQueries(string hostname)
+      {
+         return _pinnedMergeRequests.Data
+            .Where(key => key.ProjectKey.HostName == hostname)
+            .Select(key => new GitLabClient.SearchQuery
+            {
+               IId = key.IId,
+               ProjectName = key.ProjectKey.ProjectName
+            })
+            .ToArray();
       }
    }
 }
