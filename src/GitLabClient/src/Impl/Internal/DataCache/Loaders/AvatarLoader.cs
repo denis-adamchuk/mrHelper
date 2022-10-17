@@ -22,17 +22,20 @@ namespace mrHelper.GitLabClient.Loaders
       async public Task LoadAvatars(IEnumerable<MergeRequestKey> mergeRequestKeys)
       {
          IEnumerable<User> authors = extractAuthors(mergeRequestKeys);
+         authors = filterUsers(authors);
          await loadAvatarsForUsersAsync(authors, Constants.AvatarLoaderUserBatchLimits);
       }
 
       async public Task LoadAvatars(IEnumerable<Discussion> discussions)
       {
          IEnumerable<User> authors = extractAuthors(discussions);
+         authors = filterUsers(authors);
          await loadAvatarsForUsersAsync(authors, Constants.AvatarLoaderForDiscussionsUserBatchLimits);
       }
 
       async public Task LoadAvatars(IEnumerable<User> users)
       {
+         users = filterUsers(users);
          await loadAvatarsForUsersAsync(users, Constants.AvatarLoaderForUsersUserBatchLimits);
       }
 
@@ -52,6 +55,19 @@ namespace mrHelper.GitLabClient.Loaders
             .Select(mr => mr.Author)
             .GroupBy(user => user.Id)
             .Select(group => group.First());
+      }
+
+      private IEnumerable<User> filterUsers(IEnumerable<User> users)
+      {
+         IEnumerable<User> cachedAtDisk = users.Where(user => hasAvatarAtDisk(user.Avatar_Url));
+         foreach (User user in cachedAtDisk)
+         {
+            int userId = user.Id;
+            string avatarUrl = user.Avatar_Url;
+            byte[] avatar = readAvatarFromDisk(avatarUrl);
+            _cacheUpdater.UpdateAvatar(userId, avatar);
+         }
+         return users.Except(cachedAtDisk);
       }
 
       async private Task loadAvatarsForUsersAsync(IEnumerable<User> users, TaskUtils.BatchLimits batchLimits)
@@ -86,7 +102,10 @@ namespace mrHelper.GitLabClient.Loaders
       {
          int userId = user.Id;
          string avatarUrl = user.Avatar_Url;
-         byte[] avatar = readAvatarFromDisk(avatarUrl);
+
+         // even users returned by filterOutUser() might have been already cached by concurrent calls,
+         // so let's disk cache first
+         byte[] avatar = readAvatarFromDisk(avatarUrl); 
          if (avatar == null)
          {
             avatar = await call(
@@ -101,6 +120,12 @@ namespace mrHelper.GitLabClient.Loaders
       private string getAvatarCacheKey(string avatarUrl)
       {
          return CryptoHelper.GetHashString(avatarUrl);
+      }
+
+      private bool hasAvatarAtDisk(string avatarUrl)
+      {
+         string key = getAvatarCacheKey(avatarUrl);
+         return _diskCache.Has(key);
       }
 
       private byte[] readAvatarFromDisk(string avatarUrl)

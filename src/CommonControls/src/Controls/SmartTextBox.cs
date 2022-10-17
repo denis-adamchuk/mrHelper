@@ -260,12 +260,6 @@ namespace mrHelper.CommonControls.Controls
          hideAutoCompleteList();
       }
 
-      private void listBox_Format(object sender, ListControlConvertEventArgs e)
-      {
-         AutoCompletionEntity item = (AutoCompletionEntity)(e.ListItem);
-         e.Value = format(item);
-      }
-
       private void listBox_LostFocus(object sender, EventArgs e)
       {
          hideAutoCompleteList();
@@ -447,20 +441,16 @@ namespace mrHelper.CommonControls.Controls
          ListBoxEx listBox = new ListBoxEx
          {
             BorderStyle = BorderStyle.None,
-            //FormattingEnabled = true,
             DrawMode = DrawMode.OwnerDrawVariable,
-            Size = new Size(200, 200)
+            Font = this.Font
          };
-         listBox.Click += new System.EventHandler(listBox_Click);
-         listBox.Font = this.Font;
-         //listBox.Format += new System.Windows.Forms.ListControlConvertEventHandler(listBox_Format);
-         listBox.KeyDown += new System.Windows.Forms.KeyEventHandler(listBox_KeyDown);
+         listBox.Click += listBox_Click;
+         listBox.KeyDown += listBox_KeyDown;
          listBox.PreviewKeyDown += listBox_PreviewKeyDown;
          listBox.LostFocus += listBox_LostFocus;
          listBox.NCMouseButtonDown += listBox_NCMouseButtonDown;
          listBox.DrawItem += ListBox_DrawItem;
          listBox.MeasureItem += ListBox_MeasureItem;
-         listBox.SizeChanged += ListBox_SizeChanged;
 
          // If we don't create control manually here, it is created on
          // showPopupWindow() call and resets size to a default one.
@@ -468,45 +458,56 @@ namespace mrHelper.CommonControls.Controls
          return listBox;
       }
 
-      private void ListBox_SizeChanged(object sender, EventArgs e)
-      {
-         Console.Write("");
-      }
-
       private void ListBox_MeasureItem(object sender, MeasureItemEventArgs e)
       {
          ListBox listBox = sender as ListBox;
-         AutoCompletionEntity item = (AutoCompletionEntity)listBox.Items[e.Index];
-         string itemText = format(item);
-         SizeF textSize = e.Graphics.MeasureString(itemText, listBox.Font, listBox.Width);
-         int textWidth = (int)Math.Ceiling(textSize.Width);
-
-         e.ItemHeight = 32;
-         e.ItemWidth = textWidth + 32;
+         e.ItemHeight = AutoCompletionItemHeight;
+         e.ItemWidth = listBox.Width; // see resizeListBox()
       }
 
       private void ListBox_DrawItem(object sender, DrawItemEventArgs e)
       {
-         ListBox listBox = sender as ListBox;
-         AutoCompletionEntity item = (AutoCompletionEntity)listBox.Items[e.Index];
-         string itemText = format(item);
-         var imageRect = new Rectangle(e.Bounds.X, e.Bounds.Y, 32, 32);
-         var textRect = new Rectangle(e.Bounds.X + 32, e.Bounds.Y + (e.Bounds.Height - e.Font.Height) / 2, e.Bounds.Width - 32, e.Bounds.Height);
+         int imageHeight = AutoCompletionImageHeight;
+         int imageWidth = AutoCompletionImageWidth;
+         int imagePaddingRight = AutoCompletionImageRightPadding;
+         int x = e.Bounds.X + ListBoxPaddingLeft;
 
          e.DrawBackground();
+
+         ListBox listBox = sender as ListBox;
+         AutoCompletionEntity item = (AutoCompletionEntity)listBox.Items[e.Index];
          Image image = item.GetImage();
+
+         Rectangle imageRect = new Rectangle(
+            x,
+            e.Bounds.Y + (e.Bounds.Height - imageHeight) / 2,
+            imageWidth,
+            imageHeight);
+
          if (image != null)
          {
-            e.Graphics.DrawImage(item.GetImage(), imageRect);
+            e.Graphics.DrawImage(image, imageRect);
          }
          else
          {
-            using (Brush b = new SolidBrush(Color.Gray))
+            using (Brush grayBrush = new SolidBrush(Color.Gray))
             {
-               e.Graphics.FillEllipse(b, imageRect);
+               e.Graphics.FillEllipse(grayBrush, imageRect);
             }
          }
-         e.Graphics.DrawString(itemText, e.Font, new SolidBrush(e.ForeColor), textRect);
+
+         Rectangle textRect = new Rectangle(
+            x + imageWidth + imagePaddingRight,
+            e.Bounds.Y + (e.Bounds.Height - e.Font.Height) / 2,
+            e.Bounds.Width - imageWidth - imagePaddingRight,
+            e.Bounds.Height);
+
+         using (Brush textBrush = new SolidBrush(e.ForeColor))
+         {
+            string itemText = format(item);
+            e.Graphics.DrawString(itemText, e.Font, textBrush, textRect);
+         }
+
          e.DrawFocusRectangle();
       }
 
@@ -529,10 +530,11 @@ namespace mrHelper.CommonControls.Controls
          {
             preferredWidth += SystemInformation.VerticalScrollBarWidth;
          }
-         preferredWidth += 32;
+         preferredWidth += AutoCompletionImageRightPadding + AutoCompletionImageWidth;
+         preferredWidth += ListBoxPaddingLeft + ListBoxPaddingRight;
 
          // Cannot use listBox.ItemHeight because it does not change on high DPI
-         int singleLineWithoutBorderHeight = 32;
+         int singleLineWithoutBorderHeight = AutoCompletionItemHeight;
          int calcPreferredHeight(int rows) => rows * singleLineWithoutBorderHeight;
          listBox.MaximumSize = new Size(preferredWidth, calcPreferredHeight(MaxRowsToShowInListBox));
          listBox.Size = new Size(preferredWidth, calcPreferredHeight(objects.Length));
@@ -599,6 +601,12 @@ namespace mrHelper.CommonControls.Controls
          new PopupWindow(autoClose: false, borderRadius: null);
       private IEnumerable<AutoCompletionEntity> _autoCompletionEntities;
 
+      private static readonly int AutoCompletionItemHeight = 32;
+      private static readonly int AutoCompletionImageWidth = 28;
+      private static readonly int AutoCompletionImageHeight = AutoCompletionImageWidth;
+      private static readonly int AutoCompletionImageRightPadding = 10;
+      private static readonly int ListBoxPaddingLeft = 5;
+      private static readonly int ListBoxPaddingRight = 10;
       private static readonly Padding PopupWindowPadding = new Padding(1, 2, 1, 2);
       private static readonly int MaxRowsToShowInListBox = 5;
    }

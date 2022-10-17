@@ -8,13 +8,13 @@ namespace mrHelper.GitLabClient.Operators
    {
       public void Dispose()
       {
-         foreach (var cts in _avatarCancellationToken)
+         foreach (System.Threading.CancellationTokenSource cts in _avatarCancellationToken)
          {
             cts.Cancel();
             cts.Dispose();
          }
 
-         foreach (var cl in _avatarClient)
+         foreach (GitLabSharp.HttpClient cl in _avatarClient)
          {
             cl.Dispose();
          }
@@ -30,7 +30,7 @@ namespace mrHelper.GitLabClient.Operators
          System.Threading.CancellationTokenSource cancellationToken =
             new System.Threading.CancellationTokenSource();
          GitLabSharp.HttpClient httpClient =
-            new GitLabSharp.HttpClient(String.Empty, cancellationToken); // TODO !!
+            new GitLabSharp.HttpClient(String.Empty, cancellationToken);
 
          _avatarClient.Add(httpClient);
          _avatarCancellationToken.Add(cancellationToken);
