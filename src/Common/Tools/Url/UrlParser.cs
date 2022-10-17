@@ -13,7 +13,7 @@ namespace mrHelper.Common.Tools
          @"(http[s]?:\/\/)?([^:\/\s]+)\/(api\/v4\/projects\/)?([\.\w_-]+\/[\.\w_-]+)\/(?>-\/)?merge_requests\/(\d*)";
       private static readonly Regex mergeRequestUrlRegEx = new Regex(mergeRequestUrlRegExText, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-      private static readonly string noteUrlRegExText = mergeRequestUrlRegExText + @"#(?'note_id'\d*)";
+      private static readonly string noteUrlRegExText = mergeRequestUrlRegExText + @"#note_(?'note_id'\d*)";
       private static readonly Regex noteUrlRegEx = new Regex(noteUrlRegExText, RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
       static readonly int MaxUrlLength = 256;

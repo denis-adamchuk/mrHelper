@@ -106,7 +106,7 @@ namespace mrHelper.Common.Tools
 
       public static string GetNoteUrl(string mergeRequestWebUrl, int noteId)
       {
-         return String.Format("{0}#{1}", mergeRequestWebUrl, noteId);
+         return String.Format("{0}#note_{1}", mergeRequestWebUrl, noteId);
       }
 
       public static string AddAtSignToLetterSubstring(string word)
