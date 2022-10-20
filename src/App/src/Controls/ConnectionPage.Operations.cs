@@ -85,6 +85,18 @@ namespace mrHelper.App.Controls
             return;
          }
 
+         if (null == fullProjectList
+            .SingleOrDefault(project => project.Path_With_Namespace == fmk.Value.ProjectKey.ProjectName))
+         {
+            Trace.TraceWarning("[ConnectionPage] Project is not found in a full list");
+            string message = String.Format(
+               "You don't have a membership in {0} project. " +
+               "Please contact {1} administrator or SCM team and restart the application.",
+               fmk.Value.ProjectKey.ProjectName, fmk.Value.ProjectKey.HostName);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return;
+         }
+
          acceptMergeRequest(fmk.Value);
       }
 

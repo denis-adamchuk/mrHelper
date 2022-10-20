@@ -95,9 +95,15 @@ namespace mrHelper.App.Forms
          IEnumerable<Project> fullProjectList = projectCache.GetProjects();
          Project selectedProject = fullProjectList
             .SingleOrDefault(project => project.Path_With_Namespace == _mergeRequestKey.ProjectKey.ProjectName);
+         if (selectedProject == null)
+         {
+            Debug.Assert(false); // unexpected by application design
+            traceError("Cannot find project in full project list");
+            return false;
+         }
          if (selectedProject.Merge_Method != "ff")
          {
-            traceError(String.Format("Unsupported merge method {0} detected in project {1}",
+            traceWarning(String.Format("Unsupported merge method {0} detected in project {1}",
                selectedProject.Merge_Method, selectedProject.Path_With_Namespace));
             string message = "Current version supports projects with Fast Forward merge method only";
             disableProcessingTimer();
