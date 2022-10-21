@@ -83,6 +83,10 @@ namespace mrHelper.App.Controls
          }
          finally
          {
+            if (parsedUrl is UrlParser.ParsedNoteUrl noteUrl)
+            {
+               showDiscussionsForSelectedMergeRequest(noteUrl.NoteId);
+            }
          }
       }
 

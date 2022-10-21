@@ -13,19 +13,16 @@ namespace mrHelper.GitLabClient.Operators
             cts.Cancel();
             cts.Dispose();
          }
+         _avatarCancellationToken.Clear();
 
          foreach (GitLabSharp.HttpClient cl in _avatarClient)
          {
             cl.Dispose();
          }
+         _avatarClient.Clear();
       }
 
       async internal Task<byte[]> GetAvatarAsync(string avatarUrl)
-      {
-         return await getHttpClient().GetDataTaskAsync(avatarUrl);
-      }
-
-      private GitLabSharp.HttpClient getHttpClient()
       {
          System.Threading.CancellationTokenSource cancellationToken =
             new System.Threading.CancellationTokenSource();
@@ -35,7 +32,21 @@ namespace mrHelper.GitLabClient.Operators
          _avatarClient.Add(httpClient);
          _avatarCancellationToken.Add(cancellationToken);
 
-         return httpClient;
+         byte[] result = await httpClient.GetDataTaskAsync(avatarUrl);
+
+         if (_avatarCancellationToken.Contains(cancellationToken))
+         {
+            cancellationToken.Dispose();
+            _avatarCancellationToken.Remove(cancellationToken);
+         }
+
+         if (_avatarClient.Contains(httpClient))
+         {
+            httpClient.Dispose();
+            _avatarClient.Remove(httpClient);
+         }
+
+         return result;
       }
 
       private List<System.Threading.CancellationTokenSource> _avatarCancellationToken =

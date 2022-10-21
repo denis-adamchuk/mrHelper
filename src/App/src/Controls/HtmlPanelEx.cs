@@ -59,6 +59,7 @@ namespace mrHelper.App.Controls
          base.OnPaint(e);
          if (needShowBorder())
          {
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             drawBorders(this, e.Graphics);
          }
       }
@@ -149,8 +150,8 @@ namespace mrHelper.App.Controls
             Rectangle bounds = control.ClientRectangle;
             bounds.X += 1;
             bounds.Y += 1;
-            bounds.Width -= 2;
-            bounds.Height -= 2;
+            bounds.Width -= 3;
+            bounds.Height -= 3;
             bool isHorizontalScrollVisible = (control as ScrollableControl)?.HorizontalScroll.Visible ?? false;
             graphics.DrawPath(pen, _pathCache.GetPath(bounds, isHorizontalScrollVisible));
          }

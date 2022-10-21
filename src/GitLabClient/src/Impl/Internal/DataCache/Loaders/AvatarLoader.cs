@@ -62,6 +62,7 @@ namespace mrHelper.GitLabClient.Loaders
             .Select(group => group.First());
       }
 
+      // Remove users whose avatars are already cached at disk
       private IEnumerable<User> filterUsers(IEnumerable<User> users)
       {
          IEnumerable<User> cachedAtDisk = users.Where(user => hasAvatarAtDisk(user.Avatar_Url));
@@ -108,7 +109,7 @@ namespace mrHelper.GitLabClient.Loaders
          int userId = user.Id;
          string avatarUrl = user.Avatar_Url;
 
-         // even users returned by filterOutUser() might have been already cached by concurrent calls,
+         // even users returned by filterUsers() might have been already cached by concurrent calls,
          // so let's disk cache first
          byte[] avatar = readAvatarFromDisk(avatarUrl); 
          if (avatar == null)

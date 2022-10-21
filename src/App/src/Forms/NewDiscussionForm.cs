@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using System.Drawing;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using TheArtOfDev.HtmlRenderer.WinForms;
 using mrHelper.App.Controls;
 using mrHelper.App.Interprocess;
 using mrHelper.Core.Context;
@@ -15,9 +17,8 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.CommonNative;
 using mrHelper.CommonControls.Tools;
-using TheArtOfDev.HtmlRenderer.WinForms;
 using mrHelper.App.Helpers;
-using System.Drawing;
+using GitLabSharp.Entities;
 
 namespace mrHelper.App.Forms
 {
@@ -44,11 +45,12 @@ namespace mrHelper.App.Forms
          htmlPanelContext.MouseWheelEx += panelScroll_MouseWheel;
 
          applyFont(Program.Settings.MainWindowFontSizeName);
-         initSmartTextBox(fullUserList);
          _groupBoxRelatedThreadsDefaultHeight = groupBoxRelated.Height;
          _diffContextDefaultHeight = panelHtmlContextCanvas.Height;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
          _avatarImageCache = avatarImageCache;
+         _fullUserList = fullUserList;
+         initSmartTextBox();
 
          this.Text = Constants.StartNewThreadCaption;
          labelInvisibleCharactersHint.Text = Constants.WarningOnUnescapedMarkdown;
@@ -149,7 +151,7 @@ namespace mrHelper.App.Forms
 
       private void buttonInsertCode_Click(object sender, EventArgs e)
       {
-         DynamicHelpers.InsertCodePlaceholderIntoTextBox(textBoxDiscussionBody);
+         SmartTextBoxHelpers.InsertCodePlaceholderIntoTextBox(textBoxDiscussionBody);
          textBoxDiscussionBody.Focus();
       }
 
@@ -253,7 +255,8 @@ namespace mrHelper.App.Forms
 
       async private void buttonReply_Click(object sender, EventArgs e)
       {
-         using (ReplyOnRelatedNoteForm form = new ReplyOnRelatedNoteForm(_imagePath, null, _avatarImageCache))
+         using (ReplyOnRelatedNoteForm form = new ReplyOnRelatedNoteForm(
+            _imagePath, _fullUserList, _avatarImageCache))
          {
             form.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
             if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
@@ -711,15 +714,18 @@ namespace mrHelper.App.Forms
          return _modifiedNoteTexts.Any() || _deletedNotes.Any();
       }
 
-      private void initSmartTextBox(IEnumerable<GitLabSharp.Entities.User> fullUserList)
+      private void initSmartTextBox()
       {
          textBoxDiscussionBody.Init(false, String.Empty, true,
             !Program.Settings.DisableSpellChecker, Program.Settings.WPFSoftwareOnlyRenderMode);
 
-         textBoxDiscussionBody.SetAutoCompletionEntities(fullUserList
-            .Select(user => new CommonControls.Controls.SmartTextBox.AutoCompletionEntity(
-               user.Name, user.Username, CommonControls.Controls.SmartTextBox.AutoCompletionEntity.EntityType.User,
-               () => _avatarImageCache.GetAvatar(user, Color.White))));
+         if (_fullUserList != null && _avatarImageCache != null)
+         {
+            textBoxDiscussionBody.SetAutoCompletionEntities(_fullUserList
+               .Select(user => new CommonControls.Controls.SmartTextBox.AutoCompletionEntity(
+                  user.Name, user.Username, CommonControls.Controls.SmartTextBox.AutoCompletionEntity.EntityType.User,
+                  () => _avatarImageCache.GetAvatar(user, Color.White))));
+         }
 
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
          textBoxDiscussionBody.TextChanged += textBoxDiscussionBody_TextChanged;
@@ -984,6 +990,7 @@ namespace mrHelper.App.Forms
       private readonly int _diffContextDefaultHeight;
       private readonly string _imagePath;
       private readonly AvatarImageCache _avatarImageCache;
+      private readonly IEnumerable<User> _fullUserList;
    }
 }
 

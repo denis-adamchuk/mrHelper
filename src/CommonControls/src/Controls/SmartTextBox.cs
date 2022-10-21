@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using System.Windows.Input;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
 
@@ -34,13 +33,11 @@ namespace mrHelper.CommonControls.Controls
       {
          textBox = WPFHelpers.CreateWPFTextBox(textBoxHost, isReadOnly, text, multiline,
             isSpellCheckEnabled, softwareOnlyRenderMode);
-         textBox.TextChanged += TextBox_TextChanged;
-         textBox.LostFocus += TextBox_LostFocus;
-         textBox.KeyDown += TextBox_KeyDown;
-         textBox.PreviewKeyDown += TextBox_PreviewKeyDown;
+         textBox.TextChanged += textBox_TextChanged;
+         textBox.LostFocus += textBox_LostFocus;
+         textBox.KeyDown += textBox_KeyDown;
+         textBox.PreviewKeyDown += textBox_PreviewKeyDown;
       }
-
-      private static readonly char GitLabLabelPrefixChar = '@';
 
       public struct AutoCompletionEntity
       {
@@ -61,84 +58,6 @@ namespace mrHelper.CommonControls.Controls
          public string Name { get; }
          public EntityType Type { get; }
          public Func<Image> GetImage { get; }
-      }
-
-      // Compares names and hints so that it look like Gitlab Web UI auto-completion
-      private class EntityComparer : IComparer<AutoCompletionEntity>
-      {
-         public EntityComparer(string substr)
-         {
-            _substr = substr;
-         }
-
-         public int Compare(AutoCompletionEntity x, AutoCompletionEntity y)
-         {
-            bool xMatchesHint = StringUtils.ContainsNoCase(x.Hint, _substr);
-            bool xMatchesName = StringUtils.ContainsNoCase(x.Name, _substr);
-            bool yMatchesHint = StringUtils.ContainsNoCase(y.Hint, _substr);
-            bool yMatchesName = StringUtils.ContainsNoCase(y.Name, _substr);
-
-            // Not all cases are implemented
-            Debug.Assert(xMatchesHint || xMatchesName);
-            Debug.Assert(yMatchesHint || yMatchesName);
-
-            if (xMatchesHint && yMatchesHint)
-            {
-               if (xMatchesName)
-               {
-                  if (yMatchesName)
-                  {
-                     return String.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase);
-                  }
-                  else
-                  {
-                     return -1;
-                  }
-               }
-               else
-               {
-                  if (yMatchesName)
-                  {
-                     return 1;
-                  }
-                  else
-                  {
-                     return String.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase);
-                  }
-               }
-            }
-            else if (xMatchesHint && !yMatchesHint)
-            {
-               if (!xMatchesName && yMatchesName)
-               {
-                  return 1;
-               }
-               else if (xMatchesName && yMatchesName)
-               {
-                  return -1;
-               }
-            }
-            else if (!xMatchesHint && yMatchesHint)
-            {
-               if (xMatchesName && !yMatchesName)
-               {
-                  return -1;
-               }
-               else if (xMatchesName && yMatchesName)
-               {
-                  return 1;
-               }
-            }
-            else if (!xMatchesHint && !yMatchesHint)
-            {
-               return String.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase);
-            }
-
-            Debug.Assert(false);
-            return 0;
-         }
-
-         private readonly string _substr;
       }
 
       public enum HidingReason
@@ -162,6 +81,10 @@ namespace mrHelper.CommonControls.Controls
 
       public void SetAutoCompletionEntities(IEnumerable<AutoCompletionEntity> entities)
       {
+         if (entities == null)
+         {
+            throw new ArgumentException("Value cannot be null: entities");
+         }
          _autoCompletionEntities = entities;
       }
 
@@ -177,7 +100,22 @@ namespace mrHelper.CommonControls.Controls
          }
       }
 
-      private void TextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+      public int GetSelectionStart()
+      {
+         return textBox.SelectionStart;
+      }
+
+      public void SetSelectionStart(int start)
+      {
+         textBox.SelectionStart = start;
+      }
+
+      public int GetSelectionLength()
+      {
+         return textBox.SelectionLength;
+      }
+
+      private void textBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
       {
          if (_listBoxAutoComplete != null)
          {
@@ -190,7 +128,7 @@ namespace mrHelper.CommonControls.Controls
          OnTextChanged(e);
       }
 
-      private void TextBox_LostFocus(object sender, System.Windows.RoutedEventArgs e)
+      private void textBox_LostFocus(object sender, System.Windows.RoutedEventArgs e)
       {
          if (_listBoxAutoComplete != null && !_listBoxAutoComplete.Focused)
          {
@@ -198,12 +136,12 @@ namespace mrHelper.CommonControls.Controls
          }
       }
 
-      private void TextBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+      private void textBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
       {
          OnKeyDown(new System.Windows.Forms.KeyEventArgs(WPFHelpers.GetKeysOnWPFKeyDown(e.Key)));
       }
 
-      private void TextBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+      private void textBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
       {
          if (e.Key == System.Windows.Input.Key.Down)
          {
@@ -265,7 +203,248 @@ namespace mrHelper.CommonControls.Controls
          hideAutoCompleteList();
       }
 
-      private string format(AutoCompletionEntity entity)
+      private void listBox_MeasureItem(object sender, MeasureItemEventArgs e)
+      {
+         ListBox listBox = sender as ListBox;
+         e.ItemHeight = AutoCompletionItemHeight;
+         e.ItemWidth = listBox.Width; // see resizeListBox()
+      }
+
+      private void listBox_DrawItem(object sender, DrawItemEventArgs e)
+      {
+         int imageHeight = AutoCompletionImageHeight;
+         int imageWidth = AutoCompletionImageWidth;
+         int imagePaddingRight = AutoCompletionImageRightPadding;
+         int x = e.Bounds.X + ListBoxPaddingLeft;
+
+         e.DrawBackground();
+
+         ListBox listBox = sender as ListBox;
+         AutoCompletionEntity item = (AutoCompletionEntity)listBox.Items[e.Index];
+         Image image = item.GetImage();
+
+         Rectangle imageRect = new Rectangle(
+            x,
+            e.Bounds.Y + (e.Bounds.Height - imageHeight) / 2,
+            imageWidth,
+            imageHeight);
+
+         if (image != null)
+         {
+            e.Graphics.DrawImage(image, imageRect);
+         }
+         else
+         {
+            using (Brush grayBrush = new SolidBrush(Color.Gray))
+            {
+               e.Graphics.FillEllipse(grayBrush, imageRect);
+            }
+         }
+
+         Rectangle textRect = new Rectangle(
+            x + imageWidth + imagePaddingRight,
+            e.Bounds.Y + (e.Bounds.Height - e.Font.Height) / 2,
+            e.Bounds.Width - imageWidth - imagePaddingRight,
+            e.Bounds.Height);
+
+         using (Brush textBrush = new SolidBrush(e.ForeColor))
+         {
+            string itemText = format(item);
+            e.Graphics.DrawString(itemText, e.Font, textBrush, textRect);
+         }
+
+         e.DrawFocusRectangle();
+      }
+
+      private void listBox_NCMouseButtonDown(object sender, EventArgs e)
+      {
+         cancelDelayedHiding();
+      }
+
+      private IEnumerable<AutoCompletionEntity> getMatchingEntities()
+      {
+         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBox);
+         if (!currentWordInfo.IsValid || currentWordInfo.Word.Length < 2)
+         {
+            return Array.Empty<AutoCompletionEntity>();
+         }
+
+         EntityComparer comparer = new EntityComparer(currentWordInfo.Word);
+         return _autoCompletionEntities
+            .Where(entity => StringUtils.ContainsNoCase(entity.Hint, currentWordInfo.Word)
+                          || StringUtils.ContainsNoCase(entity.Name, currentWordInfo.Word))
+            .OrderBy(entity => entity, comparer);
+      }
+
+      private class ListBoxEx : ListBox
+      {
+         const int WM_NCLBUTTONDOWN = 0x00A1;
+         const int WM_NCRBUTTONDOWN = 0x00A4;
+
+         public ListBoxEx()
+         {
+            DoubleBuffered = true;
+         }
+
+         protected override void WndProc(ref Message m)
+         {
+            if (m.Msg == WM_NCLBUTTONDOWN || m.Msg == WM_NCRBUTTONDOWN)
+            {
+               NCMouseButtonDown?.Invoke(this, null);
+            }
+            base.WndProc(ref m);
+         }
+
+         internal event EventHandler NCMouseButtonDown;
+      }
+
+      private ListBox createListBox()
+      {
+         ListBoxEx listBox = new ListBoxEx
+         {
+            BorderStyle = BorderStyle.None,
+            DrawMode = DrawMode.OwnerDrawVariable,
+            Font = this.Font
+         };
+         listBox.Click += listBox_Click;
+         listBox.KeyDown += listBox_KeyDown;
+         listBox.PreviewKeyDown += listBox_PreviewKeyDown;
+         listBox.LostFocus += listBox_LostFocus;
+         listBox.NCMouseButtonDown += listBox_NCMouseButtonDown;
+         listBox.DrawItem += listBox_DrawItem;
+         listBox.MeasureItem += listBox_MeasureItem;
+
+         // If we don't create control manually here, it is created on
+         // showPopupWindow() call and resets size to a default one.
+         listBox.CreateControl();
+         return listBox;
+      }
+
+      private void fillListBox(ListBox listBox, AutoCompletionEntity[] objects)
+      {
+         listBox.Items.AddRange(objects.Cast<object>().ToArray());
+      }
+
+      private void resizeListBox(ListBox listBox, AutoCompletionEntity[] objects)
+      {
+         AutoCompletionEntity longestObject = objects
+            .OrderByDescending(e => format(e).Length).First();
+         int preferredWidth = TextRenderer.MeasureText(format(longestObject), listBox.Font).Width;
+         if (objects.Length > MaxRowsToShowInListBox)
+         {
+            preferredWidth += SystemInformation.VerticalScrollBarWidth;
+         }
+         preferredWidth += AutoCompletionImageRightPadding + AutoCompletionImageWidth;
+         preferredWidth += ListBoxPaddingLeft + ListBoxPaddingRight;
+
+         // Cannot use listBox.ItemHeight because it does not change on high DPI
+         int singleLineWithoutBorderHeight = AutoCompletionItemHeight;
+         int calcPreferredHeight(int rows) => rows * singleLineWithoutBorderHeight;
+         listBox.MaximumSize = new Size(preferredWidth, calcPreferredHeight(MaxRowsToShowInListBox));
+         listBox.Size = new Size(preferredWidth, calcPreferredHeight(objects.Length));
+      }
+
+      private void bindPopupWindowToListBox(ListBox listBox)
+      {
+         _popupWindow.SetContent(listBox, PopupWindowPadding);
+      }
+
+      private void showPopupWindow()
+      {
+         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBox);
+         Debug.Assert(currentWordInfo.IsValid);
+
+         System.Windows.Point position = textBox.GetRectFromCharacterIndex(currentWordInfo.Start).BottomLeft;
+         Point pt = PointToScreen(new Point((int)position.X, (int)(position.Y)));
+         _popupWindow.Show(pt);
+      }
+
+      private void refreshAutoCompleteList()
+      {
+         Debug.Assert(_listBoxAutoComplete != null);
+         _listBoxAutoComplete.Items.Clear();
+
+         AutoCompletionEntity[] entities = getMatchingEntities().ToArray();
+         if (!entities.Any())
+         {
+            hideAutoCompleteList();
+            return;
+         }
+
+         fillListBox(_listBoxAutoComplete, entities);
+         resizeListBox(_listBoxAutoComplete, entities);
+      }
+
+      private void showAutoCompleteList()
+      {
+         Debug.Assert(_listBoxAutoComplete == null);
+
+         AutoCompletionEntity[] entities = getMatchingEntities().ToArray();
+         if (!entities.Any())
+         {
+            return;
+         }
+
+         ListBox listBox = createListBox();
+         fillListBox(listBox, entities);
+         resizeListBox(listBox, entities);
+         bindPopupWindowToListBox(listBox);
+         showPopupWindow();
+         _listBoxAutoComplete = listBox;
+      }
+
+      private bool activateAutoCompleteList()
+      {
+         if (_listBoxAutoComplete != null)
+         {
+            _listBoxAutoComplete.SelectedIndex = 0;
+            _listBoxAutoComplete.Focus();
+            cancelDelayedHiding(); // Focus() caused Form Deactivation and scheduled list box hiding, stop it
+            return true;
+         }
+         return false;
+      }
+
+      private bool hideAutoCompleteList()
+      {
+         if (_listBoxAutoComplete != null)
+         {
+            _popupWindow.Close();
+            _listBoxAutoComplete = null;
+
+            Focus();
+            return true;
+         }
+         return false;
+      }
+
+      private void applyAutoCompleteListSelection()
+      {
+         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBox);
+         if (_listBoxAutoComplete.SelectedItem == null || !currentWordInfo.IsValid)
+         {
+            return;
+         }
+
+         string substitutionWord = ((AutoCompletionEntity)(_listBoxAutoComplete.SelectedItem)).Name;
+
+         hideAutoCompleteList(); // Hide before Text change to avoid TextChange event handling
+
+         textBox.Text = TextUtils.ReplaceWord(textBox.Text, currentWordInfo, substitutionWord);
+         textBox.SelectionStart = currentWordInfo.Start + substitutionWord.Length;
+      }
+
+      private void cancelDelayedHiding()
+      {
+         _delayedHidingTimer.Stop();
+      }
+
+      private void scheduleDelayedHiding()
+      {
+         _delayedHidingTimer.Start();
+      }
+
+      private static string format(AutoCompletionEntity entity)
       {
          switch (entity.Type)
          {
@@ -350,245 +529,82 @@ namespace mrHelper.CommonControls.Controls
          return new TextUtils.WordInfo(startPosition, trimmedWord);
       }
 
-      private IEnumerable<AutoCompletionEntity> getMatchingEntities()
+      // Compares names and hints so that it look like Gitlab Web UI auto-completion
+      private class EntityComparer : IComparer<AutoCompletionEntity>
       {
-         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBox);
-         if (!currentWordInfo.IsValid || currentWordInfo.Word.Length < 2)
+         public EntityComparer(string substr)
          {
-            return Array.Empty<AutoCompletionEntity>();
+            _substr = substr;
          }
 
-         EntityComparer comparer = new EntityComparer(currentWordInfo.Word);
-         return _autoCompletionEntities?
-            .Where(entity => StringUtils.ContainsNoCase(entity.Hint, currentWordInfo.Word)
-                          || StringUtils.ContainsNoCase(entity.Name, currentWordInfo.Word))
-            .OrderBy(entity => entity, comparer);
-      }
-
-      private void refreshAutoCompleteList()
-      {
-         Debug.Assert(_listBoxAutoComplete != null);
-         _listBoxAutoComplete.Items.Clear();
-
-         AutoCompletionEntity[] entities = getMatchingEntities().ToArray();
-         if (!entities.Any())
+         public int Compare(AutoCompletionEntity x, AutoCompletionEntity y)
          {
-            hideAutoCompleteList();
-            return;
-         }
+            bool xMatchesHint = StringUtils.ContainsNoCase(x.Hint, _substr);
+            bool xMatchesName = StringUtils.ContainsNoCase(x.Name, _substr);
+            bool yMatchesHint = StringUtils.ContainsNoCase(y.Hint, _substr);
+            bool yMatchesName = StringUtils.ContainsNoCase(y.Name, _substr);
 
-         fillListBox(_listBoxAutoComplete, entities);
-         resizeListBox(_listBoxAutoComplete, entities);
-      }
+            // Not all cases are implemented
+            Debug.Assert(xMatchesHint || xMatchesName);
+            Debug.Assert(yMatchesHint || yMatchesName);
 
-      private void showAutoCompleteList()
-      {
-         Debug.Assert(_listBoxAutoComplete == null);
-
-         AutoCompletionEntity[] entities = getMatchingEntities().ToArray();
-         if (!entities.Any())
-         {
-            return;
-         }
-
-         ListBox listBox = createListBox();
-         fillListBox(listBox, entities);
-         resizeListBox(listBox, entities);
-         bindPopupWindowToListBox(listBox);
-         showPopupWindow();
-         _listBoxAutoComplete = listBox;
-      }
-
-      private void bindPopupWindowToListBox(ListBox listBox)
-      {
-         _popupWindow.SetContent(listBox, PopupWindowPadding);
-      }
-
-      private void showPopupWindow()
-      {
-         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBox);
-         Debug.Assert(currentWordInfo.IsValid);
-
-         System.Windows.Point position = textBox.GetRectFromCharacterIndex(currentWordInfo.Start).BottomLeft;
-         Point pt = PointToScreen(new Point((int)position.X, (int)(position.Y)));
-         _popupWindow.Show(pt);
-      }
-
-      private class ListBoxEx : ListBox
-      {
-         const int WM_NCLBUTTONDOWN = 0x00A1;
-         const int WM_NCRBUTTONDOWN = 0x00A4;
-
-         public ListBoxEx()
-         {
-            DoubleBuffered = true;
-         }
-
-         protected override void WndProc(ref Message m)
-         {
-            if (m.Msg == WM_NCLBUTTONDOWN || m.Msg == WM_NCRBUTTONDOWN)
+            if (xMatchesHint && yMatchesHint)
             {
-               NCMouseButtonDown?.Invoke(this, null);
+               if (xMatchesName)
+               {
+                  if (yMatchesName)
+                  {
+                     return String.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase);
+                  }
+                  else
+                  {
+                     return -1;
+                  }
+               }
+               else
+               {
+                  if (yMatchesName)
+                  {
+                     return 1;
+                  }
+                  else
+                  {
+                     return String.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase);
+                  }
+               }
             }
-            base.WndProc(ref m);
-         }
-
-         internal event EventHandler NCMouseButtonDown;
-      }
-
-      private ListBox createListBox()
-      {
-         ListBoxEx listBox = new ListBoxEx
-         {
-            BorderStyle = BorderStyle.None,
-            DrawMode = DrawMode.OwnerDrawVariable,
-            Font = this.Font
-         };
-         listBox.Click += listBox_Click;
-         listBox.KeyDown += listBox_KeyDown;
-         listBox.PreviewKeyDown += listBox_PreviewKeyDown;
-         listBox.LostFocus += listBox_LostFocus;
-         listBox.NCMouseButtonDown += listBox_NCMouseButtonDown;
-         listBox.DrawItem += ListBox_DrawItem;
-         listBox.MeasureItem += ListBox_MeasureItem;
-
-         // If we don't create control manually here, it is created on
-         // showPopupWindow() call and resets size to a default one.
-         listBox.CreateControl();
-         return listBox;
-      }
-
-      private void ListBox_MeasureItem(object sender, MeasureItemEventArgs e)
-      {
-         ListBox listBox = sender as ListBox;
-         e.ItemHeight = AutoCompletionItemHeight;
-         e.ItemWidth = listBox.Width; // see resizeListBox()
-      }
-
-      private void ListBox_DrawItem(object sender, DrawItemEventArgs e)
-      {
-         int imageHeight = AutoCompletionImageHeight;
-         int imageWidth = AutoCompletionImageWidth;
-         int imagePaddingRight = AutoCompletionImageRightPadding;
-         int x = e.Bounds.X + ListBoxPaddingLeft;
-
-         e.DrawBackground();
-
-         ListBox listBox = sender as ListBox;
-         AutoCompletionEntity item = (AutoCompletionEntity)listBox.Items[e.Index];
-         Image image = item.GetImage();
-
-         Rectangle imageRect = new Rectangle(
-            x,
-            e.Bounds.Y + (e.Bounds.Height - imageHeight) / 2,
-            imageWidth,
-            imageHeight);
-
-         if (image != null)
-         {
-            e.Graphics.DrawImage(image, imageRect);
-         }
-         else
-         {
-            using (Brush grayBrush = new SolidBrush(Color.Gray))
+            else if (xMatchesHint && !yMatchesHint)
             {
-               e.Graphics.FillEllipse(grayBrush, imageRect);
+               if (!xMatchesName && yMatchesName)
+               {
+                  return 1;
+               }
+               else if (xMatchesName && yMatchesName)
+               {
+                  return -1;
+               }
             }
+            else if (!xMatchesHint && yMatchesHint)
+            {
+               if (xMatchesName && !yMatchesName)
+               {
+                  return -1;
+               }
+               else if (xMatchesName && yMatchesName)
+               {
+                  return 1;
+               }
+            }
+            else if (!xMatchesHint && !yMatchesHint)
+            {
+               return String.Compare(x.Name, y.Name, StringComparison.CurrentCultureIgnoreCase);
+            }
+
+            Debug.Assert(false);
+            return 0;
          }
 
-         Rectangle textRect = new Rectangle(
-            x + imageWidth + imagePaddingRight,
-            e.Bounds.Y + (e.Bounds.Height - e.Font.Height) / 2,
-            e.Bounds.Width - imageWidth - imagePaddingRight,
-            e.Bounds.Height);
-
-         using (Brush textBrush = new SolidBrush(e.ForeColor))
-         {
-            string itemText = format(item);
-            e.Graphics.DrawString(itemText, e.Font, textBrush, textRect);
-         }
-
-         e.DrawFocusRectangle();
-      }
-
-      private void listBox_NCMouseButtonDown(object sender, EventArgs e)
-      {
-         cancelDelayedHiding();
-      }
-
-      private void fillListBox(ListBox listBox, AutoCompletionEntity[] objects)
-      {
-         listBox.Items.AddRange(objects.Cast<object>().ToArray());
-      }
-
-      private void resizeListBox(ListBox listBox, AutoCompletionEntity[] objects)
-      {
-         AutoCompletionEntity longestObject = objects
-            .OrderByDescending(e => format(e).Length).First();
-         int preferredWidth = TextRenderer.MeasureText(format(longestObject), listBox.Font).Width;
-         if (objects.Length > MaxRowsToShowInListBox)
-         {
-            preferredWidth += SystemInformation.VerticalScrollBarWidth;
-         }
-         preferredWidth += AutoCompletionImageRightPadding + AutoCompletionImageWidth;
-         preferredWidth += ListBoxPaddingLeft + ListBoxPaddingRight;
-
-         // Cannot use listBox.ItemHeight because it does not change on high DPI
-         int singleLineWithoutBorderHeight = AutoCompletionItemHeight;
-         int calcPreferredHeight(int rows) => rows * singleLineWithoutBorderHeight;
-         listBox.MaximumSize = new Size(preferredWidth, calcPreferredHeight(MaxRowsToShowInListBox));
-         listBox.Size = new Size(preferredWidth, calcPreferredHeight(objects.Length));
-      }
-
-      private bool activateAutoCompleteList()
-      {
-         if (_listBoxAutoComplete != null)
-         {
-            _listBoxAutoComplete.SelectedIndex = 0;
-            _listBoxAutoComplete.Focus();
-            cancelDelayedHiding(); // Focus() caused Form Deactivation and scheduled list box hiding, stop it
-            return true;
-         }
-         return false;
-      }
-
-      private bool hideAutoCompleteList()
-      {
-         if (_listBoxAutoComplete != null)
-         {
-            _popupWindow.Close();
-            _listBoxAutoComplete = null;
-
-            Focus();
-            return true;
-         }
-         return false;
-      }
-
-      private void applyAutoCompleteListSelection()
-      {
-         TextUtils.WordInfo currentWordInfo = getCurrentWord(textBox);
-         if (_listBoxAutoComplete.SelectedItem == null || !currentWordInfo.IsValid)
-         {
-            return;
-         }
-
-         string substitutionWord = ((AutoCompletionEntity)(_listBoxAutoComplete.SelectedItem)).Name;
-
-         hideAutoCompleteList(); // Hide before Text change to avoid TextChange event handling
-
-         textBox.Text = TextUtils.ReplaceWord(textBox.Text, currentWordInfo, substitutionWord);
-         textBox.SelectionStart = currentWordInfo.Start + substitutionWord.Length;
-      }
-
-      private void cancelDelayedHiding()
-      {
-         _delayedHidingTimer.Stop();
-      }
-
-      private void scheduleDelayedHiding()
-      {
-         _delayedHidingTimer.Start();
+         private readonly string _substr;
       }
 
       private readonly System.Windows.Forms.Timer _delayedHidingTimer = new System.Windows.Forms.Timer
@@ -599,8 +615,9 @@ namespace mrHelper.CommonControls.Controls
       private ListBox _listBoxAutoComplete;
       private PopupWindow _popupWindow =
          new PopupWindow(autoClose: false, borderRadius: null);
-      private IEnumerable<AutoCompletionEntity> _autoCompletionEntities;
+      private IEnumerable<AutoCompletionEntity> _autoCompletionEntities = new AutoCompletionEntity[] { };
 
+      private static readonly char GitLabLabelPrefixChar = '@';
       private static readonly int AutoCompletionItemHeight = 42;
       private static readonly int AutoCompletionImageWidth = 40;
       private static readonly int AutoCompletionImageHeight = AutoCompletionImageWidth;

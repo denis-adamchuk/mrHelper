@@ -1432,7 +1432,7 @@ namespace mrHelper.App.Controls
             bool needShrinkNote = noteContainer != noteContainers.First();
             int noteWidthDelta = needShrinkNote ? getNoteRepliesPadding(width) : 0;
 
-            int noteAvatarHeight = noteContainer.NoteInfo.Height * 2;
+            int noteAvatarHeight = (int)(noteContainer.NoteInfo.Height * 2.2);
             int noteAvatarWidth = noteAvatarHeight;
             noteContainer.NoteAvatar.Size = new Size(noteAvatarWidth, noteAvatarHeight);
 

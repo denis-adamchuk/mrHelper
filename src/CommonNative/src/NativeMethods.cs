@@ -284,26 +284,12 @@ namespace mrHelper.CommonNative
       public static uint MA_NOACTIVATE       = 4;
       public static uint MA_NOACTIVATEANDEAT = 4;
 
-      [DllImport("gdi32.dll")]
-      public static extern IntPtr CreateRoundRectRgn(
-         int nLeftRect, int nTopRect, int nRightRect, int nBottomRect, int nWidthEllipse, int nHeightEllipse);
-
       internal static ushort HIWORD(IntPtr dwValue)
       {
          return (ushort)((((long)dwValue) >> 0x10) & 0xffff);
       }
 
-      internal static ushort HIWORD(uint dwValue)
-      {
-         return (ushort)(dwValue >> 0x10);
-      }
-
       public static int GET_WHEEL_DELTA_WPARAM(IntPtr wParam)
-      {
-         return (short)HIWORD(wParam);
-      }
-
-      public static int GET_WHEEL_DELTA_WPARAM(uint wParam)
       {
          return (short)HIWORD(wParam);
       }

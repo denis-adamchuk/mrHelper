@@ -80,7 +80,7 @@
     <Compile Include="src\Controls\ToolStripEx.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="src\Tools\DynamicHelpers.cs" />
+    <Compile Include="src\Tools\SmartTextBoxHelpers.cs" />
     <Compile Include="src\Tools\RadioButtonGroup.cs" />
     <Compile Include="src\Tools\RoundedPathCache.cs" />
     <Compile Include="src\Tools\StringUtils.cs" />

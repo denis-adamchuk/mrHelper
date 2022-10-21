@@ -13,17 +13,12 @@ namespace mrHelper.GitLabClient.Operators
    /// <summary>
    /// Implements DataCache-related interaction with GitLab
    /// </summary>
-   internal class DataCacheOperator : BaseOperator, IDisposable
+   internal class DataCacheOperator : BaseOperator
    {
       internal DataCacheOperator(string host, IHostProperties settings,
          INetworkOperationStatusListener networkOperationStatusListener)
          : base(host, settings, networkOperationStatusListener)
       {
-      }
-
-      public new void Dispose()
-      {
-         base.Dispose();
       }
 
       internal Task<IEnumerable<MergeRequest>> SearchMergeRequestsAsync(SearchQuery searchQuery)

@@ -747,7 +747,6 @@ namespace mrHelper.App.Controls
             if (isPinned(fmk))
             {
                drawImageForIId(e.Graphics, bounds, e.Item.ListView.Font, Properties.Resources.pin_transparent_alpha);
-
             }
          }
          else if (isClickable)
@@ -868,6 +867,8 @@ namespace mrHelper.App.Controls
       private void drawEllipseForIId(Graphics g, Rectangle bounds, Color fillColor,
          Font font, Color? penColor)
       {
+         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
          SizeF textSize = g.MeasureString("A", font, bounds.Width);
          float ellipseWidth = (float)(textSize.Height - 0.09 * textSize.Height); // 9% less
          float ellipseHeight = ellipseWidth;
@@ -890,11 +891,14 @@ namespace mrHelper.App.Controls
                }
             }
          }
+
+         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
       }
 
       private void drawImageForIId(Graphics g, Rectangle bounds, Font font, Image image)
       {
          Debug.Assert(image != null);
+         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
          SizeF textSize = g.MeasureString("A", font, bounds.Width);
          float imageWidth = (float)(textSize.Height - 0.35 * textSize.Height); // 35% less
@@ -907,14 +911,20 @@ namespace mrHelper.App.Controls
                bounds.X + imageX, bounds.Y + imageY, imageWidth, imageHeight);
             g.DrawImage(image, imageRect);
          }
+
+         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
       }
 
       private void drawAvatar(Graphics g, Rectangle bounds, Image avatar)
       {
+         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
          Rectangle avatarRect = getAvatarRectangle();
          Rectangle imageRect = new Rectangle(
             bounds.X + avatarRect.X, bounds.Y + avatarRect.Y, avatarRect.Width, avatarRect.Height);
          g.DrawImage(avatar, imageRect);
+
+         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
       }
 
       private Rectangle getAvatarRectangle()

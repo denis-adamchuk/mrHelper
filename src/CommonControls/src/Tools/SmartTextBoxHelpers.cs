@@ -1,13 +1,14 @@
 ﻿using System;
+using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.CommonControls.Tools
 {
-   public static class DynamicHelpers
+   public static class SmartTextBoxHelpers
    {
-      public static void InsertCodePlaceholderIntoTextBox(dynamic textBox)
+      public static void InsertCodePlaceholderIntoTextBox(SmartTextBox textBox)
       {
-         int selectionStartIndex = textBox.SelectionStart;
-         int selectionLength = textBox.SelectionLength;
+         int selectionStartIndex = textBox.GetSelectionStart();
+         int selectionLength = textBox.GetSelectionLength();
          int selectionEndIndex = selectionStartIndex + selectionLength - 1; // less than start index if nothing selected
 
          string text = textBox.Text;
@@ -23,7 +24,7 @@ namespace mrHelper.CommonControls.Tools
          textBox.Text = textBox.Text.Insert(beforeCursorTextPos, beforeCursorText);
          textBox.Text = textBox.Text.Insert(afterCursorTextPos, afterCursorText);
 
-         textBox.SelectionStart = beforeCursorTextPos + beforeCursorText.Length;
+         textBox.SetSelectionStart(beforeCursorTextPos + beforeCursorText.Length);
       }
    }
 }

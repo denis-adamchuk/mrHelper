@@ -32,7 +32,6 @@ namespace mrHelper.App.Forms
          _currentUser = currentUser;
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
          _isAllowedToChangeSource = isAllowedToChangeSource;
-         _fullUserList = users;
          _avatarImageCache = avatarImageCache;
 
          string css = String.Format("{0}", mrHelper.App.Properties.Resources.Common_CSS);
@@ -46,16 +45,16 @@ namespace mrHelper.App.Forms
          textBoxSpecialNote.Init(false, String.Empty, false, false, true);
          if (users == null || !users.Any())
          {
+            _fullUserList = new User[] { };
+
             // This may happen when new MR creation is requested by URL and mrHelper is not launched.
             // In this case User Cache is still not filled. Let's load project users.
             comboBoxProject.SelectedIndexChanged += new System.EventHandler(loadProjectUsersForAutoCompletion);
          }
          else
          {
-            textBoxSpecialNote.SetAutoCompletionEntities(users
-               .Select(user => new SmartTextBox.AutoCompletionEntity(
-                  user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User,
-                  () => _avatarImageCache.GetAvatar(user, System.Drawing.Color.White))));
+            _fullUserList = users;
+            setAutocompletionEntities();
          }
       }
 
@@ -79,12 +78,20 @@ namespace mrHelper.App.Forms
          BeginInvoke(new Action(async () =>
          {
             string projectName = getProjectName();
-            IEnumerable<User> users = await _projectAccessor.GetSingleProjectAccessor(projectName).GetUsersAsync();
-            textBoxSpecialNote.SetAutoCompletionEntities(users
+            _fullUserList = await _projectAccessor.GetSingleProjectAccessor(projectName).GetUsersAsync();
+            setAutocompletionEntities();
+         }));
+      }
+
+      private void setAutocompletionEntities()
+      {
+         if (_fullUserList != null && _avatarImageCache != null)
+         {
+            textBoxSpecialNote.SetAutoCompletionEntities(_fullUserList
                .Select(user => new SmartTextBox.AutoCompletionEntity(
                   user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User,
                   () => _avatarImageCache.GetAvatar(user, System.Drawing.Color.White))));
-         }));
+         }
       }
 
       internal string ProjectName => getProjectName();
@@ -114,7 +121,7 @@ namespace mrHelper.App.Forms
       {
          string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
          string formCaption = "Edit Merge Request title";
-         using (TextEditBaseForm editTitleForm = new SimpleTextEditForm(formCaption, title, false, String.Empty, null, null)) // TODO br_avatar Test @
+         using (TextEditBaseForm editTitleForm = new SimpleTextEditForm(formCaption, title, false, String.Empty, null, null))
          {
             if (WinFormsHelpers.ShowDialogOnControl(editTitleForm, this) == DialogResult.OK)
             {
@@ -127,7 +134,7 @@ namespace mrHelper.App.Forms
       {
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
-         string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName())); // TODO br_avatar Test launched from GE and not
+         string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName()));
          using (TextEditBaseForm editDescriptionForm = new SimpleTextEditForm(
             formCaption, description, true, uploadsPrefix, _fullUserList, _avatarImageCache))
          {
@@ -439,7 +446,7 @@ namespace mrHelper.App.Forms
 
       private readonly MarkdownPipeline _mdPipeline;
       private readonly bool _isAllowedToChangeSource;
-      private readonly IEnumerable<User> _fullUserList;
+      private IEnumerable<User> _fullUserList;
       private readonly AvatarImageCache _avatarImageCache;
       private string _title;
       private string _description;

@@ -110,16 +110,6 @@ namespace mrHelper.App.Helpers
             hashCode = hashCode * -1521134295 + _backgroundColor.GetHashCode();
             return hashCode;
          }
-
-         public static bool operator ==(Key left, Key right)
-         {
-            return left.Equals(right);
-         }
-
-         public static bool operator !=(Key left, Key right)
-         {
-            return !(left == right);
-         }
       }
       private readonly Dictionary<Key, Image> _cached = new Dictionary<Key, Image>();
    }

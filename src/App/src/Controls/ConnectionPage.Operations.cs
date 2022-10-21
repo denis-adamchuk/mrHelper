@@ -155,6 +155,15 @@ namespace mrHelper.App.Controls
          openAuthorProfile(getMergeRequest(null));
       }
 
+      private void openAuthorProfile(MergeRequest mergeRequest)
+      {
+         if (mergeRequest == null)
+         {
+            return;
+         }
+         UrlHelper.OpenBrowser(mergeRequest.Author.Web_Url);
+      }
+
       private void toggleSelectedMergeRequestPinState()
       {
          EDataCacheType type = getCurrentTabDataCacheType();
@@ -177,15 +186,6 @@ namespace mrHelper.App.Controls
          {
             pin(mrk);
          }
-      }
-
-      private void openAuthorProfile(MergeRequest mergeRequest)
-      {
-         if (mergeRequest == null)
-         {
-            return;
-         }
-         UrlHelper.OpenBrowser(mergeRequest.Author.Web_Url);
       }
 
       private void toggleMergeRequestExclusion(EDataCacheType type, MergeRequest mergeRequest)

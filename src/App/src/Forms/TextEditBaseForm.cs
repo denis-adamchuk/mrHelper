@@ -82,10 +82,13 @@ namespace mrHelper.App.Forms
          textBox.Init(!editable, initialText, multiline,
             !Program.Settings.DisableSpellChecker, Program.Settings.WPFSoftwareOnlyRenderMode);
 
-         textBox.SetAutoCompletionEntities(fullUserList
-            .Select(user => new SmartTextBox.AutoCompletionEntity(
-               user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User,
-               () => _avatarImageCache.GetAvatar(user, System.Drawing.Color.White))));
+         if (fullUserList != null && _avatarImageCache != null)
+         {
+            textBox.SetAutoCompletionEntities(fullUserList
+               .Select(user => new SmartTextBox.AutoCompletionEntity(
+                  user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User,
+                  () => _avatarImageCache.GetAvatar(user, System.Drawing.Color.White))));
+         }
 
          textBox.KeyDown += textBox_KeyDown;
          textBox.TextChanged += textBox_TextChanged;
@@ -117,7 +120,7 @@ namespace mrHelper.App.Forms
       {
          if (textBox != null)
          {
-            DynamicHelpers.InsertCodePlaceholderIntoTextBox(textBox);
+            SmartTextBoxHelpers.InsertCodePlaceholderIntoTextBox(textBox);
             textBox.Focus();
          }
       }

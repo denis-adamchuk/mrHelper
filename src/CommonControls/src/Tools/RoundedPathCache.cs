@@ -24,8 +24,7 @@ namespace mrHelper.CommonControls.Tools
          }
          else
          {
-            pathToUse = CommonControls.Tools.WinFormsHelpers.GetRoundedPath(
-               bounds, _radius, isHorizontalScrollVisible);
+            pathToUse = WinFormsHelpers.GetRoundedPath(bounds, _radius, isHorizontalScrollVisible);
             cache[bounds] = pathToUse;
          }
          return pathToUse;
@@ -37,6 +36,8 @@ namespace mrHelper.CommonControls.Tools
             .Select(kv => kv.Value)
             .ToList()
             .ForEach(p => p.Dispose());
+         _pathWithoutScrollBarCache.Clear();
+         _pathWithoutScrollBarCache.Clear();
       }
 
       private readonly int _radius;

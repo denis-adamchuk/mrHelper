@@ -119,7 +119,7 @@ namespace mrHelper.App.Controls
          string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey);
          StringBuilder builder = new StringBuilder();
          builder.Append("<b>Notes from author</b><br>");
-         builder.Append("<table class=\"no-border no-bg\"><tbody>");
+         builder.Append("<table class=\"no-border no-bg\" style=\"width: 100%;\"><tbody>");
          foreach (Discussion discussion in discussions)
          {
             DiscussionNote note = discussion.Notes.First();

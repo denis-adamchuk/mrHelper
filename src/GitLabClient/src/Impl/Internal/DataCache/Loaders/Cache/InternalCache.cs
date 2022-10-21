@@ -7,7 +7,7 @@ using Version = GitLabSharp.Entities.Version;
 
 namespace mrHelper.GitLabClient.Loaders.Cache
 {
-   internal class InternalCache : IInternalCache, IDisposable
+   internal class InternalCache : IInternalCache
    {
       internal InternalCache()
       {
@@ -54,11 +54,6 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       public IInternalCache Clone()
       {
          return new InternalCache(this);
-      }
-
-      public void Dispose()
-      {
-
       }
 
       /// <summary>

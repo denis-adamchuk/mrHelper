@@ -1,7 +1,4 @@
-﻿using Microsoft.Win32;
-using Microsoft.WindowsAPICodePack.Taskbar;
-using mrHelper.CommonNative;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -9,6 +6,9 @@ using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Taskbar;
+using mrHelper.CommonNative;
 
 namespace mrHelper.CommonControls.Tools
 {
@@ -415,15 +415,6 @@ namespace mrHelper.CommonControls.Tools
          return bitmap;
       }
 
-      public static Image ImageFromByteArray(byte[] bytes)
-      {
-         using (MemoryStream ms = new MemoryStream(bytes))
-         {
-            Image returnImage = Image.FromStream(ms);
-            return returnImage;
-         }
-      }
-
       // inspired by https://stackoverflow.com/a/47205281
       public static Image ClipRectToCircle(Image srcImage, Color backGround)
       {
@@ -439,20 +430,22 @@ namespace mrHelper.CommonControls.Tools
                g.FillRectangle(brush, 0, 0, dstImage.Width, dstImage.Height);
             }
 
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             // adds the new ellipse & draws the image again 
             using (GraphicsPath path = new GraphicsPath())
             {
-               PointF center = new PointF(dstImage.Width / 2, dstImage.Height / 2);
+               PointF center = new PointF((float)dstImage.Width / 2, (float)dstImage.Height / 2);
                float radius = (float)dstImage.Width / 2;
 
                RectangleF r = new RectangleF(center.X - radius, center.Y - radius, radius * 2, radius * 2);
                path.AddEllipse(r);
                g.SetClip(path);
 
-               int imgX = (dstImage.Width - srcImage.Width) / 2;
-               int imgY = (dstImage.Height - srcImage.Height) / 2;
+               float imgX = (float)(dstImage.Width - srcImage.Width) / 2;
+               float imgY = (float)(dstImage.Height - srcImage.Height) / 2;
                g.DrawImage(srcImage, imgX, imgY);
             }
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
 
             return dstImage;
          }
