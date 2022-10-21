@@ -2,16 +2,13 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
-using GitLabSharp;
-using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
-using mrHelper.Common.Tools;
 
-namespace mrHelper.App.Helpers
+namespace mrHelper.Common.Tools
 {
-   internal static class UrlHelper
+   public static class UrlHelper
    {
-      internal static object Parse(string originalUrl, Dictionary<string, string> sourceBranchTemplates)
+      public static object Parse(string originalUrl, Dictionary<string, string> sourceBranchTemplates)
       {
          if (String.IsNullOrEmpty(originalUrl))
          {
@@ -21,6 +18,20 @@ namespace mrHelper.App.Helpers
          string url = trimPrefix(originalUrl);
 
          List<Exception> exceptions = new List<Exception>();
+         try
+         {
+            UrlParser.ParsedNoteUrl originalParsed = UrlParser.ParseNoteUrl(url);
+            UrlParser.ParsedNoteUrl noteUrl = new UrlParser.ParsedNoteUrl(
+               StringUtils.GetHostWithPrefix(originalParsed.Host), originalParsed.Project,
+               originalParsed.IId, originalParsed.NoteId);
+            return noteUrl;
+         }
+         catch (UriFormatException ex)
+         {
+            // ok, let's try another parser
+            exceptions.Add(ex);
+         }
+
          try
          {
             UrlParser.ParsedMergeRequestUrl originalParsed = UrlParser.ParseMergeRequestUrl(url);
@@ -50,7 +61,7 @@ namespace mrHelper.App.Helpers
 
       private static readonly int MaxUrlLength = 256;
 
-      internal static bool CheckGitLabMergeRequestUrl(string originalUrl)
+      public static bool CheckGitLabMergeRequestUrl(string originalUrl)
       {
          if (String.IsNullOrEmpty(originalUrl) || originalUrl.Length > MaxUrlLength)
          {
@@ -58,10 +69,10 @@ namespace mrHelper.App.Helpers
          }
 
          string url = trimPrefix(originalUrl);
-         return UrlParser.IsValidUrl(url);
+         return UrlParser.IsValidMergeRequestUrl(url);
       }
 
-      internal static void OpenBrowser(string url)
+      public static void OpenBrowser(string url)
       {
          Trace.TraceInformation("Opening browser with URL {0}", url);
 
@@ -79,7 +90,7 @@ namespace mrHelper.App.Helpers
 
       private static string trimPrefix(string originalUrl)
       {
-         string prefix = Constants.CustomProtocolName + "://";
+         string prefix = Constants.Constants.CustomProtocolName + "://";
          return originalUrl.StartsWith(prefix) ? originalUrl.Substring(prefix.Length) : originalUrl;
       }
    }

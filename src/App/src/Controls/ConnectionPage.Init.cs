@@ -10,7 +10,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
-using TheArtOfDev.HtmlRenderer.WinForms;
+using mrHelper.CustomActions;
 
 namespace mrHelper.App.Controls
 {
@@ -19,6 +19,7 @@ namespace mrHelper.App.Controls
       public ConnectionPage(
          string hostname,
          DictionaryWrapper<MergeRequestKey, DateTime> recentMergeRequests,
+         HashSetWrapper<MergeRequestKey> pinnedMergeRequests,
          DictionaryWrapper<MergeRequestKey, HashSet<string>> reviewedRevisions,
          DictionaryWrapper<string, MergeRequestKey> lastMergeRequestsByHosts,
          DictionaryWrapper<string, NewMergeRequestProperties> newMergeRequestDialogStatesByHosts,
@@ -35,7 +36,9 @@ namespace mrHelper.App.Controls
          bool integratedInSourceTree,
          ColorScheme colorScheme,
          UserDefinedSettings.OldFilterSettings oldFilter,
-         ITimeTrackerHolder timeTrackerHolder)
+         ITimeTrackerHolder timeTrackerHolder,
+         Action<string> onOpenUrl,
+         Func<ICommand, MergeRequestKey, ConnectionPage, System.Threading.Tasks.Task> onCommand)
       {
          HostName = hostname;
          _keywords = keywords;
@@ -44,13 +47,15 @@ namespace mrHelper.App.Controls
          _integratedInSourceTree = integratedInSourceTree;
          _toolTip = toolTip;
          _timeTrackerHolder = timeTrackerHolder;
-
          _recentMergeRequests = recentMergeRequests;
+         _pinnedMergeRequests = pinnedMergeRequests;
          _reviewedRevisions = reviewedRevisions;
          _lastMergeRequestsByHosts = lastMergeRequestsByHosts;
          _newMergeRequestDialogStatesByHosts = newMergeRequestDialogStatesByHosts;
          _filtersByHostsLive = filtersByHostsLive;
          _filtersByHostsRecent = filtersByHostsRecent;
+         _onOpenUrl = onOpenUrl;
+         _onCommand = onCommand;
 
          InitializeComponent();
          updateSplitterOrientation();
@@ -60,16 +65,19 @@ namespace mrHelper.App.Controls
          listViewLiveMergeRequests.SetMutedMergeRequests(mutedMergeRequests);
          listViewLiveMergeRequests.SetOpenMergeRequestUrlCallback(openBrowserForMergeRequest);
          listViewLiveMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
+         listViewLiveMergeRequests.SetPinChecker(isPinned);
          listViewLiveMergeRequests.Initialize(hostname);
 
          listViewFoundMergeRequests.SetIdentity(Constants.SearchListViewName);
          listViewFoundMergeRequests.SetCollapsedProjects(collapsedProjectsSearch);
          listViewFoundMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
+         listViewFoundMergeRequests.SetPinChecker(isPinned);
          listViewFoundMergeRequests.Initialize(hostname);
 
          listViewRecentMergeRequests.SetIdentity(Constants.RecentListViewName);
          listViewRecentMergeRequests.SetCollapsedProjects(collapsedProjectsRecent);
          listViewRecentMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
+         listViewRecentMergeRequests.SetPinChecker(isPinned);
          listViewRecentMergeRequests.Initialize(hostname);
 
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
@@ -92,10 +100,10 @@ namespace mrHelper.App.Controls
          createLiveDataCacheAndDependencies();
          subscribeToLiveDataCache();
 
-         createSearchDataCache();
+         createSearchDataCacheAndDependencies();
          subscribeToSearchDataCache();
 
-         createRecentDataCache();
+         createRecentDataCacheAndDependencies();
          subscribeToRecentDataCache();
       }
 
@@ -209,6 +217,8 @@ namespace mrHelper.App.Controls
             muteSelectedMergeRequestUntilMonday,
             unMuteSelectedMergeRequest,
             toggleSelectedMergeRequestExclusion,
+            openSelectedAuthorProfile,
+            toggleSelectedMergeRequestPinState,
             showDiscussionsForSelectedMergeRequest));
 
          foreach (EDataCacheType mode in new EDataCacheType[] { EDataCacheType.Recent, EDataCacheType.Search })
@@ -227,6 +237,8 @@ namespace mrHelper.App.Controls
                null,
                null,
                mode == EDataCacheType.Search ? (null as Action) : toggleSelectedMergeRequestExclusion,
+               openSelectedAuthorProfile,
+               toggleSelectedMergeRequestPinState,
                showDiscussionsForSelectedMergeRequest));
          }
       }
@@ -287,6 +299,9 @@ namespace mrHelper.App.Controls
 
          _eventFilter = new EventFilter(Program.Settings, dataCache, _mergeRequestFilter);
          _userNotifier = new UserNotifier(dataCache, _eventFilter, _trayIcon);
+
+         _avatarImageCache[EDataCacheType.Live] = new AvatarImageCache(dataCache);
+         getListView(EDataCacheType.Live).SetAvatarImageCache(_avatarImageCache[EDataCacheType.Live]);
       }
 
       private void subscribeToLiveDataCache()
@@ -299,12 +314,26 @@ namespace mrHelper.App.Controls
 
       private void disposeLiveDataCacheDependencies()
       {
+         _avatarImageCache[EDataCacheType.Live]?.Dispose();
+         _avatarImageCache.Remove(EDataCacheType.Live);
          _userNotifier?.Dispose();
          _userNotifier = null;
          _eventFilter?.Dispose();
          _eventFilter = null;
          _expressionResolver?.Dispose();
          _expressionResolver = null;
+      }
+
+      private void disposeSearchDataCacheDependencies()
+      {
+         _avatarImageCache[EDataCacheType.Search]?.Dispose();
+         _avatarImageCache.Remove(EDataCacheType.Search);
+      }
+
+      private void disposeRecentDataCacheDependencies()
+      {
+         _avatarImageCache[EDataCacheType.Recent]?.Dispose();
+         _avatarImageCache.Remove(EDataCacheType.Recent);
       }
 
       private void subscribeToLiveDataCacheInternalEvents()
@@ -366,25 +395,13 @@ namespace mrHelper.App.Controls
          switch (mode)
          {
             case EDataCacheType.Live:
-               // The idea is that:
-               // 1. Already cached MR that became closed remotely will not be removed from the cache
-               // 2. Open MR that are missing in the cache, will be added to the cache
-               // 3. Open MR that exist in the cache, will be updated
-               // 4. Non-cached MR that are closed remotely, will not be added to the cache even if directly requested by IId
-               bool updateOnlyOpened = true;
-               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
-                                               Program.Settings.AutoUpdatePeriodMs,
-                                               updateOnlyOpened);
-
             case EDataCacheType.Recent:
                return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
-                                               Program.Settings.AutoUpdatePeriodMs,
-                                               false);
+                                               Program.Settings.AutoUpdatePeriodMs);
 
             case EDataCacheType.Search:
                return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
-                                               int.MaxValue,
-                                               false);
+                                               int.MaxValue);
 
             default:
                Debug.Assert(false);
@@ -393,13 +410,16 @@ namespace mrHelper.App.Controls
          return null;
       }
 
-      private void createSearchDataCache()
+      private void createSearchDataCacheAndDependencies()
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Search", new DataCacheCallbacks(null, null),
             getDataCacheUpdateRules(EDataCacheType.Search), false, false);
          _searchDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Search).SetDataCache(_searchDataCache);
+
+         _avatarImageCache[EDataCacheType.Search] = new AvatarImageCache(_searchDataCache);
+         getListView(EDataCacheType.Search).SetAvatarImageCache(_avatarImageCache[EDataCacheType.Search]);
       }
 
       private void subscribeToSearchDataCacheInternalEvents()
@@ -460,7 +480,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void createRecentDataCache()
+      private void createRecentDataCacheAndDependencies()
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilterRecent, _keywords,
             Program.Settings.UpdateManagerExtendedLogging, "Recent", new DataCacheCallbacks(null, null),
@@ -468,6 +488,9 @@ namespace mrHelper.App.Controls
          _recentDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Recent).SetDataCache(_recentDataCache);
          getListView(EDataCacheType.Recent).SetFilter(_mergeRequestFilterRecent);
+
+         _avatarImageCache[EDataCacheType.Recent] = new AvatarImageCache(_recentDataCache);
+         getListView(EDataCacheType.Recent).SetAvatarImageCache(_avatarImageCache[EDataCacheType.Recent]);
       }
 
       private void subscribeToRecentDataCacheInternalEvents()

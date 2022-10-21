@@ -38,17 +38,19 @@ namespace mrHelper.GitLabClient
 
             InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
             bool isApprovalStatusSupported = await checkIsApprovalSupportedAsync(gitLabInstance);
-            IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
-               hostname, _operator, cacheUpdater,
-               _cacheContext.Callbacks, connectionContext.QueryCollection,
-               isApprovalStatusSupported);
 
             traceInformation(String.Format("Connecting data cache to {0}...", hostname));
             string accessToken = hostProperties.GetAccessToken(hostname);
             await new CurrentUserLoader(_operator).Load(hostname, accessToken);
             User currentUser = GlobalCache.GetAuthenticatedUser(hostname, accessToken);
 
-            await mergeRequestListLoader.Load();
+            using (MergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
+               hostname, _operator, cacheUpdater, _cacheContext.Callbacks, connectionContext.QueryCollection,
+               isApprovalStatusSupported))
+            {
+               await mergeRequestListLoader.Load();
+            }
+
             _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser,
                connectionContext.QueryCollection, gitLabInstance.ModificationNotifier,
                gitLabInstance.NetworkOperationStatusListener, isApprovalStatusSupported);
@@ -125,6 +127,8 @@ namespace mrHelper.GitLabClient
 
       public IUserCache UserCache => _internal?.UserCache;
 
+      public IAvatarCache AvatarCache => _internal?.AvatarCache;
+
       public DataCacheConnectionContext ConnectionContext { get; private set; }
 
       private void reset()
@@ -158,9 +162,12 @@ namespace mrHelper.GitLabClient
          MergeRequestManager mergeRequestManager = new MergeRequestManager(
             _cacheContext, cacheUpdater, hostname, hostProperties, queryCollection, networkOperationStatusListener,
             isApprovalStatusSupported);
+
+         AvatarLoader avatarLoaderForDiscussionManager = new AvatarLoader(cacheUpdater);
          DiscussionManager discussionManager = new DiscussionManager(
             _cacheContext, hostname, hostProperties, user, mergeRequestManager,
-            modificationNotifier, networkOperationStatusListener);
+            modificationNotifier, networkOperationStatusListener, avatarLoaderForDiscussionManager);
+
          TimeTrackingManager timeTrackingManager = new TimeTrackingManager(
             hostname, hostProperties, user, discussionManager, modificationNotifier, networkOperationStatusListener);
 
@@ -170,14 +177,18 @@ namespace mrHelper.GitLabClient
             IProjectListLoader loader = new ProjectListLoader(hostname, _operator);
             projectCache = new ProjectCache(loader, _cacheContext, hostname);
          }
+
          UserCache userCache = null;
          if (_cacheContext.SupportUserCache)
          {
-            IUserListLoader userListLoader = new UserListLoader(hostname, _operator);
+            AvatarLoader avatarLoaderForUserListLoader = new AvatarLoader(cacheUpdater);
+            UserListLoader userListLoader = new UserListLoader(hostname, _operator, avatarLoaderForUserListLoader);
             userCache = new UserCache(userListLoader, _cacheContext, hostname);
          }
+
+         AvatarCache avatarCache = new AvatarCache(cacheUpdater.Cache);
          return new DataCacheInternal(mergeRequestManager, discussionManager,
-            timeTrackingManager, projectCache, userCache);
+            timeTrackingManager, projectCache, userCache, avatarCache);
       }
 
       private bool _isConnecting;

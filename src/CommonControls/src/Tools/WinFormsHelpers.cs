@@ -1,13 +1,14 @@
-﻿using Microsoft.Win32;
-using Microsoft.WindowsAPICodePack.Taskbar;
-using mrHelper.CommonNative;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using Microsoft.Win32;
+using Microsoft.WindowsAPICodePack.Taskbar;
+using mrHelper.CommonNative;
 
 namespace mrHelper.CommonControls.Tools
 {
@@ -47,6 +48,11 @@ namespace mrHelper.CommonControls.Tools
             ImageSize = new Size(1, height)
          };
          listView.SmallImageList = imgList;
+      }
+
+      public static int GetListViewRowHeight(ListView listView)
+      {
+         return listView?.SmallImageList?.ImageSize.Height ?? 0; 
       }
 
       public static void CloseAllFormsExceptOne(string exceptionalFormName)
@@ -407,6 +413,97 @@ namespace mrHelper.CommonControls.Tools
             }
          }
          return bitmap;
+      }
+
+      // inspired by https://stackoverflow.com/a/47205281
+      public static Image ClipRectToCircle(Image srcImage, Color backGround)
+      {
+         int dstImageWidth = Math.Min(srcImage.Width, srcImage.Height);
+         int dstImageHeight = dstImageWidth;
+         Bitmap dstImage = new Bitmap(dstImageWidth, dstImageHeight, srcImage.PixelFormat);
+
+         using (Graphics g = Graphics.FromImage(dstImage))
+         {
+            // fills background color
+            using (Brush brush = new SolidBrush(backGround))
+            {
+               g.FillRectangle(brush, 0, 0, dstImage.Width, dstImage.Height);
+            }
+
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            // adds the new ellipse & draws the image again 
+            using (GraphicsPath path = new GraphicsPath())
+            {
+               PointF center = new PointF((float)dstImage.Width / 2, (float)dstImage.Height / 2);
+               float radius = (float)dstImage.Width / 2;
+
+               RectangleF r = new RectangleF(center.X - radius, center.Y - radius, radius * 2, radius * 2);
+               path.AddEllipse(r);
+               g.SetClip(path);
+
+               float imgX = (float)(dstImage.Width - srcImage.Width) / 2;
+               float imgY = (float)(dstImage.Height - srcImage.Height) / 2;
+               g.DrawImage(srcImage, imgX, imgY);
+            }
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+
+            return dstImage;
+         }
+      }
+
+      // inspired by https://stackoverflow.com/a/32991419
+      private static GraphicsPath getRoundRectagle(Rectangle bounds, int radius, bool isHScrollVisible)
+      {
+         GraphicsPath path = new GraphicsPath();
+         if (!isHScrollVisible)
+         {
+            path.StartFigure();
+            path.AddArc(bounds.Left, bounds.Top, radius, radius, 180, 90);
+            path.AddArc(bounds.Right - radius, bounds.Top, radius, radius, 270, 90);
+            path.AddArc(bounds.Right - radius, bounds.Bottom - radius, radius, radius, 0, 90);
+            path.AddArc(bounds.Left, bounds.Bottom - radius, radius, radius, 90, 90);
+            path.CloseFigure();
+         }
+         else
+         {
+            int hScrollHeight = SystemInformation.HorizontalScrollBarHeight;
+            Point topLeft = new Point(bounds.Left, bounds.Top);
+            Point bottomLeft = new Point(bounds.Left, bounds.Bottom + hScrollHeight);
+            Point bottomRight = new Point(bounds.Right, bounds.Bottom + hScrollHeight);
+            Point topRight = new Point(bounds.Right, bounds.Top);
+            Point topLeft2 = new Point(topLeft.X, topLeft.Y + radius);
+            Point topRight2 = new Point(topRight.X, topRight.Y + radius);
+            Point topLeft3 = new Point(topLeft.X + radius, topLeft.Y);
+            Point topRight3 = new Point(topRight.X - radius, topRight.Y);
+
+            path.AddArc(topLeft.X, topLeft.Y, radius, radius, 180, 90);
+            path.AddLine(topLeft3, topRight3);
+            path.AddArc(topRight3.X, topRight3.Y, radius, radius, 270, 90);
+            path.AddLine(topRight2, bottomRight);
+            path.AddLine(bottomRight, bottomLeft);
+            path.AddLine(bottomLeft, topLeft2);
+         }
+         return path;
+      }
+
+      public static GraphicsPath GetRoundedPath(Rectangle bounds, int radius, bool isHScrollVisible)
+      {
+         return getRoundRectagle(bounds, radius, isHScrollVisible);
+      }
+
+      public class BorderlessRenderer : ToolStripProfessionalRenderer
+      {
+         public BorderlessRenderer()
+         {
+            // Remove extra padding
+            RoundedEdges = false;
+         }
+
+         protected override void OnRenderToolStripBorder(ToolStripRenderEventArgs e)
+         {
+            // Suppress base class functionality to not draw borders
+            // base.OnRenderToolStripBorder(e);
+         }
       }
 
       public static void PerformClick(Tuple<Button, bool>[] buttonsToClick)

@@ -455,8 +455,6 @@ namespace mrHelper.App
          }
          catch (DiffToolIntegrationException ex)
          {
-            string message = String.Format("{0} integration failed. Application cannot start. See logs for details",
-               diffTool.GetToolName());
             ExceptionHandlers.Handle(String.Format("Cannot integrate \"{0}\"", diffTool.GetToolName()), ex);
             return false;
          }

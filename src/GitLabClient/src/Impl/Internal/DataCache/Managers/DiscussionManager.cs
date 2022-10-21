@@ -9,6 +9,7 @@ using mrHelper.Common.Interfaces;
 using mrHelper.Common.Exceptions;
 using mrHelper.Common.Constants;
 using mrHelper.GitLabClient.Operators;
+using mrHelper.GitLabClient.Loaders;
 
 namespace mrHelper.GitLabClient.Managers
 {
@@ -32,9 +33,11 @@ namespace mrHelper.GitLabClient.Managers
          User user,
          IMergeRequestCache mergeRequestCache,
          IModificationNotifier modificationNotifier,
-         INetworkOperationStatusListener networkOperationStatusListener)
+         INetworkOperationStatusListener networkOperationStatusListener,
+         AvatarLoader avatarLoader)
       {
          _operator = new DiscussionOperator(hostname, hostProperties, networkOperationStatusListener);
+         _avatarLoader = avatarLoader;
 
          _parser = new DiscussionParser(this, dataCacheContext.DiscussionKeywords, user);
          _parser.DiscussionEvent += onDiscussionParserEvent;
@@ -99,6 +102,8 @@ namespace mrHelper.GitLabClient.Managers
 
          _operator?.Dispose();
          _operator = null;
+
+         _avatarLoader?.Dispose();
       }
 
       public event Action<MergeRequestKey> DiscussionsLoading;
@@ -345,6 +350,7 @@ namespace mrHelper.GitLabClient.Managers
                _loading.Add(mrk);
                DiscussionsLoading?.Invoke(mrk);
                discussions = await _operator.GetDiscussionsAsync(mrk, ts);
+               loadAvatars(discussions);
             }
             catch (OperatorException)
             {
@@ -363,6 +369,12 @@ namespace mrHelper.GitLabClient.Managers
          {
             _updating.Remove(mrk);
          }
+      }
+
+      private void loadAvatars(IEnumerable<Discussion> discussions)
+      {
+         _timer?.SynchronizingObject.BeginInvoke(new Action(async () =>
+            await _avatarLoader.LoadAvatars(discussions)), null);
       }
 
       async private Task waitForUpdateCompetion(MergeRequestKey? mrk)
@@ -629,7 +641,7 @@ namespace mrHelper.GitLabClient.Managers
       private readonly string _tagForLogging;
       private DiscussionParser _parser;
       private DiscussionOperator _operator;
-
+      private readonly AvatarLoader _avatarLoader;
       private System.Timers.Timer _timer;
       private readonly List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 

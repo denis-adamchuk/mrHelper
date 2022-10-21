@@ -6,6 +6,7 @@ namespace mrHelper.App.Controls
    {
       IId,
       Color,
+      Avatar,
       Author,
       Title,
       Labels,

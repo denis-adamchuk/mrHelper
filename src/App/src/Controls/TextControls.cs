@@ -1,5 +1,6 @@
 ﻿using GitLabSharp.Entities;
 using mrHelper.CommonControls.Controls;
+using mrHelper.CommonControls.Tools;
 using System;
 using System.Windows.Forms;
 using TheArtOfDev.HtmlRenderer.WinForms;
@@ -55,10 +56,10 @@ namespace mrHelper.App.Controls
       private readonly IHighlightListener _highlightListener;
    }
 
-   internal class SearchableHtmlPanel : HtmlPanel, ITextControl
+   internal class SearchableHtmlPanel : HtmlPanelEx, ITextControl
    {
-      internal SearchableHtmlPanel(IHighlightListener highlightListener)
-         : base()
+      internal SearchableHtmlPanel(IHighlightListener highlightListener, RoundedPathCache pathCache)
+         : base(pathCache, true, true)
       {
          /// Disable async image loading.
          /// Given feature prevents showing full-size images because their size are unknown
@@ -68,7 +69,7 @@ namespace mrHelper.App.Controls
          _highlightListener = highlightListener;
       }
 
-      string ITextControl.Text => removeCodeBlocks(getOriginalNote()).Body;
+      string ITextControl.Text => removeCodeBlocks(getOriginalNote())?.Body ?? String.Empty;
 
       public HighlightState HighlightState { get; private set; }
 
@@ -95,9 +96,10 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         // Unwrap a wrapped span (i.e. undo HihghlightFragment).
+         // Unwrap a wrapped span (i.e. undo HighlightFragment).
          // Don't reset HighlightState to remember a place where highlighting was located in order to continue search.
-         (Parent as DiscussionBox).setDiscussionNoteText(this, note);
+         // Note: Parent can be null if a note was deleted.
+         (Parent as DiscussionBox)?.setDiscussionNoteText(this, note);
       }
 
       protected override void OnMouseDown(MouseEventArgs e)

@@ -155,6 +155,9 @@
     <Compile Include="src\Controls\HostToolbarItem.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\HtmlPanelEx.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\HtmlToolTipEx.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -258,11 +261,16 @@
     </Compile>
     <Compile Include="src\Forms\EditSearchQueryFormState.cs" />
     <Compile Include="src\Forms\Helpers\DiscussionLayout.cs" />
+    <Compile Include="src\Forms\TextEditForms.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="src\Helpers\CommandState.cs" />
     <Compile Include="src\Helpers\Configuration\DefaultWorkflowLoader.cs" />
     <Compile Include="src\Helpers\Configuration\RawDictionaryStringHelper.cs" />
+    <Compile Include="src\Helpers\DiffContextHelpers.cs" />
     <Compile Include="src\Helpers\GitLab\AsyncDiscussionHelper.cs" />
     <Compile Include="src\Helpers\GitLab\AsyncDiscussionLoader.cs" />
+    <Compile Include="src\Helpers\GitLab\AvatarImageCache.cs" />
     <Compile Include="src\Helpers\GitLab\TimeTrackingHelpers.cs" />
     <Compile Include="src\Forms\NewMergeRequestForm.cs">
       <SubType>Form</SubType>
@@ -288,7 +296,6 @@
     <Compile Include="src\Forms\Helpers\NewMergeRequestProperties.cs" />
     <Compile Include="src\Forms\Helpers\EditProjectsListViewCallback.cs" />
     <Compile Include="src\Forms\Helpers\EditUsersListViewCallback.cs" />
-    <Compile Include="src\Forms\Helpers\WPFHelpers.cs" />
     <Compile Include="src\Forms\AcceptMergeRequestForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -301,11 +308,11 @@
     <Compile Include="src\Forms\TimeSpanEditForm.Designer.cs">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\TextEditForm.cs">
+    <Compile Include="src\Forms\TextEditBaseForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="src\Forms\TextEditForm.Designer.cs">
-      <DependentUpon>TextEditForm.cs</DependentUpon>
+    <Compile Include="src\Forms\TextEditBaseForm.Designer.cs">
+      <DependentUpon>TextEditBaseForm.cs</DependentUpon>
     </Compile>
     <Compile Include="src\Forms\AddKnownHostForm.cs">
       <SubType>Form</SubType>
@@ -371,7 +378,6 @@
     <Compile Include="src\Helpers\GitLab\DiscussionFilter.cs" />
     <Compile Include="src\Helpers\GitLab\DiscussionSort.cs" />
     <Compile Include="src\Helpers\GitLab\ExpressionResolver.cs" />
-    <Compile Include="src\Helpers\Url\NewMergeRequestUrlParser.cs" />
     <Compile Include="src\Helpers\GitLab\MergeRequestEditHelper.cs" />
     <Compile Include="src\Helpers\GitLab\PositionConverter.cs" />
     <Compile Include="src\Helpers\ContextProviders\VersionBasedContextProvider.cs" />
@@ -397,8 +403,6 @@
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserModel.cs" />
     <Compile Include="src\Helpers\RevisionPreviewBrowser\RevisionPreviewBrowserItem.cs" />
     <Compile Include="src\Helpers\RevisionPreviewBrowser\RevisionPreviewBrowserModel.cs" />
-    <Compile Include="src\Helpers\Url\UrlConnectionException.cs" />
-    <Compile Include="src\Helpers\Url\UrlHelper.cs" />
     <Compile Include="src\LaunchOptions.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
@@ -462,8 +466,8 @@
     <EmbeddedResource Include="src\Forms\TimeSpanEditForm.resx">
       <DependentUpon>TimeSpanEditForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="src\Forms\TextEditForm.resx">
-      <DependentUpon>TextEditForm.cs</DependentUpon>
+    <EmbeddedResource Include="src\Forms\TextEditBaseForm.resx">
+      <DependentUpon>TextEditBaseForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\AddKnownHostForm.resx">
       <DependentUpon>AddKnownHostForm.cs</DependentUpon>
@@ -534,6 +538,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\pin-transparent-alpha.png" />
     <None Include="Resources\toolbar\thread_24x24.png" />
     <None Include="Resources\toolbar\create-new_24x24.png" />
     <None Include="Resources\toolbar\stop_24x24.png" />
@@ -548,6 +553,7 @@
     <None Include="Resources\toolbar\add-comment_24x24.png" />
     <None Include="Resources\gitlab-icon-stub-16x16.png" />
     <None Include="Resources\gitlab-icon-stub-16x16-border.png" />
+    <None Include="Resources\loading-transp-alpha.png" />
     <Content Include="Resources\ny2020\balls.png" />
     <Content Include="Resources\ny2020\happy_ny2002.png" />
     <Content Include="Resources\ny2020\ny2020-theme.css" />

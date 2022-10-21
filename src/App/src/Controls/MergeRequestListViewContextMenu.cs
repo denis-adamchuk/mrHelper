@@ -18,7 +18,7 @@ namespace mrHelper.App.Controls
          Action onDiscussions, Action onRefreshList, Action onRefresh, Action onEdit,
          Action onMerge, Action onClose, Action onDiffToBase, Action onDiffDefault,
          Action onMuteUntilTomorrow, Action onMuteUntilMonday, Action onUnmute,
-         Action onExclude, Action onDefault)
+         Action onExclude, Action onOpenAuthorProfile, Action onPin, Action onDefault)
       {
          _discussionsItem = addItem(onDiscussions, "&Discussions", onDiscussions == onDefault);
 
@@ -65,6 +65,20 @@ namespace mrHelper.App.Controls
 
          _excludeItem = addItem(onExclude, "Hi&de/Unhi&de", onExclude == onDefault);
 
+         if (onPin != null)
+         {
+            addSeparator();
+         }
+
+         _pinItem = addItem(onPin, "Pin/Unpin", onPin == onDefault);
+
+         if (onOpenAuthorProfile != null)
+         {
+            addSeparator();
+         }
+
+         _openAuthorProfileItem = addItem(onOpenAuthorProfile, "Open author profile...", onOpenAuthorProfile == onDefault);
+
          _operationController = operationController;
       }
 
@@ -99,6 +113,11 @@ namespace mrHelper.App.Controls
       public void SetExcludeAbilityState(bool canBeExcluded)
       {
          _canBeExcluded = canBeExcluded;
+      }
+
+      public void SetPinAbilityState(bool canBePinned)
+      {
+         _canBePinned = canBePinned;
       }
 
       public void DisableAll()
@@ -176,6 +195,16 @@ namespace mrHelper.App.Controls
          {
             _excludeItem.Text = _canBeExcluded ? "Hi&de" : "Unhi&de";
          }
+
+         if (_pinItem != null)
+         {
+            _pinItem.Text = _canBePinned ? "Pin at Live tab" : "Unpin";
+         }
+
+         if (_openAuthorProfileItem != null)
+         {
+            _openAuthorProfileItem.Enabled = !_disabledAll;
+         }
       }
 
       private readonly IOperationController _operationController;
@@ -188,12 +217,15 @@ namespace mrHelper.App.Controls
       private readonly ToolStripItem _muteUntilMondayItem;
       private readonly ToolStripItem _unmuteItem;
       private readonly ToolStripItem _excludeItem;
+      private readonly ToolStripItem _pinItem;
       private readonly ToolStripMenuItem _diffToolItem;
       private readonly ToolStripMenuItem _diffToBaseItem;
       private readonly ToolStripMenuItem _discussionsItem;
+      private readonly ToolStripMenuItem _openAuthorProfileItem;
       private bool _disabledAll;
       private bool _isUnmuteActionEnabled;
       private bool _canBeExcluded;
+      private bool _canBePinned;
    }
 }
 

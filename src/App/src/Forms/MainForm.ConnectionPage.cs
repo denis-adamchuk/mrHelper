@@ -138,13 +138,13 @@ namespace mrHelper.App.Forms
          foreach (string hostname in getHostList())
          {
             ConnectionPage connectionPage = new ConnectionPage(hostname,
-               _recentMergeRequests, _reviewedRevisions, _lastMergeRequestsByHosts,
+               _recentMergeRequests, _pinnedMergeRequests, _reviewedRevisions, _lastMergeRequestsByHosts,
                _newMergeRequestDialogStatesByHosts, _collapsedProjectsLive,
                _collapsedProjectsRecent, _collapsedProjectsSearch, _mutedMergeRequests,
                _filtersByHostsLive, _filtersByHostsRecent,
                _keywords, _trayIcon, toolTip,
                _integratedInGitExtensions,
-               _integratedInSourceTree, _colorScheme, oldFilter, this);
+               _integratedInSourceTree, _colorScheme, oldFilter, this, onOpenCommand, onCommandAsync);
             subscribeToConnectionPage(connectionPage);
             ConnectionTabPage tabPage = new ConnectionTabPage(hostname, connectionPage);
             tabControlHost.TabPages.Add(tabPage);
@@ -518,19 +518,26 @@ namespace mrHelper.App.Forms
             if (parsed is UrlParser.ParsedMergeRequestUrl parsedMergeRequestUrl)
             {
                throwOnUnknownHost(parsedMergeRequestUrl.Host);
-               await connectToUrlAsyncInternal(url, parsedMergeRequestUrl);
-               return;
+               await connectToUrlAsyncInternal(url, parsedMergeRequestUrl.Host, parsedMergeRequestUrl);
             }
             else if (parsed is ParsedNewMergeRequestUrl parsedNewMergeRequestUrl)
             {
                createMergeRequestFromUrl(parsedNewMergeRequestUrl);
-               return;
+            }
+            else if (parsed is UrlParser.ParsedNoteUrl parsedNoteUrl)
+            {
+               throwOnUnknownHost(parsedNoteUrl.Host);
+               await connectToUrlAsyncInternal(url, parsedNoteUrl.Host, parsedNoteUrl);
             }
             else if (parsed == null)
             {
                MessageBox.Show("Failed to parse URL", "Error",
                   MessageBoxButtons.OK, MessageBoxIcon.Error,
                   MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+            }
+            else
+            {
+               Debug.Assert(false);
             }
          }
          catch (UrlConnectionException ex)
@@ -578,9 +585,8 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private Task connectToUrlAsyncInternal(string url, UrlParser.ParsedMergeRequestUrl parsedUrl)
+      private Task connectToUrlAsyncInternal<T>(string url, string hostname, T parsedUrl)
       {
-         string hostname = parsedUrl.Host;
          emulateClickOnHostToolbarButton(hostname);
          if (getCurrentConnectionPage()?.GetCurrentHostName() == hostname)
          {

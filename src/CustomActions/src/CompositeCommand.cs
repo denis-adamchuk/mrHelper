@@ -12,6 +12,7 @@ namespace mrHelper.CustomActions
          string name,
          string enabledIf,
          string visibleIf,
+         bool pin,
          bool stopTimer,
          bool reload,
          string hint,
@@ -22,6 +23,7 @@ namespace mrHelper.CustomActions
          Name = name;
          EnabledIf = enabledIf;
          VisibleIf = visibleIf;
+         Pin = pin;
          StopTimer = stopTimer;
          Reload = reload;
          Hint = hint;
@@ -34,6 +36,8 @@ namespace mrHelper.CustomActions
       public string EnabledIf { get; }
 
       public string VisibleIf { get; }
+
+      public bool Pin { get; }
 
       public bool StopTimer { get; }
 

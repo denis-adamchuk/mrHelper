@@ -15,26 +15,28 @@ namespace mrHelper.App.Helpers
 
       internal SearchQuery Query { get; private set; }
 
-      internal TextSearchResult? FindFirst(out int count)
+      internal IEnumerable<TextSearchResult> FindAll()
       {
-         count = 0;
-         TextSearchResult? result = new TextSearchResult?();
+         List<TextSearchResult> results = new List<TextSearchResult>();
 
          foreach (ITextControl textControl in _allControls)
          {
             int startPosition = 0;
             while (doesMatchText(textControl, Query, true, startPosition, out int insideControlPosition))
             {
-               if (!result.HasValue)
-               {
-                  result = new TextSearchResult(textControl, insideControlPosition);
-               }
+               results.Add(new TextSearchResult(textControl, insideControlPosition));
                startPosition = insideControlPosition + 1;
-               ++count;
             }
          }
 
-         return result;
+         return results;
+      }
+
+      internal TextSearchResult? FindFirst(out int count)
+      {
+         IEnumerable<TextSearchResult> allResults = FindAll();
+         count = allResults.Any() ? allResults.Count() : 0;
+         return allResults.Any() ? allResults.First() : new TextSearchResult?();
       }
 
       internal TextSearchResult? FindNext(ITextControl control, int startPosition)

@@ -98,6 +98,21 @@ namespace mrHelper.App.Controls
          return EDataCacheType.Live;
       }
 
+      private EDataCacheType getDataCacheType(DataCache dataCache)
+      {
+         if (dataCache == _recentDataCache)
+         {
+            return EDataCacheType.Recent;
+         }
+         else if (dataCache == _searchDataCache)
+         {
+            return EDataCacheType.Search;
+         }
+
+         Debug.Assert(dataCache == _liveDataCache);
+         return EDataCacheType.Live;
+      }
+
       private void forEachListView(Action<MergeRequestListView> action)
       {
          foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
@@ -1188,7 +1203,7 @@ namespace mrHelper.App.Controls
          CanCreateNewChanged?.Invoke(this);
       }
 
-      private CommandState isCommandEnabledInDiscussionsView(MergeRequestKey mrk, ICommand command)
+      private CommandState isCommandEnabledInDiscussionsView(ICommand command, MergeRequestKey mrk)
       {
          // In Discussions view we cannot say what DataCache contains MR in advance,
          // because during Discussions view lifetime, MR can be removed from the original DataCache.
@@ -1211,13 +1226,16 @@ namespace mrHelper.App.Controls
             }
          }
 
-         CommandState? commandStateOpt = isCommandEnabledInDiscussionsView(bestMode, mrk, command);
+         CommandState? commandStateOpt = isCommandEnabled(bestMode, mrk, command);
          if (commandStateOpt.HasValue)
          {
             return commandStateOpt.Value;
          }
          return new CommandState(false, false);
       }
+
+      private System.Threading.Tasks.Task onCommandLaunchedFromDiscussionsView(
+         ICommand command, MergeRequestKey mrk) => _onCommand(command, mrk, this);
 
       private void reloadByDiscussionsViewRequest(MergeRequestKey mrk)
       {
@@ -1227,6 +1245,44 @@ namespace mrHelper.App.Controls
 
          ReloadOne(mrk);
       }
+
+      private bool isCached(EDataCacheType mode, MergeRequestKey mrk) =>
+         getDataCache(mode)?.MergeRequestCache?.GetMergeRequest(mrk) != null;
+
+      private void pin(MergeRequestKey mrk)
+      {
+         bool wasCached = isCached(EDataCacheType.Live, mrk);
+         _pinnedMergeRequests.Add(mrk);
+         onMergeRequestPinStateChanged(mrk, !wasCached /* optimization */);
+      }
+
+      private void unpin(MergeRequestKey mrk)
+      {
+         _pinnedMergeRequests.Remove(mrk);
+         onMergeRequestPinStateChanged(mrk, true /* cannot tell if to update or not */);
+      }
+
+      private void onMergeRequestPinStateChanged(MergeRequestKey mrk, bool updateDataCache)
+      {
+         bool isPinned = this.isPinned(mrk);
+         bool wasPinned = !isPinned;
+         Trace.TraceInformation(String.Format(
+            "[ConnectionPage] Changed pin state from {0} to {1} for MR with IId {2}",
+            wasPinned.ToString(), isPinned.ToString(), mrk.IId));
+
+         EnabledCustomActionsChanged?.Invoke(this);
+         updateMergeRequestList(EDataCacheType.Live);
+
+         updateLiveDataCacheQueryColletion();
+         if (updateDataCache)
+         {
+            bool needUpdateFullList = wasPinned;
+            MergeRequestKey? keyForUpdate = needUpdateFullList ? new Nullable<MergeRequestKey>() : mrk;
+            requestUpdates(EDataCacheType.Live, keyForUpdate, new[] { PseudoTimerInterval });
+         }
+      }
+
+      private bool isPinned(MergeRequestKey mrk) => _pinnedMergeRequests.Data.Contains(mrk);
    }
 }
 

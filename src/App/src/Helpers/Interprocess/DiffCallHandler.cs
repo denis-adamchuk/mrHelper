@@ -30,13 +30,16 @@ namespace mrHelper.App.Interprocess
       internal DiffCallHandler(IGitCommandService git,
          User currentUser, Action<MergeRequestKey> onDiscussionSubmitted,
          Func<MergeRequestKey, IEnumerable<Discussion>> getDiscussions,
-         Shortcuts shortcuts)
+         Shortcuts shortcuts, IEnumerable<User> fullUserList,
+         AvatarImageCache avatarImageCache)
       {
          _git = git ?? throw new ArgumentException("git argument cannot be null");
          _currentUser = currentUser;
          _onDiscussionSubmitted = onDiscussionSubmitted;
          _getDiscussions = getDiscussions;
          _shortcuts = shortcuts;
+         _fullUserList = fullUserList;
+         _avatarImageCache = avatarImageCache;
       }
 
       public void Handle(MatchInfo matchInfo, Snapshot snapshot)
@@ -117,7 +120,9 @@ namespace mrHelper.App.Interprocess
             fnOnReply,
             fnGetRelatedDiscussions,
             fnGetNewDiscussionDiffContext,
-            fnGetDiffContext);
+            fnGetDiffContext,
+            _fullUserList,
+            _avatarImageCache);
          form.Show();
       }
 
@@ -555,6 +560,8 @@ namespace mrHelper.App.Interprocess
       private readonly Action<MergeRequestKey> _onDiscussionSubmitted;
       private readonly Func<MergeRequestKey, IEnumerable<Discussion>> _getDiscussions;
       private readonly Shortcuts _shortcuts;
+      private readonly IEnumerable<User> _fullUserList;
+      private readonly AvatarImageCache _avatarImageCache;
 
       private struct MismatchWhitelistKey : IEquatable<MismatchWhitelistKey>
       {

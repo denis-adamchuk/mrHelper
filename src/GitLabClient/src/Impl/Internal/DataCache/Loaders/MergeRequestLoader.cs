@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using GitLabSharp.Entities;
 using mrHelper.GitLabClient.Loaders.Cache;
@@ -14,40 +12,47 @@ namespace mrHelper.GitLabClient.Loaders
          : base(String.Empty, innerException) { }
    }
 
-   internal class MergeRequestLoader : BaseDataCacheLoader, IMergeRequestLoader
+   internal class MergeRequestLoader : BaseDataCacheLoader, IMergeRequestLoader, IDisposable
    {
-      internal MergeRequestLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater, bool updateOnlyOpened,
+      internal MergeRequestLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater,
          bool isApprovalStatusSupported)
          : base(op)
       {
          _cacheUpdater = cacheUpdater;
          _versionLoader = new VersionLoader(op, cacheUpdater);
          _approvalLoader = isApprovalStatusSupported ? new ApprovalLoader(op, cacheUpdater) : null;
-         _updateOnlyOpened = updateOnlyOpened;
+         _avatarLoader = new AvatarLoader(cacheUpdater);
+      }
+
+      public void Dispose()
+      {
+         _avatarLoader.Dispose();
       }
 
       async public Task LoadMergeRequest(MergeRequestKey mrk)
       {
-         bool fetchOnlyOpenMergeRequests = _updateOnlyOpened;
-
          MergeRequest mergeRequest = await fetchMergeRequest(mrk);
-         if (mergeRequest != null && (!fetchOnlyOpenMergeRequests || mergeRequest.State == "opened"))
+         if (mergeRequest == null)
          {
-            MergeRequest cachedMergeRequest = _cacheUpdater.Cache.GetMergeRequest(mrk);
-            _cacheUpdater.UpdateMergeRequest(mrk, mergeRequest);
-
-            MergeRequestKey[] dummyArray = new MergeRequestKey[] { mrk };
-            if (Helpers.GetVersionLoaderKey(cachedMergeRequest) != Helpers.GetVersionLoaderKey(mergeRequest))
-            {
-               await _versionLoader.LoadVersionsAndCommits(dummyArray);
-            }
-
-            // Note: GitLab (13.6) does not changed Updated_At when approval is revoked
-            if (_approvalLoader != null)
-            {
-               await _approvalLoader.LoadApprovals(dummyArray);
-            }
+            return;
          }
+
+         MergeRequest cachedMergeRequest = _cacheUpdater.Cache.GetMergeRequest(mrk);
+         _cacheUpdater.UpdateMergeRequest(mrk, mergeRequest);
+
+         MergeRequestKey[] dummyArray = new MergeRequestKey[] { mrk };
+         if (Helpers.GetVersionLoaderKey(cachedMergeRequest) != Helpers.GetVersionLoaderKey(mergeRequest))
+         {
+            await _versionLoader.LoadVersionsAndCommits(dummyArray);
+         }
+
+         // Note: GitLab (13.6) does not changed Updated_At when approval is revoked
+         if (_approvalLoader != null)
+         {
+            await _approvalLoader.LoadApprovals(dummyArray);
+         }
+
+         await _avatarLoader.LoadAvatars(dummyArray);
       }
 
       private async Task<MergeRequest> fetchMergeRequest(MergeRequestKey mrk)
@@ -69,9 +74,9 @@ namespace mrHelper.GitLabClient.Loaders
          }
       }
 
-      private readonly bool _updateOnlyOpened;
-      private readonly IVersionLoader _versionLoader;
-      private readonly IApprovalLoader _approvalLoader;
+      private readonly VersionLoader _versionLoader;
+      private readonly ApprovalLoader _approvalLoader;
+      private readonly AvatarLoader _avatarLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
    }
 }

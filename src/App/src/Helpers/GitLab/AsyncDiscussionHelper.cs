@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms;
-using mrHelper.App.Controls;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.CommonControls.Tools;
@@ -14,11 +14,13 @@ namespace mrHelper.App.Helpers
    internal class AsyncDiscussionHelper
    {
       internal AsyncDiscussionHelper(MergeRequestKey mrk, string title,
-         User currentUser, GitLab.Shortcuts shortcuts)
+         User currentUser, GitLab.Shortcuts shortcuts, IEnumerable<User> fullUserList, AvatarImageCache avatarImageCache)
       {
          _creator = shortcuts.GetDiscussionCreator(mrk, currentUser);
          _uploadsPrefix = StringUtils.GetUploadsPrefix(mrk.ProjectKey);
          _title = title;
+         _fullUserList = fullUserList;
+         _avatarImageCache = avatarImageCache;
       }
 
       internal Task<bool> AddCommentAsync(Form parentForm)
@@ -37,10 +39,9 @@ namespace mrHelper.App.Helpers
 
       async private Task<bool> createDiscussion(Form parentForm, string title, Func<string, Task> funcCreator)
       {
-         NoteEditPanel actions = new NoteEditPanel();
-         using (TextEditForm form = new TextEditForm(title, "", true, true, actions, _uploadsPrefix))
+         using (TextEditBaseForm form = new SimpleTextEditForm(title, String.Empty, true, _uploadsPrefix,
+            _fullUserList, _avatarImageCache))
          {
-            actions.SetTextbox(form.TextBox);
             if (WinFormsHelpers.ShowDialogOnControl(form, parentForm) == DialogResult.OK)
             {
                if (form.Body.Length == 0)
@@ -72,6 +73,8 @@ namespace mrHelper.App.Helpers
       private readonly IDiscussionCreator _creator;
       private readonly string _uploadsPrefix;
       private readonly string _title;
+      private readonly IEnumerable<User> _fullUserList;
+      private readonly AvatarImageCache _avatarImageCache;
    }
 }
 

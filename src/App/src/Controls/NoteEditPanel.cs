@@ -1,41 +1,33 @@
 ﻿using System;
 using System.Windows.Forms;
-using mrHelper.App.Forms.Helpers;
 
 namespace mrHelper.App.Controls
 {
    public partial class NoteEditPanel : UserControl
    {
-      public NoteEditPanel()
+      public NoteEditPanel(Action onInsertCode)
       {
          InitializeComponent();
+         _onInsertCode = onInsertCode;
       }
 
-      public NoteEditPanel(string resolveActionText, bool isResolveActionChecked)
+      public NoteEditPanel(string resolveActionText, bool isResolveActionChecked, Action onInsertCode)
       {
          InitializeComponent();
          checkBoxResolveAction.Text = resolveActionText;
          checkBoxResolveAction.Checked = isResolveActionChecked;
          checkBoxResolveAction.Visible = true;
-      }
-
-      internal void SetTextbox(System.Windows.Controls.TextBox textBox)
-      {
-         _textBox = textBox;
+         _onInsertCode = onInsertCode;
       }
 
       internal bool IsResolveActionChecked => checkBoxResolveAction.Checked;
 
       private void buttonInsertCode_Click(object sender, EventArgs e)
       {
-         if (_textBox != null)
-         {
-            WPFHelpers.InsertCodePlaceholderIntoTextBox(_textBox);
-            _textBox.Focus();
-         }
+         _onInsertCode();
       }
 
-      private System.Windows.Controls.TextBox _textBox;
+      private readonly Action _onInsertCode;
    }
 }
 

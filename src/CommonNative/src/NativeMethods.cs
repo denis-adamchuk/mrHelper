@@ -283,6 +283,16 @@ namespace mrHelper.CommonNative
       public static uint MA_ACTIVATEANDEAT   = 2;
       public static uint MA_NOACTIVATE       = 4;
       public static uint MA_NOACTIVATEANDEAT = 4;
+
+      internal static ushort HIWORD(IntPtr dwValue)
+      {
+         return (ushort)((((long)dwValue) >> 0x10) & 0xffff);
+      }
+
+      public static int GET_WHEEL_DELTA_WPARAM(IntPtr wParam)
+      {
+         return (short)HIWORD(wParam);
+      }
    }
 }
 

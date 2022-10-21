@@ -1,6 +1,6 @@
 ﻿namespace mrHelper.App.Forms
 {
-   partial class TextEditForm
+   partial class TextEditBaseForm
    {
       /// <summary>
       /// Required designer variable.
@@ -31,7 +31,7 @@
          this.components = new System.ComponentModel.Container();
          this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonOK = new System.Windows.Forms.Button();
-         this.textBoxHost = new System.Windows.Forms.Integration.ElementHost();
+         this.textBox = new mrHelper.CommonControls.Controls.SmartTextBox();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.panelExtraActions = new System.Windows.Forms.Panel();
          this.tabControlMode = new System.Windows.Forms.TabControl();
@@ -67,15 +67,13 @@
          this.buttonOK.Text = "OK";
          this.buttonOK.UseVisualStyleBackColor = true;
          // 
-         // textBoxHost
+         // textBox
          // 
-         this.textBoxHost.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.textBoxHost.Location = new System.Drawing.Point(3, 3);
-         this.textBoxHost.Name = "textBoxHost";
-         this.textBoxHost.Size = new System.Drawing.Size(586, 82);
-         this.textBoxHost.TabIndex = 3;
-         this.textBoxHost.Text = "textBoxHost";
-         this.textBoxHost.Child = null;
+         textBox.Dock = System.Windows.Forms.DockStyle.Fill;;
+         textBox.Location = new System.Drawing.Point(3, 3);
+         textBox.Name = "textBox";
+         textBox.Size = new System.Drawing.Size(586, 82);
+         textBox.TabIndex = 3;
          // 
          // panelExtraActions
          // 
@@ -101,7 +99,7 @@
          // 
          // tabPageEdit
          // 
-         this.tabPageEdit.Controls.Add(this.textBoxHost);
+         this.tabPageEdit.Controls.Add(this.textBox);
          this.tabPageEdit.Location = new System.Drawing.Point(4, 22);
          this.tabPageEdit.Name = "tabPageEdit";
          this.tabPageEdit.Padding = new System.Windows.Forms.Padding(3);
@@ -174,8 +172,7 @@
       #endregion
       private System.Windows.Forms.Button buttonOK;
       private CommonControls.Controls.ConfirmCancelButton buttonCancel;
-      private System.Windows.Forms.Integration.ElementHost textBoxHost;
-      private System.Windows.Controls.TextBox textBox;
+      private CommonControls.Controls.SmartTextBox textBox;
       private System.Windows.Forms.ToolTip toolTip;
       private System.Windows.Forms.Panel panelExtraActions;
       private System.Windows.Forms.TabControl tabControlMode;

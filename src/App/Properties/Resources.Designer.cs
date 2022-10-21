@@ -117,6 +117,12 @@ namespace mrHelper.App.Properties {
         ///   border-spacing: 0;
         ///}
         ///
+        ///table .no-border {
+        ///   border: none;
+        ///   border-collapse: initial;
+        ///   border-spacing: initial;
+        ///}
+        ///
         ///table thead th {
         ///   background-color: #E4E7E6;
         ///   border: solid 1px #DDEEEE;
@@ -126,11 +132,7 @@ namespace mrHelper.App.Properties {
         ///   text-shadow: 1px 1px 1px #fff;
         ///}
         ///
-        ///table tbody td {
-        ///   background-color: #FBFBF5;
-        ///   border: solid 1px #DDEEEE;
-        ///   color: #333;
-        ///   paddi [rest of string was truncated]&quot;;.
+        ///tab [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Common_CSS {
             get {
@@ -229,6 +231,16 @@ namespace mrHelper.App.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap loading_transp_alpha {
+            get {
+                object obj = ResourceManager.GetObject("loading_transp_alpha", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to body {
         ///  background-image: url(&apos;balls.png&apos;);
         ///  background-repeat: repeat-x;
@@ -251,6 +263,16 @@ namespace mrHelper.App.Properties {
         internal static System.Drawing.Bitmap Penguin {
             get {
                 object obj = ResourceManager.GetObject("Penguin", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap pin_transparent_alpha {
+            get {
+                object obj = ResourceManager.GetObject("pin_transparent_alpha", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

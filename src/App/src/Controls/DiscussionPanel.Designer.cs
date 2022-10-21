@@ -1,4 +1,6 @@
-﻿namespace mrHelper.App.Controls
+﻿using System.Linq;
+
+namespace mrHelper.App.Controls
 {
    partial class DiscussionPanel
    {
@@ -35,6 +37,8 @@
          _redrawTimer.Dispose();
 
          _popupWindow.Dispose();
+
+         _pathCache.Dispose();
 
          base.Dispose(disposing);
       }

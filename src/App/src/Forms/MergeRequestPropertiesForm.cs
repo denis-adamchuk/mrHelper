@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using Markdig;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
 using mrHelper.GitLabClient;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
@@ -17,7 +18,7 @@ namespace mrHelper.App.Forms
    internal abstract partial class MergeRequestPropertiesForm : CustomFontForm
    {
       internal MergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
-         bool isAllowedToChangeSource, IEnumerable<User> users)
+         bool isAllowedToChangeSource, IEnumerable<User> users, AvatarImageCache avatarImageCache)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);
@@ -31,6 +32,7 @@ namespace mrHelper.App.Forms
          _currentUser = currentUser;
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
          _isAllowedToChangeSource = isAllowedToChangeSource;
+         _avatarImageCache = avatarImageCache;
 
          string css = String.Format("{0}", mrHelper.App.Properties.Resources.Common_CSS);
          htmlPanelTitle.BaseStylesheet = css;
@@ -40,32 +42,35 @@ namespace mrHelper.App.Forms
 
          buttonCancel.ConfirmationCondition = () => true;
 
+         textBoxSpecialNote.Init(false, String.Empty, false, false, true);
          if (users == null || !users.Any())
          {
+            _fullUserList = new User[] { };
+
             // This may happen when new MR creation is requested by URL and mrHelper is not launched.
             // In this case User Cache is still not filled. Let's load project users.
             comboBoxProject.SelectedIndexChanged += new System.EventHandler(loadProjectUsersForAutoCompletion);
          }
          else
          {
-            textBoxSpecialNote.SetUsers(users
-               .Select(user => new CommonControls.Controls.TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
+            _fullUserList = users;
+            setAutocompletionEntities();
          }
       }
 
       private void MergeRequestPropertiesForm_Deactivate(object sender, EventArgs e)
       {
-         textBoxSpecialNote.HideAutoCompleteBox(TextBoxWithUserAutoComplete.HidingReason.FormDeactivation);
+         textBoxSpecialNote.HideAutoCompleteBox(SmartTextBox.HidingReason.FormDeactivation);
       }
 
       private void MergeRequestPropertiesForm_LocationChanged(object sender, EventArgs e)
       {
-         textBoxSpecialNote.HideAutoCompleteBox(TextBoxWithUserAutoComplete.HidingReason.FormMovedOrResized);
+         textBoxSpecialNote.HideAutoCompleteBox(SmartTextBox.HidingReason.FormMovedOrResized);
       }
 
       private void MergeRequestPropertiesForm_SizeChanged(object sender, EventArgs e)
       {
-         textBoxSpecialNote.HideAutoCompleteBox(TextBoxWithUserAutoComplete.HidingReason.FormMovedOrResized);
+         textBoxSpecialNote.HideAutoCompleteBox(SmartTextBox.HidingReason.FormMovedOrResized);
       }
 
       private void loadProjectUsersForAutoCompletion(object sender, EventArgs e)
@@ -73,10 +78,20 @@ namespace mrHelper.App.Forms
          BeginInvoke(new Action(async () =>
          {
             string projectName = getProjectName();
-            IEnumerable<User> users = await _projectAccessor.GetSingleProjectAccessor(projectName).GetUsersAsync();
-            textBoxSpecialNote.SetUsers(users
-               .Select(user => new CommonControls.Controls.TextBoxWithUserAutoComplete.User(user.Name, user.Username)));
+            _fullUserList = await _projectAccessor.GetSingleProjectAccessor(projectName).GetUsersAsync();
+            setAutocompletionEntities();
          }));
+      }
+
+      private void setAutocompletionEntities()
+      {
+         if (_fullUserList != null && _avatarImageCache != null)
+         {
+            textBoxSpecialNote.SetAutoCompletionEntities(_fullUserList
+               .Select(user => new SmartTextBox.AutoCompletionEntity(
+                  user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User,
+                  () => _avatarImageCache.GetAvatar(user, System.Drawing.Color.White))));
+         }
       }
 
       internal string ProjectName => getProjectName();
@@ -106,7 +121,7 @@ namespace mrHelper.App.Forms
       {
          string title = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getTitle());
          string formCaption = "Edit Merge Request title";
-         using (TextEditForm editTitleForm = new TextEditForm(formCaption, title, true, false, null, String.Empty))
+         using (TextEditBaseForm editTitleForm = new SimpleTextEditForm(formCaption, title, false, String.Empty, null, null))
          {
             if (WinFormsHelpers.ShowDialogOnControl(editTitleForm, this) == DialogResult.OK)
             {
@@ -120,7 +135,8 @@ namespace mrHelper.App.Forms
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
          string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName()));
-         using (TextEditForm editDescriptionForm = new TextEditForm(formCaption, description, true, true, null, uploadsPrefix))
+         using (TextEditBaseForm editDescriptionForm = new SimpleTextEditForm(
+            formCaption, description, true, uploadsPrefix, _fullUserList, _avatarImageCache))
          {
             if (WinFormsHelpers.ShowDialogOnControl(editDescriptionForm, this) == DialogResult.OK)
             {
@@ -430,6 +446,8 @@ namespace mrHelper.App.Forms
 
       private readonly MarkdownPipeline _mdPipeline;
       private readonly bool _isAllowedToChangeSource;
+      private IEnumerable<User> _fullUserList;
+      private readonly AvatarImageCache _avatarImageCache;
       private string _title;
       private string _description;
    }

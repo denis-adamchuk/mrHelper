@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using mrHelper.App.Helpers;
 using mrHelper.CustomActions;
-using mrHelper.Common.Exceptions;
 using mrHelper.Common.Constants;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.CommonControls.Tools;
@@ -52,6 +52,7 @@ namespace mrHelper.App.Controls
          Action<string> onFontSelected,
          ColorScheme colorScheme,
          Func<ICommand, CommandState> isCommandEnabled,
+         Func<ICommand, Task> onCommand,
          Action onRefresh)
       {
          _loadingConfiguration = true;
@@ -60,6 +61,7 @@ namespace mrHelper.App.Controls
 
          _displayFilter = displayFilter;
          setDiscussionFilterStateInControls(_displayFilter.FilterState);
+         _displayFilter.FilterStateChanged += () => setDiscussionFilterStateInControls(_displayFilter.FilterState);
 
          _discussionLayout = discussionLayout;
          setDiscussionLayoutStateInControls();
@@ -71,6 +73,7 @@ namespace mrHelper.App.Controls
          _discussionHelper = discussionHelper;
 
          _isCommandEnabled = isCommandEnabled;
+         _onCommand = onCommand;
          addCustomActions(commands, commandCallback);
 
          addFontSizes();
@@ -214,7 +217,7 @@ namespace mrHelper.App.Controls
       private void onDiffContextDepthCheckedChanged(object sender, EventArgs e)
       {
          ToolStripMenuItem checkBox = sender as ToolStripMenuItem;
-         if (!checkBox.Checked || !int.TryParse(checkBox.Text, out int diffContextDepthInteger))
+         if (_loadingConfiguration || !checkBox.Checked || !int.TryParse(checkBox.Text, out int diffContextDepthInteger))
          {
             return;
          }
@@ -272,20 +275,10 @@ namespace mrHelper.App.Controls
 
       private void onCommandAction(ICommand command, ICommandCallback commandCallback)
       {
+         Trace.TraceInformation("[DiscussionsFormMenu] onCommandAction({0})", command.Name);
          BeginInvoke(new Action(async () =>
          {
-            try
-            {
-               await command.Run(commandCallback);
-            }
-            catch (Exception ex) // Exception type does not matter
-            {
-               string errorMessage = "Custom action failed";
-               ExceptionHandlers.Handle(errorMessage, ex);
-               MessageBox.Show(errorMessage, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-               return;
-            }
-            Trace.TraceInformation("[DiscussionsFormMenu] onCommandAction({0})", command.Name);
+            await _onCommand(command);
             onRefreshAction();
          }));
       }
@@ -520,6 +513,7 @@ namespace mrHelper.App.Controls
       private AsyncDiscussionHelper _discussionHelper;
       private Action<string> _onFontSelected;
       private Func<ICommand, CommandState> _isCommandEnabled;
+      private Func<ICommand, Task> _onCommand;
       private ColorScheme _colorScheme;
       private bool _loadingConfiguration;
       private readonly ToolStripMenuItem[] _sortMenuItemGroup;

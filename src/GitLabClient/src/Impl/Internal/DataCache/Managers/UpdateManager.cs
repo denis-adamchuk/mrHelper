@@ -30,8 +30,7 @@ namespace mrHelper.GitLabClient.Managers
          _mergeRequestListLoader = new MergeRequestListLoader(
             hostname, _updateOperator, cacheUpdater, null, queryCollection,
             isApprovalStatusSupported);
-         _mergeRequestLoader = new MergeRequestLoader(_updateOperator, cacheUpdater,
-            dataCacheContext.UpdateRules.UpdateOnlyOpenedMergeRequests, isApprovalStatusSupported);
+         _mergeRequestLoader = new MergeRequestLoader(_updateOperator, cacheUpdater, isApprovalStatusSupported);
          _extLogging = dataCacheContext.UpdateManagerExtendedLogging;
          _tagForLogging = dataCacheContext.TagForLogging;
 
@@ -63,10 +62,14 @@ namespace mrHelper.GitLabClient.Managers
          }
          _oneShotTimers.Clear();
 
-         _mergeRequestListLoader = null;
-         _mergeRequestLoader = null;
          _updateOperator?.Dispose();
          _updateOperator = null;
+
+         _mergeRequestLoader?.Dispose();
+         _mergeRequestLoader = null;
+
+         _mergeRequestListLoader?.Dispose();
+         _mergeRequestListLoader = null;
       }
 
       public void RequestOneShotUpdate(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
@@ -80,6 +83,20 @@ namespace mrHelper.GitLabClient.Managers
          {
             enqueueOneShotTimer(mrk, interval, null);
          }
+      }
+
+      private class OneShotTimer : System.Timers.Timer
+      {
+         internal OneShotTimer(System.ComponentModel.ISynchronizeInvoke synchronizeInvoke,
+            int interval, MergeRequestKey? mrk)
+            : base(interval)
+         {
+            SynchronizingObject = synchronizeInvoke;
+            MergeRequestKey = mrk;
+            AutoReset = false;
+         }
+
+         internal MergeRequestKey? MergeRequestKey { get; }
       }
 
       private void enqueueOneShotTimer(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
@@ -96,13 +113,7 @@ namespace mrHelper.GitLabClient.Managers
             return;
          }
 
-         System.Timers.Timer oneShotTimer = new System.Timers.Timer
-         {
-            Interval = interval,
-            AutoReset = false,
-            SynchronizingObject = _timer?.SynchronizingObject
-         };
-
+         OneShotTimer oneShotTimer = new OneShotTimer(_timer.SynchronizingObject, interval, mrk);
          oneShotTimer.Elapsed +=
             async (s, e) =>
          {
@@ -125,8 +136,13 @@ namespace mrHelper.GitLabClient.Managers
             notify(updates);
 
             onUpdateFinished?.Invoke();
-            _oneShotTimers.Remove(oneShotTimer);
-            oneShotTimer.Dispose();
+
+            // the timer might have been dropped in updateAllOnTimer()
+            if (_oneShotTimers.Contains(oneShotTimer))
+            {
+               _oneShotTimers.Remove(oneShotTimer);
+               oneShotTimer.Dispose();
+            }
          };
 
          oneShotTimer.Start();
@@ -246,8 +262,34 @@ namespace mrHelper.GitLabClient.Managers
                   mergeRequestsWithUpdatedDetailsCount,
                   closedMergeRequestsCount));
          }
+         IEnumerable<MergeRequestKey> removedMergeRequestKeys =
+            updates
+            .Where(x => x.RemovedFromCache)
+            .Select(x => new MergeRequestKey(x.FullMergeRequestKey.ProjectKey,
+                                             x.FullMergeRequestKey.MergeRequest.IId));
+         stopOneShotTimers(removedMergeRequestKeys);
 
          return updates;
+      }
+
+      private void stopOneShotTimers(IEnumerable<MergeRequestKey> mergeRequestKeys)
+      {
+         foreach (MergeRequestKey mergeRequestKey in mergeRequestKeys)
+         {
+            for (int iTimer = 0; iTimer < _oneShotTimers.Count; ++iTimer)
+            {
+               OneShotTimer timer = _oneShotTimers[iTimer];
+               if (timer.MergeRequestKey.Equals(mergeRequestKey))
+               {
+                  timer.Stop();
+                  timer.Dispose();
+                  _oneShotTimers[iTimer] = null;
+                  traceDetailed(String.Format("Stopped timer with interval {0} for MRK !{1} in {2}",
+                     timer.Interval, mergeRequestKey.IId, mergeRequestKey.ProjectKey.ProjectName));
+               }
+            }
+         }
+         _oneShotTimers.RemoveAll(x => x == null);
       }
 
       private void notify(IEnumerable<UserEvents.MergeRequestEvent> updates)
@@ -272,11 +314,11 @@ namespace mrHelper.GitLabClient.Managers
       }
 
       private System.Timers.Timer _timer;
-      private readonly List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
+      private readonly List<OneShotTimer> _oneShotTimers = new List<OneShotTimer>();
 
       private DataCacheOperator _updateOperator;
-      private IMergeRequestListLoader _mergeRequestListLoader;
-      private IMergeRequestLoader _mergeRequestLoader;
+      private MergeRequestListLoader _mergeRequestListLoader;
+      private MergeRequestLoader _mergeRequestLoader;
       private readonly IInternalCache _cache;
       private readonly InternalMergeRequestCacheComparator _checker =
          new InternalMergeRequestCacheComparator();

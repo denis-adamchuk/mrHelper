@@ -142,6 +142,24 @@ namespace mrHelper.Common.Constants
          Delay = 0
       };
 
+      public static TaskUtils.BatchLimits AvatarLoaderUserBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 0
+      };
+
+      public static TaskUtils.BatchLimits AvatarLoaderForDiscussionsUserBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 10,
+         Delay = 1000
+      };
+
+      public static TaskUtils.BatchLimits AvatarLoaderForUsersUserBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 5,
+         Delay = 10000
+      };
+
       // @{ Default properties for FileStorageUpdater (can be overridden by user in a configuration file)
       // AwaitedUpdateComparisonBatchSizeKeyName
       public static TaskUtils.BatchLimits AwaitedUpdateComparisonBatchDefaultLimits = new TaskUtils.BatchLimits

@@ -37,6 +37,7 @@ namespace mrHelper.App.Controls
             listView.SetColorScheme(null);
             listView.SetFilter(null);
             listView.SetExpressionResolver(null);
+            listView.SetAvatarImageCache(null);
          }
 
          // Clear RevisionBrowser and let it drop ContextMenuStrip
@@ -57,6 +58,8 @@ namespace mrHelper.App.Controls
          disposeGitHelpers();
          disposeLocalGitRepositoryFactory();
          disposeLiveDataCacheDependencies();
+         disposeSearchDataCacheDependencies();
+         disposeRecentDataCacheDependencies();
 
          resetLostConnectionInfo();
 
@@ -89,6 +92,7 @@ namespace mrHelper.App.Controls
          this.listViewLiveMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderColor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderAvatar = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -108,6 +112,7 @@ namespace mrHelper.App.Controls
          this.columnHeaderFoundIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundColor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderFoundAvatar = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderFoundLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -124,6 +129,7 @@ namespace mrHelper.App.Controls
          this.columnHeaderRecentIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentColor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentState = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderRecentAvatar = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentAuthor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentTitle = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -248,6 +254,7 @@ namespace mrHelper.App.Controls
          this.listViewLiveMergeRequests.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeaderIId,
             this.columnHeaderColor,
+            this.columnHeaderAvatar,
             this.columnHeaderAuthor,
             this.columnHeaderTitle,
             this.columnHeaderLabels,
@@ -286,6 +293,12 @@ namespace mrHelper.App.Controls
          this.columnHeaderColor.Tag = mrHelper.App.Controls.ColumnType.Color;
          this.columnHeaderColor.Text = "Color";
          this.columnHeaderColor.Width = MergeRequestListView.DefaultColorColumnWidth;
+         // 
+         // columnHeaderAvatar
+         // 
+         this.columnHeaderAvatar.Tag = mrHelper.App.Controls.ColumnType.Avatar;
+         this.columnHeaderAvatar.Text = "Avatar";
+         this.columnHeaderAvatar.Width = 64;
          // 
          // columnHeaderAuthor
          // 
@@ -404,6 +417,7 @@ namespace mrHelper.App.Controls
             this.columnHeaderFoundIId,
             this.columnHeaderFoundColor,
             this.columnHeaderFoundState,
+            this.columnHeaderFoundAvatar,
             this.columnHeaderFoundAuthor,
             this.columnHeaderFoundTitle,
             this.columnHeaderFoundLabels,
@@ -444,6 +458,12 @@ namespace mrHelper.App.Controls
          this.columnHeaderFoundState.Tag = mrHelper.App.Controls.ColumnType.State;
          this.columnHeaderFoundState.Text = "State";
          this.columnHeaderFoundState.Width = 80;
+         // 
+         // columnHeaderFoundAvatar
+         // 
+         this.columnHeaderFoundAvatar.Tag = mrHelper.App.Controls.ColumnType.Avatar;
+         this.columnHeaderFoundAvatar.Text = "Avatar";
+         this.columnHeaderFoundAvatar.Width = 110;
          // 
          // columnHeaderFoundAuthor
          // 
@@ -565,6 +585,7 @@ namespace mrHelper.App.Controls
             this.columnHeaderRecentIId,
             this.columnHeaderRecentColor,
             this.columnHeaderRecentState,
+            this.columnHeaderRecentAvatar,
             this.columnHeaderRecentAuthor,
             this.columnHeaderRecentTitle,
             this.columnHeaderRecentLabels,
@@ -605,6 +626,12 @@ namespace mrHelper.App.Controls
          this.columnHeaderRecentState.Tag = mrHelper.App.Controls.ColumnType.State;
          this.columnHeaderRecentState.Text = "State";
          this.columnHeaderRecentState.Width = 80;
+         // 
+         // columnHeaderRecentAvatar
+         // 
+         this.columnHeaderRecentAvatar.Tag = mrHelper.App.Controls.ColumnType.Avatar;
+         this.columnHeaderRecentAvatar.Text = "Avatar";
+         this.columnHeaderRecentAvatar.Width = 64;
          // 
          // columnHeaderRecentAuthor
          // 
@@ -784,6 +811,7 @@ namespace mrHelper.App.Controls
       private App.Controls.MergeRequestListView listViewLiveMergeRequests;
       private System.Windows.Forms.ColumnHeader columnHeaderIId;
       private System.Windows.Forms.ColumnHeader columnHeaderColor;
+      private System.Windows.Forms.ColumnHeader columnHeaderAvatar;
       private System.Windows.Forms.ColumnHeader columnHeaderAuthor;
       private System.Windows.Forms.ColumnHeader columnHeaderTitle;
       private System.Windows.Forms.ColumnHeader columnHeaderLabels;
@@ -802,6 +830,7 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ColumnHeader columnHeaderFoundIId;
       private System.Windows.Forms.ColumnHeader columnHeaderFoundColor;
       private System.Windows.Forms.ColumnHeader columnHeaderFoundState;
+      private System.Windows.Forms.ColumnHeader columnHeaderFoundAvatar;
       private System.Windows.Forms.ColumnHeader columnHeaderFoundAuthor;
       private System.Windows.Forms.ColumnHeader columnHeaderFoundTitle;
       private System.Windows.Forms.ColumnHeader columnHeaderFoundLabels;
@@ -817,6 +846,7 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ColumnHeader columnHeaderRecentIId;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentColor;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentState;
+      private System.Windows.Forms.ColumnHeader columnHeaderRecentAvatar;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentAuthor;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentTitle;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentLabels;

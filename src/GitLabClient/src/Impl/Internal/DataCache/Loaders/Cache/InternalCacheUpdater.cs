@@ -87,6 +87,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          _cache.SetApprovals(mrk, approvals);
       }
 
+      internal void UpdateAvatar(int userId, byte[] avatar)
+      {
+         _cache.SetAvatar(userId, avatar);
+      }
+
       /// <summary>
       /// Cache passed merge request
       /// </summary>

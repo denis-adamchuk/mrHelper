@@ -77,11 +77,22 @@ namespace mrHelper.App.Controls
          }
 
          IEnumerable<Project> fullProjectList = getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects();
-         bool isProjectListReady = fullProjectList?.Any() ?? false;
-         if (!isProjectListReady)
+         if (fullProjectList == null || !fullProjectList.Any())
          {
             Debug.Assert(false); // full project list is needed to check project properties inside the dialog code
             Trace.TraceError("[ConnectionPage] Project List is not ready at the moment of Accept click");
+            return;
+         }
+
+         if (null == fullProjectList
+            .SingleOrDefault(project => project.Path_With_Namespace == fmk.Value.ProjectKey.ProjectName))
+         {
+            Trace.TraceWarning("[ConnectionPage] Project is not found in a full list");
+            string message = String.Format(
+               "You don't have a membership in {0} project. " +
+               "Please contact {1} administrator or SCM team and restart the application.",
+               fmk.Value.ProjectKey.ProjectName, fmk.Value.ProjectKey.HostName);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
          }
 
@@ -138,6 +149,45 @@ namespace mrHelper.App.Controls
          toggleMergeRequestExclusion(getCurrentTabDataCacheType(), getMergeRequest(null));
       }
 
+      private void openSelectedAuthorProfile()
+      {
+         Trace.TraceInformation("[ConnectionPage] Open selected author profile...");
+         openAuthorProfile(getMergeRequest(null));
+      }
+
+      private void openAuthorProfile(MergeRequest mergeRequest)
+      {
+         if (mergeRequest == null)
+         {
+            return;
+         }
+         UrlHelper.OpenBrowser(mergeRequest.Author.Web_Url);
+      }
+
+      private void toggleSelectedMergeRequestPinState()
+      {
+         EDataCacheType type = getCurrentTabDataCacheType();
+         FullMergeRequestKey? selectedMergeRequestOpt = getListView(type)?.GetSelectedMergeRequest();
+         if (selectedMergeRequestOpt == null)
+         {
+            return;
+         }
+
+         FullMergeRequestKey fullKey = selectedMergeRequestOpt.Value;
+         MergeRequestKey mrk = new MergeRequestKey(fullKey.ProjectKey, fullKey.MergeRequest.IId);
+         bool wasPinned = isPinned(mrk);
+         Trace.TraceInformation(String.Format(
+            "[ConnectionPage] Toggling pin state for selected MR (was pinned = {0}...", wasPinned.ToString()));
+         if (wasPinned)
+         {
+            unpin(mrk);
+         }
+         else
+         {
+            pin(mrk);
+         }
+      }
+
       private void toggleMergeRequestExclusion(EDataCacheType type, MergeRequest mergeRequest)
       {
          if (mergeRequest == null)
@@ -172,7 +222,7 @@ namespace mrHelper.App.Controls
 
          using (MergeRequestPropertiesForm form = new NewMergeRequestForm(hostname,
             _shortcuts.GetProjectAccessor(), currentUser, initialProperties, fullProjectList, fullUserList,
-            sourceBranchesInUse, getSourceBranchTemplate(), showIntegrationHint))
+            sourceBranchesInUse, getSourceBranchTemplate(), showIntegrationHint, _avatarImageCache[EDataCacheType.Live]))
          {
             if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) != DialogResult.OK)
             {
@@ -306,9 +356,11 @@ namespace mrHelper.App.Controls
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
+            EDataCacheType mode = getCurrentTabDataCacheType();
+            DataCache dataCache = getDataCache(mode);
+            IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
-               mrk, mergeRequest.Title, CurrentUser, _shortcuts);
+               mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList, _avatarImageCache[mode]);
             bool res = await discussionHelper.AddCommentAsync(WinFormsHelpers.FindMainForm());
             addOperationRecord(res ? "New comment has been added" : "Comment has not been added");
          }));
@@ -321,9 +373,11 @@ namespace mrHelper.App.Controls
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            DataCache dataCache = getDataCache(getCurrentTabDataCacheType());
+            EDataCacheType mode = getCurrentTabDataCacheType();
+            DataCache dataCache = getDataCache(mode);
+            IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
-               mrk, mergeRequest.Title, CurrentUser, _shortcuts);
+               mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList, _avatarImageCache[mode]);
             bool res = await discussionHelper.AddThreadAsync(WinFormsHelpers.FindMainForm());
             addOperationRecord(res ? "A new discussion thread has been added" : "Discussion thread has not been added");
          }));
@@ -396,7 +450,8 @@ namespace mrHelper.App.Controls
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(dataCache.DiscussionCache, mrk);
          using (MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
-            _shortcuts.GetProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList))
+            _shortcuts.GetProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList,
+            _avatarImageCache[mode]))
          {
             if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) != DialogResult.OK)
             {
@@ -448,7 +503,9 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void showDiscussionsForSelectedMergeRequest()
+      private void showDiscussionsForSelectedMergeRequest() => showDiscussionsForSelectedMergeRequest(null);
+
+      private void showDiscussionsForSelectedMergeRequest(int? noteId = null)
       {
          BeginInvoke(new Action(async () =>
          {
@@ -460,11 +517,14 @@ namespace mrHelper.App.Controls
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
-            await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.Web_Url);
+            await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.Web_Url, noteId);
          }));
       }
 
-      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string webUrl)
+      private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string webUrl) =>
+         showDiscussionsFormAsync(mrk, title, author, webUrl, null);
+
+      async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string webUrl, int? noteId)
       {
          Debug.Assert(HostName != String.Empty);
          Debug.Assert(CurrentUser != null);
@@ -495,7 +555,7 @@ namespace mrHelper.App.Controls
          {
             return;
          }
-         showDiscussionForm(dataCache, storage, currentUser, mrk, discussions, title, author, webUrl);
+         showDiscussionForm(dataCache, storage, currentUser, mrk, discussions, title, author, webUrl, noteId);
       }
 
       async private Task<bool> prepareStorageForDiscussionsForm(MergeRequestKey mrk,
@@ -522,7 +582,7 @@ namespace mrHelper.App.Controls
       }
 
       private void showDiscussionForm(DataCache dataCache, ILocalCommitStorage storage, User currentUser,
-         MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author, string webUrl)
+         MergeRequestKey mrk, IEnumerable<Discussion> discussions, string title, User author, string webUrl, int? noteId)
       {
          if (currentUser == null || discussions == null || author == null || currentUser.Id == 0)
          {
@@ -536,6 +596,11 @@ namespace mrHelper.App.Controls
          {
             existingDiscussionsForm.Restore();
             Trace.TraceInformation(String.Format("[ConnectionPage] Activated an existing Discussions view for MR {0}", mrk.IId));
+            if (noteId.HasValue)
+            {
+               Trace.TraceInformation(String.Format("[ConnectionPage] Selecting note with Id {0}", noteId.Value));
+               existingDiscussionsForm.SelectNote(noteId.Value);
+            }
             return;
          }
 
@@ -569,12 +634,18 @@ namespace mrHelper.App.Controls
                }
             }, this);
 
-            AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(mrk, title, currentUser, _shortcuts);
+            AvatarImageCache avatarImageCache = _avatarImageCache[getCurrentTabDataCacheType()];
+            IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
+            AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
+               mrk, title, currentUser, _shortcuts, fullUserList, avatarImageCache);
 
             DiscussionsForm discussionsForm = new DiscussionsForm(
                git, currentUser, mrk, discussions, title, author, _colorScheme,
                discussionLoader, discussionHelper, webUrl, _shortcuts, GetCustomActionList(),
-               cmd => isCommandEnabledInDiscussionsView(mrk, cmd), () => reloadByDiscussionsViewRequest(mrk))
+               cmd => isCommandEnabledInDiscussionsView(cmd, mrk),
+               cmd => onCommandLaunchedFromDiscussionsView(cmd, mrk),
+               () => reloadByDiscussionsViewRequest(mrk),
+               avatarImageCache, _onOpenUrl, fullUserList)
             {
                Tag = mrk
             };
@@ -597,6 +668,12 @@ namespace mrHelper.App.Controls
 
          addOperationRecord("Discussions view has opened");
          ensureMergeRequestInRecentDataCache(mrk);
+
+         if (noteId.HasValue)
+         {
+            Trace.TraceInformation(String.Format("[ConnectionPage] Selecting note with Id {0}", noteId.Value));
+            form.SelectNote(noteId.Value);
+         }
       }
 
       private void onColorSchemeChanged()

@@ -25,7 +25,8 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException, ContextMakingException.
       /// </summary>
-      public DiffContext GetContext(DiffPosition position, ContextDepth depth, int offset, UnchangedLinePolicy unchangedLinePolicy)
+      public DiffContext GetContext(DiffPosition position, ContextDepth depth, int offset,
+         UnchangedLinePolicy unchangedLinePolicy)
       {
          if (!Context.Helpers.IsValidPosition(position))
          {

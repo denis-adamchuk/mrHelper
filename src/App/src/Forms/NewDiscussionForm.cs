@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using System.Drawing;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using TheArtOfDev.HtmlRenderer.WinForms;
 using mrHelper.App.Controls;
 using mrHelper.App.Interprocess;
 using mrHelper.Core.Context;
@@ -15,7 +17,8 @@ using mrHelper.Common.Exceptions;
 using mrHelper.Common.Interfaces;
 using mrHelper.CommonNative;
 using mrHelper.CommonControls.Tools;
-using TheArtOfDev.HtmlRenderer.WinForms;
+using mrHelper.App.Helpers;
+using GitLabSharp.Entities;
 
 namespace mrHelper.App.Forms
 {
@@ -33,16 +36,21 @@ namespace mrHelper.App.Forms
          Func<ReportedDiscussionNoteKey, string, Task> onReply,
          Func<ReportedDiscussionNoteKey?, DiffPosition, IEnumerable<ReportedDiscussionNote>> getRelatedDiscussions,
          Func<DiffPosition, DiffContext> getNewDiscussionDiffContext,
-         Func<DiffPosition, DiffContext> getDiffContext)
+         Func<DiffPosition, DiffContext> getDiffContext,
+         IEnumerable<GitLabSharp.Entities.User> fullUserList,
+         AvatarImageCache avatarImageCache)
       {
          InitializeComponent();
          this.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
+         htmlPanelContext.MouseWheelEx += panelScroll_MouseWheel;
 
          applyFont(Program.Settings.MainWindowFontSizeName);
-         createWPFTextBox();
          _groupBoxRelatedThreadsDefaultHeight = groupBoxRelated.Height;
          _diffContextDefaultHeight = panelHtmlContextCanvas.Height;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
+         _avatarImageCache = avatarImageCache;
+         _fullUserList = fullUserList;
+         initSmartTextBox();
 
          this.Text = Constants.StartNewThreadCaption;
          labelInvisibleCharactersHint.Text = Constants.WarningOnUnescapedMarkdown;
@@ -103,7 +111,12 @@ namespace mrHelper.App.Forms
          updateControlState();
       }
 
-      private void panelScroll_MouseWheel(object sender, System.Windows.Forms.MouseEventArgs e)
+      private void panelScroll_MouseWheel(object sender, HtmlPanelEx.MouseWheelExArgs e)
+      {
+         WinFormsHelpers.ConvertMouseWheelToClick(buttonScrollDown, buttonScrollUp, e.Delta);
+      }
+
+      private void panelScroll_MouseWheel(object sender, MouseEventArgs e)
       {
          WinFormsHelpers.ConvertMouseWheelToClick(buttonScrollDown, buttonScrollUp, e.Delta);
       }
@@ -121,15 +134,15 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void textBoxDiscussionBody_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+      private void textBoxDiscussionBody_KeyDown(object sender, KeyEventArgs e)
       {
-         if (e.Key == System.Windows.Input.Key.Enter && Control.ModifierKeys == Keys.Control)
+         if (e.KeyCode == Keys.Enter && e.Modifiers.HasFlag(Keys.Control))
          {
             buttonOK.PerformClick();
          }
       }
 
-      private void textBoxDiscussionBody_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+      private void textBoxDiscussionBody_TextChanged(object sender, EventArgs e)
       {
          saveNoteText(CurrentNoteIndex, textBoxDiscussionBody.Text);
          updateInvisibleCharactersHint();
@@ -138,7 +151,7 @@ namespace mrHelper.App.Forms
 
       private void buttonInsertCode_Click(object sender, EventArgs e)
       {
-         Helpers.WPFHelpers.InsertCodePlaceholderIntoTextBox(textBoxDiscussionBody);
+         SmartTextBoxHelpers.InsertCodePlaceholderIntoTextBox(textBoxDiscussionBody);
          textBoxDiscussionBody.Focus();
       }
 
@@ -242,11 +255,10 @@ namespace mrHelper.App.Forms
 
       async private void buttonReply_Click(object sender, EventArgs e)
       {
-         ReplyOnRelatedNotePanel actions = new ReplyOnRelatedNotePanel(true);
-         using (TextEditForm form = new TextEditForm("Reply on a Discussion", "", true, true, actions, _imagePath))
+         using (ReplyOnRelatedNoteForm form = new ReplyOnRelatedNoteForm(
+            _imagePath, _fullUserList, _avatarImageCache))
          {
             form.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
-            actions.SetTextbox(form.TextBox);
             if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
             {
                if (form.Body.Length == 0)
@@ -256,7 +268,7 @@ namespace mrHelper.App.Forms
                   return;
                }
 
-               if (actions.IsCloseDialogActionChecked)
+               if (form.IsCloseDialogActionChecked)
                {
                   Hide();
                }
@@ -277,14 +289,14 @@ namespace mrHelper.App.Forms
                   MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error,
                      MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
 
-                  if (actions.IsCloseDialogActionChecked)
+                  if (form.IsCloseDialogActionChecked)
                   {
                      Show();
                   }
                   return;
                }
 
-               if (actions.IsCloseDialogActionChecked)
+               if (form.IsCloseDialogActionChecked)
                {
                   await checkAndSubmit();
                }
@@ -557,8 +569,10 @@ namespace mrHelper.App.Forms
       {
          stylesheet = String.Empty;
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
-         var getContext = isCurrentNoteNew() ? _getNewDiscussionDiffContext(position) : _getDiffContext(position);
-         return DiffContextFormatter.GetHtml(getContext, fontSizePx, 2, true);
+         DiffContext context = isCurrentNoteNew() ?
+            _getNewDiscussionDiffContext(position) : _getDiffContext(position);
+         int tableWidth = DiffContextHelpers.EstimateHtmlWidth(context, fontSizePx, htmlPanel.Width);
+         return DiffContextFormatter.GetHtml(context, fontSizePx, 1, tableWidth);
       }
 
       private void updateControlState()
@@ -700,11 +714,19 @@ namespace mrHelper.App.Forms
          return _modifiedNoteTexts.Any() || _deletedNotes.Any();
       }
 
-      private void createWPFTextBox()
+      private void initSmartTextBox()
       {
-         textBoxDiscussionBody = Helpers.WPFHelpers.CreateWPFTextBox(textBoxDiscussionBodyHost,
-            false, String.Empty, true, !Program.Settings.DisableSpellChecker,
-            Program.Settings.WPFSoftwareOnlyRenderMode);
+         textBoxDiscussionBody.Init(false, String.Empty, true,
+            !Program.Settings.DisableSpellChecker, Program.Settings.WPFSoftwareOnlyRenderMode);
+
+         if (_fullUserList != null && _avatarImageCache != null)
+         {
+            textBoxDiscussionBody.SetAutoCompletionEntities(_fullUserList
+               .Select(user => new CommonControls.Controls.SmartTextBox.AutoCompletionEntity(
+                  user.Name, user.Username, CommonControls.Controls.SmartTextBox.AutoCompletionEntity.EntityType.User,
+                  () => _avatarImageCache.GetAvatar(user, Color.White))));
+         }
+
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;
          textBoxDiscussionBody.TextChanged += textBoxDiscussionBody_TextChanged;
       }
@@ -967,6 +989,8 @@ namespace mrHelper.App.Forms
       private readonly int _groupBoxRelatedThreadsDefaultHeight;
       private readonly int _diffContextDefaultHeight;
       private readonly string _imagePath;
+      private readonly AvatarImageCache _avatarImageCache;
+      private readonly IEnumerable<User> _fullUserList;
    }
 }
 

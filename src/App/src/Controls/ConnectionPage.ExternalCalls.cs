@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GitLabSharp;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
@@ -51,33 +50,43 @@ namespace mrHelper.App.Controls
          createNewMergeRequest(HostName, CurrentUser, initialProperties, fullProjectList, fullUserList, false);
       }
 
-      async private Task connectToUrlAsyncInternal(string url, UrlParser.ParsedMergeRequestUrl parsedUrl)
+      async private Task connectToUrlAsyncInternal<T>(string url, T parsedUrl)
       {
          MergeRequestKey mrk = parseUrlIntoMergeRequestKey(parsedUrl);
 
-         // First, try to select a MR from lists of visible MRs
-         bool tryOpenAtLiveTab = true;
-         switch (trySelectMergeRequest(mrk))
+         try
          {
-            case SelectionResult.NotFound:
-               break;
-            case SelectionResult.Selected:
-               addOperationRecord("Merge Request was found in cache and selected");
-               return;
-            case SelectionResult.Hidden:
-               tryOpenAtLiveTab = false;
-               break;
+            // First, try to select a MR from lists of visible MRs
+            bool tryOpenAtLiveTab = true;
+            switch (trySelectMergeRequest(mrk))
+            {
+               case SelectionResult.NotFound:
+                  break;
+               case SelectionResult.Selected:
+                  addOperationRecord("Merge Request was found in cache and selected");
+                  return;
+               case SelectionResult.Hidden:
+                  tryOpenAtLiveTab = false;
+                  break;
+            }
+
+            Debug.Assert(getDataCache(EDataCacheType.Live)?.ConnectionContext != null);
+
+            // If MR is not found at the Live tab at all or user rejected to unhide it,
+            // don't try to open it at the Live tab.
+            // Otherwise, check if requested MR match workflow filters.
+            tryOpenAtLiveTab = tryOpenAtLiveTab && (await checkLiveDataCacheFilterAsync(mrk, url));
+            if (!tryOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url))
+            {
+               await openUrlAtSearchTabAsync(mrk);
+            }
          }
-
-         Debug.Assert(getDataCache(EDataCacheType.Live)?.ConnectionContext != null);
-
-         // If MR is not found at the Live tab at all or user rejected to unhide it,
-         // don't try to open it at the Live tab.
-         // Otherwise, check if requested MR match workflow filters.
-         tryOpenAtLiveTab = tryOpenAtLiveTab && (await checkLiveDataCacheFilterAsync(mrk, url));
-         if (!tryOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url))
+         finally
          {
-            await openUrlAtSearchTabAsync(mrk);
+            if (parsedUrl is UrlParser.ParsedNoteUrl noteUrl)
+            {
+               showDiscussionsForSelectedMergeRequest(noteUrl.NoteId);
+            }
          }
       }
 
@@ -90,8 +99,6 @@ namespace mrHelper.App.Controls
 
       private SelectionResult trySelectMergeRequest(MergeRequestKey mrk)
       {
-         bool isCached(EDataCacheType mode) => getDataCache(mode)?.MergeRequestCache?.GetMergeRequest(mrk) != null;
-
          // We want to check lists in specific order:
          EDataCacheType[] modes = new EDataCacheType[]
          {
@@ -101,7 +108,7 @@ namespace mrHelper.App.Controls
          };
 
          // Check if requested MR is cached
-         if (modes.All(mode => !isCached(mode)))
+         if (modes.All(mode => !isCached(mode, mrk)))
          {
             return SelectionResult.NotFound;
          }
@@ -109,7 +116,7 @@ namespace mrHelper.App.Controls
          // Try selecting an item which is not hidden by filters
          foreach (EDataCacheType mode in modes)
          {
-            if (isCached(mode) && switchTabAndSelectMergeRequest(mode, mrk))
+            if (isCached(mode, mrk) && switchTabAndSelectMergeRequest(mode, mrk))
             {
                return SelectionResult.Selected;
             }
@@ -118,7 +125,7 @@ namespace mrHelper.App.Controls
          // If we are here, requested MR is hidden on each tab where it is cached
          foreach (EDataCacheType mode in modes)
          {
-            if (isCached(mode))
+            if (isCached(mode, mrk))
             {
                if (unhideFilteredMergeRequest(mode))
                {
@@ -255,7 +262,7 @@ namespace mrHelper.App.Controls
          return GitLabClient.Helpers.DoesMatchSearchQuery(queries, mergeRequest, mrk.ProjectKey);
       }
 
-      private MergeRequestKey parseUrlIntoMergeRequestKey(UrlParser.ParsedMergeRequestUrl parsedUrl)
+      private MergeRequestKey parseUrlIntoMergeRequestKey(dynamic parsedUrl)
       {
          return new MergeRequestKey(new ProjectKey(parsedUrl.Host, parsedUrl.Project), parsedUrl.IId);
       }

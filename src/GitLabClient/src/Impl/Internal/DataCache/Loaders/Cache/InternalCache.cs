@@ -11,18 +11,12 @@ namespace mrHelper.GitLabClient.Loaders.Cache
    {
       internal InternalCache()
       {
-         _mergeRequests = new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
-         _versions = new Dictionary<MergeRequestKey, IEnumerable<Version>>();
-         _commits = new Dictionary<MergeRequestKey, IEnumerable<Commit>>();
-         _approvals = new Dictionary<MergeRequestKey, MergeRequestApprovalConfiguration>();
+         init();
       }
 
       private InternalCache(InternalCache details)
       {
-         _mergeRequests = new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
-         _versions = new Dictionary<MergeRequestKey, IEnumerable<Version>>();
-         _commits = new Dictionary<MergeRequestKey, IEnumerable<Commit>>();
-         _approvals = new Dictionary<MergeRequestKey, MergeRequestApprovalConfiguration>();
+         init();
 
          foreach (KeyValuePair<ProjectKey, IEnumerable<MergeRequest>> kv in details._mergeRequests)
          {
@@ -43,6 +37,15 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          {
             SetApprovals(kv.Key, kv.Value);
          }
+      }
+
+      private void init()
+      {
+         _mergeRequests = new Dictionary<ProjectKey, IEnumerable<MergeRequest>>();
+         _versions = new Dictionary<MergeRequestKey, IEnumerable<Version>>();
+         _commits = new Dictionary<MergeRequestKey, IEnumerable<Commit>>();
+         _approvals = new Dictionary<MergeRequestKey, MergeRequestApprovalConfiguration>();
+         _avatars = new Dictionary<int, byte[]>();
       }
 
       /// <summary>
@@ -138,6 +141,16 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          _approvals[mrk] = approvals;
       }
 
+      public byte[] GetAvatar(int userId)
+      {
+         return _avatars.TryGetValue(userId, out byte[] value) ? value : null;
+      }
+
+      internal void SetAvatar(int userId, byte[] avatar)
+      {
+         _avatars[userId] = avatar;
+      }
+
       /// <summary>
       /// Updates a merge request
       /// </summary>
@@ -176,13 +189,16 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       private Dictionary<ProjectKey, IEnumerable<MergeRequest>> _mergeRequests;
 
       // maps Merge Request to its versions
-      private readonly Dictionary<MergeRequestKey, IEnumerable<Version>> _versions;
+      private Dictionary<MergeRequestKey, IEnumerable<Version>> _versions;
 
       // maps Merge Request to its commits
-      private readonly Dictionary<MergeRequestKey, IEnumerable<Commit>> _commits;
+      private Dictionary<MergeRequestKey, IEnumerable<Commit>> _commits;
 
       // maps Merge Request to its approval configuration
-      private readonly Dictionary<MergeRequestKey, MergeRequestApprovalConfiguration> _approvals;
+      private Dictionary<MergeRequestKey, MergeRequestApprovalConfiguration> _approvals;
+
+      // maps User Id to its avatar
+      private Dictionary<int, byte[]> _avatars;
    }
 }
 

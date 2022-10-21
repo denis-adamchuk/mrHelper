@@ -40,6 +40,8 @@ namespace mrHelper.App.Controls
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
       private ExpressionResolver _expressionResolver;
+      private Dictionary<EDataCacheType, AvatarImageCache> _avatarImageCache =
+         new Dictionary<EDataCacheType, AvatarImageCache>();
       private MergeRequestFilter _mergeRequestFilter;
       private MergeRequestFilter _mergeRequestFilterRecent;
       private readonly System.Windows.Forms.ToolTip _toolTip;
@@ -47,6 +49,7 @@ namespace mrHelper.App.Controls
       private readonly ITimeTrackerHolder _timeTrackerHolder;
 
       private readonly DictionaryWrapper<MergeRequestKey, DateTime> _recentMergeRequests;
+      private readonly HashSetWrapper<MergeRequestKey> _pinnedMergeRequests;
       private readonly DictionaryWrapper<MergeRequestKey, HashSet<string>> _reviewedRevisions;
       private readonly DictionaryWrapper<string, MergeRequestKey> _lastMergeRequestsByHosts;
       private readonly DictionaryWrapper<string, NewMergeRequestProperties> _newMergeRequestDialogStatesByHosts;
@@ -83,6 +86,9 @@ namespace mrHelper.App.Controls
          internal DateTime TimeStamp { get; }
       }
       private LostConnectionInfo? _lostConnectionInfo;
+
+      private readonly Action<string> _onOpenUrl;
+      private readonly Func<ICommand, MergeRequestKey, ConnectionPage, System.Threading.Tasks.Task> _onCommand;
    }
 }
 

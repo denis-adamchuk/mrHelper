@@ -33,15 +33,8 @@ namespace mrHelper.GitLabClient.Loaders
          : base(String.Empty, null) { }
    }
 
-   /// <summary>
-   /// </summary>
-   internal class BaseDataCacheLoader
+   internal class BaseLoader
    {
-      internal BaseDataCacheLoader(DataCacheOperator op)
-      {
-         _operator = op;
-      }
-
       async protected static Task<T> call<T>(Func<Task<T>> func, string cancelMessage, string errorMessage)
       {
          try
@@ -57,6 +50,14 @@ namespace mrHelper.GitLabClient.Loaders
             }
             throw new BaseLoaderException(errorMessage, ex);
          }
+      }
+   }
+
+   internal class BaseDataCacheLoader : BaseLoader
+   {
+      internal BaseDataCacheLoader(DataCacheOperator op)
+      {
+         _operator = op;
       }
 
       internal DataCacheOperator _operator;

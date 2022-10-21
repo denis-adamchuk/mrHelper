@@ -163,6 +163,7 @@ namespace mrHelper.CustomActions
       {
          XmlNode enabledIf = attributes.GetNamedItem("EnabledIf");
          XmlNode visibleIf = attributes.GetNamedItem("VisibleIf");
+         XmlNode pin = attributes.GetNamedItem("Pin");
          XmlNode stopTimer = attributes.GetNamedItem("StopTimer");
          XmlNode reload = attributes.GetNamedItem("Reload");
          XmlNode hint = attributes.GetNamedItem("Hint");
@@ -173,6 +174,7 @@ namespace mrHelper.CustomActions
                            name,
                            enabledIf?.Value ?? String.Empty,
                            visibleIf?.Value ?? String.Empty,
+                           (pin?.Value ?? "0") == "1",
                            (stopTimer?.Value ?? "0") == "1",
                            (reload?.Value ?? "0") == "1",
                            hint?.Value ?? String.Empty,

@@ -17,6 +17,8 @@ namespace mrHelper.Common.Tools
 
       public static string DumpStorage => Path.Combine(TempDirectory, DumpStoragePrefix);
 
+      public static string AvatarStorage => Path.Combine(TempDirectory, AvatarStorageDirName);
+
       private static string EMailDirectoryPrefix => "mrh_email";
 
       private static string StoragePrefix => "mrh_db";
@@ -28,6 +30,8 @@ namespace mrHelper.Common.Tools
       private static string InstallerStoragePrefix => "mrh_msi";
 
       private static string DumpStoragePrefix => "mrh_dumps";
+
+      private static string AvatarStorageDirName => "mrh_av";
 
       private static string TempDirectory => Environment.GetEnvironmentVariable("TEMP");
    }

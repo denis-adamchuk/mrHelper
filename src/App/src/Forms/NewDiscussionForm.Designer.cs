@@ -1,4 +1,6 @@
-﻿namespace mrHelper.App.Forms
+﻿using mrHelper.App.Controls;
+
+namespace mrHelper.App.Forms
 {
    partial class NewDiscussionForm
    {
@@ -34,8 +36,8 @@
          this.textBoxFileName = new System.Windows.Forms.TextBox();
          this.buttonOK = new System.Windows.Forms.Button();
          this.panelHtmlContextCanvas = new System.Windows.Forms.Panel();
-         this.htmlPanelContext = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
-         this.textBoxDiscussionBodyHost = new System.Windows.Forms.Integration.ElementHost();
+         this.htmlPanelContext = new HtmlPanelEx(null, false, false);
+         this.textBoxDiscussionBody = new mrHelper.CommonControls.Controls.SmartTextBox();
          this.buttonInsertCode = new System.Windows.Forms.Button();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
          this.buttonPrev = new System.Windows.Forms.Button();
@@ -149,15 +151,13 @@
          this.htmlPanelContext.Text = null;
          this.htmlPanelContext.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelScroll_MouseWheel);
          // 
-         // textBoxDiscussionBodyHost
+         // textBoxDiscussionBody
          // 
-         this.textBoxDiscussionBodyHost.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.textBoxDiscussionBodyHost.Location = new System.Drawing.Point(3, 3);
-         this.textBoxDiscussionBodyHost.Name = "textBoxDiscussionBodyHost";
-         this.textBoxDiscussionBodyHost.Size = new System.Drawing.Size(710, 86);
-         this.textBoxDiscussionBodyHost.TabIndex = 11;
-         this.textBoxDiscussionBodyHost.Text = "textBoxDiscussionBodyHost";
-         this.textBoxDiscussionBodyHost.Child = null;
+         textBoxDiscussionBody.Dock = System.Windows.Forms.DockStyle.Fill;;
+         textBoxDiscussionBody.Location = new System.Drawing.Point(3, 3);
+         textBoxDiscussionBody.Name = "textBoxDiscussionBody";
+         textBoxDiscussionBody.Size = new System.Drawing.Size(586, 82);
+         textBoxDiscussionBody.TabIndex = 11;
          // 
          // buttonInsertCode
          // 
@@ -281,7 +281,7 @@
          // 
          // tabPageEdit
          // 
-         this.tabPageEdit.Controls.Add(this.textBoxDiscussionBodyHost);
+         this.tabPageEdit.Controls.Add(this.textBoxDiscussionBody);
          this.tabPageEdit.Location = new System.Drawing.Point(4, 22);
          this.tabPageEdit.Name = "tabPageEdit";
          this.tabPageEdit.Padding = new System.Windows.Forms.Padding(3);
@@ -548,16 +548,15 @@
       private System.Windows.Forms.Button buttonOK;
       private System.Windows.Forms.TextBox textBoxFileName;
       private System.Windows.Forms.CheckBox checkBoxIncludeContext;
-        private System.Windows.Forms.Panel panelHtmlContextCanvas;
-      private System.Windows.Controls.TextBox textBoxDiscussionBody;
-      private System.Windows.Forms.Integration.ElementHost textBoxDiscussionBodyHost;
+      private System.Windows.Forms.Panel panelHtmlContextCanvas;
+      private CommonControls.Controls.SmartTextBox textBoxDiscussionBody;
       private System.Windows.Forms.Button buttonInsertCode;
       private System.Windows.Forms.ToolTip toolTip;
       private System.Windows.Forms.TabControl tabControlMode;
       private System.Windows.Forms.TabPage tabPageEdit;
       private System.Windows.Forms.TabPage tabPagePreview;
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelPreview;
-      private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelContext;
+      private HtmlPanelEx htmlPanelContext;
       private System.Windows.Forms.Label labelInvisibleCharactersHint;
       private System.Windows.Forms.Panel panelNavigation;
       private System.Windows.Forms.Button buttonPrev;
