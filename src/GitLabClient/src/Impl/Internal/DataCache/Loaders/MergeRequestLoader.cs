@@ -12,9 +12,9 @@ namespace mrHelper.GitLabClient.Loaders
          : base(String.Empty, innerException) { }
    }
 
-   internal class MergeRequestLoader : BaseDataCacheLoader, IMergeRequestLoader
+   internal class MergeRequestLoader : BaseDataCacheLoader, IMergeRequestLoader, IDisposable
    {
-      internal MergeRequestLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater, 
+      internal MergeRequestLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater,
          bool isApprovalStatusSupported)
          : base(op)
       {
@@ -22,6 +22,11 @@ namespace mrHelper.GitLabClient.Loaders
          _versionLoader = new VersionLoader(op, cacheUpdater);
          _approvalLoader = isApprovalStatusSupported ? new ApprovalLoader(op, cacheUpdater) : null;
          _avatarLoader = new AvatarLoader(cacheUpdater);
+      }
+
+      public void Dispose()
+      {
+         _avatarLoader.Dispose();
       }
 
       async public Task LoadMergeRequest(MergeRequestKey mrk)
@@ -69,9 +74,9 @@ namespace mrHelper.GitLabClient.Loaders
          }
       }
 
-      private readonly IVersionLoader _versionLoader;
-      private readonly IApprovalLoader _approvalLoader;
-      private readonly IAvatarLoader _avatarLoader;
+      private readonly VersionLoader _versionLoader;
+      private readonly ApprovalLoader _approvalLoader;
+      private readonly AvatarLoader _avatarLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
    }
 }

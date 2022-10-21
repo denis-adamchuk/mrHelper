@@ -10,13 +10,18 @@ using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Loaders
 {
-   internal class AvatarLoader : BaseLoader, IAvatarLoader
+   internal class AvatarLoader : BaseLoader, IAvatarLoader, IDisposable
    {
       internal AvatarLoader(InternalCacheUpdater cacheUpdater)
       {
          _cacheUpdater = cacheUpdater;
          _diskCache = new DiskCache(PathFinder.AvatarStorage);
          _avatarOperator = new AvatarOperator();
+      }
+
+      public void Dispose()
+      {
+         _avatarOperator.Dispose();
       }
 
       async public Task LoadAvatars(IEnumerable<MergeRequestKey> mergeRequestKeys)

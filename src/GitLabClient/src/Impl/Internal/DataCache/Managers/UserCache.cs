@@ -7,9 +7,9 @@ using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Managers
 {
-   internal class UserCache : IUserCache
+   internal class UserCache : IUserCache, IDisposable
    {
-      internal UserCache(IUserListLoader userListLoader, DataCacheContext context, string hostname)
+      internal UserCache(UserListLoader userListLoader, DataCacheContext context, string hostname)
       {
          _userListLoader = userListLoader;
          _context = context;
@@ -33,13 +33,18 @@ namespace mrHelper.GitLabClient.Managers
          }), null);
       }
 
+      public void Dispose()
+      {
+         _userListLoader.Dispose();
+      }
+
       public IEnumerable<User> GetUsers()
       {
          return GlobalCache.GetUsers(_hostname) ?? Array.Empty<User>();
       }
 
       private readonly string _hostname;
-      private readonly IUserListLoader _userListLoader;
+      private readonly UserListLoader _userListLoader;
       private readonly DataCacheContext _context;
    }
 }

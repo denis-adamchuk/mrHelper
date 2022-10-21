@@ -77,8 +77,7 @@ namespace mrHelper.App.Controls
          }
 
          IEnumerable<Project> fullProjectList = getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects();
-         bool isProjectListReady = fullProjectList?.Any() ?? false;
-         if (!isProjectListReady)
+         if (fullProjectList == null || !fullProjectList.Any())
          {
             Debug.Assert(false); // full project list is needed to check project properties inside the dialog code
             Trace.TraceError("[ConnectionPage] Project List is not ready at the moment of Accept click");

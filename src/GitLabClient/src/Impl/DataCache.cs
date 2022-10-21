@@ -38,17 +38,19 @@ namespace mrHelper.GitLabClient
 
             InternalCacheUpdater cacheUpdater = new InternalCacheUpdater(new InternalCache());
             bool isApprovalStatusSupported = await checkIsApprovalSupportedAsync(gitLabInstance);
-            IMergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
-               hostname, _operator, cacheUpdater,
-               _cacheContext.Callbacks, connectionContext.QueryCollection,
-               isApprovalStatusSupported);
 
             traceInformation(String.Format("Connecting data cache to {0}...", hostname));
             string accessToken = hostProperties.GetAccessToken(hostname);
             await new CurrentUserLoader(_operator).Load(hostname, accessToken);
             User currentUser = GlobalCache.GetAuthenticatedUser(hostname, accessToken);
 
-            await mergeRequestListLoader.Load();
+            using (MergeRequestListLoader mergeRequestListLoader = new MergeRequestListLoader(
+               hostname, _operator, cacheUpdater, _cacheContext.Callbacks, connectionContext.QueryCollection,
+               isApprovalStatusSupported))
+            {
+               await mergeRequestListLoader.Load();
+            }
+
             _internal = createCacheInternal(cacheUpdater, hostname, hostProperties, currentUser,
                connectionContext.QueryCollection, gitLabInstance.ModificationNotifier,
                gitLabInstance.NetworkOperationStatusListener, isApprovalStatusSupported);
@@ -180,7 +182,7 @@ namespace mrHelper.GitLabClient
          if (_cacheContext.SupportUserCache)
          {
             AvatarLoader avatarLoaderForUserListLoader = new AvatarLoader(cacheUpdater);
-            IUserListLoader userListLoader = new UserListLoader(hostname, _operator, avatarLoaderForUserListLoader);
+            UserListLoader userListLoader = new UserListLoader(hostname, _operator, avatarLoaderForUserListLoader);
             userCache = new UserCache(userListLoader, _cacheContext, hostname);
          }
 

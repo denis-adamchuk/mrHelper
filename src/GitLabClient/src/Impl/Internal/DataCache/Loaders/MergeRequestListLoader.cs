@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using GitLabSharp.Accessors;
 using GitLabSharp.Entities;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
@@ -12,7 +11,7 @@ using mrHelper.GitLabClient.Operators;
 
 namespace mrHelper.GitLabClient.Loaders
 {
-   internal class MergeRequestListLoader : BaseDataCacheLoader, IMergeRequestListLoader
+   internal class MergeRequestListLoader : BaseDataCacheLoader, IMergeRequestListLoader, IDisposable
    {
       internal MergeRequestListLoader(string hostname, DataCacheOperator op,
          InternalCacheUpdater cacheUpdater, DataCacheCallbacks callbacks,
@@ -26,6 +25,11 @@ namespace mrHelper.GitLabClient.Loaders
          _avatarLoader = new AvatarLoader(cacheUpdater);
          _callbacks = callbacks;
          _queryCollection = queryCollection;
+      }
+
+      public void Dispose()
+      {
+         _avatarLoader.Dispose();
       }
 
       async public Task Load()
@@ -247,9 +251,9 @@ namespace mrHelper.GitLabClient.Loaders
       }
 
       private readonly string _hostname;
-      private readonly IVersionLoader _versionLoader;
-      private readonly IApprovalLoader _approvalLoader;
-      private readonly IAvatarLoader _avatarLoader;
+      private readonly VersionLoader _versionLoader;
+      private readonly ApprovalLoader _approvalLoader;
+      private readonly AvatarLoader _avatarLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
       private readonly DataCacheCallbacks _callbacks;
       private readonly SearchQueryCollection _queryCollection;

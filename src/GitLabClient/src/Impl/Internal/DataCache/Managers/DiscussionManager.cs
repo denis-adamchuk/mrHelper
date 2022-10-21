@@ -34,7 +34,7 @@ namespace mrHelper.GitLabClient.Managers
          IMergeRequestCache mergeRequestCache,
          IModificationNotifier modificationNotifier,
          INetworkOperationStatusListener networkOperationStatusListener,
-         IAvatarLoader avatarLoader)
+         AvatarLoader avatarLoader)
       {
          _operator = new DiscussionOperator(hostname, hostProperties, networkOperationStatusListener);
          _avatarLoader = avatarLoader;
@@ -102,6 +102,8 @@ namespace mrHelper.GitLabClient.Managers
 
          _operator?.Dispose();
          _operator = null;
+
+         _avatarLoader?.Dispose();
       }
 
       public event Action<MergeRequestKey> DiscussionsLoading;
@@ -371,7 +373,8 @@ namespace mrHelper.GitLabClient.Managers
 
       private void loadAvatars(IEnumerable<Discussion> discussions)
       {
-         _avatarLoader.LoadAvatars(discussions);
+         _timer?.SynchronizingObject.BeginInvoke(new Action(async () =>
+            await _avatarLoader.LoadAvatars(discussions)), null);
       }
 
       async private Task waitForUpdateCompetion(MergeRequestKey? mrk)
@@ -638,7 +641,7 @@ namespace mrHelper.GitLabClient.Managers
       private readonly string _tagForLogging;
       private DiscussionParser _parser;
       private DiscussionOperator _operator;
-      private readonly IAvatarLoader _avatarLoader;
+      private readonly AvatarLoader _avatarLoader;
       private System.Timers.Timer _timer;
       private readonly List<System.Timers.Timer> _oneShotTimers = new List<System.Timers.Timer>();
 

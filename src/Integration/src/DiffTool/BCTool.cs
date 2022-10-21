@@ -31,6 +31,30 @@ namespace mrHelper.Integration.DiffTool
 
       public static string Command => "BCompare.exe";
 
+      private bool loadDocument(string configFilePath, XmlDocument document)
+      {
+         if (!System.IO.File.Exists(configFilePath))
+         {
+            return true;
+         }
+
+         try
+         {
+            document.Load(configFilePath);
+            return false;
+         }
+         catch (XmlException)
+         {
+            try
+            {
+               System.IO.File.Delete(configFilePath);
+               return true;
+            }
+            catch (Exception) { }
+            throw;
+         }
+      }
+
       /// <summary>
       /// Adds a command to launch MRHelper to Beyond Compare 3/4 preferences file
       /// Throws DiffToolIntegrationException
@@ -39,28 +63,8 @@ namespace mrHelper.Integration.DiffTool
       {
          string configFilePath = getConfigFilePath();
 
-         bool createDocument = true;
          XmlDocument document = new XmlDocument();
-         if (System.IO.File.Exists(configFilePath))
-         {
-            try
-            {
-               document.Load(configFilePath);
-               createDocument = false;
-            }
-            catch (XmlException xe)
-            {
-               try
-               {
-                  System.IO.File.Delete(configFilePath);
-               }
-               catch (Exception)
-               {
-                  throw xe;
-               }
-            }
-         }
-
+         bool createDocument = loadDocument(configFilePath, document);
          if (createDocument)
          {
             if (!System.IO.Directory.Exists(getConfigPath()))

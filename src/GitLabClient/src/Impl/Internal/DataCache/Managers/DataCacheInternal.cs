@@ -31,6 +31,12 @@ namespace mrHelper.GitLabClient.Managers
 
          _timeTrackingManager?.Dispose();
          _timeTrackingManager = null;
+
+         _userCache?.Dispose();
+         _userCache = null;
+
+         _projectCache = null;
+         _avatarCache = null;
       }
 
       public IMergeRequestCache MergeRequestCache => _mergeRequestManager;
@@ -48,9 +54,9 @@ namespace mrHelper.GitLabClient.Managers
       private MergeRequestManager _mergeRequestManager;
       private DiscussionManager _discussionManager;
       private TimeTrackingManager _timeTrackingManager;
-      private readonly ProjectCache _projectCache;
-      private readonly UserCache _userCache;
-      private readonly AvatarCache _avatarCache;
+      private ProjectCache _projectCache;
+      private UserCache _userCache;
+      private AvatarCache _avatarCache;
    }
 }
 
