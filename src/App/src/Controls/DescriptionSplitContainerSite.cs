@@ -119,24 +119,14 @@ namespace mrHelper.App.Controls
          string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey);
          StringBuilder builder = new StringBuilder();
          builder.Append("<b>Notes from author</b><br>");
-         builder.Append("<table class=\"no-border no-bg\" style=\"width: 100%;\"><tbody>");
          foreach (Discussion discussion in discussions)
          {
             DiscussionNote note = discussion.Notes.First();
             string noteBody = MarkDownUtils.ConvertToHtml(note.Body, uploadsPrefix, _mdPipeline, htmlPanelAuthorComments);
-            int? optColumnWidth = HtmlUtils.CalcMaximumPreElementWidth(noteBody,
-               new WidthCalculator(htmlPanelAuthorComments).CalculateWidth);
-            string styleWidth = optColumnWidth.HasValue ?
-               String.Format("style=\"width:{0}px;\"", optColumnWidth.Value) : String.Empty;
-            string noteRow = String.Format(
-               "<tr><td {3} class=\"no-border no-bg\"><div><i>{0} ({1})</i></div><div>{2}</div></td></tr><br>",
-               TimeUtils.DateTimeToStringAgo(note.Created_At),
-               TimeUtils.DateTimeToString(note.Created_At),
-               noteBody,
-               styleWidth);
+            string noteRow = String.Format("<p><i>{0} ({1})</i></p><br><p>{2}</p><br>",
+               TimeUtils.DateTimeToStringAgo(note.Created_At), TimeUtils.DateTimeToString(note.Created_At), noteBody);
             builder.Append(noteRow);
          }
-         builder.Append("</tbody></table>");
          return builder.ToString();
       }
 
