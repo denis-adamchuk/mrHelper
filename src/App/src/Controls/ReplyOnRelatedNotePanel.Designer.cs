@@ -44,6 +44,7 @@
          // 
          // buttonInsertCode
          // 
+         this.buttonInsertCode.AutoSize = true;
          this.buttonInsertCode.Location = new System.Drawing.Point(0, 0);
          this.buttonInsertCode.Name = "buttonInsertCode";
          this.buttonInsertCode.Size = new System.Drawing.Size(75, 23);

@@ -48,6 +48,7 @@ namespace mrHelper.App.Forms
          IEnumerable<User> fullUserList, AvatarImageCache avatarImageCache)
          : base(caption, initialText, true, multiline, uploadsPrefix, fullUserList, avatarImageCache)
       {
+         setExtraActionsControl(new Controls.NoteEditPanel(onInsertCode));
       }
    }
 

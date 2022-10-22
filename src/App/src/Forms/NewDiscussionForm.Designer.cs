@@ -166,7 +166,7 @@ namespace mrHelper.App.Forms
          this.buttonInsertCode.Name = "buttonInsertCode";
          this.buttonInsertCode.Size = new System.Drawing.Size(75, 23);
          this.buttonInsertCode.TabIndex = 12;
-         this.buttonInsertCode.Text = "Insert code";
+         this.buttonInsertCode.Text = "Insert Code";
          this.toolTip.SetToolTip(this.buttonInsertCode, "Insert a placeholder for a code snippet");
          this.buttonInsertCode.UseVisualStyleBackColor = true;
          this.buttonInsertCode.Click += new System.EventHandler(this.buttonInsertCode_Click);
