@@ -71,7 +71,22 @@ namespace mrHelper.App.Forms
          toggleWarningVisibility();
       }
 
-      private void textEditForm_Shown(object sender, System.EventArgs e)
+      private void form_Deactivate(object sender, EventArgs e)
+      {
+         textBox.HideAutoCompleteBox(SmartTextBox.HidingReason.FormDeactivation);
+      }
+
+      private void form_LocationChanged(object sender, EventArgs e)
+      {
+         textBox.HideAutoCompleteBox(SmartTextBox.HidingReason.FormMovedOrResized);
+      }
+
+      private void form_SizeChanged(object sender, EventArgs e)
+      {
+         textBox.HideAutoCompleteBox(SmartTextBox.HidingReason.FormMovedOrResized);
+      }
+
+      private void form_Shown(object sender, System.EventArgs e)
       {
          textBox.Focus();
          toggleWarningVisibility();

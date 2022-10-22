@@ -160,7 +160,10 @@
          this.MinimumSize = new System.Drawing.Size(640, 223);
          this.Name = "TextEditForm";
          this.Text = "Dialog caption";
-         this.Shown += new System.EventHandler(this.textEditForm_Shown);
+         this.Deactivate += new System.EventHandler(this.form_Deactivate);
+         this.LocationChanged += new System.EventHandler(this.form_LocationChanged);
+         this.SizeChanged += new System.EventHandler(this.form_SizeChanged);
+         this.Shown += new System.EventHandler(this.form_Shown);
          this.tabControlMode.ResumeLayout(false);
          this.tabPageEdit.ResumeLayout(false);
          this.tabPagePreview.ResumeLayout(false);
