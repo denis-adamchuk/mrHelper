@@ -28,8 +28,10 @@ namespace mrHelper.App.Forms
          DiffPosition newDiscussionPosition,
          ReportedDiscussionNote[] oldNotes,
          ProjectKey projectKey,
+         string webUrl,
          Func<DiffPosition, bool, DiffPosition> onScrollPosition,
          Action onDialogClosed,
+         Action<string> onGoToNote,
          Func<string, bool, DiffPosition, Task> onSubmitNewDiscussion,
          Func<ReportedDiscussionNoteKey, ReportedDiscussionNoteContent, Task> onEditOldNote,
          Func<ReportedDiscussionNoteKey, Task> onDeleteOldNote,
@@ -37,7 +39,7 @@ namespace mrHelper.App.Forms
          Func<ReportedDiscussionNoteKey?, DiffPosition, IEnumerable<ReportedDiscussionNote>> getRelatedDiscussions,
          Func<DiffPosition, DiffContext> getNewDiscussionDiffContext,
          Func<DiffPosition, DiffContext> getDiffContext,
-         IEnumerable<GitLabSharp.Entities.User> fullUserList,
+         IEnumerable<User> fullUserList,
          AvatarImageCache avatarImageCache)
       {
          InitializeComponent();
@@ -45,6 +47,7 @@ namespace mrHelper.App.Forms
          htmlPanelContext.MouseWheelEx += panelScroll_MouseWheel;
 
          applyFont(Program.Settings.MainWindowFontSizeName);
+         _webUrl = webUrl;
          _groupBoxRelatedThreadsDefaultHeight = groupBoxRelated.Height;
          _diffContextDefaultHeight = panelHtmlContextCanvas.Height;
          _imagePath = StringUtils.GetUploadsPrefix(projectKey);
@@ -60,6 +63,7 @@ namespace mrHelper.App.Forms
 
          _onDialogClosed = onDialogClosed;
          _onScrollPosition = onScrollPosition;
+         _onGoToNote = onGoToNote;
          _onSubmitNewDiscussion = onSubmitNewDiscussion;
          _onEditOldNote = onEditOldNote;
          _onDeleteOldNote = onDeleteOldNote;
@@ -213,6 +217,25 @@ namespace mrHelper.App.Forms
             buttonPrevRelatedDiscussion, buttonNextRelatedDiscussion);
       }
 
+      private void panelCanvas_SizeChanged(object sender, EventArgs e)
+      {
+         if (sender == panelHtmlContextCanvas)
+         {
+            if (needShowDiffContext())
+            {
+               showDiscussionContext(getCurrentNoteDiffPosition(), htmlPanelContext);
+            }
+         }
+         else if (sender == panelRelatedDiscussionHtmlContextCanvas)
+         {
+            if (needShowRelatedDiscussions())
+            {
+               ReportedDiscussionNote note = _relatedDiscussions[_relatedDiscussionIndex.Value];
+               showDiscussionContext(note.Position.DiffPosition, htmlPanelRelatedDiscussionContext);
+            }
+         }
+      }
+
       private void buttonRelatedPrev_Click(object sender, EventArgs e)
       {
          Debug.Assert(_relatedDiscussions.Any());
@@ -304,6 +327,18 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void linkLabelGoToRelatedDiscussion_Click(object sender, EventArgs e)
+      {
+         if (!needShowRelatedDiscussions())
+         {
+            return;
+         }
+
+         ReportedDiscussionNote note = _relatedDiscussions[_relatedDiscussionIndex.Value];
+         string noteUrl = StringUtils.GetNoteUrl(_webUrl, note.Key.Id);
+         _onGoToNote(noteUrl);
+      }
+
       private bool needShowDiffContext()
       {
          return checkBoxIncludeContext.Checked && getCurrentNoteDiffPosition() != null;
@@ -384,13 +419,14 @@ namespace mrHelper.App.Forms
       private bool needShowRelatedDiscussions()
       {
          return checkBoxShowRelated.Checked
+             && _relatedDiscussions != null
              && _relatedDiscussions.Any()
              && needShowDiffContext();
        }
 
       private void updateRelatedThreadsGroupBoxVisibility()
       {
-         bool doVisible = needShowRelatedDiscussions(); ;
+         bool doVisible = needShowRelatedDiscussions();
          if (doVisible == groupBoxRelated.Visible)
          {
             return;
@@ -684,6 +720,8 @@ namespace mrHelper.App.Forms
          buttonNextRelatedDiscussion.Enabled = allowScrollForward;
 
          labelRelatedDiscussionAuthor.Visible = areRelatedDisussionsAvailable;
+         pictureBoxRelatedDiscussionAvatar.Visible = areRelatedDisussionsAvailable;
+         linkLabelGoToRelatedDiscussion.Visible = areRelatedDisussionsAvailable;
 
          updateRelatedThreadsGroupBoxVisibility();
          if (needShowRelatedDiscussions())
@@ -692,8 +730,9 @@ namespace mrHelper.App.Forms
             bool areRefsEqual = note.Position.DiffPosition.Refs.Equals(NewDiscussionPosition.Refs);
             labelDifferentContextHint.Visible = !areRefsEqual;
             labelRelatedDiscussionAuthor.Text = String.Format("{0} -- {1}",
-               note.Details.AuthorName, TimeUtils.DateTimeToStringAgo(note.Details.CreatedAt));
+               note.Details.Author.Name, TimeUtils.DateTimeToStringAgo(note.Details.CreatedAt));
             toolTip.SetToolTip(labelRelatedDiscussionAuthor, TimeUtils.DateTimeToString(note.Details.CreatedAt));
+            pictureBoxRelatedDiscussionAvatar.Image = _avatarImageCache.GetAvatar(note.Details.Author, this.BackColor);
             updatePreview(htmlPanelPreviewRelatedDiscussion, note.Content.Body);
             showDiscussionContext(note.Position.DiffPosition, htmlPanelRelatedDiscussionContext);
          }
@@ -701,6 +740,7 @@ namespace mrHelper.App.Forms
          {
             labelRelatedDiscussionAuthor.Text = String.Empty;
             toolTip.SetToolTip(labelRelatedDiscussionAuthor, String.Empty);
+            pictureBoxRelatedDiscussionAvatar.Image = null;
             htmlPanelPreviewRelatedDiscussion.Text = String.Empty;
             htmlPanelRelatedDiscussionContext.Text = String.Empty;
          }
@@ -963,6 +1003,11 @@ namespace mrHelper.App.Forms
       private readonly Func<DiffPosition, bool, DiffPosition> _onScrollPosition;
 
       /// <summary>
+      /// Functor which opens a note by url in Discussions view.
+      /// </summary>
+      private readonly Action<string> _onGoToNote;
+
+      /// <summary>
       /// Cached text of a note that is going to be reported.
       /// </summary>
       private string _cachedNewNoteText = String.Empty;
@@ -982,6 +1027,7 @@ namespace mrHelper.App.Forms
       /// </summary>
       private readonly Dictionary<ReportedDiscussionNoteKey, string> _modifiedNoteTexts =
          new Dictionary<ReportedDiscussionNoteKey, string>();
+      private readonly string _webUrl;
 
       /// <summary>
       /// Cached height allows to hide the groupbox and show it back by user request.

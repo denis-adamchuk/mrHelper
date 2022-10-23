@@ -1,4 +1,5 @@
 ﻿using System;
+using GitLabSharp.Entities;
 using mrHelper.Core.Matching;
 
 namespace mrHelper.App.Interprocess
@@ -27,13 +28,13 @@ namespace mrHelper.App.Interprocess
 
    internal struct ReportedDiscussionNoteDetails
    {
-      public ReportedDiscussionNoteDetails(string authorName, DateTime createdAt)
+      public ReportedDiscussionNoteDetails(User author, DateTime createdAt)
       {
-         AuthorName = authorName;
+         Author = author;
          CreatedAt = createdAt;
       }
 
-      internal string AuthorName { get; }
+      internal User Author { get; }
       internal DateTime CreatedAt { get; }
    }
 
@@ -50,11 +51,11 @@ namespace mrHelper.App.Interprocess
    internal struct ReportedDiscussionNote
    {
       public ReportedDiscussionNote(int id, string discussionId, DiffPosition diffPosition,
-         string body, string authorName, DateTime createdAt)
+         string body, User author, DateTime createdAt)
       {
          Key = new ReportedDiscussionNoteKey(id, discussionId);
          Position = new ReportedDiscussionNotePosition(diffPosition);
-         Details = new ReportedDiscussionNoteDetails(authorName, createdAt);
+         Details = new ReportedDiscussionNoteDetails(author, createdAt);
          Content = new ReportedDiscussionNoteContent(body);
       }
 

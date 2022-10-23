@@ -29,6 +29,7 @@ namespace mrHelper.App.Interprocess
    {
       internal DiffCallHandler(IGitCommandService git,
          User currentUser, Action<MergeRequestKey> onDiscussionSubmitted,
+         Action<string> onGoToNote,
          Func<MergeRequestKey, IEnumerable<Discussion>> getDiscussions,
          Shortcuts shortcuts, IEnumerable<User> fullUserList,
          AvatarImageCache avatarImageCache)
@@ -40,6 +41,7 @@ namespace mrHelper.App.Interprocess
          _shortcuts = shortcuts;
          _fullUserList = fullUserList;
          _avatarImageCache = avatarImageCache;
+         _onGoToNote = onGoToNote;
       }
 
       public void Handle(MatchInfo matchInfo, Snapshot snapshot)
@@ -112,8 +114,10 @@ namespace mrHelper.App.Interprocess
             initialNewDiscussionPosition,
             reportedDiscussions,
             mrk.ProjectKey,
+            snapshot.WebUrl,
             fnOnScroll,
             fnOnDialogClosed,
+            _onGoToNote,
             fnOnSubmitNewDiscussion,
             fnOnEditOldNote,
             fnOnDeleteOldNote,
@@ -268,7 +272,7 @@ namespace mrHelper.App.Interprocess
                DiscussionNote firstNote = discussion.Notes.First();
                Core.Matching.DiffPosition firstNotePosition = PositionConverter.Convert(firstNote.Position);
                return new ReportedDiscussionNote(firstNote.Id, discussion.Id, firstNotePosition,
-                  firstNote.Body, firstNote.Author.Name, firstNote.Created_At);
+                  firstNote.Body, firstNote.Author, firstNote.Created_At);
             });
       }
 
@@ -333,7 +337,7 @@ namespace mrHelper.App.Interprocess
                      && (!keyOpt.HasValue || keyOpt.Value.Id != firstNote.Id))
                   {
                      ReportedDiscussionNote note = new ReportedDiscussionNote(firstNote.Id, discussion.Id,
-                        firstNotePosition, firstNote.Body, firstNote.Author.Name, firstNote.Created_At);
+                        firstNotePosition, firstNote.Body, firstNote.Author, firstNote.Created_At);
                      relatedNotes.Add(note);
                   }
                }
@@ -562,6 +566,7 @@ namespace mrHelper.App.Interprocess
       private readonly Shortcuts _shortcuts;
       private readonly IEnumerable<User> _fullUserList;
       private readonly AvatarImageCache _avatarImageCache;
+      private readonly Action<string> _onGoToNote;
 
       private struct MismatchWhitelistKey : IEquatable<MismatchWhitelistKey>
       {

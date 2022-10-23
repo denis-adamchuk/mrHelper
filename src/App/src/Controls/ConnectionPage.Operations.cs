@@ -858,6 +858,8 @@ namespace mrHelper.App.Controls
       private void saveInterprocessSnapshot(int pid, string leftSHA, string rightSHA, MergeRequestKey mrk,
          DataCache dataCache)
       {
+         string webUrl = dataCache.MergeRequestCache?.GetMergeRequest(mrk)?.Web_Url ?? String.Empty;
+
          // leftSHA - Base commit SHA in the source branch
          // rightSHA - SHA referencing HEAD of this merge request
          Snapshot snapshot = new Snapshot(
@@ -867,7 +869,8 @@ namespace mrHelper.App.Controls
             new Core.Matching.DiffRefs(leftSHA, rightSHA),
             Program.Settings.LocalStorageFolder,
             getDataCacheName(dataCache),
-            dataCache.ConnectionContext?.GetHashCode() ?? 0);
+            dataCache.ConnectionContext?.GetHashCode() ?? 0,
+            webUrl);
 
          SnapshotSerializer serializer = new SnapshotSerializer();
          try

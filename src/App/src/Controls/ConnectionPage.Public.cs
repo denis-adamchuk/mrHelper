@@ -421,6 +421,7 @@ namespace mrHelper.App.Controls
          DiffCallHandler handler = new DiffCallHandler(storage.Git, CurrentUser,
             (mrk) => dataCache.DiscussionCache?.RequestUpdate(
                mrk, Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null),
+            _onOpenUrl,
             (mrk) => dataCache.DiscussionCache?.GetDiscussions(mrk) ?? Array.Empty<Discussion>(),
             _shortcuts, fullUserList, _avatarImageCache[getDataCacheType(dataCache)]);
          handler.Handle(matchInfo, snapshot);

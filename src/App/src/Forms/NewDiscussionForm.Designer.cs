@@ -47,6 +47,7 @@ namespace mrHelper.App.Forms
          this.buttonNextRelatedDiscussion = new System.Windows.Forms.Button();
          this.buttonScrollUp = new System.Windows.Forms.Button();
          this.buttonScrollDown = new System.Windows.Forms.Button();
+         this.buttonReply = new System.Windows.Forms.Button();
          this.tabControlMode = new System.Windows.Forms.TabControl();
          this.tabPageEdit = new System.Windows.Forms.TabPage();
          this.tabPagePreview = new System.Windows.Forms.TabPage();
@@ -57,6 +58,7 @@ namespace mrHelper.App.Forms
          this.labelCounter = new System.Windows.Forms.Label();
          this.checkBoxShowRelated = new System.Windows.Forms.CheckBox();
          this.groupBoxRelated = new System.Windows.Forms.GroupBox();
+         this.pictureBoxRelatedDiscussionAvatar = new System.Windows.Forms.PictureBox();
          this.labelDifferentContextHint = new System.Windows.Forms.Label();
          this.panelRelatedDiscussionHtmlContextCanvas = new System.Windows.Forms.Panel();
          this.htmlPanelRelatedDiscussionContext = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
@@ -65,13 +67,14 @@ namespace mrHelper.App.Forms
          this.labelRelatedDiscussionAuthor = new System.Windows.Forms.Label();
          this.htmlPanelPreviewRelatedDiscussion = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.panelScroll = new System.Windows.Forms.Panel();
-         this.buttonReply = new System.Windows.Forms.Button();
+         this.linkLabelGoToRelatedDiscussion = new System.Windows.Forms.LinkLabel();
          this.panelHtmlContextCanvas.SuspendLayout();
          this.tabControlMode.SuspendLayout();
          this.tabPageEdit.SuspendLayout();
          this.tabPagePreview.SuspendLayout();
          this.panelNavigation.SuspendLayout();
          this.groupBoxRelated.SuspendLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRelatedDiscussionAvatar)).BeginInit();
          this.panelRelatedDiscussionHtmlContextCanvas.SuspendLayout();
          this.panelRelatedDiscussionNavigation.SuspendLayout();
          this.SuspendLayout();
@@ -136,6 +139,7 @@ namespace mrHelper.App.Forms
          this.panelHtmlContextCanvas.Name = "panelHtmlContextCanvas";
          this.panelHtmlContextCanvas.Size = new System.Drawing.Size(805, 88);
          this.panelHtmlContextCanvas.TabIndex = 10;
+         this.panelHtmlContextCanvas.SizeChanged += new System.EventHandler(this.panelCanvas_SizeChanged);
          // 
          // htmlPanelContext
          // 
@@ -153,11 +157,12 @@ namespace mrHelper.App.Forms
          // 
          // textBoxDiscussionBody
          // 
-         textBoxDiscussionBody.Dock = System.Windows.Forms.DockStyle.Fill;;
-         textBoxDiscussionBody.Location = new System.Drawing.Point(3, 3);
-         textBoxDiscussionBody.Name = "textBoxDiscussionBody";
-         textBoxDiscussionBody.Size = new System.Drawing.Size(586, 82);
-         textBoxDiscussionBody.TabIndex = 11;
+         this.textBoxDiscussionBody.BackColor = System.Drawing.SystemColors.Control;
+         this.textBoxDiscussionBody.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.textBoxDiscussionBody.Location = new System.Drawing.Point(3, 3);
+         this.textBoxDiscussionBody.Name = "textBoxDiscussionBody";
+         this.textBoxDiscussionBody.Size = new System.Drawing.Size(710, 86);
+         this.textBoxDiscussionBody.TabIndex = 11;
          // 
          // buttonInsertCode
          // 
@@ -264,6 +269,18 @@ namespace mrHelper.App.Forms
          this.buttonScrollDown.UseVisualStyleBackColor = true;
          this.buttonScrollDown.Click += new System.EventHandler(this.buttonScrollDown_Click);
          this.buttonScrollDown.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelScroll_MouseWheel);
+         // 
+         // buttonReply
+         // 
+         this.buttonReply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.buttonReply.Location = new System.Drawing.Point(722, 139);
+         this.buttonReply.Name = "buttonReply";
+         this.buttonReply.Size = new System.Drawing.Size(75, 23);
+         this.buttonReply.TabIndex = 38;
+         this.buttonReply.Text = "Reply";
+         this.toolTip.SetToolTip(this.buttonReply, "Continue the selected thread");
+         this.buttonReply.UseVisualStyleBackColor = true;
+         this.buttonReply.Click += new System.EventHandler(this.buttonReply_Click);
          // 
          // tabControlMode
          // 
@@ -381,6 +398,8 @@ namespace mrHelper.App.Forms
          // 
          this.groupBoxRelated.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+         this.groupBoxRelated.Controls.Add(this.linkLabelGoToRelatedDiscussion);
+         this.groupBoxRelated.Controls.Add(this.pictureBoxRelatedDiscussionAvatar);
          this.groupBoxRelated.Controls.Add(this.buttonReply);
          this.groupBoxRelated.Controls.Add(this.labelDifferentContextHint);
          this.groupBoxRelated.Controls.Add(this.panelRelatedDiscussionHtmlContextCanvas);
@@ -389,19 +408,28 @@ namespace mrHelper.App.Forms
          this.groupBoxRelated.Controls.Add(this.htmlPanelPreviewRelatedDiscussion);
          this.groupBoxRelated.Location = new System.Drawing.Point(13, 275);
          this.groupBoxRelated.Name = "groupBoxRelated";
-         this.groupBoxRelated.Size = new System.Drawing.Size(804, 232);
+         this.groupBoxRelated.Size = new System.Drawing.Size(804, 247);
          this.groupBoxRelated.TabIndex = 28;
          this.groupBoxRelated.TabStop = false;
          this.groupBoxRelated.Text = "Related threads";
          this.groupBoxRelated.SizeChanged += new System.EventHandler(this.groupBoxRelated_SizeChanged);
          this.groupBoxRelated.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.groupBoxRelated_MouseWheel);
          // 
+         // pictureBoxRelatedDiscussionAvatar
+         // 
+         this.pictureBoxRelatedDiscussionAvatar.Location = new System.Drawing.Point(7, 106);
+         this.pictureBoxRelatedDiscussionAvatar.Name = "pictureBoxRelatedDiscussionAvatar";
+         this.pictureBoxRelatedDiscussionAvatar.Size = new System.Drawing.Size(32, 32);
+         this.pictureBoxRelatedDiscussionAvatar.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+         this.pictureBoxRelatedDiscussionAvatar.TabIndex = 39;
+         this.pictureBoxRelatedDiscussionAvatar.TabStop = false;
+         // 
          // labelDifferentContextHint
          // 
-         this.labelDifferentContextHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+         this.labelDifferentContextHint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.labelDifferentContextHint.AutoSize = true;
          this.labelDifferentContextHint.ForeColor = System.Drawing.Color.Olive;
-         this.labelDifferentContextHint.Location = new System.Drawing.Point(208, 116);
+         this.labelDifferentContextHint.Location = new System.Drawing.Point(6, 228);
          this.labelDifferentContextHint.Name = "labelDifferentContextHint";
          this.labelDifferentContextHint.Size = new System.Drawing.Size(393, 13);
          this.labelDifferentContextHint.TabIndex = 37;
@@ -414,10 +442,11 @@ namespace mrHelper.App.Forms
             | System.Windows.Forms.AnchorStyles.Right)));
          this.panelRelatedDiscussionHtmlContextCanvas.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
          this.panelRelatedDiscussionHtmlContextCanvas.Controls.Add(this.htmlPanelRelatedDiscussionContext);
-         this.panelRelatedDiscussionHtmlContextCanvas.Location = new System.Drawing.Point(9, 17);
+         this.panelRelatedDiscussionHtmlContextCanvas.Location = new System.Drawing.Point(7, 17);
          this.panelRelatedDiscussionHtmlContextCanvas.Name = "panelRelatedDiscussionHtmlContextCanvas";
          this.panelRelatedDiscussionHtmlContextCanvas.Size = new System.Drawing.Size(789, 88);
          this.panelRelatedDiscussionHtmlContextCanvas.TabIndex = 36;
+         this.panelRelatedDiscussionHtmlContextCanvas.SizeChanged += new System.EventHandler(this.panelCanvas_SizeChanged);
          // 
          // htmlPanelRelatedDiscussionContext
          // 
@@ -458,7 +487,7 @@ namespace mrHelper.App.Forms
          // labelRelatedDiscussionAuthor
          // 
          this.labelRelatedDiscussionAuthor.AutoSize = true;
-         this.labelRelatedDiscussionAuthor.Location = new System.Drawing.Point(6, 116);
+         this.labelRelatedDiscussionAuthor.Location = new System.Drawing.Point(45, 116);
          this.labelRelatedDiscussionAuthor.Name = "labelRelatedDiscussionAuthor";
          this.labelRelatedDiscussionAuthor.Size = new System.Drawing.Size(103, 13);
          this.labelRelatedDiscussionAuthor.TabIndex = 30;
@@ -487,24 +516,24 @@ namespace mrHelper.App.Forms
          this.panelScroll.TabIndex = 31;
          this.panelScroll.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelScroll_MouseWheel);
          // 
-         // buttonReply
+         // linkLabelGoToRelatedDiscussion
          // 
-         this.buttonReply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonReply.Location = new System.Drawing.Point(722, 139);
-         this.buttonReply.Name = "buttonReply";
-         this.buttonReply.Size = new System.Drawing.Size(75, 23);
-         this.buttonReply.TabIndex = 38;
-         this.buttonReply.Text = "Reply";
-         this.buttonReply.UseVisualStyleBackColor = true;
-         this.buttonReply.Click += new System.EventHandler(this.buttonReply_Click);
-         this.toolTip.SetToolTip(this.buttonReply, "Continue the selected thread");
+         this.linkLabelGoToRelatedDiscussion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+         this.linkLabelGoToRelatedDiscussion.AutoSize = true;
+         this.linkLabelGoToRelatedDiscussion.Location = new System.Drawing.Point(631, 228);
+         this.linkLabelGoToRelatedDiscussion.Name = "linkLabelGoToRelatedDiscussion";
+         this.linkLabelGoToRelatedDiscussion.Size = new System.Drawing.Size(85, 13);
+         this.linkLabelGoToRelatedDiscussion.TabIndex = 40;
+         this.linkLabelGoToRelatedDiscussion.TabStop = true;
+         this.linkLabelGoToRelatedDiscussion.Text = "Go to discussion";
+         this.linkLabelGoToRelatedDiscussion.Click += new System.EventHandler(this.linkLabelGoToRelatedDiscussion_Click);
          // 
          // NewDiscussionForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
          this.CancelButton = this.buttonCancel;
-         this.ClientSize = new System.Drawing.Size(829, 512);
+         this.ClientSize = new System.Drawing.Size(829, 527);
          this.Controls.Add(this.buttonScrollDown);
          this.Controls.Add(this.buttonScrollUp);
          this.Controls.Add(this.groupBoxRelated);
@@ -521,7 +550,7 @@ namespace mrHelper.App.Forms
          this.Controls.Add(this.panelScroll);
          this.Icon = global::mrHelper.App.Properties.Resources.DefaultAppIcon;
          this.MaximizeBox = false;
-         this.MinimumSize = new System.Drawing.Size(845, 551);
+         this.MinimumSize = new System.Drawing.Size(845, 566);
          this.Name = "NewDiscussionForm";
          this.Text = "Start a thread";
          this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.NewDiscussionForm_FormClosed);
@@ -535,6 +564,7 @@ namespace mrHelper.App.Forms
          this.panelNavigation.PerformLayout();
          this.groupBoxRelated.ResumeLayout(false);
          this.groupBoxRelated.PerformLayout();
+         ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRelatedDiscussionAvatar)).EndInit();
          this.panelRelatedDiscussionHtmlContextCanvas.ResumeLayout(false);
          this.panelRelatedDiscussionNavigation.ResumeLayout(false);
          this.panelRelatedDiscussionNavigation.PerformLayout();
@@ -579,5 +609,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Panel panelScroll;
       private System.Windows.Forms.Label labelDifferentContextHint;
       private System.Windows.Forms.Button buttonReply;
+      private System.Windows.Forms.PictureBox pictureBoxRelatedDiscussionAvatar;
+      private System.Windows.Forms.LinkLabel linkLabelGoToRelatedDiscussion;
    }
 }
