@@ -53,9 +53,10 @@ namespace mrHelper.App.Controls
          cleanUpMutedMergeRequests();
       }
 
-      internal void Initialize(string hostname)
+      internal void Initialize(string hostname, bool doesSupportPin)
       {
          _hostname = hostname;
+         _doesSupportPin = doesSupportPin;
 
          if (needShowGroups())
          {
@@ -744,7 +745,7 @@ namespace mrHelper.App.Controls
          {
             Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
             drawEllipseForIId(e.Graphics, bounds, color, e.Item.ListView.Font, null);
-            if (isPinned(fmk))
+            if (isPinnedToMe(fmk))
             {
                drawImageForIId(e.Graphics, bounds, e.Item.ListView.Font, Properties.Resources.pin_transparent_alpha);
             }
@@ -998,7 +999,7 @@ namespace mrHelper.App.Controls
          User author = fmk.MergeRequest.Author;
          bool isExcluded = !wouldMatchFilter(fmk.MergeRequest);
          bool isTrackingTime = _timeTrackingCheckingCallback(mrk);
-         bool isPinned = this.isPinned(fmk);
+         bool isPinned = isPinnedToMe(fmk);
          return GitLabClient.Helpers.CheckConditions(conditions, approvedBy, labels, author,
             isExcluded, isTrackingTime, isPinned);
       }
@@ -1839,6 +1840,12 @@ namespace mrHelper.App.Controls
          return _fnIsPinned(mrk);
       }
 
+      // is pinned to this list view instance
+      private bool isPinnedToMe(FullMergeRequestKey fmk)
+      {
+         return _doesSupportPin && isPinned(fmk);
+      }
+
       private int compare(ListViewItem item1, ListViewItem item2, ColumnType columnType)
       {
          FullMergeRequestKey fmk1 = ((FullMergeRequestKey)item1.Tag);
@@ -1878,8 +1885,8 @@ namespace mrHelper.App.Controls
 
             case ColumnType.Color:
                {
-                  bool isPinned1 = isPinned(fmk1);
-                  bool isPinned2 = isPinned(fmk2);
+                  bool isPinned1 = isPinnedToMe(fmk1);
+                  bool isPinned2 = isPinnedToMe(fmk2);
                   if (isPinned1 != isPinned2)
                   {
                      return isPinned1 ? 1 : -1;
@@ -1981,6 +1988,7 @@ namespace mrHelper.App.Controls
       private string _identity;
       private Action<MergeRequestKey, string> _openMergeRequestUrlCallback;
       private string _hostname;
+      private bool _doesSupportPin;
       private Func<MergeRequestKey, bool> _timeTrackingCheckingCallback;
       private AvatarImageCache _avatarImageCache;
       private Func<MergeRequestKey, bool> _fnIsPinned;
