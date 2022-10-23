@@ -519,6 +519,10 @@ namespace mrHelper.App.Controls
 
       private void showDiscussionsForMergeRequest(MergeRequest mergeRequest, MergeRequestKey mrk, int? noteId = null)
       {
+         Trace.TraceInformation(String.Format(
+            "[ConnectionPage] showDiscussionsForMergeRequest() for MR {0} (project {1}), note id = {2}",
+            mrk.IId, mrk.ProjectKey.ProjectName, noteId.HasValue ? noteId.Value.ToString() : "N/A"));
+
          BeginInvoke(new Action(async () => await showDiscussionsFormAsync(
             mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.Web_Url, noteId)));
       }
@@ -528,6 +532,10 @@ namespace mrHelper.App.Controls
 
       async private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string webUrl, int? noteId)
       {
+         Trace.TraceInformation(String.Format(
+            "[ConnectionPage] showDiscussionsFormAsync() for MR {0} (project {1}), note id = {2}",
+            mrk.IId, mrk.ProjectKey.ProjectName, noteId.HasValue ? noteId.Value.ToString() : "N/A"));
+
          Debug.Assert(HostName != String.Empty);
          Debug.Assert(CurrentUser != null);
 

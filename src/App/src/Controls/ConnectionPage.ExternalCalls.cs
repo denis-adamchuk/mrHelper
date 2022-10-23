@@ -93,12 +93,16 @@ namespace mrHelper.App.Controls
             if (isCached(mode, mrk))
             {
                mergeRequest = getDataCache(mode).MergeRequestCache.GetMergeRequest(mrk);
+               Trace.TraceInformation(String.Format(
+                  "[ConnectionPage] Merge Request is found in cache {0}", mode.ToString()));
                break;
             }
          }
 
          if (mergeRequest == null)
          {
+            Trace.TraceInformation("[ConnectionPage] Merge Request not found in caches. Trying to find at GitLab...");
+
             await searchMergeRequestsSafeAsync(
                new SearchQueryCollection(new GitLabClient.SearchQuery
                {
