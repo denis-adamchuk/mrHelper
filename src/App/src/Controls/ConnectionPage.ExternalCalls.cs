@@ -53,40 +53,69 @@ namespace mrHelper.App.Controls
       async private Task connectToUrlAsyncInternal<T>(string url, T parsedUrl)
       {
          MergeRequestKey mrk = parseUrlIntoMergeRequestKey(parsedUrl);
-
-         try
+         if (parsedUrl is UrlParser.ParsedNoteUrl noteUrl)
          {
-            // First, try to select a MR from lists of visible MRs
-            bool tryOpenAtLiveTab = true;
-            switch (trySelectMergeRequest(mrk))
-            {
-               case SelectionResult.NotFound:
-                  break;
-               case SelectionResult.Selected:
-                  addOperationRecord("Merge Request was found in cache and selected");
-                  return;
-               case SelectionResult.Hidden:
-                  tryOpenAtLiveTab = false;
-                  break;
-            }
+            await connectToNoteUrlAsync(mrk, noteUrl);
+            return;
+         }
 
-            Debug.Assert(getDataCache(EDataCacheType.Live)?.ConnectionContext != null);
+         // First, try to select a MR from lists of visible MRs
+         bool tryOpenAtLiveTab = true;
+         switch (trySelectMergeRequest(mrk))
+         {
+            case SelectionResult.NotFound:
+               break;
+            case SelectionResult.Selected:
+               addOperationRecord("Merge Request was found in cache and selected");
+               return;
+            case SelectionResult.Hidden:
+               tryOpenAtLiveTab = false;
+               break;
+         }
 
-            // If MR is not found at the Live tab at all or user rejected to unhide it,
-            // don't try to open it at the Live tab.
-            // Otherwise, check if requested MR match workflow filters.
-            tryOpenAtLiveTab = tryOpenAtLiveTab && (await checkLiveDataCacheFilterAsync(mrk, url));
-            if (!tryOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url))
+         Debug.Assert(getDataCache(EDataCacheType.Live)?.ConnectionContext != null);
+
+         // If MR is not found at the Live tab at all or user rejected to unhide it,
+         // don't try to open it at the Live tab.
+         // Otherwise, check if requested MR match workflow filters.
+         tryOpenAtLiveTab = tryOpenAtLiveTab && (await checkLiveDataCacheFilterAsync(mrk, url));
+         if (!tryOpenAtLiveTab || !await openUrlAtLiveTabAsync(mrk, url))
+         {
+            await openUrlAtSearchTabAsync(mrk);
+         }
+      }
+
+      private async Task connectToNoteUrlAsync(MergeRequestKey mrk, UrlParser.ParsedNoteUrl noteUrl)
+      {
+         MergeRequest mergeRequest = null;
+         foreach (EDataCacheType mode in getOrderedCacheTypes())
+         {
+            if (isCached(mode, mrk))
             {
-               await openUrlAtSearchTabAsync(mrk);
+               mergeRequest = getDataCache(mode).MergeRequestCache.GetMergeRequest(mrk);
+               break;
             }
          }
-         finally
+
+         if (mergeRequest == null)
          {
-            if (parsedUrl is UrlParser.ParsedNoteUrl noteUrl)
-            {
-               showDiscussionsForSelectedMergeRequest(noteUrl.NoteId);
-            }
+            await searchMergeRequestsSafeAsync(
+               new SearchQueryCollection(new GitLabClient.SearchQuery
+               {
+                  IId = mrk.IId,
+                  ProjectName = mrk.ProjectKey.ProjectName,
+                  MaxResults = 1
+               }),
+               EDataCacheType.Search,
+               new Func<Exception, bool>(x =>
+                  throw new UrlConnectionException("Failed to open a note for a merge request. ", x)));
+
+            mergeRequest = getDataCache(EDataCacheType.Search).MergeRequestCache.GetMergeRequest(mrk);
+         }
+
+         if (mergeRequest != null)
+         {
+            showDiscussionsForMergeRequest(mergeRequest, mrk, noteUrl.NoteId);
          }
       }
 
@@ -97,15 +126,21 @@ namespace mrHelper.App.Controls
          Selected,
       }
 
-      private SelectionResult trySelectMergeRequest(MergeRequestKey mrk)
+      private static EDataCacheType[] getOrderedCacheTypes()
       {
          // We want to check lists in specific order:
-         EDataCacheType[] modes = new EDataCacheType[]
+         return new EDataCacheType[]
          {
             EDataCacheType.Live,
             EDataCacheType.Recent,
             EDataCacheType.Search
          };
+      }
+
+      private SelectionResult trySelectMergeRequest(MergeRequestKey mrk)
+      {
+         // We want to check lists in specific order:
+         EDataCacheType[] modes = getOrderedCacheTypes();
 
          // Check if requested MR is cached
          if (modes.All(mode => !isCached(mode, mrk)))

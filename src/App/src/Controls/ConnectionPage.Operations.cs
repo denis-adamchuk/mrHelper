@@ -507,18 +507,20 @@ namespace mrHelper.App.Controls
 
       private void showDiscussionsForSelectedMergeRequest(int? noteId = null)
       {
-         BeginInvoke(new Action(async () =>
+         if (getMergeRequest(null) == null || !getMergeRequestKey(null).HasValue)
          {
-            if (getMergeRequest(null) == null || !getMergeRequestKey(null).HasValue)
-            {
-               return;
-            }
+            return;
+         }
 
-            MergeRequest mergeRequest = getMergeRequest(null);
-            MergeRequestKey mrk = getMergeRequestKey(null).Value;
+         MergeRequest mergeRequest = getMergeRequest(null);
+         MergeRequestKey mrk = getMergeRequestKey(null).Value;
+         showDiscussionsForMergeRequest(mergeRequest, mrk, noteId);
+      }
 
-            await showDiscussionsFormAsync(mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.Web_Url, noteId);
-         }));
+      private void showDiscussionsForMergeRequest(MergeRequest mergeRequest, MergeRequestKey mrk, int? noteId = null)
+      {
+         BeginInvoke(new Action(async () => await showDiscussionsFormAsync(
+            mrk, mergeRequest.Title, mergeRequest.Author, mergeRequest.Web_Url, noteId)));
       }
 
       private Task showDiscussionsFormAsync(MergeRequestKey mrk, string title, User author, string webUrl) =>
