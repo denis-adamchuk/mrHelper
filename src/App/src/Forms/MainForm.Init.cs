@@ -44,6 +44,8 @@ namespace mrHelper.App.Forms
          _colorScheme.Changed += onColorSchemeChanged;
 
          Program.Settings.ToolBarPositionChanged += onToolBarPositionChanged;
+
+         labelOperationStatus.SetTooltip(this.toolTip);
       }
 
       private void createSharedCollections()

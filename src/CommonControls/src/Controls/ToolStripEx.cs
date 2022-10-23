@@ -1,6 +1,7 @@
-﻿using mrHelper.CommonNative;
-using System;
+﻿using System;
+using System.Drawing;
 using System.Windows.Forms;
+using mrHelper.CommonNative;
 
 namespace mrHelper.CommonControls.Controls
 {
@@ -49,6 +50,30 @@ namespace mrHelper.CommonControls.Controls
          base.WndProc(ref m);
          CommonActivationHandler.Handle(ref m, ClickThrough);
       }
+   }
+
+   // https://social.msdn.microsoft.com/Forums/en-US/c48fc24e-9bd6-4879-a992-507b8e008b52/blinking-tooltip-of-toolstripstatuslabel?forum=winforms
+   public class ToolStripStatusLabelEx : ToolStripStatusLabel
+   {
+      public void SetTooltip(ToolTip tooltip)
+      {
+         _toolTip = tooltip;
+      }
+
+      protected override void OnMouseHover(System.EventArgs e)
+      {
+         Point loc = new Point(Control.MousePosition.X + 30, Control.MousePosition.Y);
+         loc = this.Parent.PointToClient(loc);
+         _toolTip?.Show(this.ToolTipText, this.Parent, loc);
+      }
+
+      protected override void OnMouseLeave(System.EventArgs e)
+      {
+         _toolTip?.Hide(this.Parent);
+         base.OnMouseLeave(e);
+      }
+
+      private ToolTip _toolTip;
    }
 }
 

@@ -79,7 +79,7 @@ namespace mrHelper.App.Forms
          this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
          this.statusStrip1 = new mrHelper.CommonControls.Controls.StatusStripEx();
          this.labelConnectionStatus = new System.Windows.Forms.ToolStripStatusLabel();
-         this.labelOperationStatus = new System.Windows.Forms.ToolStripStatusLabel();
+         this.labelOperationStatus = new mrHelper.CommonControls.Controls.ToolStripStatusLabelEx();
          this.labelStorageStatus = new System.Windows.Forms.ToolStripStatusLabel();
          this.linkLabelAbortGitClone = new System.Windows.Forms.ToolStripStatusLabel();
          this.menuStrip1 = new mrHelper.CommonControls.Controls.MenuStripEx();
@@ -263,7 +263,6 @@ namespace mrHelper.App.Forms
             this.linkLabelAbortGitClone});
          this.statusStrip1.Location = new System.Drawing.Point(0, 0);
          this.statusStrip1.Name = "statusStrip1";
-         this.statusStrip1.ShowItemToolTips = true;
          this.statusStrip1.Size = new System.Drawing.Size(1050, 24);
          this.statusStrip1.TabIndex = 0;
          // 
@@ -1079,7 +1078,7 @@ namespace mrHelper.App.Forms
       private ToolStripMenuItem configureHostsToolStripMenuItem;
       private ToolStripMenuItem configureStorageToolStripMenuItem;
       private ToolStripStatusLabel labelConnectionStatus;
-      private ToolStripStatusLabel labelOperationStatus;
+      private ToolStripStatusLabelEx labelOperationStatus;
       private ToolStripStatusLabel labelStorageStatus;
       private ToolStripStatusLabel linkLabelAbortGitClone;
       private ToolStripSeparator toolStripSeparator10;
