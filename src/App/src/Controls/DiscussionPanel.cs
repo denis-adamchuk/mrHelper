@@ -325,6 +325,7 @@ namespace mrHelper.App.Controls
             if (_currentSelectedNote != null)
             {
                _currentSelectedNote.ShowBorderWhenNotFocused = false;
+               _currentSelectedNote.Invalidate();
             }
             _currentSelectedNote = htmlPanelEx;
             _currentSelectedNote.ShowBorderWhenNotFocused = true;
