@@ -56,7 +56,7 @@ namespace mrHelper.Common.Constants
       public static string DefaultColorSchemeFileName =>
          String.Format("{0}.{1}", DefaultColorSchemeName, ColorSchemeFileNamePrefix);
 
-      public static string[] ThemeNames = { "Default", "New Year 2020" };
+      public static string[] ThemeNames = { "Default" };
       public static string DefaultThemeName = "Default";
 
       public static string[] ColorSchemeKnownColorNames =

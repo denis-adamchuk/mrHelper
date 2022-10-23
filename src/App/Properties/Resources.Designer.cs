@@ -73,16 +73,6 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Balls {
-            get {
-                object obj = ResourceManager.GetObject("Balls", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap cancel_24x24 {
             get {
                 object obj = ResourceManager.GetObject("cancel_24x24", resourceCulture);
@@ -213,16 +203,6 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap HappyNY2020 {
-            get {
-                object obj = ResourceManager.GetObject("HappyNY2020", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap link_24x24 {
             get {
                 object obj = ResourceManager.GetObject("link_24x24", resourceCulture);
@@ -260,16 +240,6 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Penguin {
-            get {
-                object obj = ResourceManager.GetObject("Penguin", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap pin_transparent_alpha {
             get {
                 object obj = ResourceManager.GetObject("pin_transparent_alpha", resourceCulture);
@@ -290,29 +260,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap PleaseInspect {
-            get {
-                object obj = ResourceManager.GetObject("PleaseInspect", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap refresh_24x24 {
             get {
                 object obj = ResourceManager.GetObject("refresh_24x24", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap SnowflakeBg {
-            get {
-                object obj = ResourceManager.GetObject("SnowflakeBg", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -333,16 +283,6 @@ namespace mrHelper.App.Properties {
         internal static System.Drawing.Bitmap thread_24x24 {
             get {
                 object obj = ResourceManager.GetObject("thread_24x24", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
-        internal static System.Drawing.Bitmap Tree {
-            get {
-                object obj = ResourceManager.GetObject("Tree", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

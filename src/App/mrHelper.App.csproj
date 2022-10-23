@@ -554,13 +554,6 @@
     <None Include="Resources\gitlab-icon-stub-16x16.png" />
     <None Include="Resources\gitlab-icon-stub-16x16-border.png" />
     <None Include="Resources\loading-transp-alpha.png" />
-    <Content Include="Resources\ny2020\balls.png" />
-    <Content Include="Resources\ny2020\happy_ny2002.png" />
-    <Content Include="Resources\ny2020\ny2020-theme.css" />
-    <Content Include="Resources\ny2020\penguin.png" />
-    <Content Include="Resources\ny2020\please_inspect.png" />
-    <Content Include="Resources\ny2020\snowflake-bg.png" />
-    <Content Include="Resources\ny2020\tree.gif" />
     <None Include="Resources\gitlab.ico" />
     <Content Include="gitlab.ico" />
     <Content Include="Resources\common.css" />
