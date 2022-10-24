@@ -7,19 +7,22 @@ namespace mrHelper.App.Forms
 {
    internal abstract partial class ReplyOnNoteBaseForm : TextEditBaseForm
    {
-      internal ReplyOnNoteBaseForm(string uploadsPrefix, IEnumerable<User> fullUserList, AvatarImageCache avatarImageCache)
-         : base("Reply on a Discussion", "", true, true, uploadsPrefix, fullUserList, avatarImageCache)
+      internal ReplyOnNoteBaseForm(string uploadsPrefix, string initialText, IEnumerable<User> fullUserList,
+         AvatarImageCache avatarImageCache)
+         : base("Reply on a Discussion", initialText, true, true, uploadsPrefix, fullUserList, avatarImageCache)
       {
       }
    }
 
    internal partial class ReplyOnDiscussionNoteForm : ReplyOnNoteBaseForm
    {
-      internal ReplyOnDiscussionNoteForm(string resolveText, bool proposeUserToToggleResolveOnReply, string uploadsPrefix,
+      internal ReplyOnDiscussionNoteForm(string resolveText, string initialText,
+         bool proposeUserToToggleResolveOnReply, string uploadsPrefix,
          IEnumerable<User> fullUserList, AvatarImageCache avatarImageCache)
-         : base(uploadsPrefix, fullUserList, avatarImageCache)
+         : base(uploadsPrefix, initialText, fullUserList, avatarImageCache)
       {
-         Controls.NoteEditPanel p = new Controls.NoteEditPanel(resolveText, proposeUserToToggleResolveOnReply, onInsertCode);
+         Controls.NoteEditPanel p = new Controls.NoteEditPanel(
+            resolveText, proposeUserToToggleResolveOnReply, onInsertCode);
          _isResolveChecked = () => p.IsResolveActionChecked;
          setExtraActionsControl(p);
       }
@@ -31,7 +34,7 @@ namespace mrHelper.App.Forms
    internal partial class ReplyOnRelatedNoteForm : ReplyOnNoteBaseForm
    {
       internal ReplyOnRelatedNoteForm(string uploadsPrefix, IEnumerable<User> fullUserList, AvatarImageCache avatarImageCache)
-         : base(uploadsPrefix, fullUserList, avatarImageCache)
+         : base(uploadsPrefix, String.Empty, fullUserList, avatarImageCache)
       {
          Controls.ReplyOnRelatedNotePanel p = new Controls.ReplyOnRelatedNotePanel(true, onInsertCode);
          _isCloseDialogChecked = () => p.IsCloseDialogActionChecked;

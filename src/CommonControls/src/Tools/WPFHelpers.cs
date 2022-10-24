@@ -14,6 +14,7 @@ namespace mrHelper.CommonControls.Tools
             AcceptsReturn = multiline,
             IsReadOnly = isReadOnly,
             Text = text,
+            SelectionStart = text.Length,
             TextWrapping = System.Windows.TextWrapping.Wrap,
             HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto

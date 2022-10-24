@@ -121,8 +121,8 @@ namespace mrHelper.App.Controls
 
          foreach (NoteContainer noteContainer in getNoteContainers())
          {
-            noteContainer.NoteInfo.ContextMenu?.Dispose();
             noteContainer.NoteContent.ContextMenu?.Dispose();
+            noteContainer.NoteAvatar.ContextMenu?.Dispose();
          }
       }
 
@@ -275,6 +275,18 @@ namespace mrHelper.App.Controls
          }
       }
 
+      async private void onMenuItemReplyTo(object sender, EventArgs e)
+      {
+         MenuItem menuItem = (MenuItem)(sender);
+         Control control = (Control)(menuItem.Tag);
+         DiscussionNote note = getNoteFromControl(control);
+         if (control?.Parent?.Parent != null && note != null && note.Author != null)
+         {
+            string initialText = Common.Constants.Constants.GitLabLabelPrefix + note.Author.Username + " ";
+            await onReplyToDiscussionAsync(false, initialText);
+         }
+      }
+
       async private void onMenuItemReplyAndResolve(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
@@ -286,6 +298,16 @@ namespace mrHelper.App.Controls
       }
 
       async private void onMenuItemReplyDone(object sender, EventArgs e)
+      {
+         MenuItem menuItem = (MenuItem)(sender);
+         Control control = (Control)(menuItem.Tag);
+         if (control?.Parent?.Parent != null)
+         {
+            await onReplyAsync("Done", false);
+         }
+      }
+
+      async private void onMenuItemReplyDoneAndResolve(object sender, EventArgs e)
       {
          MenuItem menuItem = (MenuItem)(sender);
          Control control = (Control)(menuItem.Tag);
@@ -897,6 +919,13 @@ namespace mrHelper.App.Controls
             .Where(noteControl => noteControl != null);
       }
 
+      private IEnumerable<Control> getNoteAvatars()
+      {
+         return getNoteContainers()
+            .Select(container => container.NoteAvatar)
+            .Where(noteAvatar => noteAvatar != null);
+      }
+
       private IEnumerable<NoteContainer> createNoteContainers(Control parent, IEnumerable<DiscussionNote> allNotes)
       {
          if (parent == null)
@@ -985,8 +1014,10 @@ namespace mrHelper.App.Controls
          noteContainer.NoteAvatar = new PictureBox
          {
             Image = _avatarImageCache.GetAvatar(note.Author, this.BackColor),
-            SizeMode = PictureBoxSizeMode.StretchImage
+            SizeMode = PictureBoxSizeMode.StretchImage,
+            Tag = note
          };
+         noteContainer.NoteAvatar.ContextMenu = createContextMenuForAvatar(note, noteContainer.NoteAvatar);
 
          noteContainer.NoteLink = new LinkLabel()
          {
@@ -1225,12 +1256,32 @@ namespace mrHelper.App.Controls
          string replyText = "Reply and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread";
          addMenuItem(replyText, canAddNotes(), onMenuItemReplyAndResolve, Shortcut.F4);
 
-         string replyDoneText = "Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread";
-         addMenuItem(replyDoneText, canAddNotes() && isDiscussionResolvable(), onMenuItemReplyDone, Shortcut.ShiftF4);
+         string replyDoneText = "Reply \"Done\"";
+         addMenuItem(replyDoneText, canAddNotes(), onMenuItemReplyDone);
+
+         string replyDoneAndResolveText = "Reply \"Done\" and " + (discussionResolved ? "Unresolve" : "Resolve") + " Thread";
+         addMenuItem(replyDoneAndResolveText, canAddNotes() && isDiscussionResolvable(), onMenuItemReplyDoneAndResolve, Shortcut.ShiftF4);
 
          addSeparator();
 
          addMenuItem("View Note as plain text", true, onMenuItemViewNote, Shortcut.F6);
+
+         return contextMenu;
+      }
+
+      private ContextMenu createContextMenuForAvatar(DiscussionNote note, Control avatarControl)
+      {
+         ContextMenu contextMenu = new ContextMenu();
+
+         void addMenuItem(string text, bool isEnabled, EventHandler onClick, Shortcut shortcut = Shortcut.None) =>
+            contextMenu.MenuItems.Add(createMenuItem(avatarControl, text, isEnabled, onClick, shortcut));
+         void addSeparator() => addMenuItem("-", true, null);
+
+         addMenuItem("Open profile", true, (s, e) => UrlHelper.OpenBrowser(note.Author.Web_Url));
+
+         addSeparator();
+
+         addMenuItem("Reply to", canAddNotes(), onMenuItemReplyTo);
 
          return contextMenu;
       }
@@ -1789,7 +1840,8 @@ namespace mrHelper.App.Controls
          }
       }
 
-      async private Task onReplyToDiscussionAsync(bool proposeUserToToggleResolveOnReply)
+      async private Task onReplyToDiscussionAsync(
+         bool proposeUserToToggleResolveOnReply, string initialText = "")
       {
          if (!canAddNotes())
          {
@@ -1799,7 +1851,7 @@ namespace mrHelper.App.Controls
          bool isAlreadyResolved = isDiscussionResolved();
          string resolveText = String.Format("{0} Thread", (isAlreadyResolved ? "Unresolve" : "Resolve"));
          using (ReplyOnDiscussionNoteForm form = new ReplyOnDiscussionNoteForm(
-            resolveText, proposeUserToToggleResolveOnReply, _imagePath, _fullUserList, _avatarImageCache))
+            resolveText, initialText, proposeUserToToggleResolveOnReply, _imagePath, _fullUserList, _avatarImageCache))
          {
             if (WinFormsHelpers.ShowDialogOnControl(form, this) == DialogResult.OK)
             {
@@ -1979,6 +2031,21 @@ namespace mrHelper.App.Controls
          {
             disableNoteControl(noteControl);
          }
+
+         void disableNoteAvatar(Control noteAvatar)
+         {
+            if (noteAvatar != null)
+            {
+               noteAvatar.ContextMenu?.Dispose();
+               noteAvatar.ContextMenu = new ContextMenu();
+               noteAvatar.Tag = null;
+            }
+         }
+
+         foreach (Control noteAvatar in getNoteAvatars())
+         {
+            disableNoteAvatar(noteAvatar);
+         }
       }
 
       async private Task refreshDiscussion(Discussion discussion = null)
@@ -2049,10 +2116,10 @@ namespace mrHelper.App.Controls
          return Discussion != null && !Discussion.Individual_Note;
       }
 
-      private DiscussionNote getNoteFromControl(Control noteControl)
+      private DiscussionNote getNoteFromControl(Control control)
       {
-         Debug.Assert(noteControl is HtmlPanel);
-         return (noteControl == null || noteControl.Tag == null) ? null : (DiscussionNote)(noteControl.Tag);
+         Debug.Assert(control is HtmlPanel || control is PictureBox);
+         return (control == null || control.Tag == null) ? null : (DiscussionNote)(control.Tag);
       }
 
       // Widths in %
