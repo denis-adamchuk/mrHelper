@@ -66,18 +66,21 @@ namespace mrHelper.App.Controls
          listViewLiveMergeRequests.SetOpenMergeRequestUrlCallback(openBrowserForMergeRequest);
          listViewLiveMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
          listViewLiveMergeRequests.SetPinChecker(isPinned);
+         listViewLiveMergeRequests.SetPinText("Pin", "Unpin");
          listViewLiveMergeRequests.Initialize(hostname, doesSupportPin: true);
 
          listViewFoundMergeRequests.SetIdentity(Constants.SearchListViewName);
          listViewFoundMergeRequests.SetCollapsedProjects(collapsedProjectsSearch);
          listViewFoundMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
          listViewFoundMergeRequests.SetPinChecker(isPinned);
+         listViewFoundMergeRequests.SetPinText("Pin to Live tab", "Unpin from Live tab");
          listViewFoundMergeRequests.Initialize(hostname, doesSupportPin: false);
 
          listViewRecentMergeRequests.SetIdentity(Constants.RecentListViewName);
          listViewRecentMergeRequests.SetCollapsedProjects(collapsedProjectsRecent);
          listViewRecentMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
          listViewRecentMergeRequests.SetPinChecker(isPinned);
+         listViewRecentMergeRequests.SetPinText("Pin to Live tab", "Unpin from Live tab");
          listViewRecentMergeRequests.Initialize(hostname, doesSupportPin: false);
 
          _mdPipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());

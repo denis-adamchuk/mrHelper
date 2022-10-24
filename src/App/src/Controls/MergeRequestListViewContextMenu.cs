@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows.Forms;
 
 namespace mrHelper.App.Controls
@@ -115,9 +116,9 @@ namespace mrHelper.App.Controls
          _canBeExcluded = canBeExcluded;
       }
 
-      public void SetPinAbilityState(bool canBePinned)
+      public void SetPinItemText(string pinItemText)
       {
-         _canBePinned = canBePinned;
+         _pinItemText = pinItemText;
       }
 
       public void DisableAll()
@@ -198,7 +199,7 @@ namespace mrHelper.App.Controls
 
          if (_pinItem != null)
          {
-            _pinItem.Text = _canBePinned ? "Pin at Live tab" : "Unpin";
+            _pinItem.Text = _pinItemText;
          }
 
          if (_openAuthorProfileItem != null)
@@ -225,7 +226,7 @@ namespace mrHelper.App.Controls
       private bool _disabledAll;
       private bool _isUnmuteActionEnabled;
       private bool _canBeExcluded;
-      private bool _canBePinned;
+      private string _pinItemText;
    }
 }
 

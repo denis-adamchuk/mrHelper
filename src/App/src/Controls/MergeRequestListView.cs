@@ -105,6 +105,12 @@ namespace mrHelper.App.Controls
          _fnIsPinned = fnIsPinned;
       }
 
+      internal void SetPinText(string pinText, string unpinText)
+      {
+         _pinText = pinText;
+         _unpinText = unpinText;
+      }
+
       internal void SetDataCache(DataCache dataCache)
       {
          _dataCache = dataCache;
@@ -858,7 +864,7 @@ namespace mrHelper.App.Controls
             contextMenu.EnableAll();
             contextMenu.SetUnmuteActionEnabled(isMuted(fmk));
             contextMenu.SetExcludeAbilityState(!isExplicitlyExcluded(fmk));
-            contextMenu.SetPinAbilityState(!isPinned(fmk));
+            contextMenu.SetPinItemText(isPinned(fmk) ? _unpinText : _pinText);
          }
          contextMenu.UpdateItemState();
 
@@ -1992,6 +1998,8 @@ namespace mrHelper.App.Controls
       private Func<MergeRequestKey, bool> _timeTrackingCheckingCallback;
       private AvatarImageCache _avatarImageCache;
       private Func<MergeRequestKey, bool> _fnIsPinned;
+      private string _pinText;
+      private string _unpinText;
       private static readonly int MaxListViewRows = 3;
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
       private static readonly string AllListViewRowsHint = "See all labels in tooltip";
