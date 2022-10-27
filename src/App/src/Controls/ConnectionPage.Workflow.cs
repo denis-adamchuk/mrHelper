@@ -256,7 +256,7 @@ namespace mrHelper.App.Controls
          {
             Trace.TraceInformation("[ConnectionPage] Excluded Merge Requests are no longer in the cache {1}: {0}",
                String.Join(", ", oldExcludedIds), getDataCacheName(getDataCache(EDataCacheType.Live)));
-            toggleMergeRequestExclusion(EDataCacheType.Live, oldExcludedIds);
+            toggleMergeRequestsExclusion(EDataCacheType.Live, oldExcludedIds);
          }
 
          updateMergeRequestList(EDataCacheType.Live);
@@ -442,7 +442,7 @@ namespace mrHelper.App.Controls
 
       private IEnumerable<GitLabClient.SearchQuery> convertPinnedMergeRequestsToSearchQueries(string hostname)
       {
-         return _pinnedMergeRequests.Data
+         return getPinnedMergeRequestKeys()
             .Where(key => key.ProjectKey.HostName == hostname)
             .Select(key => new GitLabClient.SearchQuery
             {

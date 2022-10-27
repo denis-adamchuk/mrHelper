@@ -10,31 +10,30 @@ namespace mrHelper.GitLabClient
 {
    public struct KeywordCollection
    {
-      public KeywordCollection(KeywordCollection collection)
-      {
-         _data = collection._data.ToArray();
-      }
+      public KeywordCollection(KeywordCollection collection) => _data = collection._data.ToArray();
 
-      public bool IsExcluded(string text)
-      {
-         string exclusionRule = getExclusionRule(text);
-         return _data.Any(keyword => String.Compare(keyword, exclusionRule) == 0);
-      }
+      public bool IsExcluded(string text) => containsKeyword(createExcludedKeyword(text));
 
-      public IEnumerable<string> GetExcluded()
-      {
-         return _data
-            .Where(keyword => keyword.StartsWith(Constants.ExcludeLabelPrefix))
-            .Select(keyword => keyword.Substring(Constants.ExcludeLabelPrefix.Length))
-            .Where(keyword => !String.IsNullOrWhiteSpace(keyword));
-      }
+      public IEnumerable<string> GetExcluded() => getExcluded(includePrefix: false);
 
       public KeywordCollection CloneWithToggledExclusion(string text)
       {
-         string exclusionRule = getExclusionRule(text);
-         return IsExcluded(text)
-            ? new KeywordCollection(_data.Where(rule => rule != exclusionRule).ToArray())
-            : new KeywordCollection(_data.Append(exclusionRule).ToArray());
+         string keyword = createExcludedKeyword(text);
+         IEnumerable<string> keywords = containsKeyword(keyword) ?
+            removeKeyword(_data, keyword) : addKeyword(_data, keyword);
+         return new KeywordCollection(keywords);
+      }
+
+      public bool IsPinned(string text) => containsKeyword(createPinnedKeyword(text));
+
+      public IEnumerable<string> GetPinned() => getPinned();
+
+      public KeywordCollection CloneWithToggledPinned(string text)
+      {
+         string keyword = createPinnedKeyword(text);
+         IEnumerable<string> keywords = containsKeyword(keyword) ?
+            removeKeyword(_data, keyword) : addKeyword(_data, keyword);
+         return new KeywordCollection(keywords);
       }
 
       public static KeywordCollection FromString(string text)
@@ -50,40 +49,50 @@ namespace mrHelper.GitLabClient
             .ToArray());
       }
 
-      public override string ToString() 
+      public override string ToString() => String.Join(", ", _data);
+
+      public string[] ToArray() => _data.ToArray();
+
+      public static MergeRequestKey? KeywordToMergeRequestKey(string keyword, string hostname)
       {
-         return String.Join(", ", _data);
+         string[] parts = keyword.Split(':').ToArray();
+         return new MergeRequestKey(new Common.Interfaces.ProjectKey(hostname, parts[0]), int.Parse(parts[1]));
       }
 
-      public string[] ToArray()
+      public static string KeywordFromMergeRequestKey(MergeRequestKey mergeRequestKey)
       {
-         return _data.ToArray();
+         return mergeRequestKey.ProjectKey.ProjectName + ":" + mergeRequestKey.IId.ToString();
       }
 
-      internal bool DoesMatchFilter(MergeRequest mergeRequest)
+      internal bool DoesMatchFilter(FullMergeRequestKey fmk)
       {
          if (!_data.Any() || (_data.Length == 1 && _data[0] == String.Empty))
          {
             return true;
          }
 
-         if (IsExcluded(mergeRequest.Id.ToString()))
-         {
-            return false;
-         }
-
-         string[] nonExclusions = _data
-            .Where(keyword => !keyword.StartsWith(Constants.ExcludeLabelPrefix)).ToArray();
-         if (!nonExclusions.Any() || (nonExclusions.Length == 1 && nonExclusions[0] == String.Empty))
+         MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+         if (IsPinned(KeywordFromMergeRequestKey(mrk)))
          {
             return true;
          }
 
-         foreach (string item in nonExclusions)
+         if (IsExcluded(fmk.MergeRequest.Id.ToString()))
+         {
+            return false;
+         }
+
+         string[] notExcluded = _data.Except(getExcluded(includePrefix: true)).ToArray();
+         if (!notExcluded.Any() || (notExcluded.Length == 1 && notExcluded[0] == String.Empty))
+         {
+            return true;
+         }
+
+         foreach (string item in notExcluded)
          {
             if (item.StartsWith(Constants.AuthorLabelPrefix))
             {
-               if (mergeRequest.Author.Username.StartsWith(item.Substring(1),
+               if (fmk.MergeRequest.Author.Username.StartsWith(item.Substring(1),
                      StringComparison.CurrentCultureIgnoreCase))
                {
                   return true;
@@ -91,7 +100,7 @@ namespace mrHelper.GitLabClient
             }
             else if (item.StartsWith(Constants.GitLabLabelPrefix))
             {
-               if (mergeRequest.Labels.Any(x => x.StartsWith(item,
+               if (fmk.MergeRequest.Labels.Any(x => x.StartsWith(item,
                      StringComparison.CurrentCultureIgnoreCase)))
                {
                   return true;
@@ -99,12 +108,12 @@ namespace mrHelper.GitLabClient
             }
             else if (item != String.Empty)
             {
-               if (mergeRequest.IId.ToString() == item
-                || StringUtils.ContainsNoCase(mergeRequest.Author.Username, item)
-                || StringUtils.ContainsNoCase(mergeRequest.Title, item)
-                || StringUtils.ContainsNoCase(mergeRequest.Source_Branch, item)
-                || StringUtils.ContainsNoCase(mergeRequest.Target_Branch, item)
-                || mergeRequest.Labels.Any(x => StringUtils.ContainsNoCase(x, item)))
+               if (fmk.MergeRequest.IId.ToString() == item
+                || StringUtils.ContainsNoCase(fmk.MergeRequest.Author.Username, item)
+                || StringUtils.ContainsNoCase(fmk.MergeRequest.Title, item)
+                || StringUtils.ContainsNoCase(fmk.MergeRequest.Source_Branch, item)
+                || StringUtils.ContainsNoCase(fmk.MergeRequest.Target_Branch, item)
+                || fmk.MergeRequest.Labels.Any(x => StringUtils.ContainsNoCase(x, item)))
                {
                   return true;
                }
@@ -114,15 +123,41 @@ namespace mrHelper.GitLabClient
          return false;
       }
 
-      private static string getExclusionRule(string text)
+      private KeywordCollection(IEnumerable<string> data) => _data = data.ToArray();
+
+      private IEnumerable<string> getExcluded(bool includePrefix)
       {
-         return String.Format("{0}{1}", Constants.ExcludeLabelPrefix, text);
+         IEnumerable<string> keywords = getKeywordsWithPrefix(Constants.ExcludeLabelPrefix);
+         return includePrefix ? keywords : trimPrefix(keywords, Constants.ExcludeLabelPrefix);
       }
 
-      private KeywordCollection(string[] data)
+      private IEnumerable<string> getPinned()
       {
-         _data = data.ToArray();
+         IEnumerable<string> keywords = getKeywordsWithPrefix(Constants.PinLabelPrefix);
+         return trimPrefix(keywords, Constants.ExcludeLabelPrefix);
       }
+
+      private bool containsKeyword(string keyword) => _data.Any(kw => String.Compare(kw, keyword) == 0);
+
+      private IEnumerable<string> getKeywordsWithPrefix(string prefix) =>
+         _data.Where(keyword => keyword.StartsWith(prefix));
+
+      private static IEnumerable<string> trimPrefix(IEnumerable<string> keywords, string prefix) =>
+         keywords
+            .Select(keyword => keyword.Substring(prefix.Length))
+            .Where(keyword => !String.IsNullOrWhiteSpace(keyword));
+
+      private static IEnumerable<string> removeKeyword(IEnumerable<string> keywords, string keyword) =>
+         keywords.Where(kw => kw != keyword).ToArray();
+
+      private static IEnumerable<string> addKeyword(IEnumerable<string> keywords, string keyword) =>
+         keywords.Append(keyword).ToArray();
+
+      private static string createExcludedKeyword(string text) =>
+         String.Format("{0}{1}", Constants.ExcludeLabelPrefix, text);
+
+      private static string createPinnedKeyword(string text) =>
+         String.Format("{0}{1}", Constants.PinLabelPrefix, text);
 
       private readonly string[] _data;
    }
@@ -169,18 +204,18 @@ namespace mrHelper.GitLabClient
 
       public event Action FilterChanged;
 
-      public bool DoesMatchFilter(MergeRequest mergeRequest)
+      public bool DoesMatchFilter(FullMergeRequestKey fmk)
       {
          switch (Filter.State)
          {
             case FilterState.Enabled:
-               return Filter.Keywords.DoesMatchFilter(mergeRequest);
+               return Filter.Keywords.DoesMatchFilter(fmk);
 
             case FilterState.Disabled:
                return true;
 
             case FilterState.ShowHiddenOnly:
-               return Filter.Keywords.IsExcluded(mergeRequest.Id.ToString());
+               return Filter.Keywords.IsExcluded(fmk.MergeRequest.Id.ToString());
 
             default:
                Debug.Assert(false);

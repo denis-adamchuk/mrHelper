@@ -41,7 +41,7 @@ namespace mrHelper.App.Helpers
 
          MergeRequest mergeRequest = e.FullMergeRequestKey.MergeRequest;
 
-         return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest)
+         return (!_mergeRequestFilter.DoesMatchFilter(e.FullMergeRequestKey)
             || (isServiceEvent(mergeRequest)                                 && !_settings.Notifications_Service)
             || (isCurrentUserActivity(_currentUser, mergeRequest)            && !_settings.Notifications_MyActivity)
             || (e.EventType == MergeRequestEvent.Type.AddedMergeRequest      && !_settings.Notifications_NewMergeRequests)
@@ -81,7 +81,8 @@ namespace mrHelper.App.Helpers
              ||                                            !_settings.Notifications_OnMention;
          }
 
-         return (!_mergeRequestFilter.DoesMatchFilter(mergeRequest)
+         FullMergeRequestKey fmk = new FullMergeRequestKey(e.MergeRequestKey.ProjectKey, mergeRequest);
+         return (!_mergeRequestFilter.DoesMatchFilter(fmk)
             || (isServiceEvent(e)                                         && !_settings.Notifications_Service)
             || (isCurrentUserActivity(_currentUser, e)                    && !_settings.Notifications_MyActivity)
             || (e.EventType == DiscussionEvent.Type.ResolvedAllThreads    && !_settings.Notifications_AllThreadsResolved)

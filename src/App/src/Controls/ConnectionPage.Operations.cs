@@ -175,16 +175,16 @@ namespace mrHelper.App.Controls
 
          FullMergeRequestKey fullKey = selectedMergeRequestOpt.Value;
          MergeRequestKey mrk = new MergeRequestKey(fullKey.ProjectKey, fullKey.MergeRequest.IId);
-         bool wasPinned = isPinned(mrk);
+         bool wasPinned = isMergeRequestPinned(mrk);
          Trace.TraceInformation(String.Format(
             "[ConnectionPage] Toggling pin state for selected MR (was pinned = {0}...", wasPinned.ToString()));
          if (wasPinned)
          {
-            unpin(mrk);
+            unpinFromLiveTab(mrk);
          }
          else
          {
-            pin(mrk);
+            pinToLiveTab(mrk);
          }
       }
 
@@ -197,7 +197,7 @@ namespace mrHelper.App.Controls
          toggleMergeRequestExclusion(type, mergeRequest.Id);
       }
 
-      private void toggleMergeRequestExclusion(EDataCacheType type, IEnumerable<int> mergeRequestIds)
+      private void toggleMergeRequestsExclusion(EDataCacheType type, IEnumerable<int> mergeRequestIds)
       {
          mergeRequestIds
             .ToList()

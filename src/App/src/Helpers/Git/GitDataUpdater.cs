@@ -68,8 +68,9 @@ namespace mrHelper.App.Helpers
       async protected override Task doUpdate(ILocalCommitStorage repo)
       {
          IEnumerable<MergeRequestKey> mergeRequestKeys = _mergeRequestCache.GetMergeRequests(repo.ProjectKey)
+            .Select(x => new FullMergeRequestKey(repo.ProjectKey, x))
             .Where(x => _mergeRequestFilter.DoesMatchFilter(x))
-            .Select(x => new MergeRequestKey(repo.ProjectKey, x.IId));
+            .Select(x => new MergeRequestKey(repo.ProjectKey, x.MergeRequest.IId));
 
          foreach (MergeRequestKey mrk in mergeRequestKeys)
          {

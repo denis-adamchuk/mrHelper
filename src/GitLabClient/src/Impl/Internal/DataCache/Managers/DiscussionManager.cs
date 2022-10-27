@@ -611,13 +611,15 @@ namespace mrHelper.GitLabClient.Managers
             {
                matchingFilterList.AddRange(
                   _mergeRequestCache.GetMergeRequests(projectKey)
+                     .Select(x => new FullMergeRequestKey(projectKey, x))
                      .Where(x => _mergeRequestFilterChecker.DoesMatchFilter(x))
-                     .Select(x => new MergeRequestKey(projectKey, x.IId)));
+                     .Select(x => new MergeRequestKey(projectKey, x.MergeRequest.IId)));
 
                nonMatchingFilterList.AddRange(
                   _mergeRequestCache.GetMergeRequests(projectKey)
+                     .Select(x => new FullMergeRequestKey(projectKey, x))
                      .Where(x => !_mergeRequestFilterChecker.DoesMatchFilter(x))
-                     .Select(x => new MergeRequestKey(projectKey, x.IId)));
+                     .Select(x => new MergeRequestKey(projectKey, x.MergeRequest.IId)));
             }
          }
          matchingFilter = matchingFilterList;

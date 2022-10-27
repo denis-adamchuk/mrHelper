@@ -375,7 +375,7 @@ namespace mrHelper.App.Controls
          for (int index = Items.Count - 1; index >= 0; --index)
          {
             FullMergeRequestKey fmk = (FullMergeRequestKey)Items[index].Tag;
-            if (!doesMatchFilter(fmk.MergeRequest))
+            if (!doesMatchFilter(fmk))
             {
                Items.RemoveAt(index);
             }
@@ -480,7 +480,7 @@ namespace mrHelper.App.Controls
             }
             else
             {
-               bool doesItemMatchFilter = doesMatchFilter(fmk.MergeRequest);
+               bool doesItemMatchFilter = doesMatchFilter(fmk);
                removeItem = !doesItemMatchFilter;
             }
             if (removeItem)
@@ -1003,7 +1003,7 @@ namespace mrHelper.App.Controls
             .Select(item => item.User) ?? Array.Empty<User>();
          IEnumerable<string> labels = fmk.MergeRequest.Labels;
          User author = fmk.MergeRequest.Author;
-         bool isExcluded = !wouldMatchFilter(fmk.MergeRequest);
+         bool isExcluded = !wouldMatchFilter(fmk);
          bool isTrackingTime = _timeTrackingCheckingCallback(mrk);
          bool isPinned = isPinnedToMe(fmk);
          return GitLabClient.Helpers.CheckConditions(conditions, approvedBy, labels, author,
@@ -1177,7 +1177,7 @@ namespace mrHelper.App.Controls
 
       private IEnumerable<FullMergeRequestKey> getMatchingFilterProjectItems(ProjectKey projectKey)
       {
-         return getAllProjectItemsFromCache(projectKey).Where(fmk => doesMatchFilter(fmk.MergeRequest));
+         return getAllProjectItemsFromCache(projectKey).Where(fmk => doesMatchFilter(fmk));
       }
 
       private IEnumerable<FullMergeRequestKey> getAllMergeRequests()
@@ -1186,12 +1186,12 @@ namespace mrHelper.App.Controls
             .SelectMany(projectKey => getAllProjectItemsFromCache(projectKey)) ?? Array.Empty<FullMergeRequestKey>();
       }
 
-      private bool doesMatchFilter(MergeRequest mergeRequest)
+      private bool doesMatchFilter(FullMergeRequestKey fmk)
       {
-         return _mergeRequestFilter?.DoesMatchFilter(mergeRequest) ?? true;
+         return _mergeRequestFilter?.DoesMatchFilter(fmk) ?? true;
       }
 
-      private bool wouldMatchFilter(MergeRequest mergeRequest)
+      private bool wouldMatchFilter(FullMergeRequestKey fmk)
       {
          if (_mergeRequestFilter == null)
          {
@@ -1201,7 +1201,7 @@ namespace mrHelper.App.Controls
          MergeRequestFilterState filterState = new MergeRequestFilterState(
             _mergeRequestFilter.Filter.Keywords.ToString(), FilterState.Enabled);
          MergeRequestFilter filter = new MergeRequestFilter(filterState);
-         return filter.DoesMatchFilter(mergeRequest);
+         return filter.DoesMatchFilter(fmk);
       }
 
       private ListViewItem createListViewMergeRequestItem(FullMergeRequestKey fmk)

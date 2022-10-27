@@ -19,7 +19,6 @@ namespace mrHelper.App.Controls
       public ConnectionPage(
          string hostname,
          DictionaryWrapper<MergeRequestKey, DateTime> recentMergeRequests,
-         HashSetWrapper<MergeRequestKey> pinnedMergeRequests,
          DictionaryWrapper<MergeRequestKey, HashSet<string>> reviewedRevisions,
          DictionaryWrapper<string, MergeRequestKey> lastMergeRequestsByHosts,
          DictionaryWrapper<string, NewMergeRequestProperties> newMergeRequestDialogStatesByHosts,
@@ -48,7 +47,6 @@ namespace mrHelper.App.Controls
          _toolTip = toolTip;
          _timeTrackerHolder = timeTrackerHolder;
          _recentMergeRequests = recentMergeRequests;
-         _pinnedMergeRequests = pinnedMergeRequests;
          _reviewedRevisions = reviewedRevisions;
          _lastMergeRequestsByHosts = lastMergeRequestsByHosts;
          _newMergeRequestDialogStatesByHosts = newMergeRequestDialogStatesByHosts;
@@ -65,21 +63,21 @@ namespace mrHelper.App.Controls
          listViewLiveMergeRequests.SetMutedMergeRequests(mutedMergeRequests);
          listViewLiveMergeRequests.SetOpenMergeRequestUrlCallback(openBrowserForMergeRequest);
          listViewLiveMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
-         listViewLiveMergeRequests.SetPinChecker(isPinned);
+         listViewLiveMergeRequests.SetPinChecker(isMergeRequestPinned);
          listViewLiveMergeRequests.SetPinText("Pin", "Unpin");
          listViewLiveMergeRequests.Initialize(hostname, doesSupportPin: true);
 
          listViewFoundMergeRequests.SetIdentity(Constants.SearchListViewName);
          listViewFoundMergeRequests.SetCollapsedProjects(collapsedProjectsSearch);
          listViewFoundMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
-         listViewFoundMergeRequests.SetPinChecker(isPinned);
+         listViewFoundMergeRequests.SetPinChecker(isMergeRequestPinned);
          listViewFoundMergeRequests.SetPinText("Pin to Live tab", "Unpin from Live tab");
          listViewFoundMergeRequests.Initialize(hostname, doesSupportPin: false);
 
          listViewRecentMergeRequests.SetIdentity(Constants.RecentListViewName);
          listViewRecentMergeRequests.SetCollapsedProjects(collapsedProjectsRecent);
          listViewRecentMergeRequests.SetTimeTrackingCheckingCallback(isTrackingTime);
-         listViewRecentMergeRequests.SetPinChecker(isPinned);
+         listViewRecentMergeRequests.SetPinChecker(isMergeRequestPinned);
          listViewRecentMergeRequests.SetPinText("Pin to Live tab", "Unpin from Live tab");
          listViewRecentMergeRequests.Initialize(hostname, doesSupportPin: false);
 

@@ -143,7 +143,7 @@ namespace mrHelper.App.Controls
             return null;
          }
 
-         bool isPinned = this.isPinned(mrk);
+         bool isPinned = this.isMergeRequestPinned(mrk);
          User author = mergeRequest.Author;
          IEnumerable<string> labels = mergeRequest.Labels;
          IEnumerable<User> approvedBy = dataCache.MergeRequestCache.GetApprovals(mrk)?.Approved_By?
@@ -224,9 +224,9 @@ namespace mrHelper.App.Controls
          refreshSelectedMergeRequest();
       }
 
-      internal void Pin(MergeRequestKey mrk)
+      internal void Pin(MergeRequestKey mergeRequestKey)
       {
-         pin(mrk);
+         pinToLiveTab(mergeRequestKey);
       }
 
       internal void ReloadOne(MergeRequestKey mrk)

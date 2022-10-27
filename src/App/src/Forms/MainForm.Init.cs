@@ -51,7 +51,6 @@ namespace mrHelper.App.Forms
       private void createSharedCollections()
       {
          _recentMergeRequests = new DictionaryWrapper<MergeRequestKey, DateTime>(saveState);
-         _pinnedMergeRequests = new HashSetWrapper<MergeRequestKey>(saveState);
          _reviewedRevisions = new DictionaryWrapper<MergeRequestKey, HashSet<string>>(saveState);
          _lastMergeRequestsByHosts = new DictionaryWrapper<string, MergeRequestKey>(saveState);
          _newMergeRequestDialogStatesByHosts = new DictionaryWrapper<string, Helpers.NewMergeRequestProperties>(saveState);

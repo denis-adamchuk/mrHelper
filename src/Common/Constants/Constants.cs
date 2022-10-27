@@ -41,6 +41,7 @@ namespace mrHelper.Common.Constants
       public static int FullContextSize = 20000;
 
       public static string ExcludeLabelPrefix = "!";
+      public static string PinLabelPrefix = "^";
       public static string AuthorLabelPrefix = "#";
       public static string GitLabLabelPrefix = "@";
       public static string HighPriorityLabel = "high-priority";

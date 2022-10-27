@@ -131,7 +131,7 @@ namespace mrHelper.App.Controls
          {
             Trace.TraceInformation("[ConnectionPage] Excluded Merge Requests are no longer in the cache {1}: {0}",
                String.Join(", ", oldExcludedIds), getDataCacheName(getDataCache(EDataCacheType.Recent)));
-            toggleMergeRequestExclusion(EDataCacheType.Recent, oldExcludedIds);
+            toggleMergeRequestsExclusion(EDataCacheType.Recent, oldExcludedIds);
          }
 
          // current mode may have changed during 'await'

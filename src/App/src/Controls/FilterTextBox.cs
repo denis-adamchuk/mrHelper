@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using mrHelper.CommonControls.Controls;
@@ -8,7 +9,7 @@ namespace mrHelper.App.Controls
    class FilterTextBox : DelayedTextBox
    {
       private static System.Drawing.Color NormalTextColor = System.Drawing.Color.Black;
-      private static System.Drawing.Color ExcludedTextColor = System.Drawing.Color.LightGray;
+      private static System.Drawing.Color HiddenTextColor = System.Drawing.Color.LightGray;
 
       public override string Text
       {
@@ -60,11 +61,11 @@ namespace mrHelper.App.Controls
          {
             bool isThereCommaAfterWord = !ReferenceEquals(word, words.Last());
             int commaCount = isThereCommaAfterWord ? 1 : 0;
-            if (word.Trim(' ').StartsWith(Common.Constants.Constants.ExcludeLabelPrefix))
+            if (hasSpecialPrefix(word))
             {
                SelectionStart = index;
                SelectionLength = word.Length + commaCount;
-               SelectionColor = ExcludedTextColor;
+               SelectionColor = HiddenTextColor;
             }
             index += word.Length + commaCount;
          }
@@ -79,7 +80,7 @@ namespace mrHelper.App.Controls
       private void setVisibleText(string text)
       {
          string getVisibleText() =>
-            String.Join(",", text.Split(',').Where(word => !isExcluded(word)).ToArray());
+            String.Join(",", text.Split(',').Where(word => !hasSpecialPrefix(word)).ToArray());
 
          if (!Program.Settings.ShowHiddenMergeRequestIds)
          {
@@ -94,7 +95,7 @@ namespace mrHelper.App.Controls
       private void setHiddenText(string text)
       {
          string getHiddenText() =>
-            String.Join(",", text.Split(',').Where(word => isExcluded(word)).ToArray());
+            String.Join(",", text.Split(',').Where(word => hasSpecialPrefix(word)).ToArray());
 
          if (!Program.Settings.ShowHiddenMergeRequestIds)
          {
@@ -106,10 +107,14 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private bool isExcluded(string word)
-      {
-         return word.Trim(' ').StartsWith(Common.Constants.Constants.ExcludeLabelPrefix);
-      }
+      private static bool hasSpecialPrefix(string text) =>
+         hasExcludePrefix(text) || hasPinPrefix(text);
+
+      private static bool hasExcludePrefix(string word) =>
+         word.Trim(' ').StartsWith(Common.Constants.Constants.ExcludeLabelPrefix);
+
+      private static bool hasPinPrefix(string word) =>
+         word.Trim(' ').StartsWith(Common.Constants.Constants.PinLabelPrefix);
 
       private string _visibleText;
       private string _hiddenText;

@@ -1,10 +1,8 @@
-﻿using GitLabSharp.Entities;
-
-namespace mrHelper.GitLabClient
+﻿namespace mrHelper.GitLabClient
 {
    public interface IMergeRequestFilterChecker
    {
-      bool DoesMatchFilter(MergeRequest mergeRequest);
+      bool DoesMatchFilter(FullMergeRequestKey mergeRequest);
    }
 }
 

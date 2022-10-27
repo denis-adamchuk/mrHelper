@@ -138,7 +138,7 @@ namespace mrHelper.App.Forms
          foreach (string hostname in getHostList())
          {
             ConnectionPage connectionPage = new ConnectionPage(hostname,
-               _recentMergeRequests, _pinnedMergeRequests, _reviewedRevisions, _lastMergeRequestsByHosts,
+               _recentMergeRequests, _reviewedRevisions, _lastMergeRequestsByHosts,
                _newMergeRequestDialogStatesByHosts, _collapsedProjectsLive,
                _collapsedProjectsRecent, _collapsedProjectsSearch, _mutedMergeRequests,
                _filtersByHostsLive, _filtersByHostsRecent,

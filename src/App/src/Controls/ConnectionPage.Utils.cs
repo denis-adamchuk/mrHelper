@@ -199,11 +199,115 @@ namespace mrHelper.App.Controls
             .Select(keyword => int.Parse(keyword));
       }
 
-      private IEnumerable<int> selectNotCachedMergeRequestIds(EDataCacheType type,
-         IEnumerable<int> mergeRequestIds)
+      private void toggleMergeRequestExclusion(EDataCacheType type, int mergeRequestId)
       {
-         return mergeRequestIds.Where(id => !isMergeRequestCached(type, id));
+         KeywordCollection newKeywords = getKeywordCollection(type)
+            .CloneWithToggledExclusion(mergeRequestId.ToString());
+         setFilterTextUI(type, newKeywords.ToString());
+         writeFilterKeywordsForHost(type, newKeywords.ToString());
+         applyFilterChange(type);
+         updateHiddenCountInComboBox(type);
+
+         Trace.TraceInformation("[ConnectionPage] Toggled exclusion for MR with Id {0}, new state - {1}",
+            mergeRequestId, isMergeRequestExcluded(type, mergeRequestId) ? "excluded" : "not excluded");
       }
+
+      private IEnumerable<MergeRequestKey> getPinnedMergeRequestKeys()
+      {
+         return getKeywordCollection(EDataCacheType.Live).GetPinned()
+            .Select(keyword =>
+            {
+               string[] parts = keyword.Split(':').ToArray();
+               bool isKeywordAKey = parts.Length == 2 && int.TryParse(parts[1], out int iid);
+               return isKeywordAKey ? KeywordCollection.KeywordToMergeRequestKey(keyword, HostName) : null;
+            })
+            .Where(mergeRequestKey => mergeRequestKey.HasValue)
+            .Select(mergeRequestKey => mergeRequestKey.Value);
+      }
+
+      private void pinToLiveTab(MergeRequestKey mergeRequestKey)
+      {
+         toggleMergeRequestPinState(mergeRequestKey);
+      }
+
+      private void unpinFromLiveTab(MergeRequestKey mergeRequestKey)
+      {
+         toggleMergeRequestPinState(mergeRequestKey);
+      }
+
+      private void toggleMergeRequestPinState(MergeRequestKey mrk)
+      {
+         EDataCacheType type = EDataCacheType.Live;
+         KeywordCollection newKeywords = getKeywordCollection(type)
+            .CloneWithToggledPinned(KeywordCollection.KeywordFromMergeRequestKey(mrk));
+         setFilterTextUI(type, newKeywords.ToString());
+         writeFilterKeywordsForHost(type, newKeywords.ToString());
+         applyFilterChange(type);
+
+         Trace.TraceInformation("[ConnectionPage] Toggled pin state of MR with IId {0}", mrk.IId);
+      }
+
+      private void updatePinnedAndUnpinnedMergeRequests(
+         IEnumerable<MergeRequestKey> oldPinned, IEnumerable<MergeRequestKey> newPinned)
+      {
+         if (oldPinned == null || newPinned == null)
+         {
+            return;
+         }
+
+         IEnumerable<MergeRequestKey> becomePinned = newPinned.Except(oldPinned);
+         IEnumerable<MergeRequestKey> becomeUnpinned = oldPinned.Except(newPinned);
+         IEnumerable<MergeRequestKey> becomePinnedAndUnpinned = becomePinned.Concat(becomeUnpinned);
+         if (!becomePinnedAndUnpinned.Any())
+         {
+            return;
+         }
+
+         bool needReloadAll = false;
+         foreach (MergeRequestKey mrk in becomePinnedAndUnpinned)
+         {
+            if (becomeUnpinned.Contains(mrk))
+            {
+               needReloadAll = true;
+               Trace.TraceInformation(
+                  "[ConnectionPage] onTextBoxDisplayFilterUpdate(): MR with IId {0} causes full reload", mrk.IId);
+            }
+         }
+
+         EnabledCustomActionsChanged?.Invoke(this);
+         updateMergeRequestList(EDataCacheType.Live);
+
+         updateLiveDataCacheQueryColletion();
+
+         if (needReloadAll)
+         {
+            string startMessage = "Live list refresh has started";
+            string endMessage = "List refresh has completed";
+            addOperationRecord(startMessage);
+            void onUpdateFinished() => addOperationRecord(endMessage);
+            requestUpdates(getDataCache(EDataCacheType.Live), null, PseudoTimerInterval, onUpdateFinished);
+         }
+         else
+         {
+            foreach (MergeRequestKey mergeRequestKey in becomePinned)
+            {
+               if (!isCached(EDataCacheType.Live, mergeRequestKey))
+               {
+                  string startMessage = String.Format("Merge request !{0} refresh has started", mergeRequestKey.IId);
+                  string endMessage = String.Format("Merge request !{0} has been refreshed", mergeRequestKey.IId);
+                  addOperationRecord(startMessage);
+                  void onUpdateFinished() => addOperationRecord(endMessage);
+                  requestUpdates(getDataCache(EDataCacheType.Live), mergeRequestKey, PseudoTimerInterval, onUpdateFinished);
+               }
+            }
+         }
+      }
+
+      private bool isMergeRequestPinned(MergeRequestKey mergeRequestKey) =>
+         getPinnedMergeRequestKeys().Any(key => mergeRequestKey.Equals(key));
+
+      private IEnumerable<int> selectNotCachedMergeRequestIds(EDataCacheType type, IEnumerable<int> mergeRequestIds) =>
+         mergeRequestIds.Where(id => !isMergeRequestCached(type, id));
 
       // List View
 
@@ -912,9 +1016,15 @@ namespace mrHelper.App.Controls
             "[ConnectionPage] onTextBoxDisplayFilterUpdate({0}, \"{1}\"), HostName={2}",
             getDataCacheName(getDataCache(type)), text, HostName);
 
+         bool isPinAllowedInText = type == EDataCacheType.Live;
+         IEnumerable<MergeRequestKey> oldPinned = isPinAllowedInText ? getPinnedMergeRequestKeys() : null;
+
          writeFilterKeywordsForHost(type, text);
          applyFilterChange(type);
          updateHiddenCountInComboBox(type);
+
+         IEnumerable<MergeRequestKey> newPinned = isPinAllowedInText ? getPinnedMergeRequestKeys() : null;
+         updatePinnedAndUnpinnedMergeRequests(oldPinned, newPinned);
       }
 
       private void onCheckBoxDisplayFilterUpdate(EDataCacheType type, FilterState state)
@@ -1015,19 +1125,6 @@ namespace mrHelper.App.Controls
          string keywords = filtersByHosts.Data.ContainsKey(HostName) ?
             filtersByHosts[HostName].Keywords.ToString() : String.Empty;
          filtersByHosts[HostName] = new MergeRequestFilterState(keywords, state);
-      }
-
-      private void toggleMergeRequestExclusion(EDataCacheType type, int mergeRequestId)
-      {
-         KeywordCollection newKeywords = getKeywordCollection(type)
-            .CloneWithToggledExclusion(mergeRequestId.ToString());
-         setFilterTextUI(type, newKeywords.ToString());
-         writeFilterKeywordsForHost(type, newKeywords.ToString());
-         applyFilterChange(type);
-         updateHiddenCountInComboBox(type);
-
-         Trace.TraceInformation("[ConnectionPage] Toggled exclusion for MR with Id {0}, new state - {1}",
-            mergeRequestId, isMergeRequestExcluded(type, mergeRequestId) ? "excluded" : "not excluded");
       }
 
       private KeywordCollection getKeywordCollection(EDataCacheType type)
@@ -1248,41 +1345,6 @@ namespace mrHelper.App.Controls
 
       private bool isCached(EDataCacheType mode, MergeRequestKey mrk) =>
          getDataCache(mode)?.MergeRequestCache?.GetMergeRequest(mrk) != null;
-
-      private void pin(MergeRequestKey mrk)
-      {
-         bool wasCached = isCached(EDataCacheType.Live, mrk);
-         _pinnedMergeRequests.Add(mrk);
-         onMergeRequestPinStateChanged(mrk, !wasCached /* optimization */);
-      }
-
-      private void unpin(MergeRequestKey mrk)
-      {
-         _pinnedMergeRequests.Remove(mrk);
-         onMergeRequestPinStateChanged(mrk, true /* cannot tell if to update or not */);
-      }
-
-      private void onMergeRequestPinStateChanged(MergeRequestKey mrk, bool updateDataCache)
-      {
-         bool isPinned = this.isPinned(mrk);
-         bool wasPinned = !isPinned;
-         Trace.TraceInformation(String.Format(
-            "[ConnectionPage] Changed pin state from {0} to {1} for MR with IId {2}",
-            wasPinned.ToString(), isPinned.ToString(), mrk.IId));
-
-         EnabledCustomActionsChanged?.Invoke(this);
-         updateMergeRequestList(EDataCacheType.Live);
-
-         updateLiveDataCacheQueryColletion();
-         if (updateDataCache)
-         {
-            bool needUpdateFullList = wasPinned;
-            MergeRequestKey? keyForUpdate = needUpdateFullList ? new Nullable<MergeRequestKey>() : mrk;
-            requestUpdates(EDataCacheType.Live, keyForUpdate, new[] { PseudoTimerInterval });
-         }
-      }
-
-      private bool isPinned(MergeRequestKey mrk) => _pinnedMergeRequests.Data.Contains(mrk);
    }
 }
 
