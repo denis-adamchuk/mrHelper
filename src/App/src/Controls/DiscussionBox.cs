@@ -72,7 +72,7 @@ namespace mrHelper.App.Controls
          {
             _panelContextMaker = new EnhancedContextMaker(git);
             _simpleContextMaker = new SimpleContextMaker(git);
-            _popupContextMaker = _simpleContextMaker;
+            _popupContextMaker = _panelContextMaker;
          }
          _colorScheme = colorScheme;
          _colorScheme.Changed += onColorSchemeChanged;
