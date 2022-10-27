@@ -1254,8 +1254,13 @@ namespace mrHelper.App.Controls
       private Dictionary<ListViewItem, int> _colorOrderCache = new Dictionary<ListViewItem, int>();
       private int getColorOrder(ListViewItem item)
       {
-         return _colorOrderCache.TryGetValue(item, out int value)
-            ? value : getColorOrder(((FullMergeRequestKey)item.Tag));
+         if (_colorOrderCache.TryGetValue(item, out int value))
+         {
+            return value;
+         }
+         int r = getColorOrder((FullMergeRequestKey)item.Tag);
+         _colorOrderCache[item] = r;
+         return r;
       }
 
       private void initColorOrderCache()
