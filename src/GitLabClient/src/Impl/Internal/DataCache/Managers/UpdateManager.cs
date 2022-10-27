@@ -288,8 +288,8 @@ namespace mrHelper.GitLabClient.Managers
                      timer.Interval, mergeRequestKey.IId, mergeRequestKey.ProjectKey.ProjectName));
                }
             }
+            _oneShotTimers.RemoveAll(x => x == null);
          }
-         _oneShotTimers.RemoveAll(x => x == null);
       }
 
       private void notify(IEnumerable<UserEvents.MergeRequestEvent> updates)
