@@ -1312,7 +1312,7 @@ namespace mrHelper.App.Controls
          {
             DataCache dataCache = getDataCache(mode);
             IMergeRequestCache mergeRequestCache = dataCache?.MergeRequestCache;
-            if (mergeRequestCache != null)
+            if (mergeRequestCache != null && isCached(mode, mrk))
             {
                DateTime refreshTime = mergeRequestCache.GetMergeRequestRefreshTime(mrk);
                if (refreshTime > bestRefreshTime)
