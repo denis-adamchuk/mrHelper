@@ -30,26 +30,6 @@ namespace mrHelper.App.Forms
          return _timeTracker;
       }
 
-      public string GetCurrentHostName()
-      {
-         return getCurrentConnectionPage()?.GetCurrentHostName();
-      }
-
-      public string GetCurrentAccessToken()
-      {
-         return getCurrentConnectionPage()?.GetCurrentAccessToken();
-      }
-
-      public string GetCurrentProjectName()
-      {
-         return getCurrentConnectionPage()?.GetCurrentProjectName();
-      }
-
-      public int GetCurrentMergeRequestIId()
-      {
-         return getCurrentConnectionPage()?.GetCurrentMergeRequestIId() ?? 0;
-      }
-
       private ConnectionPage getCurrentConnectionPage()
       {
          if (!tabControlHost.Created)

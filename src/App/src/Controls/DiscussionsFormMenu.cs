@@ -48,7 +48,6 @@ namespace mrHelper.App.Controls
          DiscussionLayout discussionLayout,
          AsyncDiscussionHelper discussionHelper,
          IEnumerable<ICommand> commands,
-         ICommandCallback commandCallback,
          Action<string> onFontSelected,
          ColorScheme colorScheme,
          Func<ICommand, CommandState> isCommandEnabled,
@@ -74,7 +73,7 @@ namespace mrHelper.App.Controls
 
          _isCommandEnabled = isCommandEnabled;
          _onCommand = onCommand;
-         addCustomActions(commands, commandCallback);
+         addCustomActions(commands);
 
          addFontSizes();
          _onFontSelected = onFontSelected;
@@ -273,7 +272,7 @@ namespace mrHelper.App.Controls
          }));
       }
 
-      private void onCommandAction(ICommand command, ICommandCallback commandCallback)
+      private void onCommandAction(ICommand command)
       {
          Trace.TraceInformation("[DiscussionsFormMenu] onCommandAction({0})", command.Name);
          BeginInvoke(new Action(async () =>
@@ -297,7 +296,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void addCustomActions(IEnumerable<ICommand> commands, ICommandCallback commandCallback)
+      private void addCustomActions(IEnumerable<ICommand> commands)
       {
          if (commands == null)
          {
@@ -315,7 +314,7 @@ namespace mrHelper.App.Controls
                Text = command.Name,
                ToolTipText = command.Hint
             };
-            item.Click += (x, y) => onCommandAction(command, commandCallback);
+            item.Click += (x, y) => onCommandAction(command);
             actionsToolStripMenuItem.DropDownItems.Add(item);
             id++;
          }

@@ -17,26 +17,6 @@ namespace mrHelper.App.Controls
 {
    internal partial class ConnectionPage
    {
-      public string GetCurrentHostName()
-      {
-         return HostName;
-      }
-
-      public string GetCurrentAccessToken()
-      {
-         return Program.Settings.GetAccessToken(HostName);
-      }
-
-      public string GetCurrentProjectName()
-      {
-         return getMergeRequestKey(null)?.ProjectKey.ProjectName ?? String.Empty;
-      }
-
-      public int GetCurrentMergeRequestIId()
-      {
-         return getMergeRequestKey(null)?.IId ?? 0;
-      }
-
       // Helpers
 
       private DataCache getDataCacheByName(string name)

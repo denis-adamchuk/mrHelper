@@ -553,6 +553,14 @@ namespace mrHelper.App.Controls
          _exiting = true;
       }
 
+      internal string GetCurrentHostName() => HostName;
+
+      internal string GetCurrentProjectName() =>
+         getMergeRequestKey(null)?.ProjectKey.ProjectName ?? String.Empty;
+
+      internal int GetCurrentMergeRequestIId() =>
+         getMergeRequestKey(null)?.IId ?? 0;
+
       internal event Action<ConnectionPage> RequestLive;
       internal event Action<ConnectionPage> RequestRecent;
       internal event Action<ConnectionPage> RequestSearch;

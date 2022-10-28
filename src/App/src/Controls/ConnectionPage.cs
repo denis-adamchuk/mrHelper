@@ -12,7 +12,7 @@ using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Controls
 {
-   internal partial class ConnectionPage : UserControl, ICommandCallback
+   internal partial class ConnectionPage : UserControl
    {
       private static readonly int ProjectAndUserCacheCheckTimerInterval = 1000 * 1; // 1 second
       private static readonly int RedrawTimerInterval = 1000 * 30; // 0.5 minute

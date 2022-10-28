@@ -14,7 +14,7 @@ using mrHelper.Core.Context;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class DiscussionsForm : CustomFontForm, ICommandCallback
+   internal partial class DiscussionsForm : CustomFontForm
    {
       public DiscussionsForm(
          IGitCommandService git,
@@ -82,7 +82,7 @@ namespace mrHelper.App.Forms
          searchPanel.Initialize(discussionPanel);
 
          discussionMenu.Initialize(discussionSort, displayFilter, discussionLayout,
-            discussionHelper, commands, this, applyFont, colorScheme, isCommandEnabled, onCommand, onRefreshByUser);
+            discussionHelper, commands, applyFont, colorScheme, isCommandEnabled, onCommand, onRefreshByUser);
 
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);
@@ -239,30 +239,6 @@ namespace mrHelper.App.Forms
          get => String.Format(
             "Discussions for merge request !{0} in {1} -- \"{2}\"",
             _mergeRequestKey.IId, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestTitle);
-      }
-
-      // ICommandCallback
-      public string GetCurrentHostName()
-      {
-         return _mergeRequestKey.ProjectKey.HostName;
-      }
-
-      // ICommandCallback
-      public string GetCurrentAccessToken()
-      {
-         return Program.Settings.GetAccessToken(_mergeRequestKey.ProjectKey.HostName);
-      }
-
-      // ICommandCallback
-      public string GetCurrentProjectName()
-      {
-         return _mergeRequestKey.ProjectKey.ProjectName;
-      }
-
-      // ICommandCallback
-      public int GetCurrentMergeRequestIId()
-      {
-         return _mergeRequestKey.IId;
       }
 
       private readonly MergeRequestKey _mergeRequestKey;

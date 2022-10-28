@@ -157,7 +157,7 @@ namespace mrHelper.App.Forms
 
       private void onTimerStarted()
       {
-         _timeTrackingHost = GetCurrentHostName();
+         _timeTrackingHost = getCurrentConnectionPage()?.GetCurrentHostName();
          toolStripButtonGoToTimeTracking.Enabled = true;
          toolStripButtonEditTrackedTime.Enabled = false;
          toolStripButtonCancelTimer.Enabled = true;
@@ -639,8 +639,9 @@ namespace mrHelper.App.Forms
                ConnectionPage connectionPage = getCurrentConnectionPage();
                if (connectionPage != null)
                {
-                  MergeRequestKey mergeRequestKey = new MergeRequestKey(new ProjectKey(
-                     GetCurrentHostName(), GetCurrentProjectName()), GetCurrentMergeRequestIId());
+                  MergeRequestKey mergeRequestKey = new MergeRequestKey(
+                     new ProjectKey(connectionPage.GetCurrentHostName(), connectionPage.GetCurrentProjectName()),
+                     connectionPage.GetCurrentMergeRequestIId());
                   BeginInvoke(new Action(async () => await onCommandAsync(command, mergeRequestKey, connectionPage)));
                }
             };
@@ -649,12 +650,27 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private struct CommandCallback : ICommandCallback
+      {
+         public CommandCallback(MergeRequestKey mergeRequestKey) => MergeRequestKey = mergeRequestKey;
+
+         public string GetCurrentAccessToken() => Program.Settings.GetAccessToken(MergeRequestKey.ProjectKey.HostName);
+
+         public string GetCurrentHostName() => MergeRequestKey.ProjectKey.HostName;
+
+         public int GetCurrentMergeRequestIId() => MergeRequestKey.IId;
+
+         public string GetCurrentProjectName() => MergeRequestKey.ProjectKey.ProjectName;
+
+         private MergeRequestKey MergeRequestKey { get; }
+      }
+
       private async Task onCommandAsync(ICommand command, MergeRequestKey mrk, ConnectionPage connectionPage)
       {
          addOperationRecord(String.Format("Command {0} execution has started", command.Name));
          try
          {
-            await command.Run(this);
+            await command.Run(new CommandCallback(mrk));
          }
          catch (Exception ex) // Exception type does not matter
          {

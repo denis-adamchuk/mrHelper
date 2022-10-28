@@ -10,7 +10,7 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class MainForm : CustomFontForm, ICommandCallback
+   internal partial class MainForm : CustomFontForm
    {
       // TODO Combine multiple timers into a single one
       private static readonly int ConnectionLossBlinkingTimerInterval = 750 * 1; // 0.75 second
