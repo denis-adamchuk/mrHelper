@@ -47,6 +47,7 @@
     <Compile Include="src\Impl\Internal\DataCache\Loaders\AvatarLoader.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Loaders\AvatarLoaderItf.cs" />
     <Compile Include="src\Impl\Internal\DataCache\Managers\AvatarCache.cs" />
+    <Compile Include="src\Impl\Internal\DataCache\Managers\AvatarDiskCache.cs" />
     <Compile Include="src\Impl\Internal\Operators\AvatarOperator.cs" />
     <Compile Include="src\Interfaces\AvatarCacheItf.cs" />
     <Compile Include="src\Interfaces\ComparisonCacheItf.cs" />

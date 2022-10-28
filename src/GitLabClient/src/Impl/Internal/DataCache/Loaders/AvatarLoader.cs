@@ -7,6 +7,7 @@ using mrHelper.Common.Constants;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient.Loaders.Cache;
 using mrHelper.GitLabClient.Operators;
+using mrHelper.GitLabClient.Managers;
 
 namespace mrHelper.GitLabClient.Loaders
 {
@@ -15,7 +16,7 @@ namespace mrHelper.GitLabClient.Loaders
       internal AvatarLoader(InternalCacheUpdater cacheUpdater)
       {
          _cacheUpdater = cacheUpdater;
-         _diskCache = new DiskCache(PathFinder.AvatarStorage);
+         _diskCache = new AvatarDiskCache();
          _avatarOperator = new AvatarOperator();
       }
 
@@ -65,12 +66,12 @@ namespace mrHelper.GitLabClient.Loaders
       // Remove users whose avatars are already cached at disk
       private IEnumerable<User> filterUsers(IEnumerable<User> users)
       {
-         IEnumerable<User> cachedAtDisk = users.Where(user => hasAvatarAtDisk(user.Avatar_Url));
+         IEnumerable<User> cachedAtDisk = users
+            .Where(user => hasAvatarAtDisk(user));
          foreach (User user in cachedAtDisk)
          {
             int userId = user.Id;
-            string avatarUrl = user.Avatar_Url;
-            byte[] avatar = readAvatarFromDisk(avatarUrl);
+            byte[] avatar = readAvatarFromDisk(user);
             _cacheUpdater.UpdateAvatar(userId, avatar);
          }
          return users.Except(cachedAtDisk);
@@ -107,63 +108,39 @@ namespace mrHelper.GitLabClient.Loaders
       async private Task loadAvatarForUserAsync(User user)
       {
          int userId = user.Id;
-         string avatarUrl = user.Avatar_Url;
 
          // even users returned by filterUsers() might have been already cached by concurrent calls,
          // so let's disk cache first
-         byte[] avatar = readAvatarFromDisk(avatarUrl); 
+         byte[] avatar = readAvatarFromDisk(user); 
          if (avatar == null)
          {
+            string avatarUrl = user.Avatar_Url;
+            if (String.IsNullOrWhiteSpace(avatarUrl))
+            {
+               return; // don't waste time on missing avatars
+            }
+
             avatar = await call(
                () => _avatarOperator.GetAvatarAsync(avatarUrl),
                String.Format("Cancelled loading avatar for user with id {0}", userId),
                String.Format("Cannot load avatar for user with id {0}", userId));
-            saveAvatarToDisk(avatarUrl, avatar);
+            saveAvatarToDisk(user, avatar);
          }
          _cacheUpdater.UpdateAvatar(userId, avatar);
       }
 
-      private string getAvatarCacheKey(string avatarUrl)
-      {
-         return CryptoHelper.GetHashString(avatarUrl);
-      }
+      private bool hasAvatarAtDisk(User user) =>
+         _diskCache.IsUserAvatarCached(user);
 
-      private bool hasAvatarAtDisk(string avatarUrl)
-      {
-         string key = getAvatarCacheKey(avatarUrl);
-         return _diskCache.Has(key);
-      }
+      private byte[] readAvatarFromDisk(User user) =>
+         _diskCache.LoadUserAvatar(user);
 
-      private byte[] readAvatarFromDisk(string avatarUrl)
-      {
-         string key = getAvatarCacheKey(avatarUrl);
-         try
-         {
-            return _diskCache.LoadBytes(key);
-         }
-         catch (DiskCacheReadException ex)
-         {
-            Common.Exceptions.ExceptionHandlers.Handle("Cannot read avatar from disk", ex);
-         }
-         return null;
-      }
-
-      private void saveAvatarToDisk(string avatarUrl, byte[] bytes)
-      {
-         string key = getAvatarCacheKey(avatarUrl);
-         try
-         {
-            _diskCache.SaveBytes(key, bytes);
-         }
-         catch (DiskCacheWriteException ex)
-         {
-            Common.Exceptions.ExceptionHandlers.Handle("Cannot write avatar to disk", ex);
-         }
-      }
+      private void saveAvatarToDisk(User user, byte[] bytes) =>
+         _diskCache.SaveUserAvatar(user, bytes);
 
       private readonly AvatarOperator _avatarOperator;
       private readonly InternalCacheUpdater _cacheUpdater;
-      private readonly DiskCache _diskCache;
+      private readonly AvatarDiskCache _diskCache;
    }
 }
 

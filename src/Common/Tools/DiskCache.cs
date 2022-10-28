@@ -21,7 +21,7 @@ namespace mrHelper.Common.Tools
          _path = path;
       }
 
-      public bool Has(string key)
+      public bool IsUserAvatarCached(string key)
       {
          return System.IO.Directory.Exists(_path)
              && System.IO.File.Exists(System.IO.Path.Combine(_path, key));

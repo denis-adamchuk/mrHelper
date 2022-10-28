@@ -158,7 +158,7 @@ namespace mrHelper.App.Forms
          {
             comboBoxProjectName.Enabled = false;
             comboBoxProjectName.DropDownStyle = ComboBoxStyle.DropDown; // allows custom text
-            comboBoxProjectName.Text = "Project list is not loaded yet";
+            comboBoxProjectName.Text = "Project list is empty or not loaded yet";
             checkBoxSearchByProject.Enabled = false;
          }
          else
