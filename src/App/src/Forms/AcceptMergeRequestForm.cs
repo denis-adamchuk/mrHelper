@@ -398,7 +398,7 @@ namespace mrHelper.App.Forms
 
       private string getSquashCommitMessage()
       {
-         if (!_isSquashNeeded.GetValueOrDefault(false))
+         if (!_isSquashNeeded.GetValueOrDefault(true))
          {
             return null;
          }
