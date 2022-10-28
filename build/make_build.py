@@ -198,8 +198,9 @@ class PreBuilder:
          raise self.Exception(f'Bad file with versions "{version_file}"')
       self.version_file = version_file
 
-      if not os.path.exists(msix_manifest) or not os.path.isfile(msix_manifest):
-         raise self.Exception(f'Bad MSIX manifest file "{msix_manifest}"')
+      if msix_manifest is not None:
+         if not os.path.exists(msix_manifest) or not os.path.isfile(msix_manifest):
+            raise self.Exception(f'Bad MSIX manifest file "{msix_manifest}"')
       self.msix_manifest = msix_manifest
 
    def prebuild(self):
@@ -225,6 +226,9 @@ class PreBuilder:
             f.write(line)
 
    def _write_version_msix(self):
+      if msix_manifest is None:
+         return
+
       identity_version_rex = re.compile(r'(\s*<Identity.*Version=)(?:\"[0-9\.]+\")(.*)')
 
       lines = []
@@ -262,6 +266,9 @@ class Builder:
          raise self.Exception(f'Bad target path')
 
       target_filepath = os.path.join(target_path, archive_name)
+      if os.path.exists(target_filepath):
+         os.remove(target_filepath)
+
       with zipfile.ZipFile(target_filepath, 'a', zipfile.ZIP_DEFLATED) as zip:
          for base, dirs, files in os.walk(pdb_path):
             for file in files:
@@ -397,19 +404,25 @@ try:
 
    config = ScriptConfigParser(args.config())
 
-   prebuilder = PreBuilder(args.version(), config.version_file(), config.msix_manifest())
+   msix_manifest = config.msix_manifest() if args.msix() else None
+   prebuilder = PreBuilder(args.version(), config.version_file(), msix_manifest)
    prebuilder.prebuild()
 
    builder = Builder()
 
    msi_filename = config.msi_target_name_template().replace("{Version}", args.version())
    msi_filepath = os.path.join(config.bin(), msi_filename)
-   msix_filename = config.msix_target_name_template().replace("{Version}", args.version())
-   msix_filepath = os.path.join(config.msix_bin(), msix_filename)
+   if os.path.exists(msi_filepath):
+      os.remove(msi_filepath)
 
    builder.build(config.build_script(), msi_filepath)
    if args.msix():
-      builder.build(config.msix_build_script(), msix_filepath + " " + config.msix_manifest())
+      msix_filename = config.msix_target_name_template().replace("{Version}", args.version())
+      msix_filepath = os.path.join(config.msix_bin(), msix_filename)
+      if os.path.exists(msix_filepath):
+         os.remove(msix_filepath)
+
+      builder.build(config.msix_build_script(), msix_filepath + " " + msix_manifest)
 
    pdb_archive_filename = config.pdb_archive_name_template().replace("{Version}", args.version())
    pdb_archive_filepath = builder.pack_pdb(config.bin(), pdb_archive_filename, config.build_bin())
