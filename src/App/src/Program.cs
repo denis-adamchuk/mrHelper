@@ -21,10 +21,19 @@ namespace mrHelper.App
    {
       private static void HandleUnhandledException(Exception ex)
       {
+         void trace(Exception exception)
+         {
+            if (exception != null)
+            {
+               Trace.TraceError("Unhandled exception (nested): [{0}] {1}\nCallstack:\n{2}",
+                  exception.GetType().ToString(), exception.Message, exception.StackTrace);
+            }
+         }
+
          AppDomain.CurrentDomain.UnhandledException -= CurrentDomain_UnhandledException;
          Debug.Assert(false);
-         Trace.TraceError("Unhandled exception: [{0}] {1}\nCallstack:\n{2}",
-            ex.GetType().ToString(), ex.Message, ex.StackTrace);
+         trace(ex);
+         trace(ex.InnerException);
          if (ServiceManager != null && FeedbackReporter != null)
          {
             if (MessageBox.Show("Fatal error occurred, see details in logs. Do you want to report this problem?",
