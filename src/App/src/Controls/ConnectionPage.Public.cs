@@ -226,7 +226,7 @@ namespace mrHelper.App.Controls
 
       internal void Pin(MergeRequestKey mergeRequestKey)
       {
-         pinToLiveTab(mergeRequestKey);
+         toggleMergeRequestPinState(mergeRequestKey);
       }
 
       internal void ReloadOne(MergeRequestKey mrk)

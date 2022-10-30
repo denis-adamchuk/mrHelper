@@ -178,14 +178,7 @@ namespace mrHelper.App.Controls
          bool wasPinned = isMergeRequestPinned(mrk);
          Trace.TraceInformation(String.Format(
             "[ConnectionPage] Toggling pin state for selected MR (was pinned = {0}...", wasPinned.ToString()));
-         if (wasPinned)
-         {
-            unpinFromLiveTab(mrk);
-         }
-         else
-         {
-            pinToLiveTab(mrk);
-         }
+         toggleMergeRequestPinState(mrk);
       }
 
       private void toggleMergeRequestExclusion(EDataCacheType type, MergeRequest mergeRequest)

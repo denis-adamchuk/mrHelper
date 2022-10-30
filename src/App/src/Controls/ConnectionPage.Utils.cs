@@ -205,16 +205,6 @@ namespace mrHelper.App.Controls
             .Select(mergeRequestKey => mergeRequestKey.Value);
       }
 
-      private void pinToLiveTab(MergeRequestKey mergeRequestKey)
-      {
-         toggleMergeRequestPinState(mergeRequestKey);
-      }
-
-      private void unpinFromLiveTab(MergeRequestKey mergeRequestKey)
-      {
-         toggleMergeRequestPinState(mergeRequestKey);
-      }
-
       private void toggleMergeRequestPinState(MergeRequestKey mrk)
       {
          EDataCacheType type = EDataCacheType.Live;
