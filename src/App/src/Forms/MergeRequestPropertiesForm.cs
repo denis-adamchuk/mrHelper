@@ -42,6 +42,7 @@ namespace mrHelper.App.Forms
 
          buttonCancel.ConfirmationCondition = () => true;
 
+         textBoxSpecialNote.Size = new System.Drawing.Size(textBoxSpecialNote.Size.Width, textBoxAssigneeUsername.Height);
          textBoxSpecialNote.Init(false, String.Empty, false, false, true);
          if (users == null || !users.Any())
          {

@@ -34,18 +34,30 @@
       /// </summary>
       private void InitializeComponent()
       {
+         this.textBox = new System.Windows.Controls.TextBox();
          this.textBoxHost = new System.Windows.Forms.Integration.ElementHost();
          this.SuspendLayout();
+         //
+         // textBox
+         //
+         this.textBox.HorizontalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
+         this.textBox.Margin = new System.Windows.Thickness(0);
+         this.textBox.TextWrapping = System.Windows.TextWrapping.Wrap;
+         this.textBox.VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto;
+         this.textBox.TextChanged += textBox_TextChanged;
+         this.textBox.LostFocus += textBox_LostFocus;
+         this.textBox.KeyDown += textBox_KeyDown;
+         this.textBox.PreviewKeyDown += textBox_PreviewKeyDown;
          // 
          // textBoxHost
          // 
+         this.textBoxHost.Child = this.textBox;
          this.textBoxHost.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.textBoxHost.Location = new System.Drawing.Point(3, 3);
+         this.textBoxHost.Location = new System.Drawing.Point(0, 0);
+         this.textBoxHost.Margin = new System.Windows.Forms.Padding(0);
+         this.textBoxHost.Padding = new System.Windows.Forms.Padding(0);
          this.textBoxHost.Name = "textBoxHost";
-         this.textBoxHost.Size = new System.Drawing.Size(586, 82);
          this.textBoxHost.TabIndex = 3;
-         this.textBoxHost.Text = "textBoxHost";
-         this.textBoxHost.Child = null;
          // 
          // TextBoxWithUserAutoComplete
          // 

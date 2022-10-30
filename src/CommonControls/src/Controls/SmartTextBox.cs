@@ -31,12 +31,28 @@ namespace mrHelper.CommonControls.Controls
       public void Init(bool isReadOnly, string text, bool multiline,
          bool isSpellCheckEnabled, bool softwareOnlyRenderMode)
       {
-         textBox = WPFHelpers.CreateWPFTextBox(textBoxHost, isReadOnly, text, multiline,
-            isSpellCheckEnabled, softwareOnlyRenderMode);
-         textBox.TextChanged += textBox_TextChanged;
-         textBox.LostFocus += textBox_LostFocus;
-         textBox.KeyDown += textBox_KeyDown;
-         textBox.PreviewKeyDown += textBox_PreviewKeyDown;
+         textBox.AcceptsReturn = multiline;
+         textBox.IsReadOnly = isReadOnly;
+         textBox.Text = text;
+         textBox.SelectionStart = text.Length;
+         textBox.VerticalContentAlignment = multiline ?
+            System.Windows.VerticalAlignment.Top : System.Windows.VerticalAlignment.Stretch;
+         textBox.VerticalAlignment = multiline ?
+            System.Windows.VerticalAlignment.Stretch : System.Windows.VerticalAlignment.Center;
+         textBox.SpellCheck.IsEnabled = isSpellCheckEnabled;
+         textBox.Loaded += (s, e) =>
+         {
+            double verticalPadding = multiline ? 4 : (this.Height - textBox.ActualHeight) / 2.0;
+            textBox.Padding = new System.Windows.Thickness(0, verticalPadding, 0, verticalPadding);
+            if (softwareOnlyRenderMode)
+            {
+               System.Windows.PresentationSource source = System.Windows.PresentationSource.FromVisual(textBox);
+               if (source.CompositionTarget is System.Windows.Interop.HwndTarget hwndTarget)
+               {
+                  hwndTarget.RenderMode = System.Windows.Interop.RenderMode.SoftwareOnly;
+               }
+            }
+         };
       }
 
       public struct AutoCompletionEntity
