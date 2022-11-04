@@ -577,19 +577,13 @@ namespace mrHelper.App.Controls
          Point ptScreen = PointToScreen(new Point(_panelContext.Location.X, _panelContext.Location.Y));
          _popupWindow.Show(ptScreen);
          _showMoreContextHint?.Show();
-         if (_showMoreContext != null)
-         {
-            _showMoreContext.Enabled = false;
-         }
+         _showMoreContext?.Hide();
       }
 
       private void onPopupWindowClosed(object sender, ToolStripDropDownClosedEventArgs e)
       {
          _showMoreContextHint?.Hide();
-         if (_showMoreContext != null)
-         {
-            _showMoreContext.Enabled = true;
-         }
+         _showMoreContext?.Show();
          disposePopupContext();
       }
 
@@ -827,7 +821,7 @@ namespace mrHelper.App.Controls
          Label label = new Label()
          {
             AutoSize = true,
-            Text = "Scroll up/down with mouse wheel",
+            Text = "Scroll with mouse wheel",
             ForeColor = Color.Olive,
             BorderStyle = BorderStyle.None,
             Visible = false
@@ -1505,10 +1499,9 @@ namespace mrHelper.App.Controls
          if (_textboxFilename != null)
          {
             _textboxFilename.Width = getDiffContextWidth(width)
-               - (_showMoreContextHint == null ? 0 : _showMoreContextHint.Width)
                - (_showMoreContext == null ? 0 : _showMoreContext.Width)
                - (_copyToClipboard == null ? 0 : _copyToClipboard.Width)
-               - (_copyToClipboard == null && _showMoreContextHint == null && _showMoreContext == null ? 0 : 50);
+               - (_copyToClipboard == null && _showMoreContext == null ? 0 : 25);
             _textboxFilename.Height = (_textboxFilename as TextBoxEx).FullPreferredHeight;
          }
 
@@ -1552,24 +1545,6 @@ namespace mrHelper.App.Controls
             {
                _panelContext.Location = contextPos;
 
-               if (_showMoreContextHint != null)
-               {
-                  _showMoreContextHint.Location = new Point(
-                     _panelContext.Location.X + _panelContext.Width - _showMoreContextHint.Width, 0);
-
-                  if (_showMoreContext != null)
-                  {
-                     _showMoreContextHint.Location = new Point(
-                        _showMoreContextHint.Location.X - _showMoreContext.Width - 20, _showMoreContextHint.Location.Y);
-                  }
-
-                  if (_copyToClipboard != null)
-                  {
-                     _showMoreContextHint.Location = new Point(
-                        _showMoreContextHint.Location.X - _copyToClipboard.Width - 20, _showMoreContextHint.Location.Y);
-                  }
-               }
-
                if (_showMoreContext != null)
                {
                   _showMoreContext.Location = new Point(
@@ -1580,6 +1555,11 @@ namespace mrHelper.App.Controls
                      _showMoreContext.Location = new Point(
                         _showMoreContext.Location.X - _copyToClipboard.Width - 20, _showMoreContext.Location.Y);
                   }
+               }
+
+               if (_showMoreContextHint != null)
+               {
+                  _showMoreContextHint.Location = _showMoreContext.Location;
                }
 
                if (_copyToClipboard != null)
@@ -1615,25 +1595,7 @@ namespace mrHelper.App.Controls
          if (_panelContext != null)
          {
             _panelContext.Location = controlPos;
-            controlPos.Offset(0, _panelContext.Height + 5);
-
-            if (_showMoreContextHint != null)
-            {
-               _showMoreContextHint.Location = new Point(
-                  _panelContext.Location.X + _panelContext.Width - _showMoreContextHint.Width, 0);
-
-               if (_showMoreContext != null)
-               {
-                  _showMoreContextHint.Location = new Point(
-                     _showMoreContextHint.Location.X - _showMoreContext.Width - 20, _showMoreContextHint.Location.Y);
-               }
-
-               if (_copyToClipboard != null)
-               {
-                  _showMoreContextHint.Location = new Point(
-                     _showMoreContextHint.Location.X - _copyToClipboard.Width - 20, _showMoreContextHint.Location.Y);
-               }
-            }
+            controlPos.Offset(0, _panelContext.Height + 20);
 
             if (_showMoreContext != null)
             {
@@ -1645,6 +1607,11 @@ namespace mrHelper.App.Controls
                   _showMoreContext.Location = new Point(
                      _showMoreContext.Location.X - _copyToClipboard.Width - 20, _showMoreContext.Location.Y);
                }
+            }
+
+            if (_showMoreContextHint != null)
+            {
+               _showMoreContextHint.Location = _showMoreContext.Location;
             }
 
             if (_copyToClipboard != null)
@@ -1695,7 +1662,7 @@ namespace mrHelper.App.Controls
                noteContentPos.Offset(noteHorzOffset + AvatarPaddingRight + noteContainer.NoteAvatar.Width, 0);
                noteContainer.NoteContent.Location = noteContentPos;
             }
-            controlPos.Offset(0, noteContainer.NoteContent.Height + 5);
+            controlPos.Offset(0, noteContainer.NoteContent.Height + 20);
          }
       }
 
