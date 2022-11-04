@@ -1016,10 +1016,9 @@ namespace mrHelper.App.Controls
          noteContainer.NoteInfo.Invalidated += (_, __) =>
             noteContainer.NoteInfo.Text = getNoteInformation(note);
 
-         noteContainer.NoteAvatar = new PictureBox
+         noteContainer.NoteAvatar = new AvatarBox
          {
-            Image = _avatarImageCache.GetAvatar(note.Author, this.BackColor),
-            SizeMode = PictureBoxSizeMode.StretchImage,
+            Image = _avatarImageCache.GetAvatar(note.Author),
             Tag = note
          };
          noteContainer.NoteAvatar.ContextMenu = createContextMenuForAvatar(note, noteContainer.NoteAvatar);
@@ -2096,7 +2095,7 @@ namespace mrHelper.App.Controls
 
       private DiscussionNote getNoteFromControl(Control control)
       {
-         Debug.Assert(control is HtmlPanel || control is PictureBox);
+         Debug.Assert(control is HtmlPanel || control is AvatarBox);
          return (control == null || control.Tag == null) ? null : (DiscussionNote)(control.Tag);
       }
 

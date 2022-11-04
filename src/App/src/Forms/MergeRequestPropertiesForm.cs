@@ -91,7 +91,7 @@ namespace mrHelper.App.Forms
             textBoxSpecialNote.SetAutoCompletionEntities(_fullUserList
                .Select(user => new SmartTextBox.AutoCompletionEntity(
                   user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User,
-                  () => _avatarImageCache.GetAvatar(user, System.Drawing.Color.White))));
+                  () => _avatarImageCache.GetAvatar(user))));
          }
       }
 

@@ -728,7 +728,7 @@ namespace mrHelper.App.Forms
          buttonNextRelatedDiscussion.Enabled = allowScrollForward;
 
          labelRelatedDiscussionAuthor.Visible = areRelatedDisussionsAvailable;
-         pictureBoxRelatedDiscussionAvatar.Visible = areRelatedDisussionsAvailable;
+         avatarBoxRelatedDiscussionAvatar.Visible = areRelatedDisussionsAvailable;
          linkLabelGoToRelatedDiscussion.Visible = areRelatedDisussionsAvailable;
 
          updateRelatedThreadsGroupBoxVisibility();
@@ -740,7 +740,7 @@ namespace mrHelper.App.Forms
             labelRelatedDiscussionAuthor.Text = String.Format("{0} -- {1}",
                note.Details.Author.Name, TimeUtils.DateTimeToStringAgo(note.Details.CreatedAt));
             toolTip.SetToolTip(labelRelatedDiscussionAuthor, TimeUtils.DateTimeToString(note.Details.CreatedAt));
-            pictureBoxRelatedDiscussionAvatar.Image = _avatarImageCache.GetAvatar(note.Details.Author, this.BackColor);
+            avatarBoxRelatedDiscussionAvatar.Image = _avatarImageCache.GetAvatar(note.Details.Author);
             updatePreview(htmlPanelPreviewRelatedDiscussion, note.Content.Body);
             showDiscussionContext(note.Position.DiffPosition, htmlPanelRelatedDiscussionContext);
          }
@@ -748,7 +748,7 @@ namespace mrHelper.App.Forms
          {
             labelRelatedDiscussionAuthor.Text = String.Empty;
             toolTip.SetToolTip(labelRelatedDiscussionAuthor, String.Empty);
-            pictureBoxRelatedDiscussionAvatar.Image = null;
+            avatarBoxRelatedDiscussionAvatar.Image = null;
             htmlPanelPreviewRelatedDiscussion.Text = String.Empty;
             htmlPanelRelatedDiscussionContext.Text = String.Empty;
          }
@@ -772,7 +772,7 @@ namespace mrHelper.App.Forms
             textBoxDiscussionBody.SetAutoCompletionEntities(_fullUserList
                .Select(user => new CommonControls.Controls.SmartTextBox.AutoCompletionEntity(
                   user.Name, user.Username, CommonControls.Controls.SmartTextBox.AutoCompletionEntity.EntityType.User,
-                  () => _avatarImageCache.GetAvatar(user, Color.White))));
+                  () => _avatarImageCache.GetAvatar(user))));
          }
 
          textBoxDiscussionBody.KeyDown += textBoxDiscussionBody_KeyDown;

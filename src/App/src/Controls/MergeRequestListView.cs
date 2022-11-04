@@ -777,9 +777,7 @@ namespace mrHelper.App.Controls
          {
             if (!isSummaryItem(e.Item))
             {
-               Color avatarBackgroundColor = isMuted(fmk) ? Color.White : getMergeRequestColor(fmk, Color.White);
-               avatarBackgroundColor = isSelected ? SystemColors.Highlight : avatarBackgroundColor;
-               Image avatar = _avatarImageCache.GetAvatar(fmk.MergeRequest.Author, avatarBackgroundColor);
+               Image avatar = _avatarImageCache.GetAvatar(fmk.MergeRequest.Author);
                drawAvatar(e.Graphics, e.Bounds, avatar);
             }
          }
@@ -929,7 +927,7 @@ namespace mrHelper.App.Controls
          Rectangle avatarRect = getAvatarRectangle();
          Rectangle imageRect = new Rectangle(
             bounds.X + avatarRect.X, bounds.Y + avatarRect.Y, avatarRect.Width, avatarRect.Height);
-         g.DrawImage(avatar, imageRect);
+         WinFormsHelpers.DrawClippedCircleImage(g, avatar, imageRect);
 
          g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
       }

@@ -26,14 +26,15 @@ namespace mrHelper.App.Forms
 
          _colorScheme.Changed -= onColorSchemeChanged;
 
+         // dispose connection pages before toolstrip because in some cases reverse order causes unhandled exception
+         disposeAllConnectionPages();
+
          foreach (ToolStrip toolStrip in new ToolStrip[] { toolStripHosts, toolStripActions, toolStripCustomActions })
          {
             removeToolbarButtons(toolStrip); // actually unneeded
             toolStrip.Dispose();
          }
          toolTip.Dispose();
-
-         disposeAllConnectionPages();
 
          Microsoft.Win32.SystemEvents.SessionSwitch -= SystemEvents_SessionSwitch;
          Microsoft.Win32.SystemEvents.DisplaySettingsChanged -= SystemEvents_DisplaySettingsChanged;

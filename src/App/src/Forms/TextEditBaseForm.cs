@@ -102,7 +102,7 @@ namespace mrHelper.App.Forms
             textBox.SetAutoCompletionEntities(fullUserList
                .Select(user => new SmartTextBox.AutoCompletionEntity(
                   user.Name, user.Username, SmartTextBox.AutoCompletionEntity.EntityType.User,
-                  () => _avatarImageCache.GetAvatar(user, System.Drawing.Color.White))));
+                  () => _avatarImageCache.GetAvatar(user))));
          }
 
          textBox.KeyDown += textBox_KeyDown;

@@ -26,20 +26,20 @@ namespace mrHelper.App.Helpers
          clearCache();
       }
 
-      public Image GetAvatar(User user, Color backgroundColor)
+      public Image GetAvatar(User user)
       {
          if (user == null)
          {
             return null;
          }
 
-         Key key = new Key(user.Id, backgroundColor);
+         Key key = new Key(user.Id);
          if (_cached.TryGetValue(key, out Image image))
          {
             return image;
          }
 
-         image = convertByteToImage(_dataCache.AvatarCache.GetAvatar(user), backgroundColor);
+         image = convertByteToImage(_dataCache.AvatarCache.GetAvatar(user));
          if (image == null)
          {
             return Properties.Resources.loading_transp_alpha;
@@ -49,7 +49,7 @@ namespace mrHelper.App.Helpers
          return image;
       }
 
-      private Image convertByteToImage(byte[] bytes, Color backgroundColor)
+      private Image convertByteToImage(byte[] bytes)
       {
          if (bytes == null)
          {
@@ -58,10 +58,7 @@ namespace mrHelper.App.Helpers
 
          using (System.IO.MemoryStream ms = new System.IO.MemoryStream(bytes))
          {
-            using (Image image = Image.FromStream(ms))
-            {
-               return WinFormsHelpers.ClipRectToCircle(image, backgroundColor);
-            }
+            return Image.FromStream(ms);
          }
       }
 
@@ -83,14 +80,12 @@ namespace mrHelper.App.Helpers
 
       private struct Key : IEquatable<Key>
       {
-         public Key(int userId, Color backgroundColo)
+         public Key(int userId)
          {
             _userId = userId;
-            _backgroundColor = backgroundColo;
          }
 
          private int _userId;
-         private Color _backgroundColor;
 
          public override bool Equals(object obj)
          {
@@ -99,15 +94,13 @@ namespace mrHelper.App.Helpers
 
          public bool Equals(Key other)
          {
-            return _userId == other._userId &&
-                   EqualityComparer<Color>.Default.Equals(_backgroundColor, other._backgroundColor);
+            return _userId == other._userId;
          }
 
          public override int GetHashCode()
          {
             int hashCode = -1622434987;
             hashCode = hashCode * -1521134295 + _userId.GetHashCode();
-            hashCode = hashCode * -1521134295 + _backgroundColor.GetHashCode();
             return hashCode;
          }
       }

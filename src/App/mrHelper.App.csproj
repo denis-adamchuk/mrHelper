@@ -72,6 +72,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="src\Controls\AvatarBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\ConnectionPage.cs">
       <SubType>UserControl</SubType>
     </Compile>

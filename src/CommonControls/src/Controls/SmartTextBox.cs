@@ -247,7 +247,7 @@ namespace mrHelper.CommonControls.Controls
 
          if (image != null)
          {
-            e.Graphics.DrawImage(image, imageRect);
+            WinFormsHelpers.DrawClippedCircleImage(e.Graphics, image, imageRect);
          }
          else
          {

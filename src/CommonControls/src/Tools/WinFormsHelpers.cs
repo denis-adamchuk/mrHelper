@@ -411,11 +411,33 @@ namespace mrHelper.CommonControls.Tools
          return bitmap;
       }
 
-      // inspired by https://stackoverflow.com/a/47205281
-      public static Image ClipRectToCircle(Image srcImage, Color backGround)
+      public static void DrawClippedCircleImage(Graphics g, Image image, Rectangle imageRect)
       {
-         int dstImageWidth = Math.Min(srcImage.Width, srcImage.Height);
+         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+         using (GraphicsPath path = new GraphicsPath())
+         {
+            path.AddEllipse(imageRect);
+            g.SetClip(path);
+         }
+         g.DrawImage(image, imageRect);
+         g.ResetClip();
+
+         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+      }
+
+      // inspired by https://stackoverflow.com/a/47205281
+      public static Image ClipRectToCircle(Image srcImage, Color backGround, int dpi)
+      {
+         float horizontalRate = dpi / srcImage.HorizontalResolution;
+         float verticalRate = dpi / srcImage.VerticalResolution;
+
+         int srcImageWidthScaled = (int)(srcImage.Width * horizontalRate);
+         int srcImageHeightScaled = (int)(srcImage.Height * verticalRate);
+
+         int dstImageWidth = Math.Min(srcImageWidthScaled, srcImageHeightScaled);
          int dstImageHeight = dstImageWidth;
+
          Bitmap dstImage = new Bitmap(dstImageWidth, dstImageHeight, srcImage.PixelFormat);
 
          using (Graphics g = Graphics.FromImage(dstImage))
@@ -437,11 +459,10 @@ namespace mrHelper.CommonControls.Tools
                path.AddEllipse(r);
                g.SetClip(path);
 
-               float imgX = (float)(dstImage.Width - srcImage.Width) / 2;
-               float imgY = (float)(dstImage.Height - srcImage.Height) / 2;
-               g.DrawImage(srcImage, imgX, imgY);
+               int imgX = (int)(dstImageWidth - srcImageWidthScaled) / 2;
+               int imgY = (int)(dstImageHeight - srcImageHeightScaled) / 2;
+               g.DrawImageUnscaled(srcImage, imgX, imgY);
             }
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
 
             return dstImage;
          }

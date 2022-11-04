@@ -58,7 +58,7 @@ namespace mrHelper.App.Forms
          this.labelCounter = new System.Windows.Forms.Label();
          this.checkBoxShowRelated = new System.Windows.Forms.CheckBox();
          this.groupBoxRelated = new System.Windows.Forms.GroupBox();
-         this.pictureBoxRelatedDiscussionAvatar = new System.Windows.Forms.PictureBox();
+         this.avatarBoxRelatedDiscussionAvatar = new AvatarBox();
          this.labelDifferentContextHint = new System.Windows.Forms.Label();
          this.panelRelatedDiscussionHtmlContextCanvas = new System.Windows.Forms.Panel();
          this.htmlPanelRelatedDiscussionContext = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
@@ -74,7 +74,6 @@ namespace mrHelper.App.Forms
          this.tabPagePreview.SuspendLayout();
          this.panelNavigation.SuspendLayout();
          this.groupBoxRelated.SuspendLayout();
-         ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRelatedDiscussionAvatar)).BeginInit();
          this.panelRelatedDiscussionHtmlContextCanvas.SuspendLayout();
          this.panelRelatedDiscussionNavigation.SuspendLayout();
          this.SuspendLayout();
@@ -399,7 +398,7 @@ namespace mrHelper.App.Forms
          this.groupBoxRelated.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
          this.groupBoxRelated.Controls.Add(this.linkLabelGoToRelatedDiscussion);
-         this.groupBoxRelated.Controls.Add(this.pictureBoxRelatedDiscussionAvatar);
+         this.groupBoxRelated.Controls.Add(this.avatarBoxRelatedDiscussionAvatar);
          this.groupBoxRelated.Controls.Add(this.buttonReply);
          this.groupBoxRelated.Controls.Add(this.labelDifferentContextHint);
          this.groupBoxRelated.Controls.Add(this.panelRelatedDiscussionHtmlContextCanvas);
@@ -415,14 +414,13 @@ namespace mrHelper.App.Forms
          this.groupBoxRelated.SizeChanged += new System.EventHandler(this.groupBoxRelated_SizeChanged);
          this.groupBoxRelated.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.groupBoxRelated_MouseWheel);
          // 
-         // pictureBoxRelatedDiscussionAvatar
+         // avatarBoxRelatedDiscussionAvatar
          // 
-         this.pictureBoxRelatedDiscussionAvatar.Location = new System.Drawing.Point(7, 108);
-         this.pictureBoxRelatedDiscussionAvatar.Name = "pictureBoxRelatedDiscussionAvatar";
-         this.pictureBoxRelatedDiscussionAvatar.Size = new System.Drawing.Size(32, 32);
-         this.pictureBoxRelatedDiscussionAvatar.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-         this.pictureBoxRelatedDiscussionAvatar.TabIndex = 39;
-         this.pictureBoxRelatedDiscussionAvatar.TabStop = false;
+         this.avatarBoxRelatedDiscussionAvatar.Location = new System.Drawing.Point(7, 108);
+         this.avatarBoxRelatedDiscussionAvatar.Name = "pictureBoxRelatedDiscussionAvatar";
+         this.avatarBoxRelatedDiscussionAvatar.Size = new System.Drawing.Size(32, 32);
+         this.avatarBoxRelatedDiscussionAvatar.TabIndex = 39;
+         this.avatarBoxRelatedDiscussionAvatar.TabStop = false;
          // 
          // labelDifferentContextHint
          // 
@@ -563,7 +561,6 @@ namespace mrHelper.App.Forms
          this.panelNavigation.PerformLayout();
          this.groupBoxRelated.ResumeLayout(false);
          this.groupBoxRelated.PerformLayout();
-         ((System.ComponentModel.ISupportInitialize)(this.pictureBoxRelatedDiscussionAvatar)).EndInit();
          this.panelRelatedDiscussionHtmlContextCanvas.ResumeLayout(false);
          this.panelRelatedDiscussionNavigation.ResumeLayout(false);
          this.panelRelatedDiscussionNavigation.PerformLayout();
@@ -608,7 +605,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Panel panelScroll;
       private System.Windows.Forms.Label labelDifferentContextHint;
       private System.Windows.Forms.Button buttonReply;
-      private System.Windows.Forms.PictureBox pictureBoxRelatedDiscussionAvatar;
+      private AvatarBox avatarBoxRelatedDiscussionAvatar;
       private System.Windows.Forms.LinkLabel linkLabelGoToRelatedDiscussion;
    }
 }
