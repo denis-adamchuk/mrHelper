@@ -89,6 +89,8 @@ namespace mrHelper.App.Forms
             updateRelatedDiscussions();
             updateControlState();
          }
+
+         Size = MinimumSize;
       }
 
       async private void buttonOK_Click(object sender, EventArgs e)
@@ -566,8 +568,8 @@ namespace mrHelper.App.Forms
 
       private void updatePreview(HtmlPanel previewPanel, string text)
       {
-         previewPanel.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
-            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(previewPanel));
+         previewPanel.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}pt; }}",
+            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPoints(previewPanel));
 
          var pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
          string body = MarkDownUtils.ConvertToHtml(text, String.Empty, pipeline, previewPanel);
@@ -604,11 +606,17 @@ namespace mrHelper.App.Forms
       private string getContextHtmlText(DiffPosition position, HtmlPanel htmlPanel, out string stylesheet)
       {
          stylesheet = String.Empty;
-         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
          DiffContext context = isCurrentNoteNew() ?
             _getNewDiscussionDiffContext(position) : _getDiffContext(position);
-         int tableWidth = DiffContextHelpers.EstimateHtmlWidth(context, fontSizePx, htmlPanel.Width);
-         return DiffContextFormatter.GetHtml(context, fontSizePx, 1, tableWidth);
+
+         string longestLine = context.GetLongestLine();
+         double fontSizePt = WinFormsHelpers.GetFontSizeInPoints(htmlPanel);
+         string htmlSnippet = longestLine != null ?
+            DiffContextFormatter.GetHtml(longestLine, fontSizePt, 0, null) : null;
+
+         double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
+         int tableWidth = DiffContextHelpers.EstimateHtmlWidth(htmlSnippet, fontSizePx, htmlPanel.Width);
+         return DiffContextFormatter.GetHtml(context, fontSizePt, 1, tableWidth);
       }
 
       private void updateControlState()

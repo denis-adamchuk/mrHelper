@@ -49,8 +49,8 @@ namespace mrHelper.App.Forms
       {
          if (tabControlMode.SelectedTab == tabPagePreview)
          {
-            htmlPanelPreview.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}px; }}",
-               Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(htmlPanelPreview));
+            htmlPanelPreview.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}pt; }}",
+               Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPoints(htmlPanelPreview));
 
             Markdig.MarkdownPipeline pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
             string body = MarkDownUtils.ConvertToHtml(textBox.Text, _uploadsPrefix, pipeline, htmlPanelPreview);

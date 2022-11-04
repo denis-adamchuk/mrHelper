@@ -175,8 +175,8 @@ namespace mrHelper.App.Controls
 
       static private void setFontSizeInHtmlPanel(HtmlPanel htmlPanel)
       {
-         string cssEx = String.Format("body div {{ font-size: {0}px; }}",
-            CommonControls.Tools.WinFormsHelpers.GetFontSizeInPixels(htmlPanel));
+         string cssEx = String.Format("body div {{ font-size: {0}pt; }}",
+            CommonControls.Tools.WinFormsHelpers.GetFontSizeInPoints(htmlPanel));
          htmlPanel.BaseStylesheet = String.Format("{0}{1}", Properties.Resources.Common_CSS, cssEx);
       }
 

@@ -315,14 +315,10 @@ namespace mrHelper.CommonControls.Tools
             control.ToString(), currentDPI, oldEmSize, newEmSize, designTimeFontSize, designTimeDPI));
       }
 
-      /// <summary>
-      /// Convert font size in points to font size in pixels.
-      /// Note - control.Font.Height gives another value which is not ok for CSS font-size
-      /// </summary>
-      public static double GetFontSizeInPixels(Control control)
-      {
-         return control.Font.SizeInPoints * 96.0 / 72.0;
-      }
+      public static double GetFontSizeInPoints(Control control) => control.Font.SizeInPoints;
+
+      public static double GetFontSizeInPixels(Control control) =>
+         GetFontSizeInPoints(control) * control.DeviceDpi / 72.0;
 
       public static void LogScaleDimensions(ContainerControl control)
       {

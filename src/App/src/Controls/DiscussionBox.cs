@@ -433,11 +433,16 @@ namespace mrHelper.App.Controls
 
          string getPopupDiffContextText(Control control, DiffContext? ctx, int minWidth)
          {
-            double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(control);
+            double fontSizePt = WinFormsHelpers.GetFontSizeInPoints(control);
             if (ctx.HasValue && ctx.Value.IsValid())
             {
-               int tableWidth = DiffContextHelpers.EstimateHtmlWidth(ctx.Value, fontSizePx, minWidth);
-               return getFormattedHtml(ctx.Value, fontSizePx, tableWidth);
+               string longestLine = ctx.Value.GetLongestLine();
+               string htmlSnippet = longestLine != null ?
+                  DiffContextFormatter.GetHtml(longestLine, fontSizePt, 0, null) : null;
+
+               double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(control);
+               int tableWidth = DiffContextHelpers.EstimateHtmlWidth(htmlSnippet, fontSizePx, minWidth);
+               return getFormattedHtml(ctx.Value, fontSizePt, tableWidth);
             }
             return getErrorHtml("Cannot create a diff ctx for popup window");
          }
@@ -661,10 +666,16 @@ namespace mrHelper.App.Controls
          }
          else
          {
+            double fontSizePt = WinFormsHelpers.GetFontSizeInPoints(diffContextControl);
+
             bool recalcTableWidth = actualHeight == 0 || expectedHeight < actualHeight;
+            string longestLine = context.Value.GetLongestLine();
+            string htmlSnippet = longestLine != null ?
+               DiffContextFormatter.GetHtml(longestLine, fontSizePt, 0, null) : null;
+
             int? tableWidth = recalcTableWidth ?
-               DiffContextHelpers.EstimateHtmlWidth(context.Value, fontSizePx, actualWidth) : new int?();
-            html = getFormattedHtml(context.Value, fontSizePx, tableWidth);
+               DiffContextHelpers.EstimateHtmlWidth(htmlSnippet, fontSizePx, actualWidth) : new int?();
+            html = getFormattedHtml(context.Value, fontSizePt, tableWidth);
          }
 
          // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
@@ -722,12 +733,12 @@ namespace mrHelper.App.Controls
          return null;
       }
 
-      private string getFormattedHtml(DiffContext context, double fontSizePx, int? tableWidth)
+      private string getFormattedHtml(DiffContext context, double fontSizePt, int? tableWidth)
       {
          string errorMessage = "Cannot render HTML context.";
          try
          {
-            return DiffContextFormatter.GetHtml(context, fontSizePx, 0, tableWidth);
+            return DiffContextFormatter.GetHtml(context, fontSizePt, 0, tableWidth);
          }
          catch (ArgumentException ex)
          {
@@ -1036,8 +1047,8 @@ namespace mrHelper.App.Controls
          void updateStylesheet(HtmlPanel htmlPanel)
          {
             htmlPanel.BaseStylesheet = String.Format(
-               "{0} body div {{ font-size: {1}px; padding-left: {2}px; padding-right: {3}px; }}",
-               Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(htmlPanel),
+               "{0} body div {{ font-size: {1}pt; padding-left: {2}px; padding-right: {3}px; }}",
+               Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPoints(htmlPanel),
                NoteHtmlPaddingLeft, NoteHtmlPaddingRight);
          }
 
@@ -1309,8 +1320,8 @@ namespace mrHelper.App.Controls
             note.Author.Name, TimeUtils.DateTimeToString(note.Created_At));
          body.AppendFormat("<br><br>Use context menu to view note as <b>plain text</b>.");
 
-         string css = String.Format("{0} body div {{ font-size: {1}px; }}",
-            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPixels(noteControl));
+         string css = String.Format("{0} body div {{ font-size: {1}pt; }}",
+            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPoints(noteControl));
 
          return String.Format(
             @"<html>

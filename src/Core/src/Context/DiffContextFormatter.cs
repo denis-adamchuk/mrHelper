@@ -12,7 +12,7 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException if DiffContext is invalid
       /// </summary>
-      public static string GetHtml(DiffContext context, double fontSizePx, int rowsVPaddingPx, int? tableWidth)
+      public static string GetHtml(DiffContext context, double fontSizePt, int rowsVPaddingPx, int? tableWidth)
       {
          if (!context.IsValid())
          {
@@ -20,15 +20,15 @@ namespace mrHelper.Core.Context
             return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
          }
 
-         return getHtml(getTable(context), fontSizePx, rowsVPaddingPx, tableWidth);
+         return getHtml(getTable(context), fontSizePt, rowsVPaddingPx, tableWidth);
       }
 
-      public static string GetHtml(string code, double fontSizePx, int rowsVPaddingPx, int? tableWidth)
+      public static string GetHtml(string code, double fontSizePt, int rowsVPaddingPx, int? tableWidth)
       {
-         return getHtml(getTable(code), fontSizePx, rowsVPaddingPx, tableWidth);
+         return getHtml(getTable(code), fontSizePt, rowsVPaddingPx, tableWidth);
       }
 
-      private static string getHtml(string table, double fontSizePx, int rowsVPaddingPx, int? tableWidth)
+      private static string getHtml(string table, double fontSizePt, int rowsVPaddingPx, int? tableWidth)
       {
          return String.Format(
             @"<html>
@@ -41,12 +41,12 @@ namespace mrHelper.Core.Context
                   {1}
                </body>
              </html>",
-            getStylesheet(fontSizePx, rowsVPaddingPx, tableWidth), table);
+            getStylesheet(fontSizePt, rowsVPaddingPx, tableWidth), table);
       }
 
-      private static string getStylesheet(double fontSizePx, int rowsVPaddingPx, int? tableWidth)
+      private static string getStylesheet(double fontSizePt, int rowsVPaddingPx, int? tableWidth)
       {
-         return loadStylesFromCSS() + getCustomStyle(fontSizePx, rowsVPaddingPx, tableWidth);
+         return loadStylesFromCSS() + getCustomStyle(fontSizePt, rowsVPaddingPx, tableWidth);
       }
 
       static readonly string TableBegin = @"<table cellspacing=""0"" cellpadding=""0"">";
@@ -67,11 +67,11 @@ namespace mrHelper.Core.Context
          return mrHelper.Core.Properties.Resources.DiffContextCSS;
       }
 
-      private static string getCustomStyle(double fontSizePx, int rowsVPaddingPx, int? tableWidth)
+      private static string getCustomStyle(double fontSizePt, int rowsVPaddingPx, int? tableWidth)
       {
          return string.Format(@"
             table {{
-               font-size: {0}px;
+               font-size: {0}pt;
                width: {2};
             }}
             td {{
@@ -79,7 +79,7 @@ namespace mrHelper.Core.Context
                padding-bottom: {1}px;
                overflow: visible;
             }}",
-            fontSizePx, rowsVPaddingPx, tableWidth.HasValue ? (tableWidth.Value.ToString() + "px") : "100%");
+            fontSizePt, rowsVPaddingPx, tableWidth.HasValue ? (tableWidth.Value.ToString() + "px") : "100%");
       }
 
       private static string getTableBody(string text)

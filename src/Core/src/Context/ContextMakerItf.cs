@@ -20,6 +20,14 @@ namespace mrHelper.Core.Context
 
       public bool IsValid() => !this.Equals(InvalidContext);
 
+      public string GetLongestLine()
+      {
+         return Lines
+            .Select(line => line.Text)
+            .OrderBy(line => line.Length)
+            .LastOrDefault();
+      }
+
       public struct Line : IEquatable<Line>
       {
          public Line(string text, Side? left, Side? right)
