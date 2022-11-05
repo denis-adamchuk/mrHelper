@@ -118,32 +118,32 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="add_comment_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\add-comment_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="add_comment_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\add-comment_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="cancel_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\cancel_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="cancel_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\cancel_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="clipboard_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\clipboard_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="clipboard_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\clipboard_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Common_CSS" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\common.css;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;windows-1251</value>
   </data>
-  <data name="create_new_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\create-new_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="create_new_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\create-new_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="DefaultAppIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\gitlab.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="diff_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\diff_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="diff_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\diff_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="discussions_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\discussions_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="discussions_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\discussions_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="edit_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\edit_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="edit_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\edit_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="gitlab_icon_stub_16x16" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\gitlab-icon-stub-16x16.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -151,8 +151,8 @@
   <data name="gitlab_icon_stub_16x16_border" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\gitlab-icon-stub-16x16-border.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="link_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\link_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="link_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\link_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="loading_transp_alpha" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\loading-transp-alpha.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -160,16 +160,16 @@
   <data name="pin_transparent_alpha" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\pin-transparent-alpha.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="play_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\play_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="play_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\play_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="refresh_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\refresh_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="refresh_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\refresh_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="stop_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\stop_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="stop_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\stop_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="thread_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\toolbar\thread_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="thread_100x100" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\toolbar\thread_100x100.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

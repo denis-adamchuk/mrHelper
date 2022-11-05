@@ -9,7 +9,6 @@ using mrHelper.App.Controls;
 using mrHelper.CustomActions;
 using mrHelper.Common.Tools;
 using System.Threading.Tasks;
-using GitLabSharp;
 using mrHelper.GitLabClient;
 using mrHelper.Common.Exceptions;
 
@@ -149,12 +148,13 @@ namespace mrHelper.App.Forms
          toolStripHosts.SuspendLayout();
          foreach (string hostname in getHostList().Reverse())
          {
-            HostToolbarItem toolbarItem = new HostToolbarItem(hostname)
+            HostToolbarItem toolbarItem = new HostToolbarItem(hostname, this)
             {
                Margin = toolStripButtonLive.Margin,
                ImageAlign = ContentAlignment.MiddleLeft,
                TextAlign = ContentAlignment.MiddleLeft,
                DisplayStyle = ToolStripItemDisplayStyle.ImageAndText
+               // see also HostToolbarItem.updateIcon()
             };
             toolbarItem.Click += onHostToolbarButtonClicked;
             toolStripHosts.Items.Insert(0, toolbarItem);

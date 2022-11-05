@@ -845,7 +845,7 @@ namespace mrHelper.App.Forms
          // toolStripButtonCreateNew
          // 
          this.toolStripButtonCreateNew.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-         this.toolStripButtonCreateNew.Image = global::mrHelper.App.Properties.Resources.create_new_24x24;
+         this.toolStripButtonCreateNew.Image = global::mrHelper.App.Properties.Resources.create_new_100x100;
          this.toolStripButtonCreateNew.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonCreateNew.Name = "toolStripButtonCreateNew";
          this.toolStripButtonCreateNew.Size = new System.Drawing.Size(28, 28);
@@ -856,7 +856,7 @@ namespace mrHelper.App.Forms
          // toolStripButtonRefreshList
          // 
          this.toolStripButtonRefreshList.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-         this.toolStripButtonRefreshList.Image = global::mrHelper.App.Properties.Resources.refresh_24x24;
+         this.toolStripButtonRefreshList.Image = global::mrHelper.App.Properties.Resources.refresh_100x100;
          this.toolStripButtonRefreshList.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonRefreshList.Name = "toolStripButtonRefreshList";
          this.toolStripButtonRefreshList.Size = new System.Drawing.Size(28, 28);
@@ -867,7 +867,7 @@ namespace mrHelper.App.Forms
          // toolStripButtonOpenFromClipboard
          // 
          this.toolStripButtonOpenFromClipboard.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-         this.toolStripButtonOpenFromClipboard.Image = global::mrHelper.App.Properties.Resources.clipboard_24x24;
+         this.toolStripButtonOpenFromClipboard.Image = global::mrHelper.App.Properties.Resources.clipboard_100x100;
          this.toolStripButtonOpenFromClipboard.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonOpenFromClipboard.Name = "toolStripButtonOpenFromClipboard";
          this.toolStripButtonOpenFromClipboard.Size = new System.Drawing.Size(28, 28);
@@ -883,7 +883,7 @@ namespace mrHelper.App.Forms
          // toolStripButtonDiffTool
          // 
          this.toolStripButtonDiffTool.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-         this.toolStripButtonDiffTool.Image = global::mrHelper.App.Properties.Resources.diff_24x24;
+         this.toolStripButtonDiffTool.Image = global::mrHelper.App.Properties.Resources.diff_100x100;
          this.toolStripButtonDiffTool.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonDiffTool.Name = "toolStripButtonDiffTool";
          this.toolStripButtonDiffTool.Size = new System.Drawing.Size(28, 28);
@@ -894,7 +894,7 @@ namespace mrHelper.App.Forms
          // toolStripButtonDiscussions
          // 
          this.toolStripButtonDiscussions.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-         this.toolStripButtonDiscussions.Image = global::mrHelper.App.Properties.Resources.discussions_24x24;
+         this.toolStripButtonDiscussions.Image = global::mrHelper.App.Properties.Resources.discussions_100x100;
          this.toolStripButtonDiscussions.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonDiscussions.Name = "toolStripButtonDiscussions";
          this.toolStripButtonDiscussions.Size = new System.Drawing.Size(28, 28);
@@ -905,7 +905,7 @@ namespace mrHelper.App.Forms
          // toolStripButtonAddComment
          // 
          this.toolStripButtonAddComment.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-         this.toolStripButtonAddComment.Image = global::mrHelper.App.Properties.Resources.add_comment_24x24;
+         this.toolStripButtonAddComment.Image = global::mrHelper.App.Properties.Resources.add_comment_100x100;
          this.toolStripButtonAddComment.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonAddComment.Name = "toolStripButtonAddComment";
          this.toolStripButtonAddComment.Size = new System.Drawing.Size(28, 28);
@@ -916,7 +916,7 @@ namespace mrHelper.App.Forms
          // toolStripButtonNewThread
          // 
          this.toolStripButtonNewThread.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-         this.toolStripButtonNewThread.Image = global::mrHelper.App.Properties.Resources.thread_24x24;
+         this.toolStripButtonNewThread.Image = global::mrHelper.App.Properties.Resources.thread_100x100;
          this.toolStripButtonNewThread.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonNewThread.Name = "toolStripButtonNewThread";
          this.toolStripButtonNewThread.Size = new System.Drawing.Size(28, 28);
@@ -932,7 +932,7 @@ namespace mrHelper.App.Forms
          // toolStripButtonStartStopTimer
          // 
          this.toolStripButtonStartStopTimer.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-         this.toolStripButtonStartStopTimer.Image = global::mrHelper.App.Properties.Resources.play_24x24;
+         this.toolStripButtonStartStopTimer.Image = global::mrHelper.App.Properties.Resources.play_100x100;
          this.toolStripButtonStartStopTimer.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonStartStopTimer.Name = "toolStripButtonStartStopTimer";
          this.toolStripButtonStartStopTimer.Size = new System.Drawing.Size(28, 28);
@@ -944,7 +944,7 @@ namespace mrHelper.App.Forms
          // 
          this.toolStripButtonCancelTimer.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
          this.toolStripButtonCancelTimer.Enabled = false;
-         this.toolStripButtonCancelTimer.Image = global::mrHelper.App.Properties.Resources.cancel_24x24;
+         this.toolStripButtonCancelTimer.Image = global::mrHelper.App.Properties.Resources.cancel_100x100;
          this.toolStripButtonCancelTimer.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonCancelTimer.Name = "toolStripButtonCancelTimer";
          this.toolStripButtonCancelTimer.Size = new System.Drawing.Size(28, 28);
@@ -956,7 +956,7 @@ namespace mrHelper.App.Forms
          // 
          this.toolStripButtonGoToTimeTracking.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
          this.toolStripButtonGoToTimeTracking.Enabled = false;
-         this.toolStripButtonGoToTimeTracking.Image = global::mrHelper.App.Properties.Resources.link_24x24;
+         this.toolStripButtonGoToTimeTracking.Image = global::mrHelper.App.Properties.Resources.link_100x100;
          this.toolStripButtonGoToTimeTracking.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonGoToTimeTracking.Name = "toolStripButtonGoToTimeTracking";
          this.toolStripButtonGoToTimeTracking.Size = new System.Drawing.Size(28, 28);
@@ -970,13 +970,13 @@ namespace mrHelper.App.Forms
          this.toolStripTextBoxTrackedTime.Font = new System.Drawing.Font("Segoe UI", 9F);
          this.toolStripTextBoxTrackedTime.Name = "toolStripTextBoxTrackedTime";
          this.toolStripTextBoxTrackedTime.ReadOnly = true;
-         this.toolStripTextBoxTrackedTime.Size = new System.Drawing.Size(70, 31);
+         this.toolStripTextBoxTrackedTime.Size = new System.Drawing.Size(84, 31);
          this.toolStripTextBoxTrackedTime.TextBoxTextAlign = HorizontalAlignment.Center;
          // 
          // toolStripButtonEditTrackedTime
          // 
          this.toolStripButtonEditTrackedTime.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-         this.toolStripButtonEditTrackedTime.Image = global::mrHelper.App.Properties.Resources.edit_24x24;
+         this.toolStripButtonEditTrackedTime.Image = global::mrHelper.App.Properties.Resources.edit_100x100;
          this.toolStripButtonEditTrackedTime.ImageTransparentColor = System.Drawing.Color.Magenta;
          this.toolStripButtonEditTrackedTime.Name = "toolStripButtonEditTrackedTime";
          this.toolStripButtonEditTrackedTime.Size = new System.Drawing.Size(28, 28);

@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Drawing;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Tools;
-using mrHelper.CustomActions;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.Common.Interfaces;
@@ -23,6 +23,8 @@ namespace mrHelper.App.Forms
       private static readonly string RefreshButtonTooltip = "Refresh Live merge request list in the background";
 
       private static readonly int OperationRecordHistoryDepth = 10;
+
+      private static readonly Size DefaultToolbarImageSize = new Size(32, 32);
 
       private readonly string _startUrl;
 

@@ -162,7 +162,7 @@ namespace mrHelper.App.Forms
          toolStripButtonEditTrackedTime.Enabled = false;
          toolStripButtonCancelTimer.Enabled = true;
          toolStripTextBoxTrackedTime.Text = DefaultTimeTrackingTextBoxText;
-         toolStripButtonStartStopTimer.Image = Properties.Resources.stop_24x24;
+         toolStripButtonStartStopTimer.Image = Properties.Resources.stop_100x100;
          pullCustomActionToolBar();
 
          addOperationRecord("Time tracking has started");
@@ -178,7 +178,7 @@ namespace mrHelper.App.Forms
          toolStripButtonEditTrackedTime.Enabled = connectionPage != null && connectionPage.CanTrackTime();
          toolStripButtonCancelTimer.Enabled = false;
          toolStripTextBoxTrackedTime.Text = connectionPage?.GetTrackedTimeAsText() ?? DefaultTimeTrackingTextBoxText;
-         toolStripButtonStartStopTimer.Image = Properties.Resources.play_24x24;
+         toolStripButtonStartStopTimer.Image = Properties.Resources.play_100x100;
          pullCustomActionToolBar();
 
          onSummaryColorChanged(getCurrentConnectionPage());
@@ -629,9 +629,9 @@ namespace mrHelper.App.Forms
                ToolTipText = command.Hint,
                Enabled = false,
                Visible = command.InitiallyVisible,
-               Image = new Bitmap(24, 24),
+               // Image size automatically upscales to parent's ImageScalingSize but let's set it to some default value
+               Image = new Bitmap(DefaultToolbarImageSize.Width, DefaultToolbarImageSize.Height),
                DisplayStyle = ToolStripItemDisplayStyle.ImageAndText,
-               ImageScaling = ToolStripItemImageScaling.None,
                TextImageRelation = TextImageRelation.Overlay
             };
             menuItem.Click += (sender, e) =>
@@ -920,6 +920,8 @@ namespace mrHelper.App.Forms
             "System DPI has changed",
             "It is recommended to restart application to update layout"
          ));
+
+         resizeToolbarImages();
       }
 
       private bool checkAutoScaleDimensions()
@@ -1075,7 +1077,21 @@ namespace mrHelper.App.Forms
          // Place menu
          menuStrip1.Location = new System.Drawing.Point(0, 0);
 
+         resizeToolbarImages();
+
          toolStripContainer1.ResumeLayout();
+      }
+
+      private void resizeToolbarImages()
+      {
+         int newToolbarImageWidth = (int)(DefaultToolbarImageSize.Width * DeviceDpi / 96.0);
+         int newToolbarImageHeight = (int)(DefaultToolbarImageSize.Height * DeviceDpi / 96.0);
+         Size newToolbarImageSize = new Size(newToolbarImageWidth, newToolbarImageHeight);
+         foreach (ToolStrip toolStrip in new ToolStrip[]
+            { toolStripCustomActions, toolStripActions, toolStripHosts })
+         {
+            toolStrip.ImageScalingSize = newToolbarImageSize;
+         }
       }
 
       private bool isToolStripHostsVisible()

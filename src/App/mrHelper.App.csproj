@@ -541,19 +541,19 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\toolbar\thread_100x100.png" />
+    <None Include="Resources\toolbar\stop_100x100.png" />
+    <None Include="Resources\toolbar\refresh_100x100.png" />
+    <None Include="Resources\toolbar\play_100x100.png" />
+    <None Include="Resources\toolbar\link_100x100.png" />
+    <None Include="Resources\toolbar\edit_100x100.png" />
+    <None Include="Resources\toolbar\discussions_100x100.png" />
+    <None Include="Resources\toolbar\diff_100x100.png" />
+    <None Include="Resources\toolbar\create-new_100x100.png" />
+    <None Include="Resources\toolbar\clipboard_100x100.png" />
+    <None Include="Resources\toolbar\cancel_100x100.png" />
+    <None Include="Resources\toolbar\add-comment_100x100.png" />
     <None Include="Resources\pin-transparent-alpha.png" />
-    <None Include="Resources\toolbar\thread_24x24.png" />
-    <None Include="Resources\toolbar\create-new_24x24.png" />
-    <None Include="Resources\toolbar\stop_24x24.png" />
-    <None Include="Resources\toolbar\refresh_24x24.png" />
-    <None Include="Resources\toolbar\play_24x24.png" />
-    <None Include="Resources\toolbar\link_24x24.png" />
-    <None Include="Resources\toolbar\edit_24x24.png" />
-    <None Include="Resources\toolbar\discussions_24x24.png" />
-    <None Include="Resources\toolbar\diff_24x24.png" />
-    <None Include="Resources\toolbar\clipboard_24x24.png" />
-    <None Include="Resources\toolbar\cancel_24x24.png" />
-    <None Include="Resources\toolbar\add-comment_24x24.png" />
     <None Include="Resources\gitlab-icon-stub-16x16.png" />
     <None Include="Resources\gitlab-icon-stub-16x16-border.png" />
     <None Include="Resources\loading-transp-alpha.png" />

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using mrHelper.Common.Tools;
@@ -8,12 +9,23 @@ namespace mrHelper.App.Controls
 {
    internal class HostToolbarItem : ToolStripButton
    {
-      public HostToolbarItem(string hostname)
+      public HostToolbarItem(string hostname, Form deviceDpiHolder)
          : base(StringUtils.GetHostWithoutPrefix(hostname), null)
       {
          ToolTipText = String.Format("Show merge requests for {0}", hostname);
          HostName = hostname;
-         updateIcon(null);
+
+         _deviceDpiHolder = deviceDpiHolder;
+         _deviceDpiHolder.DpiChanged += _deviceDpiHolder_DpiChanged;
+
+         _summaryColor = null;
+         updateIcon();
+      }
+
+      public new void Dispose()
+      {
+         base.Dispose();
+         _deviceDpiHolder.DpiChanged -= _deviceDpiHolder_DpiChanged;
       }
 
       internal string HostName { get; }
@@ -25,25 +37,40 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         updateIcon(summaryColor);
-      }
-
-      private void updateIcon(Color? summaryColor)
-      {
-         Image = summaryColor.HasValue
-            ? WinFormsHelpers.DrawEllipse(32, 24, 2, summaryColor.Value)
-            : new Bitmap(24, 24);
-         ImageScaling = summaryColor.HasValue
-            ? ToolStripItemImageScaling.SizeToFit
-            : ToolStripItemImageScaling.None;
-         TextImageRelation = summaryColor.HasValue
-            ? TextImageRelation.ImageBeforeText
-            : TextImageRelation.Overlay;
-
          _summaryColor = summaryColor;
+         updateIcon();
       }
+
+      private void updateIcon()
+      {
+         Image?.Dispose();
+         Debug.Assert(ImageScaling == ToolStripItemImageScaling.SizeToFit);
+
+         int deviceDpi = getDeviceDpi();
+         if (_summaryColor.HasValue)
+         {
+            int imageSize = (int)(DefaultToolbarImageSize.Width * deviceDpi / 96.0);
+            int ellipseSize = (int)(imageSize * 0.80); // imageSize - 20%
+            int padding = (int)(2 * deviceDpi / 96.0); // 2px by default
+            Image = WinFormsHelpers.DrawEllipse(imageSize, ellipseSize, padding, _summaryColor.Value);
+            TextImageRelation = TextImageRelation.ImageBeforeText;
+         }
+         else
+         {
+            // Image size automatically upscales to parent's ImageScalingSize but let's set it to some default value
+            Image = new Bitmap(DefaultToolbarImageSize.Width, DefaultToolbarImageSize.Height);
+            TextImageRelation = TextImageRelation.Overlay;
+         }
+      }
+
+      private void _deviceDpiHolder_DpiChanged(object sender, DpiChangedEventArgs e) => updateIcon();
+
+      private int getDeviceDpi() => _deviceDpiHolder.DeviceDpi;
+
+      private static readonly Size DefaultToolbarImageSize = new Size(32, 32);
 
       private Color? _summaryColor;
+      private Form _deviceDpiHolder;
    }
 }
 

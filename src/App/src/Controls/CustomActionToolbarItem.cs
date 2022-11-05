@@ -1,6 +1,4 @@
-﻿using System;
-using System.Windows.Forms;
-using mrHelper.Common.Tools;
+﻿using System.Windows.Forms;
 
 namespace mrHelper.App.Controls
 {

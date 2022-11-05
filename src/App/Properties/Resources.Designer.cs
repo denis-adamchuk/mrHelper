@@ -19,7 +19,7 @@ namespace mrHelper.App.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -63,9 +63,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap add_comment_24x24 {
+        internal static System.Drawing.Bitmap add_comment_100x100 {
             get {
-                object obj = ResourceManager.GetObject("add_comment_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("add_comment_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap cancel_24x24 {
+        internal static System.Drawing.Bitmap cancel_100x100 {
             get {
-                object obj = ResourceManager.GetObject("cancel_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("cancel_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -83,9 +83,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap clipboard_24x24 {
+        internal static System.Drawing.Bitmap clipboard_100x100 {
             get {
-                object obj = ResourceManager.GetObject("clipboard_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("clipboard_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -133,9 +133,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap create_new_24x24 {
+        internal static System.Drawing.Bitmap create_new_100x100 {
             get {
-                object obj = ResourceManager.GetObject("create_new_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("create_new_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -153,9 +153,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap diff_24x24 {
+        internal static System.Drawing.Bitmap diff_100x100 {
             get {
-                object obj = ResourceManager.GetObject("diff_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("diff_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -163,9 +163,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap discussions_24x24 {
+        internal static System.Drawing.Bitmap discussions_100x100 {
             get {
-                object obj = ResourceManager.GetObject("discussions_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("discussions_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -173,9 +173,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap edit_24x24 {
+        internal static System.Drawing.Bitmap edit_100x100 {
             get {
-                object obj = ResourceManager.GetObject("edit_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("edit_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -203,9 +203,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap link_24x24 {
+        internal static System.Drawing.Bitmap link_100x100 {
             get {
-                object obj = ResourceManager.GetObject("link_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("link_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -217,23 +217,6 @@ namespace mrHelper.App.Properties {
             get {
                 object obj = ResourceManager.GetObject("loading_transp_alpha", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to body {
-        ///  background-image: url(&apos;balls.png&apos;);
-        ///  background-repeat: repeat-x;
-        ///  background-attachment: fixed;
-        ///  background-position: 0 0;
-        ///  padding-top: 50px;
-        ///}
-        ///
-        ///.
-        /// </summary>
-        internal static string NewYear2020_CSS {
-            get {
-                return ResourceManager.GetString("NewYear2020_CSS", resourceCulture);
             }
         }
         
@@ -250,9 +233,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap play_24x24 {
+        internal static System.Drawing.Bitmap play_100x100 {
             get {
-                object obj = ResourceManager.GetObject("play_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("play_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -260,9 +243,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap refresh_24x24 {
+        internal static System.Drawing.Bitmap refresh_100x100 {
             get {
-                object obj = ResourceManager.GetObject("refresh_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("refresh_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -270,9 +253,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap stop_24x24 {
+        internal static System.Drawing.Bitmap stop_100x100 {
             get {
-                object obj = ResourceManager.GetObject("stop_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("stop_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -280,9 +263,9 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap thread_24x24 {
+        internal static System.Drawing.Bitmap thread_100x100 {
             get {
-                object obj = ResourceManager.GetObject("thread_24x24", resourceCulture);
+                object obj = ResourceManager.GetObject("thread_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
