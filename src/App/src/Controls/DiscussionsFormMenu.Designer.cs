@@ -424,7 +424,7 @@ namespace mrHelper.App.Controls
          // 
          // DiscussionsFormMenu
          // 
-         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
+         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
          this.BackColor = System.Drawing.SystemColors.Menu;
          this.Controls.Add(this.menuStrip);
          this.Margin = new System.Windows.Forms.Padding(0);

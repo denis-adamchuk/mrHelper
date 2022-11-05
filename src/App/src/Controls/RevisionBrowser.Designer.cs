@@ -61,9 +61,7 @@
          // 
          // _treeView
          // 
-         this._treeView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+         this._treeView.Dock = System.Windows.Forms.DockStyle.Fill;
          this._treeView.AutoRowHeight = true;
          this._treeView.BackColor = System.Drawing.SystemColors.Window;
          this._treeView.Columns.Add(this.treeColumn1);

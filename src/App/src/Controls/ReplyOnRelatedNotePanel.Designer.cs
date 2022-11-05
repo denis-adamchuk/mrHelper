@@ -55,7 +55,8 @@
          // 
          // ReplyOnRelatedNotePanel
          // 
-         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
+         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+         this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.Controls.Add(this.checkBoxCloseNewDiscussionDialog);
          this.Controls.Add(this.buttonInsertCode);
          this.Name = "ReplyOnRelatedNotePanel";
