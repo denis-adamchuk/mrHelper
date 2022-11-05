@@ -232,6 +232,7 @@ namespace mrHelper.App.Forms
          // 
          // toolStripContainer1.BottomToolStripPanel
          // 
+         this.toolStripContainer1.BottomToolStripPanel.AutoScaleMode = AutoScaleMode.Inherit;
          this.toolStripContainer1.BottomToolStripPanel.Controls.Add(this.statusStrip1);
          // 
          // toolStripContainer1.ContentPanel
@@ -246,15 +247,25 @@ namespace mrHelper.App.Forms
          this.toolStripContainer1.TabIndex = 2;
          this.toolStripContainer1.Text = "toolStripContainer1";
          // 
+         // toolStripContainer1.LeftToolStripPanel
+         // 
+         this.toolStripContainer1.LeftToolStripPanel.AutoScaleMode = AutoScaleMode.Inherit;
+         // 
          // toolStripContainer1.TopToolStripPanel
          // 
+         this.toolStripContainer1.TopToolStripPanel.AutoScaleMode = AutoScaleMode.Inherit;
          this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.menuStrip1);
          this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.toolStripHosts);
          this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.toolStripActions);
          this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.toolStripCustomActions);
          // 
+         // toolStripContainer1.RightToolStripPanel
+         // 
+         this.toolStripContainer1.RightToolStripPanel.AutoScaleMode = AutoScaleMode.Inherit;
+         // 
          // statusStrip1
          // 
+         this.statusStrip1.AutoSize = true;
          this.statusStrip1.ClickThrough = true;
          this.statusStrip1.Dock = System.Windows.Forms.DockStyle.None;
          this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -264,7 +275,6 @@ namespace mrHelper.App.Forms
             this.linkLabelAbortGitClone});
          this.statusStrip1.Location = new System.Drawing.Point(0, 0);
          this.statusStrip1.Name = "statusStrip1";
-         this.statusStrip1.Size = new System.Drawing.Size(1050, 24);
          this.statusStrip1.TabIndex = 0;
          // 
          // labelConnectionStatus
@@ -272,37 +282,42 @@ namespace mrHelper.App.Forms
          this.labelConnectionStatus.AutoSize = false;
          this.labelConnectionStatus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.labelConnectionStatus.Name = "labelConnectionStatus";
-         this.labelConnectionStatus.Size = new System.Drawing.Size(230, 19);
+         this.labelConnectionStatus.Size = new System.Drawing.Size(340, 19);
+         this.labelConnectionStatus.Spring = false;
          this.labelConnectionStatus.Text = "labelConnectionStatus";
          this.labelConnectionStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
          // 
          // labelOperationStatus
          // 
+         this.labelOperationStatus.AutoSize = false;
          this.labelOperationStatus.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
          this.labelOperationStatus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.labelOperationStatus.Name = "labelOperationStatus";
-         this.labelOperationStatus.Size = new System.Drawing.Size(382, 19);
-         this.labelOperationStatus.Spring = true;
+         this.labelOperationStatus.Size = new System.Drawing.Size(860, 19);
+         this.labelOperationStatus.Spring = false;
          this.labelOperationStatus.Text = "labelOperationStatus";
          this.labelOperationStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
          // 
          // labelStorageStatus
          // 
+         this.labelStorageStatus.AutoSize = false;
          this.labelStorageStatus.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
          this.labelStorageStatus.BorderStyle = System.Windows.Forms.Border3DStyle.Etched;
          this.labelStorageStatus.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
          this.labelStorageStatus.Name = "labelStorageStatus";
-         this.labelStorageStatus.Size = new System.Drawing.Size(382, 19);
+         this.labelStorageStatus.Size = new System.Drawing.Size(102, 19);
          this.labelStorageStatus.Spring = true;
          this.labelStorageStatus.Text = "labelStorageStatus";
          this.labelStorageStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
          // 
          // linkLabelAbortGitClone
          // 
+         this.linkLabelAbortGitClone.AutoSize = false;
          this.linkLabelAbortGitClone.BorderSides = System.Windows.Forms.ToolStripStatusLabelBorderSides.Left;
          this.linkLabelAbortGitClone.IsLink = true;
          this.linkLabelAbortGitClone.Name = "linkLabelAbortGitClone";
-         this.linkLabelAbortGitClone.Size = new System.Drawing.Size(41, 19);
+         this.linkLabelAbortGitClone.Size = new System.Drawing.Size(80, 19);
+         this.linkLabelAbortGitClone.Spring = false;
          this.linkLabelAbortGitClone.Text = "Abort";
          this.linkLabelAbortGitClone.Click += new System.EventHandler(this.linkLabelAbortGitClone_Click);
          // 
