@@ -714,7 +714,11 @@ namespace mrHelper.App.Controls
             }
             else
             {
-               e.Graphics.DrawString(e.Header.Text, font, Brushes.Black, e.Bounds);
+               using (StringFormat format = new StringFormat(StringFormatFlags.LineLimit))
+               {
+                  format.Trimming = StringTrimming.EllipsisCharacter;
+                  e.Graphics.DrawString(e.Header.Text, font, Brushes.Black, e.Bounds, format);
+               }
             }
          }
       }
@@ -741,62 +745,63 @@ namespace mrHelper.App.Controls
          WinFormsHelpers.FillRectangle(e, bounds, backgroundColor, isSelected);
 
          ColumnType columnType = getColumnType(e.SubItem);
-         StringFormat format = new StringFormat(getSubItemStringFormatFlags(e.SubItem))
+         using (StringFormat format = new StringFormat(getSubItemStringFormatFlags(e.SubItem)))
          {
-            Trimming = StringTrimming.EllipsisCharacter
-         };
-         string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
-         bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
-         if (columnType == ColumnType.Color)
-         {
-            Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
-            drawEllipseForIId(e.Graphics, bounds, color, e.Item.ListView.Font, null);
-            if (isPinnedToMe(fmk))
+            format.Trimming = StringTrimming.EllipsisCharacter;
+
+            string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
+            bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
+            if (columnType == ColumnType.Color)
             {
-               drawImageForIId(e.Graphics, bounds, e.Item.ListView.Font, Properties.Resources.pin_transparent_alpha);
+               Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
+               drawEllipseForIId(e.Graphics, bounds, color, e.Item.ListView.Font, null);
+               if (isPinnedToMe(fmk))
+               {
+                  drawImageForIId(e.Graphics, bounds, e.Item.ListView.Font, Properties.Resources.pin_transparent_alpha);
+               }
             }
-         }
-         else if (isClickable)
-         {
-            using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
+            else if (isClickable)
             {
-               Brush brush = Brushes.Blue;
-               e.Graphics.DrawString(text, font, brush, bounds, format);
+               using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
+               {
+                  Brush brush = Brushes.Blue;
+                  e.Graphics.DrawString(text, font, brush, bounds, format);
+               }
             }
-         }
-         else if (isSelected && columnType == ColumnType.Labels)
-         {
-            Color defaultLabelColor = SystemColors.Window;
-            Color color = isMuted(fmk) ? defaultLabelColor : getMergeRequestColor(fmk, defaultLabelColor);
-            using (Brush brush = new SolidBrush(color))
+            else if (isSelected && columnType == ColumnType.Labels)
             {
+               Color defaultLabelColor = SystemColors.Window;
+               Color color = isMuted(fmk) ? defaultLabelColor : getMergeRequestColor(fmk, defaultLabelColor);
+               using (Brush brush = new SolidBrush(color))
+               {
+                  e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
+               }
+            }
+            else if (columnType == ColumnType.Avatar)
+            {
+               if (!isSummaryItem(e.Item))
+               {
+                  Image avatar = _avatarImageCache.GetAvatar(fmk.MergeRequest.Author);
+                  drawAvatar(e.Graphics, e.Bounds, avatar);
+               }
+            }
+            else if (columnType == ColumnType.Resolved)
+            {
+               using (Brush brush = new SolidBrush(getDiscussionCountColor(fmk, isSelected)))
+               {
+                  e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
+               }
+            }
+            else if (columnType == ColumnType.TotalTime)
+            {
+               Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
                e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
             }
-         }
-         else if (columnType == ColumnType.Avatar)
-         {
-            if (!isSummaryItem(e.Item))
+            else
             {
-               Image avatar = _avatarImageCache.GetAvatar(fmk.MergeRequest.Author);
-               drawAvatar(e.Graphics, e.Bounds, avatar);
+               Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
+               e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
             }
-         }
-         else if (columnType == ColumnType.Resolved)
-         {
-            using (Brush brush = new SolidBrush(getDiscussionCountColor(fmk, isSelected)))
-            {
-               e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
-            }
-         }
-         else if (columnType == ColumnType.TotalTime)
-         {
-            Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
-            e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
-         }
-         else
-         {
-            Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
-            e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
          }
       }
 
@@ -1725,21 +1730,22 @@ namespace mrHelper.App.Controls
 
          using (Graphics g = CreateGraphics())
          {
-            StringFormat noTrimmingFormat = new StringFormat() { Trimming = StringTrimming.None };
-
-            float headerWidth = 0;
-            using (Font headerFont = getColumnHeaderFont(getSortedByColumn() == columnType))
+            using (StringFormat noTrimmingFormat = new StringFormat() { Trimming = StringTrimming.None })
             {
-               headerWidth = g.MeasureString(column.Text, headerFont, MaxAllowedColumnWidth, noTrimmingFormat).Width;
+               float headerWidth = 0;
+               using (Font headerFont = getColumnHeaderFont(getSortedByColumn() == columnType))
+               {
+                  headerWidth = g.MeasureString(column.Text, headerFont, MaxAllowedColumnWidth, noTrimmingFormat).Width;
+               }
+
+               Font contentFont = this.Font;
+               float widestContentWidth = Items
+                  .Cast<ListViewItem>()
+                  .Select(item => getSubItemTag(item, columnType))
+                  .Max(subItem => g.MeasureString(subItem.Text, contentFont, MaxAllowedColumnWidth, noTrimmingFormat).Width);
+
+               return Convert.ToInt32(Math.Ceiling(Math.Max(headerWidth, widestContentWidth)));
             }
-
-            Font contentFont = this.Font;
-            float widestContentWidth = Items
-               .Cast<ListViewItem>()
-               .Select(item => getSubItemTag(item, columnType))
-               .Max(subItem => g.MeasureString(subItem.Text, contentFont, MaxAllowedColumnWidth, noTrimmingFormat).Width);
-
-            return Convert.ToInt32(Math.Ceiling(Math.Max(headerWidth, widestContentWidth)));
          }
       }
 
