@@ -22,6 +22,12 @@ namespace mrHelper.App.Forms
 
       private static readonly string RefreshButtonTooltip = "Refresh Live merge request list in the background";
 
+      private static readonly string HideButtonTooltip = "Hide merge request";
+      private static readonly string UnhideButtonTooltip = "Show merge request";
+
+      private static readonly string PinButtonTooltip = "Pin merge request";
+      private static readonly string UnpinButtonTooltip = "Unpin merge request";
+
       private static readonly int OperationRecordHistoryDepth = 10;
 
       private static readonly Size DefaultToolbarImageSize = new Size(32, 32);

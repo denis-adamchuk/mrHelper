@@ -183,6 +183,16 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap editmr_100x100 {
+            get {
+                object obj = ResourceManager.GetObject("editmr_100x100", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap gitlab_icon_stub_16x16 {
             get {
                 object obj = ResourceManager.GetObject("gitlab_icon_stub_16x16", resourceCulture);
@@ -203,6 +213,16 @@ namespace mrHelper.App.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap hide_100x100 {
+            get {
+                object obj = ResourceManager.GetObject("hide_100x100", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap link_100x100 {
             get {
                 object obj = ResourceManager.GetObject("link_100x100", resourceCulture);
@@ -216,6 +236,26 @@ namespace mrHelper.App.Properties {
         internal static System.Drawing.Bitmap loading_transp_alpha {
             get {
                 object obj = ResourceManager.GetObject("loading_transp_alpha", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap merge_100x100 {
+            get {
+                object obj = ResourceManager.GetObject("merge_100x100", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap pin_100x100 {
+            get {
+                object obj = ResourceManager.GetObject("pin_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -266,6 +306,26 @@ namespace mrHelper.App.Properties {
         internal static System.Drawing.Bitmap thread_100x100 {
             get {
                 object obj = ResourceManager.GetObject("thread_100x100", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap unhide_100x100 {
+            get {
+                object obj = ResourceManager.GetObject("unhide_100x100", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap unpin_100x100 {
+            get {
+                object obj = ResourceManager.GetObject("unpin_100x100", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -1177,6 +1177,10 @@ namespace mrHelper.App.Controls
          CanAbortCloneChanged?.Invoke(this);
          CanTrackTimeChanged?.Invoke(this);
          EnabledCustomActionsChanged?.Invoke(this);
+         CanMergeChanged?.Invoke(this);
+         CanEditChanged?.Invoke(this);
+         CanToggleHideStatusChanged?.Invoke(this);
+         CanTogglePinStatusChanged?.Invoke(this);
       }
 
       private string getDefaultProjectName()

@@ -541,6 +541,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\toolbar\unpin_100x100.png" />
+    <None Include="Resources\toolbar\unhide_100x100.png" />
+    <None Include="Resources\toolbar\pin_100x100.png" />
+    <None Include="Resources\toolbar\merge_100x100.png" />
+    <None Include="Resources\toolbar\hide_100x100.png" />
+    <None Include="Resources\toolbar\editmr_100x100.png" />
     <None Include="Resources\toolbar\thread_100x100.png" />
     <None Include="Resources\toolbar\stop_100x100.png" />
     <None Include="Resources\toolbar\refresh_100x100.png" />

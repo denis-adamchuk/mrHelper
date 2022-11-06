@@ -359,6 +359,26 @@ namespace mrHelper.App.Forms
          onCanNewThreadChanged(connectionPage);
       }
 
+      private void ConnectionPage_CanEditChanged(ConnectionPage connectionPage)
+      {
+         onCanEditChanged(connectionPage);
+      }
+
+      private void ConnectionPage_CanMergeChanged(ConnectionPage connectionPage)
+      {
+         onCanMergeChanged(connectionPage);
+      }
+
+      private void ConnectionPage_CanToggleHideStatusChanged(ConnectionPage connectionPage)
+      {
+         onCanToggleHideStatusChanged(connectionPage);
+      }
+
+      private void ConnectionPage_CanTogglePinStatusChanged(ConnectionPage connectionPage)
+      {
+         onCanTogglePinStatusChanged(connectionPage);
+      }
+
       private void ConnectionPage_CanAddCommentChanged(ConnectionPage connectionPage)
       {
          onCanAddCommentChanged(connectionPage);
@@ -501,6 +521,26 @@ namespace mrHelper.App.Forms
       private void toolStripButtonNewThread_Click(object sender, System.EventArgs e)
       {
          getCurrentConnectionPage()?.NewThread();
+      }
+
+      private void toolStripButtonEditMergeRequest_Click(object sender, System.EventArgs e)
+      {
+         getCurrentConnectionPage()?.EditMergeRequest();
+      }
+
+      private void toolStripButtonMergeMergeRequest_Click(object sender, System.EventArgs e)
+      {
+         getCurrentConnectionPage()?.MergeMergeRequest();
+      }
+
+      private void toolStripButtonHideMergeRequest_Click(object sender, System.EventArgs e)
+      {
+         getCurrentConnectionPage()?.ToggleHideState();
+      }
+
+      private void toolStripButtonPinMergeRequest_Click(object sender, System.EventArgs e)
+      {
+         getCurrentConnectionPage()?.TogglePinState();
       }
 
       private void toolStripButtonRefreshList_Click(object sender, System.EventArgs e)

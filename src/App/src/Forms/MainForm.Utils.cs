@@ -695,7 +695,7 @@ namespace mrHelper.App.Forms
 
          if (command.Pin)
          {
-            connectionPage.Pin(mrk);
+            connectionPage.TogglePinState(mrk);
          }
 
          if (command.Reload)

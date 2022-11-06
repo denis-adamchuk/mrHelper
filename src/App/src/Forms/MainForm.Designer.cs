@@ -151,7 +151,12 @@ namespace mrHelper.App.Forms
          this.toolStripButtonDiscussions = new System.Windows.Forms.ToolStripButton();
          this.toolStripButtonAddComment = new System.Windows.Forms.ToolStripButton();
          this.toolStripButtonNewThread = new System.Windows.Forms.ToolStripButton();
+         this.toolStripButtonEditMergeRequest = new System.Windows.Forms.ToolStripButton();
+         this.toolStripButtonMergeMergeRequest = new System.Windows.Forms.ToolStripButton();
+         this.toolStripButtonHideMergeRequest = new System.Windows.Forms.ToolStripButton();
+         this.toolStripButtonPinMergeRequest = new System.Windows.Forms.ToolStripButton();
          this.toolStripActionsSeparator = new System.Windows.Forms.ToolStripSeparator();
+         this.toolStripActionsSeparator1 = new System.Windows.Forms.ToolStripSeparator();
          this.toolStripButtonStartStopTimer = new System.Windows.Forms.ToolStripButton();
          this.toolStripButtonCancelTimer = new System.Windows.Forms.ToolStripButton();
          this.toolStripButtonGoToTimeTracking = new System.Windows.Forms.ToolStripButton();
@@ -790,6 +795,11 @@ namespace mrHelper.App.Forms
             this.toolStripButtonDiscussions,
             this.toolStripButtonAddComment,
             this.toolStripButtonNewThread,
+            this.toolStripButtonEditMergeRequest,
+            this.toolStripButtonMergeMergeRequest,
+            this.toolStripActionsSeparator1,
+            this.toolStripButtonHideMergeRequest,
+            this.toolStripButtonPinMergeRequest,
             this.toolStripActionsSeparator,
             this.toolStripButtonCreateNew,
             this.toolStripButtonRefreshList,
@@ -924,6 +934,55 @@ namespace mrHelper.App.Forms
          this.toolStripButtonNewThread.ToolTipText = "Start a new discussion thread";
          this.toolStripButtonNewThread.Click += new System.EventHandler(this.toolStripButtonNewThread_Click);
          // 
+         // toolStripButtonEditMergeRequest
+         // 
+         this.toolStripButtonEditMergeRequest.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+         this.toolStripButtonEditMergeRequest.Image = global::mrHelper.App.Properties.Resources.editmr_100x100;
+         this.toolStripButtonEditMergeRequest.ImageTransparentColor = System.Drawing.Color.Magenta;
+         this.toolStripButtonEditMergeRequest.Name = "toolStripButtonEditMergeRequest";
+         this.toolStripButtonEditMergeRequest.Size = new System.Drawing.Size(28, 28);
+         this.toolStripButtonEditMergeRequest.Text = "toolStripButtonEditMergeRequest";
+         this.toolStripButtonEditMergeRequest.ToolTipText = "Edit merge request properties";
+         this.toolStripButtonEditMergeRequest.Click += new System.EventHandler(this.toolStripButtonEditMergeRequest_Click);
+         // 
+         // toolStripButtonMergeMergeRequest
+         // 
+         this.toolStripButtonMergeMergeRequest.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+         this.toolStripButtonMergeMergeRequest.Image = global::mrHelper.App.Properties.Resources.merge_100x100;
+         this.toolStripButtonMergeMergeRequest.ImageTransparentColor = System.Drawing.Color.Magenta;
+         this.toolStripButtonMergeMergeRequest.Name = "toolStripButtonMergeMergeRequest";
+         this.toolStripButtonMergeMergeRequest.Size = new System.Drawing.Size(28, 28);
+         this.toolStripButtonMergeMergeRequest.Text = "toolStripButtonMergeMergeRequest";
+         this.toolStripButtonMergeMergeRequest.ToolTipText = "Merge merge request";
+         this.toolStripButtonMergeMergeRequest.Click += new System.EventHandler(this.toolStripButtonMergeMergeRequest_Click);
+         // 
+         // toolStripButtonHideMergeRequest
+         // 
+         this.toolStripButtonHideMergeRequest.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+         this.toolStripButtonHideMergeRequest.Image = global::mrHelper.App.Properties.Resources.hide_100x100;
+         this.toolStripButtonHideMergeRequest.ImageTransparentColor = System.Drawing.Color.Magenta;
+         this.toolStripButtonHideMergeRequest.Name = "toolStripButtonHideMergeRequest";
+         this.toolStripButtonHideMergeRequest.Size = new System.Drawing.Size(28, 28);
+         this.toolStripButtonHideMergeRequest.Text = "toolStripButtonHideMergeRequest";
+         this.toolStripButtonHideMergeRequest.ToolTipText = HideButtonTooltip;
+         this.toolStripButtonHideMergeRequest.Click += new System.EventHandler(this.toolStripButtonHideMergeRequest_Click);
+         // 
+         // toolStripButtonPinMergeRequest
+         // 
+         this.toolStripButtonPinMergeRequest.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+         this.toolStripButtonPinMergeRequest.Image = global::mrHelper.App.Properties.Resources.pin_100x100;
+         this.toolStripButtonPinMergeRequest.ImageTransparentColor = System.Drawing.Color.Magenta;
+         this.toolStripButtonPinMergeRequest.Name = "toolStripButtonPinMergeRequest";
+         this.toolStripButtonPinMergeRequest.Size = new System.Drawing.Size(28, 28);
+         this.toolStripButtonPinMergeRequest.Text = "toolStripButtonPinMergeRequest";
+         this.toolStripButtonPinMergeRequest.ToolTipText = PinButtonTooltip;
+         this.toolStripButtonPinMergeRequest.Click += new System.EventHandler(this.toolStripButtonPinMergeRequest_Click);
+         // 
+         // toolStripActionsSeparator1
+         // 
+         this.toolStripActionsSeparator1.Name = "toolStripActionsSeparator1";
+         this.toolStripActionsSeparator1.Size = new System.Drawing.Size(6, 31);
+         // 
          // toolStripActionsSeparator
          // 
          this.toolStripActionsSeparator.Name = "toolStripActionsSeparator";
@@ -1045,12 +1104,17 @@ namespace mrHelper.App.Forms
       private ToolStripSeparator toolStripHostsSeparator;
       private ToolStripButton toolStripButtonLive;
       private ToolStripSeparator toolStripActionsSeparator;
+      private ToolStripSeparator toolStripActionsSeparator1;
       private ToolStripSeparator toolStripGlobalActionsSeparator;
       private ToolStripSeparator toolStripModesSeparator;
       private ToolStripButton toolStripButtonDiffTool;
       private ToolStripButton toolStripButtonDiscussions;
       private ToolStripButton toolStripButtonAddComment;
       private ToolStripButton toolStripButtonNewThread;
+      private ToolStripButton toolStripButtonEditMergeRequest;
+      private ToolStripButton toolStripButtonMergeMergeRequest;
+      private ToolStripButton toolStripButtonHideMergeRequest;
+      private ToolStripButton toolStripButtonPinMergeRequest;
       private ToolStripButton toolStripButtonRefreshList;
       private ToolStripButton toolStripButtonOpenFromClipboard;
       private ToolStripButton toolStripButtonCreateNew;

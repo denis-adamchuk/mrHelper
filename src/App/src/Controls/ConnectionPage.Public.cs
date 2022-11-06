@@ -122,6 +122,18 @@ namespace mrHelper.App.Controls
          selectTab(EDataCacheType.Search);
       }
 
+      internal bool IsSelectedMergeRequestPinned()
+      {
+         MergeRequestKey? mrkOpt = getMergeRequestKey(null);
+         return mrkOpt.HasValue && isMergeRequestPinned(mrkOpt.Value);
+      }
+
+      internal bool IsSelectedMergeRequestHidden()
+      {
+         MergeRequest mergeRequest = getMergeRequest(null);
+         return mergeRequest != null && isMergeRequestExcluded(getCurrentTabDataCacheType(), mergeRequest);
+      }
+
       internal CommandState IsCommandEnabledForSelectedMergeRequest(ICommand command)
       {
          MergeRequestKey? mrk = getMergeRequestKey(null);
@@ -224,7 +236,35 @@ namespace mrHelper.App.Controls
          refreshSelectedMergeRequest();
       }
 
-      internal void Pin(MergeRequestKey mergeRequestKey)
+      internal void EditMergeRequest()
+      {
+         editSelectedMergeRequest();
+      }
+
+      internal void MergeMergeRequest()
+      {
+         acceptSelectedMergeRequest();
+      }
+
+      internal void ToggleHideState()
+      {
+         MergeRequest mergeRequest = getMergeRequest(null);
+         if (mergeRequest != null)
+         {
+            toggleMergeRequestExclusion(getCurrentTabDataCacheType(), mergeRequest);
+         }
+      }
+
+      internal void TogglePinState()
+      {
+         MergeRequestKey? mrk = getMergeRequestKey(null);
+         if (mrk.HasValue)
+         {
+            TogglePinState(mrk.Value);
+         }
+      }
+
+      internal void TogglePinState(MergeRequestKey mergeRequestKey)
       {
          toggleMergeRequestPinState(mergeRequestKey);
       }
@@ -509,12 +549,24 @@ namespace mrHelper.App.Controls
 
       public bool CanEdit()
       {
-         return areLongCachesReady(getDataCache(EDataCacheType.Live));
+         MergeRequestKey? mrkOpt = getMergeRequestKey(null);
+         return mrkOpt.HasValue && areLongCachesReady(getDataCache(EDataCacheType.Live));
       }
 
       public bool CanMerge()
       {
-         return areLongCachesReady(getDataCache(EDataCacheType.Live));
+         MergeRequestKey? mrkOpt = getMergeRequestKey(null);
+         return mrkOpt.HasValue && areLongCachesReady(getDataCache(EDataCacheType.Live));
+      }
+
+      public bool CanToggleHideStatus()
+      {
+         return getMergeRequestKey(null).HasValue;
+      }
+
+      public bool CanTogglePinStatus()
+      {
+         return getMergeRequestKey(null).HasValue;
       }
 
       internal void RestoreSplitterDistance()
@@ -571,6 +623,8 @@ namespace mrHelper.App.Controls
       internal event Action<ConnectionPage> CanCreateNewChanged;
       internal event Action<ConnectionPage> CanEditChanged;
       internal event Action<ConnectionPage> CanMergeChanged;
+      internal event Action<ConnectionPage> CanToggleHideStatusChanged;
+      internal event Action<ConnectionPage> CanTogglePinStatusChanged;
       internal event Action<ConnectionPage> CanDiffToolChanged;
       internal event Action<ConnectionPage> CanDiscussionsChanged;
       internal event Action<ConnectionPage> CanReloadAllChanged;

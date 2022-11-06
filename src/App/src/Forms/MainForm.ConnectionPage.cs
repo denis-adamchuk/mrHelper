@@ -71,6 +71,10 @@ namespace mrHelper.App.Forms
          connectionPage.CanCreateNewChanged += ConnectionPage_CanCreateNewChanged;
          connectionPage.CanAddCommentChanged += ConnectionPage_CanAddCommentChanged;
          connectionPage.CanNewThreadChanged += ConnectionPage_CanNewThreadChanged;
+         connectionPage.CanEditChanged += ConnectionPage_CanEditChanged;
+         connectionPage.CanMergeChanged += ConnectionPage_CanMergeChanged;
+         connectionPage.CanToggleHideStatusChanged += ConnectionPage_CanToggleHideStatusChanged;
+         connectionPage.CanTogglePinStatusChanged += ConnectionPage_CanTogglePinStatusChanged;
          connectionPage.CanDiscussionsChanged += ConnectionPage_CanDiscussionsChanged;
          connectionPage.CanDiffToolChanged += ConnectionPage_CanDiffToolChanged;
          connectionPage.CanAbortCloneChanged += ConnectionPage_CanAbortCloneChanged;
@@ -279,6 +283,72 @@ namespace mrHelper.App.Forms
          if (connectionPage == getCurrentConnectionPage())
          {
             toolStripButtonNewThread.Enabled = connectionPage != null && connectionPage.CanNewThread();
+         }
+      }
+
+      private void onCanEditChanged(ConnectionPage connectionPage)
+      {
+         if (connectionPage == getCurrentConnectionPage())
+         {
+            toolStripButtonEditMergeRequest.Enabled = connectionPage != null && connectionPage.CanEdit();
+         }
+      }
+
+      private void onCanMergeChanged(ConnectionPage connectionPage)
+      {
+         if (connectionPage == getCurrentConnectionPage())
+         {
+            toolStripButtonMergeMergeRequest.Enabled = connectionPage != null && connectionPage.CanMerge();
+         }
+      }
+
+      private void onCanToggleHideStatusChanged(ConnectionPage connectionPage)
+      {
+         if (connectionPage == getCurrentConnectionPage())
+         {
+            if (connectionPage != null)
+            {
+               toolStripButtonHideMergeRequest.Enabled = connectionPage.CanToggleHideStatus();
+               if (connectionPage.IsSelectedMergeRequestHidden())
+               {
+                  toolStripButtonHideMergeRequest.Image = Properties.Resources.unhide_100x100;
+                  toolStripButtonHideMergeRequest.ToolTipText = UnhideButtonTooltip;
+               }
+               else
+               {
+                  toolStripButtonHideMergeRequest.Image = Properties.Resources.hide_100x100;
+                  toolStripButtonHideMergeRequest.ToolTipText = HideButtonTooltip;
+               }
+            }
+            else
+            {
+               toolStripButtonHideMergeRequest.Enabled = false;
+            }
+         }
+      }
+
+      private void onCanTogglePinStatusChanged(ConnectionPage connectionPage)
+      {
+         if (connectionPage == getCurrentConnectionPage())
+         {
+            if (connectionPage != null)
+            {
+               toolStripButtonPinMergeRequest.Enabled = connectionPage.CanTogglePinStatus();
+               if (connectionPage.IsSelectedMergeRequestPinned())
+               {
+                  toolStripButtonPinMergeRequest.Image = Properties.Resources.unpin_100x100;
+                  toolStripButtonPinMergeRequest.ToolTipText = UnpinButtonTooltip;
+               }
+               else
+               {
+                  toolStripButtonPinMergeRequest.Image = Properties.Resources.pin_100x100;
+                  toolStripButtonPinMergeRequest.ToolTipText = PinButtonTooltip;
+               }
+            }
+            else
+            {
+               toolStripButtonPinMergeRequest.Enabled = false;
+            }
          }
       }
 
