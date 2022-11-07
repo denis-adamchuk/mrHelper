@@ -24,19 +24,25 @@ namespace mrHelper.App.Helpers
          NarrowPlus,
          Medium,
          MediumPlus,
-         Wide
+         Wide,
+         WidePlus,
+         SuperWide,
+         SuperWidePlus
       }
 
       internal static DiscussionColumnWidth GetNextColumnWidth(DiscussionColumnWidth value)
       {
          switch (value)
          {
-            case DiscussionColumnWidth.Narrow:     return DiscussionColumnWidth.NarrowPlus;
-            case DiscussionColumnWidth.NarrowPlus: return DiscussionColumnWidth.Medium;
-            case DiscussionColumnWidth.Medium:     return DiscussionColumnWidth.MediumPlus;
-            case DiscussionColumnWidth.MediumPlus: return DiscussionColumnWidth.Wide;
-            case DiscussionColumnWidth.Wide:       return DiscussionColumnWidth.Wide;
-            default: Debug.Assert(false);          return DiscussionColumnWidth.Wide;
+            case DiscussionColumnWidth.Narrow:        return DiscussionColumnWidth.NarrowPlus;
+            case DiscussionColumnWidth.NarrowPlus:    return DiscussionColumnWidth.Medium;
+            case DiscussionColumnWidth.Medium:        return DiscussionColumnWidth.MediumPlus;
+            case DiscussionColumnWidth.MediumPlus:    return DiscussionColumnWidth.Wide;
+            case DiscussionColumnWidth.Wide:          return DiscussionColumnWidth.WidePlus;
+            case DiscussionColumnWidth.WidePlus:      return DiscussionColumnWidth.SuperWide;
+            case DiscussionColumnWidth.SuperWide:     return DiscussionColumnWidth.SuperWidePlus;
+            case DiscussionColumnWidth.SuperWidePlus: return DiscussionColumnWidth.SuperWidePlus;
+            default: Debug.Assert(false);             return DiscussionColumnWidth.Wide;
          }
       }
 
@@ -44,12 +50,15 @@ namespace mrHelper.App.Helpers
       {
          switch (value)
          {
-            case DiscussionColumnWidth.Narrow:     return DiscussionColumnWidth.Narrow;
-            case DiscussionColumnWidth.NarrowPlus: return DiscussionColumnWidth.Narrow;
-            case DiscussionColumnWidth.Medium:     return DiscussionColumnWidth.NarrowPlus;
-            case DiscussionColumnWidth.MediumPlus: return DiscussionColumnWidth.Medium;
-            case DiscussionColumnWidth.Wide:       return DiscussionColumnWidth.MediumPlus;
-            default: Debug.Assert(false);          return DiscussionColumnWidth.Narrow;
+            case DiscussionColumnWidth.Narrow:        return DiscussionColumnWidth.Narrow;
+            case DiscussionColumnWidth.NarrowPlus:    return DiscussionColumnWidth.Narrow;
+            case DiscussionColumnWidth.Medium:        return DiscussionColumnWidth.NarrowPlus;
+            case DiscussionColumnWidth.MediumPlus:    return DiscussionColumnWidth.Medium;
+            case DiscussionColumnWidth.Wide:          return DiscussionColumnWidth.MediumPlus;
+            case DiscussionColumnWidth.WidePlus:      return DiscussionColumnWidth.Wide;
+            case DiscussionColumnWidth.SuperWide:     return DiscussionColumnWidth.WidePlus;
+            case DiscussionColumnWidth.SuperWidePlus: return DiscussionColumnWidth.SuperWide;
+            default: Debug.Assert(false);             return DiscussionColumnWidth.Narrow;
          }
       }
 
@@ -71,9 +80,21 @@ namespace mrHelper.App.Helpers
          {
             return DiscussionColumnWidth.MediumPlus;
          }
-         else
+         else if (settings.DiscussionColumnWidth == "wide")
          {
             return DiscussionColumnWidth.Wide;
+         }
+         else if (settings.DiscussionColumnWidth == "wideplus")
+         {
+            return DiscussionColumnWidth.WidePlus;
+         }
+         else if (settings.DiscussionColumnWidth == "superwide")
+         {
+            return DiscussionColumnWidth.SuperWide;
+         }
+         else
+         {
+            return DiscussionColumnWidth.SuperWidePlus;
          }
       }
 
@@ -99,6 +120,18 @@ namespace mrHelper.App.Helpers
 
             case DiscussionColumnWidth.Wide:
                settings.DiscussionColumnWidth = "wide";
+               break;
+
+            case DiscussionColumnWidth.WidePlus:
+               settings.DiscussionColumnWidth = "wideplus";
+               break;
+
+            case DiscussionColumnWidth.SuperWide:
+               settings.DiscussionColumnWidth = "superwide";
+               break;
+
+            case DiscussionColumnWidth.SuperWidePlus:
+               settings.DiscussionColumnWidth = "superwideplus";
                break;
          }
       }

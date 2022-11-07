@@ -1511,7 +1511,7 @@ namespace mrHelper.App.Controls
             _textboxFilename.Width = getDiffContextWidth(width)
                - (_showMoreContext == null ? 0 : _showMoreContext.Width)
                - (_copyToClipboard == null ? 0 : _copyToClipboard.Width)
-               - (_copyToClipboard == null && _showMoreContext == null ? 0 : 25);
+               - (_copyToClipboard == null && _showMoreContext == null ? 0 : 50);
             _textboxFilename.Height = (_textboxFilename as TextBoxEx).FullPreferredHeight;
          }
 
@@ -2109,7 +2109,10 @@ namespace mrHelper.App.Controls
          { ConfigurationHelper.DiscussionColumnWidth.NarrowPlus, 50 },
          { ConfigurationHelper.DiscussionColumnWidth.Medium, 55 },
          { ConfigurationHelper.DiscussionColumnWidth.MediumPlus, 60 },
-         { ConfigurationHelper.DiscussionColumnWidth.Wide,   65 }
+         { ConfigurationHelper.DiscussionColumnWidth.Wide,   65 },
+         { ConfigurationHelper.DiscussionColumnWidth.WidePlus,  70 },
+         { ConfigurationHelper.DiscussionColumnWidth.SuperWide,  75 },
+         { ConfigurationHelper.DiscussionColumnWidth.SuperWidePlus,  80 }
       };
       private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidth_Percents_TwoColumns =
          new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
@@ -2118,7 +2121,10 @@ namespace mrHelper.App.Controls
          { ConfigurationHelper.DiscussionColumnWidth.NarrowPlus, 39 },
          { ConfigurationHelper.DiscussionColumnWidth.Medium, 42 },
          { ConfigurationHelper.DiscussionColumnWidth.MediumPlus, 45 },
-         { ConfigurationHelper.DiscussionColumnWidth.Wide,   48 }
+         { ConfigurationHelper.DiscussionColumnWidth.Wide,   48 },
+         { ConfigurationHelper.DiscussionColumnWidth.WidePlus,  48 },
+         { ConfigurationHelper.DiscussionColumnWidth.SuperWide,  48 },
+         { ConfigurationHelper.DiscussionColumnWidth.SuperWidePlus,  48 }
       };
       private readonly Dictionary<ConfigurationHelper.DiscussionColumnWidth, int> NoteWidth_Symbols_OneColumn =
          new Dictionary<ConfigurationHelper.DiscussionColumnWidth, int>
