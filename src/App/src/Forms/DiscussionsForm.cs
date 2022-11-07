@@ -104,7 +104,10 @@ namespace mrHelper.App.Forms
 
       internal void Restore()
       {
-         this.WindowState = _previousState;
+         if (this.WindowState != _previousState)
+         {
+            this.WindowState = _previousState;
+         }
          Activate();
          _discussionLoader.LoadDiscussions();
       }
