@@ -39,7 +39,7 @@ namespace mrHelper.App.Controls
 
    internal partial class MergeRequestListView : ListViewEx
    {
-      internal static int DefaultColorColumnWidth = 20;
+      internal static int DefaultColorColumnWidth = 20; // TODO HighDPI
 
       internal event Action<ListView> ContentChanged;
 
@@ -2013,9 +2013,11 @@ namespace mrHelper.App.Controls
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
       private static readonly string AllListViewRowsHint = "See all labels in tooltip";
 
-      private static readonly int GroupHeaderHeight = 20; // found experimentally
+      private int scale(int px) => (int)WinFormsHelpers.ScalePixelsToNewDpi(96, DeviceDpi, px);
 
-      private static readonly int AvatarPaddingX = 10;
+      private int GroupHeaderHeight => scale(20); // found experimentally
+
+      private int AvatarPaddingX => scale(10);
 
       private static readonly int UnmuteTimerInterval = 60 * 1000; // 1 minute
       private readonly Timer _unmuteTimer = new Timer

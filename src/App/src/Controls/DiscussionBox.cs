@@ -1511,7 +1511,7 @@ namespace mrHelper.App.Controls
             _textboxFilename.Width = getDiffContextWidth(width)
                - (_showMoreContext == null ? 0 : _showMoreContext.Width)
                - (_copyToClipboard == null ? 0 : _copyToClipboard.Width)
-               - (_copyToClipboard == null && _showMoreContext == null ? 0 : 50);
+               - (_copyToClipboard == null && _showMoreContext == null ? 0 : TextBoxFileNamePaddingRight);
             _textboxFilename.Height = (_textboxFilename as TextBoxEx).FullPreferredHeight;
          }
 
@@ -1563,7 +1563,7 @@ namespace mrHelper.App.Controls
                   if (_copyToClipboard != null)
                   {
                      _showMoreContext.Location = new Point(
-                        _showMoreContext.Location.X - _copyToClipboard.Width - 20, _showMoreContext.Location.Y);
+                        _showMoreContext.Location.X - _copyToClipboard.Width - CopyLinkPaddingLeft, _showMoreContext.Location.Y);
                   }
                }
 
@@ -1605,7 +1605,7 @@ namespace mrHelper.App.Controls
          if (_panelContext != null)
          {
             _panelContext.Location = controlPos;
-            controlPos.Offset(0, _panelContext.Height + 20);
+            controlPos.Offset(0, _panelContext.Height + DiffContextPaddingBottom);
 
             if (_showMoreContext != null)
             {
@@ -1615,7 +1615,7 @@ namespace mrHelper.App.Controls
                if (_copyToClipboard != null)
                {
                   _showMoreContext.Location = new Point(
-                     _showMoreContext.Location.X - _copyToClipboard.Width - 20, _showMoreContext.Location.Y);
+                     _showMoreContext.Location.X - _copyToClipboard.Width - CopyLinkPaddingLeft, _showMoreContext.Location.Y);
                }
             }
 
@@ -1672,7 +1672,7 @@ namespace mrHelper.App.Controls
                noteContentPos.Offset(noteHorzOffset + AvatarPaddingRight + noteContainer.NoteAvatar.Width, 0);
                noteContainer.NoteContent.Location = noteContentPos;
             }
-            controlPos.Offset(0, noteContainer.NoteContent.Height + 20);
+            controlPos.Offset(0, noteContainer.NoteContent.Height + NotePaddingBottom);
          }
       }
 
@@ -2148,16 +2148,23 @@ namespace mrHelper.App.Controls
 
       private readonly Padding PopupContextPadding = new Padding(0, 0, 0, 0);
 
-      private readonly int AvatarPaddingTop = 5;
-      private readonly int AvatarPaddingRight = 10;
-      private readonly int BackLinkPaddingRight = 10;
+      private int scale(int px) => (int)WinFormsHelpers.ScalePixelsToNewDpi(96, DeviceDpi, px);
 
-      private readonly int ServiceNoteExtraWidth = 4;
-      private readonly int ServiceNoteExtraHeight = 4;
-      private readonly int NormalNoteExtraHeight = 2;
-      private readonly int DiffContextExtraHeight = 0;
-      private readonly int NoteHtmlPaddingLeft = 4;
-      private readonly int NoteHtmlPaddingRight = 20;
+      private int AvatarPaddingTop => scale(5);
+      private int AvatarPaddingRight => scale(10);
+      private int BackLinkPaddingRight => scale(10);
+
+      private int ServiceNoteExtraWidth => scale(4);
+      private int ServiceNoteExtraHeight => scale(4);
+      private int NormalNoteExtraHeight => scale(2);
+      private int DiffContextExtraHeight => scale(0);
+      private int NoteHtmlPaddingLeft => scale(4);
+      private int NoteHtmlPaddingRight => scale(20);
+
+      private int TextBoxFileNamePaddingRight => scale(25);
+      private int NotePaddingBottom => scale(20);
+      private int DiffContextPaddingBottom => scale(20);
+      private int CopyLinkPaddingLeft => scale(20);
 
       private Control _textboxFilename;
       private Control _showMoreContextHint;

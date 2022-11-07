@@ -491,8 +491,8 @@ namespace mrHelper.App.Controls
          // Stack boxes vertically
          DiffContextPosition diffContextPosition = _discussionLayout?.DiffContextPosition ?? DiffContextPosition.Top;
          bool isContextAtTop = diffContextPosition == DiffContextPosition.Top;
-         int discussionBoxTopMargin = isContextAtTop ? 40 : 20;
-         int firstDiscussionBoxTopMargin = 20;
+         int discussionBoxTopMargin = isContextAtTop ? 40 : 20; // TODO HighDPI
+         int firstDiscussionBoxTopMargin = 20; // TODO HighDPI
 
          IEnumerable<DiscussionBox> boxes = getVisibleAndSortedBoxes();
          foreach (DiscussionBox box in boxes)

@@ -49,9 +49,9 @@ namespace mrHelper.App.Controls
          int deviceDpi = getDeviceDpi();
          if (_summaryColor.HasValue)
          {
-            int imageSize = (int)(DefaultToolbarImageSize.Width * deviceDpi / 96.0);
+            int imageSize = (int)WinFormsHelpers.ScalePixelsToNewDpi(96, deviceDpi, DefaultToolbarImageSize.Width);
             int ellipseSize = (int)(imageSize * 0.80); // imageSize - 20%
-            int padding = (int)(2 * deviceDpi / 96.0); // 2px by default
+            int padding = (int)WinFormsHelpers.ScalePixelsToNewDpi(96, deviceDpi, 2); // 2px by default
             Image = WinFormsHelpers.DrawEllipse(imageSize, ellipseSize, padding, _summaryColor.Value);
             TextImageRelation = TextImageRelation.ImageBeforeText;
          }

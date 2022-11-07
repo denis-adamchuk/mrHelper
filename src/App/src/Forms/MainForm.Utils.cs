@@ -1084,8 +1084,10 @@ namespace mrHelper.App.Forms
 
       private void resizeToolbarImages()
       {
-         int newToolbarImageWidth = (int)(DefaultToolbarImageSize.Width * DeviceDpi / 96.0);
-         int newToolbarImageHeight = (int)(DefaultToolbarImageSize.Height * DeviceDpi / 96.0);
+         int newToolbarImageWidth = (int)WinFormsHelpers.ScalePixelsToNewDpi(
+            96, DeviceDpi, DefaultToolbarImageSize.Width);
+         int newToolbarImageHeight = (int)WinFormsHelpers.ScalePixelsToNewDpi(
+            96, DeviceDpi, DefaultToolbarImageSize.Height);
          Size newToolbarImageSize = new Size(newToolbarImageWidth, newToolbarImageHeight);
          foreach (ToolStrip toolStrip in new ToolStrip[]
             { toolStripCustomActions, toolStripActions, toolStripHosts })

@@ -315,6 +315,8 @@ namespace mrHelper.CommonControls.Tools
             control.ToString(), currentDPI, oldEmSize, newEmSize, designTimeFontSize, designTimeDPI));
       }
 
+      public static double ScalePixelsToNewDpi(int oldDpi, int newDpi, int pixels) => pixels * newDpi / (double)oldDpi;
+
       public static double GetFontSizeInPoints(Control control) => control.Font.SizeInPoints;
 
       public static double GetFontSizeInPixels(Control control) =>

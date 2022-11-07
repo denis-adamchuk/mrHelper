@@ -616,7 +616,7 @@ namespace mrHelper.App.Forms
 
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
          int tableWidth = DiffContextHelpers.EstimateHtmlWidth(htmlSnippet, fontSizePx, htmlPanel.Width);
-         return DiffContextFormatter.GetHtml(context, fontSizePt, 1, tableWidth);
+         return DiffContextFormatter.GetHtml(context, fontSizePt, 1, tableWidth); // TODO HighDPI
       }
 
       private void updateControlState()
