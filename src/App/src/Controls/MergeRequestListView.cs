@@ -927,26 +927,30 @@ namespace mrHelper.App.Controls
 
       private void drawAvatar(Graphics g, Rectangle bounds, Image avatar)
       {
-         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+         int colWidth = getColumnWidth(ColumnType.Avatar);
+         int rowHeight = WinFormsHelpers.GetListViewRowHeight(this);
+         int rectangleSide = Math.Min(colWidth, rowHeight);
+         if (rectangleSide < rowHeight / 2)
+         {
+            return;
+         }
 
-         Rectangle avatarRect = getAvatarRectangle();
+         Size avatarSize = getAvatarSize(rectangleSide);
+         int imageX = (colWidth - avatarSize.Width) / 2;
+         int imageY = (rowHeight - avatarSize.Height) / 2;
          Rectangle imageRect = new Rectangle(
-            bounds.X + avatarRect.X, bounds.Y + avatarRect.Y, avatarRect.Width, avatarRect.Height);
-         WinFormsHelpers.DrawClippedCircleImage(g, avatar, imageRect);
+            bounds.X + imageX, bounds.Y + imageY, avatarSize.Width, avatarSize.Height);
 
+         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+         WinFormsHelpers.DrawClippedCircleImage(g, avatar, imageRect);
          g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
       }
 
-      private Rectangle getAvatarRectangle()
+      private Size getAvatarSize(int rectangleSide)
       {
-         int rowHeight = WinFormsHelpers.GetListViewRowHeight(this);
-         int imageWidth = (int)Math.Ceiling(rowHeight - 0.05 * rowHeight); // 5% less
+         int imageWidth = (int)Math.Ceiling(rectangleSide - 0.05 * rectangleSide); // 5% less
          int imageHeight = imageWidth;
-         int imagePaddingX = AvatarPaddingX;
-         int imageX = imagePaddingX;
-         int imageY = (rowHeight - imageHeight) / 2;
-         Rectangle avatarRect = new Rectangle(imageX, imageY, imageWidth, imageHeight);
-         return avatarRect;
+         return new Size(imageWidth, imageHeight);
       }
 
       enum EColorSchemeItemsKind
@@ -1713,8 +1717,9 @@ namespace mrHelper.App.Controls
 
             case ColumnType.Avatar:
                {
-                  Rectangle avatarRectangle = getAvatarRectangle();
-                  return avatarRectangle.X + avatarRectangle.Width;
+                  int rowHeight = WinFormsHelpers.GetListViewRowHeight(this);
+                  Size avatarSize = getAvatarSize(rowHeight);
+                  return avatarSize.Width + AvatarPaddingX;
                }
          }
          return getColumnAutoWidthByContent(column);
