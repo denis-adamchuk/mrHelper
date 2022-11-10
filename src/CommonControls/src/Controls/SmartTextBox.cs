@@ -634,12 +634,16 @@ namespace mrHelper.CommonControls.Controls
       private IEnumerable<AutoCompletionEntity> _autoCompletionEntities = new AutoCompletionEntity[] { };
 
       private static readonly char GitLabLabelPrefixChar = '@';
-      private static readonly int AutoCompletionItemHeight = 42;
-      private static readonly int AutoCompletionImageWidth = 40;
-      private static readonly int AutoCompletionImageHeight = AutoCompletionImageWidth;
-      private static readonly int AutoCompletionImageRightPadding = 10;
-      private static readonly int ListBoxPaddingLeft = 5;
-      private static readonly int ListBoxPaddingRight = 10;
+
+      private int scale(int px) => (int)WinFormsHelpers.ScalePixelsToNewDpi(96, DeviceDpi, px);
+
+      private int AutoCompletionItemHeight => scale(42);
+      private int AutoCompletionImageWidth => scale(40);
+      private int AutoCompletionImageHeight => AutoCompletionImageWidth;
+      private int AutoCompletionImageRightPadding => scale(10);
+      private int ListBoxPaddingLeft => scale(5);
+      private int ListBoxPaddingRight => scale(10);
+
       private static readonly Padding PopupWindowPadding = new Padding(1, 2, 1, 2);
       private static readonly int MaxRowsToShowInListBox = 5;
    }
