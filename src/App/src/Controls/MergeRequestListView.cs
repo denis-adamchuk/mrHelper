@@ -697,22 +697,31 @@ namespace mrHelper.App.Controls
 
       protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
       {
-         base.OnDrawColumnHeader(e);
          if (e.Header.ListView == null)
          {
             return;
          }
 
-         bool isSortedByThisColumn = e.ColumnIndex == getColumnByType(getSortedByColumn()).Index;
-         using (Font font = getColumnHeaderFont(isSortedByThisColumn))
+         using (Brush brush = new SolidBrush(Color.DarkGray))
          {
-            if (e.ColumnIndex == getColumnByType(ColumnType.Color).Index)
-            {
-               Color? penColor = isSortedByThisColumn ? Color.Black : new Color?();
-               Color fillColor = GetSummaryColor() ?? Color.Gray;
-               drawEllipseForIId(e.Graphics, e.Bounds, fillColor, font, penColor);
-            }
-            else
+            e.Graphics.FillRectangle(brush, e.Bounds);
+         }
+         using (Brush brush = new SolidBrush(Color.Gray))
+         {
+            Rectangle rect = new Rectangle(e.Bounds.X, e.Bounds.Y, e.Bounds.Width - 1, e.Bounds.Height);
+            e.Graphics.FillRectangle(SystemBrushes.ButtonFace, rect);
+         }
+
+         bool isSortedByThisColumn = e.ColumnIndex == getColumnByType(getSortedByColumn()).Index;
+         if (e.ColumnIndex == getColumnByType(ColumnType.Color).Index)
+         {
+            Color? penColor = isSortedByThisColumn ? Color.Black : new Color?();
+            Color fillColor = GetSummaryColor() ?? Color.Gray;
+            drawColorColumnEllipse(e.Graphics, e.Bounds, fillColor, penColor);
+         }
+         else
+         {
+            using (Font font = getColumnHeaderFont(isSortedByThisColumn))
             {
                using (StringFormat format = new StringFormat(StringFormatFlags.LineLimit))
                {
@@ -754,10 +763,10 @@ namespace mrHelper.App.Controls
             if (columnType == ColumnType.Color)
             {
                Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
-               drawEllipseForIId(e.Graphics, bounds, color, e.Item.ListView.Font, null);
+               drawColorColumnEllipse(e.Graphics, bounds, color, null);
                if (isPinnedToMe(fmk))
                {
-                  drawImageForIId(e.Graphics, bounds, e.Item.ListView.Font, Properties.Resources.pin_transparent_alpha);
+                  drawColorColumnImage(e.Graphics, bounds, Properties.Resources.pin_transparent_alpha);
                }
             }
             else if (isClickable)
@@ -874,53 +883,72 @@ namespace mrHelper.App.Controls
          _toolTip.Cancel();
       }
 
-      private void drawEllipseForIId(Graphics g, Rectangle bounds, Color fillColor,
-         Font font, Color? penColor)
+      private float getColorEllipsePreferrableWidth()
       {
-         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+         double textHeight = WinFormsHelpers.GetFontSizeInPixels(this);
+         return (float)(textHeight + 0.20 * textHeight);
+      }
 
-         SizeF textSize = g.MeasureString("A", font, bounds.Width);
-         float ellipseWidth = (float)(textSize.Height - 0.09 * textSize.Height); // 9% less
+      private void drawColorColumnEllipse(Graphics g, Rectangle bounds, Color fillColor, Color? penColor)
+      {
+         int colWidth = getColumnWidth(ColumnType.Color);
+         float ellipseWidthByText = getColorEllipsePreferrableWidth();
+         float ellipseWidth = Math.Min(ellipseWidthByText, colWidth);
+         if (ellipseWidth < ellipseWidthByText / 2)
+         {
+            return;
+         }
+
          float ellipseHeight = ellipseWidth;
          float ellipseX = (bounds.Width - ellipseWidth) / 2;
          float ellipseY = (bounds.Height - ellipseHeight) / 2;
-         if (bounds.Width > ellipseX + ellipseWidth)
+         using (Brush ellipseBrush = new SolidBrush(fillColor))
          {
-            using (Brush ellipseBrush = new SolidBrush(fillColor))
-            {
-               RectangleF ellipseRect = new RectangleF(
-                  bounds.X + ellipseX, bounds.Y + ellipseY, ellipseWidth, ellipseHeight);
-               g.FillEllipse(ellipseBrush, ellipseRect);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-               if (penColor.HasValue)
+            RectangleF ellipseRect = new RectangleF(
+               bounds.X + ellipseX, bounds.Y + ellipseY, ellipseWidth, ellipseHeight);
+            g.FillEllipse(ellipseBrush, ellipseRect);
+
+            if (penColor.HasValue)
+            {
+               using (Pen ellipsePen = new Pen(penColor.Value, 2))
                {
-                  using (Pen ellipsePen = new Pen(penColor.Value, 2))
-                  {
-                     g.DrawEllipse(ellipsePen, ellipseRect);
-                  }
+                  g.DrawEllipse(ellipsePen, ellipseRect);
                }
             }
-         }
 
-         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
+         }
       }
 
-      private void drawImageForIId(Graphics g, Rectangle bounds, Font font, Image image)
+      private float getColorImagePreferrableWidth()
+      {
+         double textHeight = WinFormsHelpers.GetFontSizeInPixels(this);
+         return (float)(textHeight - 0.20 * textHeight);
+      }
+
+      private void drawColorColumnImage(Graphics g, Rectangle bounds, Image image)
       {
          Debug.Assert(image != null);
-         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-         SizeF textSize = g.MeasureString("A", font, bounds.Width);
-         float imageWidth = (float)(textSize.Height - 0.35 * textSize.Height); // 35% less
+         float imageWidthByText = getColorImagePreferrableWidth();
+         int colWidth = getColumnWidth(ColumnType.Color);
+         float imageWidth = Math.Min(imageWidthByText, colWidth);
+         if (imageWidth < imageWidthByText / 2)
+         {
+            return;
+         }
+
          float imageHeight = imageWidth;
          float imageX = (bounds.Width - imageWidth) / 2;
          float imageY = (bounds.Height - imageHeight) / 2;
-         if (bounds.Width > imageX + imageWidth)
-         {
-            RectangleF imageRect = new RectangleF(
-               bounds.X + imageX, bounds.Y + imageY, imageWidth, imageHeight);
-            g.DrawImage(image, imageRect);
-         }
+
+         g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+         RectangleF imageRect = new RectangleF(
+            bounds.X + imageX, bounds.Y + imageY, imageWidth, imageHeight);
+         g.DrawImage(image, imageRect);
 
          g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.Default;
       }
@@ -1713,7 +1741,7 @@ namespace mrHelper.App.Controls
          switch (columnType.Value)
          {
             case ColumnType.Color:
-               return DefaultColorColumnWidth;
+               return (int)Math.Ceiling(Math.Max(getColorEllipsePreferrableWidth(), getColorImagePreferrableWidth()));
 
             case ColumnType.Avatar:
                {
