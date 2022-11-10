@@ -217,8 +217,8 @@ namespace mrHelper.App.Forms
          // 
          // buttonPrevRelatedDiscussion
          // 
-         this.buttonPrevRelatedDiscussion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-         this.buttonPrevRelatedDiscussion.Location = new System.Drawing.Point(-1, 0);
+         this.buttonPrevRelatedDiscussion.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+         this.buttonPrevRelatedDiscussion.Location = new System.Drawing.Point(0, 0);
          this.buttonPrevRelatedDiscussion.Margin = new System.Windows.Forms.Padding(0);
          this.buttonPrevRelatedDiscussion.Name = "buttonPrevRelatedDiscussion";
          this.buttonPrevRelatedDiscussion.Size = new System.Drawing.Size(22, 22);
