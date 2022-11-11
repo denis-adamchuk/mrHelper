@@ -37,13 +37,10 @@ namespace mrHelper.CommonControls.Controls
          textBox.SelectionStart = text.Length;
          textBox.VerticalContentAlignment = multiline ?
             System.Windows.VerticalAlignment.Top : System.Windows.VerticalAlignment.Stretch;
-         textBox.VerticalAlignment = multiline ?
-            System.Windows.VerticalAlignment.Stretch : System.Windows.VerticalAlignment.Center;
+         textBox.VerticalAlignment = System.Windows.VerticalAlignment.Stretch;
          textBox.SpellCheck.IsEnabled = isSpellCheckEnabled;
          textBox.Loaded += (s, e) =>
          {
-            double verticalPadding = multiline ? 4 : (this.Height - textBox.ActualHeight) / 2.0;
-            textBox.Padding = new System.Windows.Thickness(0, verticalPadding, 0, verticalPadding);
             if (softwareOnlyRenderMode)
             {
                System.Windows.PresentationSource source = System.Windows.PresentationSource.FromVisual(textBox);
