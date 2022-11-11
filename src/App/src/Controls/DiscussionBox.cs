@@ -850,7 +850,7 @@ namespace mrHelper.App.Controls
          LinkLabel linkLabel = new LinkLabel()
          {
             AutoSize = true,
-            Text = "Copy to clipboard",
+            Text = "Copy issue",
             BorderStyle = BorderStyle.None,
             TabStop = false
          };
@@ -2162,8 +2162,8 @@ namespace mrHelper.App.Controls
       private int NoteHtmlPaddingRight => scale(20);
 
       private int TextBoxFileNamePaddingRight => scale(25);
-      private int NotePaddingBottom => scale(20);
-      private int DiffContextPaddingBottom => scale(20);
+      private int NotePaddingBottom => scale(15);
+      private int DiffContextPaddingBottom => scale(15);
       private int CopyLinkPaddingLeft => scale(20);
 
       private Control _textboxFilename;
