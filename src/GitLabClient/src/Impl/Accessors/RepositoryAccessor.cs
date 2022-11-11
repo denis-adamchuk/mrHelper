@@ -63,6 +63,11 @@ namespace mrHelper.GitLabClient
       async public Task<Commit> FindFirstBranchCommit(string branchName)
       {
          Commit headBranchCommit = await LoadCommit(branchName);
+         if (headBranchCommit == null)
+         {
+            return null;
+         }
+
          if (headBranchCommit.Parent_Ids == null || !headBranchCommit.Parent_Ids.Any())
          {
             Debug.Assert(false);
