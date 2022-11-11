@@ -190,6 +190,7 @@ namespace mrHelper.App.Controls
 
          Trace.TraceInformation("[ConnectionPage] Toggled exclusion for MR with Id {0}, new state - {1}",
             mergeRequestId, isMergeRequestExcluded(type, mergeRequestId) ? "excluded" : "not excluded");
+         CanToggleHideStatusChanged?.Invoke(this);
       }
 
       private IEnumerable<MergeRequestKey> getPinnedMergeRequestKeys()
@@ -215,6 +216,7 @@ namespace mrHelper.App.Controls
          applyFilterChange(type);
 
          Trace.TraceInformation("[ConnectionPage] Toggled pin state of MR with IId {0}", mrk.IId);
+         CanTogglePinStatusChanged?.Invoke(this);
       }
 
       private void updatePinnedAndUnpinnedMergeRequests(

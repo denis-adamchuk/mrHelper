@@ -257,11 +257,7 @@ namespace mrHelper.App.Controls
 
       internal void TogglePinState()
       {
-         MergeRequestKey? mrk = getMergeRequestKey(null);
-         if (mrk.HasValue)
-         {
-            TogglePinState(mrk.Value);
-         }
+         toggleSelectedMergeRequestPinState();
       }
 
       internal void TogglePinState(MergeRequestKey mergeRequestKey)
