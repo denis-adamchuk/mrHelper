@@ -34,6 +34,8 @@ namespace mrHelper.App.Controls
 
          _redrawTimer.Tick += onRedrawTimer;
          _redrawTimer.Start();
+
+         _pathCache = new RoundedPathCache(DiffContextBorderRadius);
       }
 
       internal void Initialize(
@@ -491,8 +493,7 @@ namespace mrHelper.App.Controls
          // Stack boxes vertically
          DiffContextPosition diffContextPosition = _discussionLayout?.DiffContextPosition ?? DiffContextPosition.Top;
          bool isContextAtTop = diffContextPosition == DiffContextPosition.Top;
-         int discussionBoxTopMargin = isContextAtTop ? 40 : 20; // TODO HighDPI
-         int firstDiscussionBoxTopMargin = 20; // TODO HighDPI
+         int discussionBoxTopMargin = isContextAtTop ? DiscussionBoxTopMarginVertLayout : DiscussionBoxTopMarginHorzLayout;
 
          IEnumerable<DiscussionBox> boxes = getVisibleAndSortedBoxes();
          foreach (DiscussionBox box in boxes)
@@ -500,7 +501,7 @@ namespace mrHelper.App.Controls
             box.AdjustToWidth(clientWidth);
 
             int boxLocationX = (clientWidth - box.Width) / 2;
-            int topMargin = box == boxes.First() ? firstDiscussionBoxTopMargin : discussionBoxTopMargin;
+            int topMargin = box == boxes.First() ? FirstDiscussionBoxTopMargin : discussionBoxTopMargin;
             int boxLocationY = topMargin + previousBoxLocation.Y + previousBoxSize.Height;
             Point location = new Point(boxLocationX, boxLocationY);
             box.Location = location + (Size)AutoScrollPosition;
@@ -783,8 +784,14 @@ namespace mrHelper.App.Controls
          Interval = RedrawTimerInterval
       };
 
-      public static int DiffContextBorderRadius = 10;
-      private RoundedPathCache _pathCache = new RoundedPathCache(DiffContextBorderRadius);
+      private int scale(int px) => (int)WinFormsHelpers.ScalePixelsToNewDpi(96, DeviceDpi, px);
+
+      private int DiffContextBorderRadius => scale(10);
+      private int DiscussionBoxTopMarginVertLayout => scale(40);
+      private int DiscussionBoxTopMarginHorzLayout => scale(20);
+      private int FirstDiscussionBoxTopMargin => scale(20);
+
+      private RoundedPathCache _pathCache;
       private HtmlPanelEx _currentSelectedNote;
       private IEnumerable<DiscussionBox> _foundBoxes;
    }

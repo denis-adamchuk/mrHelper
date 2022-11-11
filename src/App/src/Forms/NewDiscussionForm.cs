@@ -612,11 +612,11 @@ namespace mrHelper.App.Forms
          string longestLine = context.GetLongestLine();
          double fontSizePt = WinFormsHelpers.GetFontSizeInPoints(htmlPanel);
          string htmlSnippet = longestLine != null ?
-            DiffContextFormatter.GetHtml(longestLine, fontSizePt, 0, null) : null;
+            DiffContextFormatter.GetHtml(longestLine, fontSizePt, null) : null;
 
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
          int tableWidth = DiffContextHelpers.EstimateHtmlWidth(htmlSnippet, fontSizePx, htmlPanel.Width);
-         return DiffContextFormatter.GetHtml(context, fontSizePt, 1, tableWidth); // TODO HighDPI
+         return DiffContextFormatter.GetHtml(context, fontSizePt, tableWidth);
       }
 
       private void updateControlState()

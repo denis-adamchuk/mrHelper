@@ -39,8 +39,6 @@ namespace mrHelper.App.Controls
 
    internal partial class MergeRequestListView : ListViewEx
    {
-      internal static int DefaultColorColumnWidth = 20; // TODO HighDPI
-
       internal event Action<ListView> ContentChanged;
 
       public MergeRequestListView()

@@ -136,7 +136,7 @@ namespace mrHelper.App.Forms
          this.panelHtmlContextCanvas.Controls.Add(this.htmlPanelContext);
          this.panelHtmlContextCanvas.Location = new System.Drawing.Point(12, 38);
          this.panelHtmlContextCanvas.Name = "panelHtmlContextCanvas";
-         this.panelHtmlContextCanvas.Size = new System.Drawing.Size(805, 90);
+         this.panelHtmlContextCanvas.Size = new System.Drawing.Size(805, 82);
          this.panelHtmlContextCanvas.TabIndex = 10;
          this.panelHtmlContextCanvas.SizeChanged += new System.EventHandler(this.panelCanvas_SizeChanged);
          // 
@@ -149,7 +149,7 @@ namespace mrHelper.App.Forms
          this.htmlPanelContext.Dock = System.Windows.Forms.DockStyle.Fill;
          this.htmlPanelContext.Location = new System.Drawing.Point(0, 0);
          this.htmlPanelContext.Name = "htmlPanelContext";
-         this.htmlPanelContext.Size = new System.Drawing.Size(803, 88);
+         this.htmlPanelContext.Size = new System.Drawing.Size(803, 80);
          this.htmlPanelContext.TabIndex = 0;
          this.htmlPanelContext.Text = null;
          this.htmlPanelContext.MouseWheel += new System.Windows.Forms.MouseEventHandler(this.panelScroll_MouseWheel);
@@ -442,7 +442,7 @@ namespace mrHelper.App.Forms
          this.panelRelatedDiscussionHtmlContextCanvas.Controls.Add(this.htmlPanelRelatedDiscussionContext);
          this.panelRelatedDiscussionHtmlContextCanvas.Location = new System.Drawing.Point(7, 17);
          this.panelRelatedDiscussionHtmlContextCanvas.Name = "panelRelatedDiscussionHtmlContextCanvas";
-         this.panelRelatedDiscussionHtmlContextCanvas.Size = new System.Drawing.Size(789, 90);
+         this.panelRelatedDiscussionHtmlContextCanvas.Size = new System.Drawing.Size(789, 82);
          this.panelRelatedDiscussionHtmlContextCanvas.TabIndex = 36;
          this.panelRelatedDiscussionHtmlContextCanvas.SizeChanged += new System.EventHandler(this.panelCanvas_SizeChanged);
          // 
@@ -455,13 +455,13 @@ namespace mrHelper.App.Forms
          this.htmlPanelRelatedDiscussionContext.Dock = System.Windows.Forms.DockStyle.Fill;
          this.htmlPanelRelatedDiscussionContext.Location = new System.Drawing.Point(0, 0);
          this.htmlPanelRelatedDiscussionContext.Name = "htmlPanelRelatedDiscussionContext";
-         this.htmlPanelRelatedDiscussionContext.Size = new System.Drawing.Size(787, 88);
+         this.htmlPanelRelatedDiscussionContext.Size = new System.Drawing.Size(787, 80);
          this.htmlPanelRelatedDiscussionContext.TabIndex = 1;
          this.htmlPanelRelatedDiscussionContext.Text = null;
          // 
          // panelRelatedDiscussionNavigation
          // 
-         this.panelRelatedDiscussionNavigation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+         this.panelRelatedDiscussionNavigation.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top) 
             | System.Windows.Forms.AnchorStyles.Right)));
          this.panelRelatedDiscussionNavigation.Controls.Add(this.buttonPrevRelatedDiscussion);
          this.panelRelatedDiscussionNavigation.Controls.Add(this.buttonNextRelatedDiscussion);

@@ -438,7 +438,7 @@ namespace mrHelper.App.Controls
             {
                string longestLine = ctx.Value.GetLongestLine();
                string htmlSnippet = longestLine != null ?
-                  DiffContextFormatter.GetHtml(longestLine, fontSizePt, 0, null) : null;
+                  DiffContextFormatter.GetHtml(longestLine, fontSizePt, null) : null;
 
                double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(control);
                int tableWidth = DiffContextHelpers.EstimateHtmlWidth(htmlSnippet, fontSizePx, minWidth);
@@ -671,7 +671,7 @@ namespace mrHelper.App.Controls
             bool recalcTableWidth = actualHeight == 0 || expectedHeight < actualHeight;
             string longestLine = context.Value.GetLongestLine();
             string htmlSnippet = longestLine != null ?
-               DiffContextFormatter.GetHtml(longestLine, fontSizePt, 0, null) : null;
+               DiffContextFormatter.GetHtml(longestLine, fontSizePt, null) : null;
 
             int? tableWidth = recalcTableWidth ?
                DiffContextHelpers.EstimateHtmlWidth(htmlSnippet, fontSizePx, actualWidth) : new int?();
@@ -738,7 +738,7 @@ namespace mrHelper.App.Controls
          string errorMessage = "Cannot render HTML context.";
          try
          {
-            return DiffContextFormatter.GetHtml(context, fontSizePt, 0, tableWidth);
+            return DiffContextFormatter.GetHtml(context, fontSizePt, tableWidth);
          }
          catch (ArgumentException ex)
          {
