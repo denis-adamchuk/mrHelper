@@ -26,7 +26,7 @@ namespace mrHelper.GitLabClient
 
       public bool IsPinned(string text) => containsKeyword(createPinnedKeyword(text));
 
-      public IEnumerable<string> GetPinned() => getPinned();
+      public IEnumerable<string> GetPinned() => getPinned(includePrefix: false);
 
       public KeywordCollection CloneWithToggledPinned(string text)
       {
@@ -82,7 +82,9 @@ namespace mrHelper.GitLabClient
             return false;
          }
 
-         string[] notExcluded = _data.Except(getExcluded(includePrefix: true)).ToArray();
+         IEnumerable<string> excluded = getExcluded(includePrefix: true)
+                                  .Concat(getPinned(includePrefix: true));
+         string[] notExcluded = _data.Except(excluded).ToArray();
          if (!notExcluded.Any() || (notExcluded.Length == 1 && notExcluded[0] == String.Empty))
          {
             return true;
@@ -125,16 +127,16 @@ namespace mrHelper.GitLabClient
 
       private KeywordCollection(IEnumerable<string> data) => _data = data.ToArray();
 
-      private IEnumerable<string> getExcluded(bool includePrefix)
-      {
-         IEnumerable<string> keywords = getKeywordsWithPrefix(Constants.ExcludeLabelPrefix);
-         return includePrefix ? keywords : trimPrefix(keywords, Constants.ExcludeLabelPrefix);
-      }
+      private IEnumerable<string> getExcluded(bool includePrefix) =>
+         getSpecific(includePrefix, Constants.ExcludeLabelPrefix);
 
-      private IEnumerable<string> getPinned()
+      private IEnumerable<string> getPinned(bool includePrefix) =>
+         getSpecific(includePrefix, Constants.PinLabelPrefix);
+
+      private IEnumerable<string> getSpecific(bool includePrefix, string prefix)
       {
-         IEnumerable<string> keywords = getKeywordsWithPrefix(Constants.PinLabelPrefix);
-         return trimPrefix(keywords, Constants.ExcludeLabelPrefix);
+         IEnumerable<string> keywords = getKeywordsWithPrefix(prefix);
+         return includePrefix ? keywords : trimPrefix(keywords, prefix);
       }
 
       private bool containsKeyword(string keyword) => _data.Any(kw => String.Compare(kw, keyword) == 0);
@@ -144,6 +146,7 @@ namespace mrHelper.GitLabClient
 
       private static IEnumerable<string> trimPrefix(IEnumerable<string> keywords, string prefix) =>
          keywords
+            .Where(keyword => keyword.StartsWith(prefix))
             .Select(keyword => keyword.Substring(prefix.Length))
             .Where(keyword => !String.IsNullOrWhiteSpace(keyword));
 
