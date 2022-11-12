@@ -144,6 +144,24 @@ namespace mrHelper.App.Controls
          return getNoteContents().Any(noteControl => getNoteFromControl(noteControl).Id == noteId);
       }
 
+      internal bool HasTextControl(ITextControl textControl)
+      {
+         if (_textboxFilename == textControl)
+         {
+            return true;
+         }
+
+         IEnumerable<NoteContainer> noteContainers = getNoteContainers();
+         foreach (NoteContainer noteContainer in noteContainers)
+         {
+            if (noteContainer.NoteContent == textControl)
+            {
+               return true;
+            }
+         }
+         return false;
+      }
+
       internal bool SelectNote(int noteId, int? prevNoteId)
       {
          foreach (Control noteControl in getNoteContents())

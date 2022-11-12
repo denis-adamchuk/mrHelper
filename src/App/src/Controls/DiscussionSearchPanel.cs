@@ -53,7 +53,6 @@ namespace mrHelper.App.Controls
       private void textBoxSearch_TextChanged(object sender, EventArgs e)
       {
          enableButtons();
-         resetSearch();
       }
 
       private void textBoxSearch_KeyDown(object sender, KeyEventArgs e)
@@ -106,9 +105,10 @@ namespace mrHelper.App.Controls
       {
          labelFoundCount.Visible = count.HasValue;
          labelFoundCount.Text = count.HasValue ? String.Format(
-            "Found {0} results. {1}", count.Value,
-            count.Value > 0
-            ? "Use F3/Shift-F3 to navigate between search results." : String.Empty): String.Empty;
+            "Found {0} result{2}. {1}", count.Value,
+            count.Value > 1
+            ? "Use F3/Shift-F3 to navigate between search results." : String.Empty,
+            count.Value == 1 ? "" : "s"): String.Empty;
       }
 
       private void enableButtons()
@@ -131,7 +131,7 @@ namespace mrHelper.App.Controls
 
       private void startSearch(SearchQuery query, bool highlight)
       {
-         resetSearch();
+         resetSearch(notifyHost: false /* optimization */);
 
          _textSearch = new TextSearch(_host.Controls, query);
          TextSearchResult? result = _textSearch.FindFirst(out int count);
@@ -180,13 +180,19 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void resetSearch()
+      private void resetSearch(bool notifyHost = true)
       {
-         _textSearch = null;
-         displayFoundCount(null);
-         _textSearchResult?.Control.ClearHighlight();
-         _textSearchResult = null;
-         _host.OnSearchResults(null, false);
+         if (_textSearch != null)
+         {
+            _textSearch = null;
+            displayFoundCount(null);
+            _textSearchResult?.Control.ClearHighlight();
+            _textSearchResult = null;
+            if (notifyHost)
+            {
+               _host.OnSearchResults(null, false);
+            }
+         }
       }
 
       private TextSearch _textSearch;

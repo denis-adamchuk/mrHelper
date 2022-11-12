@@ -88,29 +88,48 @@ namespace mrHelper.App.Controls
 
       public void OnSearchResults(IEnumerable<TextSearchResult> results, bool showFoundOnly)
       {
-         if (!showFoundOnly)
+         IEnumerable<DiscussionBox> oldHiddenBoxes = _boxesHiddenBySearch;
+         IEnumerable<DiscussionBox> newHiddenBoxes = null;
+
+         bool checkIfRepositionNeeded()
          {
-            _foundBoxes = null;
+            if (oldHiddenBoxes != null && newHiddenBoxes == null)
+            {
+               return true;
+            }
+            else if (oldHiddenBoxes == null && newHiddenBoxes != null)
+            {
+               return true;
+            }
+            else if (oldHiddenBoxes != null && newHiddenBoxes != null)
+            {
+               IEnumerable<string> oldIds = oldHiddenBoxes.Select(box => box.Discussion.Id);
+               IEnumerable<string> newIds = newHiddenBoxes.Select(box => box.Discussion.Id);
+               return !oldIds.SequenceEqual(newIds);
+            }
+            return false;
          }
-         else
+
+         if (showFoundOnly)
          {
-            IEnumerable<DiscussionNote> notes = results
+            IEnumerable<ITextControl> foundControls = results
                .Select(result => result.Control)
-               .Distinct()
-               .Where(control => control is SearchableHtmlPanel)
-               .Cast<SearchableHtmlPanel>()
-               .Select(control => (DiscussionNote)(control.Tag))
-               .OrderBy(note => note.Id);
+               .Distinct();
 
-            IEnumerable<DiscussionBox> boxes = getAllBoxes()
-               .Where(box => box.Discussion.Notes.Any(note => notes.Any(foundNote => foundNote.Id == note.Id)));
+            IEnumerable<DiscussionBox> foundBoxes = getBoxesForSearch()
+               .Where(box => foundControls.Any(foundControl => box.HasTextControl(foundControl)));
 
-            _foundBoxes = boxes;
+            newHiddenBoxes = getBoxesForSearch().Except(foundBoxes).ToArray();
          }
 
-         SuspendLayout(); // Avoid repositioning child controls on each box visibility change
-         updateVisibilityOfBoxes();
-         ResumeLayout(true); // Place controls at their places
+         _boxesHiddenBySearch = newHiddenBoxes;
+
+         if (checkIfRepositionNeeded())
+         {
+            SuspendLayout(); // Avoid repositioning child controls on each box visibility change
+            updateVisibilityOfBoxes();
+            ResumeLayout(true); // Place controls at their places
+         }
       }
 
       public void OnHighlighted(Control control)
@@ -211,7 +230,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      ITextControl[] ITextControlHost.Controls => getAllVisibleAndSortedTextControls().ToArray();
+      ITextControl[] ITextControlHost.Controls => getControlsSuitableForSearch().ToArray();
 
       ITextControl ITextControlHost.ActiveControl => ((_mostRecentFocusedDiscussionControl ?? ActiveControl) as ITextControl);
 
@@ -584,16 +603,29 @@ namespace mrHelper.App.Controls
 
       private IEnumerable<DiscussionBox> getVisibleAndSortedBoxes()
       {
-         return _discussionSort?.Sort(getVisibleBoxes(), x => x.Discussion.Notes) ?? Array.Empty<DiscussionBox>();
+         return sortBoxes(getVisibleBoxes());
       }
 
-      private IEnumerable<ITextControl> getAllVisibleAndSortedTextControls()
+      private IEnumerable<DiscussionBox> getBoxesForSearch()
       {
-         return getVisibleAndSortedBoxes()
+         IEnumerable<DiscussionBox> boxes = _boxesHiddenBySearch != null
+            ? getVisibleBoxes().Concat(_boxesHiddenBySearch)
+            : getVisibleBoxes();
+         return sortBoxes(boxes);
+      }
+
+      private IEnumerable<ITextControl> getControlsSuitableForSearch()
+      {
+         return getBoxesForSearch()
             .SelectMany(box => box.Controls.Cast<Control>())
             .Where(control => control is ITextControl)
             .Cast<ITextControl>()
             .ToArray(); // force immediate execution
+      }
+
+      private IEnumerable<DiscussionBox> sortBoxes(IEnumerable<DiscussionBox> boxes)
+      {
+         return _discussionSort?.Sort(boxes, x => x.Discussion.Notes) ?? Array.Empty<DiscussionBox>();
       }
 
       private void onDiscussionBoxContentChanging(DiscussionBox sender)
@@ -621,35 +653,24 @@ namespace mrHelper.App.Controls
 
       private void updateVisibilityOfBoxes()
       {
-         foreach (DiscussionBox box in getAllBoxes())
+         bool isBoxAmongSearchResults(DiscussionBox box) =>
+            _boxesHiddenBySearch == null || !_boxesHiddenBySearch.Contains(box);
+
+         bool isAllowedToDisplay(DiscussionBox box) =>
+            _displayFilter.DoesMatchFilter(box.Discussion) && isBoxAmongSearchResults(box);
+
+         foreach (DiscussionBox box in getAllBoxes().Where(b => b?.Discussion != null))
          {
-            updateVisibilityOfBox(box);
+            // Note that the following does not change Visible property value until Form gets Visible itself
+            box.Visible = isAllowedToDisplay(box);
          }
 
          // Check if this box will be visible or not. The same condition as in updateVisibilityOfBoxes().
          // Cannot check Visible property because it might be temporarily unset to avoid flickering.
          _visibleBoxes = getAllBoxes()
-            .Where(box => _displayFilter.DoesMatchFilter(box.Discussion))
-            .Where(box => isBoxAmongSearchResults(box))
+            .Where(box => isAllowedToDisplay(box))
             .ToArray(); // force immediate execution
          ContentMatchesFilter?.Invoke();
-      }
-
-      private void updateVisibilityOfBox(DiscussionBox box)
-      {
-         if (box?.Discussion == null)
-         {
-            return;
-         }
-
-         bool isAllowedToDisplay = _displayFilter.DoesMatchFilter(box.Discussion) && isBoxAmongSearchResults(box);
-         // Note that the following does not change Visible property value until Form gets Visible itself
-         box.Visible = isAllowedToDisplay;
-      }
-
-      private bool isBoxAmongSearchResults(DiscussionBox box)
-      {
-         return _foundBoxes == null || _foundBoxes.Contains(box);
       }
 
       private void onRedrawTimer(object sender, EventArgs e)
@@ -793,7 +814,7 @@ namespace mrHelper.App.Controls
 
       private RoundedPathCache _pathCache;
       private HtmlPanelEx _currentSelectedNote;
-      private IEnumerable<DiscussionBox> _foundBoxes;
+      private IEnumerable<DiscussionBox> _boxesHiddenBySearch;
    }
 }
 
