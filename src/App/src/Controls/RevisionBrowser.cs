@@ -182,7 +182,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void onTreeViewDrawNode(object sender, DrawEventArgs e)
+      private void onTreeViewDrawNode(object sender, DrawTextEventArgs e)
       {
          e.BackgroundBrush = null;
          if (e.Node.Tag is RevisionBrowserItem leafNode && leafNode.IsReviewed)
