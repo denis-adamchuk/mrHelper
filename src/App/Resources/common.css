@@ -14,12 +14,6 @@ table {
    border-spacing: 0;
 }
 
-table .no-border {
-   border: none;
-   border-collapse: initial;
-   border-spacing: initial;
-}
-
 table thead th {
    background-color: #E4E7E6;
    border: solid 1px #DDEEEE;
@@ -36,10 +30,6 @@ table tbody td {
    padding: 5px;
    text-shadow: 1px 1px 1px #fff;
 }
-
-table tbody td .no-border {
-   background-color: initial;
-   border: none;
 }
 
 p {
@@ -66,5 +56,6 @@ ul, ol {
 }
 
 .no-bg {
-  background-color: initial;
+   background-color: initial;
 }
+

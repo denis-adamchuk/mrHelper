@@ -668,7 +668,7 @@ namespace mrHelper.App.Controls
          DiffContext? context = getContextSafe(_panelContextMaker, position, 0, _diffContextDepth);
 
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(diffContextControl);
-         double expectedHeight = fontSizePx * (_diffContextDepth.Size + 1) + (_diffContextDepth.Size + 1) * 2;
+         double expectedHeight = fontSizePx * (_diffContextDepth.Size + 1) + (_diffContextDepth.Size + 1) * scale(2);
          int actualHeight = diffContextControl.Height;
          int actualWidth = preferredWidth ?? diffContextControl.Width;
          if (actualWidth == 0)
@@ -1063,10 +1063,10 @@ namespace mrHelper.App.Controls
 
          void updateStylesheet(HtmlPanel htmlPanel)
          {
+            string css = ResourceHelper.SetControlFontSizeToCommonCss(htmlPanel);
             htmlPanel.BaseStylesheet = String.Format(
-               "{0} body div {{ font-size: {1}pt; padding-left: {2}px; padding-right: {3}px; }}",
-               Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPoints(htmlPanel),
-               NoteHtmlPaddingLeft, NoteHtmlPaddingRight);
+               "{0} body div {{ padding-left: {1}px; padding-right: {2}px; }}",
+               css, NoteHtmlPaddingLeft, NoteHtmlPaddingRight);
          }
 
          if (!isServiceDiscussionNote(note))
@@ -1337,9 +1337,7 @@ namespace mrHelper.App.Controls
             note.Author.Name, TimeUtils.DateTimeToString(note.Created_At));
          body.AppendFormat("<br><br>Use context menu to view note as <b>plain text</b>.");
 
-         string css = String.Format("{0} body div {{ font-size: {1}pt; }}",
-            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPoints(noteControl));
-
+         string css = ResourceHelper.SetControlFontSizeToCommonCss(noteControl);
          return String.Format(
             @"<html>
                <head>
@@ -1683,7 +1681,7 @@ namespace mrHelper.App.Controls
                noteLinkPos.X += getNoteWidth(width) - noteContainer.NoteLink.Width;
                noteContainer.NoteLink.Location = noteLinkPos;
             }
-            controlPos.Offset(0, noteContainer.NoteInfo.Height + 2);
+            controlPos.Offset(0, noteContainer.NoteInfo.Height + scale(2));
 
             {
                Point noteContentPos = controlPos;
@@ -2175,7 +2173,7 @@ namespace mrHelper.App.Controls
       private int ServiceNoteExtraWidth => scale(4);
       private int ServiceNoteExtraHeight => scale(4);
       private int NormalNoteExtraHeight => scale(2);
-      private int DiffContextExtraHeight => scale(0);
+      private int DiffContextExtraHeight => scale(0); // :)
       private int NoteHtmlPaddingLeft => scale(4);
       private int NoteHtmlPaddingRight => scale(20);
 

@@ -483,7 +483,7 @@ namespace mrHelper.App.Forms
       {
          if (e.Index >= 0)
          {
-            e.ItemHeight = listBox.Font.Height + 2;
+            e.ItemHeight = listBox.Font.Height + scale(2);
          }
       }
 
@@ -544,6 +544,8 @@ namespace mrHelper.App.Forms
 
          internal Color Color { get; }
       }
+
+      private int scale(int px) => (int)WinFormsHelpers.ScalePixelsToNewDpi(96, DeviceDpi, px);
 
       private readonly ColorScheme _colorScheme;
    }

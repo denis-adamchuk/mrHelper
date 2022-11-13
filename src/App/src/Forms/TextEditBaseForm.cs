@@ -49,12 +49,10 @@ namespace mrHelper.App.Forms
       {
          if (tabControlMode.SelectedTab == tabPagePreview)
          {
-            htmlPanelPreview.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}pt; }}",
-               Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPoints(htmlPanelPreview));
-
             Markdig.MarkdownPipeline pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
             string body = MarkDownUtils.ConvertToHtml(textBox.Text, _uploadsPrefix, pipeline, htmlPanelPreview);
             htmlPanelPreview.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
+            htmlPanelPreview.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(htmlPanelPreview);
          }
       }
 
@@ -125,7 +123,7 @@ namespace mrHelper.App.Forms
             // 4. Stretch out the form
             if (extraHeight > 0)
             {
-               extraHeight += 10; // some extra space for better look
+               extraHeight += ExtraHeight; // some extra space for better look
                this.Height += extraHeight;
             }
          }
@@ -145,6 +143,10 @@ namespace mrHelper.App.Forms
          bool areUnescapedCharacters = StringUtils.DoesContainUnescapedSpecialCharacters(textBox.Text);
          labelNoteAboutInvisibleCharacters.Visible = areUnescapedCharacters;
       }
+
+      private int scale(int px) => (int)WinFormsHelpers.ScalePixelsToNewDpi(96, DeviceDpi, px);
+
+      private int ExtraHeight => scale(10);
 
       private static readonly int MaximumTextLengthTocancelWithoutConfirmation = 5;
       private readonly string _uploadsPrefix;

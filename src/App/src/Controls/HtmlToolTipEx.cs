@@ -1,4 +1,5 @@
-﻿using System;
+﻿using mrHelper.CommonControls.Tools;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
@@ -81,16 +82,18 @@ namespace mrHelper.App.Controls
          var mousePos = Control.MousePosition;
          var screenBounds = Screen.FromControl(associatedControl).WorkingArea;
 
+         int scale(int px) => this.scale(px, associatedControl.DeviceDpi);
+
          // adjust if tooltip is outside form bounds
          if (mousePos.X + size.Width > screenBounds.Right)
          {
-            mousePos.X = Math.Max(screenBounds.Right - size.Width - 5, screenBounds.Left + 3);
+            mousePos.X = Math.Max(screenBounds.Right - size.Width - scale(5), screenBounds.Left + scale(3));
          }
 
-         const int yOffset = 20;
+         int yOffset = scale(20);
          if (mousePos.Y + size.Height + yOffset > screenBounds.Bottom)
          {
-            mousePos.Y = Math.Max(screenBounds.Bottom - size.Height - yOffset - 3, screenBounds.Top + 2);
+            mousePos.Y = Math.Max(screenBounds.Bottom - size.Height - yOffset - scale(3), screenBounds.Top + scale(2));
          }
 
          // move the tooltip window to new location
@@ -101,6 +104,8 @@ namespace mrHelper.App.Controls
       {
          return _userText.TryGetValue(control, out string value) ? value : String.Empty;
       }
+
+      private int scale(int px, int dpi) => (int)WinFormsHelpers.ScalePixelsToNewDpi(96, dpi, px);
 
       private readonly static string DefaultToolTipText = "HtmlToolTipEx";
       private readonly Dictionary<Control, string> _userText = new Dictionary<Control, string>();

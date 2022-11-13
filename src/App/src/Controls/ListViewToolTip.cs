@@ -151,8 +151,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         // shift tooltip position to the right of the cursor 16 pixels
-         Point location = new Point(_lastMouseLocation.X + 16, _lastMouseLocation.Y);
+         Point location = new Point(_lastMouseLocation.X + TooltipHorzOffsetFromMousePosition, _lastMouseLocation.Y);
          string text = needShowToolTip(_lastHistTestInfo.SubItem) ? _getToolTipText(_lastHistTestInfo.SubItem) : null;
          Show(text, _listView, location);
          _toolTipShown = true;
@@ -196,6 +195,10 @@ namespace mrHelper.App.Controls
       private static bool isAnyCellHit(ListViewHitTestInfo hit) => hit.Item != null && hit.SubItem != null;
       private bool isTooltipShown() => _toolTipShown;
       private bool isTooltipScheduled() => _toolTipScheduled;
+
+      private int scale(int px) => (int)WinFormsHelpers.ScalePixelsToNewDpi(96, _listView.DeviceDpi, px);
+
+      private int TooltipHorzOffsetFromMousePosition => scale(16);
 
       private bool _toolTipShown;
       private bool _toolTipScheduled;

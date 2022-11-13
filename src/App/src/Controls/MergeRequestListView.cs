@@ -702,11 +702,14 @@ namespace mrHelper.App.Controls
 
          using (Brush brush = new SolidBrush(Color.DarkGray))
          {
+            // Fill rectangle with dark color
             e.Graphics.FillRectangle(brush, e.Bounds);
          }
          using (Brush brush = new SolidBrush(Color.Gray))
          {
-            Rectangle rect = new Rectangle(e.Bounds.X, e.Bounds.Y, e.Bounds.Width - 1, e.Bounds.Height);
+            // Fill rectangle with lighter color but leave 1px for a "border".
+            // 1px is enough no matter which DPI is used.
+            Rectangle rect = new Rectangle(e.Bounds.X, e.Bounds.Y, e.Bounds.Width - 1 /* px */, e.Bounds.Height);
             e.Graphics.FillRectangle(SystemBrushes.ButtonFace, rect);
          }
 
@@ -1757,7 +1760,7 @@ namespace mrHelper.App.Controls
          Debug.Assert(columnTypeOpt.HasValue);
          ColumnType columnType = columnTypeOpt.Value;
 
-         const int MaxAllowedColumnWidth = 1000;
+         int MaxAllowedColumnWidth = scale(1000);
 
          using (Graphics g = CreateGraphics())
          {

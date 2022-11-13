@@ -371,6 +371,7 @@
     <Compile Include="src\Helpers\Interprocess\ReportedDiscussionNote.cs" />
     <Compile Include="src\Helpers\PeriodicUpdateChecker.cs" />
     <Compile Include="src\Helpers\PersistentStateHelpers.cs" />
+    <Compile Include="src\Helpers\ResourceHelper.cs" />
     <Compile Include="src\Helpers\Search\SearchHelper.cs" />
     <Compile Include="src\Helpers\Search\SearchQuery.cs" />
     <Compile Include="src\Helpers\Search\TextSearchResult.cs" />

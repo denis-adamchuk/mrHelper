@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using GitLabSharp.Entities;
+using mrHelper.App.Helpers;
 using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 using TheArtOfDev.HtmlRenderer.WinForms;
@@ -175,9 +175,7 @@ namespace mrHelper.App.Controls
 
       static private void setFontSizeInHtmlPanel(HtmlPanel htmlPanel)
       {
-         string cssEx = String.Format("body div {{ font-size: {0}pt; }}",
-            CommonControls.Tools.WinFormsHelpers.GetFontSizeInPoints(htmlPanel));
-         htmlPanel.BaseStylesheet = String.Format("{0}{1}", Properties.Resources.Common_CSS, cssEx);
+         htmlPanel.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(htmlPanel);
       }
 
       private static readonly int RedrawTimerInterval = 1000 * 30; // 0.5 minute

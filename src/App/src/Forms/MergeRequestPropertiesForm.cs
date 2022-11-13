@@ -34,9 +34,8 @@ namespace mrHelper.App.Forms
          _isAllowedToChangeSource = isAllowedToChangeSource;
          _avatarImageCache = avatarImageCache;
 
-         string css = String.Format("{0}", mrHelper.App.Properties.Resources.Common_CSS);
-         htmlPanelTitle.BaseStylesheet = css;
-         htmlPanelDescription.BaseStylesheet = css;
+         htmlPanelTitle.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(htmlPanelTitle);
+         htmlPanelDescription.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(htmlPanelDescription);
 
          labelSpecialNotePrefix.Text = Program.ServiceManager.GetSpecialNotePrefix();
 

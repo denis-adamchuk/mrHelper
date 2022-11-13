@@ -568,12 +568,10 @@ namespace mrHelper.App.Forms
 
       private void updatePreview(HtmlPanel previewPanel, string text)
       {
-         previewPanel.BaseStylesheet = String.Format("{0} body div {{ font-size: {1}pt; }}",
-            Properties.Resources.Common_CSS, WinFormsHelpers.GetFontSizeInPoints(previewPanel));
-
          var pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
          string body = MarkDownUtils.ConvertToHtml(text, String.Empty, pipeline, previewPanel);
          previewPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
+         previewPanel.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(previewPanel);
       }
 
       private void showDiscussionContext(DiffPosition position, HtmlPanel htmlPanel)
@@ -583,10 +581,7 @@ namespace mrHelper.App.Forms
             htmlPanel.Text = "This discussion is not associated with code";
             return;
          }
-
-         string html = getContextHtmlText(position, htmlPanel, out string stylesheet);
-         htmlPanel.BaseStylesheet = stylesheet;
-         htmlPanel.Text = html;
+         htmlPanel.Text = getContextHtmlText(position, htmlPanel);
       }
 
       private void showFileName(DiffPosition position)
@@ -603,9 +598,8 @@ namespace mrHelper.App.Forms
                            + "  Right: " + (rightSideFileName == String.Empty ? "N/A" : rightSideFileName);
       }
 
-      private string getContextHtmlText(DiffPosition position, HtmlPanel htmlPanel, out string stylesheet)
+      private string getContextHtmlText(DiffPosition position, HtmlPanel htmlPanel)
       {
-         stylesheet = String.Empty;
          DiffContext context = isCurrentNoteNew() ?
             _getNewDiscussionDiffContext(position) : _getDiffContext(position);
 

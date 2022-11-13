@@ -33,7 +33,8 @@ namespace mrHelper.CommonControls.Tools
       public static void SetListViewRowHeight(ListView listView, int maxLineCount)
       {
          // It is expected to use font size in pixels here
-         int height = listView.Font.Height * maxLineCount + 2;
+         int extraPixels = (int)WinFormsHelpers.ScalePixelsToNewDpi(96, listView.DeviceDpi, 2);
+         int height = listView.Font.Height * maxLineCount + extraPixels;
 
          if (listView.SmallImageList != null
           && listView.SmallImageList.ImageSize.Height == height)
