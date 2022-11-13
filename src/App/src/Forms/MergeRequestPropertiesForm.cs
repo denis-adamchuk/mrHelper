@@ -212,7 +212,7 @@ namespace mrHelper.App.Forms
 
       async private Task<bool> verifyTargetBranch()
       {
-         if (String.IsNullOrEmpty(getTargetBranchName()))
+         if (!isValidBranchName(getTargetBranchName()))
          {
             return false;
          }
@@ -348,18 +348,18 @@ namespace mrHelper.App.Forms
          fillProjectListAndSelect(new string[] { project }, Array.Empty<string>(), null);
       }
 
-      protected void fillSourceBranchListAndSelect(IEnumerable<Branch> branches, string defaultSourceBrachName)
+      protected void fillSourceBranchListAndSelect(IEnumerable<Branch> branches)
       {
          comboBoxSourceBranch.Items.AddRange(branches.ToArray());
-         WinFormsHelpers.SelectComboBoxItem(comboBoxSourceBranch, String.IsNullOrWhiteSpace(defaultSourceBrachName)
-            ? null : new Func<object, bool>(o => (o as Branch).Name == defaultSourceBrachName));
+         WinFormsHelpers.SelectComboBoxItem(comboBoxSourceBranch, null);
       }
 
-      protected void fillTargetBranchListAndSelect(IEnumerable<string> branchNames, string defaultTargetBranchName)
+      protected void fillTargetBranchListAndSelect(IEnumerable<string> branchNames)
       {
+         branchNames = branchNames.Count() > 1 ?
+            StringUtils.InsertString(branchNames, 0, UndefinedBranchName) : branchNames;
          comboBoxTargetBranch.Items.AddRange(branchNames.ToArray());
-         WinFormsHelpers.SelectComboBoxItem(comboBoxTargetBranch, String.IsNullOrWhiteSpace(defaultTargetBranchName)
-            ? null : new Func<object, bool>(o => (o as string) == defaultTargetBranchName));
+         WinFormsHelpers.SelectComboBoxItem(comboBoxTargetBranch, null);
       }
 
       protected abstract void applyInitialState();
@@ -376,7 +376,7 @@ namespace mrHelper.App.Forms
          bool isSourceBranchSelected = !String.IsNullOrEmpty(getSourceBranchName());
          comboBoxTargetBranch.Enabled = isSourceBranchSelected;
 
-         bool isTargetBranchSelected = !String.IsNullOrEmpty(getTargetBranchName());
+         bool isTargetBranchSelected = isValidBranchName(getTargetBranchName());
          bool allDetailsLoaded = isProjectSelected && isSourceBranchSelected && isTargetBranchSelected && !isLoadingCommit();
          buttonEditDescription.Enabled = allDetailsLoaded;
          buttonEditTitle.Enabled = allDetailsLoaded;
@@ -438,8 +438,14 @@ namespace mrHelper.App.Forms
          return trimmed.StartsWith("@") ? trimmed.Substring(1) : trimmed;
       }
 
+      private static bool isValidBranchName(string name)
+      {
+         return !String.IsNullOrWhiteSpace(name) && name != UndefinedBranchName;
+      }
+
       protected static string FavoriteProjectsItemText = "--- Recently used ---";
       protected static string AllProjectsItemText      = "--- All ---";
+      protected static string UndefinedBranchName = "Select branch manually!";
 
       protected readonly User _currentUser;
       protected readonly ProjectAccessor _projectAccessor;

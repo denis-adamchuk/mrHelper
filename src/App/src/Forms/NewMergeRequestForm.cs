@@ -133,7 +133,7 @@ namespace mrHelper.App.Forms
             IEnumerable<Branch> availableBranches = excludeBranchesInUse(getProjectName(), branchList.ToArray());
             if (availableBranches.Any())
             {
-               fillSourceBranchListAndSelect(availableBranches.ToArray(), null);
+               fillSourceBranchListAndSelect(availableBranches.ToArray());
             }
          }
 
@@ -226,7 +226,7 @@ namespace mrHelper.App.Forms
       {
          if (targetBranchNames != null && targetBranchNames.Any())
          {
-            fillTargetBranchListAndSelect(targetBranchNames.ToArray(), null);
+            fillTargetBranchListAndSelect(targetBranchNames.ToArray());
          }
 
          updateControls();
@@ -263,8 +263,8 @@ namespace mrHelper.App.Forms
             }
 
             fillProjectListAndSelect(_initialState.DefaultProject);
-            fillSourceBranchListAndSelect(adjustedArray, null);
-            fillTargetBranchListAndSelect(_initialState.TargetBranchCandidates, null);
+            fillSourceBranchListAndSelect(adjustedArray);
+            fillTargetBranchListAndSelect(_initialState.TargetBranchCandidates);
 
             BeginInvoke(new Action(
                async () =>

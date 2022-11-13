@@ -36,12 +36,12 @@ namespace mrHelper.App.Forms
 
          if (!String.IsNullOrEmpty(_initialMergeRequest.Source_Branch))
          {
-            fillSourceBranchListAndSelect(new Branch[] { new Branch(_initialMergeRequest.Source_Branch, null) }, null);
+            fillSourceBranchListAndSelect(new Branch[] { new Branch(_initialMergeRequest.Source_Branch, null) });
          }
 
          if (!String.IsNullOrEmpty(_initialMergeRequest.Target_Branch))
          {
-            fillTargetBranchListAndSelect(new string[] { _initialMergeRequest.Target_Branch }, null);
+            fillTargetBranchListAndSelect(new string[] { _initialMergeRequest.Target_Branch });
          }
 
          setTitle(String.Empty);

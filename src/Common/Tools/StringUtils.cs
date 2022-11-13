@@ -324,6 +324,13 @@ namespace mrHelper.Common.Tools
          return result;
       }
 
+      public static IEnumerable<string> InsertString(IEnumerable<string> collection, int position, string newString)
+      {
+         List<string> collectionAsList = collection.ToList();
+         collectionAsList.Insert(position, newString);
+         return collectionAsList;
+      }
+
       private static readonly string WorkInProgressPrefix = "WIP: ";
       private static readonly string DraftPrefix = "Draft: ";
    }
