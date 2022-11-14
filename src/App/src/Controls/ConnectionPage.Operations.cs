@@ -137,6 +137,13 @@ namespace mrHelper.App.Controls
          getListView(type).MuteSelectedMergeRequestFor(TimeUtils.GetTimeTillMonday());
       }
 
+      private void muteSelectedMergeRequest()
+      {
+         EDataCacheType type = getCurrentTabDataCacheType();
+         TimeSpan timeSpan = DateTime.Now.AddYears(10) - DateTime.Now; // mute for 10 years
+         getListView(type).MuteSelectedMergeRequestFor(timeSpan);
+      }
+
       private void unMuteSelectedMergeRequest()
       {
          EDataCacheType type = getCurrentTabDataCacheType();

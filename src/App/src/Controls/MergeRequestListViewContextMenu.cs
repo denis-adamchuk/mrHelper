@@ -18,7 +18,7 @@ namespace mrHelper.App.Controls
          IOperationController operationController,
          Action onDiscussions, Action onRefreshList, Action onRefresh, Action onEdit,
          Action onMerge, Action onClose, Action onDiffToBase, Action onDiffDefault,
-         Action onMuteUntilTomorrow, Action onMuteUntilMonday, Action onUnmute,
+         Action onMuteUntilTomorrow, Action onMuteUntilMonday, Action onMuteForever, Action onUnmute,
          Action onExclude, Action onOpenAuthorProfile, Action onPin, Action onDefault)
       {
          _discussionsItem = addItem(onDiscussions, "&Discussions", onDiscussions == onDefault);
@@ -54,9 +54,11 @@ namespace mrHelper.App.Controls
          }
 
          _muteUntilTomorrowItem = addItem(onMuteUntilTomorrow,
-            "Don't &highlight until tomorrow", onMuteUntilTomorrow == onDefault);
+            "Don't highlight until tomorrow", onMuteUntilTomorrow == onDefault);
          _muteUntilMondayItem = addItem(onMuteUntilMonday,
-            "Don't &highlight until Monday", onMuteUntilMonday == onDefault);
+            "Don't highlight until Monday", onMuteUntilMonday == onDefault);
+         _muteForeverItem = addItem(onMuteForever,
+            "Don't highlight", onMuteForever == onDefault);
          _unmuteItem = addItem(onUnmute, "Restore high&light", onUnmute == onDefault);
 
          if (onExclude != null)
@@ -177,6 +179,11 @@ namespace mrHelper.App.Controls
             _mergeItem.Enabled = _operationController.CanMerge() && !_disabledAll;
          }
 
+         if (_muteForeverItem != null)
+         {
+            _muteForeverItem.Enabled = !_disabledAll;
+         }
+
          if (_muteUntilTomorrowItem != null)
          {
             _muteUntilTomorrowItem.Enabled = !_disabledAll;
@@ -214,6 +221,7 @@ namespace mrHelper.App.Controls
       private readonly ToolStripItem _editItem;
       private readonly ToolStripItem _mergeItem;
       private ToolStripItem _defaultItem;
+      private readonly ToolStripItem _muteForeverItem;
       private readonly ToolStripItem _muteUntilTomorrowItem;
       private readonly ToolStripItem _muteUntilMondayItem;
       private readonly ToolStripItem _unmuteItem;
