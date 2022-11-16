@@ -326,7 +326,7 @@ namespace mrHelper.App.Controls
       {
          foreach (string fontSizeChoice in Constants.DiscussionsWindowFontSizeChoices)
          {
-            bool isDefaultFont = fontSizeChoice == Constants.DefaultMainWindowFontSizeChoice;
+            bool isDefaultFont = fontSizeChoice == Program.Settings.MainWindowFontSizeName;
             ToolStripMenuItem item = new ToolStripMenuItem
             {
                Name = "fontSize" + fontSizeChoice,
