@@ -51,8 +51,8 @@ namespace mrHelper.App.Forms
          {
             Markdig.MarkdownPipeline pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
             string body = MarkDownUtils.ConvertToHtml(textBox.Text, _uploadsPrefix, pipeline, htmlPanelPreview);
-            htmlPanelPreview.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
             htmlPanelPreview.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(htmlPanelPreview);
+            htmlPanelPreview.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
          }
       }
 

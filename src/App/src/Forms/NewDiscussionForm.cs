@@ -568,10 +568,10 @@ namespace mrHelper.App.Forms
 
       private void updatePreview(HtmlPanel previewPanel, string text)
       {
-         var pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
+         Markdig.MarkdownPipeline pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
          string body = MarkDownUtils.ConvertToHtml(text, String.Empty, pipeline, previewPanel);
-         previewPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
          previewPanel.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(previewPanel);
+         previewPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
       }
 
       private void showDiscussionContext(DiffPosition position, HtmlPanel htmlPanel)
