@@ -19,7 +19,7 @@ tr.selected {
 }
 
 td.linenumbers {
-   width: 50px;
+   width: 3em;
    color: rgb(175, 175, 175);
    background-color: rgb(250, 250, 250);
    text-align: center;

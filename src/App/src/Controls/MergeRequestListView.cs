@@ -901,7 +901,7 @@ namespace mrHelper.App.Controls
          }
 
          float ellipseHeight = ellipseWidth;
-         float ellipseX = (bounds.Width - ellipseWidth) / 2;
+         float ellipseX = (colWidth - ellipseWidth) / 2;
          float ellipseY = (bounds.Height - ellipseHeight) / 2;
          using (Brush ellipseBrush = new SolidBrush(fillColor))
          {
@@ -942,7 +942,7 @@ namespace mrHelper.App.Controls
          }
 
          float imageHeight = imageWidth;
-         float imageX = (bounds.Width - imageWidth) / 2;
+         float imageX = (colWidth - imageWidth) / 2;
          float imageY = (bounds.Height - imageHeight) / 2;
 
          g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -1742,7 +1742,8 @@ namespace mrHelper.App.Controls
          switch (columnType.Value)
          {
             case ColumnType.Color:
-               return (int)Math.Ceiling(Math.Max(getColorEllipsePreferrableWidth(), getColorImagePreferrableWidth()));
+               return (int)Math.Ceiling(Math.Max(getColorEllipsePreferrableWidth(),
+                  getColorImagePreferrableWidth())) + ColorEllipsePaddingX;
 
             case ColumnType.Avatar:
                {
@@ -2052,6 +2053,7 @@ namespace mrHelper.App.Controls
       private int GroupHeaderHeight => scale(20); // found experimentally
 
       private int AvatarPaddingX => scale(10);
+      private int ColorEllipsePaddingX => scale(10);
 
       private static readonly int UnmuteTimerInterval = 60 * 1000; // 1 minute
       private readonly Timer _unmuteTimer = new Timer
