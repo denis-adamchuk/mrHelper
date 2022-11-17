@@ -1261,11 +1261,13 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private bool areLongCachesReady(DataCache dataCache)
-      {
-         return (dataCache?.ProjectCache?.GetProjects()?.Any() ?? false)
-             && (dataCache?.UserCache?.GetUsers()?.Any() ?? false);
-      }
+      private IEnumerable<Project> getProjects() =>
+         getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects() ?? Array.Empty<Project>();
+
+      private IEnumerable<User> getUsers() =>
+         getDataCache(EDataCacheType.Live)?.UserCache?.GetUsers() ?? Array.Empty<User>();
+
+      private bool areLongCachesReady() => getProjects().Any() && getUsers().Any();
 
       private void onLongCachesReady()
       {

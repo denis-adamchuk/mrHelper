@@ -32,16 +32,15 @@ namespace mrHelper.App.Controls
       private void editSelectedMergeRequest()
       {
          Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
-         DataCache dataCache = getDataCache(EDataCacheType.Live);
+
          FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
          if (!fmk.HasValue || !checkIfMergeRequestCanBeEdited())
          {
             return;
          }
 
-         IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
-         bool isUserListReady = fullUserList?.Any() ?? false;
-         if (!isUserListReady)
+         IEnumerable<User> fullUserList = getUsers();
+         if (!fullUserList.Any())
          {
             Debug.Assert(false);
             Trace.TraceError("[ConnectionPage] User List is not ready at the moment of Edit click");
@@ -76,8 +75,8 @@ namespace mrHelper.App.Controls
             }
          }
 
-         IEnumerable<Project> fullProjectList = getDataCache(EDataCacheType.Live)?.ProjectCache?.GetProjects();
-         if (fullProjectList == null || !fullProjectList.Any())
+         IEnumerable<Project> fullProjectList = getProjects();
+         if (!fullProjectList.Any())
          {
             Debug.Assert(false); // full project list is needed to check project properties inside the dialog code
             Trace.TraceError("[ConnectionPage] Project List is not ready at the moment of Accept click");
@@ -358,7 +357,7 @@ namespace mrHelper.App.Controls
 
             EDataCacheType mode = getCurrentTabDataCacheType();
             DataCache dataCache = getDataCache(mode);
-            IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
+            IEnumerable<User> fullUserList = getUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
                mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList, _avatarImageCache[mode]);
             bool res = await discussionHelper.AddCommentAsync(WinFormsHelpers.FindMainForm());
@@ -375,7 +374,7 @@ namespace mrHelper.App.Controls
 
             EDataCacheType mode = getCurrentTabDataCacheType();
             DataCache dataCache = getDataCache(mode);
-            IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
+            IEnumerable<User> fullUserList = getUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
                mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList, _avatarImageCache[mode]);
             bool res = await discussionHelper.AddThreadAsync(WinFormsHelpers.FindMainForm());
@@ -645,7 +644,7 @@ namespace mrHelper.App.Controls
             }, this);
 
             AvatarImageCache avatarImageCache = _avatarImageCache[getCurrentTabDataCacheType()];
-            IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
+            IEnumerable<User> fullUserList = getUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
                mrk, title, currentUser, _shortcuts, fullUserList, avatarImageCache);
 

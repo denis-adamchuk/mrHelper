@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -39,14 +40,13 @@ namespace mrHelper.App.Controls
             parsedNewMergeRequestUrl.TargetBranchCandidates, defaultProperties.AssigneeUsername,
             defaultProperties.IsSquashNeeded, defaultProperties.IsBranchDeletionNeeded,
             defaultProperties.FavoriteProjects);
-         DataCache dataCache = getDataCache(EDataCacheType.Live);
-         var fullProjectList = dataCache?.ProjectCache?.GetProjects() ?? Array.Empty<Project>();
-         var fullUserList = dataCache?.UserCache?.GetUsers() ?? Array.Empty<User>();
+         IEnumerable<User> fullUserList = getUsers();
          if (!fullUserList.Any())
          {
             Trace.TraceInformation("[ConnectionPage] User list is not ready at the moment of creating a MR from URL");
          }
 
+         IEnumerable<Project> fullProjectList = getProjects();
          createNewMergeRequest(HostName, CurrentUser, initialProperties, fullProjectList, fullUserList, false);
       }
 

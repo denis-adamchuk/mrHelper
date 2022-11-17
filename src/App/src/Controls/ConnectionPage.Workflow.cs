@@ -243,7 +243,7 @@ namespace mrHelper.App.Controls
 
          Program.FeedbackReporter.SetUserEMail(user.EMail);
          startRedrawTimer();
-         startEventPendingTimer(() => areLongCachesReady(dataCache), ProjectAndUserCacheCheckTimerInterval,
+         startEventPendingTimer(() => areLongCachesReady(), ProjectAndUserCacheCheckTimerInterval,
             () => onLongCachesReady());
 
          IEnumerable<MergeRequestKey> closedReviewed = gatherClosedReviewedMergeRequests(dataCache, hostname);

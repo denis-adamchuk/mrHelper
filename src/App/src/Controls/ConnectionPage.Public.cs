@@ -61,24 +61,21 @@ namespace mrHelper.App.Controls
 
       internal void CreateNew()
       {
-         DataCache dataCache = getDataCache(EDataCacheType.Live);
          if (!checkIfMergeRequestCanBeCreated())
          {
             return;
          }
 
-         IEnumerable<Project> fullProjectList = dataCache?.ProjectCache?.GetProjects();
-         bool isProjectListReady = fullProjectList?.Any() ?? false;
-         if (!isProjectListReady)
+         IEnumerable<Project> fullProjectList = getProjects();
+         if (!fullProjectList.Any())
          {
             Debug.Assert(false);
             Trace.TraceError("[ConnectionPage] Project List is not ready at the moment of Create New click");
             return;
          }
 
-         IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
-         bool isUserListReady = fullUserList?.Any() ?? false;
-         if (!isUserListReady)
+         IEnumerable<User> fullUserList = getUsers();
+         if (!fullUserList.Any())
          {
             Debug.Assert(false);
             Trace.TraceError("[ConnectionPage] User List is not ready at the moment of Create New click");
@@ -453,7 +450,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         IEnumerable<User> fullUserList = dataCache.UserCache?.GetUsers();
+         IEnumerable<User> fullUserList = getUsers();
          DiffCallHandler handler = new DiffCallHandler(storage.Git, CurrentUser,
             (mrk) => dataCache.DiscussionCache?.RequestUpdate(
                mrk, Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null),
@@ -540,19 +537,19 @@ namespace mrHelper.App.Controls
 
       internal bool CanCreateNew()
       {
-         return areLongCachesReady(getDataCache(EDataCacheType.Live));
+         return areLongCachesReady();
       }
 
       public bool CanEdit()
       {
          MergeRequestKey? mrkOpt = getMergeRequestKey(null);
-         return mrkOpt.HasValue && areLongCachesReady(getDataCache(EDataCacheType.Live));
+         return mrkOpt.HasValue && areLongCachesReady();
       }
 
       public bool CanMerge()
       {
          MergeRequestKey? mrkOpt = getMergeRequestKey(null);
-         return mrkOpt.HasValue && areLongCachesReady(getDataCache(EDataCacheType.Live));
+         return mrkOpt.HasValue && areLongCachesReady();
       }
 
       public bool CanToggleHideStatus()

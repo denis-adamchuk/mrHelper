@@ -63,27 +63,13 @@ namespace mrHelper.App.Controls
 
       private void linkLabelNewSearch_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
       {
-         DataCache dataCache = getDataCache(EDataCacheType.Live);
-
-         IEnumerable<Project> fullProjectList = dataCache?.ProjectCache?.GetProjects();
-         if (fullProjectList == null)
-         {
-            fullProjectList = Array.Empty<Project>();
-         }
-
-         IEnumerable<string> projectNames = fullProjectList
-            .Select(project => project.Path_With_Namespace);
-         IEnumerable<User> fullUserList = dataCache?.UserCache?.GetUsers();
-         if (fullUserList == null)
-         {
-            fullUserList = Array.Empty<User>();
-         }
-
          if (_prevSearchQuery == null)
          {
             _prevSearchQuery = new EditSearchQueryFormState(getDefaultProjectName());
          }
 
+         IEnumerable<User> fullUserList = getUsers();
+         IEnumerable<string> projectNames = getProjects().Select(project => project.Path_With_Namespace);
          using (EditSearchQueryForm form = new EditSearchQueryForm(
             projectNames, fullUserList, CurrentUser, _prevSearchQuery))
          {
