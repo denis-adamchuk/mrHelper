@@ -54,6 +54,7 @@ namespace mrHelper.App.Controls
       private void acceptSelectedMergeRequest()
       {
          Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live);
+
          FullMergeRequestKey? fmk = getListView(EDataCacheType.Live).GetSelectedMergeRequest();
          if (!fmk.HasValue
           || !checkIfMergeRequestCanBeEdited()

@@ -543,13 +543,13 @@ namespace mrHelper.App.Controls
       public bool CanEdit()
       {
          MergeRequestKey? mrkOpt = getMergeRequestKey(null);
-         return mrkOpt.HasValue && areLongCachesReady();
+         return mrkOpt.HasValue && areLongCachesReady() && getCurrentTabDataCacheType() == EDataCacheType.Live;
       }
 
       public bool CanMerge()
       {
          MergeRequestKey? mrkOpt = getMergeRequestKey(null);
-         return mrkOpt.HasValue && areLongCachesReady();
+         return mrkOpt.HasValue && areLongCachesReady() && getCurrentTabDataCacheType() == EDataCacheType.Live;
       }
 
       public bool CanToggleHideStatus()
