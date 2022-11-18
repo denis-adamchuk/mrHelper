@@ -31,6 +31,7 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
 
          applyFont(Program.Settings.MainWindowFontSizeName);
+         Size = MinimumSize;
          _formDefaultMinimumHeight = MinimumSize.Height;
          _groupBoxCommitMessageDefaultHeight = groupBoxMergeCommitMessage.Height;
 
