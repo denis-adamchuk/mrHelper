@@ -491,7 +491,6 @@ namespace mrHelper.CommonControls.Tools
             Point bottomLeft = new Point(bounds.Left, bounds.Bottom + hScrollHeight);
             Point bottomRight = new Point(bounds.Right, bounds.Bottom + hScrollHeight);
             Point topRight = new Point(bounds.Right, bounds.Top);
-            Point topLeft2 = new Point(topLeft.X, topLeft.Y + radius);
             Point topRight2 = new Point(topRight.X, topRight.Y + radius);
             Point topLeft3 = new Point(topLeft.X + radius, topLeft.Y);
             Point topRight3 = new Point(topRight.X - radius, topRight.Y);
@@ -501,7 +500,8 @@ namespace mrHelper.CommonControls.Tools
             path.AddArc(topRight3.X, topRight3.Y, radius, radius, 270, 90);
             path.AddLine(topRight2, bottomRight);
             path.AddLine(bottomRight, bottomLeft);
-            path.AddLine(bottomLeft, topLeft2);
+            path.CloseFigure();
+
          }
          return path;
       }
