@@ -18,6 +18,7 @@ using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
+using static mrHelper.App.Helpers.DiffContextHelpers;
 
 namespace mrHelper.App.Controls
 {
@@ -49,6 +50,7 @@ namespace mrHelper.App.Controls
          ContextDepth diffContextDepth,
          AvatarImageCache avatarImageCache,
          RoundedPathCache pathCache,
+         EstimateWidthCache estimateWidthCache,
          string webUrl,
          IEnumerable<User> fullUserList,
          Action<string> selectNoteByUrl,
@@ -63,6 +65,7 @@ namespace mrHelper.App.Controls
          _imagePath = StringUtils.GetUploadsPrefix(mergeRequestKey.ProjectKey);
          _avatarImageCache = avatarImageCache;
          _pathCache = pathCache;
+         _estimateWidthCache = estimateWidthCache;
          _webUrl = webUrl;
          _fullUserList = fullUserList;
 
@@ -459,7 +462,7 @@ namespace mrHelper.App.Controls
                   DiffContextFormatter.GetHtml(longestLine, fontSizePt, null) : null;
 
                double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(control);
-               int tableWidth = DiffContextHelpers.EstimateHtmlWidth(htmlSnippet, fontSizePx, minWidth);
+               int tableWidth = EstimateHtmlWidth(htmlSnippet, fontSizePx, minWidth);
                return getFormattedHtml(ctx.Value, fontSizePt, tableWidth);
             }
             return getErrorHtml("Cannot create a diff ctx for popup window");
@@ -691,9 +694,26 @@ namespace mrHelper.App.Controls
             string htmlSnippet = longestLine != null ?
                DiffContextFormatter.GetHtml(longestLine, fontSizePt, null) : null;
 
-            int? tableWidth = recalcTableWidth ?
-               DiffContextHelpers.EstimateHtmlWidth(htmlSnippet, fontSizePx, actualWidth) : new int?();
-            html = getFormattedHtml(context.Value, fontSizePt, tableWidth);
+            int? tableWidthOpt = new int?();
+            if (recalcTableWidth)
+            {
+               EstimateWidthKey key = new EstimateWidthKey()
+               {
+                  ActualWidth = actualWidth,
+                  FontSizePx = fontSizePx,
+                  HtmlSnippet = htmlSnippet
+               };
+               if (!_estimateWidthCache.TryGetValue(key, out int tableWidth))
+               {
+                  tableWidthOpt = EstimateHtmlWidth(htmlSnippet, fontSizePx, actualWidth);
+                  _estimateWidthCache[key] = tableWidthOpt.Value;
+               }
+               else
+               {
+                  tableWidthOpt = tableWidth;
+               }
+            }
+            html = getFormattedHtml(context.Value, fontSizePt, tableWidthOpt);
          }
 
          // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
@@ -2205,6 +2225,7 @@ namespace mrHelper.App.Controls
       private readonly string _imagePath;
       private readonly AvatarImageCache _avatarImageCache;
       private readonly RoundedPathCache _pathCache;
+      private readonly EstimateWidthCache _estimateWidthCache;
       private readonly string _webUrl;
       private readonly IEnumerable<User> _fullUserList;
       private ContextDepth _diffContextDepth;

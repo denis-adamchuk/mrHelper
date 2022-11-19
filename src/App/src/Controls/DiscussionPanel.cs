@@ -440,6 +440,7 @@ namespace mrHelper.App.Controls
                _discussionLayout.DiffContextDepth,
                _avatarImageCache,
                _pathCache,
+               _estimatedWidthCache,
                _webUrl,
                _fullUserList,
                selectNoteByUrl,
@@ -815,6 +816,8 @@ namespace mrHelper.App.Controls
       private RoundedPathCache _pathCache;
       private HtmlPanelEx _currentSelectedNote;
       private IEnumerable<DiscussionBox> _boxesHiddenBySearch;
+
+      DiffContextHelpers.EstimateWidthCache _estimatedWidthCache = new DiffContextHelpers.EstimateWidthCache();
    }
 }
 
