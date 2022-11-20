@@ -540,24 +540,24 @@ namespace mrHelper.App.Controls
          return areLongCachesReady();
       }
 
-      public bool CanEdit()
+      public bool CanEdit() //-V3013
       {
          MergeRequestKey? mrkOpt = getMergeRequestKey(null);
          return mrkOpt.HasValue && areLongCachesReady() && getCurrentTabDataCacheType() == EDataCacheType.Live;
       }
 
-      public bool CanMerge()
+      public bool CanMerge() //-V3013
       {
          MergeRequestKey? mrkOpt = getMergeRequestKey(null);
          return mrkOpt.HasValue && areLongCachesReady() && getCurrentTabDataCacheType() == EDataCacheType.Live;
       }
 
-      public bool CanToggleHideStatus()
+      public bool CanToggleHideStatus() //-V3013
       {
          return getMergeRequestKey(null).HasValue;
       }
 
-      public bool CanTogglePinStatus()
+      public bool CanTogglePinStatus() //-V3013
       {
          return getMergeRequestKey(null).HasValue;
       }

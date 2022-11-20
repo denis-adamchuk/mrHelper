@@ -739,6 +739,11 @@ namespace mrHelper.App.Forms
       private static void removeToolbarButtons(ToolStrip toolbar)
       {
          toolbar.SuspendLayout();
+         toolbar.Items.Cast<ToolStripItem>()
+            .Where(item => item is HostToolbarItem)
+            .Select(item => item as HostToolbarItem)
+            .ToList()
+            .ForEach(item => item.UnsubscribeFromDpiChange());
          toolbar.Items.Cast<ToolStripItem>().ToList().ForEach(item => item.Image?.Dispose());
          toolbar.Items.Cast<ToolStripItem>().ToList().ForEach(item => item.Dispose());
          toolbar.Items.Clear();

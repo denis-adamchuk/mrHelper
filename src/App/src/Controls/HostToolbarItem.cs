@@ -22,9 +22,8 @@ namespace mrHelper.App.Controls
          updateIcon();
       }
 
-      public new void Dispose()
+      public void UnsubscribeFromDpiChange()
       {
-         base.Dispose();
          _deviceDpiHolder.DpiChanged -= _deviceDpiHolder_DpiChanged;
       }
 

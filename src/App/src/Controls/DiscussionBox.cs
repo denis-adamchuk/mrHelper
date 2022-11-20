@@ -1607,7 +1607,7 @@ namespace mrHelper.App.Controls
                   }
                }
 
-               if (_showMoreContextHint != null)
+               if (_showMoreContextHint != null && _showMoreContext != null)
                {
                   _showMoreContextHint.Location = _showMoreContext.Location;
                }
@@ -1659,7 +1659,7 @@ namespace mrHelper.App.Controls
                }
             }
 
-            if (_showMoreContextHint != null)
+            if (_showMoreContextHint != null && _showMoreContext != null)
             {
                _showMoreContextHint.Location = _showMoreContext.Location;
             }

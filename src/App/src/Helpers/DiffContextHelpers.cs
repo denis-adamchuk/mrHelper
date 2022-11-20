@@ -15,7 +15,7 @@ namespace mrHelper.App.Helpers
 
          public bool Equals(EstimateWidthKey other)
          {
-            return FontSizePx == other.FontSizePx &&
+            return FontSizePx == other.FontSizePx && //-V3024
                    HtmlSnippet == other.HtmlSnippet &&
                    ActualWidth == other.ActualWidth;
          }
