@@ -308,27 +308,34 @@ namespace mrHelper.App.Forms
 
       private void onCanToggleHideStatusChanged(ConnectionPage connectionPage)
       {
-         if (connectionPage == getCurrentConnectionPage())
+         if (connectionPage != getCurrentConnectionPage())
          {
-            if (connectionPage != null)
-            {
-               toolStripButtonHideMergeRequest.Enabled = connectionPage.CanToggleHideStatus();
-               if (connectionPage.IsSelectedMergeRequestHidden())
-               {
-                  toolStripButtonHideMergeRequest.Image = Properties.Resources.unhide_100x100;
-                  toolStripButtonHideMergeRequest.ToolTipText = UnhideButtonTooltip;
-               }
-               else
-               {
-                  toolStripButtonHideMergeRequest.Image = Properties.Resources.hide_100x100;
-                  toolStripButtonHideMergeRequest.ToolTipText = HideButtonTooltip;
-               }
-            }
-            else
-            {
-               toolStripButtonHideMergeRequest.Enabled = false;
-            }
+            return;
          }
+
+         if (connectionPage == null)
+         {
+            toolStripButtonHideMergeRequest.Enabled = false;
+            return;
+         }
+
+         toolStripButtonHideMergeRequest.Image = Properties.Resources.hide_100x100;
+         toolStripButtonHideMergeRequest.ToolTipText = HideButtonTooltip;
+
+         if (!connectionPage.CanToggleHideStatus())
+         {
+            toolStripButtonHideMergeRequest.Enabled = false;
+            return;
+         }
+
+         toolStripButtonHideMergeRequest.Enabled = true;
+         if (!connectionPage.IsSelectedMergeRequestHidden())
+         {
+            return;
+         }
+
+         toolStripButtonHideMergeRequest.Image = Properties.Resources.unhide_100x100;
+         toolStripButtonHideMergeRequest.ToolTipText = UnhideButtonTooltip;
       }
 
       private void onCanTogglePinStatusChanged(ConnectionPage connectionPage)

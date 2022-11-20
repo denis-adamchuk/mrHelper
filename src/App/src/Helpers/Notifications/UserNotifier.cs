@@ -74,7 +74,7 @@ namespace mrHelper.App.Helpers
                return new BalloonText
                (
                   title,
-                  String.Format("New merge request \"{0}\" from {1}",
+                  String.Format("Merge request \"{0}\" from {1} added to Live tab",
                                 mergeRequest.Title, mergeRequest.Author.Name)
                );
 

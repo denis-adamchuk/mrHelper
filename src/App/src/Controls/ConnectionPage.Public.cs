@@ -554,7 +554,7 @@ namespace mrHelper.App.Controls
 
       public bool CanToggleHideStatus() //-V3013
       {
-         return getMergeRequestKey(null).HasValue;
+         return getMergeRequestKey(null).HasValue && getCurrentTabDataCacheType() != EDataCacheType.Search;
       }
 
       public bool CanTogglePinStatus() //-V3013
