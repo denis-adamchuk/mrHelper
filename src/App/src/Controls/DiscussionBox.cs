@@ -716,6 +716,8 @@ namespace mrHelper.App.Controls
             html = getFormattedHtml(context.Value, fontSizePt, tableWidthOpt);
          }
 
+         diffContextControl.SuspendLayout();
+
          // We need to zero the control size before SetText call to allow HtmlPanel to compute the size
          if (diffContextControl.Visible)
          {
@@ -723,6 +725,8 @@ namespace mrHelper.App.Controls
             diffContextControl.Height = 0;
          }
          diffContextControl.Text = html;
+
+         diffContextControl.ResumeLayout(!diffContextControl.Visible);
 
          if (diffContextControl.Visible)
          {
