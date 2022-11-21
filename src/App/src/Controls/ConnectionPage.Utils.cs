@@ -213,13 +213,12 @@ namespace mrHelper.App.Controls
             .CloneWithToggledPinned(KeywordCollection.KeywordFromMergeRequestKey(mrk));
          setFilterTextUI(type, newKeywords.ToString());
 
-         bool isPinAllowedInText = type == EDataCacheType.Live;
-         IEnumerable<MergeRequestKey> oldPinned = isPinAllowedInText ? getPinnedMergeRequestKeys() : null;
+         IEnumerable<MergeRequestKey> oldPinned = getPinnedMergeRequestKeys();
 
          writeFilterKeywordsForHost(type, newKeywords.ToString());
          applyFilterChange(type);
 
-         IEnumerable<MergeRequestKey> newPinned = isPinAllowedInText ? getPinnedMergeRequestKeys() : null;
+         IEnumerable<MergeRequestKey> newPinned = getPinnedMergeRequestKeys();
          updatePinnedAndUnpinnedMergeRequests(oldPinned, newPinned);
 
          Trace.TraceInformation("[ConnectionPage] Toggled pin state of MR with IId {0}", mrk.IId);
