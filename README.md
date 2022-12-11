@@ -11,13 +11,13 @@ It is a desktop tool that manages **git** and **GitLab** to support merge reques
 * Search among old MR
 * Show list of recently reviewed/developed MR
 ### Review
-* Beyond Compare 3 support: launching a diff tool and reporting new discussions for selected lines of code with hotkey
+* Beyond Compare 3/4 support: launching a diff tool and reporting new discussions for selected lines of code with hotkey
 * Color display of context diff
 * Navigation between related discussion threads when reporting a new discussion from diff tool
 * Full list of discussions with search and filters
 * Time tracking, including calculation of total time tracked by current user
 ### Customization
-* Custom protocol (to open links "mrhelper://gitlab-server/group/project/merge_requests/237")
+* Custom protocol (to open links "mrhelper://gitlab-server/group/project/-/merge_requests/237")
 * Custom actions (for example to send specific comments) (extensible)
 * Integration with Git Extensions and Source Tree
 ### Other
