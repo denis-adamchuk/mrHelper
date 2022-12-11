@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Windows.Forms;
 using mrHelper.App.Helpers;
 
@@ -13,10 +16,34 @@ namespace mrHelper.App.Controls
          enableButtons();
       }
 
-      internal void Initialize(ITextControlHost host)
+      internal void Initialize(ITextControlHost host,
+         Action<IEnumerable<TextSearchResult>> onSearchResult)
       {
          _host = host;
-         _host.ContentChanged += onHostContentChanged;
+         _onSearchResult = onSearchResult;
+      }
+
+      internal bool NeedShowFoundOnly()
+      {
+         Debug.Assert(checkBoxShowFoundOnly.CheckState != CheckState.Indeterminate);
+         return checkBoxShowFoundOnly.Checked;
+      }
+
+      internal void RestartSearch()
+      {
+         restartSearch(true);
+         resolveIndeterminateState();
+      }
+
+      internal void RefreshSearch()
+      {
+         int? foundCountOld = _resultCounter?.ControlCount;
+         restartSearch(false);
+         int? foundCountNew = _resultCounter?.ControlCount;
+         if (foundCountOld > foundCountNew)
+         {
+            setIndeterminateState();
+         }
       }
 
       internal void ProcessKeyDown(KeyEventArgs e)
@@ -35,6 +62,7 @@ namespace mrHelper.App.Controls
          }
          else if (e.KeyCode == Keys.Escape)
          {
+            resolveIndeterminateState();
             resetSearch();
             e.Handled = true;
          }
@@ -68,14 +96,25 @@ namespace mrHelper.App.Controls
          buttonFindNext.PerformClick();
       }
 
-      private void checkBoxShowFoundOnly_CheckedChanged(object sender, EventArgs e)
+      private void checkBoxShowFoundOnly_Click(object sender, EventArgs e)
       {
-         restartSearch();
-      }
+         switch (checkBoxShowFoundOnly.CheckState)
+         {
+            case CheckState.Unchecked:
+               checkBoxShowFoundOnly.CheckState = CheckState.Checked;
+               break;
 
-      private void onHostContentChanged()
-      {
-         restartSearch();
+            case CheckState.Checked:
+               checkBoxShowFoundOnly.CheckState = CheckState.Unchecked;
+               break;
+
+            default:
+               Debug.Assert(checkBoxShowFoundOnly.CheckState == CheckState.Indeterminate);
+               resolveIndeterminateState();
+               break;
+         }
+
+         restartSearch(true);
       }
 
       private enum SearchDirection
@@ -89,11 +128,13 @@ namespace mrHelper.App.Controls
          SearchQuery query = new SearchQuery(textBoxSearch.Text, checkBoxCaseSensitive.Checked);
          if (query.Text == String.Empty)
          {
+            resolveIndeterminateState();
             resetSearch();
          }
          else if (_textSearch == null || !query.Equals(_textSearch.Query))
          {
-            startSearch(query, true);
+            resolveIndeterminateState();
+            startSearch(query, true, true);
          }
          else
          {
@@ -101,8 +142,22 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void displayFoundCount(int? count)
+      private void setIndeterminateState()
       {
+         checkBoxShowFoundOnly.CheckState = CheckState.Indeterminate;
+      }
+
+      private void resolveIndeterminateState()
+      {
+         if (checkBoxShowFoundOnly.CheckState == CheckState.Indeterminate)
+         {
+            checkBoxShowFoundOnly.CheckState = CheckState.Checked;
+         }
+      }
+
+      private void displayFoundCount()
+      {
+         int? count = _resultCounter?.TotalCount;
          labelFoundCount.Visible = count.HasValue;
          labelFoundCount.Text = count.HasValue ? String.Format(
             "Found {0} result{2}. {1}", count.Value,
@@ -129,27 +184,31 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void startSearch(SearchQuery query, bool highlight)
+      private void startSearch(SearchQuery query, bool needHighlightSearchResult, bool needTriggerCallback)
       {
-         resetSearch(notifyHost: false /* optimization */);
+         resetSearch(needTriggerCallback: false /* optimization */);
 
          _textSearch = new TextSearch(_host.Controls, query);
-         TextSearchResult? result = _textSearch.FindFirst(out int count);
-         displayFoundCount(count);
+         TextSearchResult? result = _textSearch.FindFirst(out int totalCount, out int controlCount);
+         _resultCounter = new ResultCounter(totalCount, controlCount);
+         displayFoundCount();
 
-         if (highlight)
+         if (needHighlightSearchResult)
          {
             highlightSearchResult(result);
          }
 
-         _host.OnSearchResults(_textSearch.FindAll(), checkBoxShowFoundOnly.Checked);
+         if (needTriggerCallback)
+         {
+            _onSearchResult?.Invoke(_textSearch.FindAll());
+         }
       }
 
-      private void restartSearch()
+      private void restartSearch(bool needTriggerCallback)
       {
          if (_textSearch != null)
          {
-            startSearch(_textSearch.Query, false);
+            startSearch(_textSearch.Query, false, needTriggerCallback);
          }
       }
 
@@ -180,17 +239,18 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void resetSearch(bool notifyHost = true)
+      private void resetSearch(bool needTriggerCallback = true)
       {
          if (_textSearch != null)
          {
             _textSearch = null;
-            displayFoundCount(null);
+            _resultCounter = null;
+            displayFoundCount();
             _textSearchResult?.Control.ClearHighlight();
             _textSearchResult = null;
-            if (notifyHost)
+            if (needTriggerCallback)
             {
-               _host.OnSearchResults(null, false);
+               _onSearchResult(null);
             }
          }
       }
@@ -198,6 +258,20 @@ namespace mrHelper.App.Controls
       private TextSearch _textSearch;
       private TextSearchResult? _textSearchResult;
       private ITextControlHost _host;
+      private Action<IEnumerable<TextSearchResult>> _onSearchResult;
+
+      private struct ResultCounter
+      {
+         public ResultCounter(int totalCount, int controlCount)
+         {
+            TotalCount = totalCount;
+            ControlCount = controlCount;
+         }
+
+         public int TotalCount { get; }
+         public int ControlCount { get; }
+      }
+      private ResultCounter? _resultCounter;
    }
 }
 

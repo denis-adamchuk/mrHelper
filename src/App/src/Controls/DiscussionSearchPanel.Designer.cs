@@ -18,11 +18,6 @@
             components.Dispose();
          }
 
-         if (_host != null)
-         {
-            _host.ContentChanged -= onHostContentChanged;
-         }
-
          base.Dispose(disposing);
       }
 
@@ -66,13 +61,15 @@
          // checkBoxShowFoundOnly
          // 
          this.checkBoxShowFoundOnly.AutoSize = true;
+         this.checkBoxShowFoundOnly.AutoCheck = false;
          this.checkBoxShowFoundOnly.Location = new System.Drawing.Point(360, 14);
          this.checkBoxShowFoundOnly.Name = "checkBoxShowFoundOnly";
          this.checkBoxShowFoundOnly.Size = new System.Drawing.Size(105, 17);
          this.checkBoxShowFoundOnly.TabIndex = 5;
          this.checkBoxShowFoundOnly.Text = "Show found only";
+         this.checkBoxShowFoundOnly.ThreeState = true;
          this.checkBoxShowFoundOnly.UseVisualStyleBackColor = true;
-         this.checkBoxShowFoundOnly.CheckedChanged += new System.EventHandler(this.checkBoxShowFoundOnly_CheckedChanged);
+         this.checkBoxShowFoundOnly.Click += new System.EventHandler(this.checkBoxShowFoundOnly_Click);
          // 
          // checkBoxCaseSensitive
          // 

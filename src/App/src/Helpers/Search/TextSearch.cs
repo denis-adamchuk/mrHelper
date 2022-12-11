@@ -1,6 +1,5 @@
-using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
+using System.Collections.Generic;
 using mrHelper.App.Controls;
 
 namespace mrHelper.App.Helpers
@@ -32,11 +31,18 @@ namespace mrHelper.App.Helpers
          return results;
       }
 
-      internal TextSearchResult? FindFirst(out int count)
+      internal TextSearchResult? FindFirst(out int totalCount, out int controlCount)
       {
          IEnumerable<TextSearchResult> allResults = FindAll();
-         count = allResults.Any() ? allResults.Count() : 0;
-         return allResults.Any() ? allResults.First() : new TextSearchResult?();
+         if (allResults.Any())
+         {
+            totalCount = allResults.Count();
+            controlCount = allResults.Select(x => x.Control).Distinct().Count();
+            return allResults.First();
+         }
+         totalCount = 0;
+         controlCount = 0;
+         return new TextSearchResult();
       }
 
       internal TextSearchResult? FindNext(ITextControl control, int startPosition)

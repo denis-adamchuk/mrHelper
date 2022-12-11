@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Threading.Tasks;
@@ -66,12 +67,13 @@ namespace mrHelper.App.Forms
          Program.Settings.NeedShiftRepliesChanged += updateSaveDefaultLayoutState;
 
          var displayFilter = new DiscussionFilter(currentUser, mergeRequestAuthor, DiscussionFilterState.Default);
+         _searchFilter = new DiscussionFilter(currentUser, mergeRequestAuthor, DiscussionFilterState.Default);
          var discussionSort = new DiscussionSort(DiscussionSortState.Default);
 
          // Includes making some boxes visible. This does not paint them because their parent (Form) is hidden so far.
-         discussionPanel.Initialize(discussionSort, displayFilter, discussionLoader, discussions,
+         discussionPanel.Initialize(discussionSort, displayFilter, _searchFilter, discussionLoader, discussions,
             shortcuts, git, colorScheme, mrk, mergeRequestAuthor, currentUser, discussionLayout, avatarImageCache,
-            webUrl, onSelectNoteByUrl, fullUserList);
+            webUrl, onSelectNoteByUrl, fullUserList, contentChanged);
          discussionPanel.ContentMismatchesFilter += showReapplyFilter;
          discussionPanel.ContentMatchesFilter += hideReapplyFilter;
          if (discussionPanel.DiscussionCount < 1)
@@ -79,7 +81,7 @@ namespace mrHelper.App.Forms
             throw new NoDiscussionsToShow();
          }
 
-         searchPanel.Initialize(discussionPanel);
+         searchPanel.Initialize(discussionPanel, onSearchResult);
 
          discussionMenu.Initialize(discussionSort, displayFilter, discussionLayout,
             discussionHelper, commands, applyFont, colorScheme, isCommandEnabled, onCommand, onRefreshByUser);
@@ -183,6 +185,31 @@ namespace mrHelper.App.Forms
          }
       }
 
+      private void contentChanged(bool needRestartSearch)
+      {
+         if (needRestartSearch)
+         {
+            searchPanel.RestartSearch();
+         }
+         else
+         {
+            searchPanel.RefreshSearch();
+         }
+      }
+
+      private void onSearchResult(IEnumerable<TextSearchResult> results)
+      {
+         if (results == null || !searchPanel.NeedShowFoundOnly())
+         {
+            _searchFilter.FilterState = new DiscussionFilterState(null);
+            return;
+         }
+
+         IEnumerable<Controls.ITextControl> controls = results.Select(r => r.Control);
+         IEnumerable<Discussion> discussions = discussionPanel.CollectDiscussionsForControls(controls);
+         _searchFilter.FilterState = new DiscussionFilterState(discussions.ToArray());
+      }
+
       private void onRefreshByUser()
       {
          _discussionLoader.LoadDiscussions();
@@ -248,6 +275,7 @@ namespace mrHelper.App.Forms
       private readonly AsyncDiscussionLoader _discussionLoader;
       private readonly DiscussionLayout _discussionLayout;
       private FormWindowState _previousState;
+      private DiscussionFilter _searchFilter;
    }
 
    internal class NoDiscussionsToShow : Exception { };

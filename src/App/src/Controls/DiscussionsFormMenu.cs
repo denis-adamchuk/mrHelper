@@ -388,7 +388,8 @@ namespace mrHelper.App.Controls
                showThreadsStartedByMeOnlyToolStripMenuItem.Checked,
                showServiceMessagesToolStripMenuItem.Checked,
                filterByAnswers,
-               filterByResolution
+               filterByResolution,
+               null
             );
       }
 

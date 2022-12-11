@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
+using System.Drawing;
+using System.Diagnostics;
 using System.Windows.Forms;
+using System.Collections.Generic;
 using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
@@ -13,7 +13,6 @@ using mrHelper.CommonControls.Controls;
 using mrHelper.CommonControls.Tools;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
-using TheArtOfDev.HtmlRenderer.WinForms;
 using static mrHelper.App.Helpers.ConfigurationHelper;
 
 namespace mrHelper.App.Controls
@@ -22,8 +21,6 @@ namespace mrHelper.App.Controls
    {
       ITextControl[] Controls { get; }
       ITextControl ActiveControl { get; }
-      event Action ContentChanged;
-      void OnSearchResults(IEnumerable<TextSearchResult> results, bool showFoundOnly);
    }
 
    public partial class DiscussionPanel : UserControl, ITextControlHost, IHighlightListener
@@ -41,6 +38,7 @@ namespace mrHelper.App.Controls
       internal void Initialize(
          DiscussionSort discussionSort,
          DiscussionFilter displayFilter,
+         DiscussionFilter searchFilter,
          AsyncDiscussionLoader discussionLoader,
          IEnumerable<Discussion> discussions,
          Shortcuts shortcuts,
@@ -53,7 +51,8 @@ namespace mrHelper.App.Controls
          AvatarImageCache avatarImageCache,
          string webUrl,
          Action<string> selectExternalNoteByUrl,
-         IEnumerable<User> fullUserList)
+         IEnumerable<User> fullUserList,
+         Action<bool> contentChanged)
       {
          _shortcuts = shortcuts;
          _git = git;
@@ -67,12 +66,16 @@ namespace mrHelper.App.Controls
          _webUrl = webUrl;
          _selectExternalNoteByUrl = selectExternalNoteByUrl;
          _fullUserList = fullUserList;
+         _contentChanged = contentChanged;
 
          _discussionSort = discussionSort;
          _discussionSort.SortStateChanged += onSortStateChanged;
 
          _displayFilter = displayFilter;
          _displayFilter.FilterStateChanged += onFilterChanged;
+
+         _searchFilter = searchFilter;
+         _searchFilter.FilterStateChanged += onSearchFilterChanged;
 
          _discussionLoader = discussionLoader;
          _discussionLoader.Loaded += onDiscussionsLoaded;
@@ -86,7 +89,7 @@ namespace mrHelper.App.Controls
          apply(discussions);
       }
 
-      public void OnSearchResults(IEnumerable<TextSearchResult> results, bool showFoundOnly)
+      private void onSearchFilterChanged()
       {
          IEnumerable<DiscussionBox> oldHiddenBoxes = _boxesHiddenBySearch;
          IEnumerable<DiscussionBox> newHiddenBoxes = null;
@@ -110,18 +113,13 @@ namespace mrHelper.App.Controls
             return false;
          }
 
-         if (showFoundOnly)
+         IEnumerable<Discussion> enabledDiscussions = _searchFilter.FilterState.EnabledDiscussions;
+         if (enabledDiscussions != null)
          {
-            IEnumerable<ITextControl> foundControls = results
-               .Select(result => result.Control)
-               .Distinct();
-
             IEnumerable<DiscussionBox> foundBoxes = getBoxesForSearch()
-               .Where(box => foundControls.Any(foundControl => box.HasTextControl(foundControl)));
-
+               .Where(box => enabledDiscussions.Any(x => x.Id == box.Discussion.Id));
             newHiddenBoxes = getBoxesForSearch().Except(foundBoxes).ToArray();
          }
-
          _boxesHiddenBySearch = newHiddenBoxes;
 
          if (checkIfRepositionNeeded())
@@ -132,13 +130,19 @@ namespace mrHelper.App.Controls
          }
       }
 
+      internal IEnumerable<Discussion> CollectDiscussionsForControls(IEnumerable<ITextControl> controls)
+      {
+         return getBoxesForSearch()
+            .Where(box => controls.Any(control => box.HasTextControl(control)))
+            .Select(box => box.Discussion);
+      }
+
       public void OnHighlighted(Control control)
       {
          control.Focus();
          scrollToControl(control, ExpectedControlPosition.TopEdge);
       }
 
-      public event Action ContentChanged;
       public event Action ContentMismatchesFilter;
       public event Action ContentMatchesFilter;
 
@@ -324,7 +328,7 @@ namespace mrHelper.App.Controls
       private void onSortStateChanged()
       {
          PerformLayout(); // Recalculate locations of child controls
-         ContentChanged?.Invoke();
+         _contentChanged?.Invoke(true);
          scrollToControl(_currentSelectedNote, ExpectedControlPosition.TopEdge);
       }
 
@@ -333,7 +337,7 @@ namespace mrHelper.App.Controls
          SuspendLayout(); // Avoid repositioning child controls on each box visibility change
          updateVisibilityOfBoxes();
          ResumeLayout(true); // Place controls at their places
-         ContentChanged?.Invoke();
+         _contentChanged?.Invoke(true);
          scrollToControl(_currentSelectedNote, ExpectedControlPosition.TopEdge);
       }
 
@@ -567,7 +571,7 @@ namespace mrHelper.App.Controls
          if (deletedDiscussions.Any() || updatedDiscussions.Any())
          {
             renderDiscussionsWithSuspendedLayout(deletedDiscussions, updatedDiscussions);
-            ContentChanged?.Invoke();
+            _contentChanged?.Invoke(true);
          }
       }
 
@@ -607,12 +611,14 @@ namespace mrHelper.App.Controls
          return sortBoxes(getVisibleBoxes());
       }
 
+      private IEnumerable<DiscussionBox> getBoxesHiddenBySearch()
+      {
+         return _boxesHiddenBySearch ?? Array.Empty<DiscussionBox>();
+      }
+
       private IEnumerable<DiscussionBox> getBoxesForSearch()
       {
-         IEnumerable<DiscussionBox> boxes = _boxesHiddenBySearch != null
-            ? getVisibleBoxes().Concat(_boxesHiddenBySearch)
-            : getVisibleBoxes();
-         return sortBoxes(boxes);
+         return sortBoxes(getVisibleBoxes().Concat(getBoxesHiddenBySearch()));
       }
 
       private IEnumerable<ITextControl> getControlsSuitableForSearch()
@@ -641,22 +647,25 @@ namespace mrHelper.App.Controls
          SuspendLayout(); // Avoid repositioning child controls on changing sender visibility
          sender.Visible = true;
          ResumeLayout(true); // Put child controls at their places
-         ContentChanged?.Invoke();
+
+         Debug.Assert(isBoxAmongSearchResults(sender));
+         _contentChanged?.Invoke(false /* Panel does not want to receive update from _searchFilter */);
 
          bool doesContentMismatchFilter =
-            getVisibleBoxes()
-            .FirstOrDefault(box => !_displayFilter.DoesMatchFilter(box.Discussion)) != null;
+            getVisibleBoxes().FirstOrDefault(box => !_displayFilter.DoesMatchFilter(box.Discussion)) != null;
          if (doesContentMismatchFilter)
          {
             ContentMismatchesFilter?.Invoke();
          }
       }
 
+      private bool isBoxAmongSearchResults(DiscussionBox box)
+      {
+         return !getBoxesHiddenBySearch().Contains(box);
+      }
+
       private void updateVisibilityOfBoxes()
       {
-         bool isBoxAmongSearchResults(DiscussionBox box) =>
-            _boxesHiddenBySearch == null || !_boxesHiddenBySearch.Contains(box);
-
          bool isAllowedToDisplay(DiscussionBox box) =>
             _displayFilter.DoesMatchFilter(box.Discussion) && isBoxAmongSearchResults(box);
 
@@ -779,8 +788,10 @@ namespace mrHelper.App.Controls
       private IEnumerable<User> _fullUserList;
       private DiscussionSort _discussionSort;
       private DiscussionFilter _displayFilter; // filters out discussions by user preferences
+      private DiscussionFilter _searchFilter; // filters out discussions by search
       private DiscussionLayout _discussionLayout;
       private AsyncDiscussionLoader _discussionLoader;
+      private Action<bool> _contentChanged;
 
       /// <summary>
       /// Holds a control that had focus before we clicked on Find Next/Find Prev in order to continue search

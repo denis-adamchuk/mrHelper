@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using GitLabSharp.Entities;
 
@@ -30,18 +31,29 @@ namespace mrHelper.App.Helpers
    public struct DiscussionFilterState : IEquatable<DiscussionFilterState>
    {
       public DiscussionFilterState(bool byCurrentUserOnly, bool serviceMessages,
-         FilterByAnswers byAnswers, FilterByResolution byResolution)
+         FilterByAnswers byAnswers, FilterByResolution byResolution, IEnumerable<Discussion> enabledDiscussions)
       {
          ByCurrentUserOnly = byCurrentUserOnly;
          ServiceMessages = serviceMessages;
          ByAnswers = byAnswers;
          ByResolution = byResolution;
+         EnabledDiscussions = enabledDiscussions;
+      }
+
+      public DiscussionFilterState(IEnumerable<Discussion> enabledDiscussions)
+      {
+         ByCurrentUserOnly = Default.ByCurrentUserOnly;
+         ServiceMessages = Default.ServiceMessages;
+         ByAnswers = Default.ByAnswers;
+         ByResolution = Default.ByResolution;
+         EnabledDiscussions = enabledDiscussions;
       }
 
       public bool ByCurrentUserOnly { get; }
       public bool ServiceMessages { get; }
       public FilterByAnswers ByAnswers { get; }
       public FilterByResolution ByResolution { get; }
+      public IEnumerable<Discussion> EnabledDiscussions { get; }
 
       static public DiscussionFilterState Default
       {
@@ -49,7 +61,7 @@ namespace mrHelper.App.Helpers
          {
             return new DiscussionFilterState(false, false,
                FilterByAnswers.Answered | FilterByAnswers.Unanswered,
-               FilterByResolution.Resolved | FilterByResolution.NotResolved);
+               FilterByResolution.Resolved | FilterByResolution.NotResolved, null);
          }
       }
 
@@ -59,7 +71,7 @@ namespace mrHelper.App.Helpers
          {
             return new DiscussionFilterState(true, true,
                FilterByAnswers.Answered | FilterByAnswers.Unanswered,
-               FilterByResolution.Resolved | FilterByResolution.NotResolved);
+               FilterByResolution.Resolved | FilterByResolution.NotResolved, null);
          }
       }
 
@@ -70,19 +82,23 @@ namespace mrHelper.App.Helpers
 
       public bool Equals(DiscussionFilterState other)
       {
+         // TODO Is this method needed?
          return ByCurrentUserOnly == other.ByCurrentUserOnly &&
                 ServiceMessages == other.ServiceMessages &&
                 ByAnswers == other.ByAnswers &&
-                ByResolution == other.ByResolution;
+                ByResolution == other.ByResolution &&
+                EnabledDiscussions.SequenceEqual(other.EnabledDiscussions);
       }
 
       public override int GetHashCode()
       {
+         // TODO Is this method needed?
          int hashCode = -858265698;
          hashCode = hashCode * -1521134295 + ByCurrentUserOnly.GetHashCode();
          hashCode = hashCode * -1521134295 + ServiceMessages.GetHashCode();
          hashCode = hashCode * -1521134295 + ByAnswers.GetHashCode();
          hashCode = hashCode * -1521134295 + ByResolution.GetHashCode();
+         hashCode = hashCode * -1521134295 + EnabledDiscussions.GetHashCode();
          return hashCode;
       }
    }
@@ -113,6 +129,12 @@ namespace mrHelper.App.Helpers
 
       public bool DoesMatchFilter(Discussion discussion)
       {
+         if (_filterState.EnabledDiscussions != null
+         && !_filterState.EnabledDiscussions.Select(x => x.Id).Contains(discussion.Id))
+         {
+            return false;
+         }
+
          if (discussion.Notes.Count() == 0)
          {
             return false;
