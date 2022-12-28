@@ -34,7 +34,7 @@ namespace mrHelper.App.Controls
       public bool Clickable => Url != String.Empty;
       public string Text => _getText?.Invoke(false) ?? String.Empty;
       public string Url => _getUrl?.Invoke() ?? String.Empty;
-      public string TooltipText => !String.IsNullOrWhiteSpace(Url) ? Url : _getText(true);
+      public string TooltipText => !String.IsNullOrWhiteSpace(Url) ? Url : (_getText?.Invoke(true) ?? String.Empty);
       public ColumnType ColumnType { get; }
 
       /// <summary>
