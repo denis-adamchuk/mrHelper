@@ -239,9 +239,7 @@ namespace mrHelper.App.Forms
 
       private string DefaultCaption
       {
-         get => String.Format(
-            "Discussions for merge request !{0} in {1} -- \"{2}\"",
-            _mergeRequestKey.IId, _mergeRequestKey.ProjectKey.ProjectName, _mergeRequestTitle);
+         get => String.Format("\"{0}\" ({1})", _mergeRequestTitle, _mergeRequestKey.ProjectKey.ProjectName);
       }
 
       private readonly MergeRequestKey _mergeRequestKey;
