@@ -1,7 +1,5 @@
-using System;
 using System.Drawing;
 using System.Windows.Forms;
-using mrHelper.Common;
 using mrHelper.Common.Constants;
 
 namespace mrHelper.App.Forms

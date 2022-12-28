@@ -564,6 +564,13 @@ namespace mrHelper.App.Controls
          base.Dispose(disposing);
       }
 
+      protected override void OnDpiChangedAfterParent(EventArgs e)
+      {
+         base.OnDpiChangedAfterParent(e);
+
+         recalcRowHeightForMergeRequestListView();
+      }
+
       private bool _processingHandleCreated = false;
       protected override void OnHandleCreated(EventArgs e)
       {

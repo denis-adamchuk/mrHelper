@@ -927,6 +927,8 @@ namespace mrHelper.App.Forms
          ));
 
          resizeToolbarImages();
+
+         DiffContextHelpers.EnableHtmlWidthEstimates = false;
       }
 
       private bool checkAutoScaleDimensions()

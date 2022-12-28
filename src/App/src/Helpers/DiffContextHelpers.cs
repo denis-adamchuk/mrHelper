@@ -32,10 +32,12 @@ namespace mrHelper.App.Helpers
 
       internal class EstimateWidthCache : Dictionary<EstimateWidthKey, int> { }
 
+      internal static bool EnableHtmlWidthEstimates = true;
+
       public static int EstimateHtmlWidth(string html, double fontSizePx, int minWidthPx)
       {
          Debug.Assert(minWidthPx >= 0);
-         if (html != null)
+         if (html != null && EnableHtmlWidthEstimates)
          {
             _htmlPanelForWidthCalculation.Width = minWidthPx;
             _htmlPanelForWidthCalculation.Text = html;

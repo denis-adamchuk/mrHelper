@@ -129,6 +129,12 @@ namespace mrHelper.App.Controls
          }
       }
 
+      protected override void OnDpiChangedBeforeParent(EventArgs e)
+      {
+         _previousWidth = null;
+         base.OnDpiChangedBeforeParent(e);
+      }
+
       protected override void OnLocationChanged(EventArgs e)
       {
          base.OnLocationChanged(e);
@@ -1588,7 +1594,7 @@ namespace mrHelper.App.Controls
             if (_textboxFilename != null)
             {
                _textboxFilename.Location = contextPos;
-               contextPos.Offset(0, _textboxFilename.Height + 2);
+               contextPos.Offset(0, _textboxFilename.Height + TextBoxFileNamePaddingBottom);
             }
 
             if (_panelContext != null)
@@ -1639,7 +1645,7 @@ namespace mrHelper.App.Controls
          if (_textboxFilename != null)
          {
             _textboxFilename.Location = controlPos;
-            controlPos.Offset(0, _textboxFilename.Height + 2);
+            controlPos.Offset(0, _textboxFilename.Height + TextBoxFileNamePaddingBottom);
          }
 
          if (_panelContext != null)
@@ -2202,6 +2208,7 @@ namespace mrHelper.App.Controls
       private int NoteHtmlPaddingRight => scale(20);
 
       private int TextBoxFileNamePaddingRight => scale(25);
+      private int TextBoxFileNamePaddingBottom => scale(5);
       private int NotePaddingBottom => scale(15);
       private int DiffContextPaddingBottom => scale(15);
       private int CopyLinkPaddingLeft => scale(20);

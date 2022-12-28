@@ -423,6 +423,7 @@ namespace mrHelper.App.Forms
          return checkBoxShowRelated.Checked
              && _relatedDiscussions != null
              && _relatedDiscussions.Any()
+             && _relatedDiscussionIndex != null
              && needShowDiffContext();
        }
 
