@@ -82,6 +82,9 @@ namespace mrHelper.CommonControls.Tools
                Point controlLocationAtScreen = control.PointToScreen(new Point(0, 0));
                int x = controlLocationAtScreen.X + (control.Width - dialog.Width) / 2;
                int y = controlLocationAtScreen.Y + (control.Height - dialog.Height) / 2;
+               Rectangle workingArea = Screen.GetWorkingArea(control);
+               x = Math.Min(x, workingArea.Width  - dialog.Width);
+               y = Math.Min(y, workingArea.Height - dialog.Height);
                dialog.Location = new Point(Math.Max(0, x), Math.Max(0, y));
             }
             else
