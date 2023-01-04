@@ -67,15 +67,18 @@ namespace mrHelper.App.Forms
          Program.Settings.NeedShiftRepliesChanged += updateSaveDefaultLayoutState;
 
          var displayFilter = new DiscussionFilter(currentUser, mergeRequestAuthor, DiscussionFilterState.Default);
+         _pageFilter = new DiscussionFilter(currentUser, mergeRequestAuthor, DiscussionFilterState.Default);
          _searchFilter = new DiscussionFilter(currentUser, mergeRequestAuthor, DiscussionFilterState.Default);
          var discussionSort = new DiscussionSort(DiscussionSortState.Default);
 
          // Includes making some boxes visible. This does not paint them because their parent (Form) is hidden so far.
-         discussionPanel.Initialize(discussionSort, displayFilter, _searchFilter, discussionLoader, discussions,
+         discussionPanel.Initialize(discussionSort, displayFilter, _pageFilter, _searchFilter, discussionLoader, discussions,
             shortcuts, git, colorScheme, mrk, mergeRequestAuthor, currentUser, discussionLayout, avatarImageCache,
             webUrl, onSelectNoteByUrl, fullUserList, contentChanged);
          discussionPanel.ContentMismatchesFilter += showReapplyFilter;
          discussionPanel.ContentMatchesFilter += hideReapplyFilter;
+         discussionPanel.PageCountChanged += onPageCountChanged;
+         discussionPanel.PageChangeRequest += onPageChangeRequest;
          if (discussionPanel.DiscussionCount < 1)
          {
             throw new NoDiscussionsToShow();
@@ -88,10 +91,16 @@ namespace mrHelper.App.Forms
 
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);
+         toolTip.SetToolTip(linkLabelPrevPage,
+            String.Format("Show previous {0} discussions", Program.Settings.DiscussionPageSize));
+         toolTip.SetToolTip(linkLabelNextPage,
+            String.Format("Show next {0} discussions", Program.Settings.DiscussionPageSize));
          linkLabelGitLabURL.SetLinkLabelClicked(Common.Tools.UrlHelper.OpenBrowser);
 
          Text = DefaultCaption;
          MainMenuStrip = discussionMenu.MenuStrip;
+
+         updatePageNavigationButtonState();
       }
 
       internal void SelectNote(int noteId)
@@ -230,6 +239,52 @@ namespace mrHelper.App.Forms
          hideReapplyFilter();
       }
 
+      private void onPageCountChanged()
+      {
+         updatePageNavigationButtonState();
+      }
+
+      private void onPageChangeRequest(int page)
+      {
+         if (page == _pageFilter.FilterState.Page)
+         {
+            return;
+         }
+
+         _pageFilter.FilterState = new DiscussionFilterState(
+            _pageFilter.FilterState.ByCurrentUserOnly,
+            _pageFilter.FilterState.ServiceMessages,
+            _pageFilter.FilterState.ByAnswers,
+            _pageFilter.FilterState.ByResolution,
+            _pageFilter.FilterState.EnabledDiscussions,
+            page);
+         updatePageNavigationButtonState();
+      }
+
+      private void onNextPageClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         onPageChangeRequest(_pageFilter.FilterState.Page + 1);
+      }
+
+      private void onPrevPageClicked(object sender, LinkLabelLinkClickedEventArgs e)
+      {
+         onPageChangeRequest(_pageFilter.FilterState.Page - 1);
+      }
+
+      private void updatePageNavigationButtonState()
+      {
+         int pageCount = discussionPanel.PageCount;
+         bool needShowButtons = pageCount > 1;
+         linkLabelPrevPage.Visible = needShowButtons;
+         linkLabelNextPage.Visible = needShowButtons;
+
+         int currentPage = _pageFilter.FilterState.Page;
+         bool needEnablePrevButton = currentPage != 0;
+         linkLabelPrevPage.Enabled = needEnablePrevButton;
+         bool needEnableNextButton = currentPage != pageCount - 1;
+         linkLabelNextPage.Enabled = needEnableNextButton;
+      }
+
       private void showReapplyFilter()
       {
          linkLabelReapplyFilter.Visible = true;
@@ -275,6 +330,7 @@ namespace mrHelper.App.Forms
       private readonly AsyncDiscussionLoader _discussionLoader;
       private readonly DiscussionLayout _discussionLayout;
       private FormWindowState _previousState;
+      private DiscussionFilter _pageFilter;
       private DiscussionFilter _searchFilter;
    }
 

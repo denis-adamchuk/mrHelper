@@ -144,7 +144,10 @@ namespace mrHelper.App.Controls
 
       private void setIndeterminateState()
       {
-         checkBoxShowFoundOnly.CheckState = CheckState.Indeterminate;
+         if (checkBoxShowFoundOnly.CheckState == CheckState.Checked)
+         {
+            checkBoxShowFoundOnly.CheckState = CheckState.Indeterminate;
+         }
       }
 
       private void resolveIndeterminateState()
@@ -177,7 +180,7 @@ namespace mrHelper.App.Controls
       private void highlightSearchResult(TextSearchResult? result)
       {
          _textSearchResult = null;
-         if (result.HasValue && _textSearch != null)
+         if (result.HasValue && _textSearch != null && result.Value.Control != null)
          {
             result.Value.Control.HighlightFragment(result.Value.InsideControlPosition, _textSearch.Query.Text.Length);
             _textSearchResult = result;
@@ -193,14 +196,14 @@ namespace mrHelper.App.Controls
          _resultCounter = new ResultCounter(totalCount, controlCount);
          displayFoundCount();
 
-         if (needHighlightSearchResult)
-         {
-            highlightSearchResult(result);
-         }
-
          if (needTriggerCallback)
          {
             _onSearchResult?.Invoke(_textSearch.FindAll());
+         }
+
+         if (needHighlightSearchResult)
+         {
+            highlightSearchResult(result);
          }
       }
 

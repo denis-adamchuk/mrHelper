@@ -40,7 +40,7 @@ namespace mrHelper.App.Controls
          Action<DiscussionBox> onContentChanging,
          Action<DiscussionBox> onContentChanged,
          Action<Control> onControlGotFocus,
-         Action onSetFocusToNoteProgramatically,
+         Action<Control> onSetFocusToNoteProgramatically,
          Action undoFocusChangedOnClick,
          HtmlToolTipEx htmlTooltip,
          PopupWindow popupWindow,
@@ -180,8 +180,7 @@ namespace mrHelper.App.Controls
                continue;
             }
 
-            noteControl.Focus();
-            _onSetFocusToNoteProgramatically();
+            _onSetFocusToNoteProgramatically(noteControl);
             if (!prevNoteId.HasValue || prevNoteId.Value == noteId)
             {
                return true;
@@ -214,8 +213,7 @@ namespace mrHelper.App.Controls
          {
             if (noteControl.Parent.Location.Y + noteControl.Location.Y > 0)
             {
-               noteControl.Focus();
-               _onSetFocusToNoteProgramatically();
+               _onSetFocusToNoteProgramatically(noteControl);
                return true;
             }
          }
@@ -228,8 +226,7 @@ namespace mrHelper.App.Controls
          {
             if (noteControl.Parent.Location.Y + noteControl.Location.Y + noteControl.Height < screenHeight)
             {
-               noteControl.Focus();
-               _onSetFocusToNoteProgramatically();
+               _onSetFocusToNoteProgramatically(noteControl);
                return true;
             }
          }
@@ -246,8 +243,7 @@ namespace mrHelper.App.Controls
                      .FirstOrDefault(noteContainer => noteContainer.NoteContent.Focused);
                   if (current.Prev != null)
                   {
-                     current.Prev.NoteContent.Focus();
-                     _onSetFocusToNoteProgramatically();
+                     _onSetFocusToNoteProgramatically(current.Prev.NoteContent);
                   }
                   else
                   {
@@ -262,8 +258,7 @@ namespace mrHelper.App.Controls
                      .FirstOrDefault(noteContainer => noteContainer.NoteContent.Focused);
                   if (current.Next != null)
                   {
-                     current.Next.NoteContent.Focus();
-                     _onSetFocusToNoteProgramatically();
+                     _onSetFocusToNoteProgramatically(current.Next.NoteContent);
                   }
                   else
                   {
@@ -273,13 +268,11 @@ namespace mrHelper.App.Controls
                break;
 
             case ENoteSelectionRequest.First:
-               getNoteContents().First().Focus();
-               _onSetFocusToNoteProgramatically();
+               _onSetFocusToNoteProgramatically(getNoteContents().First());
                break;
 
             case ENoteSelectionRequest.Last:
-               getNoteContents().Last().Focus();
-               _onSetFocusToNoteProgramatically();
+               _onSetFocusToNoteProgramatically(getNoteContents().Last());
                break;
          }
       }
@@ -2115,8 +2108,7 @@ namespace mrHelper.App.Controls
 
          // To reposition new controls and unhide me back
          _onContentChanged?.Invoke();
-         getNoteContainers().First().NoteContent.Focus();
-         _onSetFocusToNoteProgramatically();
+         _onSetFocusToNoteProgramatically(getNoteContainers().First().NoteContent);
       }
 
       private bool isDiscussionResolved()
@@ -2260,7 +2252,7 @@ namespace mrHelper.App.Controls
       private readonly Action _undoFocusChangedOnClick;
       private readonly Action<string> _selectNoteUrl;
       private readonly Action<ENoteSelectionRequest, DiscussionBox> _selectNoteByPosition;
-      private readonly Action _onSetFocusToNoteProgramatically;
+      private readonly Action<Control> _onSetFocusToNoteProgramatically;
       private readonly HtmlToolTipEx _htmlTooltip;
       private readonly Markdig.MarkdownPipeline _specialDiscussionNoteMarkdownPipeline;
    }

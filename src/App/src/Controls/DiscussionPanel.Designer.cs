@@ -22,7 +22,9 @@ namespace mrHelper.App.Controls
 
          _discussionSort.SortStateChanged -= onSortStateChanged;
 
-         _displayFilter.FilterStateChanged -= onFilterChanged;
+         _searchFilter.FilterStateChanged -= onSearchFilterChanged;
+         _pageFilter.FilterStateChanged -= onPageFilterChanged;
+         _displayFilter.FilterStateChanged -= onDisplayFilterChanged;
 
          _discussionLoader.Loaded -= onDiscussionsLoaded;
 

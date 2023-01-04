@@ -31,13 +31,15 @@ namespace mrHelper.App.Helpers
    public struct DiscussionFilterState : IEquatable<DiscussionFilterState>
    {
       public DiscussionFilterState(bool byCurrentUserOnly, bool serviceMessages,
-         FilterByAnswers byAnswers, FilterByResolution byResolution, IEnumerable<Discussion> enabledDiscussions)
+         FilterByAnswers byAnswers, FilterByResolution byResolution, IEnumerable<Discussion> enabledDiscussions,
+         int page)
       {
          ByCurrentUserOnly = byCurrentUserOnly;
          ServiceMessages = serviceMessages;
          ByAnswers = byAnswers;
          ByResolution = byResolution;
          EnabledDiscussions = enabledDiscussions;
+         Page = page;
       }
 
       public DiscussionFilterState(IEnumerable<Discussion> enabledDiscussions)
@@ -47,6 +49,7 @@ namespace mrHelper.App.Helpers
          ByAnswers = Default.ByAnswers;
          ByResolution = Default.ByResolution;
          EnabledDiscussions = enabledDiscussions;
+         Page = Default.Page;
       }
 
       public bool ByCurrentUserOnly { get; }
@@ -54,6 +57,7 @@ namespace mrHelper.App.Helpers
       public FilterByAnswers ByAnswers { get; }
       public FilterByResolution ByResolution { get; }
       public IEnumerable<Discussion> EnabledDiscussions { get; }
+      public int Page { get; }
 
       static public DiscussionFilterState Default
       {
@@ -61,7 +65,7 @@ namespace mrHelper.App.Helpers
          {
             return new DiscussionFilterState(false, false,
                FilterByAnswers.Answered | FilterByAnswers.Unanswered,
-               FilterByResolution.Resolved | FilterByResolution.NotResolved, null);
+               FilterByResolution.Resolved | FilterByResolution.NotResolved, null, 0);
          }
       }
 
@@ -71,7 +75,7 @@ namespace mrHelper.App.Helpers
          {
             return new DiscussionFilterState(true, true,
                FilterByAnswers.Answered | FilterByAnswers.Unanswered,
-               FilterByResolution.Resolved | FilterByResolution.NotResolved, null);
+               FilterByResolution.Resolved | FilterByResolution.NotResolved, null, 0);
          }
       }
 
@@ -87,7 +91,8 @@ namespace mrHelper.App.Helpers
                 ServiceMessages == other.ServiceMessages &&
                 ByAnswers == other.ByAnswers &&
                 ByResolution == other.ByResolution &&
-                EnabledDiscussions.SequenceEqual(other.EnabledDiscussions);
+                EnabledDiscussions.SequenceEqual(other.EnabledDiscussions) &&
+                Page == other.Page;
       }
 
       public override int GetHashCode()
@@ -99,6 +104,7 @@ namespace mrHelper.App.Helpers
          hashCode = hashCode * -1521134295 + ByAnswers.GetHashCode();
          hashCode = hashCode * -1521134295 + ByResolution.GetHashCode();
          hashCode = hashCode * -1521134295 + EnabledDiscussions.GetHashCode();
+         hashCode = hashCode * -1521134295 + Page.GetHashCode();
          return hashCode;
       }
    }

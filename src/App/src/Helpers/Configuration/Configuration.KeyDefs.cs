@@ -59,6 +59,9 @@ namespace mrHelper.App.Helpers
       private static readonly string DiscussionColumnWidthKeyName = "DiscussionColumnWidth";
       private static readonly string DiscussionColumnWidthDefaultValue = "medium";
 
+      private static readonly string DiscussionPageSizeKeyName = "DiscussionPageSize";
+      private static readonly int    DiscussionPageSizeDefaultValue = Constants.DiscussionPageSizeDefaultCount;
+
       private static readonly string IsDiscussionColumnWidthFixedKeyName = "IsDiscussionColumnWidthFixed";
       private static readonly bool   IsDiscussionColumnWidthFixedDefaultValue = false;
 

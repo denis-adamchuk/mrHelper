@@ -389,7 +389,8 @@ namespace mrHelper.App.Controls
                showServiceMessagesToolStripMenuItem.Checked,
                filterByAnswers,
                filterByResolution,
-               null
+               null,
+               0
             );
       }
 

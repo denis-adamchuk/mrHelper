@@ -216,6 +216,12 @@ namespace mrHelper.App.Helpers
       }
       public event Action DiscussionColumnWidthChanged;
 
+      public int DiscussionPageSize
+      {
+         get => getIntValue(DiscussionPageSizeKeyName, DiscussionPageSizeDefaultValue);
+         set => setIntValue(DiscussionPageSizeKeyName, value);
+      }
+
       public bool NeedShiftReplies
       {
          get => getBoolValue(NeedShiftRepliesKeyName, NeedShiftRepliesDefaultValue);
