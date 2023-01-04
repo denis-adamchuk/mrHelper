@@ -254,6 +254,7 @@ namespace mrHelper.CommonNative
       internal const int LVM_FIRST = 0x1000;
       internal const int LVM_SCROLL = LVM_FIRST + 20;
       internal const int LVM_GETHEADER = LVM_FIRST + 31;
+      internal const int LVM_GETSUBITEMRECT = LVM_FIRST + 56;
       internal const int SBS_HORZ = 0;
       internal const int SBS_VERT = 1;
 

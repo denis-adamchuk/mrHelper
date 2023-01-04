@@ -124,6 +124,11 @@ namespace mrHelper.CommonNative
              || notif.code == NativeMethods.HDN_DIVIDERDBLCLICKW);
       }
 
+      public static bool IsGetSubItemRect(int message)
+      {
+         return message == NativeMethods.LVM_GETSUBITEMRECT;
+      }
+
       public static int GetListViewHeaderHeight(IntPtr listViewHandle)
       {
          IntPtr hwnd = NativeMethods.SendMessage(listViewHandle, NativeMethods.LVM_GETHEADER, IntPtr.Zero, IntPtr.Zero);

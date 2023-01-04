@@ -678,6 +678,31 @@ namespace mrHelper.App.Controls
                }
             }
          }
+         else if (Win32Tools.IsGetSubItemRect(message.Msg))
+         {
+            // ListView.CustomDraw() incorrectly computes rectangle of the first column.
+            // The first column is IId in our case, even after reorder.
+            // Let's use a helper function to compute the bounds manually.
+            // See https://learn.microsoft.com/en-us/windows/win32/controls/lvm-getsubitemrect for details
+            int itemIndex = (int)message.WParam;
+            Rectangle rectangle = (Rectangle)(message.GetLParam(typeof(Rectangle)));
+            int portion = rectangle.Left;
+            int subItemIndex = rectangle.Top;
+            if (subItemIndex == 0 && portion == (int)ItemBoundsPortion.Entire)
+            {
+               Rectangle bounds = WinFormsHelpers.GetFirstColumnCorrectRectangle(this, this.Items[itemIndex]);
+               NativeMethods.RECT rect = new NativeMethods.RECT
+               {
+                  Left = bounds.Left,
+                  Top = bounds.Top,
+                  Right = bounds.Left + bounds.Width,
+                  Bottom = bounds.Top + bounds.Height
+               };
+               System.Runtime.InteropServices.Marshal.StructureToPtr(rect, message.LParam, false);
+               message.Result = new IntPtr(1);
+               return;
+            }
+         }
 
          base.WndProc(ref message);
       }
@@ -750,11 +775,6 @@ namespace mrHelper.App.Controls
          }
 
          Rectangle bounds = e.Bounds;
-         if (e.ColumnIndex == 0 && e.Item.ListView.Columns[0].DisplayIndex != 0)
-         {
-            bounds = WinFormsHelpers.GetFirstColumnCorrectRectangle(e.Item.ListView, e.Item);
-         }
-
          bool isSelected = e.Item.Selected;
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
          Color defaultColor = Color.Transparent;
