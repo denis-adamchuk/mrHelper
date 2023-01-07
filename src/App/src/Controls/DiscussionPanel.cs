@@ -323,7 +323,7 @@ namespace mrHelper.App.Controls
          AdjustFormScrollbars(true);
       }
 
-      private void onSortStateChanged()
+      private void onSortStateChanged() //-V3013
       {
          SuspendLayout(); // Avoid repositioning child controls on each box visibility change
          updateVisibilityOfBoxes();
