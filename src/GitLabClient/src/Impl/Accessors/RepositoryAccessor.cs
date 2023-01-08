@@ -148,28 +148,46 @@ namespace mrHelper.GitLabClient
             return false;
          }
 
-         Branch descendantBranch = (await GetBranches(descendantBranchName)).FirstOrDefault();
-         Branch ancestorBranch = (await GetBranches(ancestorBranchName)).FirstOrDefault();
-         if (descendantBranch == null || ancestorBranch == null)
+         Commit ancestorCommit = await LoadCommit(ancestorBranchName);
+         if (ancestorCommit == null || descendantBranchName == ancestorCommit.Id)
          {
             return false;
          }
 
-         if (descendantBranch.Commit.Id == ancestorBranch.Commit.Id)
+         return await isDescendant(descendantBranchName, ancestorCommit.Id, 1);
+      }
+
+      private async Task<bool> isDescendant(string commitSha, string ancestorCommitSha, int depth)
+      {
+         void logResult(string result) =>
+            Trace.TraceInformation("[RepositoryAccessor] isDescendant({0}, {1}, {2}): {3}",
+               commitSha, ancestorCommitSha, depth, result);
+
+         Debug.Assert(commitSha != ancestorCommitSha);
+
+         if (depth == Constants.MaxCommitDepth)
          {
+            logResult("false (depth exceeded)");
             return false;
          }
 
-         for (int iDepth = 1; iDepth < Constants.MaxCommitDepth; ++iDepth)
+         Commit commit = await LoadCommit(commitSha);
+         if (commit == null)
          {
-            string sha = getParentSha(descendantBranch.Commit.Id, iDepth);
-            Commit commit = await LoadCommit(sha);
-            if (commit.Id == ancestorBranch.Commit.Id)
+            logResult("false (commit is null)");
+            return false;
+         }
+
+         foreach (string parentId in commit.Parent_Ids)
+         {
+            if (parentId == ancestorCommitSha || await isDescendant(parentId, ancestorCommitSha, depth + 1))
             {
+               logResult("true");
                return true;
             }
          }
 
+         logResult("false");
          return false;
       }
 
