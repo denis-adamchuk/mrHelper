@@ -106,7 +106,7 @@ namespace mrHelper.Common.Constants
       public static int MaxCommitDepth = 10;
       public static int RecentMergeRequestPerProjectDefaultCount = 7;
       public static int FavoriteProjectsPerHostDefaultCount = 5;
-      public static int DiscussionPageSizeDefaultCount = 75;
+      public static int DiscussionPageSizeDefaultCount = 200;
 
       public static TaskUtils.BatchLimits MergeRequestLoaderSearchQueryBatchLimits = new TaskUtils.BatchLimits
       {

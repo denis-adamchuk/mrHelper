@@ -194,7 +194,7 @@ namespace mrHelper.App.Controls
             "You don't have access to project {0} at {1}. "
           + "Loading of this project will be disabled. You may turn it on at Settings tab.",
             projectKey.ProjectName, projectKey.HostName);
-         MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+         addOperationRecord(message);
          Trace.TraceInformation("[MainForm.Workflow] Forbidden project. User notified that project will be disabled");
 
          changeProjectEnabledState(projectKey, false);
@@ -206,7 +206,7 @@ namespace mrHelper.App.Controls
             "There is no project {0} at {1}. "
           + "Loading of this project will be disabled. You may turn it on at Settings tab.",
             projectKey.ProjectName, projectKey.HostName);
-         MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+         addOperationRecord(message);
          Trace.TraceInformation("[MainForm.Workflow] Project not found. User notified that project will be disabled");
 
          changeProjectEnabledState(projectKey, false);

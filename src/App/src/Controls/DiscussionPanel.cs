@@ -151,8 +151,18 @@ namespace mrHelper.App.Controls
       public event Action ContentMismatchesFilter;
       public event Action ContentMatchesFilter;
       public event Action PageCountChanged;
+      public event Action PageSizeChanged;
       public event Action<int> PageChangeRequest;
-      public int PageCount => getPageCount();
+      internal int PageCount => _boxesToPages.Values.Distinct().Count();
+      internal int PageSize
+      {
+         get => _pageSize == null ? Program.Settings.DiscussionPageSize : _pageSize.Value;
+         private set
+         {
+            _pageSize = value;
+            PageSizeChanged?.Invoke();
+         }
+      }
 
       internal enum ESelectStyle
       {
@@ -350,6 +360,8 @@ namespace mrHelper.App.Controls
          SuspendLayout(); // Avoid repositioning child controls on each box visibility change
          updateVisibilityOfBoxes();
          ResumeLayout(true); // Place controls at their places
+
+         AutoScrollPosition = new Point(0, 0);
       }
 
       private void onDiscussionControlGotFocus(Control sender)
@@ -529,29 +541,29 @@ namespace mrHelper.App.Controls
          createDiscussionBoxes(updatedDiscussions);
       }
 
-      Dictionary<DiscussionBox, int> _boxesToPages = new Dictionary<DiscussionBox, int>();
+      private void adjustPageSize() => PageSize /= 2;
+
+      private int? _pageSize;
+
+      private Dictionary<DiscussionBox, int> _boxesToPages = new Dictionary<DiscussionBox, int>();
       private void matchBoxesToPages(IEnumerable<DiscussionBox> boxes)
       {
-         int pageSize = Program.Settings.DiscussionPageSize;
-
-         int oldCount = getPageCount();
+         int oldCount = PageCount;
 
          _boxesToPages.Clear();
          foreach (DiscussionBox box in boxes)
          {
-            int page = _boxesToPages.Count / pageSize;
+            int page = _boxesToPages.Count / PageSize;
             _boxesToPages[box] = page;
          }
 
-         int newCount = getPageCount();
+         int newCount = PageCount;
          if (oldCount != newCount)
          {
             Trace.TraceInformation("[DiscussionPanel] Page count changed from {0} to {1}", oldCount, newCount);
             PageCountChanged?.Invoke();
          }
       }
-
-      private int getPageCount() => _boxesToPages.Values.Distinct().Count();
 
       private int? getPage(DiscussionBox box) => _boxesToPages.TryGetValue(box, out int value) ? value : new int?();
 
@@ -588,6 +600,13 @@ namespace mrHelper.App.Controls
 
             if (isVertScrollVisible != VerticalScroll.Visible)
             {
+               break;
+            }
+
+            if (location.Y > MaxBoxYLocationPx)
+            {
+               adjustPageSize();
+               updateVisibilityOfBoxes();
                break;
             }
          }
@@ -924,6 +943,8 @@ namespace mrHelper.App.Controls
       };
 
       private int scale(int px) => (int)WinFormsHelpers.ScalePixelsToNewDpi(96, DeviceDpi, px);
+
+      private const int MaxBoxYLocationPx = 30000;
 
       private int DiffContextBorderRadius => scale(10);
       private int DiscussionBoxTopMarginVertLayout => scale(40);

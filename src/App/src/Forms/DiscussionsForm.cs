@@ -78,6 +78,7 @@ namespace mrHelper.App.Forms
          discussionPanel.ContentMismatchesFilter += showReapplyFilter;
          discussionPanel.ContentMatchesFilter += hideReapplyFilter;
          discussionPanel.PageCountChanged += onPageCountChanged;
+         discussionPanel.PageSizeChanged += onPageSizeChanged;
          discussionPanel.PageChangeRequest += onPageChangeRequest;
          if (discussionPanel.DiscussionCount < 1)
          {
@@ -91,16 +92,13 @@ namespace mrHelper.App.Forms
 
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);
-         toolTip.SetToolTip(linkLabelPrevPage,
-            String.Format("Show previous {0} discussions", Program.Settings.DiscussionPageSize));
-         toolTip.SetToolTip(linkLabelNextPage,
-            String.Format("Show next {0} discussions", Program.Settings.DiscussionPageSize));
          linkLabelGitLabURL.SetLinkLabelClicked(Common.Tools.UrlHelper.OpenBrowser);
 
          Text = DefaultCaption;
          MainMenuStrip = discussionMenu.MenuStrip;
 
          updatePageNavigationButtonState();
+         updatePageNavigationButtonTooltip();
       }
 
       internal void SelectNote(int noteId)
@@ -244,6 +242,11 @@ namespace mrHelper.App.Forms
          updatePageNavigationButtonState();
       }
 
+      private void onPageSizeChanged()
+      {
+         updatePageNavigationButtonTooltip();
+      }
+
       private void onPageChangeRequest(int page)
       {
          if (page == _pageFilter.FilterState.Page)
@@ -283,6 +286,14 @@ namespace mrHelper.App.Forms
          linkLabelPrevPage.Enabled = needEnablePrevButton;
          bool needEnableNextButton = currentPage != pageCount - 1;
          linkLabelNextPage.Enabled = needEnableNextButton;
+      }
+
+      private void updatePageNavigationButtonTooltip()
+      {
+         toolTip.SetToolTip(linkLabelPrevPage,
+            String.Format("Show previous {0} discussions", discussionPanel.PageSize));
+         toolTip.SetToolTip(linkLabelNextPage,
+            String.Format("Show next {0} discussions", discussionPanel.PageSize));
       }
 
       private void showReapplyFilter()
