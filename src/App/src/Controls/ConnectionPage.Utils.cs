@@ -1218,14 +1218,16 @@ namespace mrHelper.App.Controls
       {
          Dictionary<string, bool> projects = ConfigurationHelper.GetProjectsForHost(
             projectKey.HostName, Program.Settings).ToDictionary(item => item.Item1, item => item.Item2);
-         Debug.Assert(projects.ContainsKey(projectKey.ProjectName));
-         projects[projectKey.ProjectName] = state;
+         if (projects.ContainsKey(projectKey.ProjectName))
+         {
+            projects[projectKey.ProjectName] = state;
 
-         ConfigurationHelper.SetProjectsForHost(
-            projectKey.HostName,
-            new StringToBooleanCollection(Enumerable.Zip(
-               projects.Keys, projects.Values, (x, y) => new Tuple<string, bool>(x, y))),
-            Program.Settings);
+            ConfigurationHelper.SetProjectsForHost(
+               projectKey.HostName,
+               new StringToBooleanCollection(Enumerable.Zip(
+                  projects.Keys, projects.Values, (x, y) => new Tuple<string, bool>(x, y))),
+               Program.Settings);
+         }
       }
 
       private NewMergeRequestProperties getDefaultNewMergeRequestProperties(string hostname,
