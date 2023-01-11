@@ -684,23 +684,26 @@ namespace mrHelper.App.Controls
             // The first column is IId in our case, even after reorder.
             // Let's use a helper function to compute the bounds manually.
             // See https://learn.microsoft.com/en-us/windows/win32/controls/lvm-getsubitemrect for details
-            int itemIndex = (int)message.WParam;
-            Rectangle rectangle = (Rectangle)(message.GetLParam(typeof(Rectangle)));
-            int portion = rectangle.Left;
-            int subItemIndex = rectangle.Top;
-            if (subItemIndex == 0 && portion == (int)ItemBoundsPortion.Entire)
+            if (getColumnByType(ColumnType.IId).DisplayIndex != 0)
             {
-               Rectangle bounds = WinFormsHelpers.GetFirstColumnCorrectRectangle(this, this.Items[itemIndex]);
-               NativeMethods.RECT rect = new NativeMethods.RECT
+               int itemIndex = (int)message.WParam;
+               Rectangle rectangle = (Rectangle)(message.GetLParam(typeof(Rectangle)));
+               int portion = rectangle.Left;
+               int subItemIndex = rectangle.Top;
+               if (subItemIndex == 0 && portion == (int)ItemBoundsPortion.Entire)
                {
-                  Left = bounds.Left,
-                  Top = bounds.Top,
-                  Right = bounds.Left + bounds.Width,
-                  Bottom = bounds.Top + bounds.Height
-               };
-               System.Runtime.InteropServices.Marshal.StructureToPtr(rect, message.LParam, false);
-               message.Result = new IntPtr(1);
-               return;
+                  Rectangle bounds = WinFormsHelpers.GetFirstColumnCorrectRectangle(this, this.Items[itemIndex]);
+                  NativeMethods.RECT rect = new NativeMethods.RECT
+                  {
+                     Left = bounds.Left,
+                     Top = bounds.Top,
+                     Right = bounds.Left + bounds.Width,
+                     Bottom = bounds.Top + bounds.Height
+                  };
+                  System.Runtime.InteropServices.Marshal.StructureToPtr(rect, message.LParam, false);
+                  message.Result = new IntPtr(1);
+                  return;
+               }
             }
          }
 
