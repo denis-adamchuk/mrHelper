@@ -352,7 +352,14 @@ namespace mrHelper.App.Controls
 
          _contentChanged?.Invoke(true);
 
-         scrollToControl(_focusedNote, ExpectedControlPosition.TopEdge);
+         if (_focusedNote == null)
+         {
+            PageChangeRequest?.Invoke(0);
+         }
+         else
+         {
+            scrollToControl(_focusedNote, ExpectedControlPosition.TopEdge);
+         }
       }
 
       private void onPageFilterChanged()
