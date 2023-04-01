@@ -78,8 +78,14 @@ namespace mrHelper.Common.Tools
          }
 
          string sourceBranchName = trimRemoteOrigin(remoteSourceBranch);
+         if (String.IsNullOrEmpty(sourceBranchName))
+         {
+            throw new UriFormatException("Invalid source branch name");
+         }
+
          IEnumerable<string> targetBranchName = findTargetBranch(path.Value, remoteSourceBranch)
-            .Select(fullName => trimRemoteOrigin(fullName));
+            .Select(fullName => trimRemoteOrigin(fullName))
+            .Where(name => !String.IsNullOrEmpty(name));
          return new ParsedNewMergeRequestUrl(projectKey.Value, sourceBranchName, targetBranchName);
       }
 
@@ -123,8 +129,7 @@ namespace mrHelper.Common.Tools
 
       private static string trimRemoteOrigin(string name)
       {
-         Debug.Assert(name.StartsWith(RemoteOrigin));
-         return name.Substring(RemoteOrigin.Length);
+         return name.StartsWith(RemoteOrigin) ? name.Substring(RemoteOrigin.Length) : String.Empty;
       }
       private static readonly string RemoteOrigin = "origin/";
    }
