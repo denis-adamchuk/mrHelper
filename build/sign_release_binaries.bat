@@ -3,19 +3,19 @@
 cd ..\bin\Release
 
 for %%f in (mrHelper*.exe) do (
-   signtool sign /a /tr http://timestamp.digicert.com %%f
+   signtool sign /fd SHA256 /td SHA256 /a /tr http://timestamp.digicert.com %%f
    if %ERRORLEVEL% NEQ 0 EXIT /B 1
 )
 
 for %%f in (mrHelper*.dll) do (
-   signtool sign /a /tr http://timestamp.digicert.com %%f
+   signtool sign /fd SHA256 /td SHA256 /a /tr http://timestamp.digicert.com %%f
    if %ERRORLEVEL% NEQ 0 EXIT /B 1
 )
 
-signtool sign /a /tr http://timestamp.digicert.com GitLabSharp.dll
+signtool sign /fd SHA256 /td SHA256 /a /tr http://timestamp.digicert.com GitLabSharp.dll
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
-signtool sign /a /tr http://timestamp.digicert.com Aga.Controls.dll
+signtool sign /fd SHA256 /td SHA256 /a /tr http://timestamp.digicert.com Aga.Controls.dll
 if %ERRORLEVEL% NEQ 0 EXIT /B 1
 
 cd ..\..\build
