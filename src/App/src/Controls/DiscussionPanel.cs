@@ -358,7 +358,19 @@ namespace mrHelper.App.Controls
          }
          else
          {
-            scrollToControl(_focusedNote, ExpectedControlPosition.TopEdge);
+            if (!_focusedNote.Visible)
+            {
+               DiscussionBox box = _focusedNote.Parent as DiscussionBox;
+               if (box != null && !_boxesToPages.ContainsKey(box))
+               {
+                  // focused note is hidden by Display Filter
+                  PageChangeRequest?.Invoke(0);
+               }
+            }
+            else
+            {
+               scrollToControl(_focusedNote, ExpectedControlPosition.TopEdge);
+            }
          }
       }
 
