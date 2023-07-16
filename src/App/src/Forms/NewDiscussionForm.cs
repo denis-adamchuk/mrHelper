@@ -604,7 +604,7 @@ namespace mrHelper.App.Forms
          DiffContext context = isCurrentNoteNew() ?
             _getNewDiscussionDiffContext(position) : _getDiffContext(position);
 
-         string longestLine = context.GetLongestLine();
+         string longestLine = context.IsValid() ? context.GetLongestLine() : null;
          double fontSizePt = WinFormsHelpers.GetFontSizeInPoints(htmlPanel);
          string htmlSnippet = longestLine != null ?
             DiffContextFormatter.GetHtml(longestLine, fontSizePt, null) : null;
