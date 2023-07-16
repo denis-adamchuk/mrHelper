@@ -165,19 +165,15 @@ namespace mrHelper.App.Forms
       {
          if (!_isSquashNeeded.GetValueOrDefault(false))
          {
-            int newFormHeight = _formDefaultMinimumHeight - _groupBoxCommitMessageDefaultHeight;
-            this.MinimumSize = new System.Drawing.Size(this.MinimumSize.Width, newFormHeight);
-            this.Size = new System.Drawing.Size(this.Size.Width, newFormHeight);
-            groupBoxMergeCommitMessage.Height = 0;
-            groupBoxMergeCommitMessage.Visible = false;
+            groupBoxCommitDetails.Text = "Commit List";
+            labelCommitMessageLabel.Visible = false;
+            textBoxCommitMessage.ReadOnly = true;
          }
          else
          {
-            int newFormHeight = _formDefaultMinimumHeight;
-            this.MinimumSize = new System.Drawing.Size(this.MinimumSize.Width, newFormHeight);
-            this.Size = new System.Drawing.Size(this.Size.Width, newFormHeight);
-            groupBoxMergeCommitMessage.Height = _groupBoxCommitMessageDefaultHeight;
-            groupBoxMergeCommitMessage.Visible = true;
+            groupBoxCommitDetails.Text = "Merge Commit Message";
+            labelCommitMessageLabel.Visible = true;
+            textBoxCommitMessage.ReadOnly = false;
          }
       }
 

@@ -32,8 +32,6 @@ namespace mrHelper.App.Forms
 
          applyFont(Program.Settings.MainWindowFontSizeName);
          Size = MinimumSize;
-         _formDefaultMinimumHeight = MinimumSize.Height;
-         _groupBoxCommitMessageDefaultHeight = groupBoxMergeCommitMessage.Height;
 
          _mergeRequestKey = mrk;
          _repositoryPath = repositoryPath ?? throw new ArgumentException("repositoryPath argument cannot be null");
@@ -804,8 +802,6 @@ namespace mrHelper.App.Forms
       private string _state;
       private bool _isAwaiting;
       private bool? _isSourceBranchDescendantOfTargetBranch;
-      private readonly int _formDefaultMinimumHeight;
-      private readonly int _groupBoxCommitMessageDefaultHeight;
    }
 
    internal class UnsupportedMergeMethodException : Exception

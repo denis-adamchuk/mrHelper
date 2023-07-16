@@ -35,7 +35,7 @@
          this.linkLabelOpenExplorer = new System.Windows.Forms.LinkLabel();
          this.buttonClose = new System.Windows.Forms.Button();
          this.groupBoxMerge = new System.Windows.Forms.GroupBox();
-         this.groupBoxMergeCommitMessage = new System.Windows.Forms.GroupBox();
+         this.groupBoxCommitDetails = new System.Windows.Forms.GroupBox();
          this.labelCommitMessageLabel = new System.Windows.Forms.Label();
          this.comboBoxCommit = new System.Windows.Forms.ComboBox();
          this.textBoxCommitMessage = new System.Windows.Forms.TextBox();
@@ -67,7 +67,7 @@
          this.groupBoxWorkInProgress = new System.Windows.Forms.GroupBox();
          this.labelDraftStatus = new System.Windows.Forms.Label();
          this.groupBoxMerge.SuspendLayout();
-         this.groupBoxMergeCommitMessage.SuspendLayout();
+         this.groupBoxCommitDetails.SuspendLayout();
          this.groupBoxMergeRequestInformation.SuspendLayout();
          this.tableLayoutPanel1.SuspendLayout();
          this.groupBoxRebase.SuspendLayout();
@@ -128,7 +128,7 @@
          this.groupBoxMerge.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBoxMerge.Controls.Add(this.groupBoxMergeCommitMessage);
+         this.groupBoxMerge.Controls.Add(this.groupBoxCommitDetails);
          this.groupBoxMerge.Controls.Add(this.checkBoxSquash);
          this.groupBoxMerge.Controls.Add(this.checkBoxDeleteSourceBranch);
          this.groupBoxMerge.Controls.Add(this.buttonMerge);
@@ -140,20 +140,20 @@
          this.groupBoxMerge.TabStop = false;
          this.groupBoxMerge.Text = "Merge";
          // 
-         // groupBoxMergeCommitMessage
+         // groupBoxCommitDetails
          // 
-         this.groupBoxMergeCommitMessage.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+         this.groupBoxCommitDetails.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-         this.groupBoxMergeCommitMessage.Controls.Add(this.labelCommitMessageLabel);
-         this.groupBoxMergeCommitMessage.Controls.Add(this.comboBoxCommit);
-         this.groupBoxMergeCommitMessage.Controls.Add(this.textBoxCommitMessage);
-         this.groupBoxMergeCommitMessage.Location = new System.Drawing.Point(9, 63);
-         this.groupBoxMergeCommitMessage.Name = "groupBoxMergeCommitMessage";
-         this.groupBoxMergeCommitMessage.Size = new System.Drawing.Size(690, 161);
-         this.groupBoxMergeCommitMessage.TabIndex = 12;
-         this.groupBoxMergeCommitMessage.TabStop = false;
-         this.groupBoxMergeCommitMessage.Text = "Merge Commit Message";
+         this.groupBoxCommitDetails.Controls.Add(this.labelCommitMessageLabel);
+         this.groupBoxCommitDetails.Controls.Add(this.comboBoxCommit);
+         this.groupBoxCommitDetails.Controls.Add(this.textBoxCommitMessage);
+         this.groupBoxCommitDetails.Location = new System.Drawing.Point(9, 63);
+         this.groupBoxCommitDetails.Name = "groupBoxCommitDetails";
+         this.groupBoxCommitDetails.Size = new System.Drawing.Size(690, 161);
+         this.groupBoxCommitDetails.TabIndex = 12;
+         this.groupBoxCommitDetails.TabStop = false;
+         this.groupBoxCommitDetails.Text = "Merge Commit Message";
          // 
          // labelCommitMessageLabel
          // 
@@ -507,8 +507,8 @@
          this.Text = "Request to merge";
          this.groupBoxMerge.ResumeLayout(false);
          this.groupBoxMerge.PerformLayout();
-         this.groupBoxMergeCommitMessage.ResumeLayout(false);
-         this.groupBoxMergeCommitMessage.PerformLayout();
+         this.groupBoxCommitDetails.ResumeLayout(false);
+         this.groupBoxCommitDetails.PerformLayout();
          this.groupBoxMergeRequestInformation.ResumeLayout(false);
          this.groupBoxMergeRequestInformation.PerformLayout();
          this.tableLayoutPanel1.ResumeLayout(false);
@@ -544,7 +544,7 @@
       protected TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelTitle;
       protected System.Windows.Forms.CheckBox checkBoxSquash;
       protected System.Windows.Forms.CheckBox checkBoxDeleteSourceBranch;
-      private System.Windows.Forms.GroupBox groupBoxMergeCommitMessage;
+      private System.Windows.Forms.GroupBox groupBoxCommitDetails;
       private System.Windows.Forms.Label labelCommitMessageLabel;
       private System.Windows.Forms.ComboBox comboBoxCommit;
       private System.Windows.Forms.TextBox textBoxCommitMessage;
