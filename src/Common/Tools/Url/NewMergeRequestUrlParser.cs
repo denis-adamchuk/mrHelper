@@ -28,9 +28,7 @@ namespace mrHelper.Common.Tools
    public static class NewMergeRequestUrlParser
    {
       public static readonly string RegEx =
-         @"create\/mr" +
-         @"\?(?:Repository\=(?'Repository'.*))" +
-         @"\&(?:SourceBranch\=(?'SourceBranch'[\w_\-\/]+))";
+         @"create\/mr\?(?:Repository\=(?'Repository'.*))\&(?:SourceBranch\=(?'SourceBranch'[\w_\-\/\.]+))";
 
       static readonly int MaxUrlLength = 512;
 
@@ -92,7 +90,7 @@ namespace mrHelper.Common.Tools
       private static string getRemoteSourceBranch(string path, string sourceBranch, string template)
       {
          IEnumerable<string> refs = GitTools.GetRemotePointsAt(path, sourceBranch);
-         if (refs == null)
+         if (refs == null || !refs.Any())
          {
             return null;
          }
