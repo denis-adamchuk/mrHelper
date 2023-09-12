@@ -57,7 +57,17 @@ namespace mrHelper.Integration.GitUI
          }
 
          // load XML from disk
-         XDocument document = XDocument.Load(configFilePath);
+         XDocument document;
+         string content = System.IO.File.ReadAllText(configFilePath);
+         using (StringReader input = new StringReader(content))
+         {
+            System.Xml.XmlReaderSettings xmlReaderSettings = 
+               new System.Xml.XmlReaderSettings { CheckCharacters = false };
+            using (System.Xml.XmlReader reader = System.Xml.XmlReader.Create(input, xmlReaderSettings))
+            {
+               document = XDocument.Load(reader, LoadOptions.None);
+            }
+         }
 
          // find a placeholder for scripts
          XElement ownScripts = document?
@@ -92,7 +102,13 @@ namespace mrHelper.Integration.GitUI
 
          // serialize XML and save to disk
          ownScriptsValue.Value = scripts.ToString();
-         document.Save(configFilePath);
+
+         System.Xml.XmlWriterSettings xmlWriterSettings =
+            new System.Xml.XmlWriterSettings{ CheckCharacters = false };
+         using (System.Xml.XmlWriter writer = System.Xml.XmlWriter.Create(configFilePath, xmlWriterSettings))
+         {
+            document.Save(writer);
+         }
       }
 
       private static int getCurrentMaximumHotKeyNumber(XDocument ownScripts)
