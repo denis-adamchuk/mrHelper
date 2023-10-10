@@ -28,7 +28,7 @@ namespace mrHelper.App.Helpers
 
       public Image GetAvatar(User user)
       {
-         if (user == null)
+         if (user == null || _dataCache.AvatarCache == null)
          {
             return null;
          }

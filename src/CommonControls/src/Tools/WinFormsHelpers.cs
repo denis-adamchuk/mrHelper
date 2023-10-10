@@ -419,6 +419,11 @@ namespace mrHelper.CommonControls.Tools
 
       public static void DrawClippedCircleImage(Graphics g, Image image, Rectangle imageRect)
       {
+         if (image == null)
+         {
+            return;
+         }
+
          g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
          using (GraphicsPath path = new GraphicsPath())

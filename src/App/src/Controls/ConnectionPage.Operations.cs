@@ -548,7 +548,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         if (getCurrentTabDataCacheType() == EDataCacheType.Search)
+         if (getCurrentTabDataCacheType() == EDataCacheType.Search && dataCache.DiscussionCache != null)
          {
             // Pre-load discussions for MR in Search mode
             dataCache.DiscussionCache.RequestUpdate(mrk, PseudoTimerInterval, null);
