@@ -1093,11 +1093,15 @@ namespace mrHelper.App.Controls
 
          if (dc.Resolvable.Value == dc.Resolved.Value)
          {
-            return isSelected ? Color.SpringGreen : Color.Green;
+            return isSelected
+               ? (_colorScheme?.GetColor("ResolvedCountHighlighted")?.Color ?? Color.SpringGreen)
+               : (_colorScheme?.GetColor("ResolvedCount")?.Color ?? Color.Green);
          }
 
          Debug.Assert(dc.Resolvable.Value > dc.Resolved.Value);
-         return isSelected ? Color.Orange : Color.Red;
+         return isSelected
+            ? (_colorScheme?.GetColor("UnresolvedCountHighlighted")?.Color ?? Color.Orange)
+            : (_colorScheme?.GetColor("UnresolvedCount")?.Color ?? Color.DarkRed);
       }
 
       private string getDiscussionCount(MergeRequestKey mrk)
