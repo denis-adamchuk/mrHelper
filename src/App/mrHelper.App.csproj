@@ -546,6 +546,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\exclamation-32x32.png" />
     <None Include="Resources\toolbar\unpin_100x100.png" />
     <None Include="Resources\toolbar\unhide_100x100.png" />
     <None Include="Resources\toolbar\pin_100x100.png" />

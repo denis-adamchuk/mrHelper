@@ -922,6 +922,7 @@ namespace mrHelper.App.Controls
          foreach (NoteContainer noteContainer in _noteContainers)
          {
             Controls.Add(noteContainer.NoteInfo);
+            Controls.Add(noteContainer.NoteHint);
             Controls.Add(noteContainer.NoteContent);
             Controls.Add(noteContainer.NoteAvatar);
             Controls.Add(noteContainer.NoteLink);
@@ -940,6 +941,7 @@ namespace mrHelper.App.Controls
                Control control = Controls[iControl];
                if (container.NoteContent == control
                 || container.NoteInfo == control
+                || container.NoteHint == control
                 || container.NoteAvatar == control
                 || container.NoteLink == control
                 || container.NoteBack == control)
@@ -1057,6 +1059,16 @@ namespace mrHelper.App.Controls
          noteContainer.NoteInfo.Invalidated += (_, __) =>
             noteContainer.NoteInfo.Text = getNoteInformation(note);
 
+         string hint = getNoteHintHtml(note);
+         if (hint != null)
+         {
+            noteContainer.NoteHint = new PictureBox
+            {
+               Image = Properties.Resources.exclamation_32x32,
+               SizeMode = PictureBoxSizeMode.StretchImage
+            };
+         }
+
          noteContainer.NoteAvatar = new AvatarBox
          {
             Image = _avatarImageCache.GetAvatar(note.Author),
@@ -1108,6 +1120,7 @@ namespace mrHelper.App.Controls
                updateStylesheet(noteControl);
                setDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
                updateNoteTooltip(noteControl, getNoteFromControl(noteControl));
+               updateNoteHintTooltip(noteContainer.NoteHint, hint);
             };
             noteControl.LinkClicked += noteControl_LinkClicked;
             noteControl.KeyDown += (s, e) => noteControl_KeyDown(e);
@@ -1115,6 +1128,7 @@ namespace mrHelper.App.Controls
             updateStylesheet(noteControl);
             setDiscussionNoteText(noteControl, note);
             updateNoteTooltip(noteControl, note);
+            updateNoteHintTooltip(noteContainer.NoteHint, hint);
 
             noteContainer.NoteContent = noteControl;
          }
@@ -1147,6 +1161,16 @@ namespace mrHelper.App.Controls
       private void updateNoteTooltip(Control noteControl, DiscussionNote note)
       {
          _htmlTooltip.SetToolTip(noteControl, getNoteTooltipHtml(noteControl, note));
+      }
+
+      private void updateNoteHintTooltip(Control hintControl, string hint)
+      {
+         if (hintControl == null || hint == null)
+         {
+            return;
+         }
+
+         _htmlTooltip.SetToolTip(hintControl, getNoteHintTooltipHtml(hintControl, hint));
       }
 
       internal void setDiscussionNoteText(Control noteControl, DiscussionNote note)
@@ -1375,6 +1399,44 @@ namespace mrHelper.App.Controls
             css, body);
       }
 
+      private string getNoteHintHtml(DiscussionNote note)
+      {
+         if (note == null || String.IsNullOrEmpty(note.Body))
+         {
+            return null;
+         }
+
+         if (StringUtils.DoesContainUnescapedSpecialCharacters(note.Body))
+         {
+            return Common.Constants.Constants.UnescapedMarkdownHtmlHint;
+         }
+
+         return null;
+      }
+
+      private string getNoteHintTooltipHtml(Control noteControl, string text)
+      {
+         if (text == null)
+         {
+            return String.Empty;
+         }
+
+         string css = ResourceHelper.SetControlFontSizeToCommonCss(noteControl);
+         return String.Format(
+            @"<html>
+               <head>
+                  <style>
+                     {0}
+                  </style>
+               </head>
+               <body>
+                  {1}
+               </body>
+             </html>",
+            css, text);
+      }
+
+
       private Color getNoteColor(DiscussionNote note)
       {
          Color getColorOrDefault(string colorName)
@@ -1529,6 +1591,13 @@ namespace mrHelper.App.Controls
             int noteAvatarHeight = (int)(noteContainer.NoteInfo.Height * 2);
             int noteAvatarWidth = noteAvatarHeight;
             noteContainer.NoteAvatar.Size = new Size(noteAvatarWidth, noteAvatarHeight);
+
+            if (noteContainer.NoteHint != null)
+            {
+               int noteHintHeight = noteContainer.NoteInfo.Height;
+               int noteHintWidth = noteHintHeight;
+               noteContainer.NoteHint.Size = new Size(noteHintWidth, noteHintHeight);
+            }
 
             Control noteControl = noteContainer.NoteContent;
             HtmlPanel htmlPanel = noteControl as HtmlPanel;
@@ -1691,6 +1760,13 @@ namespace mrHelper.App.Controls
                Point noteInfoPos = controlPos;
                noteInfoPos.Offset(noteHorzOffset + AvatarPaddingRight + noteContainer.NoteAvatar.Width, 0);
                noteContainer.NoteInfo.Location = noteInfoPos;
+            }
+
+            if (noteContainer.NoteHint != null)
+            {
+               Point noteHintPos = controlPos;
+               noteHintPos.Offset(noteContainer.NoteInfo.Right + NoteHintPaddingRight, 0);
+               noteContainer.NoteHint.Location = noteHintPos;
             }
 
             {
@@ -2190,6 +2266,7 @@ namespace mrHelper.App.Controls
 
       private int AvatarPaddingTop => scale(5);
       private int AvatarPaddingRight => scale(10);
+      private int NoteHintPaddingRight => scale(10);
       private int BackLinkPaddingRight => scale(10);
 
       private int ServiceNoteExtraWidth => scale(4);
@@ -2214,6 +2291,7 @@ namespace mrHelper.App.Controls
       private class NoteContainer
       {
          public Control NoteInfo;
+         public Control NoteHint;
          public Control NoteContent;
          public Control NoteAvatar;
          public Control NoteLink;

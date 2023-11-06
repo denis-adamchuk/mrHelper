@@ -76,6 +76,9 @@ namespace mrHelper.Common.Constants
       public static string WarningOnUnescapedMarkdown =
          "Warning: Some markdown characters may require surrounding them with apostrophes, e.g. `<vector>` or `f<int>()`";
 
+      public static string UnescapedMarkdownHtmlHint =
+         "Discussion note text contains unescaped characters.<br>Markdown may look wrong. Press F6 to see plain text.";
+
       public static string NoDataAtGitLab = "GitLab can't compare";
 
       public static Dictionary<string, double> FontSizeChoices = new Dictionary<string, double>

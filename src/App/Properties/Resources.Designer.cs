@@ -98,7 +98,7 @@ namespace mrHelper.App.Properties {
         ///
         ///body div {
         ///   font-family: Microsoft Sans Serif, Sans Serif;
-        ///   padding: 2px;
+        ///   padding: 0.2em;
         ///}
         ///
         ///table {
@@ -107,22 +107,19 @@ namespace mrHelper.App.Properties {
         ///   border-spacing: 0;
         ///}
         ///
-        ///table .no-border {
-        ///   border: none;
-        ///   border-collapse: initial;
-        ///   border-spacing: initial;
-        ///}
-        ///
         ///table thead th {
         ///   background-color: #E4E7E6;
         ///   border: solid 1px #DDEEEE;
         ///   color: #333;
-        ///   padding: 5px;
         ///   text-align: left;
         ///   text-shadow: 1px 1px 1px #fff;
         ///}
         ///
-        ///tab [rest of string was truncated]&quot;;.
+        ///table tbody td {
+        ///   background-color: #FBFBF5;
+        ///   border: solid 1px #DDEEEE;
+        ///   color: #333;
+        ///   text-shadow: 1px 1px  [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string Common_CSS {
             get {
@@ -186,6 +183,16 @@ namespace mrHelper.App.Properties {
         internal static System.Drawing.Bitmap editmr_100x100 {
             get {
                 object obj = ResourceManager.GetObject("editmr_100x100", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap exclamation_32x32 {
+            get {
+                object obj = ResourceManager.GetObject("exclamation_32x32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
