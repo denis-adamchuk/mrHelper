@@ -1401,7 +1401,7 @@ namespace mrHelper.App.Controls
 
       private string getNoteHintHtml(DiscussionNote note)
       {
-         if (note == null || String.IsNullOrEmpty(note.Body))
+         if (note == null || String.IsNullOrEmpty(note.Body) || isServiceDiscussionNote(note))
          {
             return null;
          }
