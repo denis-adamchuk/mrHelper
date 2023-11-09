@@ -131,7 +131,7 @@ namespace mrHelper.Common.Tools
          return word;
       }
 
-      private static readonly char[] SpecialCharacters = new char[] { '<', '>', '\\' };
+      private static readonly char[] SpecialCharacters = new char[] { '<' };
 
       private enum CodeBlockType
       {
