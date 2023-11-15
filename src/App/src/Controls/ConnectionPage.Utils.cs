@@ -323,6 +323,7 @@ namespace mrHelper.App.Controls
          descriptionSplitContainerSite.UpdateData(fmk, dataCache);
          revisionSplitContainerSite.SetData(mrk, dataCache);
          updateConnectedToLabel(fmk);
+         updateEnvironmentLabel(getEnvStatus(mode, mrk));
 
          string status = _latestStorageUpdateStatus.TryGetValue(mrk, out string value) ? value : String.Empty;
          StorageStatusChanged?.Invoke(this);
@@ -786,18 +787,35 @@ namespace mrHelper.App.Controls
 
       private void updateConnectedToLabel(FullMergeRequestKey? fmkOpt)
       {
-         if (!fmkOpt.HasValue)
+         if (!fmkOpt.HasValue || String.IsNullOrEmpty(fmkOpt.Value.MergeRequest.Web_Url))
          {
             linkLabelConnectedTo.Text = String.Empty;
             linkLabelConnectedTo.LinkArea = new LinkArea();
          }
          else
          {
-            FullMergeRequestKey fmk = fmkOpt.Value;
-            linkLabelConnectedTo.Text = fmk.MergeRequest.Web_Url;
+            linkLabelConnectedTo.Text = fmkOpt.Value.MergeRequest.Web_Url;
             linkLabelConnectedTo.LinkArea = new LinkArea(0, linkLabelConnectedTo.Text.Length);
          }
          _toolTip.SetToolTip(linkLabelConnectedTo, linkLabelConnectedTo.Text);
+      }
+
+      private void updateEnvironmentLabel(EnvironmentStatus envStatus)
+      {
+         if (envStatus == null || !envStatus.Environment_Available ||
+            String.IsNullOrEmpty(envStatus.External_Url))
+         {
+            linkLabelEnvironment.Text = String.Empty;
+            linkLabelEnvironment.LinkArea = new LinkArea();
+            linkLabelEnvironment.Visible = false;
+         }
+         else
+         {
+            linkLabelEnvironment.Text = envStatus.External_Url;
+            linkLabelEnvironment.LinkArea = new LinkArea(0, linkLabelEnvironment.Text.Length);
+            linkLabelEnvironment.Visible = true;
+         }
+         _toolTip.SetToolTip(linkLabelEnvironment, linkLabelEnvironment.Text);
       }
 
       private void disableLiveTabControls()
@@ -828,6 +846,7 @@ namespace mrHelper.App.Controls
          descriptionSplitContainerSite.ClearData();
          revisionSplitContainerSite.ClearData();
          updateConnectedToLabel(null);
+         updateEnvironmentLabel(null);
 
          StorageStatusChanged?.Invoke(this);
          onMergeRequestActionsEnabled();
@@ -1331,6 +1350,9 @@ namespace mrHelper.App.Controls
 
       private bool isCached(EDataCacheType mode, MergeRequestKey mrk) =>
          getDataCache(mode)?.MergeRequestCache?.GetMergeRequest(mrk) != null;
+
+      private EnvironmentStatus getEnvStatus(EDataCacheType mode, MergeRequestKey mrk) =>
+         getDataCache(mode)?.MergeRequestCache?.GetEnvironmentStatus(mrk)?.FirstOrDefault(x => x.Status == "success");
    }
 }
 

@@ -136,6 +136,7 @@ namespace mrHelper.App.Controls
          forEachListView(listView => listView.ContentChanged += listViewMergeRequests_ContentChanged);
 
          linkLabelConnectedTo.SetLinkLabelClicked(openBrowserForSelectedMergeRequest);
+         linkLabelEnvironment.SetLinkLabelClicked(openBrowserForSelectedMergeRequest);
 
          descriptionSplitContainerSite.Initialize(_keywords, _mdPipeline);
          descriptionSplitContainerSite.SplitContainer.SplitterMoving +=

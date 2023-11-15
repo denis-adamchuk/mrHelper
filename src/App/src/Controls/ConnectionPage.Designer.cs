@@ -48,6 +48,7 @@ namespace mrHelper.App.Controls
 
          // To avoid dangling LinkLabelEx in a tooltip that we received from creator
          _toolTip.SetToolTip(linkLabelConnectedTo, null);
+         _toolTip.SetToolTip(linkLabelEnvironment, null);
 
          Program.Settings.MainWindowLayoutChanged -= onMainWindowLayoutChanged;
          Program.Settings.WordWrapLongRowsChanged -= onWrapLongRowsChanged;
@@ -142,6 +143,7 @@ namespace mrHelper.App.Controls
          this.groupBoxSelectedMR = new System.Windows.Forms.GroupBox();
          this.descriptionSplitContainerSite = new mrHelper.App.Controls.DescriptionSplitContainerSite();
          this.linkLabelConnectedTo = new mrHelper.CommonControls.Controls.LinkLabelEx();
+         this.linkLabelEnvironment = new mrHelper.CommonControls.Controls.LinkLabelEx();
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
          this.revisionSplitContainerSite = new mrHelper.App.Controls.RevisionSplitContainerSite();
          this.comboBoxFilter = new FilterStateComboBox();
@@ -712,6 +714,7 @@ namespace mrHelper.App.Controls
          // 
          this.groupBoxSelectedMR.Controls.Add(this.descriptionSplitContainerSite);
          this.groupBoxSelectedMR.Controls.Add(this.linkLabelConnectedTo);
+         this.groupBoxSelectedMR.Controls.Add(this.linkLabelEnvironment);
          this.groupBoxSelectedMR.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSelectedMR.Location = new System.Drawing.Point(0, 0);
          this.groupBoxSelectedMR.Name = "groupBoxSelectedMR";
@@ -732,7 +735,7 @@ namespace mrHelper.App.Controls
          // 
          this.linkLabelConnectedTo.AutoEllipsis = true;
          this.linkLabelConnectedTo.Dock = System.Windows.Forms.DockStyle.Bottom;
-         this.linkLabelConnectedTo.Location = new System.Drawing.Point(3, 309);
+         this.linkLabelConnectedTo.Location = new System.Drawing.Point(3, 286);
          this.linkLabelConnectedTo.Name = "linkLabelConnectedTo";
          this.linkLabelConnectedTo.Padding = new System.Windows.Forms.Padding(0, 2, 0, 0);
          this.linkLabelConnectedTo.Size = new System.Drawing.Size(322, 23);
@@ -740,6 +743,19 @@ namespace mrHelper.App.Controls
          this.linkLabelConnectedTo.TabStop = true;
          this.linkLabelConnectedTo.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
          this.linkLabelConnectedTo.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+         // 
+         // linkLabelEnvironment
+         // 
+         this.linkLabelEnvironment.AutoEllipsis = true;
+         this.linkLabelEnvironment.Dock = System.Windows.Forms.DockStyle.Bottom;
+         this.linkLabelEnvironment.Location = new System.Drawing.Point(3, 309);
+         this.linkLabelEnvironment.Name = "linkLabelEnvironment";
+         this.linkLabelEnvironment.Padding = new System.Windows.Forms.Padding(0, 2, 0, 0);
+         this.linkLabelEnvironment.Size = new System.Drawing.Size(322, 23);
+         this.linkLabelEnvironment.TabIndex = 5;
+         this.linkLabelEnvironment.TabStop = true;
+         this.linkLabelEnvironment.Text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
+         this.linkLabelEnvironment.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
          // 
          // groupBoxSelectRevisions
          // 
@@ -859,6 +875,7 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.GroupBox groupBoxSelectedMR;
       private System.Windows.Forms.GroupBox groupBoxSelectRevisions;
       private CommonControls.Controls.LinkLabelEx linkLabelConnectedTo;
+      private CommonControls.Controls.LinkLabelEx linkLabelEnvironment;
       private System.Windows.Forms.LinkLabel linkLabelNewSearch;
       private DescriptionSplitContainerSite descriptionSplitContainerSite;
       private RevisionSplitContainerSite revisionSplitContainerSite;
