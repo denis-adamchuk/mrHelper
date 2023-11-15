@@ -417,7 +417,8 @@ namespace mrHelper.App.Controls
       private void createSearchDataCacheAndDependencies()
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilter, _keywords,
-            Program.Settings.UpdateManagerExtendedLogging, "Search", new DataCacheCallbacks(null, null, null),
+            Program.Settings.UpdateManagerExtendedLogging, "Search",
+            new DataCacheCallbacks(null, null, isEnvironmentStatusSupported),
             getDataCacheUpdateRules(EDataCacheType.Search), false, false);
          _searchDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Search).SetDataCache(_searchDataCache);
@@ -487,7 +488,8 @@ namespace mrHelper.App.Controls
       private void createRecentDataCacheAndDependencies()
       {
          DataCacheContext dataCacheContext = new DataCacheContext(this, _mergeRequestFilterRecent, _keywords,
-            Program.Settings.UpdateManagerExtendedLogging, "Recent", new DataCacheCallbacks(null, null, null),
+            Program.Settings.UpdateManagerExtendedLogging, "Recent",
+            new DataCacheCallbacks(null, null, isEnvironmentStatusSupported),
             getDataCacheUpdateRules(EDataCacheType.Recent), false, false);
          _recentDataCache = new DataCache(dataCacheContext);
          getListView(EDataCacheType.Recent).SetDataCache(_recentDataCache);
