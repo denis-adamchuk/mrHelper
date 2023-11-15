@@ -30,7 +30,8 @@ namespace mrHelper.GitLabClient.Managers
          _mergeRequestListLoader = new MergeRequestListLoader(
             hostname, _updateOperator, cacheUpdater, null, queryCollection,
             isApprovalStatusSupported);
-         _mergeRequestLoader = new MergeRequestLoader(_updateOperator, cacheUpdater, isApprovalStatusSupported);
+         _mergeRequestLoader = new MergeRequestLoader(_updateOperator, cacheUpdater,
+            isApprovalStatusSupported, dataCacheContext.Callbacks);
          _extLogging = dataCacheContext.UpdateManagerExtendedLogging;
          _tagForLogging = dataCacheContext.TagForLogging;
 

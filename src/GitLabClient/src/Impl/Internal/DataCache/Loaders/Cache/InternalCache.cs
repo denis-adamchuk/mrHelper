@@ -37,6 +37,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          {
             SetApprovals(kv.Key, kv.Value);
          }
+
+         foreach (KeyValuePair<MergeRequestKey, IEnumerable<EnvironmentStatus>> kv in details._environmentStatus)
+         {
+            SetEnvironmentStatus(kv.Key, kv.Value.ToArray()); // make a copy
+         }
       }
 
       private void init()
@@ -45,6 +50,7 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          _versions = new Dictionary<MergeRequestKey, IEnumerable<Version>>();
          _commits = new Dictionary<MergeRequestKey, IEnumerable<Commit>>();
          _approvals = new Dictionary<MergeRequestKey, MergeRequestApprovalConfiguration>();
+         _environmentStatus = new Dictionary<MergeRequestKey, IEnumerable<EnvironmentStatus>>();
          _avatars = new Dictionary<int, byte[]>();
       }
 
@@ -141,6 +147,16 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          _approvals[mrk] = approvals;
       }
 
+      public IEnumerable<EnvironmentStatus> GetEnvironmentStatus(MergeRequestKey mrk)
+      {
+         return _environmentStatus.ContainsKey(mrk) ? _environmentStatus[mrk] : Array.Empty<EnvironmentStatus>();
+      }
+
+      internal void SetEnvironmentStatus(MergeRequestKey mrk, IEnumerable<EnvironmentStatus> status)
+      {
+         _environmentStatus[mrk] = status;
+      }
+
       public byte[] GetAvatar(int userId)
       {
          return _avatars.TryGetValue(userId, out byte[] value) ? value : null;
@@ -196,6 +212,9 @@ namespace mrHelper.GitLabClient.Loaders.Cache
 
       // maps Merge Request to its approval configuration
       private Dictionary<MergeRequestKey, MergeRequestApprovalConfiguration> _approvals;
+
+      // maps Merge Request to its environment status
+      private Dictionary<MergeRequestKey, IEnumerable<EnvironmentStatus>> _environmentStatus;
 
       // maps User Id to its avatar
       private Dictionary<int, byte[]> _avatars;

@@ -87,6 +87,17 @@ namespace mrHelper.GitLabClient.Loaders.Cache
          _cache.SetApprovals(mrk, approvals);
       }
 
+      internal void UpdateEnvironmentStatus(MergeRequestKey mrk, IEnumerable<EnvironmentStatus> status)
+      {
+         if (status == null)
+         {
+            Debug.Assert(false);
+            return;
+         }
+
+         _cache.SetEnvironmentStatus(mrk, status);
+      }
+
       internal void UpdateAvatar(int userId, byte[] avatar)
       {
          _cache.SetAvatar(userId, avatar);

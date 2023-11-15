@@ -43,6 +43,11 @@ namespace mrHelper.GitLabClient.Loaders.Cache
       MergeRequestApprovalConfiguration GetApprovals(MergeRequestKey mrk);
 
       /// <summary>
+      /// Return a list of environment status of a specified merge request
+      /// </summary>
+      IEnumerable<EnvironmentStatus> GetEnvironmentStatus(MergeRequestKey mrk);
+
+      /// <summary>
       /// Return avatar image byte array for a specified user id
       /// </summary>
       byte[] GetAvatar(int userId);

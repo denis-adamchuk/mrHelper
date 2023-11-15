@@ -582,6 +582,12 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(SelectedProjectsUpgradedKeyName, value);
       }
 
+      public Dictionary<string, string> ProjectsWithEnvironments
+      {
+         get => getStringToStringDictionary(ProjectsWithEnvironmentsKeyName, ProjectsWithEnvironmentsDefaultValue, true);
+         set => setStringToStringDictionary(ProjectsWithEnvironmentsKeyName, value);
+      }
+
       public Dictionary<string, string> CustomColors
       {
          get => getStringToStringDictionary(CustomColorsKeyName, CustomColorsDefaultValue, false);

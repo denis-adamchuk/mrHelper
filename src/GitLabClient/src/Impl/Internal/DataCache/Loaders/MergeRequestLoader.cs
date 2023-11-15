@@ -15,12 +15,13 @@ namespace mrHelper.GitLabClient.Loaders
    internal class MergeRequestLoader : BaseDataCacheLoader, IMergeRequestLoader, IDisposable
    {
       internal MergeRequestLoader(DataCacheOperator op, InternalCacheUpdater cacheUpdater,
-         bool isApprovalStatusSupported)
+         bool isApprovalStatusSupported, DataCacheCallbacks callbacks)
          : base(op)
       {
          _cacheUpdater = cacheUpdater;
          _versionLoader = new VersionLoader(op, cacheUpdater);
          _approvalLoader = isApprovalStatusSupported ? new ApprovalLoader(op, cacheUpdater) : null;
+         _envStatusLoader = new EnvironmentStatusLoader(op, cacheUpdater, callbacks);
          _avatarLoader = new AvatarLoader(cacheUpdater);
       }
 
@@ -52,6 +53,7 @@ namespace mrHelper.GitLabClient.Loaders
             await _approvalLoader.LoadApprovals(dummyArray);
          }
 
+         await _envStatusLoader.LoadEnvironmentStatus(dummyArray);
          await _avatarLoader.LoadAvatars(dummyArray);
       }
 
@@ -75,6 +77,7 @@ namespace mrHelper.GitLabClient.Loaders
       }
 
       private readonly VersionLoader _versionLoader;
+      private readonly EnvironmentStatusLoader _envStatusLoader;
       private readonly ApprovalLoader _approvalLoader;
       private readonly AvatarLoader _avatarLoader;
       private readonly InternalCacheUpdater _cacheUpdater;

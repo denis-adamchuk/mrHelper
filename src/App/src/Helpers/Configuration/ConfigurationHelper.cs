@@ -378,6 +378,27 @@ namespace mrHelper.App.Helpers
             .Where(x => x.Item2).Select(x => x.Item1);
       }
 
+      internal static void SetProjectsWithEnvironmentsForHost(string host,
+         StringToBooleanCollection projects, UserDefinedSettings settings)
+      {
+         Dictionary<string, string> selectedProjects = settings.ProjectsWithEnvironments;
+         HostStringHelper.UpdateRawDictionaryString(
+            new Dictionary<string, IEnumerable<Tuple<string, string>>>
+            {
+               { host, projects.Select(y => new Tuple<string, string>(y.Item1, y.Item2.ToString())) }
+            },
+            selectedProjects);
+         settings.ProjectsWithEnvironments = selectedProjects;
+      }
+
+      internal static StringToBooleanCollection GetProjectsWithEnvironmentsForHost(
+         string host, UserDefinedSettings settings)
+      {
+         return new StringToBooleanCollection(
+            HostStringHelper.GetDictionaryStringValue(host, settings.ProjectsWithEnvironments)
+            .Select(x => new Tuple<string, bool>(x.Item1, bool.TryParse(x.Item2, out bool result) && result)));
+      }
+
       internal static IEnumerable<string> GetEnabledUsers(string hostname, UserDefinedSettings settings)
       {
          return GetUsersForHost(hostname, settings).Where(x => x.Item2)?.Select(x => x.Item1);

@@ -8,14 +8,17 @@ namespace mrHelper.GitLabClient
    public class DataCacheCallbacks
    {
       public DataCacheCallbacks(Action<ProjectKey> onForbiddenProject,
-                                Action<ProjectKey> onNotFoundProject)
+                                Action<ProjectKey> onNotFoundProject,
+                                Func<ProjectKey, bool> isEnvironmentStatusSupported)
       {
          OnForbiddenProject = onForbiddenProject;
          OnNotFoundProject = onNotFoundProject;
+         IsEnvironmentStatusSupported = isEnvironmentStatusSupported;
       }
 
       public Action<ProjectKey> OnForbiddenProject { get; }
       public Action<ProjectKey> OnNotFoundProject { get; }
+      public Func<ProjectKey, bool> IsEnvironmentStatusSupported { get; }
    }
 
    public class DataCacheUpdateRules

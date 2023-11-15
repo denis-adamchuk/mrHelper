@@ -94,6 +94,11 @@ namespace mrHelper.GitLabClient.Managers
          return _cacheUpdater.Cache.GetApprovals(mrk);
       }
 
+      public IEnumerable<GitLabSharp.Entities.EnvironmentStatus> GetEnvironmentStatus(MergeRequestKey mrk)
+      {
+         return _cacheUpdater.Cache.GetEnvironmentStatus(mrk);
+      }
+
       private IEnumerable<Version> getAllVersions(ProjectKey projectKey)
       {
          List<Version> versions = new List<Version>();

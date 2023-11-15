@@ -77,6 +77,15 @@ namespace mrHelper.App.Forms
                StringToBooleanCollection projects = DefaultWorkflowLoader.GetDefaultProjectsForHost(hostname, false);
                ConfigurationHelper.SetProjectsForHost(hostname, projects, Program.Settings);
             });
+
+         Program.Settings.KnownHosts
+            .Where(hostname => !ConfigurationHelper.GetProjectsWithEnvironmentsForHost(hostname, Program.Settings).Any())
+            .ToList()
+            .ForEach(hostname =>
+            {
+               StringToBooleanCollection projects = DefaultWorkflowLoader.GetDefaultProjectsWithEnvironments(hostname, true);
+               ConfigurationHelper.SetProjectsWithEnvironmentsForHost(hostname, projects, Program.Settings);
+            });
       }
 
       private void initializeColorScheme()

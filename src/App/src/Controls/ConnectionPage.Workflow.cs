@@ -212,6 +212,14 @@ namespace mrHelper.App.Controls
          changeProjectEnabledState(projectKey, false);
       }
 
+      private bool isEnvironmentStatusSupported(ProjectKey projectKey)
+      {
+         return ConfigurationHelper
+            .GetProjectsWithEnvironmentsForHost(projectKey.HostName, Program.Settings)
+            .Where(x => x.Item2)
+            .Any(x => projectKey.MatchProject(x.Item1));
+      }
+
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
       private void onLiveDataCacheDisconnected()

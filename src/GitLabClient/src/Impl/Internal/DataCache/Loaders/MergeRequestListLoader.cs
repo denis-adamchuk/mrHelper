@@ -23,6 +23,7 @@ namespace mrHelper.GitLabClient.Loaders
          _versionLoader = new VersionLoader(_operator, cacheUpdater);
          _approvalLoader = isApprovalStatusSupported ? new ApprovalLoader(_operator, cacheUpdater) : null;
          _avatarLoader = new AvatarLoader(cacheUpdater);
+         _envStatusLoader = new EnvironmentStatusLoader(_operator, cacheUpdater, callbacks);
          _callbacks = callbacks;
          _queryCollection = queryCollection;
       }
@@ -46,6 +47,7 @@ namespace mrHelper.GitLabClient.Loaders
             await _approvalLoader.LoadApprovals(mergeRequestKeys);
          }
 
+         await _envStatusLoader.LoadEnvironmentStatus(mergeRequestKeys);
          await _avatarLoader.LoadAvatars(mergeRequestKeys);
       }
 
@@ -253,6 +255,7 @@ namespace mrHelper.GitLabClient.Loaders
       private readonly string _hostname;
       private readonly VersionLoader _versionLoader;
       private readonly ApprovalLoader _approvalLoader;
+      private readonly EnvironmentStatusLoader _envStatusLoader;
       private readonly AvatarLoader _avatarLoader;
       private readonly InternalCacheUpdater _cacheUpdater;
       private readonly DataCacheCallbacks _callbacks;

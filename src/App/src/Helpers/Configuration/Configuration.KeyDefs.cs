@@ -291,6 +291,9 @@ namespace mrHelper.App.Helpers
       private static readonly string SelectedProjectsUpgradedKeyName      = "SelectedProjectsUpgraded";
       private static readonly bool   SelectedProjectsUpgradedDefaultValue = false;
 
+      private static readonly string ProjectsWithEnvironmentsKeyName      = "ProjectsWithEnvironments";
+      private static readonly string ProjectsWithEnvironmentsDefaultValue = String.Empty;
+
       private static readonly string MainWindowFontSizeNameKeyName       = "MWFontSize";
       private static readonly string MainWindowFontSizeNameDefaultValue  = Constants.DefaultMainWindowFontSizeChoice;
 

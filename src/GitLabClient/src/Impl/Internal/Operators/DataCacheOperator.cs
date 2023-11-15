@@ -151,6 +151,17 @@ namespace mrHelper.GitLabClient.Operators
                            await gl.Projects.Get(projectName).MergeRequests.Get(iid).GetApprovalConfigurationTaskAsync())));
       }
 
+      internal Task<IEnumerable<EnvironmentStatus>> GetEnvironmentStatusAsync(string projectName, int iid)
+      {
+         return callWithSharedClient(
+            async (client) =>
+               await OperatorCallWrapper.Call(
+                  async () =>
+                     (IEnumerable<EnvironmentStatus>)await client.RunAsync(
+                        async (gl) =>
+                           await gl.Projects.Get(projectName).MergeRequests.Get(iid).GetCIEnvironmentStatusTaskAsync())));
+      }
+
       internal Task<IEnumerable<Project>> GetProjects()
       {
          return callWithSharedClient(

@@ -147,6 +147,12 @@ namespace mrHelper.Common.Constants
          Delay = 0
       };
 
+      public static TaskUtils.BatchLimits EnvironmentStatusLoaderMergeRequestBatchLimits = new TaskUtils.BatchLimits
+      {
+         Size = 20,
+         Delay = 0
+      };
+
       public static TaskUtils.BatchLimits AvatarLoaderUserBatchLimits = new TaskUtils.BatchLimits
       {
          Size = 20,
