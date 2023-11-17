@@ -169,8 +169,13 @@ namespace mrHelper.GitLabClient.Loaders.Cache
 
             MergeRequestApprovalConfiguration oldApprovals = oldDetails.GetApprovals(mergeRequestKey);
             MergeRequestApprovalConfiguration newApprovals = newDetails.GetApprovals(mergeRequestKey);
+
+            IEnumerable<EnvironmentStatus> oldEnvStatus = oldDetails.GetEnvironmentStatus(mergeRequestKey);
+            IEnumerable<EnvironmentStatus> newEnvStatus = newDetails.GetEnvironmentStatus(mergeRequestKey);
+
             bool detailsUpdated = areMergeRequestsDifferentInDetails(mergeRequest1, mergeRequest2)
-                               || areApprovalsDifferent(oldApprovals, newApprovals);
+                               || areApprovalsDifferent(oldApprovals, newApprovals)
+                               || areEnvStatusDifferent(oldEnvStatus, newEnvStatus);
 
             if (labelsUpdated || commitsUpdated || detailsUpdated)
             {
@@ -254,6 +259,45 @@ namespace mrHelper.GitLabClient.Loaders.Cache
              || approvals1.Merge_Status != approvals2.Merge_Status
              || approvals1.Approvals_Required != approvals2.Approvals_Required
              || approvals1.Approvals_Left != approvals2.Approvals_Left;
+      }
+
+      private bool areEnvStatusDifferent(IEnumerable<EnvironmentStatus> envStatus1,
+                                         IEnumerable<EnvironmentStatus> envStatus2)
+      {
+         if (envStatus1 == null && envStatus2 == null)
+         {
+            return false;
+         }
+         else if (envStatus1 == null || envStatus2 == null)
+         {
+            return true;
+         }
+         else if (envStatus1 == envStatus2)
+         {
+            return false;
+         }
+
+         EnvironmentStatus[] envStatusArray1 = envStatus1.OrderBy(x => x.Id).ToArray();
+         EnvironmentStatus[] envStatusArray2 = envStatus2.OrderBy(x => x.Id).ToArray();
+         if (envStatusArray1.Length != envStatusArray2.Length)
+         {
+            return true;
+         }
+
+         for (int i = 0; i < envStatusArray1.Length; ++i)
+         {
+            if (envStatusArray1[i].Id                     != envStatusArray2[i].Id ||
+                envStatusArray1[i].Name                   != envStatusArray2[i].Name ||
+                envStatusArray1[i].Status                 != envStatusArray2[i].Status ||
+                envStatusArray1[i].External_Url           != envStatusArray2[i].External_Url ||
+                envStatusArray1[i].External_Url_Formatted != envStatusArray2[i].External_Url_Formatted ||
+                envStatusArray1[i].Environment_Available  != envStatusArray2[i].Environment_Available)
+            {
+               return true;
+            }
+         }
+
+         return false;
       }
    }
 }

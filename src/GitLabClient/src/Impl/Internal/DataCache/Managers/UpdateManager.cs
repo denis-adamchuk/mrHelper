@@ -26,12 +26,14 @@ namespace mrHelper.GitLabClient.Managers
          INetworkOperationStatusListener networkOperationStatusListener,
          bool isApprovalStatusSupported)
       {
+         DataCacheCallbacks callbacks = new DataCacheCallbacks( // filter out callbacks unneeded for updates
+            null, null, dataCacheContext.Callbacks.IsEnvironmentStatusSupported);
          _updateOperator = new DataCacheOperator(hostname, hostProperties, networkOperationStatusListener);
          _mergeRequestListLoader = new MergeRequestListLoader(
-            hostname, _updateOperator, cacheUpdater, null, queryCollection,
+            hostname, _updateOperator, cacheUpdater, callbacks, queryCollection,
             isApprovalStatusSupported);
          _mergeRequestLoader = new MergeRequestLoader(_updateOperator, cacheUpdater,
-            isApprovalStatusSupported, dataCacheContext.Callbacks);
+            isApprovalStatusSupported, callbacks);
          _extLogging = dataCacheContext.UpdateManagerExtendedLogging;
          _tagForLogging = dataCacheContext.TagForLogging;
 
