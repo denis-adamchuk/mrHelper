@@ -117,7 +117,10 @@ namespace mrHelper.App.Controls
          base.Dispose(disposing);
 
          disposePopupContext();
-         _popupWindow.Closed -= onPopupWindowClosed;
+         if (_popupWindow != null)
+         {
+            _popupWindow.Closed -= onPopupWindowClosed;
+         }
          _popupWindow = null;
 
          _colorScheme.Changed -= onColorSchemeChanged;
