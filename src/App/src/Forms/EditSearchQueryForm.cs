@@ -32,7 +32,7 @@ namespace mrHelper.App.Forms
          {
             SearchQuery query = new SearchQuery
             {
-               MaxResults = Constants.MaxSearchResults
+               MaxResults = Int32.Parse(comboBoxMaxSearchResults.Text)
             };
 
             if (checkBoxSearchByTargetBranch.Checked && !String.IsNullOrWhiteSpace(textBoxSearchTargetBranch.Text))
@@ -137,19 +137,6 @@ namespace mrHelper.App.Forms
             "Search merge requests by target branch name");
          toolTip.SetToolTip(this.checkBoxSearchByTitleAndDescription,
             "Search merge requests by words from title and description");
-
-         void extendControlTooltip(Control control, int searchLimit) =>
-            toolTip.SetToolTip(control, String.Format(
-               "{0} (up to {1} results)", toolTip.GetToolTip(control), searchLimit));
-
-         extendControlTooltip(checkBoxSearchByAuthor,
-            Constants.MaxSearchResults);
-         extendControlTooltip(checkBoxSearchByProject,
-            Constants.MaxSearchResults);
-         extendControlTooltip(checkBoxSearchByTargetBranch,
-            Constants.MaxSearchResults);
-         extendControlTooltip(checkBoxSearchByTitleAndDescription,
-            Constants.MaxSearchResults);
       }
 
       private void fillProjectList(IEnumerable<string> projectNames)
@@ -241,6 +228,8 @@ namespace mrHelper.App.Forms
          {
             comboBoxSearchByState.SelectedItem = stateItem;
          }
+
+         comboBoxMaxSearchResults.SelectedIndex = 0;
       }
 
       private void selectCurrentUserInSearchDropdown()

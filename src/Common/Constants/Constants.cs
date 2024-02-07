@@ -101,7 +101,6 @@ namespace mrHelper.Common.Constants
       public static string[] DiscussionsWindowFontSizeChoices = new string[]
          { "Tiny", "Small", "Medium", "Large", "Meeting Mode" };
 
-      public static int MaxSearchResults = 20;
       public static int MaxCommitsToLoad = 50;
       public static int MaxAllowedDiffsInComparison = 1000;
       public static int MaxAllowedDiffsInBackgroundComparison = 100;

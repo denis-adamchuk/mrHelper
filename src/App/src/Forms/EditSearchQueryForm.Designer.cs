@@ -44,6 +44,8 @@ namespace mrHelper.App.Forms
          this.textBoxSearchTitleAndDescription = new System.Windows.Forms.TextBox();
          this.buttonCancel = new System.Windows.Forms.Button();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.comboBoxMaxSearchResults = new System.Windows.Forms.ComboBox();
+         this.labelMaxResultCount = new System.Windows.Forms.Label();
          this.SuspendLayout();
          // 
          // labelSearchByState
@@ -91,7 +93,7 @@ namespace mrHelper.App.Forms
          // buttonOK
          // 
          this.buttonOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-         this.buttonOK.Location = new System.Drawing.Point(12, 159);
+         this.buttonOK.Location = new System.Drawing.Point(12, 190);
          this.buttonOK.Name = "buttonOK";
          this.buttonOK.Size = new System.Drawing.Size(71, 23);
          this.buttonOK.TabIndex = 11;
@@ -175,18 +177,42 @@ namespace mrHelper.App.Forms
          // buttonCancel
          // 
          this.buttonCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-         this.buttonCancel.Location = new System.Drawing.Point(89, 159);
+         this.buttonCancel.Location = new System.Drawing.Point(89, 190);
          this.buttonCancel.Name = "buttonCancel";
          this.buttonCancel.Size = new System.Drawing.Size(71, 23);
          this.buttonCancel.TabIndex = 12;
          this.buttonCancel.Text = "Cancel";
          this.buttonCancel.UseVisualStyleBackColor = true;
          // 
+         // comboBoxMaxSearchResults
+         // 
+         this.comboBoxMaxSearchResults.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+         this.comboBoxMaxSearchResults.Items.AddRange(new object[] {
+            "20",
+            "50",
+            "75",
+            "100"});
+         this.comboBoxMaxSearchResults.Location = new System.Drawing.Point(122, 150);
+         this.comboBoxMaxSearchResults.Name = "comboBoxMaxSearchResults";
+         this.comboBoxMaxSearchResults.Size = new System.Drawing.Size(82, 21);
+         this.comboBoxMaxSearchResults.TabIndex = 13;
+         // 
+         // labelMaxResultCount
+         // 
+         this.labelMaxResultCount.AutoSize = true;
+         this.labelMaxResultCount.Location = new System.Drawing.Point(12, 153);
+         this.labelMaxResultCount.Name = "labelMaxResultCount";
+         this.labelMaxResultCount.Size = new System.Drawing.Size(85, 13);
+         this.labelMaxResultCount.TabIndex = 14;
+         this.labelMaxResultCount.Text = "Max result count";
+         // 
          // EditSearchQueryForm
          // 
          this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
          this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-         this.ClientSize = new System.Drawing.Size(308, 191);
+         this.ClientSize = new System.Drawing.Size(308, 225);
+         this.Controls.Add(this.labelMaxResultCount);
+         this.Controls.Add(this.comboBoxMaxSearchResults);
          this.Controls.Add(this.buttonCancel);
          this.Controls.Add(this.labelSearchByState);
          this.Controls.Add(this.comboBoxSearchByState);
@@ -227,5 +253,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.TextBox textBoxSearchTitleAndDescription;
       private System.Windows.Forms.Button buttonCancel;
       private System.Windows.Forms.ToolTip toolTip;
+      private System.Windows.Forms.ComboBox comboBoxMaxSearchResults;
+      private System.Windows.Forms.Label labelMaxResultCount;
    }
 }
