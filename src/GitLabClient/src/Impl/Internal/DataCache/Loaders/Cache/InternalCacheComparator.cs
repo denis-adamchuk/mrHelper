@@ -177,6 +177,14 @@ namespace mrHelper.GitLabClient.Loaders.Cache
                                || areApprovalsDifferent(oldApprovals, newApprovals)
                                || areEnvStatusDifferent(oldEnvStatus, newEnvStatus);
 
+            IEnumerable<string> addedLabels = null;
+            IEnumerable<string> removedLabels = null;
+            if (labelsUpdated)
+            {
+               removedLabels = mergeRequest1.Labels.OrderBy(x => x).Except(mergeRequest2.Labels.OrderBy(x => x)).ToList();
+               addedLabels = mergeRequest2.Labels.OrderBy(x => x).Except(mergeRequest1.Labels.OrderBy(x => x)).ToList();
+            }
+
             if (labelsUpdated || commitsUpdated || detailsUpdated)
             {
                FullMergeRequestKey fmk = new FullMergeRequestKey(
@@ -184,7 +192,8 @@ namespace mrHelper.GitLabClient.Loaders.Cache
 
                updates.Add(new UserEvents.MergeRequestEvent(
                   fmk, UserEvents.MergeRequestEvent.Type.UpdatedMergeRequest,
-                  new UserEvents.MergeRequestEvent.UpdateScope(commitsUpdated, labelsUpdated, detailsUpdated)));
+                  new UserEvents.MergeRequestEvent.UpdateScope(
+                     commitsUpdated, labelsUpdated, detailsUpdated, addedLabels, removedLabels)));
             }
          }
 

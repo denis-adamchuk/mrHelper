@@ -179,6 +179,16 @@ namespace mrHelper.App.Controls
             .Select(keyword => int.Parse(keyword));
       }
 
+      private void removeExcludedFromCache(EDataCacheType type, FullMergeRequestKey fmk)
+      {
+         if (isMergeRequestExcluded(type, fmk.MergeRequest))
+         {
+            Trace.TraceInformation("[ConnectionPage] Excluded MR {0} was removed from cache {1}",
+               fmk.MergeRequest.Id, getDataCacheName(getDataCache(type)));
+            toggleMergeRequestExclusion(type, fmk.MergeRequest);
+         }
+      }
+
       private void toggleMergeRequestExclusion(EDataCacheType type, int mergeRequestId)
       {
          KeywordCollection newKeywords = getKeywordCollection(type)
@@ -1293,6 +1303,13 @@ namespace mrHelper.App.Controls
 
       private IEnumerable<User> getUsers() =>
          getDataCache(EDataCacheType.Live)?.UserCache?.GetUsers() ?? Array.Empty<User>();
+
+      private IEnumerable<User> getApprovedBy(EDataCacheType mode, MergeRequestKey mrk) =>
+         getDataCache(mode).MergeRequestCache.GetApprovals(mrk)?.Approved_By?
+            .Select(item => item.User) ?? Array.Empty<User>();
+
+      IEnumerable<string> resolveCollection(IEnumerable<string> coll) =>
+         coll.Select(item => String.IsNullOrEmpty(item) ? String.Empty : _expressionResolver.Resolve(item));
 
       private bool areLongCachesReady() => getProjects().Any() && getUsers().Any();
 

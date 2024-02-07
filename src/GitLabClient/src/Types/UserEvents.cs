@@ -1,5 +1,6 @@
-﻿using GitLabSharp.Entities;
+﻿using System.Linq;
 using System.Collections.Generic;
+using GitLabSharp.Entities;
 
 namespace mrHelper.GitLabClient
 {
@@ -23,16 +24,21 @@ namespace mrHelper.GitLabClient
 
          public struct UpdateScope
          {
-            public UpdateScope(bool commits, bool labels, bool details)
+            public UpdateScope(bool commits, bool labels, bool details,
+               IEnumerable<string> addedLabels, IEnumerable<string> removedLabels)
             {
                Commits = commits;
                Labels = labels;
                Details = details;
+               AddedLabels = addedLabels;
+               RemovedLabels = removedLabels;
             }
 
             public bool Commits { get; }
             public bool Labels { get; }
             public bool Details { get; }
+            public IEnumerable<string> AddedLabels { get; }
+            public IEnumerable<string> RemovedLabels { get; }
 
             public override bool Equals(object obj)
             {
@@ -64,7 +70,7 @@ namespace mrHelper.GitLabClient
       }
 
       public class DiscussionEvent
-      {
+      {  
          public DiscussionEvent(MergeRequestKey mergeRequestKey, Type eventType, object details)
          {
             MergeRequestKey = mergeRequestKey;

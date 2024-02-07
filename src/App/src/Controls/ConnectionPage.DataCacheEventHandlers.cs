@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Windows.Forms;
@@ -125,11 +126,13 @@ namespace mrHelper.App.Controls
                cleanupReviewedMergeRequests(new MergeRequestKey[] { mrk });
             }
          }
-         if (e.RemovedFromCache && isMergeRequestExcluded(type, e.FullMergeRequestKey.MergeRequest))
+         if (e.RemovedFromCache)
          {
-            Trace.TraceInformation("[ConnectionPage] Excluded MR {0} was removed from cache {1}",
-               e.FullMergeRequestKey.MergeRequest.Id, getDataCacheName(getDataCache(type)));
-            toggleMergeRequestExclusion(type, e.FullMergeRequestKey.MergeRequest);
+            removeExcludedFromCache(type, e.FullMergeRequestKey);
+         }
+         if (type != EDataCacheType.Search && e.Scope != null)
+         {
+            autoUnhideIfNeeded(type, (UserEvents.MergeRequestEvent.UpdateScope)e.Scope, e.FullMergeRequestKey);
          }
 
          updateMergeRequestList(type);
@@ -150,6 +153,28 @@ namespace mrHelper.App.Controls
             Trace.TraceInformation("[ConnectionPage] Updating selected Merge Request ({0})",
                getDataCacheName(getDataCache(type)));
             onMergeRequestSelectionChanged(type);
+         }
+      }
+
+      private void autoUnhideIfNeeded(EDataCacheType type, UserEvents.MergeRequestEvent.UpdateScope scope,
+         FullMergeRequestKey fmk)
+      {
+         string condition = Program.ServiceManager.GetAutoUnhideCondition();
+         if (scope.Labels && scope.AddedLabels != null && !String.IsNullOrEmpty(condition))
+         {
+            MergeRequestKey mrk = new MergeRequestKey(fmk.ProjectKey, fmk.MergeRequest.IId);
+            IEnumerable<string> autoUnhideIf = resolveCollection(condition.Split(','));
+            IEnumerable<User> approvedBy = getApprovedBy(type, mrk);
+            bool tracking = isTrackingTime(mrk);
+            bool pinned = isMergeRequestPinned(mrk);
+            bool excluded = isMergeRequestExcluded(type, fmk.MergeRequest.Id);
+            if (GitLabClient.Helpers.CheckConditions(
+               autoUnhideIf, approvedBy, scope.AddedLabels, CurrentUser, excluded, tracking, pinned))
+            {
+               Trace.TraceInformation(
+                  "[ConnectionPage] Auto-unhide condition is met for Merge Request with Id {0}", fmk.MergeRequest.Id);
+               removeExcludedFromCache(type, fmk);
+            }
          }
       }
 

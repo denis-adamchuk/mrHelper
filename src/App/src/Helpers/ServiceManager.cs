@@ -111,6 +111,31 @@ namespace mrHelper.App.Helpers
          return result;
       }
 
+      public string GetAutoUnhideCondition()
+      {
+         int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "CustomLabels");
+         if (index == -1)
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] CustomLabels entry is missing"));
+            return String.Empty;
+         }
+
+         Dictionary<string, object> properties = _services[index].Properties;
+         if (properties == null)
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] CustomLabels entry has no properties"));
+            return String.Empty;
+         }
+
+         if (!properties.ContainsKey("auto-unhide-condition"))
+         {
+            Trace.TraceWarning(String.Format("[ServiceManager] auto-unhide-condition is missing"));
+            return String.Empty;
+         }
+
+         return properties["auto-unhide-condition"].ToString();
+      }
+
       public string GetSourceBranchTemplate()
       {
          int index = _services == null ? -1 : Array.FindIndex(_services, x => x.Name == "SourceBranchTemplate");
