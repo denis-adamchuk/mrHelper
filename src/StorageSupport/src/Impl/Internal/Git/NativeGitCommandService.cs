@@ -44,8 +44,15 @@ namespace mrHelper.StorageSupport
       async protected override Task<object> runCommandAsync(
          RevisionComparisonArguments arguments, RepositoryAccessor repositoryAccessor)
       {
-         Comparison comparison = await repositoryAccessor.Compare(arguments.Sha1, arguments.Sha2, null);
-         return comparison == null ? null : new ComparisonEx(comparison);
+         try
+         {
+            Comparison comparison = await repositoryAccessor.Compare(arguments.Sha1, arguments.Sha2, null);
+            return comparison == null ? null : new ComparisonEx(comparison);
+         }
+         catch (RepositoryAccessorException ex)
+         {
+            throw new GitCommandServiceInternalException(ex);
+         }
       }
 
       private readonly string _path;

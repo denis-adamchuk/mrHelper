@@ -38,11 +38,11 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      public Task FetchAsync(GitShowRevisionArguments arguments)
+      async public Task FetchAsync(GitShowRevisionArguments arguments)
       {
          try
          {
-            return runCommandAndCacheResultAsync(arguments, _cachedRevisions);
+            await runCommandAndCacheResultAsync(arguments, _cachedRevisions);
          }
          catch (GitCommandServiceInternalException ex)
          {
@@ -64,11 +64,11 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      public Task FetchAsync(GitDiffArguments arguments)
+      async public Task FetchAsync(GitDiffArguments arguments)
       {
          try
          {
-            return runCommandAndCacheResultAsync(arguments, _cachedDiffs);
+            await runCommandAndCacheResultAsync(arguments, _cachedDiffs);
          }
          catch (GitCommandServiceInternalException ex)
          {
@@ -77,11 +77,11 @@ namespace mrHelper.StorageSupport
          }
       }
 
-      public Task FetchAsync(RevisionComparisonArguments arguments, RepositoryAccessor repositoryAccessor)
+      async public Task FetchAsync(RevisionComparisonArguments arguments, RepositoryAccessor repositoryAccessor)
       {
          try
          {
-            return runCommandAndCacheResultAsync(arguments, _cachedComparisons, repositoryAccessor);
+            await runCommandAndCacheResultAsync(arguments, _cachedComparisons, repositoryAccessor);
          }
          catch (GitCommandServiceInternalException ex)
          {
