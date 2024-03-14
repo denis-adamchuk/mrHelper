@@ -84,6 +84,7 @@ namespace mrHelper.App
          {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            adjustCultureInfo();
 
             // This should redirect exceptions from UI events to the global try/catch
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
@@ -702,6 +703,20 @@ namespace mrHelper.App
          }
          Debug.Assert(false);
          return null;
+      }
+
+      static private void adjustCultureInfo()
+      {
+         System.Globalization.CultureInfo customCultureInfo =
+            (System.Globalization.CultureInfo)Application.CurrentCulture.Clone();
+
+         string customSeparator = ".";
+         customCultureInfo.NumberFormat.NumberDecimalSeparator = customSeparator;
+         customCultureInfo.NumberFormat.PercentDecimalSeparator = customSeparator;
+         customCultureInfo.NumberFormat.CurrencyDecimalSeparator = customSeparator;
+
+         // Override Region Settings to format doubles properly across the application
+         Application.CurrentCulture = customCultureInfo;
       }
    }
 }
