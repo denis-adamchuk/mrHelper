@@ -88,10 +88,11 @@ namespace mrHelper.App.Helpers
 
       private static readonly Regex gitDiffStatRe =
          new Regex(
-            @"\*\*Files\((?'files'\d+)\)\*\*.*\"
-          + @"|\*\*(?'add'\d+)\*\*(?>\(manually\))?\"
-          + @"|\*\*(?'mod'\d+)\*\*(?>\(manually\))?\"
-          + @"|\*\*(?'del'\d+)\*\*(?>\(manually\))?\|",
+            @"\*\*Files\((?'files'\d+)\)\*\*.*"
+          + @"\|\*\*(?'add'\d+)\*\*(?>\(.*?\))?"
+          + @"\|\*\*(?'mod'\d+)\*\*(?>\(.*?\))?"
+          + @"\|\*\*(?'del'\d+)\*\*(?>\(.*?\))?"
+          + @"\|\*\*(?'sum'\d+)\*\*(?>\(.*?\))?",
                RegexOptions.Compiled);
 
       private DiffStatistic? parseGitDiffStatistic(string discussionBody, MergeRequestKey mrk)
@@ -113,17 +114,17 @@ namespace mrHelper.App.Helpers
           || !m.Groups["files"].Success
           || !m.Groups["add"].Success
           || !m.Groups["mod"].Success
-          || !m.Groups["del"].Success)
+          || !m.Groups["del"].Success
+          || !m.Groups["sum"].Success)
          {
             traceError(discussionBody);
             return null;
          }
 
-         int added = parseOrZero(m.Groups["add"].Value);
-         int modified = parseOrZero(m.Groups["mod"].Value);
+         int total = parseOrZero(m.Groups["sum"].Value);
 
          return new DiffStatistic(parseOrZero(m.Groups["files"].Value),
-            added + modified, parseOrZero(m.Groups["del"].Value));
+            total, parseOrZero(m.Groups["del"].Value));
       }
 
       private struct MergeRequestStatistic
