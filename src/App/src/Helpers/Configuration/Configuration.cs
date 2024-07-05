@@ -61,6 +61,20 @@ namespace mrHelper.App.Helpers
          return String.Empty;
       }
 
+      public void SetAccessToken(string host, string accessToken)
+      {
+         for (int iKnownHost = 0; iKnownHost < KnownHosts.Count(); ++iKnownHost)
+         {
+            if (host == KnownHosts[iKnownHost] && KnownAccessTokens.Length > iKnownHost )
+            {
+               string[] copy = KnownAccessTokens.ToArray();
+               copy[iKnownHost] = accessToken;
+               KnownAccessTokens = copy;
+               break;
+            }
+         }
+      }
+
       public class OldFilterSettings : Tuple<bool, string>
       {
          public OldFilterSettings(bool item1, string item2) : base(item1, item2)

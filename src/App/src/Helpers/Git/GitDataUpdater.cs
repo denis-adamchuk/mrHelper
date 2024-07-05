@@ -108,7 +108,7 @@ namespace mrHelper.App.Helpers
             "[GitDataUpdater] Start processing merge request: "
           + "Host={0}, Project={1}, IId={2}. New Discussions: {3}. LatestChange = {4}",
             mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId,
-            totalCount, latestChange.ToLocalTime().ToString()));
+            totalCount, TimeUtils.DateTimeToString(latestChange)));
 #endif
          if (newDiscussions.Count() > totalCount)
          {

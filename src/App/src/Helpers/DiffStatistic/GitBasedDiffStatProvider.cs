@@ -152,7 +152,7 @@ namespace mrHelper.App.Helpers
                "[GitBasedSizeCollector] Git statistic will be updated for MR: "
              + "Host={0}, Project={1}, IId={2}. Latest version created at: {3}",
                mrk.ProjectKey.HostName, mrk.ProjectKey.ProjectName, mrk.IId,
-               version.Created_At.ToLocalTime().ToString()));
+               TimeUtils.DateTimeToString(version.Created_At)));
 
             result.Add(mrk, version);
          }

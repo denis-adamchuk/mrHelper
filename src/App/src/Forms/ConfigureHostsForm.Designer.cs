@@ -30,8 +30,8 @@ namespace mrHelper.App.Forms
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
-         System.Windows.Forms.ListViewGroup listViewGroup5 = new System.Windows.Forms.ListViewGroup("Users", System.Windows.Forms.HorizontalAlignment.Left);
-         System.Windows.Forms.ListViewGroup listViewGroup6 = new System.Windows.Forms.ListViewGroup("Projects", System.Windows.Forms.HorizontalAlignment.Left);
+         System.Windows.Forms.ListViewGroup listViewGroup1 = new System.Windows.Forms.ListViewGroup("Users", System.Windows.Forms.HorizontalAlignment.Left);
+         System.Windows.Forms.ListViewGroup listViewGroup2 = new System.Windows.Forms.ListViewGroup("Projects", System.Windows.Forms.HorizontalAlignment.Left);
          this.buttonEditProjects = new System.Windows.Forms.Button();
          this.buttonEditUsers = new System.Windows.Forms.Button();
          this.buttonRemoveKnownHost = new System.Windows.Forms.Button();
@@ -39,9 +39,11 @@ namespace mrHelper.App.Forms
          this.listViewKnownHosts = new System.Windows.Forms.ListView();
          this.columnHeaderHost = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAccessToken = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderExpiresAt = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.buttonOK = new System.Windows.Forms.Button();
          this.buttonCancel = new System.Windows.Forms.Button();
          this.groupBoxKnownHosts = new System.Windows.Forms.GroupBox();
+         this.labelExpirationHint = new System.Windows.Forms.Label();
          this.labelChecking = new System.Windows.Forms.Label();
          this.linkLabelCreateAccessToken = new mrHelper.CommonControls.Controls.LinkLabelEx();
          this.toolTip = new System.Windows.Forms.ToolTip(this.components);
@@ -100,7 +102,8 @@ namespace mrHelper.App.Forms
          // 
          this.listViewKnownHosts.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeaderHost,
-            this.columnHeaderAccessToken});
+            this.columnHeaderAccessToken,
+            this.columnHeaderExpiresAt});
          this.listViewKnownHosts.FullRowSelect = true;
          this.listViewKnownHosts.HideSelection = false;
          this.listViewKnownHosts.Location = new System.Drawing.Point(6, 19);
@@ -120,7 +123,12 @@ namespace mrHelper.App.Forms
          // columnHeaderAccessToken
          // 
          this.columnHeaderAccessToken.Text = "AccessToken";
-         this.columnHeaderAccessToken.Width = 180;
+         this.columnHeaderAccessToken.Width = 220;
+         // 
+         // columnHeaderExpiresAt
+         // 
+         this.columnHeaderExpiresAt.Text = "Expires At";
+         this.columnHeaderExpiresAt.Width = 180;
          // 
          // buttonOK
          // 
@@ -145,6 +153,7 @@ namespace mrHelper.App.Forms
          // 
          // groupBoxKnownHosts
          // 
+         this.groupBoxKnownHosts.Controls.Add(this.labelExpirationHint);
          this.groupBoxKnownHosts.Controls.Add(this.labelChecking);
          this.groupBoxKnownHosts.Controls.Add(this.linkLabelCreateAccessToken);
          this.groupBoxKnownHosts.Controls.Add(this.buttonRemoveKnownHost);
@@ -157,10 +166,19 @@ namespace mrHelper.App.Forms
          this.groupBoxKnownHosts.TabStop = false;
          this.groupBoxKnownHosts.Text = "Known Hosts";
          // 
+         // labelExpirationHint
+         // 
+         this.labelExpirationHint.AutoSize = true;
+         this.labelExpirationHint.Location = new System.Drawing.Point(311, 116);
+         this.labelExpirationHint.Name = "labelExpirationHint";
+         this.labelExpirationHint.Size = new System.Drawing.Size(266, 13);
+         this.labelExpirationHint.TabIndex = 34;
+         this.labelExpirationHint.Text = "Tokens prolong automatically 30 days before expiration";
+         // 
          // labelChecking
          // 
          this.labelChecking.AutoSize = true;
-         this.labelChecking.Location = new System.Drawing.Point(485, 116);
+         this.labelChecking.Location = new System.Drawing.Point(486, 91);
          this.labelChecking.Name = "labelChecking";
          this.labelChecking.Size = new System.Drawing.Size(61, 13);
          this.labelChecking.TabIndex = 33;
@@ -182,13 +200,13 @@ namespace mrHelper.App.Forms
          this.listViewWorkflow.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1});
          this.listViewWorkflow.FullRowSelect = true;
-         listViewGroup5.Header = "Users";
-         listViewGroup5.Name = "listViewGroupUsers";
-         listViewGroup6.Header = "Projects";
-         listViewGroup6.Name = "listViewGroupProjects";
+         listViewGroup1.Header = "Users";
+         listViewGroup1.Name = "listViewGroupUsers";
+         listViewGroup2.Header = "Projects";
+         listViewGroup2.Name = "listViewGroupProjects";
          this.listViewWorkflow.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
-            listViewGroup5,
-            listViewGroup6});
+            listViewGroup1,
+            listViewGroup2});
          this.listViewWorkflow.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
          this.listViewWorkflow.HideSelection = false;
          this.listViewWorkflow.Location = new System.Drawing.Point(6, 67);
@@ -265,6 +283,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.ListView listViewKnownHosts;
       private System.Windows.Forms.ColumnHeader columnHeaderHost;
       private System.Windows.Forms.ColumnHeader columnHeaderAccessToken;
+      private System.Windows.Forms.ColumnHeader columnHeaderExpiresAt;
       private System.Windows.Forms.Button buttonOK;
       private System.Windows.Forms.Button buttonCancel;
       private System.Windows.Forms.GroupBox groupBoxKnownHosts;
@@ -275,5 +294,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.GroupBox groupBoxSelectWorkflow;
       private System.Windows.Forms.TextBox textBox1;
       private System.Windows.Forms.Label labelChecking;
+      private System.Windows.Forms.Label labelExpirationHint;
    }
 }

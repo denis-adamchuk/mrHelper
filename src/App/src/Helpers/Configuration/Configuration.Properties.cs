@@ -594,6 +594,12 @@ namespace mrHelper.App.Helpers
          set => setStringToStringDictionary(CustomColorsKeyName, value);
       }
 
+      public bool AutoRotateAccessTokens
+      {
+         get => getBoolValue(AutoRotateAccessTokensKeyName, AutoRotateAccessTokensDefaultValue);
+         set => setBoolValue(AutoRotateAccessTokensKeyName, value);
+      }
+
       private bool AccessTokensProtected
       {
          get => getBoolValue(AccessTokensProtectedKeyName, AccessTokensProtectedDefaultValue);

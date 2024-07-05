@@ -5,8 +5,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using GitLabSharp.Entities;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.App.Helpers;
+using mrHelper.App.Helpers.GitLab;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Interfaces;
 using mrHelper.Common.Tools;
@@ -27,6 +29,9 @@ namespace mrHelper.App.Forms
 
          linkLabelCreateAccessToken.Text = String.Empty;
          linkLabelCreateAccessToken.SetLinkLabelClicked(UrlHelper.OpenBrowser);
+
+         labelExpirationHint.Text = String.Format("Tokens prolong automatically {0} days before expiration",
+            Constants.AccessTokenDaysToExpireForNotice);
       }
 
       internal bool Changed { get; private set; }
@@ -39,12 +44,12 @@ namespace mrHelper.App.Forms
 
       async private void configureHostsForm_Load(object sender, System.EventArgs e)
       {
-         loadKnownHosts();
+         onStartChecking(CheckingMode.LoadingData);
 
-         onStartChecking(CheckingMode.LoadingUsers);
          try
          {
-            foreach (KeyValuePair<string, string> kv in _hosts)
+            await loadKnownHosts();
+            foreach (KeyValuePair<string, TokenInfo> kv in _hosts)
             {
                await loadUsersForHost(kv.Key);
                loadProjectsForHost(kv.Key);
@@ -114,7 +119,7 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private void loadKnownHosts()
+      private async Task loadKnownHosts()
       {
          bool hasBadValues = false;
          string[] hosts = Program.Settings.KnownHosts.ToArray();
@@ -122,8 +127,20 @@ namespace mrHelper.App.Forms
          {
             string host = StringUtils.GetHostWithPrefix(hosts[iKnownHost]);
             string accessToken = Program.Settings.GetAccessToken(hosts[iKnownHost]);
-            hasBadValues |= accessToken == Constants.ConfigurationBadValueLoaded;
-            addKnownHost(host, accessToken);
+            bool isValid = accessToken != Constants.ConfigurationBadValueLoaded;
+            if (isValid)
+            {
+               PersonalAccessToken token = await loadTokenExpirationDate(host, accessToken);
+               if (token != null)
+               {
+                  addKnownHost(host, accessToken, token.Expires_At);
+               }
+               else
+               {
+                  Trace.TraceInformation("[ConfigureHostsForm] Token for host {0} is null", host);
+               }
+            }
+            hasBadValues |= !isValid;
          }
          if (hasBadValues)
          {
@@ -134,13 +151,13 @@ namespace mrHelper.App.Forms
          }
       }
 
-      private bool addKnownHost(string newHost, string newAccessToken)
+      private bool addKnownHost(string newHost, string newAccessToken, DateTime? expiresAt)
       {
          if (_hosts.ContainsKey(newHost))
          {
             return false;
          }
-         _hosts[newHost] = newAccessToken;
+         _hosts[newHost] = new TokenInfo(newAccessToken, expiresAt);
          return true;
       }
 
@@ -218,6 +235,21 @@ namespace mrHelper.App.Forms
          setUsersForHost(hostname, users);
       }
 
+      struct TokenHolder : IHostProperties
+      {
+         internal TokenHolder(string token) { Token = token; }
+         public string GetAccessToken(string _) { return Token; }
+         private readonly string Token;
+      }
+
+      private async Task<PersonalAccessToken> loadTokenExpirationDate(string hostname, string token)
+      {
+         TokenHolder holder = new TokenHolder(token);
+         GitLabInstance gitLabInstance = new GitLabInstance(hostname, holder, this);
+         PersonalAccessTokenAccessor accessor = new Shortcuts(gitLabInstance).GetPersonalAccessTokenAccessor();
+         return await accessor.GetPersonalAccessTokenAsync();
+      }
+
       private StringToBooleanCollection getUsersForHost(string hostname)
       {
          if (!_usernames.ContainsKey(hostname))
@@ -237,10 +269,13 @@ namespace mrHelper.App.Forms
       {
          listViewKnownHosts.Items.Clear();
 
-         foreach (KeyValuePair<string, string> kv in _hosts)
+         foreach (KeyValuePair<string, TokenInfo> kv in _hosts)
          {
             ListViewItem item = new ListViewItem(kv.Key);
-            item.SubItems.Add(kv.Value);
+            item.SubItems.Add(kv.Value.AccessToken);
+            string asText = kv.Value.ExpiresAt.HasValue ? TimeUtils.DateTimeToString(
+               kv.Value.ExpiresAt.Value, TimeUtils.DateOnlyTimeStampFormat) : "N/A";
+            item.SubItems.Add(asText);
             listViewKnownHosts.Items.Add(item);
          }
 
@@ -328,13 +363,24 @@ namespace mrHelper.App.Forms
                            : String.Format("Invalid hostname \"{0}\"", hostname);
                      MessageBox.Show(message, "Cannot connect to the host",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
+                     Trace.TraceInformation("[ConfigureHostsForm] Connection issue. Message = \"{0}\"", message);
                      return;
                   }
 
-                  if (!addKnownHost(hostname, accessToken))
+                  PersonalAccessToken tokenInfo = await loadTokenExpirationDate(hostname, accessToken);
+                  if (tokenInfo == null)
+                  {
+                     MessageBox.Show("Bad access token", "Cannot connect to the host",
+                        MessageBoxButtons.OK, MessageBoxIcon.Error);
+                     Trace.TraceInformation("[ConfigureHostsForm] Bad access token for host {0}", hostname);
+                     return;
+                  }
+
+                  if (!addKnownHost(hostname, accessToken, tokenInfo.Expires_At))
                   {
                      MessageBox.Show("Such host is already in the list", "Host will not be added",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                     Trace.TraceInformation("[ConfigureHostsForm] Cannot add duplicate host {0}", hostname);
                      return;
                   }
 
@@ -353,7 +399,7 @@ namespace mrHelper.App.Forms
       private bool saveKnownHosts()
       {
          IEnumerable<string> hosts = _hosts.Keys;
-         IEnumerable<string> tokens = _hosts.Values;
+         IEnumerable<string> tokens = _hosts.Values.Select(x => x.AccessToken);
 
          string[] oldHosts = Program.Settings.KnownHosts.ToArray();
          string[] oldTokens = Program.Settings.KnownAccessTokens.ToArray();
@@ -449,7 +495,7 @@ namespace mrHelper.App.Forms
 
       enum CheckingMode
       {
-         LoadingUsers,
+         LoadingData,
          CheckingHost
       }
 
@@ -457,8 +503,8 @@ namespace mrHelper.App.Forms
       {
          switch (mode)
          {
-            case CheckingMode.LoadingUsers:
-               labelChecking.Text = "Loading users...";
+            case CheckingMode.LoadingData:
+               labelChecking.Text = "Loading data...";
                break;
             case CheckingMode.CheckingHost:
                labelChecking.Text = "Checking host...";
@@ -486,11 +532,23 @@ namespace mrHelper.App.Forms
 
       public string GetAccessToken(string host)
       {
-         return _hosts.ContainsKey(host) ? _hosts[host] : String.Empty;
+         return _hosts.ContainsKey(host) ? _hosts[host].AccessToken : String.Empty;
       }
 
-      private readonly Dictionary<string, string> _hosts =
-         new Dictionary<string, string>();
+      private struct TokenInfo
+      {
+         internal TokenInfo(string accessToken, DateTime? expiresAt)
+         {
+            AccessToken = accessToken;
+            ExpiresAt = expiresAt;
+         }
+
+         internal readonly string AccessToken;
+         internal readonly DateTime? ExpiresAt;
+      };
+
+      private readonly Dictionary<string, TokenInfo> _hosts =
+         new Dictionary<string, TokenInfo>();
       private readonly Dictionary<string, StringToBooleanCollection> _projects =
          new Dictionary<string, StringToBooleanCollection>();
       private readonly Dictionary<string, StringToBooleanCollection> _usernames =

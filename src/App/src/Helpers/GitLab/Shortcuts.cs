@@ -18,6 +18,12 @@ namespace mrHelper.App.Helpers.GitLab
             .VersionAccessor;
       }
 
+      internal PersonalAccessTokenAccessor GetPersonalAccessTokenAccessor()
+      {
+         return new RawDataAccessor(_gitLabInstance)
+            .AccessTokenAccessor;
+      }
+
       internal ProjectAccessor GetProjectAccessor()
       {
          return new RawDataAccessor(_gitLabInstance)

@@ -5,16 +5,18 @@ namespace mrHelper.Common.Tools
 {
    public static class TimeUtils
    {
-      public static string TimeStampFormat = "d-MMM-yyyy HH:mm";
+      public const string DefaultTimeStampFormat = "d-MMM-yyyy HH:mm";
+      public const string DateOnlyTimeStampFormat = "d-MMM-yyyy";
+      public const string DateOnlyGitLabFormat = "yyyy-MM-dd";
 
       public static string DateTimeOptToString(DateTime? dateTime)
       {
          return dateTime.HasValue ? DateTimeToString(dateTime.Value) : "N/A";
       }
 
-      public static string DateTimeToString(DateTime dateTime)
+      public static string DateTimeToString(DateTime dateTime, string format = DefaultTimeStampFormat)
       {
-         return dateTime.ToLocalTime().ToString(TimeStampFormat);
+         return dateTime.ToLocalTime().ToString(format);
       }
 
       public static string DateTimeOptToStringAgo(DateTime? dateTime)

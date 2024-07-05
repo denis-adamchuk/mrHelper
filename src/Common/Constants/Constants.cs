@@ -110,6 +110,9 @@ namespace mrHelper.Common.Constants
       public static int FavoriteProjectsPerHostDefaultCount = 5;
       public static int DiscussionPageSizeDefaultCount = 200;
 
+      public static int AccessTokenDaysToExpireForNotice = 30;
+      public static int AccessTokenProlongationDays = 364;
+
       public static TaskUtils.BatchLimits MergeRequestLoaderSearchQueryBatchLimits = new TaskUtils.BatchLimits
       {
          Size = 20,

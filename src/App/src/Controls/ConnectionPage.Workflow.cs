@@ -30,6 +30,24 @@ namespace mrHelper.App.Controls
             String.Format("Nothing to load for {0}. Add user or project in Settings.", hostname)) {}
       }
 
+      internal class CannotLoadPersonalAccessTokenException : Exception
+      {
+         internal CannotLoadPersonalAccessTokenException(string hostname): base(
+            String.Format("Cannot load personal access token from host {0}", hostname)) {}
+      }
+
+      internal class BadAccessTokenException : Exception
+      {
+         internal BadAccessTokenException(string hostname): base(
+            String.Format("Access token set for {0} is bad or expired", hostname)) {}
+      }
+
+      internal class AccessTokenRotationException : Exception
+      {
+         internal AccessTokenRotationException(string hostname): base(
+            String.Format("Access token rotation failed at {0}", hostname)) {}
+      }
+
       internal class CannotLoadGitLabVersionException : Exception
       {
          internal CannotLoadGitLabVersionException(string hostname): base(
@@ -48,7 +66,10 @@ namespace mrHelper.App.Controls
           || ex is UnknownHostException
           || ex is NothingToLoadException
           || ex is CannotLoadGitLabVersionException
-          || ex is CannotLoadCurentUserException)
+          || ex is CannotLoadCurentUserException
+          || ex is CannotLoadPersonalAccessTokenException
+          || ex is BadAccessTokenException
+          || ex is AccessTokenRotationException)
          {
             if (!(ex is DataCacheConnectionCancelledException))
             {
@@ -107,7 +128,7 @@ namespace mrHelper.App.Controls
 
       async private Task preStartWorkflowAsync()
       {
-         Trace.TraceInformation("[MainForm.Workflow] Starting workflow at host {0}. Workflow type is {1}",
+         Trace.TraceInformation("[ConnectionPage.Workflow] Starting workflow at host {0}. Workflow type is {1}",
             HostName, Program.Settings.WorkflowType);
 
          if (String.IsNullOrWhiteSpace(HostName) || getDataCache(EDataCacheType.Live) == null)
@@ -121,12 +142,105 @@ namespace mrHelper.App.Controls
             throw new UnknownHostException(HostName);
          }
 
+         await checkAccessTokenExpirationDate();
          await loadGitlabVersion();
          await loadCurrentUserAsync();
          checkApprovalSupport();
 
          await upgradeProjectListFromOldVersion();
          await initializeLabelListIfEmpty();
+      }
+
+      async private Task checkAccessTokenExpirationDate()
+      {
+         if (_shortcuts == null)
+         {
+            throw new CannotLoadPersonalAccessTokenException(HostName);
+         }
+
+         PersonalAccessToken token = await _shortcuts.GetPersonalAccessTokenAccessor().GetPersonalAccessTokenAsync();
+         if (token == null)
+         {
+            throw new BadAccessTokenException(HostName);
+         }
+
+         if (!token.Expires_At.HasValue)
+         {
+            Trace.TraceInformation("[ConnectionPage.Workflow] Token for host {0} has no expiration date", HostName);
+            return;
+         }
+
+         DateTime oldExpiresAt = token.Expires_At.Value;
+         Trace.TraceInformation(
+            "[ConnectionPage.Workflow] Token for host {0} expires at {1}. AutoRotateAccessToken = {2}",
+            HostName, TimeUtils.DateTimeToString(oldExpiresAt, TimeUtils.DateOnlyGitLabFormat),
+            Program.Settings.AutoRotateAccessTokens.ToString());
+         if (!Program.Settings.AutoRotateAccessTokens)
+         {
+            return;
+         }
+
+         TimeSpan span = token.Expires_At.Value - DateTime.Now;
+         bool closeToExpiration = span.Days < Constants.AccessTokenDaysToExpireForNotice;
+         if (closeToExpiration)
+         {
+            await rotateAccessTokenAsync(token);
+         }
+      }
+
+      private async Task rotateAccessTokenAsync(PersonalAccessToken currentToken)
+      {
+         Debug.Assert(currentToken.Expires_At.HasValue);
+
+         DateTime oldExpiresAt = currentToken.Expires_At.Value;
+         string oldExpiresAtStr = TimeUtils.DateTimeToString(oldExpiresAt, TimeUtils.DateOnlyGitLabFormat);
+
+         DateTime requestedExpiresAt = DateTime.Now + TimeSpan.FromDays(Constants.AccessTokenProlongationDays);
+         string requestedExpiresAtStr = TimeUtils.DateTimeToString(requestedExpiresAt, TimeUtils.DateOnlyGitLabFormat);
+
+         PersonalAccessToken newToken =
+            await _shortcuts.GetPersonalAccessTokenAccessor().RotatePersonalAccessTokenAsync(requestedExpiresAtStr);
+         if (newToken != null && !String.IsNullOrEmpty(newToken.Token))
+         {
+            Program.Settings.SetAccessToken(HostName, newToken.Token);
+            string newExpiresAtStr = newToken.Expires_At.HasValue ?
+               TimeUtils.DateTimeToString(newToken.Expires_At.Value, TimeUtils.DateOnlyGitLabFormat) : "N/A";
+            Trace.TraceInformation("[ConnectionPage.Workflow] Token for host {0} prolonged for {1} days. " +
+               "Prev exp date = {2}. Requested exp date = {3}. New exp date = {4}",
+               HostName, Constants.AccessTokenProlongationDays,
+               oldExpiresAtStr, requestedExpiresAtStr, newExpiresAtStr);
+         }
+         else
+         {
+            Trace.TraceWarning("[ConnectionPage.Workflow] New Token for host {0} is null. " +
+               "Prev exp date = {1}. New exp date = {2}", HostName, oldExpiresAtStr, requestedExpiresAtStr);
+
+            // The token might have been reset or might be not, let's verify it
+            newToken = await _shortcuts.GetPersonalAccessTokenAccessor().GetPersonalAccessTokenAsync();
+            if (newToken == null)
+            {
+               throw new AccessTokenRotationException(HostName);
+            }
+            else if (newToken.Id != currentToken.Id)
+            {
+               Debug.Assert(false);
+               string newExpiresAtStr = newToken.Expires_At.HasValue ?
+                  TimeUtils.DateTimeToString(newToken.Expires_At.Value, TimeUtils.DateOnlyGitLabFormat) : "N/A";
+               Trace.TraceWarning(
+                  "[ConnectionPage.Workflow] Token for host {0} changed unexpectedly " +
+                  "and will be removed from Configuration. " +
+                  "Prev exp date = {1}. Requested exp date = {2}. New exp date = {3}",
+                  HostName, oldExpiresAtStr, requestedExpiresAtStr, newExpiresAtStr);
+               throw new BadAccessTokenException(HostName);
+            }
+            else
+            {
+               Trace.TraceInformation(
+                  "[ConnectionPage.Workflow] Token for host {0} has not changed after unsuccessful rotation. " +
+                  "Prev exp date = {1}. Requested exp date = {2}",
+                  HostName, oldExpiresAtStr, requestedExpiresAtStr);
+            }
+         }
       }
 
       async private Task loadGitlabVersion()
@@ -195,7 +309,7 @@ namespace mrHelper.App.Controls
           + "Loading of this project will be disabled. You may turn it on at Settings tab.",
             projectKey.ProjectName, projectKey.HostName);
          addOperationRecord(message);
-         Trace.TraceInformation("[MainForm.Workflow] Forbidden project. User notified that project will be disabled");
+         Trace.TraceInformation("[ConnectionPage.Workflow] Forbidden project. User notified that project will be disabled");
 
          changeProjectEnabledState(projectKey, false);
       }
@@ -207,7 +321,7 @@ namespace mrHelper.App.Controls
           + "Loading of this project will be disabled. You may turn it on at Settings tab.",
             projectKey.ProjectName, projectKey.HostName);
          addOperationRecord(message);
-         Trace.TraceInformation("[MainForm.Workflow] Project not found. User notified that project will be disabled");
+         Trace.TraceInformation("[ConnectionPage.Workflow] Project not found. User notified that project will be disabled");
 
          changeProjectEnabledState(projectKey, false);
       }

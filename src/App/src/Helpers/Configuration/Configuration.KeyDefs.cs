@@ -306,6 +306,9 @@ namespace mrHelper.App.Helpers
       private static readonly string AccessTokensProtectedKeyName      = "AccessTokensProtected";
       private static readonly bool   AccessTokensProtectedDefaultValue = false;
 
+      private static readonly string AutoRotateAccessTokensKeyName  = "AutoRotateAccessTokens";
+      private static readonly bool   AutoRotateAccessTokensDefaultValue = true;
+
       private static readonly string AwaitedUpdateComparisonBatchSizeKeyName      =
          "AwaitedUpdateComparisonBatchSize";
       private static readonly int    AwaitedUpdateComparisonBatchSizeDefaultValue = 

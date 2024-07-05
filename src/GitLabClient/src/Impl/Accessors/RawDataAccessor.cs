@@ -21,6 +21,9 @@ namespace mrHelper.GitLabClient
       public GitLabVersionAccessor VersionAccessor =>
          new GitLabVersionAccessor(_hostname, _hostProperties, _networkOperationStatusListener);
 
+      public PersonalAccessTokenAccessor AccessTokenAccessor =>
+         new PersonalAccessTokenAccessor(_hostname, _hostProperties, _networkOperationStatusListener);
+
       private readonly string _hostname;
       private readonly IHostProperties _hostProperties;
       private readonly IModificationListener _modificationListener;

@@ -11,5 +11,5 @@
 /src/CommonControls/obj/*
 /src/RevertMSI/obj/*
 /build/set-env.bat
-
+/src/*/.vs/*
 /bug/*
