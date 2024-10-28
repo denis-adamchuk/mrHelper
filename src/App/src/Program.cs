@@ -390,9 +390,9 @@ namespace mrHelper.App
       {
          try
          {
-            if (integrateInBC4(applicationFullPath) || integrateInBC3(applicationFullPath))
+            if (_toolDescriptions.Any(d => { return integrateInTool(d, applicationFullPath); }))
             {
-               return true;
+               return true; 
             }
             reportNotInstalledDiffTool();
             return false;
@@ -424,33 +424,62 @@ namespace mrHelper.App
          }
       }
 
-      private static bool integrateInBC3(string applicationFullPath)
+      private class ToolDescription
       {
-         if (integrateInDiffTool(new BC3Tool(), applicationFullPath))
+         internal Type Type;
+         internal string Name;
+         internal string Command;
+         internal bool IsPortable;
+
+         public ToolDescription(Type type, string name, string command, bool isPortable)
          {
-            Program.Settings.DiffToolName = BC3Tool.Name;
-            Program.Settings.DiffToolPath = String.Empty;
-            return true;
+            Type = type;
+            Name = name;
+            Command = command;
+            IsPortable = isPortable;
+         }
+      }
+
+      private static List<ToolDescription> _toolDescriptions = new List<ToolDescription> {
+         new ToolDescription(typeof(BC5PortableTool), BC5PortableTool.Name, BC5PortableTool.Command, true),
+         new ToolDescription(typeof(BC4PortableTool), BC4PortableTool.Name, BC4PortableTool.Command, true),
+         new ToolDescription(typeof(BC5Tool), BC5Tool.Name, BC5Tool.Command, false),
+         new ToolDescription(typeof(BC4Tool), BC4Tool.Name, BC4Tool.Command, false),
+         new ToolDescription(typeof(BC3Tool), BC3Tool.Name, BC3Tool.Command, false)
+      };
+
+      private static bool integrateInTool(ToolDescription description, string applicationFullPath)
+      {
+         string diffToolName = Program.Settings.DiffToolName;
+         string diffToolPath = Program.Settings.DiffToolPath;
+         if (description.IsPortable)
+         {
+            // Portable tool name and path can only be specified by user manually in config file,
+            if (diffToolName == description.Name &&
+                  !String.IsNullOrWhiteSpace(diffToolPath) && System.IO.Directory.Exists(diffToolPath))
+            {
+               IIntegratedDiffTool diffTool =
+                  (IIntegratedDiffTool)Activator.CreateInstance(description.Type, diffToolPath);
+               return doIntegrateInDiffTool(diffTool, applicationFullPath);
+            }
+            return false;
+         }
+         else
+         {
+            // Non-portable version will be integrated automatically and order of ToolDescriptions
+            // is important to integrate the newest version from all available ones.
+            IIntegratedDiffTool diffTool = (IIntegratedDiffTool)Activator.CreateInstance(description.Type);
+            if (doIntegrateInDiffTool(diffTool, applicationFullPath))
+            {
+               Program.Settings.DiffToolName = description.Name;
+               Program.Settings.DiffToolPath = String.Empty;
+               return true;
+            }
          }
          return false;
       }
 
-      private static bool integrateInBC4(string applicationFullPath)
-      {
-         string diffToolName = Program.Settings.DiffToolName;
-         string diffToolPath = Program.Settings.DiffToolPath;
-         bool checkPortable = diffToolName == BC4PortableTool.Name
-            && !String.IsNullOrWhiteSpace(diffToolPath) && System.IO.Directory.Exists(diffToolPath);
-         if (!checkPortable && integrateInDiffTool(new BC4Tool(), applicationFullPath))
-         {
-            Program.Settings.DiffToolName = BC4Tool.Name;
-            Program.Settings.DiffToolPath = String.Empty;
-            return true;
-         }
-         return checkPortable && integrateInDiffTool(new BC4PortableTool(diffToolPath), applicationFullPath);
-      }
-
-      private static bool integrateInDiffTool(IIntegratedDiffTool diffTool, string applicationFullPath)
+      private static bool doIntegrateInDiffTool(IIntegratedDiffTool diffTool, string applicationFullPath)
       {
          DiffToolIntegration integration = new DiffToolIntegration();
 
@@ -688,21 +717,13 @@ namespace mrHelper.App
 
       static private string getDiffToolCommand()
       {
-         string diffToolName = Program.Settings.DiffToolName;
-         if (diffToolName == BC3Tool.Name)
+         ToolDescription tool = _toolDescriptions.FirstOrDefault(t => t.Name == Program.Settings.DiffToolName);
+         if (tool == null)
          {
-            return BC3Tool.Command;
+            Debug.Assert(false);
+            return null;
          }
-         else if (diffToolName == BC4Tool.Name)
-         {
-            return BC4Tool.Command;
-         }
-         else if (diffToolName == BC4PortableTool.Name)
-         {
-            return BC4PortableTool.Command;
-         }
-         Debug.Assert(false);
-         return null;
+         return tool.Command;
       }
 
       static private void adjustCultureInfo()

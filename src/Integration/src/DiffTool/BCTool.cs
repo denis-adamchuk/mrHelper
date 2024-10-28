@@ -81,7 +81,7 @@ namespace mrHelper.Integration.DiffTool
          }
 
          string fullCommand = launchCommand + getLaunchArguments();
-         XmlNode openWiths = getAllApplicationRecords(document);
+         XmlNode openWiths = getAllApplicationRecords(document, getConfigVersion());
          XmlNode appRecord = findOurApplicationRecord(openWiths);
          if (appRecord != null)
          {
@@ -127,7 +127,7 @@ namespace mrHelper.Integration.DiffTool
       /// <summary>
       /// Throws DiffToolIntegrationException
       /// </summaryArgument>
-      private static XmlNode getAllApplicationRecords(XmlDocument document)
+      private static XmlNode getAllApplicationRecords(XmlDocument document, string configVersion)
       {
          XmlNode root = document.SelectSingleNode("BCPreferences");
          if (root == null)
@@ -138,12 +138,17 @@ namespace mrHelper.Integration.DiffTool
                   "Wrong root element. Must be \"BCPreferences\" node."), null);
             }
 
-            root = document.CreateElement("BCPreferences");
-            if (root == null)
+            var rootElement = document.CreateElement("BCPreferences");
+            if (rootElement == null)
             {
                throw new DiffToolIntegrationException(String.Format(
                   "Cannot create \"BCPreferences\" node"), null);
             }
+            if (!String.IsNullOrEmpty(configVersion))
+            {
+               rootElement.SetAttribute("Version", configVersion);
+            }
+            root = rootElement;
             document.AppendChild(root);
          }
 
@@ -241,6 +246,7 @@ namespace mrHelper.Integration.DiffTool
       {
          return System.IO.Path.Combine(getConfigPath(), getConfigFileName());
       }
+      protected abstract string getConfigVersion();
    }
 }
 

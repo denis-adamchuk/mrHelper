@@ -17,6 +17,7 @@ namespace mrHelper.Integration.DiffTool
       protected override string getConfigFileName() => "BCPreferences.xml";
       protected override string getConfigFileComment() =>
          String.Format(" Produced by {0} from {1} ", getToolName(), getToolCompanyName());
+      protected override string getConfigVersion() => "1";
    }
 }
 
