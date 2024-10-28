@@ -80,6 +80,18 @@ namespace mrHelper.App.Helpers
       }
       public event Action WordWrapLongRowsChanged;
 
+      public int MaxListViewRows
+      {
+         get => getIntValue(MaxListViewRowsKeyName, MaxListViewRowsDefaultValue);
+         set => setIntValue(MaxListViewRowsKeyName, value);
+      }
+
+      public int MinListViewRows
+      {
+         get => getIntValue(MinListViewRowsKeyName, MinListViewRowsDefaultValue);
+         set => setIntValue(MinListViewRowsKeyName, value);
+      }
+
       public bool FlatRevisionPreview
       {
          get => getBoolValue(FlatRevisionPreviewKeyName, FlatRevisionPreviewDefaultValue);

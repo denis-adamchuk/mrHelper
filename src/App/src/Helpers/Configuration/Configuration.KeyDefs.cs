@@ -47,6 +47,12 @@ namespace mrHelper.App.Helpers
       private static readonly string WordWrapLongRowsKeyName      = "WordWrapLongRows";
       private static readonly bool   WordWrapLongRowsDefaultValue = true;
 
+      private static readonly string MaxListViewRowsKeyName = "MaxListViewRows";
+      private static readonly int MaxListViewRowsDefaultValue = 3;
+
+      private static readonly string MinListViewRowsKeyName = "MinListViewRows";
+      private static readonly int MinListViewRowsDefaultValue = 2;
+
       private static readonly string FlatRevisionPreviewKeyName      = "FlatRevisionPreview";
       private static readonly bool   FlatRevisionPreviewDefaultValue = false;
 

@@ -1226,7 +1226,8 @@ namespace mrHelper.App.Controls
 
          int maxLineCount = Math.Max(getMaxRowCountInColumn(ColumnType.Labels),
                                      getMaxRowCountInColumn(ColumnType.Author));
-         WinFormsHelpers.SetListViewRowHeight(this, maxLineCount);
+         WinFormsHelpers.SetListViewRowHeight(this,
+            Math.Max(maxLineCount, Program.Settings.MinListViewRows));
       }
 
       private ColumnHeader getColumnByType(ColumnType columnType)
@@ -1298,7 +1299,8 @@ namespace mrHelper.App.Controls
             Program.ServiceManager.GetUnimportantSuffices(), _getCurrentUser());
          Dictionary<bool, string> labels = new Dictionary<bool, string>
          {
-            [false] = StringUtils.JoinSubstringsLimited(groupedLabels, MaxListViewRows, MoreListViewRowsHint),
+            [false] = StringUtils.JoinSubstringsLimited(groupedLabels,
+               Program.Settings.MaxListViewRows, MoreListViewRowsHint),
             [true] = StringUtils.JoinSubstrings(groupedLabels)
          };
 
@@ -2078,7 +2080,6 @@ namespace mrHelper.App.Controls
       private Func<MergeRequestKey, bool> _fnIsPinned;
       private string _pinText;
       private string _unpinText;
-      private static readonly int MaxListViewRows = 3;
       private static readonly string MoreListViewRowsHint = "See more labels in tooltip";
       private static readonly string AllListViewRowsHint = "See all labels in tooltip";
 
