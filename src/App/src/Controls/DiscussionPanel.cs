@@ -53,6 +53,7 @@ namespace mrHelper.App.Controls
          string webUrl,
          Action<string> selectExternalNoteByUrl,
          IEnumerable<User> fullUserList,
+         IEnumerable<Project> fullProjectList,
          Action<bool> contentChanged)
       {
          _shortcuts = shortcuts;
@@ -67,6 +68,7 @@ namespace mrHelper.App.Controls
          _webUrl = webUrl;
          _selectExternalNoteByUrl = selectExternalNoteByUrl;
          _fullUserList = fullUserList;
+         _fullProjectList = fullProjectList;
          _contentChanged = contentChanged;
 
          _discussionSort = discussionSort;
@@ -483,12 +485,15 @@ namespace mrHelper.App.Controls
       {
          void scrollToNote(Control control) => scrollToControl(control, ExpectedControlPosition.Auto);
 
+         Project project = _fullProjectList
+            .FirstOrDefault(p => p.Path_With_Namespace == _mergeRequestKey.ProjectKey.ProjectName);
+         string imagePath = StringUtils.GetUploadsPrefix(_mergeRequestKey.ProjectKey.HostName, project?.Id ?? 0);
          foreach (Discussion discussion in discussions)
          {
             SingleDiscussionAccessor accessor = _shortcuts.GetSingleDiscussionAccessor(
                _mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(accessor, _git, _currentUser,
-               _mergeRequestKey, discussion, _mergeRequestAuthor, _colorScheme,
+               imagePath, discussion, _mergeRequestAuthor, _colorScheme,
                onDiscussionBoxContentChanging,
                onDiscussionBoxContentChanged,
                onDiscussionControlGotFocus,
@@ -928,6 +933,7 @@ namespace mrHelper.App.Controls
       private string _webUrl;
       private Action<string> _selectExternalNoteByUrl;
       private IEnumerable<User> _fullUserList;
+      private IEnumerable<Project> _fullProjectList;
       private DiscussionSort _discussionSort;
       private DiscussionFilter _displayFilter; // filters out discussions by user preferences
       private DiscussionFilter _pageFilter; // filters out discussions by user preferences

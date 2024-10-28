@@ -40,6 +40,7 @@ namespace mrHelper.App.Forms
          Func<DiffPosition, DiffContext> getNewDiscussionDiffContext,
          Func<DiffPosition, DiffContext> getDiffContext,
          IEnumerable<User> fullUserList,
+         IEnumerable<Project> fullProjectList,
          AvatarImageCache avatarImageCache)
       {
          InitializeComponent();
@@ -50,7 +51,8 @@ namespace mrHelper.App.Forms
          _webUrl = webUrl;
          _groupBoxRelatedThreadsDefaultHeight = groupBoxRelated.Height;
          _diffContextDefaultHeight = panelHtmlContextCanvas.Height;
-         _imagePath = StringUtils.GetUploadsPrefix(projectKey);
+         Project project = fullProjectList.FirstOrDefault(p => p.Path_With_Namespace == projectKey.ProjectName);
+         _imagePath = StringUtils.GetUploadsPrefix(projectKey.HostName, project?.Id ?? 0);
          _avatarImageCache = avatarImageCache;
          _fullUserList = fullUserList;
          initSmartTextBox();

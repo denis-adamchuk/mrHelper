@@ -34,7 +34,7 @@ namespace mrHelper.App.Controls
    {
       internal DiscussionBox(
          GitLabClient.SingleDiscussionAccessor accessor, IGitCommandService git,
-         User currentUser, MergeRequestKey mergeRequestKey, Discussion discussion,
+         User currentUser, string imagePath, Discussion discussion,
          User mergeRequestAuthor,
          ColorScheme colorScheme,
          Action<DiscussionBox> onContentChanging,
@@ -62,7 +62,7 @@ namespace mrHelper.App.Controls
          _editor = accessor.GetDiscussionEditor();
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
-         _imagePath = StringUtils.GetUploadsPrefix(mergeRequestKey.ProjectKey);
+         _imagePath = imagePath;
          _avatarImageCache = avatarImageCache;
          _pathCache = pathCache;
          _estimateWidthCache = estimateWidthCache;

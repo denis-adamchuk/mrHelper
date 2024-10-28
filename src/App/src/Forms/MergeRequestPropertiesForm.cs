@@ -56,6 +56,8 @@ namespace mrHelper.App.Forms
             _fullUserList = users;
             setAutocompletionEntities();
          }
+
+         comboBoxProject.SelectedIndexChanged += new System.EventHandler(loadProjectId);
       }
 
       private void MergeRequestPropertiesForm_Deactivate(object sender, EventArgs e)
@@ -80,6 +82,15 @@ namespace mrHelper.App.Forms
             string projectName = getProjectName();
             _fullUserList = await _projectAccessor.GetSingleProjectAccessor(projectName).GetUsersAsync();
             setAutocompletionEntities();
+         }));
+      }
+
+      private void loadProjectId(object sender, EventArgs e)
+      {
+         BeginInvoke(new Action(async () =>
+         {
+            Project project = await _projectAccessor.SearchProjectAsync(getProjectName());
+            _projectId = project?.Id ?? 0;
          }));
       }
 
@@ -134,7 +145,7 @@ namespace mrHelper.App.Forms
       {
          string description = mrHelper.Common.Tools.StringUtils.ConvertNewlineUnixToWindows(getDescription());
          string formCaption = "Edit Merge Request description";
-         string uploadsPrefix = StringUtils.GetUploadsPrefix(new ProjectKey(_hostname, getProjectName()));
+         string uploadsPrefix = StringUtils.GetUploadsPrefix(_hostname, _projectId ?? 0);
          using (TextEditBaseForm editDescriptionForm = new SimpleTextEditForm(
             formCaption, description, true, uploadsPrefix, _fullUserList, _avatarImageCache))
          {
@@ -453,6 +464,7 @@ namespace mrHelper.App.Forms
       private readonly MarkdownPipeline _mdPipeline;
       private readonly bool _isAllowedToChangeSource;
       private IEnumerable<User> _fullUserList;
+      private int? _projectId;
       private readonly AvatarImageCache _avatarImageCache;
       private string _title;
       private string _description;

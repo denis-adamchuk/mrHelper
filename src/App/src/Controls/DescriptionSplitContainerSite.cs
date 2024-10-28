@@ -72,7 +72,7 @@ namespace mrHelper.App.Controls
 
             string rawDescription = !String.IsNullOrEmpty(fmk.MergeRequest.Description)
                ? fmk.MergeRequest.Description : "Description is empty";
-            string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey);
+            string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey.HostName, fmk.MergeRequest.Project_Id);
             string description = MarkDownUtils.ConvertToHtml(rawDescription, uploadsPrefix, _mdPipeline,
                richTextBoxMergeRequestDescription);
 
@@ -116,7 +116,7 @@ namespace mrHelper.App.Controls
 
       private string getCommentsAsHtmlTable(FullMergeRequestKey fmk, IEnumerable<Discussion> discussions)
       {
-         string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey);
+         string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey.HostName, fmk.MergeRequest.Project_Id);
          StringBuilder builder = new StringBuilder();
          builder.Append("<b>Notes from author</b><br>");
          foreach (Discussion discussion in discussions)

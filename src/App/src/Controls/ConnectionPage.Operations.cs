@@ -358,9 +358,8 @@ namespace mrHelper.App.Controls
 
             EDataCacheType mode = getCurrentTabDataCacheType();
             DataCache dataCache = getDataCache(mode);
-            IEnumerable<User> fullUserList = getUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
-               mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList, _avatarImageCache[mode]);
+               mrk, mergeRequest.Title, CurrentUser, _shortcuts, getUsers(), getProjects(), _avatarImageCache[mode]);
             bool res = await discussionHelper.AddCommentAsync(WinFormsHelpers.FindMainForm());
             addOperationRecord(res ? "New comment has been added" : "Comment has not been added");
          }));
@@ -375,9 +374,8 @@ namespace mrHelper.App.Controls
 
             EDataCacheType mode = getCurrentTabDataCacheType();
             DataCache dataCache = getDataCache(mode);
-            IEnumerable<User> fullUserList = getUsers();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
-               mrk, mergeRequest.Title, CurrentUser, _shortcuts, fullUserList, _avatarImageCache[mode]);
+               mrk, mergeRequest.Title, CurrentUser, _shortcuts, getUsers(), getProjects(), _avatarImageCache[mode]);
             bool res = await discussionHelper.AddThreadAsync(WinFormsHelpers.FindMainForm());
             addOperationRecord(res ? "A new discussion thread has been added" : "Discussion thread has not been added");
          }));
@@ -646,8 +644,9 @@ namespace mrHelper.App.Controls
 
             AvatarImageCache avatarImageCache = _avatarImageCache[getCurrentTabDataCacheType()];
             IEnumerable<User> fullUserList = getUsers();
+            IEnumerable<Project> fullProjectList = getProjects();
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
-               mrk, title, currentUser, _shortcuts, fullUserList, avatarImageCache);
+               mrk, title, currentUser, _shortcuts, fullUserList, fullProjectList, avatarImageCache);
 
             DiscussionsForm discussionsForm = new DiscussionsForm(
                git, currentUser, mrk, discussions, title, author, _colorScheme,
@@ -655,7 +654,7 @@ namespace mrHelper.App.Controls
                cmd => isCommandEnabledInDiscussionsView(cmd, mrk),
                cmd => onCommandLaunchedFromDiscussionsView(cmd, mrk),
                () => reloadByDiscussionsViewRequest(mrk),
-               avatarImageCache, _onOpenUrl, fullUserList)
+               avatarImageCache, _onOpenUrl, fullUserList, fullProjectList)
             {
                Tag = mrk
             };

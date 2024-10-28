@@ -31,7 +31,7 @@ namespace mrHelper.App.Interprocess
          User currentUser, Action<MergeRequestKey> onDiscussionSubmitted,
          Action<string> onGoToNote,
          Func<MergeRequestKey, IEnumerable<Discussion>> getDiscussions,
-         Shortcuts shortcuts, IEnumerable<User> fullUserList,
+         Shortcuts shortcuts, IEnumerable<User> fullUserList, IEnumerable<Project> fullProjectList,
          AvatarImageCache avatarImageCache)
       {
          _git = git ?? throw new ArgumentException("git argument cannot be null");
@@ -40,6 +40,7 @@ namespace mrHelper.App.Interprocess
          _getDiscussions = getDiscussions;
          _shortcuts = shortcuts;
          _fullUserList = fullUserList;
+         _fullProjectList = fullProjectList;
          _avatarImageCache = avatarImageCache;
          _onGoToNote = onGoToNote;
       }
@@ -126,6 +127,7 @@ namespace mrHelper.App.Interprocess
             fnGetNewDiscussionDiffContext,
             fnGetDiffContext,
             _fullUserList,
+            _fullProjectList,
             _avatarImageCache);
          form.Show();
       }
@@ -565,6 +567,7 @@ namespace mrHelper.App.Interprocess
       private readonly Func<MergeRequestKey, IEnumerable<Discussion>> _getDiscussions;
       private readonly Shortcuts _shortcuts;
       private readonly IEnumerable<User> _fullUserList;
+      private readonly IEnumerable<Project> _fullProjectList;
       private readonly AvatarImageCache _avatarImageCache;
       private readonly Action<string> _onGoToNote;
 

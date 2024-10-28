@@ -61,13 +61,13 @@ namespace mrHelper.Common.Tools
          return host;
       }
 
-      public static string GetUploadsPrefix(ProjectKey projectKey)
+      public static string GetUploadsPrefix(string hostname, int projectId)
       {
-         if (String.IsNullOrEmpty(projectKey.HostName) || string.IsNullOrEmpty(projectKey.ProjectName))
+         if (String.IsNullOrEmpty(hostname) || projectId == 0)
          {
             return String.Empty;
          }
-         return String.Format("{0}/{1}", StringUtils.GetHostWithPrefix(projectKey.HostName), projectKey.ProjectName);
+         return String.Format("{0}/-/project/{1}", StringUtils.GetHostWithPrefix(hostname), projectId);
       }
 
       public static string GetDefaultInstallLocation(string manufacturer)

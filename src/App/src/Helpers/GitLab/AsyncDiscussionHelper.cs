@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows.Forms;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -14,10 +15,12 @@ namespace mrHelper.App.Helpers
    internal class AsyncDiscussionHelper
    {
       internal AsyncDiscussionHelper(MergeRequestKey mrk, string title,
-         User currentUser, GitLab.Shortcuts shortcuts, IEnumerable<User> fullUserList, AvatarImageCache avatarImageCache)
+         User currentUser, GitLab.Shortcuts shortcuts, IEnumerable<User> fullUserList,
+         IEnumerable<Project> fullProjectList, AvatarImageCache avatarImageCache)
       {
          _creator = shortcuts.GetDiscussionCreator(mrk, currentUser);
-         _uploadsPrefix = StringUtils.GetUploadsPrefix(mrk.ProjectKey);
+         Project project = fullProjectList.FirstOrDefault(p => p.Path_With_Namespace == mrk.ProjectKey.ProjectName);
+         _uploadsPrefix = StringUtils.GetUploadsPrefix(mrk.ProjectKey.HostName, project?.Id ?? 0);
          _title = title;
          _fullUserList = fullUserList;
          _avatarImageCache = avatarImageCache;

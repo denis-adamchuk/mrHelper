@@ -445,13 +445,12 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         IEnumerable<User> fullUserList = getUsers();
          DiffCallHandler handler = new DiffCallHandler(storage.Git, CurrentUser,
             (mrk) => dataCache.DiscussionCache?.RequestUpdate(
                mrk, Constants.DiscussionCheckOnNewThreadFromDiffToolInterval, null),
             _onOpenUrl,
             (mrk) => dataCache.DiscussionCache?.GetDiscussions(mrk) ?? Array.Empty<Discussion>(),
-            _shortcuts, fullUserList, _avatarImageCache[getDataCacheType(dataCache)]);
+            _shortcuts, getUsers(), getProjects(), _avatarImageCache[getDataCacheType(dataCache)]);
          handler.Handle(matchInfo, snapshot);
       }
 
