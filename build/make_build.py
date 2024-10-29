@@ -164,8 +164,8 @@ class ScriptConfigParser:
       self._validatePathInConfig(self.config, 'Path', 'repository')
       self._validatePathInConfig(self.config, 'Path', 'Extras')
       self._validatePathInConfig(self.config, 'Build', 'Bin')
-      self._validatePathInConfig(self.config, 'Installer', 'Bin')
-      self._validatePathInConfig(self.config, 'Installer', 'msix_Bin')
+      self._validatePathInConfig(self.config, 'Installer', 'Bin', True)
+      self._validatePathInConfig(self.config, 'Installer', 'msix_Bin', True)
       self._validateFileInConfig(self.config, 'Path', 'BuildScript')
       self._validateFileInConfig(self.config, 'Path', 'msix_BuildScript')
       self._validateFileInConfig(self.config, 'Version', 'AssemblyInfo')
@@ -173,10 +173,13 @@ class ScriptConfigParser:
       self._validatePathInConfig(self.config, 'Deploy', 'path')
       self._validatePathInConfig(self.config, 'Deploy', 'beta_path')
 
-   def _validatePathInConfig(self, config, section, option):
+   def _validatePathInConfig(self, config, section, option, createIfMissing=False):
       path = self.config.get(section, option)
       if not os.path.exists(path) or not os.path.isdir(path):
-         raise self.Exception(f'Bad path "{path}"')
+         if createIfMissing:
+            os.makedirs(path)
+         else:
+            raise self.Exception(f'Bad path "{path}"')
 
    def _validateFileInConfig(self, config, section, option):
       path = self.config.get(section, option)
