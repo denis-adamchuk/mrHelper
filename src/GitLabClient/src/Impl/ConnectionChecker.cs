@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using GitLabSharp;
 using GitLabSharp.Accessors;
@@ -25,6 +26,7 @@ namespace mrHelper.GitLabClient
             }
             catch (Exception ex) // Any exception from GitLabSharp API
             {
+               Trace.TraceError(String.Format("[ConnectionChecker] Exception caught: {0}", ex.ToString()));
                if (ex.InnerException is System.Net.WebException wx)
                {
                   if (wx.Response is System.Net.HttpWebResponse response
