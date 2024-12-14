@@ -100,7 +100,7 @@ namespace mrHelper.App.Controls
          // labelLoading
          // 
          this.labelLoading.AutoSize = true;
-         this.labelLoading.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelLoading.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.labelLoading.Location = new System.Drawing.Point(167, 109);
          this.labelLoading.Name = "labelLoading";
          this.labelLoading.Size = new System.Drawing.Size(54, 13);

@@ -18,14 +18,15 @@ using static mrHelper.App.Helpers.ConfigurationHelper;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class ConfigureHostsForm : CustomFontForm, IHostProperties
+   internal partial class ConfigureHostsForm : ThemedForm, IHostProperties
    {
-      public ConfigureHostsForm()
+      internal ConfigureHostsForm()
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);
          InitializeComponent();
          applyFont(Program.Settings.MainWindowFontSizeName);
+         this.columnHeader1.Width = this.listViewWorkflow.ClientSize.Width;
 
          linkLabelCreateAccessToken.Text = String.Empty;
          linkLabelCreateAccessToken.SetLinkLabelClicked(UrlHelper.OpenBrowser);
@@ -414,7 +415,6 @@ namespace mrHelper.App.Forms
       private void updateEnablementsOfWorkflowSelectors()
       {
          bool enabled = listViewKnownHosts.SelectedItems.Count > 0;
-         listViewWorkflow.Enabled = !isChecking() && enabled;
          buttonEditProjects.Enabled = !isChecking() && enabled;
          buttonEditUsers.Enabled = !isChecking() && enabled;
       }

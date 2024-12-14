@@ -40,6 +40,9 @@ namespace mrHelper.App.Controls
          _treeView.SelectionChanged += onTreeViewSelectionChanged;
          _treeView.NodeMouseDoubleClick += onTreeViewNodeMouseDoubleClick;
          _treeView.RowDraw += onTreeViewDrawRow;
+         _treeView.DrawGridLine += onTreeViewDrawGridLine;
+         _treeView.SetToolTip(toolTip);
+         RevisionBrowserDrawingHelper.ApplyFont(_treeView, this.Font);
 
          _name.ToolTipProvider = new NameTooltipProvider();
          _name.DrawText += onTreeViewDrawNode;
@@ -169,34 +172,38 @@ namespace mrHelper.App.Controls
       protected override void OnFontChanged(EventArgs eventArgs)
       {
          base.OnFontChanged(eventArgs);
-         _treeView.Font = this.Font;
+         RevisionBrowserDrawingHelper.ApplyFont(_treeView, this.Font);
       }
 
-      private void onTreeViewDrawRow(object sender, TreeViewRowDrawEventArgs e)
+      private void onTreeViewDrawRow(object sender, TreeViewRowDrawEventArgs args)
       {
-         if (e.Node.IsSelected)
-         {
-            Rectangle focusRect = new Rectangle(
-               _treeView.OffsetX, e.RowRect.Y, _treeView.ClientRectangle.Width, e.RowRect.Height);
-            e.Graphics.FillRectangle(SystemBrushes.Highlight, focusRect);
-         }
+         RevisionBrowserDrawingHelper.DrawRow(_treeView, args);
       }
 
-      private void onTreeViewDrawNode(object sender, DrawTextEventArgs e)
+      private void onTreeViewDrawGridLine(object sender, TreeViewGridLineDrawEventArgs args)
       {
-         e.BackgroundBrush = null;
-         if (e.Node.Tag is RevisionBrowserItem leafNode && leafNode.IsReviewed)
+         RevisionBrowserDrawingHelper.DrawGridLine(args);
+      }
+
+      private void onDrawColHeaderBg(object sender, DrawColHeaderBgEventArgs args)
+      {
+         RevisionBrowserDrawingHelper.DrawColumnHeaderBackground(args);
+      }
+
+      private void onDrawColHeaderText(object sender, DrawColHeaderTextEventArgs args)
+      {
+         RevisionBrowserDrawingHelper.DrawColumnHeaderText(_treeView, args);
+      }
+
+      private void onTreeViewDrawNode(object sender, DrawTextEventArgs args)
+      {
+         args.BackgroundBrush = null;
+         if (args.Node.Tag is RevisionBrowserItem leafNode && leafNode.IsReviewed)
          {
-            e.TextColor = Color.LightGray;
+            args.TextColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextInactive;
+            return;
          }
-         else if (e.Node.IsSelected)
-         {
-            e.TextColor = SystemColors.HighlightText;
-         }
-         else
-         {
-            e.TextColor = SystemColors.ControlText;
-         }
+         RevisionBrowserDrawingHelper.DrawNode(args);
       }
 
       private void onTreeViewColumnWidthChanged(object sender, TreeColumnEventArgs e)

@@ -15,7 +15,7 @@ using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.App.Forms
 {
-   internal abstract partial class MergeRequestPropertiesForm : CustomFontForm
+   internal abstract partial class MergeRequestPropertiesForm : ThemedForm
    {
       internal MergeRequestPropertiesForm(string hostname, ProjectAccessor projectAccessor, User currentUser,
          bool isAllowedToChangeSource, IEnumerable<User> users, AvatarImageCache avatarImageCache)
@@ -24,6 +24,7 @@ namespace mrHelper.App.Forms
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);
          InitializeComponent();
          CommonControls.Tools.WinFormsHelpers.LogScaleDimensions(this);
+         ThemeSupport.ThemeSupportHelper.ExcludeFromProcessing(labelIntegrationHint);
 
          applyFont(Program.Settings.MainWindowFontSizeName);
 
@@ -34,8 +35,10 @@ namespace mrHelper.App.Forms
          _isAllowedToChangeSource = isAllowedToChangeSource;
          _avatarImageCache = avatarImageCache;
 
-         htmlPanelTitle.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(htmlPanelTitle);
-         htmlPanelDescription.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(htmlPanelDescription);
+         htmlPanelTitle.BaseStylesheet =
+            ResourceHelper.ApplyFontSizeAndColorsToCSS(htmlPanelTitle);
+         htmlPanelDescription.BaseStylesheet =
+            ResourceHelper.ApplyFontSizeAndColorsToCSS(htmlPanelDescription);
 
          labelSpecialNotePrefix.Text = Program.ServiceManager.GetSpecialNotePrefix();
 

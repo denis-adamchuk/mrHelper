@@ -2,9 +2,9 @@
 using System.Drawing;
 using System.Diagnostics;
 using System.Windows.Forms;
-using System.Drawing.Drawing2D;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using mrHelper.CommonControls.Tools;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Controls
 {
@@ -27,6 +27,21 @@ namespace mrHelper.App.Controls
 
       public void FlickBorder()
       {
+         if (_flickeringColors == null)
+         {
+            _flickeringColors = new Color[8];
+         }
+
+         Color flickering1 = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextActive;
+         Color flickering2 = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.Control;
+
+         Debug.Assert(_flickeringColors.Length % 2 == 0);
+         for (int i = 0; i < _flickeringColors.Length - 1; i += 2)
+         {
+            _flickeringColors[i] = flickering1;
+            _flickeringColors[i + 1] = flickering2;
+         }
+
          startFlickering(FlickeringTimerIntervalMs);
       }
 
@@ -42,14 +57,14 @@ namespace mrHelper.App.Controls
 
       protected override void OnGotFocus(EventArgs e)
       {
-         _borderColor = FocusedBorderColor;
+         _borderColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextActive;
          base.OnGotFocus(e);
          Invalidate();
       }
 
       protected override void OnLostFocus(EventArgs e)
       {
-         _borderColor = NotFocusedBorderColor;
+         _borderColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextInactive;
          base.OnLostFocus(e);
          Invalidate();
       }
@@ -93,8 +108,7 @@ namespace mrHelper.App.Controls
 
       protected override void WndProc(ref Message m)
       {
-         const int WM_MOUSEWHEEL = 0x020A;
-         if (m.Msg == WM_MOUSEWHEEL && !ScrollOnMouseWheel)
+         if (m.Msg == CommonNative.NativeMethods.WM_MOUSEWHEEL && !ScrollOnMouseWheel)
          {
             int delta = CommonNative.NativeMethods.GET_WHEEL_DELTA_WPARAM(m.WParam);
             MouseWheelEx?.Invoke(this, new MouseWheelExArgs(delta));
@@ -178,10 +192,7 @@ namespace mrHelper.App.Controls
          _timer = null;
       }
 
-      private static readonly Color FocusedBorderColor = Color.Black;
-      private static readonly Color NotFocusedBorderColor = Color.Gray;
-
-      private static readonly Color[] _flickeringColors = new Color[] { Color.White, Color.Black, Color.White, Color.Black, Color.White };
+      private Color[] _flickeringColors;
       private static readonly int FlickeringTimerIntervalMs = 300;
       private Timer _timer;
 

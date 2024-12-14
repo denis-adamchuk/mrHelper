@@ -36,6 +36,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\diff-context.css" />
@@ -49,6 +50,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="src\ContextColorProvider.cs" />
     <Compile Include="src\Context\ContextMakerItf.cs" />
     <Compile Include="src\Context\ContextMakingException.cs" />
     <Compile Include="src\Context\ContextMakingHelpers.cs" />

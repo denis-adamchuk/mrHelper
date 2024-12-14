@@ -15,16 +15,15 @@ using mrHelper.Core.Context;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class DiscussionsForm : CustomFontForm
+   internal partial class DiscussionsForm : ThemedForm
    {
-      public DiscussionsForm(
+      internal DiscussionsForm(
          IGitCommandService git,
          User currentUser,
          MergeRequestKey mrk,
          IEnumerable<Discussion> discussions,
          string mergeRequestTitle,
          User mergeRequestAuthor,
-         ColorScheme colorScheme,
          AsyncDiscussionLoader discussionLoader,
          AsyncDiscussionHelper discussionHelper,
          string webUrl,
@@ -74,7 +73,7 @@ namespace mrHelper.App.Forms
 
          // Includes making some boxes visible. This does not paint them because their parent (Form) is hidden so far.
          discussionPanel.Initialize(discussionSort, displayFilter, _pageFilter, _searchFilter, discussionLoader, discussions,
-            shortcuts, git, colorScheme, mrk, mergeRequestAuthor, currentUser, discussionLayout, avatarImageCache,
+            shortcuts, git, mrk, mergeRequestAuthor, currentUser, discussionLayout, avatarImageCache,
             webUrl, onSelectNoteByUrl, fullUserList, fullProjectList, contentChanged);
          discussionPanel.ContentMismatchesFilter += showReapplyFilter;
          discussionPanel.ContentMatchesFilter += hideReapplyFilter;
@@ -89,7 +88,7 @@ namespace mrHelper.App.Forms
          searchPanel.Initialize(discussionPanel, onSearchResult);
 
          discussionMenu.Initialize(discussionSort, displayFilter, discussionLayout,
-            discussionHelper, commands, applyFont, colorScheme, isCommandEnabled, onCommand, onRefreshByUser);
+            discussionHelper, commands, applyFont, isCommandEnabled, onCommand, onRefreshByUser);
 
          linkLabelGitLabURL.Text = webUrl;
          toolTip.SetToolTip(linkLabelGitLabURL, webUrl);

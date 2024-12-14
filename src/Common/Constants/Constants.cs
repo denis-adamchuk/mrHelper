@@ -51,23 +51,18 @@ namespace mrHelper.Common.Constants
       public static int DiscussionCheckOnNewThreadInterval = 1000 * 3; // 3 seconds
       public static int DiscussionCheckOnNewThreadFromDiffToolInterval = 500; // 0.5 seconds
 
-      public static string DefaultColorSchemeName = "Default";
-      public static string ColorSchemeFileNamePrefix = "colors.json";
+      public enum ColorMode
+      {
+         Dark,
+         Light
+      }
 
-      public static string DefaultColorSchemeFileName =>
-         String.Format("{0}.{1}", DefaultColorSchemeName, ColorSchemeFileNamePrefix);
-
-      public static string[] ThemeNames = { "Default" };
-      public static string DefaultThemeName = "Default";
-
-      public static string[] ColorSchemeKnownColorNames =
-         { "Brown", "Chocolate", "Salmon",
-           "Red", "Tomato", "Coral", "Orange",
-           "Dark Khaki", "Khaki", "Gold", "Yellow",
-           "Dark Gray", "Gray", "Silver", "Whitesmoke",
-           "Green", "Pale Green", "Spring Green", "Lime",
-           "Dodger Blue", "Aqua", "Light Cyan", "Light Sky Blue",
-           "Misty Rose", "Lavender", "Magenta", "Violet", "Orchid" };
+      public static string GetDefaultColorSchemeFileName(ColorMode mode)
+      {
+         string defaultColorSchemeName = "Default";
+         string colorSchemeFileNamePrefix = "colors.json";
+         return String.Format("{0}.{1}.{2}", defaultColorSchemeName, mode.ToString(), colorSchemeFileNamePrefix);
+      }
 
       public static string LiveListViewName = "Live";
       public static string SearchListViewName = "Search";

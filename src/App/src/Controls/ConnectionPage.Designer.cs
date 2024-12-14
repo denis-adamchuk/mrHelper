@@ -34,7 +34,6 @@ namespace mrHelper.App.Controls
             // Let ListView unsubscribe from other objects
             listView.SetDataCache(null);
             listView.SetDiffStatisticProvider(null);
-            listView.SetColorScheme(null);
             listView.SetFilter(null);
             listView.SetExpressionResolver(null);
             listView.SetAvatarImageCache(null);
@@ -44,7 +43,7 @@ namespace mrHelper.App.Controls
          revisionSplitContainerSite.ClearData();
          getRevisionBrowser().AssignContextMenu(null);
 
-         _colorScheme.Changed -= onColorSchemeChanged;
+         Helpers.ColorScheme.Modified -= onColorSchemeModified;
 
          // To avoid dangling LinkLabelEx in a tooltip that we received from creator
          _toolTip.SetToolTip(linkLabelConnectedTo, null);
@@ -142,8 +141,8 @@ namespace mrHelper.App.Controls
          this.splitContainerSecondary = new System.Windows.Forms.SplitContainer();
          this.groupBoxSelectedMR = new System.Windows.Forms.GroupBox();
          this.descriptionSplitContainerSite = new mrHelper.App.Controls.DescriptionSplitContainerSite();
-         this.linkLabelConnectedTo = new mrHelper.CommonControls.Controls.LinkLabelEx();
-         this.linkLabelEnvironment = new mrHelper.CommonControls.Controls.LinkLabelEx();
+         this.linkLabelConnectedTo = new CommonControls.Controls.LinkLabelEx();
+         this.linkLabelEnvironment = new CommonControls.Controls.LinkLabelEx();
          this.groupBoxSelectRevisions = new System.Windows.Forms.GroupBox();
          this.revisionSplitContainerSite = new mrHelper.App.Controls.RevisionSplitContainerSite();
          this.comboBoxFilter = new FilterStateComboBox();

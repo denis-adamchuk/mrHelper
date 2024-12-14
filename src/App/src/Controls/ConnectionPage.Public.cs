@@ -582,7 +582,7 @@ namespace mrHelper.App.Controls
       {
          if (isConnectionLost())
          {
-            return _colorScheme?.GetColor("Status_LostConnection")?.Color;
+            return ColorScheme.GetColor("Status_LostConnection")?.Color;
          }
          return getListView(EDataCacheType.Live).GetSummaryColor();
       }

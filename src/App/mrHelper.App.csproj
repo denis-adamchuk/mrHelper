@@ -75,6 +75,18 @@
     <Compile Include="src\Controls\AvatarBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\BackgroundPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ColorGroupConfigPage.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ColorGroupConfigPage.Designer.cs">
+      <DependentUpon>ColorGroupConfigPage.cs</DependentUpon>
+    </Compile>
+    <Compile Include="src\Controls\ColorGroupConfigTabPage.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\ConnectionPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -164,6 +176,7 @@
     <Compile Include="src\Controls\HtmlToolTipEx.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\ListViewDrawingHelper.cs" />
     <Compile Include="src\Controls\MergeRequestListViewContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -191,6 +204,7 @@
     <Compile Include="src\Controls\RevisionBrowserContextMenu.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\RevisionBrowserDrawingHelper.cs" />
     <Compile Include="src\Controls\RevisionComparisonListView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -210,6 +224,13 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="src\Controls\TextControls.cs" />
+    <Compile Include="src\Controls\ThemedToolTip.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="src\Controls\ToolStripSystemTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="src\Helpers\ThemeSupportHelper.cs" />
     <Compile Include="src\Forms\AcceptMergeRequestForm.UI.cs">
       <DependentUpon>AcceptMergeRequestForm.cs</DependentUpon>
       <SubType>Form</SubType>
@@ -293,7 +314,7 @@
     <Compile Include="src\Forms\EditOrderedListViewForm.Designer.cs">
       <DependentUpon>EditOrderedListViewForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="src\Forms\CustomFontForm.cs">
+    <Compile Include="src\Forms\ThemedForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="src\Forms\Helpers\NewMergeRequestProperties.cs" />
@@ -410,6 +431,9 @@
     <Compile Include="src\LaunchOptions.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
+    <EmbeddedResource Include="src\Controls\ColorGroupConfigPage.resx">
+      <DependentUpon>ColorGroupConfigPage.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\ConnectionPage.resx">
       <DependentUpon>ConnectionPage.cs</DependentUpon>
     </EmbeddedResource>

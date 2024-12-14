@@ -6,9 +6,9 @@ using mrHelper.StorageSupport;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class ConfigureStorageForm : CustomFontForm
+   internal partial class ConfigureStorageForm : ThemedForm
    {
-      public ConfigureStorageForm()
+      internal ConfigureStorageForm()
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);

@@ -1,4 +1,4 @@
-﻿using mrHelper.CommonControls.Controls;
+﻿using mrHelper.App.Controls;
 
 namespace mrHelper.App.Forms
 {
@@ -44,16 +44,16 @@ namespace mrHelper.App.Forms
       private void InitializeComponent()
       {
          this.components = new System.ComponentModel.Container();
-         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.toolTip = new Controls.ThemedToolTip(this.components);
          this.discussionPanel = new mrHelper.App.Controls.DiscussionPanel();
          this.discussionMenu = new mrHelper.App.Controls.DiscussionsFormMenu();
          this.searchPanel = new mrHelper.App.Controls.DiscussionSearchPanel();
-         this.panelHeader = new System.Windows.Forms.Panel();
+         this.panelHeader = new BackgroundPanel();
          this.linkLabelPrevPage = new System.Windows.Forms.LinkLabel();
          this.linkLabelNextPage = new System.Windows.Forms.LinkLabel();
          this.linkLabelReapplyFilter = new System.Windows.Forms.LinkLabel();
          this.linkLabelSaveAsDefaultLayout = new System.Windows.Forms.LinkLabel();
-         this.linkLabelGitLabURL = new mrHelper.CommonControls.Controls.LinkLabelEx();
+         this.linkLabelGitLabURL = new CommonControls.Controls.LinkLabelEx();
          this.panelHeader.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -69,7 +69,6 @@ namespace mrHelper.App.Forms
          // 
          // discussionMenu
          // 
-         this.discussionMenu.BackColor = System.Drawing.SystemColors.Menu;
          this.discussionMenu.Dock = System.Windows.Forms.DockStyle.Top;
          this.discussionMenu.Font = new System.Drawing.Font("Segoe UI", 9F);
          this.discussionMenu.Location = new System.Drawing.Point(0, 0);
@@ -88,7 +87,6 @@ namespace mrHelper.App.Forms
          // 
          // panelHeader
          // 
-         this.panelHeader.BackColor = System.Drawing.SystemColors.ControlLight;
          this.panelHeader.Controls.Add(this.linkLabelPrevPage);
          this.panelHeader.Controls.Add(this.linkLabelNextPage);
          this.panelHeader.Controls.Add(this.linkLabelReapplyFilter);
@@ -188,12 +186,12 @@ namespace mrHelper.App.Forms
 
       #endregion
 
-      private System.Windows.Forms.ToolTip toolTip;
+      private Controls.ThemedToolTip toolTip;
       private mrHelper.App.Controls.DiscussionPanel discussionPanel;
       private mrHelper.App.Controls.DiscussionsFormMenu discussionMenu;
       private Controls.DiscussionSearchPanel searchPanel;
-      private System.Windows.Forms.Panel panelHeader;
-      private LinkLabelEx linkLabelGitLabURL;
+      private BackgroundPanel panelHeader;
+      private CommonControls.Controls.LinkLabelEx linkLabelGitLabURL;
       private System.Windows.Forms.LinkLabel linkLabelSaveAsDefaultLayout;
       private System.Windows.Forms.LinkLabel linkLabelReapplyFilter;
       private System.Windows.Forms.LinkLabel linkLabelPrevPage;

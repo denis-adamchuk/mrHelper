@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using mrHelper.Common.Constants;
 using mrHelper.GitLabClient;
 using mrHelper.StorageSupport;
+using static mrHelper.Common.Constants.Constants;
 
 namespace mrHelper.App.Helpers
 {
@@ -615,9 +616,9 @@ namespace mrHelper.App.Helpers
          return ToolBarPosition.Right;
       }
 
-      internal static void SetToolBarPosition(UserDefinedSettings settings, ToolBarPosition ToolBarPosition)
+      internal static void SetToolBarPosition(UserDefinedSettings settings, ToolBarPosition position)
       {
-         switch (ToolBarPosition)
+         switch (position)
          {
             case ToolBarPosition.Top:
                settings.ToolBarPosition = "Top";
@@ -631,6 +632,21 @@ namespace mrHelper.App.Helpers
                settings.ToolBarPosition = "Right";
                break;
          }
+      }
+
+      internal static ColorMode GetColorMode(UserDefinedSettings settings)
+      {
+         if (!Enum.TryParse(settings.ColorMode, out ColorMode result))
+         {
+            Debug.Assert(false);
+            return ColorMode.Dark;
+         }
+         return result;
+      }
+
+      internal static void SetColorMode(UserDefinedSettings settings, ColorMode mode)
+      {
+         settings.ColorMode = mode.ToString();
       }
    }
 }

@@ -43,7 +43,7 @@ namespace mrHelper.App.Forms
          this.buttonCancel = new System.Windows.Forms.Button();
          this.buttonOK = new System.Windows.Forms.Button();
          this.storageFolderBrowser = new System.Windows.Forms.FolderBrowserDialog();
-         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.toolTip = new Controls.ThemedToolTip(this.components);
          this.groupBoxFileStorageType.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -192,6 +192,6 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonCancel;
       private System.Windows.Forms.Button buttonOK;
       private System.Windows.Forms.FolderBrowserDialog storageFolderBrowser;
-      private System.Windows.Forms.ToolTip toolTip;
+      private Controls.ThemedToolTip toolTip;
    }
 }

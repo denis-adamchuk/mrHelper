@@ -36,7 +36,7 @@ namespace mrHelper.App.Forms
          this.buttonEditUsers = new System.Windows.Forms.Button();
          this.buttonRemoveKnownHost = new System.Windows.Forms.Button();
          this.buttonAddKnownHost = new System.Windows.Forms.Button();
-         this.listViewKnownHosts = new System.Windows.Forms.ListView();
+         this.listViewKnownHosts = new CommonControls.Controls.ListViewEx();
          this.columnHeaderHost = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderAccessToken = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderExpiresAt = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -45,8 +45,8 @@ namespace mrHelper.App.Forms
          this.groupBoxKnownHosts = new System.Windows.Forms.GroupBox();
          this.labelExpirationHint = new System.Windows.Forms.Label();
          this.labelChecking = new System.Windows.Forms.Label();
-         this.linkLabelCreateAccessToken = new mrHelper.CommonControls.Controls.LinkLabelEx();
-         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.linkLabelCreateAccessToken = new CommonControls.Controls.LinkLabelEx();
+         this.toolTip = new Controls.ThemedToolTip(this.components);
          this.listViewWorkflow = new mrHelper.App.Controls.StringToBooleanListView();
          this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.groupBoxSelectWorkflow = new System.Windows.Forms.GroupBox();
@@ -280,14 +280,14 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.Button buttonEditUsers;
       private System.Windows.Forms.Button buttonRemoveKnownHost;
       private System.Windows.Forms.Button buttonAddKnownHost;
-      private System.Windows.Forms.ListView listViewKnownHosts;
+      private CommonControls.Controls.ListViewEx listViewKnownHosts;
       private System.Windows.Forms.ColumnHeader columnHeaderHost;
       private System.Windows.Forms.ColumnHeader columnHeaderAccessToken;
       private System.Windows.Forms.ColumnHeader columnHeaderExpiresAt;
       private System.Windows.Forms.Button buttonOK;
       private System.Windows.Forms.Button buttonCancel;
       private System.Windows.Forms.GroupBox groupBoxKnownHosts;
-      private System.Windows.Forms.ToolTip toolTip;
+      private Controls.ThemedToolTip toolTip;
       private CommonControls.Controls.LinkLabelEx linkLabelCreateAccessToken;
       private Controls.StringToBooleanListView listViewWorkflow;
       private System.Windows.Forms.ColumnHeader columnHeader1;

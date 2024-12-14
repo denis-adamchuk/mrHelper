@@ -5,10 +5,11 @@ using System.Windows.Forms;
 using static System.Windows.Forms.ListViewItem;
 using mrHelper.CommonControls.Tools;
 using mrHelper.CommonNative;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Controls
 {
-   public partial class ListViewToolTip : ToolTip
+   internal partial class ListViewToolTip : ThemedToolTip
    {
       public ListViewToolTip(ListView listView,
          Func<ListViewSubItem, string> getText,

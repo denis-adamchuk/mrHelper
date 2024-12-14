@@ -37,7 +37,7 @@
          this.buttonFindPrev = new System.Windows.Forms.Button();
          this.buttonFindNext = new System.Windows.Forms.Button();
          this.textBoxSearch = new System.Windows.Forms.TextBox();
-         this.toolTipSearchPanel = new System.Windows.Forms.ToolTip(this.components);
+         this.toolTipSearchPanel = new ThemedToolTip(this.components);
          this.groupBox1.SuspendLayout();
          this.SuspendLayout();
          // 
@@ -142,7 +142,7 @@
       private System.Windows.Forms.Button buttonFindNext;
       private System.Windows.Forms.TextBox textBoxSearch;
       private System.Windows.Forms.Button buttonFindPrev;
-      private System.Windows.Forms.ToolTip toolTipSearchPanel;
+      private ThemedToolTip toolTipSearchPanel;
       private System.Windows.Forms.Label labelFoundCount;
       private System.Windows.Forms.CheckBox checkBoxCaseSensitive;
       private System.Windows.Forms.CheckBox checkBoxShowFoundOnly;

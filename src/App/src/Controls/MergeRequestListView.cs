@@ -43,7 +43,6 @@ namespace mrHelper.App.Controls
 
       public MergeRequestListView()
       {
-         OwnerDraw = true;
          _toolTip = new ListViewToolTip(this,
             getText, getToolTipText, getSubItemStringFormatFlags, getBounds, getForceShowToolTip);
          Tag = "DesignTimeName";
@@ -55,11 +54,6 @@ namespace mrHelper.App.Controls
       {
          _hostname = hostname;
          _doesSupportPin = doesSupportPin;
-
-         if (needShowGroups())
-         {
-            createGroups();
-         }
 
          applySortModeFromConfiguration();
       }
@@ -129,11 +123,6 @@ namespace mrHelper.App.Controls
          _timeTrackingCheckingCallback = callback;
       }
 
-      internal void SetColorScheme(ColorScheme colorScheme)
-      {
-         _colorScheme = colorScheme;
-      }
-
       internal void SetExpressionResolver(ExpressionResolver expressionResolver)
       {
          _expressionResolver = expressionResolver;
@@ -146,7 +135,6 @@ namespace mrHelper.App.Controls
 
       internal void DisableListView()
       {
-         Enabled = false;
          DeselectAllListViewItems();
          Items.Clear();
       }
@@ -605,9 +593,8 @@ namespace mrHelper.App.Controls
 
       protected override void OnMouseMove(MouseEventArgs e)
       {
-         ListViewHitTestInfo hit = HitTest(e.Location);
          _toolTip.UpdateOnMouseMove(e.Location);
-         Cursor = getCursor(hit);
+         Cursor = getCursor(e.Location);
 
          base.OnMouseMove(e);
       }
@@ -617,11 +604,10 @@ namespace mrHelper.App.Controls
          ListViewHitTestInfo testAtCursor = HitTest(e.Location);
          if (needShowGroups())
          {
-            int headerHeight = LogicalToDeviceUnits(GroupHeaderHeight);
-            ListViewHitTestInfo testBelowCursor = HitTest(e.Location.X, e.Location.Y + headerHeight);
-            if (testAtCursor.Item == null && testBelowCursor.Item != null)
+            ListViewGroup group = getGroupAtPoint(e.Location);
+            if (group != null)
             {
-               ProjectKey projectKey = getGroupProjectKey(testBelowCursor.Item.Group);
+               ProjectKey projectKey = getGroupProjectKey(group);
                setGroupCollapsing(projectKey, !isGroupCollapsed(projectKey));
                return;
             }
@@ -666,7 +652,14 @@ namespace mrHelper.App.Controls
 
       protected override void WndProc(ref Message message)
       {
-         if (message.Msg == NativeMethods.WM_NOTIFY)
+         if (message.Msg == NativeMethods.WM_VSCROLL || message.Msg == NativeMethods.WM_MOUSEWHEEL)
+         {
+            if (needShowGroups())
+            {
+               Invalidate();
+            }
+         }
+         else if (message.Msg == NativeMethods.WM_NOTIFY)
          {
             if (Win32Tools.IsDoubleClickOnDivider(WinFormsHelpers.GetNotifyMessageHeader(message)))
             {
@@ -735,23 +728,13 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         using (Brush brush = new SolidBrush(Color.DarkGray))
-         {
-            // Fill rectangle with dark color
-            e.Graphics.FillRectangle(brush, e.Bounds);
-         }
-         using (Brush brush = new SolidBrush(Color.Gray))
-         {
-            // Fill rectangle with lighter color but leave 1px for a "border".
-            // 1px is enough no matter which DPI is used.
-            Rectangle rect = new Rectangle(e.Bounds.X, e.Bounds.Y, e.Bounds.Width - 1 /* px */, e.Bounds.Height);
-            e.Graphics.FillRectangle(SystemBrushes.ButtonFace, rect);
-         }
+         ListViewDrawingHelper.DrawColumnHeaderBackground(e);
 
+         Color textColor = ThemeSupport.StockColors.GetThemeColors().ListViewColumnHeaderTextColor;
          bool isSortedByThisColumn = e.ColumnIndex == getColumnByType(getSortedByColumn()).Index;
          if (e.ColumnIndex == getColumnByType(ColumnType.Color).Index)
          {
-            Color? penColor = isSortedByThisColumn ? Color.Black : new Color?();
+            Color? penColor = isSortedByThisColumn ? textColor : new Color?();
             Color fillColor = GetSummaryColor() ?? Color.Gray;
             drawColorColumnEllipse(e.Graphics, e.Bounds, fillColor, penColor);
          }
@@ -759,19 +742,13 @@ namespace mrHelper.App.Controls
          {
             using (Font font = getColumnHeaderFont(isSortedByThisColumn))
             {
-               using (StringFormat format = new StringFormat(StringFormatFlags.LineLimit))
-               {
-                  format.Trimming = StringTrimming.EllipsisCharacter;
-                  e.Graphics.DrawString(e.Header.Text, font, Brushes.Black, e.Bounds, format);
-               }
+               ListViewDrawingHelper.DrawColumnHeaderText(e, font);
             }
          }
       }
 
       protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
       {
-         base.OnDrawSubItem(e);
-
          if (e.Item.ListView == null)
          {
             return; // is being removed
@@ -781,8 +758,18 @@ namespace mrHelper.App.Controls
          bool isSelected = e.Item.Selected;
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
          Color defaultColor = Color.Transparent;
-         Color backgroundColor = isMuted(fmk) ? defaultColor : getMergeRequestColor(fmk, defaultColor);
-         WinFormsHelpers.FillRectangle(e, bounds, backgroundColor, isSelected);
+         EColorSchemeItemsKind kind = isMuted(fmk) ? EColorSchemeItemsKind.Muted : EColorSchemeItemsKind.All;
+         Color backgroundColor = getMergeRequestColor(fmk, defaultColor, kind);
+         Color selectedColor = ThemeSupport.StockColors.GetThemeColors().SelectionBackground;
+         backgroundColor = isSelected ? selectedColor : backgroundColor;
+         WinFormsHelpers.FillRectangle(e, bounds, backgroundColor);
+
+         // We cannot draw the header when subitem matches to IId column type only because
+         // when the MRLV is scrolled to the right (if IId is the leftmost column), then
+         // the code is not called for IId column. We could try to draw it for the
+         // "leftmost visible column", but it is tricky to catch, so just draw for each
+         // subitem at the same position.
+         ListViewDrawingHelper.DrawGroupHeader(GroupHeaderHeight, e);
 
          ColumnType columnType = getColumnType(e.SubItem);
          using (StringFormat format = new StringFormat(getSubItemStringFormatFlags(e.SubItem)))
@@ -791,6 +778,8 @@ namespace mrHelper.App.Controls
 
             string text = ((ListViewSubItemInfo)(e.SubItem.Tag)).Text;
             bool isClickable = ((ListViewSubItemInfo)(e.SubItem.Tag)).Clickable;
+            bool useBackgroundColorForLabels =
+               ConfigurationHelper.GetColorMode(Program.Settings) == Constants.ColorMode.Light;
             if (columnType == ColumnType.Color)
             {
                Color color = getMergeRequestColor(fmk, Color.Transparent, EColorSchemeItemsKind.Preview);
@@ -804,13 +793,16 @@ namespace mrHelper.App.Controls
             {
                using (Font font = new Font(e.Item.ListView.Font, FontStyle.Underline))
                {
-                  Brush brush = Brushes.Blue;
-                  e.Graphics.DrawString(text, font, brush, bounds, format);
+                  Color textColor = ThemeSupport.StockColors.GetThemeColors().LinkTextColor;
+                  using (Brush brush = new SolidBrush(textColor))
+                  {
+                     e.Graphics.DrawString(text, font, brush, bounds, format);
+                  }
                }
             }
-            else if (isSelected && columnType == ColumnType.Labels)
+            else if (isSelected && columnType == ColumnType.Labels && useBackgroundColorForLabels)
             {
-               Color defaultLabelColor = SystemColors.Window;
+               Color defaultLabelColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextInSelection;
                Color color = isMuted(fmk) ? defaultLabelColor : getMergeRequestColor(fmk, defaultLabelColor);
                using (Brush brush = new SolidBrush(color))
                {
@@ -832,15 +824,14 @@ namespace mrHelper.App.Controls
                   e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
                }
             }
-            else if (columnType == ColumnType.TotalTime)
-            {
-               Brush brush = text == Constants.NotAllowedTimeTrackingText ? Brushes.Gray : Brushes.Black;
-               e.Graphics.DrawString(text, e.Item.ListView.Font, brush, bounds, format);
-            }
             else
             {
-               Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
-               e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
+               Color textColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextActive;
+               Color selectedTextColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextInSelection;
+               using (Brush textBrush = new SolidBrush(isSelected ? selectedTextColor : textColor))
+               {
+                  e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
+               }
             }
          }
       }
@@ -877,6 +868,25 @@ namespace mrHelper.App.Controls
             if (indices != null)
             {
                setColumnIndices(indices);
+            }
+
+            // This code fixes a bug when MRLV of one host had groups (sorted by Project) and user switched to
+            // MRLV of another host (not sorted by Project). MRLV was still thinking that groups exist and
+            // the behavior was strange.
+            bool anyGroupsCreated = Groups.Count > 0;
+            if (anyGroupsCreated != needShowGroups())
+            {
+               if (needShowGroups())
+               {
+                  createGroups();
+                  // It might still not create groups if there are no projects
+               }
+               else
+               {
+                  Groups.Clear();
+               }
+               Items.Clear();
+               UpdateItems();
             }
          }
          finally
@@ -1016,7 +1026,8 @@ namespace mrHelper.App.Controls
       {
          All,
          Preview,
-         Sorting
+         Sorting,
+         Muted
       }
 
       private IEnumerable<ColorSchemeItem> getColorSchemeItems(EColorSchemeItemsKind kind)
@@ -1024,13 +1035,16 @@ namespace mrHelper.App.Controls
          switch (kind)
          {
             case EColorSchemeItemsKind.All:
-               return _colorScheme?.GetColors("MergeRequests");
+               return ColorScheme.GetColors("MergeRequests");
 
             case EColorSchemeItemsKind.Preview:
                return getColorSchemeItems(EColorSchemeItemsKind.All).Where(item => item.UseForPreview);
 
             case EColorSchemeItemsKind.Sorting:
                return getColorSchemeItems(EColorSchemeItemsKind.All).Where(item => item.UseForSorting);
+
+            case EColorSchemeItemsKind.Muted:
+               return getColorSchemeItems(EColorSchemeItemsKind.All).Where(item => item.UseForMuted);
 
             default:
                Debug.Assert(false);
@@ -1080,7 +1094,7 @@ namespace mrHelper.App.Controls
       {
          if (isSummaryKey(fmk))
          {
-            return Color.Black;
+            return ColorScheme.GetColor("MergeRequestListView_Error_Text").Color;
          }
 
          DiscussionCount dc = _dataCache?.DiscussionCache?.GetDiscussionCount(
@@ -1088,20 +1102,20 @@ namespace mrHelper.App.Controls
 
          if (dc.Status != DiscussionCount.EStatus.Ready || dc.Resolvable == null || dc.Resolved == null)
          {
-            return Color.Black;
+            return ColorScheme.GetColor("MergeRequestListView_Error_Text").Color;
          }
 
          if (dc.Resolvable.Value == dc.Resolved.Value)
          {
             return isSelected
-               ? (_colorScheme?.GetColor("ResolvedCountHighlighted")?.Color ?? Color.SpringGreen)
-               : (_colorScheme?.GetColor("ResolvedCount")?.Color ?? Color.Green);
+               ? ColorScheme.GetColor("MergeRequestListView_ResolvedCountHighlighted_Text").Color
+               : ColorScheme.GetColor("MergeRequestListView_ResolvedCount_Text").Color;
          }
 
          Debug.Assert(dc.Resolvable.Value > dc.Resolved.Value);
          return isSelected
-            ? (_colorScheme?.GetColor("UnresolvedCountHighlighted")?.Color ?? Color.Orange)
-            : (_colorScheme?.GetColor("UnresolvedCount")?.Color ?? Color.DarkRed);
+            ? ColorScheme.GetColor("MergeRequestListView_UnresolvedCountHighlighted_Text").Color
+            : ColorScheme.GetColor("MergeRequestListView_UnresolvedCount_Text").Color;
       }
 
       private string getDiscussionCount(MergeRequestKey mrk)
@@ -2051,14 +2065,37 @@ namespace mrHelper.App.Controls
          };
       }
 
-      private static Cursor getCursor(ListViewHitTestInfo hit)
+      private Cursor getCursor(Point location)
       {
+         ListViewHitTestInfo hit = HitTest(location);
          if (hit.SubItem != null)
          {
             ListViewSubItemInfo info = (ListViewSubItemInfo)(hit.SubItem.Tag);
             return info.Clickable ? Cursors.Hand : Cursors.Default;
          }
+         else if (needShowGroups())
+         {
+            ListViewGroup group = getGroupAtPoint(location);
+            return group != null ? Cursors.Hand : Cursors.Default;
+         }
          return Cursors.Default;
+      }
+
+      System.Windows.Forms.ListViewGroup getGroupAtPoint(Point location)
+      {
+         ListViewHitTestInfo testAtCursor = HitTest(location);
+         // Next tests are needed because there is a 1 px gap between MR rows and
+         // we don't want to treat it as a group header.
+         ListViewHitTestInfo test1pxAbove = HitTest(location.X, location.Y - 1);
+         ListViewHitTestInfo test1pxBelow = HitTest(location.X, location.Y + 1);
+         bool hasItemAtCursor = testAtCursor.Item != null || test1pxAbove.Item != null || test1pxBelow.Item != null;
+         if (hasItemAtCursor)
+         {
+            return null;
+         }
+
+         ListViewHitTestInfo testBelowCursor = HitTest(location.X, location.Y + GroupHeaderHeight);
+         return testBelowCursor.Item != null ? testBelowCursor.Item.Group : null;
       }
 
       private readonly ListViewToolTip _toolTip;
@@ -2066,7 +2103,6 @@ namespace mrHelper.App.Controls
       private Func<User> _getCurrentUser;
       private DataCache _dataCache;
       private MergeRequestFilter _mergeRequestFilter;
-      private ColorScheme _colorScheme;
       private bool _suppressSelectionChange;
       private HashSetWrapper<ProjectKey> _collapsedProjects;
       private DictionaryWrapper<MergeRequestKey, DateTime> _mutedMergeRequests;

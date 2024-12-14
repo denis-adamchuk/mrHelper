@@ -225,6 +225,7 @@ namespace mrHelper.App.Forms
 
       private void updateControls()
       {
+         htmlPanelTitle.BaseStylesheet = ResourceHelper.ApplyFontSizeAndColorsToCSS(htmlPanelTitle);
          htmlPanelTitle.Text = convertTextToHtml(_title, htmlPanelTitle);
          labelAuthor.Text = _author?.Name ?? String.Empty;
          labelProject.Text = _mergeRequestKey.ProjectKey.ProjectName;
@@ -273,7 +274,7 @@ namespace mrHelper.App.Forms
       private void updateWorkInProgressControls(bool isWIP)
       {
          labelDraftStatus.Text = isWIP ? "This is WIP/Draft" : "This is not WIP/Draft";
-         labelDraftStatus.ForeColor = isWIP ? Color.Red : Color.Green;
+         labelDraftStatus.ForeColor = isWIP ? getErrorColor() : getSuccessColor();
          buttonToggleDraft.Enabled = isWIP && !_isAwaiting;
       }
 
@@ -281,7 +282,7 @@ namespace mrHelper.App.Forms
       {
          labelDiscussionStatus.Text = areUnresolvedDiscussions
             ? "Please resolve unresolved threads" : "All discussions resolved";
-         labelDiscussionStatus.ForeColor = areUnresolvedDiscussions ? Color.Red : Color.Green;
+         labelDiscussionStatus.ForeColor = areUnresolvedDiscussions ? getErrorColor() : getSuccessColor();
          buttonDiscussions.Enabled = areUnresolvedDiscussions && !_isAwaiting;
       }
 
@@ -291,7 +292,7 @@ namespace mrHelper.App.Forms
          if (_state == "merged")
          {
             labelMergeStatus.Text = "Already merged";
-            labelMergeStatus.ForeColor = Color.Green;
+            labelMergeStatus.ForeColor = getSuccessColor();
             buttonMerge.Enabled = false;
             return;
          }
@@ -299,7 +300,7 @@ namespace mrHelper.App.Forms
          if (!areDependenciesResolved)
          {
             labelMergeStatus.Text = "Please resolve warnings above to continue with merge";
-            labelMergeStatus.ForeColor = Color.Red;
+            labelMergeStatus.ForeColor = getErrorColor();
             buttonMerge.Enabled = false;
             return;
          }
@@ -309,20 +310,20 @@ namespace mrHelper.App.Forms
             case MergeStatus.NotAvailable:
             case MergeStatus.Unchecked:
                labelMergeStatus.Text = "Checking for conflicts...";
-               labelMergeStatus.ForeColor = Color.Blue;
+               labelMergeStatus.ForeColor = getInProgressColor();
                buttonMerge.Enabled = false;
                break;
 
             case MergeStatus.CanBeMerged:
                labelMergeStatus.Text = "Can be merged. Merge type: Fast-forward merge without a merge commit";
-               labelMergeStatus.ForeColor = Color.Green;
+               labelMergeStatus.ForeColor = getSuccessColor();
                buttonMerge.Enabled = !_isAwaiting;
                break;
 
             case MergeStatus.CannotBeMerged:
                Debug.Assert(false); // why dependencies resolved then?
                labelMergeStatus.Text = "Merge Request cannot be merged due to some GitLab issues";
-               labelMergeStatus.ForeColor = Color.Red;
+               labelMergeStatus.ForeColor = getErrorColor();
                buttonMerge.Enabled = false;
                break;
          }
@@ -340,25 +341,25 @@ namespace mrHelper.App.Forms
          {
             case RemoteRebaseState.NotAvailable:
                labelRebaseStatus.Text = "Cannot obtain a state of rebase operation from GitLab";
-               labelRebaseStatus.ForeColor = Color.Red;
+               labelRebaseStatus.ForeColor = getErrorColor();
                buttonRebase.Enabled = false;
                break;
 
             case RemoteRebaseState.CheckingHierarchy:
                labelRebaseStatus.Text = "Checking if Rebase is needed...";
-               labelRebaseStatus.ForeColor = Color.Blue;
+               labelRebaseStatus.ForeColor = getInProgressColor();
                buttonRebase.Enabled = false;
                break;
 
             case RemoteRebaseState.Required:
                labelRebaseStatus.Text = "Fast-forward merge is not possible";
-               labelRebaseStatus.ForeColor = Color.Red;
+               labelRebaseStatus.ForeColor = getErrorColor();
                buttonRebase.Enabled = !_isAwaiting;
                break;
 
             case RemoteRebaseState.RequiredLocalRebase:
                labelRebaseStatus.Text = "Rebase branch locally";
-               labelRebaseStatus.ForeColor = Color.Red;
+               labelRebaseStatus.ForeColor = getErrorColor();
                buttonRebase.Enabled = false;
                break;
 
@@ -368,7 +369,7 @@ namespace mrHelper.App.Forms
 
             case RemoteRebaseState.Failed:
                labelRebaseStatus.Text = _rebaseError;
-               labelRebaseStatus.ForeColor = Color.Red;
+               labelRebaseStatus.ForeColor = getErrorColor();
                buttonRebase.Enabled = false;
                break;
 
@@ -422,22 +423,42 @@ namespace mrHelper.App.Forms
       private void showRebaseInProgress()
       {
          labelRebaseStatus.Text = "Rebase is in progress...";
-         labelRebaseStatus.ForeColor = Color.Blue;
+         labelRebaseStatus.ForeColor = getInProgressColor();
          buttonRebase.Enabled = false;
       }
 
       private void showRebaseUnneeded()
       {
          labelRebaseStatus.Text = "Rebase is unneeded";
-         labelRebaseStatus.ForeColor = Color.Green;
+         labelRebaseStatus.ForeColor = getSuccessColor();
          buttonRebase.Enabled = false;
       }
 
       private void showMergeInProgress()
       {
          labelMergeStatus.Text = "Merge in progress...";
-         labelMergeStatus.ForeColor = Color.Blue;
+         labelMergeStatus.ForeColor = getInProgressColor();
          buttonMerge.Enabled = false;
+      }
+
+      private void onColorSchemeModified()
+      {
+         updateControls();
+      }
+
+      private static Color getErrorColor()
+      {
+         return ColorScheme.GetColor("AcceptMR_Error_Text").Color;
+      }
+
+      private static Color getSuccessColor()
+      {
+         return ColorScheme.GetColor("AcceptMR_Success_Text").Color;
+      }
+
+      private static Color getInProgressColor()
+      {
+         return ColorScheme.GetColor("AcceptMR_InProgress_Text").Color;
       }
    }
 }

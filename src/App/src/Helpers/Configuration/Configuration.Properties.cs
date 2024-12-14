@@ -253,17 +253,12 @@ namespace mrHelper.App.Helpers
          set => setBoolValue(IsDiscussionColumnWidthFixedKeyName, value);
       }
 
-      public string ColorSchemeFileName
+      public string ColorMode
       {
-         get => getValue(ColorSchemeFileNameKeyName, ColorSchemeFileNameDefaultValue);
-         set => setValue(ColorSchemeFileNameKeyName, value);
+         get => getValue(ColorModeKeyName, ColorModeDefaultValue);
+         set => setValue(ColorModeKeyName, value);
       }
-
-      public string VisualThemeName
-      {
-         get => getValue(VisualThemeNameKeyName, VisualThemeNameDefaultValue);
-         set => setValue(VisualThemeNameKeyName, value);
-      }
+      public event Action ColorModeChanged;
 
       public string MainWindowFontSizeName
       {
@@ -600,10 +595,16 @@ namespace mrHelper.App.Helpers
          set => setStringToStringDictionary(ProjectsWithEnvironmentsKeyName, value);
       }
 
-      public Dictionary<string, string> CustomColors
+      public Dictionary<string, string> CustomColorsLight
       {
-         get => getStringToStringDictionary(CustomColorsKeyName, CustomColorsDefaultValue, false);
-         set => setStringToStringDictionary(CustomColorsKeyName, value);
+         get => getStringToStringDictionary(CustomColorsLightKeyName, CustomColorsLightDefaultValue, false);
+         set => setStringToStringDictionary(CustomColorsLightKeyName, value);
+      }
+
+      public Dictionary<string, string> CustomColorsDark
+      {
+         get => getStringToStringDictionary(CustomColorsDarkKeyName, CustomColorsDarkDefaultValue, false);
+         set => setStringToStringDictionary(CustomColorsDarkKeyName, value);
       }
 
       public bool AutoRotateAccessTokens

@@ -10,7 +10,7 @@ using mrHelper.Common.Interfaces;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class MainForm : CustomFontForm
+   internal partial class MainForm : ThemedForm
    {
       // TODO Combine multiple timers into a single one
       private static readonly int ConnectionLossBlinkingTimerInterval = 750 * 1; // 0.75 second
@@ -82,7 +82,6 @@ namespace mrHelper.App.Forms
       private ITimeTracker _timeTracker;
 
       private IEnumerable<string> _keywords;
-      private readonly ColorScheme _colorScheme;
 
       private PersistentStorage _persistentStorage;
 

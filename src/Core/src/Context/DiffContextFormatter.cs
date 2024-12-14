@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using mrHelper.Common.Tools;
 
 namespace mrHelper.Core.Context
 {
@@ -12,7 +13,8 @@ namespace mrHelper.Core.Context
       /// <summary>
       /// Throws ArgumentException if DiffContext is invalid
       /// </summary>
-      public static string GetHtml(DiffContext context, double fontSizePt, int? tableWidth)
+      public static string GetHtml(DiffContext context, double fontSizePt, int? tableWidth,
+         ContextColorProvider provider)
       {
          if (!context.IsValid())
          {
@@ -20,15 +22,17 @@ namespace mrHelper.Core.Context
             return String.Format("<html><body>{0} See logs for details</body></html>", errorMessage);
          }
 
-         return getHtml(getTable(context), fontSizePt, tableWidth);
+         return getHtml(getTable(context), fontSizePt, tableWidth, provider);
       }
 
-      public static string GetHtml(string code, double fontSizePt, int? tableWidth)
+      public static string GetHtml(string code, double fontSizePt, int? tableWidth,
+         ContextColorProvider provider)
       {
-         return getHtml(getTable(code), fontSizePt, tableWidth);
+         return getHtml(getTable(code), fontSizePt, tableWidth, provider);
       }
 
-      private static string getHtml(string table, double fontSizePt, int? tableWidth)
+      private static string getHtml(string table, double fontSizePt, int? tableWidth,
+         ContextColorProvider provider)
       {
          return String.Format(
             @"<html>
@@ -41,12 +45,13 @@ namespace mrHelper.Core.Context
                   {1}
                </body>
              </html>",
-            getStylesheet(fontSizePt, tableWidth), table);
+            getStylesheet(fontSizePt, tableWidth, provider), table);
       }
 
-      private static string getStylesheet(double fontSizePt, int? tableWidth)
+      private static string getStylesheet(double fontSizePt, int? tableWidth,
+         ContextColorProvider provider)
       {
-         return loadStylesFromCSS() + getCustomStyle(fontSizePt, tableWidth);
+         return loadStylesFromCSS() + getCustomStyle(fontSizePt, tableWidth) + applyColors(provider);
       }
 
       static readonly string TableBegin = @"<table cellspacing=""0"" cellpadding=""0"">";
@@ -79,6 +84,38 @@ namespace mrHelper.Core.Context
             }}",
             fontSizePt, tableWidth.HasValue ? (tableWidth.Value.ToString() + "px") : "100%");
       }
+
+      private static string applyColors(ContextColorProvider provider)
+      {
+         return string.Format(@"
+            td.linenumbers {{
+               color: {0};
+               background-color: {1};
+               border-right: solid 1px {2};
+            }}
+            td.unchanged {{
+               color: {3};
+               background-color: {4};
+            }}
+            td.removed {{
+               color: {5};
+               background-color: {6};
+            }}
+            td.added {{
+               color: {7};
+               background-color: {8};
+            }}",
+            HtmlUtils.ColorToRgb(provider.LineNumbersColor),
+            HtmlUtils.ColorToRgb(provider.LineNumbersBackgroundColor),
+            HtmlUtils.ColorToRgb(provider.LineNumbersRightBorderColor),
+            HtmlUtils.ColorToRgb(provider.UnchangedColor),
+            HtmlUtils.ColorToRgb(provider.UnchangedBackgroundColor),
+            HtmlUtils.ColorToRgb(provider.RemovedColor),
+            HtmlUtils.ColorToRgb(provider.RemovedBackgroundColor),
+            HtmlUtils.ColorToRgb(provider.AddedColor),
+            HtmlUtils.ColorToRgb(provider.AddedBackgroundColor));
+      }
+
 
       private static string getTableBody(string text)
       {

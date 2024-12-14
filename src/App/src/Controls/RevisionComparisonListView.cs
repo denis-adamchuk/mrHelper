@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Drawing;
 using mrHelper.CommonControls.Tools;
 using mrHelper.Common.Constants;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Controls
 {
@@ -94,8 +95,13 @@ namespace mrHelper.App.Controls
 
       protected override void OnDrawColumnHeader(DrawListViewColumnHeaderEventArgs e)
       {
-         base.OnDrawColumnHeader(e);
-         e.DrawDefault = true;
+         if (e.Header.ListView == null)
+         {
+            return;
+         }
+
+         ListViewDrawingHelper.DrawColumnHeaderBackground(e);
+         ListViewDrawingHelper.DrawColumnHeaderText(e, e.Font);
       }
 
       protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
@@ -108,16 +114,22 @@ namespace mrHelper.App.Controls
          }
 
          bool isSelected = e.Item.Selected;
-         Color backgroundColor = e.ItemIndex % 2 == 1 ? Color.WhiteSmoke : Color.White;
-         WinFormsHelpers.FillRectangle(e, e.Bounds, backgroundColor, isSelected);
+         Color backgroundColor = e.ItemIndex % 2 == 1 
+            ? ThemeSupport.StockColors.GetThemeColors().OSThemeColors.ControlLight
+            : ThemeSupport.StockColors.GetThemeColors().OSThemeColors.Control;
+         backgroundColor = isSelected ? ThemeSupport.StockColors.GetThemeColors().SelectionBackground : backgroundColor;
+         WinFormsHelpers.FillRectangle(e, e.Bounds, backgroundColor);
 
-         StringFormat format = new StringFormat(StringFormatFlags.NoWrap)
+         using (Brush textBrush = new SolidBrush(isSelected
+            ? ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextInSelection
+            : ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextActive))
          {
-            Trimming = StringTrimming.EllipsisCharacter
-         };
-
-         Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
-         e.Graphics.DrawString(e.SubItem.Text, Font, textBrush, e.Bounds, format);
+            StringFormat format = new StringFormat(StringFormatFlags.NoWrap)
+            {
+               Trimming = StringTrimming.EllipsisCharacter
+            };
+            e.Graphics.DrawString(e.SubItem.Text, Font, textBrush, e.Bounds, format);
+         }
       }
 
       private ListViewItem createListViewItem(ComparisonEx.Statistic.Item statisticItem)

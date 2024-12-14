@@ -6,7 +6,7 @@ using mrHelper.Common.Tools;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class AddKnownHostForm : CustomFontForm
+   internal partial class AddKnownHostForm : ThemedForm
    {
       internal AddKnownHostForm()
       {

@@ -9,9 +9,9 @@ using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class EditSearchQueryForm : CustomFontForm
+   internal partial class EditSearchQueryForm : ThemedForm
    {
-      public EditSearchQueryForm(IEnumerable<string> projectNames, IEnumerable<User> users,
+      internal EditSearchQueryForm(IEnumerable<string> projectNames, IEnumerable<User> users,
          User currentUser, EditSearchQueryFormState initialState)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,

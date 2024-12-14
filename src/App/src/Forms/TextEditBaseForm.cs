@@ -11,7 +11,7 @@ using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Forms
 {
-   internal abstract partial class TextEditBaseForm : CustomFontForm
+   internal abstract partial class TextEditBaseForm : ThemedForm
    {
       internal TextEditBaseForm(string caption, string initialText, bool editable, bool multiline,
          string uploadsPrefix, IEnumerable<User> fullUserList, AvatarImageCache avatarImageCache)
@@ -19,6 +19,7 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);
          InitializeComponent();
+         ThemeSupport.ThemeSupportHelper.ExcludeFromProcessing(labelNoteAboutInvisibleCharacters);
          Text = caption;
          labelNoteAboutInvisibleCharacters.Text = Constants.WarningOnUnescapedMarkdown;
          _uploadsPrefix = uploadsPrefix;
@@ -51,7 +52,8 @@ namespace mrHelper.App.Forms
          {
             Markdig.MarkdownPipeline pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
             string body = MarkDownUtils.ConvertToHtml(textBox.Text, _uploadsPrefix, pipeline, htmlPanelPreview);
-            htmlPanelPreview.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(htmlPanelPreview);
+            htmlPanelPreview.BaseStylesheet =
+               ResourceHelper.ApplyFontSizeAndColorsToCSS(htmlPanelPreview);
             htmlPanelPreview.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
          }
       }

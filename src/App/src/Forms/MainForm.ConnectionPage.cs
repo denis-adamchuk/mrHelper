@@ -127,7 +127,7 @@ namespace mrHelper.App.Forms
                _filtersByHostsLive, _filtersByHostsRecent,
                _keywords, _trayIcon, toolTip,
                _integratedInGitExtensions,
-               _integratedInSourceTree, _colorScheme, oldFilter, this, onOpenCommand, onCommandAsync);
+               _integratedInSourceTree, oldFilter, this, onOpenCommand, onCommandAsync);
             subscribeToConnectionPage(connectionPage);
             ConnectionTabPage tabPage = new ConnectionTabPage(hostname, connectionPage);
             tabControlHost.TabPages.Add(tabPage);

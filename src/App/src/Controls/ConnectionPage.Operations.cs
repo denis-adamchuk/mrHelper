@@ -649,7 +649,7 @@ namespace mrHelper.App.Controls
                mrk, title, currentUser, _shortcuts, fullUserList, fullProjectList, avatarImageCache);
 
             DiscussionsForm discussionsForm = new DiscussionsForm(
-               git, currentUser, mrk, discussions, title, author, _colorScheme,
+               git, currentUser, mrk, discussions, title, author,
                discussionLoader, discussionHelper, webUrl, _shortcuts, GetCustomActionList(),
                cmd => isCommandEnabledInDiscussionsView(cmd, mrk),
                cmd => onCommandLaunchedFromDiscussionsView(cmd, mrk),
@@ -685,7 +685,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void onColorSchemeChanged()
+      private void onColorSchemeModified()
       {
          getListView(getCurrentTabDataCacheType())?.Invalidate();
       }
@@ -748,9 +748,9 @@ namespace mrHelper.App.Controls
             DiffToolArguments arg = new DiffToolArguments(true, Constants.GitDiffToolName, leftSHA, rightSHA);
             pid = storage.Git?.LaunchDiffTool(arg) ?? null;
          }
-         catch (DiffToolLaunchException)
+         catch (DiffToolLaunchException ex)
          {
-            string message = "Cannot launch diff tool";
+            string message = "Cannot launch diff tool " + ex.Message;
             MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             addOperationRecord(message);
          }

@@ -44,7 +44,6 @@ namespace mrHelper.App.Controls
          IEnumerable<Discussion> discussions,
          Shortcuts shortcuts,
          IGitCommandService git,
-         ColorScheme colorScheme,
          MergeRequestKey mergeRequestKey,
          User mergeRequestAuthor,
          User currentUser,
@@ -58,7 +57,6 @@ namespace mrHelper.App.Controls
       {
          _shortcuts = shortcuts;
          _git = git;
-         _colorScheme = colorScheme;
          _mergeRequestKey = mergeRequestKey;
          _mergeRequestAuthor = mergeRequestAuthor;
          _currentUser = currentUser;
@@ -493,7 +491,7 @@ namespace mrHelper.App.Controls
             SingleDiscussionAccessor accessor = _shortcuts.GetSingleDiscussionAccessor(
                _mergeRequestKey, discussion.Id);
             DiscussionBox box = new DiscussionBox(accessor, _git, _currentUser,
-               imagePath, discussion, _mergeRequestAuthor, _colorScheme,
+               imagePath, discussion, _mergeRequestAuthor,
                onDiscussionBoxContentChanging,
                onDiscussionBoxContentChanged,
                onDiscussionControlGotFocus,
@@ -928,7 +926,6 @@ namespace mrHelper.App.Controls
       private MergeRequestKey _mergeRequestKey;
       private User _mergeRequestAuthor;
       private IGitCommandService _git;
-      private ColorScheme _colorScheme;
       private Shortcuts _shortcuts;
       private string _webUrl;
       private Action<string> _selectExternalNoteByUrl;

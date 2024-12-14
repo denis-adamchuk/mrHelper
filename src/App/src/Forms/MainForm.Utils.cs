@@ -414,22 +414,20 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         Color foreColor = Color.Black;
+         Color foreColor = ColorScheme.GetColor("MainFormStatusBar_Text").Color;
          string labelText = String.Empty;
          switch (state)
          {
             case ConnectionPage.EConnectionState.Connected:
-               foreColor = Color.Green;
+               foreColor = ColorScheme.GetColor("MainFormStatusBar_Connected_Text").Color;
                labelText = "Connected";
                break;
 
             case ConnectionPage.EConnectionState.Connecting:
-               foreColor = Color.Black;
                labelText = "Connecting...";
                break;
 
             case ConnectionPage.EConnectionState.NotConnected:
-               foreColor = Color.Black;
                labelText = "Not connected";
                break;
 
@@ -450,7 +448,7 @@ namespace mrHelper.App.Forms
          {
             labelText = labelText.ToUpper();
          }
-         labelConnectionStatus.ForeColor = Color.Red;
+         labelConnectionStatus.ForeColor = ColorScheme.GetColor("MainFormStatusBar_Reconnecting_Text").Color;
          labelConnectionStatus.Text = labelText;
       }
 
@@ -499,13 +497,9 @@ namespace mrHelper.App.Forms
          }
 
          Color? consolidatedColor = getConsolidatedColor();
-         if (_colorScheme == null)
+         if (isTrackingTime())
          {
-            applyColor(null);
-         }
-         else if (isTrackingTime())
-         {
-            applyColor(_colorScheme.GetColor("Status_Tracking")?.Color);
+            applyColor(ColorScheme.GetColor("Status_Tracking")?.Color);
          }
          else if (consolidatedColor.HasValue)
          {
@@ -513,7 +507,7 @@ namespace mrHelper.App.Forms
          }
          else if (isConnectionLost())
          {
-            applyColor(_colorScheme.GetColor("Status_LostConnection")?.Color);
+            applyColor(ColorScheme.GetColor("Status_LostConnection")?.Color);
          }
          else
          {
@@ -544,7 +538,7 @@ namespace mrHelper.App.Forms
       {
          IEnumerable<Color?> summaryColors = getConnectionPages()
             .Select(connectionPage => connectionPage.GetSummaryColor());
-         ColorSchemeItem[] colorSchemeItems = _colorScheme?.GetColors("MergeRequests");
+         ColorSchemeItem[] colorSchemeItems = ColorScheme.GetColors("MergeRequests");
          return colorSchemeItems?
             .FirstOrDefault(colorSchemeItem =>
                summaryColors.Any(color => color.HasValue && color.Value == colorSchemeItem.Color))?
