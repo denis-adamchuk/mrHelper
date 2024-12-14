@@ -192,7 +192,7 @@ namespace mrHelper.App.Forms
 
       private void configureColorsToolStripMenuItem_Click(object sender, EventArgs e)
       {
-         using (ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.General, _colorScheme))
+         using (ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.General))
          {
             WinFormsHelpers.ShowDialogOnControl(form, this);
          }
@@ -234,6 +234,20 @@ namespace mrHelper.App.Forms
             .Cast<ToolStripMenuItem>().ToArray(), checkBox);
          checkBox.CheckOnClick = false;
          applyMainWindowLayoutChange();
+      }
+
+      private void radioButtonTheme_CheckedChanged(object sender, EventArgs e)
+      {
+         ToolStripMenuItem checkBox = sender as ToolStripMenuItem;
+         if (!checkBox.Checked)
+         {
+            return;
+         }
+
+         WinFormsHelpers.UncheckAllExceptOne(themeToolStripMenuItem.DropDownItems
+            .Cast<ToolStripMenuItem>().ToArray(), checkBox);
+         checkBox.CheckOnClick = false;
+         applyThemeChange();
       }
 
       private void radioButtonToolbarLayout_CheckedChanged(object sender, EventArgs e)
@@ -634,7 +648,6 @@ namespace mrHelper.App.Forms
                onOpenCommand(arguments[0]);
             }
          }
-
          base.WndProc(ref rMessage);
       }
 

@@ -22,7 +22,7 @@ using GitLabSharp.Entities;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class NewDiscussionForm : CustomFontForm
+   internal partial class NewDiscussionForm : ThemedForm
    {
       internal NewDiscussionForm(
          DiffPosition newDiscussionPosition,
@@ -44,6 +44,7 @@ namespace mrHelper.App.Forms
          AvatarImageCache avatarImageCache)
       {
          InitializeComponent();
+         ThemeSupport.ThemeSupportHelper.ExcludeFromProcessing(labelInvisibleCharactersHint);
          this.TopMost = Program.Settings.NewDiscussionIsTopMostForm;
          htmlPanelContext.MouseWheelEx += panelScroll_MouseWheel;
 
@@ -573,7 +574,7 @@ namespace mrHelper.App.Forms
       {
          Markdig.MarkdownPipeline pipeline = MarkDownUtils.CreatePipeline(Program.ServiceManager.GetJiraServiceUrl());
          string body = MarkDownUtils.ConvertToHtml(text, String.Empty, pipeline, previewPanel);
-         previewPanel.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(previewPanel);
+         previewPanel.BaseStylesheet = ResourceHelper.ApplyFontSizeAndColorsToCSS(previewPanel);
          previewPanel.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
       }
 
@@ -609,11 +610,11 @@ namespace mrHelper.App.Forms
          string longestLine = context.IsValid() ? context.GetLongestLine() : null;
          double fontSizePt = WinFormsHelpers.GetFontSizeInPoints(htmlPanel);
          string htmlSnippet = longestLine != null ?
-            DiffContextFormatter.GetHtml(longestLine, fontSizePt, null) : null;
+            DiffContextFormatter.GetHtml(longestLine, fontSizePt, null, getColorProvider()) : null;
 
          double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(htmlPanel);
          int tableWidth = DiffContextHelpers.EstimateHtmlWidth(htmlSnippet, fontSizePx, htmlPanel.Width);
-         return DiffContextFormatter.GetHtml(context, fontSizePt, tableWidth);
+         return DiffContextFormatter.GetHtml(context, fontSizePt, tableWidth, getColorProvider());
       }
 
       private void updateControlState()
@@ -935,6 +936,20 @@ namespace mrHelper.App.Forms
       {
          Debug.Assert(isCurrentNoteNew());
          return _getNewDiscussionDiffContext(scroll(up)).IsValid();
+      }
+
+      private static Core.ContextColorProvider getColorProvider()
+      {
+         return new Core.ContextColorProvider(
+            ColorScheme.GetColor("HTML_Diff_LineNumbers_Text").Color,
+            ColorScheme.GetColor("HTML_Diff_LineNumbers_Background").Color,
+            ColorScheme.GetColor("HTML_Diff_LineNumbers_Right_Border").Color,
+            ColorScheme.GetColor("HTML_Diff_Text").Color,
+            ColorScheme.GetColor("HTML_Diff_Unchanged_Background").Color,
+            ColorScheme.GetColor("HTML_Diff_Text").Color,
+            ColorScheme.GetColor("HTML_Diff_Added_Background").Color,
+            ColorScheme.GetColor("HTML_Diff_Text").Color,
+            ColorScheme.GetColor("HTML_Diff_Removed_Background").Color);
       }
 
       private static readonly int MaximumTextLengthTocancelWithoutConfirmation = 5;

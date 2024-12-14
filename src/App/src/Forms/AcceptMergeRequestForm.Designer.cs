@@ -17,6 +17,7 @@
          {
             components.Dispose();
          }
+         App.Helpers.ColorScheme.Modified -= onColorSchemeModified;
          base.Dispose(disposing);
       }
 
@@ -54,7 +55,7 @@
          this.labelSourceBranch = new System.Windows.Forms.Label();
          this.labelTargetBranchLabel = new System.Windows.Forms.Label();
          this.labelSourceBranchLabel = new System.Windows.Forms.Label();
-         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.toolTip = new Controls.ThemedToolTip(this.components);
          this.buttonToggleDraft = new System.Windows.Forms.Button();
          this.buttonDiscussions = new System.Windows.Forms.Button();
          this.buttonRebase = new System.Windows.Forms.Button();
@@ -226,7 +227,7 @@
          // labelMergeStatus
          // 
          this.labelMergeStatus.AutoSize = true;
-         this.labelMergeStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelMergeStatus.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.labelMergeStatus.Location = new System.Drawing.Point(8, 20);
          this.labelMergeStatus.Name = "labelMergeStatus";
          this.labelMergeStatus.Size = new System.Drawing.Size(127, 13);
@@ -433,7 +434,7 @@
          // labelRebaseStatus
          // 
          this.labelRebaseStatus.AutoSize = true;
-         this.labelRebaseStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelRebaseStatus.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.labelRebaseStatus.ForeColor = System.Drawing.SystemColors.ControlText;
          this.labelRebaseStatus.Location = new System.Drawing.Point(6, 20);
          this.labelRebaseStatus.Name = "labelRebaseStatus";
@@ -456,7 +457,7 @@
          // labelDiscussionStatus
          // 
          this.labelDiscussionStatus.AutoSize = true;
-         this.labelDiscussionStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelDiscussionStatus.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.labelDiscussionStatus.Location = new System.Drawing.Point(8, 20);
          this.labelDiscussionStatus.Name = "labelDiscussionStatus";
          this.labelDiscussionStatus.Size = new System.Drawing.Size(155, 13);
@@ -478,7 +479,7 @@
          // labelDraftStatus
          // 
          this.labelDraftStatus.AutoSize = true;
-         this.labelDraftStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelDraftStatus.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.labelDraftStatus.Location = new System.Drawing.Point(8, 20);
          this.labelDraftStatus.Name = "labelDraftStatus";
          this.labelDraftStatus.Size = new System.Drawing.Size(116, 13);
@@ -548,7 +549,7 @@
       private System.Windows.Forms.Label labelCommitMessageLabel;
       private System.Windows.Forms.ComboBox comboBoxCommit;
       private System.Windows.Forms.TextBox textBoxCommitMessage;
-      private System.Windows.Forms.ToolTip toolTip;
+      private Controls.ThemedToolTip toolTip;
       private System.Windows.Forms.LinkLabel linkLabelOpenAtGitLab;
       private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
       private System.Windows.Forms.GroupBox groupBoxRebase;

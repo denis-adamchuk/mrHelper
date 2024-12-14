@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 using mrHelper.Common.Tools;
 using mrHelper.CommonControls.Tools;
 
@@ -126,6 +127,19 @@ namespace mrHelper.CommonControls.Controls
       public int GetSelectionLength()
       {
          return textBox.SelectionLength;
+      }
+
+      protected override void OnBackColorChanged(EventArgs e)
+      {
+         base.OnBackColorChanged(e);
+
+         System.Windows.Media.Color backColor = System.Windows.Media.Color.FromArgb(
+            BackColor.A, BackColor.R, BackColor.G, BackColor.B);
+         textBox.Background = new System.Windows.Media.SolidColorBrush(backColor);
+
+         System.Windows.Media.Color foreColor = System.Windows.Media.Color.FromArgb(
+            ForeColor.A, ForeColor.R, ForeColor.G, ForeColor.B);
+         textBox.Foreground = new System.Windows.Media.SolidColorBrush(foreColor);
       }
 
       private void textBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -315,6 +329,8 @@ namespace mrHelper.CommonControls.Controls
       {
          ListBoxEx listBox = new ListBoxEx
          {
+            BackColor = BackColor,
+            ForeColor = ForeColor,
             BorderStyle = BorderStyle.None,
             DrawMode = DrawMode.OwnerDrawVariable,
             Font = this.Font

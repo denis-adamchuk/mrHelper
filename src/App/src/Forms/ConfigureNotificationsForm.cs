@@ -4,9 +4,9 @@ using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class ConfigureNotificationsForm : CustomFontForm
+   internal partial class ConfigureNotificationsForm : ThemedForm
    {
-      public ConfigureNotificationsForm(IEnumerable<string> keywords)
+      internal ConfigureNotificationsForm(IEnumerable<string> keywords)
       {
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);

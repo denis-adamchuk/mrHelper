@@ -19,12 +19,13 @@
          }
 
          // TreeViewAdv does not Dispose() itself properly - it does not unsubscribe from ExpandingIcon static event
-         // - so TreeViewAdv is not destroyed - and we have to unsubcsribe from it manually to avoid leaks
+         // - so TreeViewAdv is not destroyed - and we have to unsubscribe from it manually to avoid leaks
          if (_treeView != null)
          {
             _treeView.SelectionChanged -= onTreeViewSelectionChanged;
             _treeView.NodeMouseDoubleClick -= onTreeViewNodeMouseDoubleClick;
             _treeView.RowDraw -= onTreeViewDrawRow;
+            _treeView.DrawGridLine -= onTreeViewDrawGridLine;
             _treeView.ColumnWidthChanged -= this.onTreeViewColumnWidthChanged;
             _treeView = null;
          }
@@ -41,6 +42,18 @@
             _timestamp = null;
          }
 
+         if (treeColumn1 != null)
+         {
+            treeColumn1.DrawColHeaderBg -= this.onDrawColHeaderBg;
+            treeColumn1.DrawColHeaderText -= this.onDrawColHeaderText;
+         }
+
+         if (treeColumn2 != null)
+         {
+            treeColumn2.DrawColHeaderBg -= this.onDrawColHeaderBg;
+            treeColumn2.DrawColHeaderText -= this.onDrawColHeaderText;
+         }
+
          base.Dispose(disposing);
       }
 
@@ -52,11 +65,13 @@
       /// </summary>
       private void InitializeComponent()
       {
+         this.components = new System.ComponentModel.Container();
          this._treeView = new Aga.Controls.Tree.TreeViewAdv();
          this.treeColumn1 = new Aga.Controls.Tree.TreeColumn();
          this.treeColumn2 = new Aga.Controls.Tree.TreeColumn();
          this._name = new Aga.Controls.Tree.NodeControls.NodeTextBox();
          this._timestamp = new Aga.Controls.Tree.NodeControls.NodeTextBox();
+         this.toolTip = new Controls.ThemedToolTip(this.components);
          this.SuspendLayout();
          // 
          // _treeView
@@ -92,6 +107,8 @@
          this.treeColumn1.SortOrder = System.Windows.Forms.SortOrder.None;
          this.treeColumn1.TooltipText = "Commit message title or version number";
          this.treeColumn1.Width = 300;
+         this.treeColumn1.DrawColHeaderBg += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderBgEventArgs>(this.onDrawColHeaderBg);
+         this.treeColumn1.DrawColHeaderText += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderTextEventArgs>(this.onDrawColHeaderText);
          // 
          // treeColumn2
          // 
@@ -100,6 +117,8 @@
          this.treeColumn2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
          this.treeColumn2.TooltipText = "Created at";
          this.treeColumn2.Width = 140;
+         this.treeColumn2.DrawColHeaderBg += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderBgEventArgs>(this.onDrawColHeaderBg);
+         this.treeColumn2.DrawColHeaderText += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderTextEventArgs>(this.onDrawColHeaderText);
          // 
          // _name
          // 
@@ -135,5 +154,6 @@
       private Aga.Controls.Tree.NodeControls.NodeTextBox _timestamp;
       private Aga.Controls.Tree.TreeColumn treeColumn1;
       private Aga.Controls.Tree.TreeColumn treeColumn2;
+      private ThemedToolTip toolTip;
    }
 }

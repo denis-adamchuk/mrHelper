@@ -226,7 +226,7 @@
          // 
          this.labelSpecialNotePrefix.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.labelSpecialNotePrefix.AutoSize = true;
-         this.labelSpecialNotePrefix.Location = new System.Drawing.Point(303, 47);
+         this.labelSpecialNotePrefix.Location = new System.Drawing.Point(300, 47);
          this.labelSpecialNotePrefix.Name = "labelSpecialNotePrefix";
          this.labelSpecialNotePrefix.Size = new System.Drawing.Size(34, 13);
          this.labelSpecialNotePrefix.TabIndex = 5;
@@ -336,7 +336,7 @@
          // labelIntegrationHint
          // 
          this.labelIntegrationHint.AutoSize = true;
-         this.labelIntegrationHint.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelIntegrationHint.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
          this.labelIntegrationHint.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
          this.labelIntegrationHint.Location = new System.Drawing.Point(70, 68);
          this.labelIntegrationHint.Name = "labelIntegrationHint";

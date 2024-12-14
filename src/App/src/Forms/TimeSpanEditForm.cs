@@ -3,9 +3,9 @@ using System.Windows.Forms;
 
 namespace mrHelper.App.Forms
 {
-   public partial class EditTimeForm : CustomFontForm
+   internal partial class EditTimeForm : ThemedForm
    {
-      public EditTimeForm(TimeSpan span)
+      internal EditTimeForm(TimeSpan span)
       {
          InitializeComponent();
          numericUpDownH.Value = span.Hours;

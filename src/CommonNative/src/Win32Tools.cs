@@ -117,6 +117,11 @@ namespace mrHelper.CommonNative
          NativeMethods.SendMessage(hWnd, NativeMethods.LVM_SCROLL, IntPtr.Zero, (IntPtr)position);
       }
 
+      public static int GetHorizontalScrollPosition(IntPtr hWnd)
+      {
+         return NativeMethods.GetScrollPos(hWnd, NativeMethods.SBS_HORZ);
+      }
+
       public static bool IsDoubleClickOnDivider(NativeMethods.NMHDR notif)
       {
          return notif != null

@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
-using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Controls
@@ -22,6 +19,10 @@ namespace mrHelper.App.Controls
 
          _treeView.Model = new RevisionPreviewBrowserModel();
          _treeView.RowDraw += onTreeViewDrawRow;
+         _treeView.DrawGridLine += onTreeViewDrawGridLine;
+         _treeView.DrawControl += onTreeViewDrawControl;
+         _treeView.SetToolTip(toolTip);
+         RevisionBrowserDrawingHelper.ApplyFont(_treeView, this.Font);
       }
 
       internal void SetData(RevisionPreviewBrowserModelData data)
@@ -62,16 +63,34 @@ namespace mrHelper.App.Controls
       protected override void OnFontChanged(EventArgs eventArgs)
       {
          base.OnFontChanged(eventArgs);
-         _treeView.Font = this.Font;
+         RevisionBrowserDrawingHelper.ApplyFont(_treeView, this.Font);
       }
 
-      private void onTreeViewDrawRow(object sender, TreeViewRowDrawEventArgs e)
+      private void onTreeViewDrawRow(object sender, TreeViewRowDrawEventArgs args)
       {
-         if (e.Node.IsSelected)
+         RevisionBrowserDrawingHelper.DrawRow(_treeView, args);
+      }
+
+      private void onTreeViewDrawGridLine(object sender, TreeViewGridLineDrawEventArgs args)
+      {
+         RevisionBrowserDrawingHelper.DrawGridLine(args);
+      }
+
+      private void onDrawColHeaderBg(object sender, DrawColHeaderBgEventArgs args)
+      {
+         RevisionBrowserDrawingHelper.DrawColumnHeaderBackground(args);
+      }
+
+      private void onDrawColHeaderText(object sender, DrawColHeaderTextEventArgs args)
+      {
+         RevisionBrowserDrawingHelper.DrawColumnHeaderText(_treeView, args);
+      }
+
+      private void onTreeViewDrawControl(object sender, DrawEventArgs args)
+      {
+         if (args is DrawTextEventArgs)
          {
-            Rectangle focusRect = new Rectangle(
-               _treeView.OffsetX, e.RowRect.Y, _treeView.ClientRectangle.Width, e.RowRect.Height);
-            e.Graphics.FillRectangle(SystemBrushes.Highlight, focusRect);
+            RevisionBrowserDrawingHelper.DrawNode(args as DrawTextEventArgs);
          }
       }
 

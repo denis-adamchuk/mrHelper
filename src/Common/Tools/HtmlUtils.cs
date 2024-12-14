@@ -13,6 +13,11 @@ namespace mrHelper.Common.Tools
       private const string close_code_token = "</code>";
       private const string image_token = "<img";
 
+      public static string ColorToRgb(System.Drawing.Color color)
+      {
+         return String.Format("rgb({0}, {1}, {2})", color.R, color.G, color.B);
+      }
+
       public static string WrapImageIntoTables(string html)
       {
          return forEachUnaryToken(html, image_token,

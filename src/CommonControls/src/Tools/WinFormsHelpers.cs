@@ -360,20 +360,14 @@ namespace mrHelper.CommonControls.Tools
       }
 
       private static Graphics GetGraphics(DrawItemEventArgs e) => e.Graphics;
+      private static Graphics GetGraphics(DrawListViewItemEventArgs e) => e.Graphics;
       private static Graphics GetGraphics(DrawListViewSubItemEventArgs e) => e.Graphics;
 
-      public static void FillRectangle<T>(T e, Rectangle bounds, Color backColor, bool isSelected)
+      public static void FillRectangle<T>(T e, Rectangle bounds, Color backColor)
       {
-         if (isSelected)
+         using (Brush brush = new SolidBrush(backColor))
          {
-            GetGraphics((dynamic)e).FillRectangle(SystemBrushes.Highlight, bounds);
-         }
-         else
-         {
-            using (Brush brush = new SolidBrush(backColor))
-            {
-               GetGraphics((dynamic)e).FillRectangle(brush, bounds);
-            }
+            GetGraphics((dynamic)e).FillRectangle(brush, bounds);
          }
       }
 

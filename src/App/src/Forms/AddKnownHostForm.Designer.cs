@@ -37,7 +37,7 @@ namespace mrHelper.App.Forms
          this.textBoxAccessToken = new System.Windows.Forms.TextBox();
          this.buttonCancel = new System.Windows.Forms.Button();
          this.buttonOK = new System.Windows.Forms.Button();
-         this.linkLabelCreateAccessToken = new mrHelper.CommonControls.Controls.LinkLabelEx();
+         this.linkLabelCreateAccessToken = new CommonControls.Controls.LinkLabelEx();
          this.SuspendLayout();
          // 
          // label1

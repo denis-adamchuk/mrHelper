@@ -1,0 +1,205 @@
+[
+   {
+      "group": "Discussions",
+      "name": "Discussions_Comments",
+      "display_name": "Comments",
+      "factory": "202,199,243",
+      "text_name": "Discussions_Comments_Text"
+   },
+   {
+      "group": "Discussions",
+      "name": "Discussions_ServiceMessages",
+      "display_name": "Service messages",
+      "factory": "240,240,255",
+      "text_name": "Discussions_ServiceMessages_Text"
+   },
+   {
+      "group": "Discussions",
+      "name": "Discussions_Author_Notes_Resolved",
+      "display_name": "Resolved notes from MR author",
+      "factory": "192,235,230",
+      "text_name": "Discussions_Author_Notes_Resolved_Text"
+   },
+   {
+      "group": "Discussions",
+      "name": "Discussions_NonAuthor_Notes_Resolved",
+      "display_name": "Resolved notes from MR reviewers",
+      "factory": "247,249,202",
+      "text_name": "Discussions_NonAuthor_Notes_Resolved_Text"
+   },
+   {
+      "group": "Discussions",
+      "name": "Discussions_Author_Notes_Unresolved",
+      "display_name": "Not resolved notes from MR author",
+      "factory": "148,218,207",
+      "text_name": "Discussions_Author_Notes_Unresolved_Text"
+   },
+   {
+      "group": "Discussions",
+      "name": "Discussions_NonAuthor_Notes_Unresolved",
+      "display_name": "Not resolved nots from MR reviewers",
+      "factory": "233,210,122",
+      "text_name": "Discussions_NonAuthor_Notes_Unresolved_Text"
+   },
+   {
+      "name": "Discussions_Comments_Text",
+      "factory": "Black"
+   },
+   {
+      "name": "Discussions_ServiceMessages_Text",
+      "factory": "Black"
+   },
+   {
+      "name": "Discussions_Author_Notes_Resolved_Text",
+      "factory": "70,70,70"
+   },
+   {
+      "name": "Discussions_NonAuthor_Notes_Resolved_Text",
+      "factory": "70,70,70"
+   },
+   {
+      "name": "Discussions_Author_Notes_Unresolved_Text",
+      "factory": "Black"
+   },
+   {
+      "name": "Discussions_NonAuthor_Notes_Unresolved_Text",
+      "factory": "Black"
+   },
+   {
+      "name": "DiscussionBox_DisabledNote_Background",
+      "factory": "LightGray"
+   },
+   {
+      "group": "General",
+      "name": "Status_LostConnection",
+      "display_name": "Lost connection",
+      "factory": "Gray"
+   },
+   {
+      "group": "MergeRequests",
+      "name": "Status_Tracking",
+      "display_name": "Tracking time",
+      "conditions": ["{IsTrackingTime:true}"],
+      "factory": "PaleGreen",
+      "use_for_preview": true,
+      "use_for_sorting": false,
+      "use_for_text_color_in_config": true
+   },
+   {
+      "group": "MergeRequests",
+      "name": "MergeRequests_excluded",
+      "display_name": "Merge requests that would be hidden if Filter was on",
+      "conditions": ["{IsExcluded:true}"],
+      "factory": "Whitesmoke",
+      "use_for_preview": false,
+      "use_for_sorting": false,
+      "use_for_text_color_in_config": true
+   },
+   {
+      "name": "MergeRequestListView_ResolvedCount_Text",
+      "factory": "Green"
+   },
+   {
+      "name": "MergeRequestListView_ResolvedCountHighlighted_Text",
+      "factory": "SpringGreen"
+   },
+   {
+      "name": "MergeRequestListView_UnresolvedCount_Text",
+      "factory": "DarkRed"
+   },
+   {
+      "name": "MergeRequestListView_UnresolvedCountHighlighted_Text",
+      "factory": "Orange"
+   },
+   {
+      "name": "MergeRequestListView_Error_Text",
+      "factory": "Black"
+   },
+   {
+      "name": "HTML_Table_Text",
+      "factory": "Black"
+   },
+   {
+      "name": "HTML_Table_Text_Shadow",
+      "factory": "White"
+   },
+   {
+      "group": "General",
+      "name": "HTML_Table_Background",
+      "display_name": "HTML Table",
+      "factory": "Snow",
+      "text_name": "HTML_Table_Text"
+   },
+   {
+      "name": "HTML_Table_Border",
+      "factory": "221,238,238"
+   },
+   {
+      "name": "HTML_Diff_LineNumbers_Text",
+      "factory": "175,175,175"
+   },
+   {
+      "group": "Discussions",
+      "name": "HTML_Diff_LineNumbers_Background",
+      "display_name": "Diff context (line numbers)",
+      "factory": "250,250,250",
+      "text_name": "HTML_Diff_LineNumbers_Text"
+   },
+   {
+      "name": "HTML_Diff_LineNumbers_Right_Border",
+      "factory": "240,240,240"
+   },
+   {
+      "name": "HTML_Diff_Text",
+      "factory": "46,46,46"
+   },
+   {
+      "group": "Discussions",
+      "name": "HTML_Diff_Unchanged_Background",
+      "display_name": "Diff context (unchanged)",
+      "factory": "White",
+      "text_name": "HTML_Diff_Text"
+   },
+   {
+      "group": "Discussions",
+      "name": "HTML_Diff_Removed_Background",
+      "display_name": "Diff context (removed)",
+      "factory": "251,233,235",
+      "text_name": "HTML_Diff_Text"
+   },
+   {
+      "group": "Discussions",
+      "name": "HTML_Diff_Added_Background",
+      "display_name": "Diff context (added)",
+      "factory": "236,253,240",
+      "text_name": "HTML_Diff_Text"
+   },
+   {
+      "name": "HTML_Highlight_Background",
+      "factory": "99,180,247"
+   },
+   {
+      "name": "AcceptMR_Error_Text",
+      "factory": "190,40,0"
+   },
+   {
+      "name": "AcceptMR_Success_Text",
+      "factory": "0,120,0"
+   },
+   {
+      "name": "AcceptMR_InProgress_Text",
+      "factory": "0,40,140"
+   },
+   {
+      "name": "MainFormStatusBar_Connected_Text",
+      "factory": "0,120,0"
+   },
+   {
+      "name": "MainFormStatusBar_Reconnecting_Text",
+      "factory": "190,40,0"
+   },
+   {
+      "name": "MainFormStatusBar_Text",
+      "factory": "0,40,140"
+   },
+]

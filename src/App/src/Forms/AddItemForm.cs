@@ -2,7 +2,7 @@
 
 namespace mrHelper.App.Forms
 {
-   internal partial class AddItemForm : CustomFontForm
+   internal partial class AddItemForm : ThemedForm
    {
       internal AddItemForm(string caption, string hint)
       {

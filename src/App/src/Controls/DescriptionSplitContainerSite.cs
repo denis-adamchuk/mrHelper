@@ -13,9 +13,10 @@ namespace mrHelper.App.Controls
 {
    internal partial class DescriptionSplitContainerSite : UserControl
    {
-      public DescriptionSplitContainerSite()
+      internal DescriptionSplitContainerSite()
       {
          InitializeComponent();
+         ColorScheme.Modified += onColorSchemeModified;
       }
 
       internal void Initialize(IEnumerable<string> keywords, Markdig.MarkdownPipeline mdPipeline)
@@ -23,9 +24,7 @@ namespace mrHelper.App.Controls
          _keywords = keywords;
          _mdPipeline = mdPipeline;
          startRedrawTimer();
-
-         setFontSizeInHtmlPanel(richTextBoxMergeRequestDescription);
-         setFontSizeInHtmlPanel(htmlPanelAuthorComments);
+         applyFontAndColors();
       }
 
       internal void UpdateData(FullMergeRequestKey fmk, DataCache dataCache)
@@ -46,14 +45,23 @@ namespace mrHelper.App.Controls
          updateAuthorComments();
       }
 
-      public SplitContainer SplitContainer => splitContainer;
+      internal SplitContainer SplitContainer => splitContainer;
 
       protected override void OnFontChanged(EventArgs e)
       {
          base.OnFontChanged(e);
+         applyFontAndColors();
+      }
 
-         setFontSizeInHtmlPanel(richTextBoxMergeRequestDescription);
-         setFontSizeInHtmlPanel(htmlPanelAuthorComments);
+      private void onColorSchemeModified()
+      {
+         applyFontAndColors();
+      }
+
+      private void applyFontAndColors()
+      {
+         applyFontAndColors(richTextBoxMergeRequestDescription);
+         applyFontAndColors(htmlPanelAuthorComments);
       }
 
       private void updateMergeRequestDescription()
@@ -173,9 +181,9 @@ namespace mrHelper.App.Controls
          updateAuthorComments();
       }
 
-      static private void setFontSizeInHtmlPanel(HtmlPanel htmlPanel)
+      static private void applyFontAndColors(HtmlPanel htmlPanel)
       {
-         htmlPanel.BaseStylesheet = ResourceHelper.SetControlFontSizeToCommonCss(htmlPanel);
+         htmlPanel.BaseStylesheet = ResourceHelper.ApplyFontSizeAndColorsToCSS(htmlPanel);
       }
 
       private static readonly int RedrawTimerInterval = 1000 * 30; // 0.5 minute

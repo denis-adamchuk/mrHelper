@@ -19,6 +19,7 @@ using mrHelper.CommonControls.Tools;
 using mrHelper.StorageSupport;
 using mrHelper.GitLabClient;
 using static mrHelper.App.Helpers.DiffContextHelpers;
+using mrHelper.Core;
 
 namespace mrHelper.App.Controls
 {
@@ -36,7 +37,6 @@ namespace mrHelper.App.Controls
          GitLabClient.SingleDiscussionAccessor accessor, IGitCommandService git,
          User currentUser, string imagePath, Discussion discussion,
          User mergeRequestAuthor,
-         ColorScheme colorScheme,
          Action<DiscussionBox> onContentChanging,
          Action<DiscussionBox> onContentChanged,
          Action<Control> onControlGotFocus,
@@ -77,8 +77,7 @@ namespace mrHelper.App.Controls
             _simpleContextMaker = new SimpleContextMaker(git);
             _popupContextMaker = _panelContextMaker;
          }
-         _colorScheme = colorScheme;
-         _colorScheme.Changed += onColorSchemeChanged;
+         ColorScheme.Modified += onColorSchemeModified;
 
          _diffContextPosition = diffContextPosition;
          _discussionColumnWidth = discussionColumnWidth;
@@ -123,7 +122,7 @@ namespace mrHelper.App.Controls
          }
          _popupWindow = null;
 
-         _colorScheme.Changed -= onColorSchemeChanged;
+         ColorScheme.Modified -= onColorSchemeModified;
 
          foreach (NoteContainer noteContainer in getNoteContainers())
          {
@@ -454,14 +453,14 @@ namespace mrHelper.App.Controls
             resizeLimitedWidthHtmlPanel(_popupContext, _panelContext.Width, DiffContextExtraHeight);
          }
 
-         string getPopupDiffContextText(Control control, DiffContext? ctx, int minWidth)
+         string formatPopupDiffContextText(Control control, DiffContext? ctx, int minWidth)
          {
             double fontSizePt = WinFormsHelpers.GetFontSizeInPoints(control);
             if (ctx.HasValue && ctx.Value.IsValid())
             {
                string longestLine = ctx.Value.GetLongestLine();
                string htmlSnippet = longestLine != null ?
-                  DiffContextFormatter.GetHtml(longestLine, fontSizePt, null) : null;
+                  DiffContextFormatter.GetHtml(longestLine, fontSizePt, null, getColorProvider()) : null;
 
                double fontSizePx = WinFormsHelpers.GetFontSizeInPixels(control);
                int tableWidth = EstimateHtmlWidth(htmlSnippet, fontSizePx, minWidth);
@@ -484,7 +483,7 @@ namespace mrHelper.App.Controls
             int step = e2.Delta > 0 ? -1 : 1;
             int newOffset = currentOffset + step;
             DiffContext? newContext = getContextSafe(_popupContextMaker, position, newOffset, _popupDiffContextDepth);
-            string text = getPopupDiffContextText(_popupContext, newContext, _panelContext.Width);
+            string text = formatPopupDiffContextText(_popupContext, newContext, _panelContext.Width);
             if (text != _popupContext.Text)
             {
                setPopupWindowText(text);
@@ -493,7 +492,7 @@ namespace mrHelper.App.Controls
          };
 
          DiffContext? context = getContextSafe(_popupContextMaker, position, currentOffset, _popupDiffContextDepth);
-         setPopupWindowText(getPopupDiffContextText(_popupContext, context, _panelContext.Width));
+         setPopupWindowText(formatPopupDiffContextText(_popupContext, context, _panelContext.Width));
 
          _popupWindow.SetContent(_popupContext, PopupContextPadding);
          _undoFocusChangedOnClick();
@@ -536,7 +535,7 @@ namespace mrHelper.App.Controls
       private static void scheduleOneShotTimer(Action onTimer)
       {
          int CopyToClipboardTimerInterval = 500; // 0.5 second
-         Timer copyToClipboardTimer = new Timer
+         System.Windows.Forms.Timer copyToClipboardTimer = new System.Windows.Forms.Timer
          {
             Interval = CopyToClipboardTimerInterval
          };
@@ -678,7 +677,6 @@ namespace mrHelper.App.Controls
          int actualWidth = preferredWidth ?? diffContextControl.Width;
          if (actualWidth == 0)
          {
-            Debug.Assert(false);
             return;
          }
 
@@ -694,7 +692,7 @@ namespace mrHelper.App.Controls
             bool recalcTableWidth = actualHeight == 0 || expectedHeight < actualHeight;
             string longestLine = context.Value.GetLongestLine();
             string htmlSnippet = longestLine != null ?
-               DiffContextFormatter.GetHtml(longestLine, fontSizePt, null) : null;
+               DiffContextFormatter.GetHtml(longestLine, fontSizePt, null, getColorProvider()) : null;
 
             int? tableWidthOpt = new int?();
             if (recalcTableWidth)
@@ -716,6 +714,11 @@ namespace mrHelper.App.Controls
                }
             }
             html = getFormattedHtml(context.Value, fontSizePt, tableWidthOpt);
+         }
+
+         if (html == diffContextControl.Text && preferredWidth == null)
+         {
+            return;
          }
 
          diffContextControl.SuspendLayout();
@@ -782,7 +785,7 @@ namespace mrHelper.App.Controls
          string errorMessage = "Cannot render HTML context.";
          try
          {
-            return DiffContextFormatter.GetHtml(context, fontSizePt, tableWidth);
+            return DiffContextFormatter.GetHtml(context, fontSizePt, tableWidth, getColorProvider());
          }
          catch (ArgumentException ex)
          {
@@ -810,9 +813,17 @@ namespace mrHelper.App.Controls
             Multiline = true,
             WordWrap = false,
             BorderStyle = BorderStyle.None,
-            ForeColor = getFileNameColor(firstNote.Position),
             TabStop = false
          };
+         // We exclude this control from processing by ThemeSupportHelper to give it
+         // a specific BackColor. But it makes us to set ForeColor manually because
+         // ThemeSupportHelper won't do that for us.
+         // Note that BackColor is set outside of constructor because when noteControl is created
+         // after form is loaded, we don't have a chance to exclude it from processing before
+         // its BackColor is overwritten by ThemeSupportHelper in OnControlAdded handler.
+         textBox.BackColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.Control;
+         textBox.ForeColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextActive;
+         ThemeSupport.ThemeSupportHelper.ExcludeFromProcessing(textBox);
          textBox.GotFocus += control_GotFocus;
          return textBox;
       }
@@ -834,23 +845,6 @@ namespace mrHelper.App.Controls
             return newPath;
          }
          return newPath + "\r\n(was " + oldPath + ")";
-      }
-
-      private Color getFileNameColor(Position position)
-      {
-         if (position.Old_Line == null)
-         {
-            return Color.Green;
-         }
-         else if (position.New_Line == null)
-         {
-            return Color.Red;
-         }
-         else if (position.Old_Path == position.New_Path)
-         {
-            return Color.Black;
-         }
-         return Color.Blue;
       }
 
       private Control createShowMoreContext(DiscussionNote firstNote)
@@ -877,7 +871,6 @@ namespace mrHelper.App.Controls
          {
             AutoSize = true,
             Text = "Scroll with mouse wheel",
-            ForeColor = Color.Olive,
             BorderStyle = BorderStyle.None,
             Visible = false
          };
@@ -1068,7 +1061,8 @@ namespace mrHelper.App.Controls
             noteContainer.NoteHint = new PictureBox
             {
                Image = Properties.Resources.exclamation_32x32,
-               SizeMode = PictureBoxSizeMode.StretchImage
+               SizeMode = PictureBoxSizeMode.StretchImage,
+               Parent = this /* to inherit Font and set right font size to CSS of a hint tooltip */
             };
          }
 
@@ -1099,39 +1093,38 @@ namespace mrHelper.App.Controls
             Visible = false
          };
 
-         void updateStylesheet(HtmlPanel htmlPanel)
-         {
-            string css = ResourceHelper.SetControlFontSizeToCommonCss(htmlPanel);
-            htmlPanel.BaseStylesheet = String.Format(
-               "{0} body div {{ padding-left: {1}px; padding-right: {2}px; }}",
-               css, NoteHtmlPaddingLeft, NoteHtmlPaddingRight);
-         }
-
+         // HtmlPanel background is defined by BackColor property.
+         // For some reason, background-color attribute (for body element) does not affect HtmlPanel background.
          if (!isServiceDiscussionNote(note))
          {
             HtmlPanel noteControl = new SearchableHtmlPanel(parent as IHighlightListener, _pathCache)
             {
-               BackColor = getNoteColor(note),
                Tag = note,
-               Parent = this,
+               Parent = this, /* to inherit Font and set right font size to CSS of a tooltip */
                IsContextMenuEnabled = false
             };
+            // Note that BackColor is set outside of constructor because when noteControl is created
+            // after form is loaded, we don't have a chance to exclude it from processing before
+            // its BackColor is overwritten by ThemeSupportHelper in OnControlAdded handler.
+            noteControl.BackColor = getNoteColor(note).Item2;
             noteControl.GotFocus += control_GotFocus;
             noteControl.ContextMenu = createContextMenuForDiscussionNote(note, noteControl, discussionResolved);
             noteControl.FontChanged += (sender, e) =>
             {
-               updateStylesheet(noteControl);
-               setDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
-               updateNoteTooltip(noteControl, getNoteFromControl(noteControl));
-               updateNoteHintTooltip(noteContainer.NoteHint, hint);
+               if (noteControl.Parent != null)
+               {
+                  updateStylesheet(noteControl);
+                  updateNoteTooltip(noteControl);
+                  updateNoteHintTooltip(noteContainer.NoteHint, hint);
+               }
             };
             noteControl.LinkClicked += noteControl_LinkClicked;
             noteControl.KeyDown += (s, e) => noteControl_KeyDown(e);
 
             updateStylesheet(noteControl);
-            setDiscussionNoteText(noteControl, note);
-            updateNoteTooltip(noteControl, note);
+            updateNoteTooltip(noteControl);
             updateNoteHintTooltip(noteContainer.NoteHint, hint);
+            ThemeSupport.ThemeSupportHelper.ExcludeFromProcessing(noteControl);
 
             noteContainer.NoteContent = noteControl;
          }
@@ -1139,21 +1132,26 @@ namespace mrHelper.App.Controls
          {
             HtmlPanel noteControl = new HtmlPanelEx(_pathCache, true, true)
             {
-               BackColor = getNoteColor(note),
                Tag = note,
-               Parent = this
+               Parent = this /* to inherit Font and set right font size to CSS of a tooltip */
             };
+            // Note that BackColor is set outside of constructor because when noteControl is created
+            // after form is loaded, we don't have a chance to exclude it from processing before
+            // its BackColor is overwritten by ThemeSupportHelper in OnControlAdded handler.
+            noteControl.BackColor = getNoteColor(note).Item2;
             noteControl.GotFocus += control_GotFocus;
             noteControl.FontChanged += (sender, e) =>
             {
-               updateStylesheet(noteControl);
-               setServiceDiscussionNoteText(noteControl, getNoteFromControl(noteControl));
+               if (noteControl.Parent != null)
+               {
+                  updateStylesheet(noteControl);
+               }
             };
             noteControl.LinkClicked += noteControl_LinkClicked;
             noteControl.KeyDown += (s, e) => noteControl_KeyDown(e);
 
             updateStylesheet(noteControl);
-            setServiceDiscussionNoteText(noteControl, note);
+            ThemeSupport.ThemeSupportHelper.ExcludeFromProcessing(noteControl);
 
             noteContainer.NoteContent = noteControl;
          }
@@ -1161,9 +1159,50 @@ namespace mrHelper.App.Controls
          return noteContainer;
       }
 
-      private void updateNoteTooltip(Control noteControl, DiscussionNote note)
+      bool updateStylesheet(HtmlPanel htmlPanel)
       {
-         _htmlTooltip.SetToolTip(noteControl, getNoteTooltipHtml(noteControl, note));
+         string createStylesheet()
+         {
+            DiscussionNote note = getNoteFromControl(htmlPanel);
+            Color textColor = note == null ? Color.Black : getNoteColor(note).Item1;
+            string css = ResourceHelper.ApplyFontSizeAndColorsToCSS(htmlPanel);
+            return String.Format(
+               @"{0}
+                 body {{
+                    color: {1};
+                 }}
+                 body div {{ 
+                    padding-left: {2}px;
+                    padding-right: {3}px;
+                 }}",
+               css,
+               HtmlUtils.ColorToRgb(textColor),
+               NoteHtmlPaddingLeft,
+               NoteHtmlPaddingRight);
+         }
+
+         string newStylesheet = createStylesheet();
+         if (newStylesheet != htmlPanel.BaseStylesheet)
+         {
+            htmlPanel.BaseStylesheet = newStylesheet;
+            if (isServiceDiscussionNote(getNoteFromControl(htmlPanel)))
+            {
+               setServiceDiscussionNoteText(htmlPanel, getNoteFromControl(htmlPanel));
+            }
+            else
+            {
+               setDiscussionNoteText(htmlPanel);
+            }
+            return true;
+         }
+         return false;
+      }
+
+      private void updateNoteTooltip(Control noteControl)
+      {
+         DiscussionNote note = getNoteFromControl(noteControl);
+         string html = formatNoteTooltipHtml(noteControl, note);
+         setToolTipText(noteControl, html);
       }
 
       private void updateNoteHintTooltip(Control hintControl, string hint)
@@ -1173,7 +1212,22 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         _htmlTooltip.SetToolTip(hintControl, getNoteHintTooltipHtml(hintControl, hint));
+         string html = formatTooltipHtml(hintControl, hint);
+         setToolTipText(hintControl, html);
+      }	  
+
+      private void setToolTipText(Control control, string text)
+      {
+         if (text != _htmlTooltip.GetToolTip(control))
+         {
+            _htmlTooltip.SetToolTip(control, text);
+         }
+      }
+
+      internal void setDiscussionNoteText(Control noteControl)
+      {
+         DiscussionNote note = getNoteFromControl(noteControl);
+         setDiscussionNoteText(noteControl, note);
       }
 
       internal void setDiscussionNoteText(Control noteControl, DiscussionNote note)
@@ -1369,37 +1423,24 @@ namespace mrHelper.App.Controls
             note.Author.Name, TimeUtils.DateTimeToStringAgo(note.Created_At));
       }
 
-      private string getNoteTooltipHtml(Control noteControl, DiscussionNote note)
+      private string formatNoteTooltipHtml(Control noteControl, DiscussionNote note)
       {
          if (note == null)
          {
             return String.Empty;
          }
 
-         System.Text.StringBuilder body = new System.Text.StringBuilder();
+         StringBuilder body = new StringBuilder();
          if (note.Resolvable)
          {
             string text = note.Resolved ? "Resolved." : "Not resolved.";
-            string color = note.Resolved ? "green" : "red";
+            string color = note.Resolved ? "seagreen" : "red";
             body.AppendFormat("<i style=\"color: {0}\">{1}&nbsp;&nbsp;&nbsp;</i>", color, text);
          }
-         body.AppendFormat("Created by <b> {0} </b> at <span style=\"color: blue\">{1}</span>",
+         body.AppendFormat("Created by <b> {0} </b> at <span style=\"color: darkcyan\">{1}</span>",
             note.Author.Name, TimeUtils.DateTimeToString(note.Created_At));
          body.AppendFormat("<br><br>Use context menu to view note as <b>plain text</b>.");
-
-         string css = ResourceHelper.SetControlFontSizeToCommonCss(noteControl);
-         return String.Format(
-            @"<html>
-               <head>
-                  <style>
-                     {0}
-                  </style>
-               </head>
-               <body>
-                  {1}
-               </body>
-             </html>",
-            css, body);
+         return formatTooltipHtml(noteControl, body.ToString());
       }
 
       private string getNoteHintHtml(DiscussionNote note)
@@ -1417,14 +1458,20 @@ namespace mrHelper.App.Controls
          return null;
       }
 
-      private string getNoteHintTooltipHtml(Control noteControl, string text)
+      private static string formatTooltipHtml(Control noteControl, string text)
       {
          if (text == null)
          {
             return String.Empty;
          }
 
-         string css = ResourceHelper.SetControlFontSizeToCommonCss(noteControl);
+         // background-color attribute is needed for tooltips, but do not have effect on HtmlPanel
+         string css = ResourceHelper.ApplyFontSizeAndColorsToCSS(noteControl);
+         Color tooltipBackgroundColor = ThemeSupport.StockColors.GetThemeColors().TooltipBackground;
+         css += String.Format(@"
+         body {{
+            background-color: {0};
+         }}", HtmlUtils.ColorToRgb(tooltipBackgroundColor));
          return String.Format(
             @"<html>
                <head>
@@ -1439,14 +1486,15 @@ namespace mrHelper.App.Controls
             css, text);
       }
 
-
-      private Color getNoteColor(DiscussionNote note)
+      private Tuple<Color, Color> getNoteColor(DiscussionNote note)
       {
-         Color getColorOrDefault(string colorName)
+         Tuple<Color, Color> getColorOrDefault(string colorName)
          {
-            Color defaultColor = Color.White;
-            ColorSchemeItem colorOpt = _colorScheme?.GetColor(colorName);
-            return colorOpt != null ? colorOpt.Color : defaultColor;
+            ColorSchemeItem item = ColorScheme.GetColor(colorName);
+            Color textColor = item.TextName == null
+               ? ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextActive
+               : ColorScheme.GetColor(item.TextName).Color;
+            return new Tuple<Color, Color>(textColor, item.Color);
          }
 
          if (isServiceDiscussionNote(note))
@@ -1523,13 +1571,35 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private void onColorSchemeChanged()
+      private void onColorSchemeModified()
       {
          getNoteContainers()?
             .ToList()
             .ForEach(noteContainer =>
-               noteContainer.NoteContent.BackColor =
-                  getNoteColor(noteContainer.NoteContent.Tag as DiscussionNote));
+            {
+               DiscussionNote note = getNoteFromControl(noteContainer.NoteContent);
+               if (note != null)
+               {
+                  noteContainer.NoteContent.BackColor = getNoteColor(note).Item2;
+                  updateStylesheet(noteContainer.NoteContent as HtmlPanel);
+                  if (!isServiceDiscussionNote(note))
+                  {
+                     updateNoteTooltip(noteContainer.NoteContent);
+                     updateNoteHintTooltip(noteContainer.NoteHint, getNoteHintHtml(note));
+                  }
+               }
+
+               if (_textboxFilename != null)
+               {
+                  _textboxFilename.BackColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.Surface;
+                  _textboxFilename.ForeColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextActive;
+               }
+            });
+
+         if (_panelContext != null)
+         {
+            setDiffContextText(_panelContext);
+         }
       }
 
       private int getColumnInterval(int width)
@@ -2109,13 +2179,27 @@ namespace mrHelper.App.Controls
             : defaultMessage;
       }
 
+      private static ContextColorProvider getColorProvider()
+      {
+         return new ContextColorProvider(
+            ColorScheme.GetColor("HTML_Diff_LineNumbers_Text").Color,
+            ColorScheme.GetColor("HTML_Diff_LineNumbers_Background").Color,
+            ColorScheme.GetColor("HTML_Diff_LineNumbers_Right_Border").Color,
+            ColorScheme.GetColor("HTML_Diff_Text").Color,
+            ColorScheme.GetColor("HTML_Diff_Unchanged_Background").Color,
+            ColorScheme.GetColor("HTML_Diff_Text").Color,
+            ColorScheme.GetColor("HTML_Diff_Added_Background").Color,
+            ColorScheme.GetColor("HTML_Diff_Text").Color,
+            ColorScheme.GetColor("HTML_Diff_Removed_Background").Color);
+      }
+
       private void disableAllNoteControls()
       {
          void disableNoteControl(Control noteControl)
          {
             if (noteControl != null)
             {
-               noteControl.BackColor = Color.LightGray;
+               noteControl.BackColor = ColorScheme.GetColor("DiscussionBox_DisabledNote_Background").Color;
                noteControl.ContextMenu?.Dispose();
                noteControl.ContextMenu = new ContextMenu();
                noteControl.Tag = null;
@@ -2326,7 +2410,6 @@ namespace mrHelper.App.Controls
       private PopupWindow _popupWindow; // shared between other Discussion Boxes
       private HtmlPanelEx _popupContext; // specific for this instance
 
-      private readonly ColorScheme _colorScheme;
       private readonly Action _onContentChanging;
       private readonly Action _onContentChanged;
       private readonly Action<Control> _onControlGotFocus;

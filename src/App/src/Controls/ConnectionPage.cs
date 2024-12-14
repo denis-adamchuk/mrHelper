@@ -31,7 +31,6 @@ namespace mrHelper.App.Controls
       private readonly bool _integratedInSourceTree;
 
       private readonly IEnumerable<string> _keywords;
-      private readonly ColorScheme _colorScheme;
       private readonly TrayIcon _trayIcon;
       private readonly Markdig.MarkdownPipeline _mdPipeline;
       private LocalCommitStorageFactory _storageFactory;
@@ -44,7 +43,7 @@ namespace mrHelper.App.Controls
          new Dictionary<EDataCacheType, AvatarImageCache>();
       private MergeRequestFilter _mergeRequestFilter;
       private MergeRequestFilter _mergeRequestFilterRecent;
-      private readonly System.Windows.Forms.ToolTip _toolTip;
+      private readonly ThemedToolTip _toolTip;
       private Forms.EditSearchQueryFormState _prevSearchQuery;
       private readonly ITimeTrackerHolder _timeTrackerHolder;
 

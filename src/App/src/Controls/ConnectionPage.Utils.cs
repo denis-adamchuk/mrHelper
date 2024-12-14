@@ -868,11 +868,9 @@ namespace mrHelper.App.Controls
          {
             case EDataCacheType.Live:
                comboBoxFilter.Enabled = enabled;
-               textBoxDisplayFilter.Enabled = enabled;
                break;
             case EDataCacheType.Recent:
                comboBoxFilterRecent.Enabled = enabled;
-               textBoxDisplayFilterRecent.Enabled = enabled;
                break;
             case EDataCacheType.Search:
             default:

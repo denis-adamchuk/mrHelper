@@ -1,4 +1,6 @@
-﻿namespace mrHelper.App.Forms
+﻿using mrHelper.App.Controls;
+
+namespace mrHelper.App.Forms
 {
    partial class TextEditBaseForm
    {
@@ -32,8 +34,8 @@
          this.buttonCancel = new mrHelper.CommonControls.Controls.ConfirmCancelButton();
          this.buttonOK = new System.Windows.Forms.Button();
          this.textBox = new mrHelper.CommonControls.Controls.SmartTextBox();
-         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
-         this.panelExtraActions = new System.Windows.Forms.Panel();
+         this.toolTip = new Controls.ThemedToolTip(this.components);
+         this.panelExtraActions = new BackgroundPanel();
          this.tabControlMode = new System.Windows.Forms.TabControl();
          this.tabPageEdit = new System.Windows.Forms.TabPage();
          this.tabPagePreview = new System.Windows.Forms.TabPage();
@@ -136,7 +138,8 @@
          // 
          this.labelNoteAboutInvisibleCharacters.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
          this.labelNoteAboutInvisibleCharacters.AutoSize = true;
-         this.labelNoteAboutInvisibleCharacters.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(0)))), ((int)(((byte)(0)))));
+         this.labelNoteAboutInvisibleCharacters.Font = new System.Drawing.Font("Segoe UI", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+         this.labelNoteAboutInvisibleCharacters.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(64)))), ((int)(((byte)(0)))));
          this.labelNoteAboutInvisibleCharacters.Location = new System.Drawing.Point(12, 130);
          this.labelNoteAboutInvisibleCharacters.Name = "labelNoteAboutInvisibleCharacters";
          this.labelNoteAboutInvisibleCharacters.Size = new System.Drawing.Size(573, 13);
@@ -176,8 +179,8 @@
       private System.Windows.Forms.Button buttonOK;
       private CommonControls.Controls.ConfirmCancelButton buttonCancel;
       private CommonControls.Controls.SmartTextBox textBox;
-      private System.Windows.Forms.ToolTip toolTip;
-      private System.Windows.Forms.Panel panelExtraActions;
+      private Controls.ThemedToolTip toolTip;
+      private BackgroundPanel panelExtraActions;
       private System.Windows.Forms.TabControl tabControlMode;
       private System.Windows.Forms.TabPage tabPageEdit;
       private System.Windows.Forms.TabPage tabPagePreview;

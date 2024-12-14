@@ -43,7 +43,7 @@ namespace mrHelper.App.Forms
          this.checkBoxSearchByTitleAndDescription = new System.Windows.Forms.CheckBox();
          this.textBoxSearchTitleAndDescription = new System.Windows.Forms.TextBox();
          this.buttonCancel = new System.Windows.Forms.Button();
-         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.toolTip = new Controls.ThemedToolTip(this.components);
          this.comboBoxMaxSearchResults = new System.Windows.Forms.ComboBox();
          this.labelMaxResultCount = new System.Windows.Forms.Label();
          this.SuspendLayout();
@@ -252,7 +252,7 @@ namespace mrHelper.App.Forms
       private System.Windows.Forms.CheckBox checkBoxSearchByTitleAndDescription;
       private System.Windows.Forms.TextBox textBoxSearchTitleAndDescription;
       private System.Windows.Forms.Button buttonCancel;
-      private System.Windows.Forms.ToolTip toolTip;
+      private Controls.ThemedToolTip toolTip;
       private System.Windows.Forms.ComboBox comboBoxMaxSearchResults;
       private System.Windows.Forms.Label labelMaxResultCount;
    }

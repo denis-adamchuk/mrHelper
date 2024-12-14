@@ -15,9 +15,9 @@ namespace mrHelper.App.Forms
       Task<string> CanAddItem(string item, IEnumerable<string> currentItems);
    }
 
-   internal partial class EditOrderedListViewForm : CustomFontForm
+   internal partial class EditOrderedListViewForm : ThemedForm
    {
-      public EditOrderedListViewForm(
+      internal EditOrderedListViewForm(
          string caption, string addItemCaption, string addItemHint,
          StringToBooleanCollection initialItems,
          IEditOrderedListViewCallback callback,
@@ -45,7 +45,7 @@ namespace mrHelper.App.Forms
          buttonCancel.ConfirmationCondition = () => !Enumerable.SequenceEqual(initialItems, Items);
       }
 
-      public StringToBooleanCollection Items
+      internal StringToBooleanCollection Items
       {
          get
          {

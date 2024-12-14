@@ -12,6 +12,7 @@ using static mrHelper.App.Helpers.ConfigurationHelper;
 using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.Common.Interfaces;
+using static mrHelper.Common.Constants.Constants;
 
 namespace mrHelper.App.Forms
 {
@@ -36,9 +37,9 @@ namespace mrHelper.App.Forms
          setShowWarningOnFileMismatchRadioValue();
          setDefaultRevisionTypeRadioValue();
          setMainWindowLayoutRadioValue();
+         setThemeRadioValue();
          setToolBarPositionRadioValue();
          addFontSizes();
-         initializeColorScheme();
 
          upgradeOldWorkflowToCommonWorkflow();
          initializeProjectListIfEmpty();
@@ -90,25 +91,7 @@ namespace mrHelper.App.Forms
 
       private void initializeColorScheme()
       {
-         if (Program.Settings.ColorSchemeFileName == String.Empty)
-         {
-            // Upgrade from old versions which did not have a separate file for Default color scheme
-            Program.Settings.ColorSchemeFileName = Constants.DefaultColorSchemeFileName;
-         }
-
-         try
-         {
-            _colorScheme.LoadFromFile(Program.Settings.ColorSchemeFileName);
-         }
-         catch (ArgumentException ex)
-         {
-            ExceptionHandlers.Handle("Cannot create a color scheme", ex);
-            if (Program.Settings.ColorSchemeFileName != Constants.DefaultColorSchemeFileName)
-            {
-               Program.Settings.ColorSchemeFileName = String.Empty;
-               initializeColorScheme();
-            }
-         }
+         ColorScheme.Initialize();
       }
 
       private void upgradeHostList()
@@ -177,6 +160,21 @@ namespace mrHelper.App.Forms
 
             case MainWindowLayout.Vertical:
                verticalToolStripMenuItem.Checked = true;
+               break;
+         }
+      }
+
+      private void setThemeRadioValue()
+      {
+         ColorMode colorMode = ConfigurationHelper.GetColorMode(Program.Settings);
+         switch (colorMode)
+         {
+            case ColorMode.Dark:
+               darkToolStripMenuItem.Checked = true;
+               break;
+
+            case ColorMode.Light:
+               lightToolStripMenuItem.Checked = true;
                break;
          }
       }
@@ -299,6 +297,26 @@ namespace mrHelper.App.Forms
             Debug.Assert(verticalToolStripMenuItem.Checked);
             ConfigurationHelper.SetMainWindowLayout(Program.Settings, MainWindowLayout.Vertical);
          }
+      }
+
+      private void applyThemeChange()
+      {
+         if (_loadingConfiguration)
+         {
+            return;
+         }
+
+         if (darkToolStripMenuItem.Checked)
+         {
+            ConfigurationHelper.SetColorMode(Program.Settings, Constants.ColorMode.Dark);
+         }
+         else
+         {
+            Debug.Assert(lightToolStripMenuItem.Checked);
+            ConfigurationHelper.SetColorMode(Program.Settings, Constants.ColorMode.Light);
+         }
+
+         initializeColorScheme();
       }
 
       private void applyToolbarLayoutChange()

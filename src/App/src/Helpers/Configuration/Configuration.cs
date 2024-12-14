@@ -396,6 +396,10 @@ namespace mrHelper.App.Helpers
          {
             ShowHiddenMergeRequestIdsChanged?.Invoke();
          }
+         else if (keyName == ColorModeKeyName)
+         {
+            ColorModeChanged?.Invoke();
+         }
       }
 
       private readonly Configuration _config;

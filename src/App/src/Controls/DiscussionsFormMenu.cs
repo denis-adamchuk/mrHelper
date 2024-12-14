@@ -49,7 +49,6 @@ namespace mrHelper.App.Controls
          AsyncDiscussionHelper discussionHelper,
          IEnumerable<ICommand> commands,
          Action<string> onFontSelected,
-         ColorScheme colorScheme,
          Func<ICommand, CommandState> isCommandEnabled,
          Func<ICommand, Task> onCommand,
          Action onRefresh)
@@ -78,8 +77,6 @@ namespace mrHelper.App.Controls
          addFontSizes();
          _onFontSelected = onFontSelected;
 
-         _colorScheme = colorScheme;
-
          _loadingConfiguration = false;
       }
 
@@ -90,7 +87,7 @@ namespace mrHelper.App.Controls
 
       private void onConfigureColorsClicked(object sender, EventArgs e)
       {
-         using (ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.Discussions, _colorScheme))
+         using (ConfigureColorsForm form = new ConfigureColorsForm(DefaultCategory.Discussions))
          {
             WinFormsHelpers.ShowDialogOnControl(form, this.ParentForm);
          }
@@ -515,7 +512,6 @@ namespace mrHelper.App.Controls
       private Action<string> _onFontSelected;
       private Func<ICommand, CommandState> _isCommandEnabled;
       private Func<ICommand, Task> _onCommand;
-      private ColorScheme _colorScheme;
       private bool _loadingConfiguration;
       private readonly ToolStripMenuItem[] _sortMenuItemGroup;
       private readonly ToolStripMenuItem[] _filterByAnswersMenuItemGroup;

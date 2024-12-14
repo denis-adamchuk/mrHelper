@@ -30,10 +30,9 @@ namespace mrHelper.App.Controls
          DictionaryWrapper<string, MergeRequestFilterState> filtersByHostsRecent,
          IEnumerable<string> keywords,
          TrayIcon trayIcon,
-         ToolTip toolTip,
+         ThemedToolTip toolTip,
          bool integratedInGitExtensions,
          bool integratedInSourceTree,
-         ColorScheme colorScheme,
          UserDefinedSettings.OldFilterSettings oldFilter,
          ITimeTrackerHolder timeTrackerHolder,
          Action<string> onOpenUrl,
@@ -87,9 +86,7 @@ namespace mrHelper.App.Controls
          Program.Settings.WordWrapLongRowsChanged += onWrapLongRowsChanged;
          Program.Settings.ShowHiddenMergeRequestIdsChanged += onShowHiddenMergeRequestIdsChanged;
 
-         _colorScheme = colorScheme;
-         _colorScheme.Changed += onColorSchemeChanged;
-         forEachListView(listView => listView.SetColorScheme(_colorScheme));
+         ColorScheme.Modified += onColorSchemeModified;
 
          moveFilterFromConfigToStorage(oldFilter);
       }

@@ -101,6 +101,8 @@ namespace mrHelper.CommonNative
       }
 
       public const int WM_NOTIFY = 0x004E;
+      public const int WM_VSCROLL = 0x115;
+      public const int WM_MOUSEWHEEL = 0x020A;
 
       // from CommCtrl.h
       public const int HDN_FIRST = -300;

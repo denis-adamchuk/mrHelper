@@ -131,11 +131,14 @@ namespace mrHelper.App.Helpers
       private static readonly string ShowRelatedThreadsKeyName      = "ShowRelatedThreads";
       private static readonly bool   ShowRelatedThreadsDefaultValue = true;
 
-      private static readonly string ColorSchemeFileNameKeyName = "ColorSchemeFileName";
-      private static readonly string ColorSchemeFileNameDefaultValue = String.Empty;
+      private static readonly string ColorModeKeyName = "ColorMode";
+      private static readonly string ColorModeDefaultValue = "Dark";
 
-      private static readonly string CustomColorsKeyName = "CustomColors";
-      private static readonly string CustomColorsDefaultValue = String.Empty;
+      private static readonly string CustomColorsLightKeyName = "CustomColors";
+      private static readonly string CustomColorsLightDefaultValue = String.Empty;
+
+      private static readonly string CustomColorsDarkKeyName = "CustomColorsDark";
+      private static readonly string CustomColorsDarkDefaultValue = String.Empty;
 
       private static readonly string AutoUpdatePeriodMsKeyName      = "AutoUpdatePeriodMs";
       private static readonly int    AutoUpdatePeriodMsDefaultValue = 5 * 60 * 1000; // 5 minutes
@@ -281,9 +284,6 @@ namespace mrHelper.App.Helpers
 
       private static readonly string RevisionSplitContainerDistanceKeyName      = "RevisionSplitterDistance";
       private static readonly int    RevisionSplitContainerDistanceDefaultValue = 0;
-
-      private static readonly string VisualThemeNameKeyName       = "VisualThemeName";
-      private static readonly string VisualThemeNameDefaultValue  = Constants.DefaultThemeName;
 
       private static readonly string WorkflowTypeKeyName      = "WorkflowType";
       private static readonly string WorkflowTypeDefaultValue = "Users";

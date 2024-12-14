@@ -29,7 +29,9 @@ namespace mrHelper.App.Forms
 
          WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"]);
          _loadingConfiguration = true;
+         initializeColorScheme(); // Do this before OnHandleCreated() where ThemeSupportHelper can be created
          InitializeComponent();
+
          WinFormsHelpers.LogScaleDimensions(this);
          WinFormsHelpers.LogScreenResolution(this);
          _loadingConfiguration = false;
@@ -40,8 +42,7 @@ namespace mrHelper.App.Forms
          SystemEvents.DisplaySettingsChanged += SystemEvents_DisplaySettingsChanged;
          _applicationUpdateChecker = new PeriodicUpdateChecker(this);
 
-         _colorScheme = new ColorScheme();
-         _colorScheme.Changed += onColorSchemeChanged;
+         ColorScheme.Modified += onColorSchemeModified;
 
          Program.Settings.ToolBarPositionChanged += onToolBarPositionChanged;
 
@@ -316,11 +317,20 @@ namespace mrHelper.App.Forms
          _applicationUpdateChecker.NewVersionAvailable -= onNewVersionAvailable;
       }
 
-      private void onColorSchemeChanged()
+      private void onColorSchemeModified()
       {
          getConnectionPages()?
             .ToList()
-            .ForEach(connectionPage => onSummaryColorChanged(connectionPage));
+            .ForEach(connectionPage =>
+            {
+               onSummaryColorChanged(connectionPage);
+               if (connectionPage != null && connectionPage == getCurrentConnectionPage())
+               {
+                  Controls.ConnectionPage.EConnectionState state =
+                     connectionPage.GetConnectionState(out string details);
+                  processConnectionStatusChange(state, details);
+               }
+            });
       }
    }
 }

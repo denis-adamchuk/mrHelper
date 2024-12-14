@@ -1,15 +1,23 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
-using System.Windows.Forms;
+using mrHelper.App.Helpers;
 using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.App.Controls
 {
-   class FilterTextBox : DelayedTextBox
+   internal class FilterTextBox : DelayedTextBox
    {
-      private static System.Drawing.Color NormalTextColor = System.Drawing.Color.Black;
-      private static System.Drawing.Color HiddenTextColor = System.Drawing.Color.LightGray;
+      internal FilterTextBox()
+      {
+         ColorScheme.Modified += onColorSchemeModified;
+      }
+
+      protected override void Dispose(bool disposing)
+      {
+         ColorScheme.Modified -= onColorSchemeModified;
+         base.Dispose(disposing);
+      }
 
       public override string Text
       {
@@ -25,7 +33,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      public string GetFullText()
+      internal string GetFullText()
       {
          return String.Format("{0}{1}{2}", _visibleText, _hiddenText.Length > 0 ? ", " : String.Empty, _hiddenText);
       }
@@ -52,7 +60,7 @@ namespace mrHelper.App.Controls
          // paint text with in black
          SelectionStart = 0;
          SelectionLength = Text.Length;
-         SelectionColor = NormalTextColor;
+         SelectionColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextActive;
 
          // paint some words in gray
          int index = 0;
@@ -65,7 +73,7 @@ namespace mrHelper.App.Controls
             {
                SelectionStart = index;
                SelectionLength = word.Length + commaCount;
-               SelectionColor = HiddenTextColor;
+               SelectionColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextInactive;
             }
             index += word.Length + commaCount;
          }
@@ -105,6 +113,11 @@ namespace mrHelper.App.Controls
          {
             _hiddenText = String.Empty;
          }
+      }
+
+      private void onColorSchemeModified()
+      {
+         applySpecialColoring();
       }
 
       private static bool hasSpecialPrefix(string text) =>

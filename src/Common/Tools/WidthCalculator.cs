@@ -16,10 +16,12 @@ namespace mrHelper.Common.Tools
          int fontSizeInPoints = 10; // found experimentally for TheArtOfDev.HtmlPanel which is used across the app
          using (Graphics g = _c.CreateGraphics())
          {
-            FontFamily fontFamily = new FontFamily(System.Drawing.Text.GenericFontFamilies.Monospace);
-            using (Font f = new Font(fontFamily, fontSizeInPoints))
+            using (FontFamily fontFamily = new FontFamily(System.Drawing.Text.GenericFontFamilies.Monospace))
             {
-               return Convert.ToInt32(Math.Ceiling(g.MeasureString(text, f).Width));
+               using (Font f = new Font(fontFamily, fontSizeInPoints))
+               {
+                  return Convert.ToInt32(Math.Ceiling(g.MeasureString(text, f).Width));
+               }
             }
          }
       }

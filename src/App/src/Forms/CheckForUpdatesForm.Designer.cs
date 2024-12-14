@@ -32,7 +32,7 @@
          this.labelStatus = new System.Windows.Forms.Label();
          this.buttonUpgradeNow = new System.Windows.Forms.Button();
          this.buttonRemindLater = new System.Windows.Forms.Button();
-         this.toolTip = new System.Windows.Forms.ToolTip(this.components);
+         this.toolTip = new Controls.ThemedToolTip(this.components);
          this.SuspendLayout();
          // 
          // labelStatus
@@ -92,6 +92,6 @@
       private System.Windows.Forms.Label labelStatus;
       private System.Windows.Forms.Button buttonUpgradeNow;
       private System.Windows.Forms.Button buttonRemindLater;
-      private System.Windows.Forms.ToolTip toolTip;
+      private Controls.ThemedToolTip toolTip;
    }
 }

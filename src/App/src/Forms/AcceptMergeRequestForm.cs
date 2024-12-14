@@ -13,7 +13,7 @@ using mrHelper.Common.Exceptions;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class AcceptMergeRequestForm : CustomFontForm
+   internal partial class AcceptMergeRequestForm : ThemedForm
    {
       public AcceptMergeRequestForm(
          MergeRequestKey mrk,
@@ -44,6 +44,7 @@ namespace mrHelper.App.Forms
          _getRepositoryAccessor = getRepositoryAccessor;
 
          initializeGitUILinks();
+         App.Helpers.ColorScheme.Modified += onColorSchemeModified;
       }
 
       private void postProcessMerge(MergeRequest mergeRequest)

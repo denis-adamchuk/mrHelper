@@ -19,6 +19,7 @@ namespace mrHelper.App.Controls
             components.Dispose();
          }
 
+         Helpers.ColorScheme.Modified -= onColorSchemeModified;
          base.Dispose(disposing);
          stopRedrawTimer();
       }
