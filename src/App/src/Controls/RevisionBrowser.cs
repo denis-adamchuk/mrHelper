@@ -178,7 +178,10 @@ namespace mrHelper.App.Controls
          {
             Rectangle focusRect = new Rectangle(
                _treeView.OffsetX, e.RowRect.Y, _treeView.ClientRectangle.Width, e.RowRect.Height);
-            e.Graphics.FillRectangle(SystemBrushes.Highlight, focusRect);
+            using (Brush brush = new SolidBrush(DarkModeForms.DarkModeCS.GetSystemColors().Accent))
+            {
+               e.Graphics.FillRectangle(brush, focusRect);
+            }
          }
       }
 
@@ -187,15 +190,15 @@ namespace mrHelper.App.Controls
          e.BackgroundBrush = null;
          if (e.Node.Tag is RevisionBrowserItem leafNode && leafNode.IsReviewed)
          {
-            e.TextColor = Color.LightGray;
+            e.TextColor = DarkModeForms.DarkModeCS.GetSystemColors().TextInactive;
          }
          else if (e.Node.IsSelected)
          {
-            e.TextColor = SystemColors.HighlightText;
+            e.TextColor = DarkModeForms.DarkModeCS.GetSystemColors().TextInAccent;
          }
          else
          {
-            e.TextColor = SystemColors.ControlText;
+            e.TextColor = DarkModeForms.DarkModeCS.GetSystemColors().TextActive;
          }
       }
 
@@ -205,6 +208,22 @@ namespace mrHelper.App.Controls
          {
             saveColumnWidths(x => Program.Settings.RevisionBrowserColumnWidths = x);
          }
+      }
+
+      private void onDrawColHeaderBg(object sender, DrawColHeaderBgEventArgs args)
+      {
+         using (Brush brush = new SolidBrush(DarkModeForms.DarkModeCS.GetSystemColors().ControlLight))
+         {
+            args.Graphics.FillRectangle(brush, args.Bounds);
+         }
+         args.Handled = true;
+      }
+
+      private void onDrawColHeaderText(object sender, DrawColHeaderTextEventArgs args)
+      {
+         TextRenderer.DrawText(args.Graphics, args.Text, _treeView.Font, args.Bounds,
+            DarkModeForms.DarkModeCS.GetSystemColors().TextActive, args.Flags);
+         args.Handled = true;
       }
 
       private void onTreeViewSelectionChanged(object sender, EventArgs e)

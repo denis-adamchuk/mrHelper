@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 using GitLabSharp.Entities;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Constants;
@@ -735,17 +736,17 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         using (Brush brush = new SolidBrush(Color.DarkGray))
+         using (Brush brush = new SolidBrush(DarkModeForms.DarkModeCS.GetSystemColors().ControlDark))
          {
             // Fill rectangle with dark color
             e.Graphics.FillRectangle(brush, e.Bounds);
          }
-         using (Brush brush = new SolidBrush(Color.Gray))
+         using (Brush brush = new SolidBrush(DarkModeForms.DarkModeCS.GetSystemColors().ControlLight))
          {
             // Fill rectangle with lighter color but leave 1px for a "border".
             // 1px is enough no matter which DPI is used.
             Rectangle rect = new Rectangle(e.Bounds.X, e.Bounds.Y, e.Bounds.Width - 1 /* px */, e.Bounds.Height);
-            e.Graphics.FillRectangle(SystemBrushes.ButtonFace, rect);
+            e.Graphics.FillRectangle(brush, rect);
          }
 
          bool isSortedByThisColumn = e.ColumnIndex == getColumnByType(getSortedByColumn()).Index;
@@ -762,7 +763,10 @@ namespace mrHelper.App.Controls
                using (StringFormat format = new StringFormat(StringFormatFlags.LineLimit))
                {
                   format.Trimming = StringTrimming.EllipsisCharacter;
-                  e.Graphics.DrawString(e.Header.Text, font, Brushes.Black, e.Bounds, format);
+                  using (Brush brush = new SolidBrush(DarkModeForms.DarkModeCS.GetSystemColors().TextActive))
+                  {
+                     e.Graphics.DrawString(e.Header.Text, font, brush, e.Bounds, format);
+                  }
                }
             }
          }
@@ -782,7 +786,8 @@ namespace mrHelper.App.Controls
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
          Color defaultColor = Color.Transparent;
          Color backgroundColor = isMuted(fmk) ? defaultColor : getMergeRequestColor(fmk, defaultColor);
-         WinFormsHelpers.FillRectangle(e, bounds, backgroundColor, isSelected);
+         backgroundColor = isSelected ? DarkModeForms.DarkModeCS.GetSystemColors().Accent : backgroundColor;
+         WinFormsHelpers.FillRectangle(e, bounds, backgroundColor);
 
          ColumnType columnType = getColumnType(e.SubItem);
          using (StringFormat format = new StringFormat(getSubItemStringFormatFlags(e.SubItem)))
@@ -839,8 +844,11 @@ namespace mrHelper.App.Controls
             }
             else
             {
-               Brush textBrush = isSelected ? SystemBrushes.HighlightText : SystemBrushes.ControlText;
-               e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
+               using (Brush textBrush = new SolidBrush(isSelected ?
+                  DarkModeForms.DarkModeCS.GetSystemColors().TextInAccent : DarkModeForms.DarkModeCS.GetSystemColors().TextActive))
+               {
+                  e.Graphics.DrawString(text, e.Item.ListView.Font, textBrush, bounds, format);
+               }
             }
          }
       }

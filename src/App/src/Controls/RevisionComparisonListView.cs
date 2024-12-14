@@ -109,7 +109,8 @@ namespace mrHelper.App.Controls
 
          bool isSelected = e.Item.Selected;
          Color backgroundColor = e.ItemIndex % 2 == 1 ? Color.WhiteSmoke : Color.White;
-         WinFormsHelpers.FillRectangle(e, e.Bounds, backgroundColor, isSelected);
+         backgroundColor = isSelected ? DarkModeForms.DarkModeCS.GetSystemColors().Accent : backgroundColor;
+         WinFormsHelpers.FillRectangle(e, e.Bounds, backgroundColor);
 
          StringFormat format = new StringFormat(StringFormatFlags.NoWrap)
          {

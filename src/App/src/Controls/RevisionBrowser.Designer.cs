@@ -41,6 +41,18 @@
             _timestamp = null;
          }
 
+         if (treeColumn1 != null)
+         {
+            treeColumn1.DrawColHeaderBg -= this.onDrawColHeaderBg;
+            treeColumn1.DrawColHeaderText -= this.onDrawColHeaderText;
+         }
+
+         if (treeColumn2 != null)
+         {
+            treeColumn2.DrawColHeaderBg -= this.onDrawColHeaderBg;
+            treeColumn2.DrawColHeaderText -= this.onDrawColHeaderText;
+         }
+
          base.Dispose(disposing);
       }
 
@@ -92,6 +104,8 @@
          this.treeColumn1.SortOrder = System.Windows.Forms.SortOrder.None;
          this.treeColumn1.TooltipText = "Commit message title or version number";
          this.treeColumn1.Width = 300;
+         this.treeColumn1.DrawColHeaderBg += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderBgEventArgs>(this.onDrawColHeaderBg);
+         this.treeColumn1.DrawColHeaderText += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderTextEventArgs>(this.onDrawColHeaderText);
          // 
          // treeColumn2
          // 
@@ -100,6 +114,8 @@
          this.treeColumn2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
          this.treeColumn2.TooltipText = "Created at";
          this.treeColumn2.Width = 140;
+         this.treeColumn2.DrawColHeaderBg += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderBgEventArgs>(this.onDrawColHeaderBg);
+         this.treeColumn2.DrawColHeaderText += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderTextEventArgs>(this.onDrawColHeaderText);
          // 
          // _name
          // 

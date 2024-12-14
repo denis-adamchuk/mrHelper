@@ -210,6 +210,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="src\Controls\TextControls.cs" />
+    <Compile Include="src\DarkModeCS.cs" />
     <Compile Include="src\Forms\AcceptMergeRequestForm.UI.cs">
       <DependentUpon>AcceptMergeRequestForm.cs</DependentUpon>
       <SubType>Form</SubType>

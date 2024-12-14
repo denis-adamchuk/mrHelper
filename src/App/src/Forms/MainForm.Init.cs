@@ -12,11 +12,14 @@ using mrHelper.Common.Exceptions;
 using mrHelper.GitLabClient;
 using mrHelper.CommonControls.Tools;
 using System.Drawing;
+using DarkModeForms;
 
 namespace mrHelper.App.Forms
 {
    internal partial class MainForm
    {
+      private DarkModeCS _dm = null;
+
       internal MainForm(bool startMinimized, bool runningAsUwp, string startUrl, bool integratedInGitExtensions,
          bool integratedInSourceTree)
       {
@@ -30,6 +33,12 @@ namespace mrHelper.App.Forms
          WinFormsHelpers.FixNonStandardDPIIssue(this, (float)Constants.FontSizeChoices["Design"]);
          _loadingConfiguration = true;
          InitializeComponent();
+         _dm = new DarkModeCS(this)
+         {
+            ColorMode = DarkModeCS.DisplayMode.SystemDefault,
+            ColorizeIcons = false
+         };
+
          WinFormsHelpers.LogScaleDimensions(this);
          WinFormsHelpers.LogScreenResolution(this);
          _loadingConfiguration = false;

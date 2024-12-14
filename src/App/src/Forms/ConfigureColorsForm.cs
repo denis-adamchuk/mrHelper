@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using DarkModeForms;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Constants;
 using mrHelper.Common.Exceptions;
@@ -19,6 +20,8 @@ namespace mrHelper.App.Forms
 
    internal partial class ConfigureColorsForm : CustomFontForm
    {
+      private DarkModeCS _dm = null;
+
       public ConfigureColorsForm(DefaultCategory defaultCategory, ColorScheme colorScheme)
       {
          _defaultCategory = defaultCategory;
@@ -27,6 +30,10 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);
          InitializeComponent();
+         _dm = new DarkModeCS(this)
+         {
+            ColorMode = DarkModeCS.DisplayMode.SystemDefault
+         };
          applyFont(Program.Settings.MainWindowFontSizeName);
       }
 
@@ -455,7 +462,8 @@ namespace mrHelper.App.Forms
 
          Color color = colorSchemeItem.Color;
          bool isSelected = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
-         WinFormsHelpers.FillRectangle(e, e.Bounds, color, isSelected);
+         color = isSelected ? DarkModeForms.DarkModeCS.GetSystemColors().Accent : color;
+         WinFormsHelpers.FillRectangle(e, e.Bounds, color);
 
          StringFormat format =
             new StringFormat
@@ -468,14 +476,17 @@ namespace mrHelper.App.Forms
          Font font = listBox.Font;
          if (isSelected)
          {
-            using (Brush brush = new SolidBrush(color))
+            using (Brush brush = new SolidBrush(colorSchemeItem.Color))
             {
                e.Graphics.DrawString(text, font, brush, e.Bounds, format);
             }
          }
          else
          {
-            e.Graphics.DrawString(text, font, SystemBrushes.ControlText, e.Bounds, format);
+            using (Brush brush = new SolidBrush(DarkModeForms.DarkModeCS.GetSystemColors().TextActive))
+            {
+               e.Graphics.DrawString(text, font, brush, e.Bounds, format);
+            }
          }
       }
 

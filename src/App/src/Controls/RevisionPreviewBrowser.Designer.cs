@@ -23,8 +23,27 @@
          if (_treeView != null)
          {
             _treeView.RowDraw -= onTreeViewDrawRow;
+            _treeView.DrawControl -= onTreeViewDrawControl;
             _treeView.ColumnWidthChanged -= this.onTreeViewColumnWidthChanged;
             _treeView = null;
+         }
+
+         if (treeColumn1 != null)
+         {
+            treeColumn1.DrawColHeaderBg -= this.onDrawColHeaderBg;
+            treeColumn1.DrawColHeaderText -= this.onDrawColHeaderText;
+         }
+
+         if (treeColumn2 != null)
+         {
+            treeColumn2.DrawColHeaderBg -= this.onDrawColHeaderBg;
+            treeColumn2.DrawColHeaderText -= this.onDrawColHeaderText;
+         }
+
+         if (treeColumn3 != null)
+         {
+            treeColumn3.DrawColHeaderBg -= this.onDrawColHeaderBg;
+            treeColumn3.DrawColHeaderText -= this.onDrawColHeaderText;
          }
 
          base.Dispose(disposing);
@@ -82,6 +101,8 @@
          this.treeColumn1.SortOrder = System.Windows.Forms.SortOrder.None;
          this.treeColumn1.TooltipText = "Name";
          this.treeColumn1.Width = 260;
+         this.treeColumn1.DrawColHeaderBg += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderBgEventArgs>(this.onDrawColHeaderBg);
+         this.treeColumn1.DrawColHeaderText += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderTextEventArgs>(this.onDrawColHeaderText);
          // 
          // treeColumn2
          // 
@@ -89,6 +110,8 @@
          this.treeColumn2.SortOrder = System.Windows.Forms.SortOrder.None;
          this.treeColumn2.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
          this.treeColumn2.Width = 120;
+         this.treeColumn2.DrawColHeaderBg += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderBgEventArgs>(this.onDrawColHeaderBg);
+         this.treeColumn2.DrawColHeaderText += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderTextEventArgs>(this.onDrawColHeaderText);
          // 
          // treeColumn3
          // 
@@ -96,6 +119,8 @@
          this.treeColumn3.SortOrder = System.Windows.Forms.SortOrder.None;
          this.treeColumn3.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
          this.treeColumn3.Width = 120;
+         this.treeColumn3.DrawColHeaderBg += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderBgEventArgs>(this.onDrawColHeaderBg);
+         this.treeColumn3.DrawColHeaderText += new System.EventHandler<Aga.Controls.Tree.DrawColHeaderTextEventArgs>(this.onDrawColHeaderText);
          // 
          // _name
          // 

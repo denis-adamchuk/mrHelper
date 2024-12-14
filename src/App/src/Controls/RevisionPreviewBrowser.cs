@@ -22,6 +22,7 @@ namespace mrHelper.App.Controls
 
          _treeView.Model = new RevisionPreviewBrowserModel();
          _treeView.RowDraw += onTreeViewDrawRow;
+         _treeView.DrawControl += onTreeViewDrawControl;
       }
 
       internal void SetData(RevisionPreviewBrowserModelData data)
@@ -71,7 +72,25 @@ namespace mrHelper.App.Controls
          {
             Rectangle focusRect = new Rectangle(
                _treeView.OffsetX, e.RowRect.Y, _treeView.ClientRectangle.Width, e.RowRect.Height);
-            e.Graphics.FillRectangle(SystemBrushes.Highlight, focusRect);
+            using (Brush brush = new SolidBrush(DarkModeForms.DarkModeCS.GetSystemColors().Accent))
+            {
+               e.Graphics.FillRectangle(brush, focusRect);
+            }
+         }
+      }
+
+      private void onTreeViewDrawControl(object sender, DrawEventArgs args)
+      {
+         if (args is DrawTextEventArgs)
+         {
+            if (args.Node.IsSelected)
+            {
+               ((DrawTextEventArgs)args).TextColor = DarkModeForms.DarkModeCS.GetSystemColors().TextInAccent;
+            }
+            else
+            {
+               ((DrawTextEventArgs)args).TextColor = DarkModeForms.DarkModeCS.GetSystemColors().TextActive;
+            }
          }
       }
 
@@ -81,6 +100,22 @@ namespace mrHelper.App.Controls
          {
             saveColumnWidths(x => Program.Settings.RevisionPreviewBrowserColumnWidths = x);
          }
+      }
+
+      private void onDrawColHeaderBg(object sender, DrawColHeaderBgEventArgs args)
+      {
+         using (Brush brush = new SolidBrush(DarkModeForms.DarkModeCS.GetSystemColors().ControlLight))
+         {
+            args.Graphics.FillRectangle(brush, args.Bounds);
+         }
+         args.Handled = true;
+      }
+
+      private void onDrawColHeaderText(object sender, DrawColHeaderTextEventArgs args)
+      {
+         TextRenderer.DrawText(args.Graphics, args.Text, _treeView.Font, args.Bounds,
+            DarkModeForms.DarkModeCS.GetSystemColors().TextActive, args.Flags);
+         args.Handled = true;
       }
 
       private RevisionPreviewBrowserModel getModel()

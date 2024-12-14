@@ -12,11 +12,13 @@ using mrHelper.GitLabClient;
 using mrHelper.App.Forms.Helpers;
 using mrHelper.CustomActions;
 using mrHelper.Core.Context;
+using DarkModeForms;
 
 namespace mrHelper.App.Forms
 {
    internal partial class DiscussionsForm : CustomFontForm
    {
+      private DarkModeCS _dm = null;
       public DiscussionsForm(
          IGitCommandService git,
          User currentUser,
@@ -49,6 +51,11 @@ namespace mrHelper.App.Forms
          CommonControls.Tools.WinFormsHelpers.FixNonStandardDPIIssue(this,
             (float)Common.Constants.Constants.FontSizeChoices["Design"]);
          InitializeComponent();
+         _dm = new DarkModeCS(this)
+         {
+            ColorMode = DarkModeCS.DisplayMode.SystemDefault
+         };
+
 
          applyFont(Program.Settings.MainWindowFontSizeName);
 
