@@ -80,20 +80,22 @@
       "name": "Status_Tracking",
       "display_name": "Tracking time",
       "conditions": ["{IsTrackingTime:true}"],
-      "factory": "Turquoise",
+      "factory": "18,194,18",
       "use_for_preview": true,
       "use_for_sorting": false,
-      "use_for_text_color_in_config": true
+      "use_for_text_color_in_config": true,
+      "use_for_muted": true
    },
    {
       "group": "MergeRequests",
       "name": "MergeRequests_excluded",
       "display_name": "Merge requests that would be hidden if Filter was on",
       "conditions": ["{IsExcluded:true}"],
-      "factory": "Gray",
+      "factory": "74,74,74",
       "use_for_preview": false,
       "use_for_sorting": false,
-      "use_for_text_color_in_config": true
+      "use_for_text_color_in_config": true,
+      "use_for_muted": true
    },
    {
       "name": "MergeRequestListView_ResolvedCount_Text",
