@@ -36,7 +36,8 @@ namespace mrHelper.App.Controls
          UserDefinedSettings.OldFilterSettings oldFilter,
          ITimeTrackerHolder timeTrackerHolder,
          Action<string> onOpenUrl,
-         Func<ICommand, MergeRequestKey, ConnectionPage, System.Threading.Tasks.Task> onCommand)
+         Func<ICommand, MergeRequestKey, ConnectionPage, System.Threading.Tasks.Task> onCommand,
+         Action<MergeRequestKey> findGlobal)
       {
          HostName = hostname;
          _keywords = keywords;
@@ -53,6 +54,7 @@ namespace mrHelper.App.Controls
          _filtersByHostsRecent = filtersByHostsRecent;
          _onOpenUrl = onOpenUrl;
          _onCommand = onCommand;
+         _findGlobal = findGlobal;
 
          InitializeComponent();
          updateSplitterOrientation();

@@ -661,32 +661,36 @@ namespace mrHelper.App.Controls
          }
       }
 
-      private bool switchTabAndSelectMergeRequest(EDataCacheType mode, MergeRequestKey? mrk)
+      private bool trySelectMergeRequest(EDataCacheType mode, MergeRequestKey mrk)
       {
-         return switchMode(mode).SelectMergeRequest(mrk, true);
+         if (isCached(mode, mrk))
+         {
+            switchMode(mode);
+            return getListView(mode).SelectMergeRequest(mrk);
+         }
+         return false;
       }
 
-      private MergeRequestListView switchMode(EDataCacheType mode)
+      private void switchMode(EDataCacheType mode)
       {
          switch (mode)
          {
             case EDataCacheType.Live:
                RequestLive?.Invoke(this);
-               return listViewLiveMergeRequests;
+               break;
 
             case EDataCacheType.Search:
                RequestSearch?.Invoke(this);
-               return listViewFoundMergeRequests;
+               break;
 
             case EDataCacheType.Recent:
                RequestRecent?.Invoke(this);
-               return listViewRecentMergeRequests;
+               break;
 
             default:
                Debug.Assert(false);
                break;
          }
-         return getListView(getCurrentTabDataCacheType());
       }
 
       // Status

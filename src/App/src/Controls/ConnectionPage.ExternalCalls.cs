@@ -155,7 +155,7 @@ namespace mrHelper.App.Controls
          // Try selecting an item which is not hidden by filters
          foreach (EDataCacheType mode in modes)
          {
-            if (isCached(mode, mrk) && switchTabAndSelectMergeRequest(mode, mrk))
+            if (isCached(mode, mrk) && trySelectMergeRequest(mode, mrk))
             {
                return SelectionResult.Selected;
             }
@@ -168,7 +168,7 @@ namespace mrHelper.App.Controls
             {
                if (unhideFilteredMergeRequest(mode))
                {
-                  if (switchTabAndSelectMergeRequest(mode, mrk))
+                  if (trySelectMergeRequest(mode, mrk))
                   {
                      return SelectionResult.Selected;
                   }
@@ -224,7 +224,7 @@ namespace mrHelper.App.Controls
             }
          }
 
-         if (!switchTabAndSelectMergeRequest(EDataCacheType.Live, mrk) && getListView(EDataCacheType.Live).Enabled)
+         if (!trySelectMergeRequest(EDataCacheType.Live, mrk) && getListView(EDataCacheType.Live).Enabled)
          {
             // We could not select MR, but let's check if it is cached or not.
             if (dataCache.MergeRequestCache.GetMergeRequests(mrk.ProjectKey).Any(x => x.IId == mrk.IId))
@@ -235,7 +235,7 @@ namespace mrHelper.App.Controls
                   return false; // user decided to not un-hide merge request
                }
 
-               if (!switchTabAndSelectMergeRequest(EDataCacheType.Live, mrk))
+               if (!trySelectMergeRequest(EDataCacheType.Live, mrk))
                {
                   Debug.Assert(false);
                   Trace.TraceError(String.Format("[ConnectionPage] Cannot open URL {0}, although MR is cached", url));
@@ -263,7 +263,7 @@ namespace mrHelper.App.Controls
             EDataCacheType.Search,
             new Func<Exception, bool>(x =>
                throw new UrlConnectionException("Failed to open merge request at Search tab. ", x)));
-         switchTabAndSelectMergeRequest(EDataCacheType.Search, mrk);
+         trySelectMergeRequest(EDataCacheType.Search, mrk);
       }
 
       private bool unhideFilteredMergeRequest(EDataCacheType dataCacheType)

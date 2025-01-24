@@ -87,6 +87,7 @@ namespace mrHelper.App.Controls
 
       private readonly Action<string> _onOpenUrl;
       private readonly Func<ICommand, MergeRequestKey, ConnectionPage, System.Threading.Tasks.Task> _onCommand;
+      private readonly Action<MergeRequestKey> _findGlobal;
    }
 }
 

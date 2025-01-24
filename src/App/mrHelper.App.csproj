@@ -230,6 +230,15 @@
     <Compile Include="src\Controls\ToolStripSystemTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Forms\CustomFontForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\WrongActionConfirmationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="src\Forms\WrongActionConfirmationForm.Designer.cs">
+      <DependentUpon>WrongActionConfirmationForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="src\Helpers\ThemeSupportHelper.cs" />
     <Compile Include="src\Forms\AcceptMergeRequestForm.UI.cs">
       <DependentUpon>AcceptMergeRequestForm.cs</DependentUpon>
@@ -457,6 +466,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="src\Controls\RevisionSplitContainerSite.resx">
       <DependentUpon>RevisionSplitContainerSite.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="src\Forms\WrongActionConfirmationForm.resx">
+      <DependentUpon>WrongActionConfirmationForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="src\Forms\AddItemForm.resx">
       <DependentUpon>AddItemForm.cs</DependentUpon>

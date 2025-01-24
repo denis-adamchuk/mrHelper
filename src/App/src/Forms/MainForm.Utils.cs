@@ -198,13 +198,23 @@ namespace mrHelper.App.Forms
 
       private void gotoTimeTrackingMergeRequest()
       {
-         ConnectionPage connectionPage = getCurrentConnectionPage();
-         if (_timeTracker == null || _timeTrackingHost == null || connectionPage == null)
+         if (_timeTracker == null || _timeTrackingHost == null)
          {
             return;
          }
          emulateClickOnHostToolbarButton(_timeTrackingHost);
-         connectionPage.FindMergeRequest(_timeTracker.MergeRequest);
+         findGlobal(_timeTracker.MergeRequest);
+      }
+
+      private void findGlobal(MergeRequestKey mrk)
+      {
+         foreach (var connectionPage in getConnectionPages())
+         {
+            if (connectionPage != null && connectionPage.FindMergeRequest(mrk))
+            {
+               break;
+            }
+         }
       }
 
       // Diff Tool
@@ -631,13 +641,23 @@ namespace mrHelper.App.Forms
             menuItem.Click += (sender, e) =>
             {
                ConnectionPage connectionPage = getCurrentConnectionPage();
-               if (connectionPage != null)
+               if (connectionPage == null)
                {
-                  MergeRequestKey mergeRequestKey = new MergeRequestKey(
-                     new ProjectKey(connectionPage.GetCurrentHostName(), connectionPage.GetCurrentProjectName()),
-                     connectionPage.GetCurrentMergeRequestIId());
-                  BeginInvoke(new Action(async () => await onCommandAsync(command, mergeRequestKey, connectionPage)));
+                  return;
                }
+
+               MergeRequestKey mergeRequestKey = new MergeRequestKey(
+                  new ProjectKey(connectionPage.GetCurrentHostName(), connectionPage.GetCurrentProjectName()),
+                  connectionPage.GetCurrentMergeRequestIId());
+
+               WrongActionConfirmationForm.ActionType actionType = WrongActionConfirmationForm.ActionType.ExecuteAction;
+               if (isTrackingTime() && !_timeTracker.MergeRequest.Equals(mergeRequestKey) &&
+                   !WrongActionConfirmationForm.Show(this, actionType, () => findGlobal(_timeTracker.MergeRequest)))
+               {
+                  return;
+               }
+
+               BeginInvoke(new Action(async () => await onCommandAsync(command, mergeRequestKey, connectionPage)));
             };
             toolStripCustomActions.Items.Add(menuItem);
             id++;

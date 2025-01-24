@@ -101,7 +101,7 @@ namespace mrHelper.App.Controls
          // current mode may have changed during 'await'
          if (getCurrentTabDataCacheType() == EDataCacheType.Search)
          {
-            getListView(EDataCacheType.Search).SelectMergeRequest(new MergeRequestKey?(), false);
+            getListView(EDataCacheType.Search).SelectMergeRequest(null);
          }
       }
 
@@ -137,7 +137,7 @@ namespace mrHelper.App.Controls
          // current mode may have changed during 'await'
          if (getCurrentTabDataCacheType() == EDataCacheType.Recent)
          {
-            getListView(EDataCacheType.Recent).SelectMergeRequest(new MergeRequestKey?(), false);
+            getListView(EDataCacheType.Recent).SelectMergeRequest(null);
          }
 
          setConnectionStatus(EConnectionStateInternal.Connected);

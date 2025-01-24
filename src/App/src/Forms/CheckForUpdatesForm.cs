@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Windows.Forms;
 using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class CheckForUpdatesForm : Form
+   internal partial class CheckForUpdatesForm : ThemedForm
    {
       internal CheckForUpdatesForm()
       {

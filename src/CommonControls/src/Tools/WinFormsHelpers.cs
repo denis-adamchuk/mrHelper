@@ -68,7 +68,7 @@ namespace mrHelper.CommonControls.Tools
          }
       }
 
-      public static DialogResult ShowDialogOnControl(Form dialog, Control control)
+      public static void PositionDialogOnControl(Form dialog, Control control)
       {
          if (dialog == null)
          {
@@ -92,6 +92,11 @@ namespace mrHelper.CommonControls.Tools
                Debug.Assert(false); // not implemented
             }
          }
+      }
+
+      public static DialogResult ShowDialogOnControl(Form dialog, Control control)
+      {
+         PositionDialogOnControl(dialog, control);
          return dialog.ShowDialog();
       }
 

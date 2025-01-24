@@ -356,6 +356,13 @@ namespace mrHelper.App.Controls
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
+            WrongActionConfirmationForm.ActionType actionType = WrongActionConfirmationForm.ActionType.AddComment;
+            if (_timeTrackerHolder != null && !isTrackingTime(mrk) &&
+                !WrongActionConfirmationForm.Show(this, actionType, () => _findGlobal(_timeTrackerHolder.GetTimeTracker().MergeRequest)))
+            {
+               return;
+            }
+
             EDataCacheType mode = getCurrentTabDataCacheType();
             DataCache dataCache = getDataCache(mode);
             AsyncDiscussionHelper discussionHelper = new AsyncDiscussionHelper(
@@ -371,6 +378,13 @@ namespace mrHelper.App.Controls
          {
             MergeRequest mergeRequest = getMergeRequest(null);
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
+
+            WrongActionConfirmationForm.ActionType actionType = WrongActionConfirmationForm.ActionType.CreateDiscussion;
+            if (_timeTrackerHolder != null && !isTrackingTime(mrk) &&
+                !WrongActionConfirmationForm.Show(this, actionType, () => _findGlobal(_timeTrackerHolder.GetTimeTracker().MergeRequest)))
+            {
+               return;
+            }
 
             EDataCacheType mode = getCurrentTabDataCacheType();
             DataCache dataCache = getDataCache(mode);

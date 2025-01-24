@@ -1,13 +1,11 @@
 using System;
-using System.Drawing;
 using System.Diagnostics;
-using System.Windows.Forms;
 using mrHelper.Common.Constants;
 using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Forms
 {
-   internal partial class ThemedForm : Form
+   internal partial class ThemedForm : CustomFontForm
    {
       internal ThemedForm()
       {
@@ -47,17 +45,6 @@ namespace mrHelper.App.Forms
             Debug.Assert(colorMode == Constants.ColorMode.Light);
             _themeSupportHelper = new ThemeSupport.ThemeSupportHelper(this, ThemeSupport.DisplayMode.ClearMode);
          }
-      }
-
-      protected virtual void applyFont(string font)
-      {
-         if (!Constants.FontSizeChoices.ContainsKey(font))
-         {
-            return;
-         }
-
-         this.Font = new Font(this.Font.FontFamily, (float)Constants.FontSizeChoices[font],
-            this.Font.Style, GraphicsUnit.Point, this.Font.GdiCharSet, this.Font.GdiVerticalFont);
       }
 
       private void onColorModeChanged()

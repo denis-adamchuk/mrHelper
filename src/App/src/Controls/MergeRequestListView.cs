@@ -163,7 +163,7 @@ namespace mrHelper.App.Controls
          }
       }
 
-      internal bool SelectMergeRequest(MergeRequestKey? mrk, bool exact)
+      internal bool SelectMergeRequest(MergeRequestKey? mrk)
       {
          if (!mrk.HasValue)
          {
@@ -197,11 +197,6 @@ namespace mrHelper.App.Controls
                ensureSelectionIsVisible();
                return true;
             }
-         }
-
-         if (exact)
-         {
-            return false;
          }
 
          if (needShowGroups())

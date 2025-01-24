@@ -106,7 +106,7 @@ namespace mrHelper.App.Controls
          int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostname].IId : 0;
 
          MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostname, projectname), iid);
-         getListView(EDataCacheType.Live).SelectMergeRequest(mrk, false);
+         getListView(EDataCacheType.Live).SelectMergeRequest(mrk);
       }
 
       internal void GoRecent()
@@ -294,22 +294,9 @@ namespace mrHelper.App.Controls
          editTimeOfSelectedMergeRequest();
       }
 
-      internal void FindMergeRequest(MergeRequestKey mrk)
+      internal bool FindMergeRequest(MergeRequestKey mrk)
       {
-         // We want to check lists in specific order:
-         EDataCacheType[] modes = new EDataCacheType[]
-         {
-            EDataCacheType.Live,
-            EDataCacheType.Recent,
-            EDataCacheType.Search
-         };
-         foreach (EDataCacheType mode in modes)
-         {
-            if (switchTabAndSelectMergeRequest(mode, mrk))
-            {
-               break;
-            }
-         }
+         return trySelectMergeRequest(mrk) != SelectionResult.NotFound;
       }
 
       internal ITimeTracker CreateTimeTracker()
