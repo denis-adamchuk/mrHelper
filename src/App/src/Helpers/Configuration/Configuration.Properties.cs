@@ -375,12 +375,14 @@ namespace mrHelper.App.Helpers
          get => getValue(ListViewMergeRequestsSortingDirectionKeyName, ListViewMergeRequestsSortingDirectionDefaultValue);
          set => setValue(ListViewMergeRequestsSortingDirectionKeyName, value);
       }
+      public event Action ListViewMergeRequestsSortingDirectionChanged;
 
       public string ListViewMergeRequestsSortedByColumnName
       {
          get => getValue(ListViewMergeRequestsSortedByColumnNameKeyName, ListViewMergeRequestsSortedByColumnNameDefaultValue);
          set => setValue(ListViewMergeRequestsSortedByColumnNameKeyName, value);
       }
+      public event Action ListViewMergeRequestsSortedByColumnChanged;
 
       public Dictionary<string, int> ListViewMergeRequestsColumnWidths
       {
@@ -390,6 +392,7 @@ namespace mrHelper.App.Helpers
                                          -1);
          set => setStringToIntDictionary(ListViewMergeRequestsColumnWidthsKeyName, value);
       }
+      public event Action ListViewMergeRequestsColumnWidthsChanged;
 
       public Dictionary<string, int> ListViewMergeRequestsDisplayIndices
       {
@@ -399,18 +402,21 @@ namespace mrHelper.App.Helpers
                                          -1);
          set => setStringToIntDictionary(ListViewMergeRequestsDisplayIndicesKeyName, value);
       }
+      public event Action ListViewMergeRequestsDisplayIndicesChanged;
 
       public string ListViewFoundMergeRequestsSortingDirection
       {
          get => getValue(ListViewFoundMergeRequestsSortingDirectionKeyName, ListViewFoundMergeRequestsSortingDirectionDefaultValue);
          set => setValue(ListViewFoundMergeRequestsSortingDirectionKeyName, value);
       }
+      public event Action ListViewFoundMergeRequestsSortingDirectionChanged;
 
       public string ListViewFoundMergeRequestsSortedByColumnName
       {
          get => getValue(ListViewFoundMergeRequestsSortedByColumnNameKeyName, ListViewFoundMergeRequestsSortedByColumnNameDefaultValue);
          set => setValue(ListViewFoundMergeRequestsSortedByColumnNameKeyName, value);
       }
+      public event Action ListViewFoundMergeRequestsSortedByColumnChanged;
 
       public Dictionary<string, int> ListViewFoundMergeRequestsColumnWidths
       {
@@ -420,6 +426,7 @@ namespace mrHelper.App.Helpers
                                          -1);
          set => setStringToIntDictionary(ListViewFoundMergeRequestsColumnWidthsKeyName, value);
       }
+      public event Action ListViewFoundMergeRequestsColumnWidthsChanged;
 
       public Dictionary<string, int> ListViewFoundMergeRequestsDisplayIndices
       {
@@ -429,18 +436,21 @@ namespace mrHelper.App.Helpers
                                          -1);
          set => setStringToIntDictionary(ListViewFoundMergeRequestsDisplayIndicesKeyName, value);
       }
+      public event Action ListViewFoundMergeRequestsDisplayIndicesChanged;
 
       public string ListViewRecentMergeRequestsSortingDirection
       {
          get => getValue(ListViewRecentMergeRequestsSortingDirectionKeyName, ListViewRecentMergeRequestsSortingDirectionDefaultValue);
          set => setValue(ListViewRecentMergeRequestsSortingDirectionKeyName, value);
       }
+      public event Action ListViewRecentMergeRequestsSortingDirectionChanged;
 
       public string ListViewRecentMergeRequestsSortedByColumnName
       {
          get => getValue(ListViewRecentMergeRequestsSortedByColumnNameKeyName, ListViewRecentMergeRequestsSortedByColumnNameDefaultValue);
          set => setValue(ListViewRecentMergeRequestsSortedByColumnNameKeyName, value);
       }
+      public event Action ListViewRecentMergeRequestsSortedByColumnChanged;
 
       public Dictionary<string, int> ListViewRecentMergeRequestsColumnWidths
       {
@@ -450,6 +460,7 @@ namespace mrHelper.App.Helpers
                                          -1);
          set => setStringToIntDictionary(ListViewRecentMergeRequestsColumnWidthsKeyName, value);
       }
+      public event Action ListViewRecentMergeRequestsColumnWidthsChanged;
 
       public Dictionary<string, int> ListViewRecentMergeRequestsDisplayIndices
       {
@@ -459,6 +470,7 @@ namespace mrHelper.App.Helpers
                                          -1);
          set => setStringToIntDictionary(ListViewRecentMergeRequestsDisplayIndicesKeyName, value);
       }
+      public event Action ListViewRecentMergeRequestsDisplayIndicesChanged;
 
       public Dictionary<string, int> RevisionBrowserColumnWidths
       {

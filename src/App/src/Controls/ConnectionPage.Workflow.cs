@@ -396,13 +396,7 @@ namespace mrHelper.App.Controls
          // current mode may have changed during 'await'
          if (getCurrentTabDataCacheType() == EDataCacheType.Live && _isActivePage)
          {
-            bool shouldUseLastSelection = _lastMergeRequestsByHosts.Data.ContainsKey(hostname);
-            string projectname = shouldUseLastSelection ?
-               _lastMergeRequestsByHosts[hostname].ProjectKey.ProjectName : String.Empty;
-            int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostname].IId : 0;
-
-            MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostname, projectname), iid);
-            getListView(EDataCacheType.Live).SelectMergeRequest(mrk);
+            selectLastUsedProjectIfNeeded(hostname);
          }
       }
 

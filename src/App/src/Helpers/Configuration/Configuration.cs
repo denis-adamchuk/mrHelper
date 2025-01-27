@@ -400,6 +400,54 @@ namespace mrHelper.App.Helpers
          {
             ColorModeChanged?.Invoke();
          }
+         else if (keyName == ListViewMergeRequestsSortingDirectionKeyName)
+         {
+            ListViewMergeRequestsSortingDirectionChanged?.Invoke();
+         }
+         else if (keyName == ListViewMergeRequestsSortedByColumnNameKeyName)
+         {
+            ListViewMergeRequestsSortedByColumnChanged?.Invoke();
+         }
+         else if (keyName == ListViewMergeRequestsColumnWidthsKeyName)
+         {
+            ListViewMergeRequestsColumnWidthsChanged?.Invoke();
+         }
+         else if (keyName == ListViewMergeRequestsDisplayIndicesKeyName)
+         {
+            ListViewMergeRequestsDisplayIndicesChanged?.Invoke();
+         }
+         else if (keyName == ListViewFoundMergeRequestsSortingDirectionKeyName)
+         {
+            ListViewFoundMergeRequestsSortingDirectionChanged?.Invoke();
+         }
+         else if (keyName == ListViewFoundMergeRequestsSortedByColumnNameKeyName)
+         {
+            ListViewFoundMergeRequestsSortedByColumnChanged?.Invoke();
+         }
+         else if (keyName == ListViewFoundMergeRequestsColumnWidthsKeyName)
+         {
+            ListViewFoundMergeRequestsColumnWidthsChanged?.Invoke();
+         }
+         else if (keyName == ListViewFoundMergeRequestsDisplayIndicesKeyName)
+         {
+            ListViewFoundMergeRequestsDisplayIndicesChanged?.Invoke();
+         }
+         else if (keyName == ListViewRecentMergeRequestsSortingDirectionKeyName)
+         {
+            ListViewRecentMergeRequestsSortingDirectionChanged?.Invoke();
+         }
+         else if (keyName == ListViewRecentMergeRequestsSortedByColumnNameKeyName)
+         {
+            ListViewRecentMergeRequestsSortedByColumnChanged?.Invoke();
+         }
+         else if (keyName == ListViewRecentMergeRequestsColumnWidthsKeyName)
+         {
+            ListViewRecentMergeRequestsColumnWidthsChanged?.Invoke();
+         }
+         else if (keyName == ListViewRecentMergeRequestsDisplayIndicesKeyName)
+         {
+            ListViewRecentMergeRequestsDisplayIndicesChanged?.Invoke();
+         }
       }
 
       private readonly Configuration _config;

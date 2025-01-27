@@ -207,7 +207,7 @@ namespace mrHelper.App.Forms
          this.listViewWorkflow.Groups.AddRange(new System.Windows.Forms.ListViewGroup[] {
             listViewGroup1,
             listViewGroup2});
-         this.listViewWorkflow.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+         this.listViewWorkflow.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
          this.listViewWorkflow.HideSelection = false;
          this.listViewWorkflow.Location = new System.Drawing.Point(6, 67);
          this.listViewWorkflow.MultiSelect = false;

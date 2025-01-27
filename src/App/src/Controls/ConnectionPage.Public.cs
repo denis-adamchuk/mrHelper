@@ -34,14 +34,11 @@ namespace mrHelper.App.Controls
       internal void Activate()
       {
          _isActivePage = true;
-         switchMode(EDataCacheType.Live);
-         //readFilterFromConfig();
       }
 
       internal void Deactivate()
       {
          _isActivePage = false;
-         switchMode(EDataCacheType.Live); // Switch tab on a page being deactivated back to the default one
       }
 
       internal Task Connect(Func<Exception, bool> exceptionHandler)
@@ -98,15 +95,7 @@ namespace mrHelper.App.Controls
       internal void GoLive()
       {
          selectTab(EDataCacheType.Live);
-
-         string hostname = GetCurrentHostName();
-         bool shouldUseLastSelection = _lastMergeRequestsByHosts.Data.ContainsKey(hostname);
-         string projectname = shouldUseLastSelection ?
-            _lastMergeRequestsByHosts[hostname].ProjectKey.ProjectName : String.Empty;
-         int iid = shouldUseLastSelection ? _lastMergeRequestsByHosts[hostname].IId : 0;
-
-         MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostname, projectname), iid);
-         getListView(EDataCacheType.Live).SelectMergeRequest(mrk);
+         selectLastUsedProjectIfNeeded(GetCurrentHostName());
       }
 
       internal void GoRecent()
@@ -294,9 +283,9 @@ namespace mrHelper.App.Controls
          editTimeOfSelectedMergeRequest();
       }
 
-      internal bool FindMergeRequest(MergeRequestKey mrk)
+      internal void TrySelectMergeRequest(MergeRequestKey mrk)
       {
-         return trySelectMergeRequest(mrk) != SelectionResult.NotFound;
+         trySelectMergeRequest(mrk);
       }
 
       internal ITimeTracker CreateTimeTracker()

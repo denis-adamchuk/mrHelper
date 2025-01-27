@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using mrHelper.CommonControls.Tools;
+using mrHelper.CommonNative;
 
 namespace mrHelper.App.Controls
 {
@@ -50,6 +51,15 @@ namespace mrHelper.App.Controls
             };
             e.Graphics.DrawString(tag.Item1, e.Item.ListView.Font, textBrush, e.Bounds, format);
          }
+      }
+
+      protected override void WndProc(ref Message message)
+      {
+         if (message.Msg == NativeMethods.WM_VSCROLL || message.Msg == NativeMethods.WM_MOUSEWHEEL)
+         {
+            Invalidate();
+         }
+         base.WndProc(ref message);
       }
 
       private int scale(int px) => (int)WinFormsHelpers.ScalePixelsToNewDpi(96, DeviceDpi, px);

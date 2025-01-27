@@ -301,7 +301,7 @@ namespace mrHelper.App.Controls
 
       private void onDataCacheSelectionChanged()
       {
-         forEachListView(listView => listView.DeselectAllListViewItems());
+         onMergeRequestSelectionChanged(getCurrentTabDataCacheType());
       }
 
       private void onMergeRequestSelectionChanged(EDataCacheType mode)
@@ -641,6 +641,8 @@ namespace mrHelper.App.Controls
 
       private void selectTab(EDataCacheType mode)
       {
+         // This function is called from Go*() functions only, which in turn
+         // are synchronized by MainForm with toolbar item state.
          switch (mode)
          {
             case EDataCacheType.Live:
@@ -663,33 +665,54 @@ namespace mrHelper.App.Controls
 
       private bool trySelectMergeRequest(EDataCacheType mode, MergeRequestKey mrk)
       {
-         if (isCached(mode, mrk))
+         void requestMainFormToEmulateModeSelection()
          {
-            switchMode(mode);
-            return getListView(mode).SelectMergeRequest(mrk);
+            // Does nothing if requested mode is already selected.
+            // If it is not, then MainForm.toolStripButton_CheckedChanged() changes toolbar item selection
+            // and calls one of ConnectionPage.Go*() functions which in turn switches a visible tab of the page.
+            switch (mode)
+            {
+               case EDataCacheType.Live:
+                  RequestLive?.Invoke(this);
+                  break;
+
+               case EDataCacheType.Search:
+                  RequestSearch?.Invoke(this);
+                  break;
+
+               case EDataCacheType.Recent:
+                  RequestRecent?.Invoke(this);
+                  break;
+
+               default:
+                  Debug.Assert(false);
+                  break;
+            }
+         }
+
+         if (isCached(mode, mrk) && getListView(mode).CanSelectMergeRequest(mrk))
+         {
+            // By historical reasons, we shall change the mode before selecting MR.
+            requestMainFormToEmulateModeSelection();
+            getListView(mode).SelectMergeRequest(mrk);
+            return true;
          }
          return false;
       }
 
-      private void switchMode(EDataCacheType mode)
+      private void selectLastUsedProjectIfNeeded(string hostname)
       {
-         switch (mode)
+         Debug.Assert(getCurrentTabDataCacheType() == EDataCacheType.Live );
+
+         bool shouldUseLastSelection = _lastMergeRequestsByHosts.Data.ContainsKey(hostname);
+         if (shouldUseLastSelection)
          {
-            case EDataCacheType.Live:
-               RequestLive?.Invoke(this);
-               break;
+            int iid = _lastMergeRequestsByHosts[hostname].IId;
+            string projectname = _lastMergeRequestsByHosts[hostname].ProjectKey.ProjectName;
+            MergeRequestKey mrk = new MergeRequestKey(new ProjectKey(hostname, projectname), iid);
 
-            case EDataCacheType.Search:
-               RequestSearch?.Invoke(this);
-               break;
-
-            case EDataCacheType.Recent:
-               RequestRecent?.Invoke(this);
-               break;
-
-            default:
-               Debug.Assert(false);
-               break;
+            // The following call never changes a tab, because current tab is Live already.
+            trySelectMergeRequest(EDataCacheType.Live, mrk);
          }
       }
 

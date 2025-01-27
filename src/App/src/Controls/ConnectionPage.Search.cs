@@ -97,12 +97,6 @@ namespace mrHelper.App.Controls
 
          bool areResults = getListView(EDataCacheType.Search).Items.Count > 0;
          addOperationRecord(areResults ? "Search has finished" : "Nothing found. Try changing search query.");
-
-         // current mode may have changed during 'await'
-         if (getCurrentTabDataCacheType() == EDataCacheType.Search)
-         {
-            getListView(EDataCacheType.Search).SelectMergeRequest(null);
-         }
       }
 
       private void onRecentDataCacheDisconnected()
@@ -132,12 +126,6 @@ namespace mrHelper.App.Controls
             Trace.TraceInformation("[ConnectionPage] Excluded Merge Requests are no longer in the cache {1}: {0}",
                String.Join(", ", oldExcludedIds), getDataCacheName(getDataCache(EDataCacheType.Recent)));
             toggleMergeRequestsExclusion(EDataCacheType.Recent, oldExcludedIds);
-         }
-
-         // current mode may have changed during 'await'
-         if (getCurrentTabDataCacheType() == EDataCacheType.Recent)
-         {
-            getListView(EDataCacheType.Recent).SelectMergeRequest(null);
          }
 
          setConnectionStatus(EConnectionStateInternal.Connected);

@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Diagnostics;
 using System.Windows.Forms;
 using mrHelper.CommonControls.Tools;
 
@@ -8,6 +9,8 @@ namespace mrHelper.App.Controls
    {
       internal static void DrawGroupHeader(int groupHeaderHeight, DrawListViewSubItemEventArgs e)
       {
+         Debug.Assert(e.Item.ListView.HeaderStyle != System.Windows.Forms.ColumnHeaderStyle.None);
+
          int headerHeight = groupHeaderHeight;
          ListViewHitTestInfo testAboveMe = e.Item.ListView.HitTest(0, e.Bounds.Location.Y - headerHeight);
          if (e.Item.Group != null && (testAboveMe.Item == null || testAboveMe.Item.Group != e.Item.Group))

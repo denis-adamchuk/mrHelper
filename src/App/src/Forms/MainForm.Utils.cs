@@ -179,6 +179,7 @@ namespace mrHelper.App.Forms
          toolStripButtonCancelTimer.Enabled = false;
          toolStripTextBoxTrackedTime.Text = connectionPage?.GetTrackedTimeAsText() ?? DefaultTimeTrackingTextBoxText;
          toolStripButtonStartStopTimer.Image = Properties.Resources.play_100x100;
+         toolStripButtonStartStopTimer.Enabled = connectionPage != null && connectionPage.CanTrackTime();
          pullCustomActionToolBar();
 
          onSummaryColorChanged(getCurrentConnectionPage());
@@ -202,19 +203,13 @@ namespace mrHelper.App.Forms
          {
             return;
          }
-         emulateClickOnHostToolbarButton(_timeTrackingHost);
          findGlobal(_timeTracker.MergeRequest);
       }
 
       private void findGlobal(MergeRequestKey mrk)
       {
-         foreach (var connectionPage in getConnectionPages())
-         {
-            if (connectionPage != null && connectionPage.FindMergeRequest(mrk))
-            {
-               break;
-            }
-         }
+         emulateClickOnHostToolbarButton(mrk.ProjectKey.HostName);
+         getConnectionPage(mrk.ProjectKey.HostName).TrySelectMergeRequest(mrk);
       }
 
       // Diff Tool

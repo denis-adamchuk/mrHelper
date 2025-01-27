@@ -55,7 +55,30 @@ namespace mrHelper.App.Controls
          _hostname = hostname;
          _doesSupportPin = doesSupportPin;
 
-         applySortModeFromConfiguration();
+         if (getIdentity() == Constants.LiveListViewName)
+         {
+            Program.Settings.ListViewMergeRequestsSortingDirectionChanged += onSettingsChanged;
+            Program.Settings.ListViewMergeRequestsSortedByColumnChanged += onSettingsChanged;
+            Program.Settings.ListViewMergeRequestsColumnWidthsChanged += onSettingsChanged;
+            Program.Settings.ListViewMergeRequestsDisplayIndicesChanged += onSettingsChanged;
+         }
+         else if (getIdentity() == Constants.SearchListViewName)
+         {
+            Program.Settings.ListViewFoundMergeRequestsSortingDirectionChanged += onSettingsChanged;
+            Program.Settings.ListViewFoundMergeRequestsSortedByColumnChanged += onSettingsChanged;
+            Program.Settings.ListViewFoundMergeRequestsColumnWidthsChanged += onSettingsChanged;
+            Program.Settings.ListViewFoundMergeRequestsDisplayIndicesChanged += onSettingsChanged;
+         }
+         else if (getIdentity() == Constants.RecentListViewName)
+         {
+            Program.Settings.ListViewRecentMergeRequestsSortingDirectionChanged += onSettingsChanged;
+            Program.Settings.ListViewRecentMergeRequestsSortedByColumnChanged += onSettingsChanged;
+            Program.Settings.ListViewRecentMergeRequestsColumnWidthsChanged += onSettingsChanged;
+            Program.Settings.ListViewRecentMergeRequestsDisplayIndicesChanged += onSettingsChanged;
+         }
+
+         restoreColumns();
+         initializeListViewSorter();
       }
 
       internal void SetDiffStatisticProvider(IDiffStatisticProvider diffStatisticProvider)
@@ -163,23 +186,19 @@ namespace mrHelper.App.Controls
          }
       }
 
-      internal bool SelectMergeRequest(MergeRequestKey? mrk)
+      internal bool CanSelectMergeRequest(MergeRequestKey mrk)
       {
-         if (!mrk.HasValue)
-         {
-            if (Items.Count < 1)
-            {
-               return false;
-            }
+         return getMatchingFilterProjectItems(mrk.ProjectKey).Any(fmk => fmk.MergeRequest.IId == mrk.IId);
+      }
 
-            Items[0].Selected = true;
-            ensureSelectionIsVisible();
-            return true;
-         }
+      internal void SelectMergeRequest(MergeRequestKey mrk)
+      {
+         // It is expected that SelectMergeRequest() is called after successful CanSelectMergeRequest() call only.
+         Debug.Assert(CanSelectMergeRequest(mrk));
 
-         if (isGroupCollapsed(mrk.Value.ProjectKey))
+         if (isGroupCollapsed(mrk.ProjectKey))
          {
-            setGroupCollapsing(mrk.Value.ProjectKey, false);
+            setGroupCollapsing(mrk.ProjectKey, false);
          }
 
          foreach (ListViewItem item in Items)
@@ -190,47 +209,13 @@ namespace mrHelper.App.Controls
             }
 
             FullMergeRequestKey key = (FullMergeRequestKey)(item.Tag);
-            if (mrk.Value.ProjectKey.Equals(key.ProjectKey)
-             && mrk.Value.IId == key.MergeRequest.IId)
+            if (mrk.ProjectKey.Equals(key.ProjectKey) && mrk.IId == key.MergeRequest.IId)
             {
                item.Selected = true;
                ensureSelectionIsVisible();
-               return true;
+               break;
             }
          }
-
-         if (needShowGroups())
-         {
-            // selected an item from the proper group
-            foreach (ListViewGroup group in Groups)
-            {
-               if (mrk.Value.ProjectKey.MatchProject(group.Name) && group.Items.Count > 0)
-               {
-                  group.Items[0].Selected = true;
-                  ensureSelectionIsVisible();
-                  return true;
-               }
-            }
-
-            // select whatever
-            foreach (ListViewGroup group in Groups)
-            {
-               if (group.Items.Count > 0)
-               {
-                  group.Items[0].Selected = true;
-                  ensureSelectionIsVisible();
-                  return true;
-               }
-            }
-         }
-         else if (Items.Count > 0)
-         {
-            Items[0].Selected = true;
-            ensureSelectionIsVisible();
-            return true;
-         }
-
-         return false;
       }
 
       internal void createGroupForProject(ProjectKey projectKey, bool isSortNeeded)
@@ -264,6 +249,11 @@ namespace mrHelper.App.Controls
 
       internal void updateGroups()
       {
+         // This function cannot replace createGroups().
+         // We're creating groups for actual list of merge requests here,
+         // while createGroups() creates groups for the configured list of projects in the configured order,
+         // and must be called in advance.
+
          if (!needShowGroups())
          {
             return;
@@ -539,6 +529,28 @@ namespace mrHelper.App.Controls
 
       protected override void Dispose(bool disposing)
       {
+         if (getIdentity() == Constants.LiveListViewName)
+         {
+            Program.Settings.ListViewMergeRequestsSortingDirectionChanged -= onSettingsChanged;
+            Program.Settings.ListViewMergeRequestsSortedByColumnChanged -= onSettingsChanged;
+            Program.Settings.ListViewMergeRequestsColumnWidthsChanged -= onSettingsChanged;
+            Program.Settings.ListViewMergeRequestsDisplayIndicesChanged -= onSettingsChanged;
+         }
+         else if (getIdentity() == Constants.SearchListViewName)
+         {
+            Program.Settings.ListViewFoundMergeRequestsSortingDirectionChanged -= onSettingsChanged;
+            Program.Settings.ListViewFoundMergeRequestsSortedByColumnChanged -= onSettingsChanged;
+            Program.Settings.ListViewFoundMergeRequestsColumnWidthsChanged -= onSettingsChanged;
+            Program.Settings.ListViewFoundMergeRequestsDisplayIndicesChanged -= onSettingsChanged;
+         }
+         else if (getIdentity() == Constants.RecentListViewName)
+         {
+            Program.Settings.ListViewRecentMergeRequestsSortingDirectionChanged -= onSettingsChanged;
+            Program.Settings.ListViewRecentMergeRequestsSortedByColumnChanged -= onSettingsChanged;
+            Program.Settings.ListViewRecentMergeRequestsColumnWidthsChanged -= onSettingsChanged;
+            Program.Settings.ListViewRecentMergeRequestsDisplayIndicesChanged -= onSettingsChanged;
+         }
+
          _unmuteTimer.Tick -= onUnmuteTimerTick;
          _unmuteTimer.Stop();
          _unmuteTimer.Dispose();
@@ -565,16 +577,6 @@ namespace mrHelper.App.Controls
          finally
          {
             _processingHandleCreated = false;
-         }
-         restoreColumns();
-      }
-
-      protected override void OnVisibleChanged(EventArgs e)
-      {
-         base.OnVisibleChanged(e);
-         if (Visible)
-         {
-            restoreColumns();
          }
       }
 
@@ -865,24 +867,7 @@ namespace mrHelper.App.Controls
                setColumnIndices(indices);
             }
 
-            // This code fixes a bug when MRLV of one host had groups (sorted by Project) and user switched to
-            // MRLV of another host (not sorted by Project). MRLV was still thinking that groups exist and
-            // the behavior was strange.
-            bool anyGroupsCreated = Groups.Count > 0;
-            if (anyGroupsCreated != needShowGroups())
-            {
-               if (needShowGroups())
-               {
-                  createGroups();
-                  // It might still not create groups if there are no projects
-               }
-               else
-               {
-                  Groups.Clear();
-               }
-               Items.Clear();
-               UpdateItems();
-            }
+            synchronizeListViewGroupsWithConfiguration();
          }
          finally
          {
@@ -1525,7 +1510,7 @@ namespace mrHelper.App.Controls
 
       private ProjectKey getGroupProjectKey(ListViewGroup group)
       {
-         return ((ProjectKey)group.Tag);
+         return (ProjectKey)(group.Tag);
       }
 
       private bool isGroupCollapsed(ProjectKey projectKey)
@@ -1569,16 +1554,15 @@ namespace mrHelper.App.Controls
             return;
          }
 
+         int itemCount = getMatchingFilterProjectItems(getGroupProjectKey(group)).Count();
          string action = isGroupCollapsed(group) ? "expand" : "collapse";
-         string groupHeader = String.Format(
-            "{0} -- click to {1} {2} item(s)",
-            group.Name, action, getMatchingFilterProjectItems(getGroupProjectKey(group)).Count());
-         if (groupHeader != group.Header)
+         string groupHeader = String.Format("{0} -- click to {1} {2} item(s)", group.Name, action, itemCount);
+         if (groupHeader != group.Header && itemCount > 0 /* optimization */)
          {
             group.Header = groupHeader;
          }
       }
-
+ 
       private void muteMergeRequestFor(FullMergeRequestKey fmk, TimeSpan timeSpan)
       {
          if (!isMuteSupported())
@@ -1645,6 +1629,16 @@ namespace mrHelper.App.Controls
          {
             onContentChanged();
          }
+      }
+
+      private void onSettingsChanged()
+      {
+         if (Visible)
+         {
+            // Visible page initiates change of settings, other receive notifications.
+            return;
+         }
+         restoreColumns();
       }
 
       private bool cleanUpMutedMergeRequests()
@@ -1837,7 +1831,6 @@ namespace mrHelper.App.Controls
 
       private void setSortedByColumn(ColumnType columnType)
       {
-         bool prevNeedShowGroups = needShowGroups();
          if (getSortedByColumn() == columnType)
          {
             SortingDirection sortingDirection = getSortingDirection();
@@ -1851,26 +1844,49 @@ namespace mrHelper.App.Controls
             ConfigurationHelper.SetSortedByColumn(Program.Settings, columnHeader.Text, getIdentity());
          }
 
-         if (prevNeedShowGroups != needShowGroups())
+         synchronizeListViewGroupsWithConfiguration();
+         Invalidate(true);
+      }
+
+      private void synchronizeListViewGroupsWithConfiguration()
+      {
+         bool anyGroupsCreated = Groups.Count > 0;
+         if (anyGroupsCreated != needShowGroups())
          {
             if (needShowGroups())
             {
+               // Although groups are created for all merge requests in UpdateItems(),
+               // we need to call createGroups() here to create groups configured for
+               // the host in the configured order.
                createGroups();
             }
             else
             {
                Groups.Clear();
             }
-            Items.Clear();
+
+            // save current selection
+            FullMergeRequestKey? selected = GetSelectedMergeRequest();
+
+            DisableListView(); // drops the selection and deletes all items
             UpdateItems();
+
+            // try to restore selection
+            if (selected != null)
+            {
+               MergeRequestKey mrk = new MergeRequestKey(selected.Value.ProjectKey, selected.Value.MergeRequest.IId);
+               if (CanSelectMergeRequest(mrk))
+               {
+                  SelectMergeRequest(mrk);
+               }
+            }
          }
 
-         applySortModeFromConfiguration();
+         initializeListViewSorter();
          ensureSelectionIsVisible();
-         Invalidate(true);
       }
 
-      private void applySortModeFromConfiguration()
+      private void initializeListViewSorter()
       {
          var comparisonFunction = getComparisonFunction(getSortedByColumn(), getSortingDirection());
          ListViewItemSorter = new ListViewItemComparer(comparisonFunction);
@@ -1878,6 +1894,7 @@ namespace mrHelper.App.Controls
 
       private void createGroups()
       {
+         // Creates groups for all configured projects in the configured order.
          Debug.Assert(needShowGroups());
          IEnumerable<string> projectNames = ConfigurationHelper.GetEnabledProjects(_hostname, Program.Settings);
          foreach (string projectName in projectNames)

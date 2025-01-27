@@ -440,28 +440,16 @@ namespace mrHelper.App.Forms
 
       private void ConnectionPage_RequestLive(ConnectionPage connectionPage)
       {
-         if (connectionPage != getCurrentConnectionPage())
-         {
-            emulateClickOnHostToolbarButton(connectionPage.GetCurrentHostName());
-         }
          toolStripButtonLive.PerformClick();
       }
 
       private void ConnectionPage_RequestRecent(ConnectionPage connectionPage)
       {
-         if (connectionPage != getCurrentConnectionPage())
-         {
-            emulateClickOnHostToolbarButton(connectionPage.GetCurrentHostName());
-         }
          toolStripButtonRecent.PerformClick();
       }
 
       private void ConnectionPage_RequestSearch(ConnectionPage connectionPage)
       {
-         if (connectionPage != getCurrentConnectionPage())
-         {
-            emulateClickOnHostToolbarButton(connectionPage.GetCurrentHostName());
-         }
          toolStripButtonSearch.PerformClick();
       }
 
@@ -482,22 +470,7 @@ namespace mrHelper.App.Forms
             new ToolStripButton[] { toolStripButtonLive, toolStripButtonRecent, toolStripButtonSearch },
             button);
          button.CheckOnClick = false;
-         if (button == toolStripButtonLive)
-         {
-            getCurrentConnectionPage()?.GoLive();
-         }
-         else if (button == toolStripButtonRecent)
-         {
-            getCurrentConnectionPage()?.GoRecent();
-         }
-         else if (button == toolStripButtonSearch)
-         {
-            getCurrentConnectionPage()?.GoSearch();
-         }
-         else
-         {
-            Debug.Assert(false);
-         }
+         synchronizePageWithSelectedMode();
       }
 
       private void toolStripButtonDiffTool_Click(object sender, System.EventArgs e)

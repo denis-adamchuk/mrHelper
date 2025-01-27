@@ -357,7 +357,7 @@ namespace mrHelper.App.Controls
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
             WrongActionConfirmationForm.ActionType actionType = WrongActionConfirmationForm.ActionType.AddComment;
-            if (_timeTrackerHolder != null && !isTrackingTime(mrk) &&
+            if (_timeTrackerHolder != null && _timeTrackerHolder.GetTimeTracker() != null && !isTrackingTime(mrk) &&
                 !WrongActionConfirmationForm.Show(this, actionType, () => _findGlobal(_timeTrackerHolder.GetTimeTracker().MergeRequest)))
             {
                return;
@@ -380,7 +380,7 @@ namespace mrHelper.App.Controls
             MergeRequestKey mrk = getMergeRequestKey(null).Value;
 
             WrongActionConfirmationForm.ActionType actionType = WrongActionConfirmationForm.ActionType.CreateDiscussion;
-            if (_timeTrackerHolder != null && !isTrackingTime(mrk) &&
+            if (_timeTrackerHolder != null && _timeTrackerHolder.GetTimeTracker() != null && !isTrackingTime(mrk) &&
                 !WrongActionConfirmationForm.Show(this, actionType, () => _findGlobal(_timeTrackerHolder.GetTimeTracker().MergeRequest)))
             {
                return;

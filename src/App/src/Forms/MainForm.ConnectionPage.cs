@@ -169,6 +169,10 @@ namespace mrHelper.App.Forms
 
       private void emulateClickOnHostToolbarButton(string hostname)
       {
+         // This function is called when we need to switch a host programatically.
+         // PerformClick() calls onHostToolbarButtonClicked() which in turn calls
+         // one of Go*() function. Some Go*() functions select a merge request in the list view,
+         // but host is never changed from ConnectionPage, only from MainForm.
          getHostToolbarButtons().SingleOrDefault(item => item.HostName == hostname)?.PerformClick();
       }
 
@@ -207,6 +211,10 @@ namespace mrHelper.App.Forms
          _defaultHostName = hostname;
 
          getCurrentConnectionPage()?.Activate();
+
+         // Host change calls a Go*() function here, what causes a switch of a visible tab inside a connection page.
+         synchronizePageWithSelectedMode();
+
          if (WindowState != FormWindowState.Minimized)
          {
             getCurrentConnectionPage()?.RestoreSplitterDistance();
@@ -676,6 +684,27 @@ namespace mrHelper.App.Forms
 
          MessageBox.Show(msgBoxMessage, "Warning", MessageBoxButtons.OK,
             MessageBoxIcon.Exclamation, MessageBoxDefaultButton.Button1, MessageBoxOptions.ServiceNotification);
+      }
+
+      private void synchronizePageWithSelectedMode()
+      {
+         // GoLive -> selectTab(Live) -> tabControlMode_SelectedIndexChanged() -> onDataCacheSelectionChanged
+         if (toolStripButtonLive.Checked)
+         {
+            getCurrentConnectionPage()?.GoLive();
+         }
+         else if (toolStripButtonRecent.Checked)
+         {
+            getCurrentConnectionPage()?.GoRecent();
+         }
+         else if (toolStripButtonSearch.Checked)
+         {
+            getCurrentConnectionPage()?.GoSearch();
+         }
+         else
+         {
+            Debug.Assert(false);
+         }
       }
    }
 }
