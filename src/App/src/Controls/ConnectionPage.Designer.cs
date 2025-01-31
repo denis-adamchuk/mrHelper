@@ -194,17 +194,14 @@ namespace mrHelper.App.Controls
          // 
          // tabControlMode
          // 
-         this.tabControlMode.Appearance = System.Windows.Forms.TabAppearance.FlatButtons;
          this.tabControlMode.Controls.Add(this.tabPageLive);
          this.tabControlMode.Controls.Add(this.tabPageSearch);
          this.tabControlMode.Controls.Add(this.tabPageRecent);
          this.tabControlMode.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.tabControlMode.ItemSize = new System.Drawing.Size(0, 1);
          this.tabControlMode.Location = new System.Drawing.Point(0, 0);
          this.tabControlMode.Name = "tabControlMode";
          this.tabControlMode.SelectedIndex = 0;
          this.tabControlMode.Size = new System.Drawing.Size(853, 631);
-         this.tabControlMode.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
          this.tabControlMode.TabIndex = 0;
          this.tabControlMode.SelectedIndexChanged += new System.EventHandler(this.tabControlMode_SelectedIndexChanged);
          // 

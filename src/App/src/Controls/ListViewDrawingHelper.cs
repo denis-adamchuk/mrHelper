@@ -9,16 +9,32 @@ namespace mrHelper.App.Controls
    {
       internal static void DrawGroupHeader(int groupHeaderHeight, DrawListViewSubItemEventArgs e)
       {
+         if (e.Item.Group == null)
+         {
+            return;
+         }
+
          Debug.Assert(e.Item.ListView.HeaderStyle != System.Windows.Forms.ColumnHeaderStyle.None);
 
          int headerHeight = groupHeaderHeight;
          ListViewHitTestInfo testAboveMe = e.Item.ListView.HitTest(0, e.Bounds.Location.Y - headerHeight);
-         if (e.Item.Group != null && (testAboveMe.Item == null || testAboveMe.Item.Group != e.Item.Group))
+         if (testAboveMe.Item == null || testAboveMe.Item.Group != e.Item.Group)
          {
             Rectangle headerBounds = e.Item.Bounds;
             headerHeight += 1; // Group header starts 1 pixel above the e.Item.Bounds.Y - headerHeight
             headerBounds.Y -= headerHeight;
             headerBounds.Height = headerHeight;
+
+            {
+               // This is needed to override artifacts of default Windows painting in
+               // an area which is in between the end of LV content and the right LV border
+               Color groupHeaderUnderlyingBackgroundColor =
+                  ThemeSupport.StockColors.GetThemeColors().ListViewBackground;
+               Rectangle headerWiderBounds = new Rectangle(
+                  headerBounds.X, headerBounds.Y, e.Item.ListView.ClientRectangle.Width - headerBounds.X, headerBounds.Height);
+               WinFormsHelpers.FillRectangle(e, headerWiderBounds, groupHeaderUnderlyingBackgroundColor);
+            }
+
             Color groupHeaderColor = ThemeSupport.StockColors.GetThemeColors().ListViewGroupHeaderBackground;
             WinFormsHelpers.FillRectangle(e, headerBounds, groupHeaderColor);
 

@@ -227,14 +227,11 @@ namespace mrHelper.App.Forms
          // 
          // tabControlHost
          // 
-         this.tabControlHost.Appearance = System.Windows.Forms.TabAppearance.FlatButtons;
          this.tabControlHost.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.tabControlHost.ItemSize = new System.Drawing.Size(0, 1);
          this.tabControlHost.Location = new System.Drawing.Point(0, 0);
          this.tabControlHost.Name = "tabControlHost";
          this.tabControlHost.SelectedIndex = 0;
          this.tabControlHost.Size = new System.Drawing.Size(1050, 377);
-         this.tabControlHost.SizeMode = System.Windows.Forms.TabSizeMode.Fixed;
          this.tabControlHost.TabIndex = 0;
          this.tabControlHost.SelectedIndexChanged += new System.EventHandler(this.tabControlHost_SelectedIndexChanged);
          // 

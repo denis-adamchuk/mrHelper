@@ -11,6 +11,7 @@ using System.Diagnostics;
 using mrHelper.Common.Exceptions;
 using mrHelper.App.Helpers;
 using mrHelper.Common.Constants;
+using mrHelper.CommonControls.Tools;
 
 // Code below was inspired and is mostly (75%) copied from 
 // https://github.com/BlueMystical/Dark-Mode-Forms/blob/main/SourceFiles/DarkModeCS.cs
@@ -30,29 +31,28 @@ namespace ThemeSupport
          if (mode == DisplayMode.DarkMode)
          {
             Background = Color.FromArgb(26, 26, 26);
-            BackgroundDark = ControlPaint.Dark(Background);
-            Surface = Color.FromArgb(48, 48, 48);
+            BackgroundDark = Color.FromArgb(8, 8, 8);
+            Surface = Color.FromArgb(43, 43, 43);
             Control = Color.FromArgb(39, 39, 39);
-            ControlLight = Surface; // In ClearMode they are equal too
+            ControlLight = Color.FromArgb(43, 43, 43);
             ControlLightLight = Color.FromArgb(55, 55, 55);
-            ControlDark = Color.FromArgb(36, 36, 36);
+            ControlDark = Color.FromArgb(30, 30, 30);
             TextActive = Color.FromArgb(203, 216, 216);
-            TextInactive =  Color.FromArgb(95, 95, 95);
+            TextInactive =  Color.FromArgb(140, 140, 140);
             TextInSelection = Color.FromArgb(203, 216, 216);
-            ButtonBorder = Color.LightBlue;
+            ButtonBorder = Color.FromArgb(173, 216, 230);
          }
          else
          {
-            /// Windows System Colors for UI components following Google Material Design concepts.
             Background = SystemColors.Control;
-            BackgroundDark = SystemColors.ControlDark;
-            Surface = SystemColors.ControlLightLight;
-            Control = SystemColors.ButtonFace;
-            ControlLight = SystemColors.ButtonHighlight;
-            ControlLightLight = SystemColors.ControlLightLight;
+            BackgroundDark = SystemColors.ControlLight;
+            Surface = SystemColors.Control;
+            Control = SystemColors.ButtonHighlight;
+            ControlLight = SystemColors.ControlLightLight;
+            ControlLightLight = SystemColors.ControlLight;
             ControlDark = SystemColors.ControlLight;
             TextActive = SystemColors.ControlText;
-            TextInactive = SystemColors.GrayText;
+            TextInactive = Color.DarkGray;
             TextInSelection = SystemColors.HighlightText;
             ButtonBorder = Color.DarkBlue;
          }
@@ -97,6 +97,8 @@ namespace ThemeSupport
       public OSThemeColors OSThemeColors { get; }
 
       public Color SelectionBackground = Color.FromArgb(0, 120, 215);
+
+      public Color ListViewBackground => OSThemeColors.Control;
 
       public Color TooltipBackground => OSThemeColors.Control;
 
@@ -351,24 +353,118 @@ namespace ThemeSupport
       /// </summary>
       private static readonly ControlStatusStorage controlStatusStorage = new ControlStatusStorage();
 
-      /// <summary>
-      /// stores the event handler reference in order to prevent its uncontrolled multiple addition
-      /// </summary>
-      private static ControlEventHandler ownerFormControlAdded;
-
-      /// <summary>
-      /// stores the event handler reference in order to prevent its uncontrolled multiple addition
-      /// </summary>
-      private static EventHandler controlHandleCreated;
-
-      /// <summary>
-      /// stores the event handler reference in order to prevent its uncontrolled multiple addition
-      /// </summary>
-      private static ControlEventHandler controlControlAdded;
-
       #endregion
 
       #region Private Methods
+
+      private void onHandleCreated(object sender, EventArgs e)
+      {
+         applySystemDarkTheme((Control)sender, getCurrentDisplayMode() == DisplayMode.DarkMode);
+      }
+
+      private void onControlAdded(object sender, ControlEventArgs e)
+      {
+         applyThemeToControl(e.Control);
+      }
+
+      private void onOwnerFormControlAdded(object sender, ControlEventArgs e)
+      {
+         applyThemeToControl(e.Control);
+      }
+
+      private void onScaledTextPaint(object sender, PaintEventArgs e)
+      {
+         Control control = (Control)sender;
+         if (!control.Enabled)
+         {
+            // The values found experimentally and tested on the scales 100%, 125%, 150%, 200%
+            // TODO This looks bad on scale 175% in Light theme.
+            // Original Dark-Mode-CS uses 16/0.
+            double horzOffsetPx = 15.2;
+            double vertOffsetPx = 1;
+            TextRenderer.DrawText(e.Graphics, control.Text, control.Font,
+               new Point(scaleUp(horzOffsetPx, control), scaleDn(vertOffsetPx, control)), _OSColors.TextInactive);
+         }
+      }
+
+      private void onButtonPaint(object sender, PaintEventArgs e)
+      {
+         Button btn = (Button)sender;
+         if (!btn.Enabled)
+         {
+            TextFormatFlags flags = 
+               TextFormatFlags.HorizontalCenter |
+               TextFormatFlags.VerticalCenter |
+               TextFormatFlags.WordBreak;
+            TextRenderer.DrawText(e.Graphics, btn.Text, btn.Font, e.ClipRectangle, _OSColors.TextInactive, flags);
+         }
+      }
+
+      private void onTabControlDrawItem(object sender, DrawItemEventArgs e)
+      {
+         TabControl tab = (TabControl)sender;
+
+         //Draw the background of the main control
+         using (SolidBrush backColor = new SolidBrush(tab.Parent.BackColor))
+         {
+            e.Graphics.FillRectangle(backColor, tab.ClientRectangle);
+         }
+
+         using (Brush tabBack = new SolidBrush(_OSColors.ControlDark))
+         {
+            for (int iTab = 0; iTab < tab.TabPages.Count; iTab++)
+            {
+               TabPage tabPage = tab.TabPages[iTab];
+               tabPage.BackColor = _OSColors.Surface;
+               tabPage.BorderStyle = BorderStyle.FixedSingle;
+               tabPage.ControlAdded -= onControlAdded;
+               tabPage.ControlAdded += onControlAdded;
+
+               bool IsSelected = (tab.SelectedIndex == iTab);
+               if (IsSelected)
+               {
+                  e.Graphics.FillRectangle(tabBack, e.Bounds);
+                  TextRenderer.DrawText(e.Graphics, tabPage.Text, tabPage.Font, e.Bounds,
+                     _OSColors.TextActive);
+               }
+               else
+               {
+                  TextRenderer.DrawText(e.Graphics, tabPage.Text, tabPage.Font,
+                     tab.GetTabRect(iTab), _OSColors.TextActive);
+               }
+            }
+         }
+      }
+
+      private void onListViewDrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
+      {
+         using (SolidBrush backBrush = new SolidBrush(StockColors.GetThemeColors().ListViewColumnHeaderBackground))
+         {
+            using (SolidBrush foreBrush = new SolidBrush(_OSColors.TextActive))
+            {
+               using (var sf = new StringFormat())
+               {
+                  ListView listView = (ListView)sender;
+                  sf.Alignment = StringAlignment.Center;
+                  e.Graphics.FillRectangle(backBrush, e.Bounds);
+                  e.Graphics.DrawString(e.Header.Text, listView.Font, foreBrush, e.Bounds, sf);
+               }
+            }
+         }
+      }
+
+      private void onListViewDrawSubItem(object sender, DrawListViewSubItemEventArgs e)
+      {
+         Color backgroundColor = e.Item.Selected ?
+            StockColors.GetThemeColors().SelectionBackground : StockColors.GetThemeColors().ListViewBackground;
+         WinFormsHelpers.FillRectangle(e, e.Bounds, backgroundColor);
+
+         Color textColor = e.Item.Selected ? _OSColors.TextInSelection : _OSColors.TextActive;
+         using (Brush textBrush = new SolidBrush(textColor))
+         {
+            e.Graphics.DrawString(e.SubItem.Text, e.Item.ListView.Font, textBrush, e.Bounds);
+         }
+      }
 
       /// <summary>Apply the Theme into the Window and all its controls.</summary>
       /// <param name="pIsDarkMode">'true': apply Dark Mode, 'false': apply Clear Mode</param>
@@ -392,16 +488,8 @@ namespace ThemeSupport
                   {
                      applyThemeToControl(_control);
                   }
-
-                  if (ownerFormControlAdded == null)
-                  {
-                     ownerFormControlAdded = (object sender, ControlEventArgs e) =>
-                     {
-                        applyThemeToControl(e.Control);
-                     };
-                  }
-                  _ownerForm.ControlAdded -= ownerFormControlAdded; //prevent uncontrolled multiple addition
-                  _ownerForm.ControlAdded += ownerFormControlAdded;
+                  _ownerForm.ControlAdded -= onOwnerFormControlAdded; //prevent uncontrolled multiple addition
+                  _ownerForm.ControlAdded += onOwnerFormControlAdded;
                }
             }
          }
@@ -443,19 +531,11 @@ namespace ThemeSupport
          BorderStyle BStyle = (isDarkMode ? BorderStyle.FixedSingle : BorderStyle.Fixed3D);
          FlatStyle FStyle = (isDarkMode ? FlatStyle.Flat : FlatStyle.Standard);
 
-         if (controlHandleCreated == null) controlHandleCreated = (object sender, EventArgs e) =>
-         {
-            applySystemDarkTheme((Control)sender, getCurrentDisplayMode() == DisplayMode.DarkMode);
-         };
-         control.HandleCreated -= controlHandleCreated; //prevent uncontrolled multiple addition
-         control.HandleCreated += controlHandleCreated;
+         control.HandleCreated -= onHandleCreated; //prevent uncontrolled multiple addition
+         control.HandleCreated += onHandleCreated;
 
-         if (controlControlAdded == null) controlControlAdded = (object sender, ControlEventArgs e) =>
-         {
-            applyThemeToControl(e.Control);
-         };
-         control.ControlAdded -= controlControlAdded; //prevent uncontrolled multiple addition
-         control.ControlAdded += controlControlAdded;
+         control.ControlAdded -= onControlAdded; //prevent uncontrolled multiple addition
+         control.ControlAdded += onControlAdded;
 
          string Mode = isDarkMode ? "DarkMode_Explorer" : "ClearMode_Explorer";
          SetWindowTheme(control.Handle, Mode, null); //<- Attempts to apply Dark Mode using Win32 API if available.
@@ -498,27 +578,10 @@ namespace ThemeSupport
             linkLabel.LinkColor = StockColors.GetThemeColors().LinkTextColor;
             linkLabel.BackColor = Color.Transparent;
          }
-         else if (control is Label lbl)
+         else if (control is Label)
          {
             control.GetType().GetProperty("BackColor")?.SetValue(control, control.Parent.BackColor);
             control.GetType().GetProperty("BorderStyle")?.SetValue(control, BorderStyle.None);
-            control.Paint += (object sender, PaintEventArgs e) =>
-            {
-               if (control.Enabled == false && isDarkMode)
-               {
-                  e.Graphics.Clear(control.Parent.BackColor);
-                  e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
-
-                  using (Brush B = new SolidBrush(control.ForeColor))
-                  {
-                     //StringFormat sf = lbl.CreateStringFormat();
-                     MethodInfo mi = lbl.GetType().GetMethod("CreateStringFormat", BindingFlags.NonPublic | BindingFlags.Instance);
-                     StringFormat sf = mi.Invoke(lbl, new object[] { }) as StringFormat;
-
-                     e.Graphics.DrawString(lbl.Text, lbl.Font, B, new System.Drawing.PointF(1, 0), sf);
-                  }
-               }
-            };
          }
          else if (control is NumericUpDown)
          {
@@ -527,12 +590,14 @@ namespace ThemeSupport
          }
          else if (control is Button)
          {
-            var button = control as Button;
+            Button button = control as Button;
             button.FlatStyle = isDarkMode ? FlatStyle.Flat : FlatStyle.Standard;
             button.FlatAppearance.CheckedBackColor = _OSColors.ButtonBorder;
             button.BackColor = _OSColors.Control;
             button.FlatAppearance.BorderColor = (_ownerForm.AcceptButton == button) ?
               _OSColors.ButtonBorder : _OSColors.Control;
+            control.Paint -= onButtonPaint;
+            control.Paint += onButtonPaint;
          }
          else if (control is ComboBox comboBox)
          {
@@ -560,17 +625,6 @@ namespace ThemeSupport
          {
             control.GetType().GetProperty("BackColor")?.SetValue(control, control.Parent.BackColor);
             control.GetType().GetProperty("ForeColor")?.SetValue(control, _OSColors.TextActive);
-            control.Paint += (object sender, PaintEventArgs e) =>
-            {
-               if (control.Enabled == false && isDarkMode)
-               {
-                  var radio = (sender as GroupBox);
-                  Brush B = new SolidBrush(control.ForeColor);
-
-                  e.Graphics.DrawString(radio.Text, radio.Font,
-                    B, new System.Drawing.PointF(6, 0));
-               }
-            };
          }
          else if (control is TableLayoutPanel)
          {
@@ -581,44 +635,13 @@ namespace ThemeSupport
          else if (control is TabControl)
          {
             var tab = control as TabControl;
-            tab.Appearance = TabAppearance.Normal;
-            tab.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
-            tab.DrawItem += (object sender, DrawItemEventArgs e) =>
+            if (tab.DrawMode != TabDrawMode.OwnerDrawFixed)
             {
-               //Draw the background of the main control
-               using (SolidBrush backColor = new SolidBrush(tab.Parent.BackColor))
-               {
-                  e.Graphics.FillRectangle(backColor, tab.ClientRectangle);
-               }
-
-               using (Brush tabBack = new SolidBrush(_OSColors.Surface))
-               {
-                  for (int i = 0; i < tab.TabPages.Count; i++)
-                  {
-                     TabPage tabPage = tab.TabPages[i];
-                     tabPage.BackColor = _OSColors.Surface;
-                     tabPage.BorderStyle = BorderStyle.FixedSingle;
-                     tabPage.ControlAdded += (object _s, ControlEventArgs _e) =>
-                     {
-                        applyThemeToControl(_e.Control);
-                     };
-
-                     var tBounds = e.Bounds;
-                     //tBounds.Inflate(100, 100);
-
-                     bool IsSelected = (tab.SelectedIndex == i);
-                     if (IsSelected)
-                     {
-                        e.Graphics.FillRectangle(tabBack, tBounds);
-                        TextRenderer.DrawText(e.Graphics, tabPage.Text, tabPage.Font, e.Bounds, _OSColors.TextActive);
-                     }
-                     else
-                     {
-                        TextRenderer.DrawText(e.Graphics, tabPage.Text, tabPage.Font, tab.GetTabRect(i), _OSColors.TextInactive);
-                     }
-                  }
-               }
-            };
+               tab.Appearance = TabAppearance.Normal;
+               tab.DrawMode = TabDrawMode.OwnerDrawFixed;
+               tab.DrawItem -= onTabControlDrawItem;
+               tab.DrawItem += onTabControlDrawItem;
+            }
          }
          else if (control is PictureBox)
          {
@@ -629,34 +652,16 @@ namespace ThemeSupport
          else if (control is CheckBox)
          {
             control.GetType().GetProperty("BackColor")?.SetValue(control, control.Parent.BackColor);
-            control.ForeColor = control.Enabled ? _OSColors.TextActive : _OSColors.TextInactive;
-            control.Paint += (object sender, PaintEventArgs e) =>
-            {
-               if (control.Enabled == false && isDarkMode)
-               {
-                  var radio = (sender as CheckBox);
-                  Brush B = new SolidBrush(control.ForeColor);
-
-                  e.Graphics.DrawString(radio.Text, radio.Font,
-                    B, new System.Drawing.PointF(16, 0));
-               }
-            };
+            control.ForeColor = _OSColors.TextActive;
+            control.Paint -= onScaledTextPaint;
+            control.Paint += onScaledTextPaint;
          }
          else if (control is RadioButton)
          {
             control.GetType().GetProperty("BackColor")?.SetValue(control, control.Parent.BackColor);
-            control.ForeColor = control.Enabled ? _OSColors.TextActive : _OSColors.TextInactive;
-            control.Paint += (object sender, PaintEventArgs e) =>
-            {
-               if (control.Enabled == false && isDarkMode)
-               {
-                  var radio = (sender as RadioButton);
-                  Brush B = new SolidBrush(control.ForeColor);
-
-                  e.Graphics.DrawString(radio.Text, radio.Font,
-                    B, new System.Drawing.PointF(16, 0));
-               }
-            };
+            control.ForeColor = _OSColors.TextActive;
+            control.Paint -= onScaledTextPaint;
+            control.Paint += onScaledTextPaint;
          }
          else if (control is MenuStrip)
          {
@@ -710,35 +715,10 @@ namespace ThemeSupport
             if (lView.View == View.Details && !lView.OwnerDraw)
             {
                lView.OwnerDraw = true;
-               lView.DrawColumnHeader += (object sender, DrawListViewColumnHeaderEventArgs e) =>
-               {
-                  using (SolidBrush backBrush = new SolidBrush(StockColors.GetThemeColors().ListViewColumnHeaderBackground))
-                  {
-                     using (SolidBrush foreBrush = new SolidBrush(_OSColors.TextActive))
-                     {
-                        using (var sf = new StringFormat())
-                        {
-                           sf.Alignment = StringAlignment.Center;
-                           e.Graphics.FillRectangle(backBrush, e.Bounds);
-                           e.Graphics.DrawString(e.Header.Text, lView.Font, foreBrush, e.Bounds, sf);
-                        }
-                     }
-                  }
-
-                  e.DrawDefault = false;
-               };
-               lView.DrawSubItem += (sender, e) =>
-               {
-                  Color backgroundColor = e.Item.Selected ?
-                     StockColors.GetThemeColors().SelectionBackground : _OSColors.Control;
-                  mrHelper.CommonControls.Tools.WinFormsHelpers.FillRectangle(e, e.Bounds, backgroundColor);
-
-                  Color textColor = e.Item.Selected ? _OSColors.TextInSelection : _OSColors.TextActive;
-                  using (Brush textBrush = new SolidBrush(textColor))
-                  {
-                     e.Graphics.DrawString(e.SubItem.Text, e.Item.ListView.Font, textBrush, e.Bounds);
-                  }
-               };
+               lView.DrawColumnHeader -= onListViewDrawColumnHeader;
+               lView.DrawColumnHeader += onListViewDrawColumnHeader;
+               lView.DrawSubItem -= onListViewDrawSubItem;
+               lView.DrawSubItem += onListViewDrawSubItem;
             }
          }
          else if (control is TreeView)
@@ -747,7 +727,9 @@ namespace ThemeSupport
          }
 
          if (control.ContextMenuStrip != null)
+         {
             applyThemeToControl(control.ContextMenuStrip);
+         }
 
          foreach (Control childControl in control.Controls)
          {
@@ -855,6 +837,15 @@ namespace ThemeSupport
             }
          }
       }
+      private static int scaleUp(double px, Control control)
+      {
+         return (int)Math.Ceiling(WinFormsHelpers.ScalePixelsToNewDpi(96, control.DeviceDpi, px));
+      }
+
+      private static int scaleDn(double px, Control control)
+      {
+         return (int)Math.Floor(WinFormsHelpers.ScalePixelsToNewDpi(96, control.DeviceDpi, px));
+      }
 
       #endregion Private Methods
 
@@ -886,14 +877,14 @@ namespace ThemeSupport
       // Draws background of the whole ToolBar Or MenuBar
       protected override void OnRenderToolStripBackground(ToolStripRenderEventArgs e)
       {
-         e.ToolStrip.BackColor = MyColors.Control;
+         e.ToolStrip.BackColor = MyColors.Background;
          base.OnRenderToolStripBackground(e);
       }
 
       // Draws background of the whole ToolBar Or MenuBar
       protected override void OnRenderToolStripStatusLabelBackground(ToolStripItemRenderEventArgs e)
       {
-         e.ToolStrip.BackColor = MyColors.Control;
+         e.ToolStrip.BackColor = MyColors.Background;
          base.OnRenderToolStripStatusLabelBackground(e);
       }
 
@@ -902,10 +893,8 @@ namespace ThemeSupport
       {
          Rectangle bounds = new Rectangle(Point.Empty, e.Item.Size);
 
-         Color gradientBegin = MyColors.Control; // Color.FromArgb(203, 225, 252);
-         Color gradientEnd = MyColors.Control;
-
-         Pen BordersPencil = new Pen(MyColors.Control);
+         Color gradientBegin = MyColors.Background;
+         Color gradientEnd = MyColors.Background;
 
          ToolStripButton button = e.Item as ToolStripButton;
          if (button.Pressed || button.Checked)
@@ -920,40 +909,18 @@ namespace ThemeSupport
          }
 
          using (Brush b = new LinearGradientBrush(
-           bounds,
-           gradientBegin,
-           gradientEnd,
-           LinearGradientMode.Vertical))
+            bounds, gradientBegin, gradientEnd, LinearGradientMode.Vertical))
          {
             e.Graphics.FillRectangle(b, bounds);
          }
 
-         e.Graphics.DrawRectangle(
-           BordersPencil,
-           bounds);
-
-         e.Graphics.DrawLine(
-           BordersPencil,
-           bounds.X,
-           bounds.Y,
-           bounds.Width - 1,
-           bounds.Y);
-
-         e.Graphics.DrawLine(
-           BordersPencil,
-           bounds.X,
-           bounds.Y,
-           bounds.X,
-           bounds.Height - 1);
-
-			if (!(button.Owner.GetItemAt(button.Bounds.X, button.Bounds.Bottom + 1) is ToolStripButton))
+         if (button.Pressed || button.Checked || button.Selected)
          {
-				e.Graphics.DrawLine(
-              BordersPencil,
-              bounds.X,
-              bounds.Height - 1,
-              bounds.X + bounds.Width - 1,
-              bounds.Height - 1);
+            using (Pen BordersPencil = new Pen(MyColors.ButtonBorder))
+            {
+               Rectangle b = new Rectangle(bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
+               e.Graphics.DrawRectangle(BordersPencil, b);
+            }
          }
       }
 
@@ -983,14 +950,7 @@ namespace ThemeSupport
       {
          if (e.Item is ToolStripMenuItem)
          {
-            if (e.Item.Enabled)
-            {
-               e.TextColor = MyColors.TextActive;
-            }
-            else
-            {
-               e.TextColor = MyColors.TextInactive;
-            }
+            e.TextColor = e.Item.Enabled ? MyColors.TextActive : MyColors.TextInactive;
          }
          base.OnRenderItemText(e);
       }
@@ -1008,31 +968,28 @@ namespace ThemeSupport
          Graphics g = e.Graphics;
          Rectangle bounds = new Rectangle(Point.Empty, e.Item.Size);
 
-         Color gradientBegin = MyColors.Background; // Color.FromArgb(203, 225, 252);
-         Color gradientEnd = MyColors.Background; // Color.FromArgb(125, 165, 224);
+         Color gradientBegin = MyColors.Background;
+         Color gradientEnd = MyColors.Background;
 
          bool DrawIt = false;
          var _menu = e.Item as ToolStripItem;
          if (_menu.Pressed)
          {
-            gradientBegin = MyColors.ControlLightLight; // Color.FromArgb(254, 128, 62);
-            gradientEnd = MyColors.ControlLightLight; // Color.FromArgb(255, 223, 154);
+            gradientBegin = MyColors.ControlLightLight;
+            gradientEnd = MyColors.ControlLightLight;
             DrawIt = true;
          }
          else if (_menu.Selected)
          {
-            gradientBegin = MyColors.ControlLight;// Color.FromArgb(255, 255, 222);
-            gradientEnd = MyColors.ControlLight; // Color.FromArgb(255, 203, 136);
+            gradientBegin = MyColors.ControlLight;
+            gradientEnd = MyColors.ControlLight;
             DrawIt = true;
          }
 
          if (DrawIt)
          {
             using (Brush b = new LinearGradientBrush(
-            bounds,
-            gradientBegin,
-            gradientEnd,
-            LinearGradientMode.Vertical))
+               bounds, gradientBegin, gradientEnd, LinearGradientMode.Vertical))
             {
                g.FillRectangle(b, bounds);
             }
@@ -1052,17 +1009,17 @@ namespace ThemeSupport
 
       public override Color ImageMarginGradientBegin
       {
-         get { return Colors.Control; }
+         get { return Colors.Background; }
       }
 
       public override Color ImageMarginGradientMiddle
       {
-         get { return Colors.Control; }
+         get { return Colors.Background; }
       }
 
       public override Color ImageMarginGradientEnd
       {
-         get { return Colors.Control; }
+         get { return Colors.Background; }
       }
 
       private OSThemeColors Colors { get; }

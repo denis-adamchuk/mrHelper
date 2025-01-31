@@ -184,6 +184,9 @@ namespace mrHelper.App.Controls
       static private void applyFontAndColors(HtmlPanel htmlPanel)
       {
          htmlPanel.BaseStylesheet = ResourceHelper.ApplyFontSizeAndColorsToCSS(htmlPanel);
+
+         // HtmlPanel shows corrupted content without forcing Text update
+         htmlPanel.Text = htmlPanel.Text;
       }
 
       private static readonly int RedrawTimerInterval = 1000 * 30; // 0.5 minute

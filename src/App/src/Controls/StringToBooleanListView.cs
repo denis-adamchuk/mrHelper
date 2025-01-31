@@ -24,14 +24,16 @@ namespace mrHelper.App.Controls
 
          ListViewDrawingHelper.DrawGroupHeader(GroupHeaderHeight, e);
 
+         Color color = ThemeSupport.StockColors.GetThemeColors().ListViewBackground;
          bool isSelected = e.Item.Selected;
          if (isSelected)
          {
-            Color color = ThemeSupport.StockColors.GetThemeColors().SelectionBackground;
-            using (Brush brush = new SolidBrush(color))
-            {
-               e.Graphics.FillRectangle(brush, e.Bounds);
-            }
+            color = ThemeSupport.StockColors.GetThemeColors().SelectionBackground;
+         }
+
+         using (Brush brush = new SolidBrush(color))
+         {
+            e.Graphics.FillRectangle(brush, e.Bounds);
          }
 
          Color textColor = tag.Item2

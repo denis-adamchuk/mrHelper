@@ -1185,6 +1185,8 @@ namespace mrHelper.App.Controls
          if (newStylesheet != htmlPanel.BaseStylesheet)
          {
             htmlPanel.BaseStylesheet = newStylesheet;
+
+            // HtmlPanel shows corrupted content without forcing Text update
             if (isServiceDiscussionNote(getNoteFromControl(htmlPanel)))
             {
                setServiceDiscussionNoteText(htmlPanel, getNoteFromControl(htmlPanel));

@@ -324,7 +324,7 @@ namespace mrHelper.CommonControls.Tools
             control.ToString(), currentDPI, oldEmSize, newEmSize, designTimeFontSize, designTimeDPI));
       }
 
-      public static double ScalePixelsToNewDpi(int oldDpi, int newDpi, int pixels) => pixels * newDpi / (double)oldDpi;
+      public static double ScalePixelsToNewDpi(int oldDpi, int newDpi, double pixels) => pixels * newDpi / (double)oldDpi;
 
       public static double GetFontSizeInPoints(Control control) => control.Font.SizeInPoints;
 
@@ -367,6 +367,7 @@ namespace mrHelper.CommonControls.Tools
       private static Graphics GetGraphics(DrawItemEventArgs e) => e.Graphics;
       private static Graphics GetGraphics(DrawListViewItemEventArgs e) => e.Graphics;
       private static Graphics GetGraphics(DrawListViewSubItemEventArgs e) => e.Graphics;
+      private static Graphics GetGraphics(DrawListViewColumnHeaderEventArgs e) => e.Graphics;
 
       public static void FillRectangle<T>(T e, Rectangle bounds, Color backColor)
       {

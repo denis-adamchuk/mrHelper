@@ -74,6 +74,7 @@ namespace mrHelper.App.Forms
          _getNewDiscussionDiffContext = getNewDiscussionDiffContext;
          _getDiffContext = getDiffContext;
          _getRelatedDiscussions = getRelatedDiscussions;
+         ColorScheme.Modified += onColorSchemeModified;
 
          NewDiscussionPosition = newDiscussionPosition;
          _needIncludeContextInNewDiscussion = NewDiscussionPosition != null;
@@ -936,6 +937,11 @@ namespace mrHelper.App.Forms
       {
          Debug.Assert(isCurrentNoteNew());
          return _getNewDiscussionDiffContext(scroll(up)).IsValid();
+      }
+
+      private void onColorSchemeModified()
+      {
+         updateControlState();
       }
 
       private static Core.ContextColorProvider getColorProvider()

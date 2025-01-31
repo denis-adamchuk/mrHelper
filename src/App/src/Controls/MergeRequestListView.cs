@@ -754,7 +754,7 @@ namespace mrHelper.App.Controls
          Rectangle bounds = e.Bounds;
          bool isSelected = e.Item.Selected;
          FullMergeRequestKey fmk = (FullMergeRequestKey)(e.Item.Tag);
-         Color defaultColor = Color.Transparent;
+         Color defaultColor = ThemeSupport.StockColors.GetThemeColors().ListViewBackground;
          EColorSchemeItemsKind kind = isMuted(fmk) ? EColorSchemeItemsKind.Muted : EColorSchemeItemsKind.All;
          Color backgroundColor = getMergeRequestColor(fmk, defaultColor, kind);
          Color selectedColor = ThemeSupport.StockColors.GetThemeColors().SelectionBackground;

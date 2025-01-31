@@ -1,4 +1,5 @@
 ﻿using mrHelper.App.Controls;
+using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Forms
 {
@@ -19,6 +20,7 @@ namespace mrHelper.App.Forms
          {
             components.Dispose();
          }
+         ColorScheme.Modified -= onColorSchemeModified;
          base.Dispose(disposing);
       }
 
