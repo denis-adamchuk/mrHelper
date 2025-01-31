@@ -115,8 +115,8 @@ namespace mrHelper.App.Controls
 
          bool isSelected = e.Item.Selected;
          Color backgroundColor = e.ItemIndex % 2 == 1 
-            ? ThemeSupport.StockColors.GetThemeColors().OSThemeColors.ControlLight
-            : ThemeSupport.StockColors.GetThemeColors().OSThemeColors.Control;
+            ? ThemeSupport.StockColors.GetThemeColors().OSThemeColors.Control
+            : ThemeSupport.StockColors.GetThemeColors().OSThemeColors.ControlDark;
          backgroundColor = isSelected ? ThemeSupport.StockColors.GetThemeColors().SelectionBackground : backgroundColor;
          WinFormsHelpers.FillRectangle(e, e.Bounds, backgroundColor);
 

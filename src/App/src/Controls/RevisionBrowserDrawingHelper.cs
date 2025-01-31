@@ -3,7 +3,6 @@ using System.Linq;
 using System.Windows.Forms;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
-using mrHelper.App.Helpers;
 
 namespace mrHelper.App.Controls
 {
@@ -33,10 +32,20 @@ namespace mrHelper.App.Controls
 
       internal static void DrawColumnHeaderBackground(DrawColHeaderBgEventArgs args)
       {
+         Color gridColor = ThemeSupport.StockColors.GetThemeColors().ListViewColumnHeaderGridColor;
+         using (Brush brush = new SolidBrush(gridColor))
+         {
+            // Fill rectangle with dark color
+            args.Graphics.FillRectangle(brush, args.Bounds);
+         }
+
          Color backgroundColor = ThemeSupport.StockColors.GetThemeColors().ListViewColumnHeaderBackground;
          using (Brush brush = new SolidBrush(backgroundColor))
          {
-            args.Graphics.FillRectangle(brush, args.Bounds);
+            // Fill rectangle with lighter color but leave 1px for a "border".
+            // 1px is enough no matter which DPI is used.
+            Rectangle rect = new Rectangle(args.Bounds.X, args.Bounds.Y, args.Bounds.Width - 1 /* px */, args.Bounds.Height);
+            args.Graphics.FillRectangle(brush, rect);
          }
          args.Handled = true;
       }

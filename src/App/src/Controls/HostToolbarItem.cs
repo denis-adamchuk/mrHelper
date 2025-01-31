@@ -50,7 +50,7 @@ namespace mrHelper.App.Controls
          {
             int imageSize = (int)WinFormsHelpers.ScalePixelsToNewDpi(96, deviceDpi, DefaultToolbarImageSize.Width);
             int ellipseSize = (int)(imageSize * 0.70); // imageSize - 30%
-            int padding = (int)WinFormsHelpers.ScalePixelsToNewDpi(96, deviceDpi, 2); // 2px by default
+            int padding = (int)WinFormsHelpers.ScalePixelsToNewDpi(96, deviceDpi, 5); // 5px by default
             Image = WinFormsHelpers.DrawEllipse(imageSize, ellipseSize, padding, _summaryColor.Value);
             TextImageRelation = TextImageRelation.ImageBeforeText;
          }

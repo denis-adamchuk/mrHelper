@@ -76,7 +76,7 @@ namespace mrHelper.App.Forms
          this.restoreToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
          this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
-         this.tabControlHost = new mrHelper.App.Controls.PlainTabControl();
+         this.tabControlHost = new PlainTabControl();
          this.toolStripContainer1 = new System.Windows.Forms.ToolStripContainer();
          this.statusStrip1 = new mrHelper.CommonControls.Controls.StatusStripEx();
          this.labelConnectionStatus = new System.Windows.Forms.ToolStripStatusLabel();

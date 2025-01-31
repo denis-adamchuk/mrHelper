@@ -75,9 +75,6 @@
     <Compile Include="src\Controls\AvatarBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="src\Controls\BackgroundPanel.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="src\Controls\ColorGroupConfigPage.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -184,9 +181,6 @@
     </Compile>
     <Compile Include="src\Controls\MergeRequestListView.cs" />
     <Compile Include="src\Controls\ListViewToolTip.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="src\Controls\PlainTabControl.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="src\Controls\ReplyOnRelatedNotePanel.cs">

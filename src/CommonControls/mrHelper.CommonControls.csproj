@@ -65,6 +65,12 @@
     <Compile Include="src\Controls\ListViewEx.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\MultilineLabel.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="src\Controls\PlainTabControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\PopupWindow.cs">
       <SubType>Component</SubType>
     </Compile>

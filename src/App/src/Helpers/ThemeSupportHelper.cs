@@ -30,13 +30,11 @@ namespace ThemeSupport
       {
          if (mode == DisplayMode.DarkMode)
          {
-            Background = Color.FromArgb(26, 26, 26);
-            BackgroundDark = Color.FromArgb(8, 8, 8);
-            Surface = Color.FromArgb(43, 43, 43);
             Control = Color.FromArgb(39, 39, 39);
-            ControlLight = Color.FromArgb(43, 43, 43);
-            ControlLightLight = Color.FromArgb(55, 55, 55);
             ControlDark = Color.FromArgb(30, 30, 30);
+            Background = Color.FromArgb(26, 26, 26);
+            BackgroundSplit = Color.FromArgb(55, 55, 55);
+
             TextActive = Color.FromArgb(203, 216, 216);
             TextInactive =  Color.FromArgb(140, 140, 140);
             TextInSelection = Color.FromArgb(203, 216, 216);
@@ -44,51 +42,40 @@ namespace ThemeSupport
          }
          else
          {
-            Background = SystemColors.Control;
-            BackgroundDark = SystemColors.ControlLight;
-            Surface = SystemColors.Control;
-            Control = SystemColors.ButtonHighlight;
-            ControlLight = SystemColors.ControlLightLight;
-            ControlLightLight = SystemColors.ControlLight;
-            ControlDark = SystemColors.ControlLight;
-            TextActive = SystemColors.ControlText;
-            TextInactive = Color.DarkGray;
-            TextInSelection = SystemColors.HighlightText;
-            ButtonBorder = Color.DarkBlue;
+            Control = Color.FromArgb(255, 255, 255);
+            ControlDark = Color.FromArgb(237, 237, 237);
+            Background = Color.FromArgb(240, 240, 240);
+            BackgroundSplit = Color.FromArgb(211, 211, 211);
+
+            TextActive = Color.FromArgb(0, 0, 0);
+            TextInactive = Color.FromArgb(169, 169, 169);
+            TextInSelection = Color.FromArgb(255, 255, 255);
+            ButtonBorder = Color.FromArgb(0, 0, 139);
          }
       }
 
-      /// <summary>For the very back of the Window. Also: BackgroundPanel and some UserControls</summary>
+      /// Background of containers, Menu, Toolbar, some UserControls, LV Column Header
       public Color Background { get; }
 
-      /// <summary>For Borders around the Background. Also: ToolStrip separator</summary>
-      public Color BackgroundDark { get; }
+      /// ToolStrip separator, LV Column Header Grid
+      public Color BackgroundSplit { get; }
 
-      /// <summary>For Container (such as Panel) above the Background. Also: LV Column Header</summary>
-      public Color Surface { get; }
-
-      /// <summary>For the background of any Control. Also: Discussions background</summary>
+      /// Background of all controls, Discussions view background, ToolStrip hovering, TextBox background
       public Color Control { get; }
 
-      /// <summary>For Borders of any Control. Also: LV Group Header</summary>
+      /// Tab Control, LV Group Header, ToolStrip selection
       public Color ControlDark { get; }
 
-      /// <summary>For Highlight elements in a Control. Also: ToolStrip hovering, TextBox background</summary>
-      public Color ControlLight { get; }
-
-      /// <summary>For Highlight elements in a Control. Also: ToolStrip selection</summary>
-      public Color ControlLightLight { get; }
-
-      /// <summary>For Main Texts</summary>
+      /// For Main Texts
       public Color TextActive { get; }
 
-      /// <summary>For Inactive Texts</summary>
+      /// For Inactive Texts
       public Color TextInactive { get; }
 
-      /// <summary>For Highlight Texts</summary>
+      /// For Highlight Texts
       public Color TextInSelection { get; }
 
-      /// <summary>Just a border of a selected button</summary>
+      /// Just a border of a selected button
       public Color ButtonBorder { get; }
    }
 
@@ -109,11 +96,11 @@ namespace ThemeSupport
 
       public Color ListViewGroupHeaderTextColor => IsDarkMode ? Color.Cyan : Color.Blue;
 
-      public Color ListViewColumnHeaderBackground => OSThemeColors.Surface;
+      public Color ListViewColumnHeaderBackground => OSThemeColors.Background;
 
       public Color ListViewColumnHeaderTextColor => OSThemeColors.TextActive;
 
-      public Color ListViewColumnHeaderGridColor => OSThemeColors.Background;
+      public Color ListViewColumnHeaderGridColor => OSThemeColors.BackgroundSplit;
 
       public static StockColors GetThemeColors()
       {
@@ -415,7 +402,7 @@ namespace ThemeSupport
             for (int iTab = 0; iTab < tab.TabPages.Count; iTab++)
             {
                TabPage tabPage = tab.TabPages[iTab];
-               tabPage.BackColor = _OSColors.Surface;
+               tabPage.BackColor = _OSColors.Background;
                tabPage.BorderStyle = BorderStyle.FixedSingle;
                tabPage.ControlAdded -= onControlAdded;
                tabPage.ControlAdded += onControlAdded;
@@ -561,17 +548,16 @@ namespace ThemeSupport
             // By default, UserControl has OSColors.Control background.
             control.BackColor = _OSColors.Background;
          }
-         else if (control is mrHelper.App.Controls.BackgroundPanel)
+         else if (control is mrHelper.CommonControls.Controls.MultilineLabel)
          {
-            // Special kind of Panel which inherits Form color
-            control.BackColor = _OSColors.Background;
+            // Emulate Label background
+            control.BackColor = control.Parent.BackColor;
          }
          else if (control is mrHelper.CommonControls.Controls.SmartTextBox ||
                   control is TextBox || control is RichTextBox)
          {
             // White background for ClearMode
-            control.BackColor = _OSColors.ControlLight;
-            //control.GetType().GetProperty("BorderStyle")?.SetValue(control, BStyle);
+            control.BackColor = _OSColors.Control;
          }
          else if (control is LinkLabel linkLabel)
          {
@@ -616,21 +602,14 @@ namespace ThemeSupport
          }
          else if (control is Panel)
          {
-            var panel = control as Panel;
-            // Process the panel within the container
-            panel.BackColor = _OSColors.Surface;
+            Panel panel = control as Panel;
+            panel.BackColor = _OSColors.Background;
             panel.BorderStyle = BorderStyle.None;
          }
          else if (control is GroupBox)
          {
             control.GetType().GetProperty("BackColor")?.SetValue(control, control.Parent.BackColor);
             control.GetType().GetProperty("ForeColor")?.SetValue(control, _OSColors.TextActive);
-         }
-         else if (control is TableLayoutPanel)
-         {
-            control.GetType().GetProperty("BackColor")?.SetValue(control, control.Parent.BackColor);
-            control.GetType().GetProperty("ForeColor")?.SetValue(control, _OSColors.TextInactive);
-            control.GetType().GetProperty("BorderStyle")?.SetValue(control, BorderStyle.None);
          }
          else if (control is TabControl)
          {
@@ -694,21 +673,6 @@ namespace ThemeSupport
             (control as ContextMenuStrip).Opening -= onToolStripDropDownOpening; //just to make sure
             (control as ContextMenuStrip).Opening += onToolStripDropDownOpening;
          }
-         else if (control is MdiClient) //<- empty area of MDI container window
-         {
-            control.GetType().GetProperty("BackColor")?.SetValue(control, _OSColors.Surface);
-         }
-         else if (control is PropertyGrid)
-         {
-            var pGrid = control as PropertyGrid;
-            pGrid.BackColor = _OSColors.Control;
-            pGrid.ViewBackColor = _OSColors.Control;
-            pGrid.LineColor = _OSColors.Surface;
-            pGrid.ViewForeColor = _OSColors.TextActive;
-            pGrid.ViewBorderColor = _OSColors.ControlDark;
-            pGrid.CategoryForeColor = _OSColors.TextActive;
-            pGrid.CategorySplitterColor = _OSColors.ControlLight;
-         }
          else if (control is ListView)
          {
             var lView = control as ListView;
@@ -720,10 +684,6 @@ namespace ThemeSupport
                lView.DrawSubItem -= onListViewDrawSubItem;
                lView.DrawSubItem += onListViewDrawSubItem;
             }
-         }
-         else if (control is TreeView)
-         {
-            control.GetType().GetProperty("BorderStyle")?.SetValue(control, BorderStyle.None);
          }
 
          if (control.ContextMenuStrip != null)
@@ -899,13 +859,13 @@ namespace ThemeSupport
          ToolStripButton button = e.Item as ToolStripButton;
          if (button.Pressed || button.Checked)
          {
-            gradientBegin = MyColors.ControlLightLight;
-            gradientEnd = MyColors.ControlLightLight;
+            gradientBegin = MyColors.ControlDark;
+            gradientEnd = MyColors.ControlDark;
          }
          else if (button.Selected)
          {
-            gradientBegin = MyColors.ControlLight;
-            gradientEnd = MyColors.ControlLight;
+            gradientBegin = MyColors.Control;
+            gradientEnd = MyColors.Control;
          }
 
          using (Brush b = new LinearGradientBrush(
@@ -926,7 +886,7 @@ namespace ThemeSupport
 
       protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
       {
-         using (Brush brush = new SolidBrush(MyColors.BackgroundDark))
+         using (Brush brush = new SolidBrush(MyColors.BackgroundSplit))
          {
             if (e.Vertical)
             {
@@ -975,14 +935,14 @@ namespace ThemeSupport
          var _menu = e.Item as ToolStripItem;
          if (_menu.Pressed)
          {
-            gradientBegin = MyColors.ControlLightLight;
-            gradientEnd = MyColors.ControlLightLight;
+            gradientBegin = MyColors.ControlDark;
+            gradientEnd = MyColors.ControlDark;
             DrawIt = true;
          }
          else if (_menu.Selected)
          {
-            gradientBegin = MyColors.ControlLight;
-            gradientEnd = MyColors.ControlLight;
+            gradientBegin = MyColors.Control;
+            gradientEnd = MyColors.Control;
             DrawIt = true;
          }
 

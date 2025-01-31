@@ -48,7 +48,7 @@ namespace mrHelper.App.Forms
          this.discussionPanel = new mrHelper.App.Controls.DiscussionPanel();
          this.discussionMenu = new mrHelper.App.Controls.DiscussionsFormMenu();
          this.searchPanel = new mrHelper.App.Controls.DiscussionSearchPanel();
-         this.panelHeader = new BackgroundPanel();
+         this.panelHeader = new System.Windows.Forms.Panel();
          this.linkLabelPrevPage = new System.Windows.Forms.LinkLabel();
          this.linkLabelNextPage = new System.Windows.Forms.LinkLabel();
          this.linkLabelReapplyFilter = new System.Windows.Forms.LinkLabel();
@@ -190,7 +190,7 @@ namespace mrHelper.App.Forms
       private mrHelper.App.Controls.DiscussionPanel discussionPanel;
       private mrHelper.App.Controls.DiscussionsFormMenu discussionMenu;
       private Controls.DiscussionSearchPanel searchPanel;
-      private BackgroundPanel panelHeader;
+      private System.Windows.Forms.Panel panelHeader;
       private CommonControls.Controls.LinkLabelEx linkLabelGitLabURL;
       private System.Windows.Forms.LinkLabel linkLabelSaveAsDefaultLayout;
       private System.Windows.Forms.LinkLabel linkLabelReapplyFilter;

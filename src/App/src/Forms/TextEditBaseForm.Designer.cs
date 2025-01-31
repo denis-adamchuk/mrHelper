@@ -35,7 +35,7 @@ namespace mrHelper.App.Forms
          this.buttonOK = new System.Windows.Forms.Button();
          this.textBox = new mrHelper.CommonControls.Controls.SmartTextBox();
          this.toolTip = new Controls.ThemedToolTip(this.components);
-         this.panelExtraActions = new BackgroundPanel();
+         this.panelExtraActions = new System.Windows.Forms.Panel();
          this.tabControlMode = new System.Windows.Forms.TabControl();
          this.tabPageEdit = new System.Windows.Forms.TabPage();
          this.tabPagePreview = new System.Windows.Forms.TabPage();
@@ -180,7 +180,7 @@ namespace mrHelper.App.Forms
       private CommonControls.Controls.ConfirmCancelButton buttonCancel;
       private CommonControls.Controls.SmartTextBox textBox;
       private Controls.ThemedToolTip toolTip;
-      private BackgroundPanel panelExtraActions;
+      private System.Windows.Forms.Panel panelExtraActions;
       private System.Windows.Forms.TabControl tabControlMode;
       private System.Windows.Forms.TabPage tabPageEdit;
       private System.Windows.Forms.TabPage tabPagePreview;

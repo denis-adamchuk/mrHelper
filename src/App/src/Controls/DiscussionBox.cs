@@ -1593,7 +1593,7 @@ namespace mrHelper.App.Controls
 
                if (_textboxFilename != null)
                {
-                  _textboxFilename.BackColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.Surface;
+                  _textboxFilename.BackColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.Background;
                   _textboxFilename.ForeColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextActive;
                }
             });

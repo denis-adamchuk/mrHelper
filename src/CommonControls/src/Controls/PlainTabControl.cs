@@ -1,9 +1,9 @@
 ﻿using System.Drawing;
 using System.Windows.Forms;
 
-namespace mrHelper.App.Controls
+namespace mrHelper.CommonControls.Controls
 {
-   internal class PlainTabControl : TabControl
+   public class PlainTabControl : TabControl
    {
       public PlainTabControl()
       {

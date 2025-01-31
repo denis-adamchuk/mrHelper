@@ -1,5 +1,4 @@
-﻿
-using System.Windows.Forms;
+﻿using mrHelper.CommonControls.Controls;
 
 namespace mrHelper.App.Controls
 {
@@ -85,7 +84,7 @@ namespace mrHelper.App.Controls
       {
          this.components = new System.ComponentModel.Container();
          this.splitContainerPrimary = new System.Windows.Forms.SplitContainer();
-         this.tabControlMode = new mrHelper.App.Controls.PlainTabControl();
+         this.tabControlMode = new PlainTabControl();
          this.tabPageLive = new System.Windows.Forms.TabPage();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
          this.textBoxDisplayFilter = new mrHelper.App.Controls.FilterTextBox();
@@ -124,7 +123,7 @@ namespace mrHelper.App.Controls
          this.tabPageRecent = new System.Windows.Forms.TabPage();
          this.groupBoxRecentMergeRequest = new System.Windows.Forms.GroupBox();
          this.textBoxDisplayFilterRecent = new mrHelper.App.Controls.FilterTextBox();
-         this.textBoxRecentMergeRequestsHint = new System.Windows.Forms.TextBox();
+         this.textBoxRecentMergeRequestsHint = new CommonControls.Controls.MultilineLabel();
          this.listViewRecentMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
          this.columnHeaderRecentIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderRecentColor = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -853,7 +852,7 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ColumnHeader columnHeaderFoundProject;
       private System.Windows.Forms.TabPage tabPageRecent;
       private System.Windows.Forms.GroupBox groupBoxRecentMergeRequest;
-      private System.Windows.Forms.TextBox textBoxRecentMergeRequestsHint;
+      private CommonControls.Controls.MultilineLabel textBoxRecentMergeRequestsHint;
       private App.Controls.MergeRequestListView listViewRecentMergeRequests;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentIId;
       private System.Windows.Forms.ColumnHeader columnHeaderRecentColor;

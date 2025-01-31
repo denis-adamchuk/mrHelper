@@ -50,7 +50,7 @@ namespace mrHelper.App.Forms
          this.listViewWorkflow = new mrHelper.App.Controls.StringToBooleanListView();
          this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.groupBoxSelectWorkflow = new System.Windows.Forms.GroupBox();
-         this.textBox1 = new System.Windows.Forms.TextBox();
+         this.textBox1 = new CommonControls.Controls.MultilineLabel();
          this.groupBoxKnownHosts.SuspendLayout();
          this.groupBoxSelectWorkflow.SuspendLayout();
          this.SuspendLayout();
@@ -292,7 +292,7 @@ namespace mrHelper.App.Forms
       private Controls.StringToBooleanListView listViewWorkflow;
       private System.Windows.Forms.ColumnHeader columnHeader1;
       private System.Windows.Forms.GroupBox groupBoxSelectWorkflow;
-      private System.Windows.Forms.TextBox textBox1;
+      private CommonControls.Controls.MultilineLabel textBox1;
       private System.Windows.Forms.Label labelChecking;
       private System.Windows.Forms.Label labelExpirationHint;
    }
