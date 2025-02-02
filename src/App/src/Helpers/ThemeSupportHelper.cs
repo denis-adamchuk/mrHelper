@@ -54,28 +54,28 @@ namespace ThemeSupport
          }
       }
 
-      /// Background of containers, Menu, Toolbar, some UserControls, LV Column Header
+      // Background of containers, menus, tool bars, some UserControls, LV Column Header
       public Color Background { get; }
 
-      /// ToolStrip separator, LV Column Header Grid
+      // ToolStrip separator, LV Column Header Grid
       public Color BackgroundSplit { get; }
 
-      /// Background of all controls, Discussions view background, ToolStrip hovering, TextBox background
+      // Background of all controls, Discussions view background, ToolStrip/Menu hovering, TextBox background
       public Color Control { get; }
 
-      /// Tab Control, LV Group Header, ToolStrip selection
+      // Tab Control, LV Group Header, ToolStrip/Menu selection
       public Color ControlDark { get; }
 
-      /// For Main Texts
+      // For Main Texts
       public Color TextActive { get; }
 
-      /// For Inactive Texts
+      // For Inactive Texts
       public Color TextInactive { get; }
 
-      /// For Highlight Texts
+      // For Highlight Texts
       public Color TextInSelection { get; }
 
-      /// Just a border of a selected button
+      // Just a border of a selected button
       public Color ButtonBorder { get; }
    }
 
@@ -130,7 +130,7 @@ namespace ThemeSupport
       private readonly DisplayMode _mode;
    }
 
-   /// <summary>This tries to automatically apply Windows Dark Mode (if enabled) to a Form.
+   // This tries to automatically apply Windows Dark Mode (if enabled) to a Form.
    public class ThemeSupportHelper
    {
       #region Win32 API Declarations
@@ -138,124 +138,76 @@ namespace ThemeSupport
       [Flags]
       public enum DWMWINDOWATTRIBUTE : uint
       {
-         /// <summary>
-         /// Use with DwmGetWindowAttribute. Discovers whether non-client rendering is enabled. The retrieved value is of type BOOL. TRUE if non-client rendering is enabled; otherwise, FALSE.
-         /// </summary>
+         // Use with DwmGetWindowAttribute. Discovers whether non-client rendering is enabled. The retrieved value is of type BOOL. TRUE if non-client rendering is enabled; otherwise, FALSE.
          DWMWA_NCRENDERING_ENABLED = 1,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Sets the non-client rendering policy. The pvAttribute parameter points to a value from the DWMNCRENDERINGPOLICY enumeration.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Sets the non-client rendering policy. The pvAttribute parameter points to a value from the DWMNCRENDERINGPOLICY enumeration.
          DWMWA_NCRENDERING_POLICY,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Enables or forcibly disables DWM transitions. The pvAttribute parameter points to a value of type BOOL. TRUE to disable transitions, or FALSE to enable transitions.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Enables or forcibly disables DWM transitions. The pvAttribute parameter points to a value of type BOOL. TRUE to disable transitions, or FALSE to enable transitions.
          DWMWA_TRANSITIONS_FORCEDISABLED,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Enables content rendered in the non-client area to be visible on the frame drawn by DWM. The pvAttribute parameter points to a value of type BOOL. TRUE to enable content rendered in the non-client area to be visible on the frame; otherwise, FALSE.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Enables content rendered in the non-client area to be visible on the frame drawn by DWM. The pvAttribute parameter points to a value of type BOOL. TRUE to enable content rendered in the non-client area to be visible on the frame; otherwise, FALSE.
          DWMWA_ALLOW_NCPAINT,
 
-         /// <summary>
-         /// Use with DwmGetWindowAttribute. Retrieves the bounds of the caption button area in the window-relative space. The retrieved value is of type RECT. If the window is minimized or otherwise not visible to the user, then the value of the RECT retrieved is undefined. You should check whether the retrieved RECT contains a boundary that you can work with, and if it doesn't then you can conclude that the window is minimized or otherwise not visible.
-         /// </summary>
+         // Use with DwmGetWindowAttribute. Retrieves the bounds of the caption button area in the window-relative space. The retrieved value is of type RECT. If the window is minimized or otherwise not visible to the user, then the value of the RECT retrieved is undefined. You should check whether the retrieved RECT contains a boundary that you can work with, and if it doesn't then you can conclude that the window is minimized or otherwise not visible.
          DWMWA_CAPTION_BUTTON_BOUNDS,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Specifies whether non-client content is right-to-left (RTL) mirrored. The pvAttribute parameter points to a value of type BOOL. TRUE if the non-client content is right-to-left (RTL) mirrored; otherwise, FALSE.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Specifies whether non-client content is right-to-left (RTL) mirrored. The pvAttribute parameter points to a value of type BOOL. TRUE if the non-client content is right-to-left (RTL) mirrored; otherwise, FALSE.
          DWMWA_NONCLIENT_RTL_LAYOUT,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Forces the window to display an iconic thumbnail or peek representation (a static bitmap), even if a live or snapshot representation of the window is available. This value is normally set during a window's creation, and not changed throughout the window's lifetime. Some scenarios, however, might require the value to change over time. The pvAttribute parameter points to a value of type BOOL. TRUE to require a iconic thumbnail or peek representation; otherwise, FALSE.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Forces the window to display an iconic thumbnail or peek representation (a static bitmap), even if a live or snapshot representation of the window is available. This value is normally set during a window's creation, and not changed throughout the window's lifetime. Some scenarios, however, might require the value to change over time. The pvAttribute parameter points to a value of type BOOL. TRUE to require a iconic thumbnail or peek representation; otherwise, FALSE.
          DWMWA_FORCE_ICONIC_REPRESENTATION,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Sets how Flip3D treats the window. The pvAttribute parameter points to a value from the DWMFLIP3DWINDOWPOLICY enumeration.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Sets how Flip3D treats the window. The pvAttribute parameter points to a value from the DWMFLIP3DWINDOWPOLICY enumeration.
          DWMWA_FLIP3D_POLICY,
 
-         /// <summary>
-         /// Use with DwmGetWindowAttribute. Retrieves the extended frame bounds rectangle in screen space. The retrieved value is of type RECT.
-         /// </summary>
+         // Use with DwmGetWindowAttribute. Retrieves the extended frame bounds rectangle in screen space. The retrieved value is of type RECT.
          DWMWA_EXTENDED_FRAME_BOUNDS,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. The window will provide a bitmap for use by DWM as an iconic thumbnail or peek representation (a static bitmap) for the window. DWMWA_HAS_ICONIC_BITMAP can be specified with DWMWA_FORCE_ICONIC_REPRESENTATION. DWMWA_HAS_ICONIC_BITMAP normally is set during a window's creation and not changed throughout the window's lifetime. Some scenarios, however, might require the value to change over time. The pvAttribute parameter points to a value of type BOOL. TRUE to inform DWM that the window will provide an iconic thumbnail or peek representation; otherwise, FALSE. Windows Vista and earlier: This value is not supported.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. The window will provide a bitmap for use by DWM as an iconic thumbnail or peek representation (a static bitmap) for the window. DWMWA_HAS_ICONIC_BITMAP can be specified with DWMWA_FORCE_ICONIC_REPRESENTATION. DWMWA_HAS_ICONIC_BITMAP normally is set during a window's creation and not changed throughout the window's lifetime. Some scenarios, however, might require the value to change over time. The pvAttribute parameter points to a value of type BOOL. TRUE to inform DWM that the window will provide an iconic thumbnail or peek representation; otherwise, FALSE. Windows Vista and earlier: This value is not supported.
          DWMWA_HAS_ICONIC_BITMAP,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Do not show peek preview for the window. The peek view shows a full-sized preview of the window when the mouse hovers over the window's thumbnail in the taskbar. If this attribute is set, hovering the mouse pointer over the window's thumbnail dismisses peek (in case another window in the group has a peek preview showing). The pvAttribute parameter points to a value of type BOOL. TRUE to prevent peek functionality, or FALSE to allow it. Windows Vista and earlier: This value is not supported.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Do not show peek preview for the window. The peek view shows a full-sized preview of the window when the mouse hovers over the window's thumbnail in the taskbar. If this attribute is set, hovering the mouse pointer over the window's thumbnail dismisses peek (in case another window in the group has a peek preview showing). The pvAttribute parameter points to a value of type BOOL. TRUE to prevent peek functionality, or FALSE to allow it. Windows Vista and earlier: This value is not supported.
          DWMWA_DISALLOW_PEEK,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Prevents a window from fading to a glass sheet when peek is invoked. The pvAttribute parameter points to a value of type BOOL. TRUE to prevent the window from fading during another window's peek, or FALSE for normal behavior. Windows Vista and earlier: This value is not supported.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Prevents a window from fading to a glass sheet when peek is invoked. The pvAttribute parameter points to a value of type BOOL. TRUE to prevent the window from fading during another window's peek, or FALSE for normal behavior. Windows Vista and earlier: This value is not supported.
          DWMWA_EXCLUDED_FROM_PEEK,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Cloaks the window such that it is not visible to the user. The window is still composed by DWM. Using with DirectComposition: Use the DWMWA_CLOAK flag to cloak the layered child window when animating a representation of the window's content via a DirectComposition visual that has been associated with the layered child window. For more details on this usage case, see How to animate the bitmap of a layered child window. Windows 7 and earlier: This value is not supported.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Cloaks the window such that it is not visible to the user. The window is still composed by DWM. Using with DirectComposition: Use the DWMWA_CLOAK flag to cloak the layered child window when animating a representation of the window's content via a DirectComposition visual that has been associated with the layered child window. For more details on this usage case, see How to animate the bitmap of a layered child window. Windows 7 and earlier: This value is not supported.
          DWMWA_CLOAK,
 
-         /// <summary>
-         /// Use with DwmGetWindowAttribute. If the window is cloaked, provides one of the following values explaining why. DWM_CLOAKED_APP (value 0x0000001). The window was cloaked by its owner application. DWM_CLOAKED_SHELL(value 0x0000002). The window was cloaked by the Shell. DWM_CLOAKED_INHERITED(value 0x0000004). The cloak value was inherited from its owner window. Windows 7 and earlier: This value is not supported.
-         /// </summary>
+         // Use with DwmGetWindowAttribute. If the window is cloaked, provides one of the following values explaining why. DWM_CLOAKED_APP (value 0x0000001). The window was cloaked by its owner application. DWM_CLOAKED_SHELL(value 0x0000002). The window was cloaked by the Shell. DWM_CLOAKED_INHERITED(value 0x0000004). The cloak value was inherited from its owner window. Windows 7 and earlier: This value is not supported.
          DWMWA_CLOAKED,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Freeze the window's thumbnail image with its current visuals. Do no further live updates on the thumbnail image to match the window's contents. Windows 7 and earlier: This value is not supported.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Freeze the window's thumbnail image with its current visuals. Do no further live updates on the thumbnail image to match the window's contents. Windows 7 and earlier: This value is not supported.
          DWMWA_FREEZE_REPRESENTATION,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Enables a non-UWP window to use host backdrop brushes. If this flag is set, then a Win32 app that calls Windows::UI::Composition APIs can build transparency effects using the host backdrop brush (see Compositor.CreateHostBackdropBrush). The pvAttribute parameter points to a value of type BOOL. TRUE to enable host backdrop brushes for the window, or FALSE to disable it. This value is supported starting with Windows 11 Build 22000.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Enables a non-UWP window to use host backdrop brushes. If this flag is set, then a Win32 app that calls Windows::UI::Composition APIs can build transparency effects using the host backdrop brush (see Compositor.CreateHostBackdropBrush). The pvAttribute parameter points to a value of type BOOL. TRUE to enable host backdrop brushes for the window, or FALSE to disable it. This value is supported starting with Windows 11 Build 22000.
          DWMWA_USE_HOSTBACKDROPBRUSH,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Allows the window frame for this window to be drawn in dark mode colors when the dark mode system setting is enabled. For compatibility reasons, all windows default to light mode regardless of the system setting. The pvAttribute parameter points to a value of type BOOL. TRUE to honor dark mode for the window, FALSE to always use light mode. This value is supported starting with Windows 10 Build 17763.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Allows the window frame for this window to be drawn in dark mode colors when the dark mode system setting is enabled. For compatibility reasons, all windows default to light mode regardless of the system setting. The pvAttribute parameter points to a value of type BOOL. TRUE to honor dark mode for the window, FALSE to always use light mode. This value is supported starting with Windows 10 Build 17763.
          DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Allows the window frame for this window to be drawn in dark mode colors when the dark mode system setting is enabled. For compatibility reasons, all windows default to light mode regardless of the system setting. The pvAttribute parameter points to a value of type BOOL. TRUE to honor dark mode for the window, FALSE to always use light mode. This value is supported starting with Windows 11 Build 22000.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Allows the window frame for this window to be drawn in dark mode colors when the dark mode system setting is enabled. For compatibility reasons, all windows default to light mode regardless of the system setting. The pvAttribute parameter points to a value of type BOOL. TRUE to honor dark mode for the window, FALSE to always use light mode. This value is supported starting with Windows 11 Build 22000.
          DWMWA_USE_IMMERSIVE_DARK_MODE = 20,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Specifies the rounded corner preference for a window. The pvAttribute parameter points to a value of type DWM_WINDOW_CORNER_PREFERENCE. This value is supported starting with Windows 11 Build 22000.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Specifies the rounded corner preference for a window. The pvAttribute parameter points to a value of type DWM_WINDOW_CORNER_PREFERENCE. This value is supported starting with Windows 11 Build 22000.
          DWMWA_WINDOW_CORNER_PREFERENCE = 33,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Specifies the color of the window border. The pvAttribute parameter points to a value of type COLORREF. The app is responsible for changing the border color according to state changes, such as a change in window activation. This value is supported starting with Windows 11 Build 22000.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Specifies the color of the window border. The pvAttribute parameter points to a value of type COLORREF. The app is responsible for changing the border color according to state changes, such as a change in window activation. This value is supported starting with Windows 11 Build 22000.
          DWMWA_BORDER_COLOR,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Specifies the color of the caption. The pvAttribute parameter points to a value of type COLORREF. This value is supported starting with Windows 11 Build 22000.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Specifies the color of the caption. The pvAttribute parameter points to a value of type COLORREF. This value is supported starting with Windows 11 Build 22000.
          DWMWA_CAPTION_COLOR,
 
-         /// <summary>
-         /// Use with DwmSetWindowAttribute. Specifies the color of the caption text. The pvAttribute parameter points to a value of type COLORREF. This value is supported starting with Windows 11 Build 22000.
-         /// </summary>
+         // Use with DwmSetWindowAttribute. Specifies the color of the caption text. The pvAttribute parameter points to a value of type COLORREF. This value is supported starting with Windows 11 Build 22000.
          DWMWA_TEXT_COLOR,
 
-         /// <summary>
-         /// Use with DwmGetWindowAttribute. Retrieves the width of the outer border that the DWM would draw around this window. The value can vary depending on the DPI of the window. The pvAttribute parameter points to a value of type UINT. This value is supported starting with Windows 11 Build 22000.
-         /// </summary>
+         // Use with DwmGetWindowAttribute. Retrieves the width of the outer border that the DWM would draw around this window. The value can vary depending on the DPI of the window. The pvAttribute parameter points to a value of type UINT. This value is supported starting with Windows 11 Build 22000.
          DWMWA_VISIBLE_FRAME_BORDER_THICKNESS,
 
-         /// <summary>
-         /// The maximum recognized DWMWINDOWATTRIBUTE value, used for validation purposes.
-         /// </summary>
+         // The maximum recognized DWMWINDOWATTRIBUTE value, used for validation purposes.
          DWMWA_LAST,
       }
 
@@ -293,20 +245,12 @@ namespace ThemeSupport
 
       #endregion Win32 API Declarations
 
-      #region Public Members
-
-      #endregion Public Members
-
       #region Constructors
 
-      /// <summary>This tries to automatically apply Windows Dark Mode (if enabled) to a Form.</summary>
-      /// <param name="_Form">The Form to become Dark</param>
+      // This tries to automatically apply Windows Dark Mode (if enabled) to a Form.
       public ThemeSupportHelper(Form form, DisplayMode displayMode)
       {
-         //Sets the Properties:
          _ownerForm = form;
-
-         // This Fires after the normal 'Form_Load' event
          form.Load += (object sender, EventArgs e) =>
          {
             applyThemeFromConfiguration();
@@ -322,10 +266,8 @@ namespace ThemeSupport
          applyThemeFromConfiguration();
       }
 
-      /// <summary>
-      /// Registers the Control as processed. Prevents applying theme to the Control.
-      /// Call it before applying the theme to your Form (or to any other Control containing (directly or indirectly) this Control)
-      /// </summary>
+      // Registers the Control as processed. Prevents applying theme to the Control.
+      // Call it before applying the theme to your Form (or to any other Control containing (directly or indirectly) this Control)
       public static void ExcludeFromProcessing(Control control)
       {
          controlStatusStorage.ExcludeFromProcessing(control);
@@ -335,9 +277,7 @@ namespace ThemeSupport
 
       #region Private Static Members
 
-      /// <summary>
-      /// Stores additional info related to the Controls
-      /// </summary>
+      // Stores additional info related to the Controls
       private static readonly ControlStatusStorage controlStatusStorage = new ControlStatusStorage();
 
       #endregion
@@ -361,6 +301,9 @@ namespace ThemeSupport
 
       private void onScaledTextPaint(object sender, PaintEventArgs e)
       {
+         // This function is needed for the controls, whose text in disabled mode
+         // is always drawn in GrayText color by Windows Forms.
+         // This function draws text _over_ the text drawn by Windows Forms.
          Control control = (Control)sender;
          if (!control.Enabled)
          {
@@ -376,6 +319,9 @@ namespace ThemeSupport
 
       private void onButtonPaint(object sender, PaintEventArgs e)
       {
+         // This function is needed for the buttons, whose text in disabled mode
+         // is always drawn in Black color by Windows Forms.
+         // This function draws text _over_ the text drawn by Windows Forms.
          Button btn = (Button)sender;
          if (!btn.Enabled)
          {
@@ -391,12 +337,13 @@ namespace ThemeSupport
       {
          TabControl tab = (TabControl)sender;
 
-         //Draw the background of the main control
+         // Draw the background of the main control
          using (SolidBrush backColor = new SolidBrush(tab.Parent.BackColor))
          {
             e.Graphics.FillRectangle(backColor, tab.ClientRectangle);
          }
 
+         // Draw tabs
          using (Brush tabBack = new SolidBrush(_OSColors.ControlDark))
          {
             for (int iTab = 0; iTab < tab.TabPages.Count; iTab++)
@@ -429,7 +376,7 @@ namespace ThemeSupport
          {
             using (SolidBrush foreBrush = new SolidBrush(_OSColors.TextActive))
             {
-               using (var sf = new StringFormat())
+               using (StringFormat sf = new StringFormat())
                {
                   ListView listView = (ListView)sender;
                   sf.Alignment = StringAlignment.Center;
@@ -453,8 +400,7 @@ namespace ThemeSupport
          }
       }
 
-      /// <summary>Apply the Theme into the Window and all its controls.</summary>
-      /// <param name="pIsDarkMode">'true': apply Dark Mode, 'false': apply Clear Mode</param>
+      // Apply the Theme into the Window and all its controls.
       public void applyThemeFromConfiguration()
       {
          bool isDarkMode = getCurrentDisplayMode() == DisplayMode.DarkMode;
@@ -463,7 +409,7 @@ namespace ThemeSupport
             _OSColors = StockColors.GetThemeColors().OSThemeColors;
             if (_OSColors != null)
             {
-               //Apply Window's Dark Mode to the Form's Title bar:
+               // Apply Window's Dark Mode to the Form's Title bar
                applySystemDarkTheme(_ownerForm, isDarkMode);
 
                _ownerForm.BackColor = _OSColors.Background;
@@ -475,7 +421,7 @@ namespace ThemeSupport
                   {
                      applyThemeToControl(_control);
                   }
-                  _ownerForm.ControlAdded -= onOwnerFormControlAdded; //prevent uncontrolled multiple addition
+                  _ownerForm.ControlAdded -= onOwnerFormControlAdded;
                   _ownerForm.ControlAdded += onOwnerFormControlAdded;
                }
             }
@@ -486,8 +432,8 @@ namespace ThemeSupport
          }
       }
 
-      /// <summary>Recursively apply the Colors from 'OScolors' to the Control and all its childs.</summary>
-      /// <param name="control">Can be a Form or any Winforms Control.</param>
+      // Recursively apply the Colors from 'OScolors' to the Control and all its childs.
+      // <param name="control">Can be a Form or any Winforms Control.</param>
       private void applyThemeToControl(Control control)
       {
          bool isDarkMode = getCurrentDisplayMode() == DisplayMode.DarkMode;
@@ -518,10 +464,10 @@ namespace ThemeSupport
          BorderStyle BStyle = (isDarkMode ? BorderStyle.FixedSingle : BorderStyle.Fixed3D);
          FlatStyle FStyle = (isDarkMode ? FlatStyle.Flat : FlatStyle.Standard);
 
-         control.HandleCreated -= onHandleCreated; //prevent uncontrolled multiple addition
+         control.HandleCreated -= onHandleCreated;
          control.HandleCreated += onHandleCreated;
 
-         control.ControlAdded -= onControlAdded; //prevent uncontrolled multiple addition
+         control.ControlAdded -= onControlAdded;
          control.ControlAdded += onControlAdded;
 
          string Mode = isDarkMode ? "DarkMode_Explorer" : "ClearMode_Explorer";
@@ -530,7 +476,7 @@ namespace ThemeSupport
          control.GetType().GetProperty("BackColor")?.SetValue(control, _OSColors.Control);
          control.GetType().GetProperty("ForeColor")?.SetValue(control, _OSColors.TextActive);
 
-         /* Here we fine tune individual Controls  */
+         // Here we fine tune individual Controls
          //
          // mrHelper controls derived from common controls shall go first.
          if (control is mrHelper.App.Controls.DiscussionPanel ||
@@ -550,14 +496,8 @@ namespace ThemeSupport
          }
          else if (control is mrHelper.CommonControls.Controls.MultilineLabel)
          {
-            // Emulate Label background
+            // MultilineLabel is a TextBox which wants to emulate Label background.
             control.BackColor = control.Parent.BackColor;
-         }
-         else if (control is mrHelper.CommonControls.Controls.SmartTextBox ||
-                  control is TextBox || control is RichTextBox)
-         {
-            // White background for ClearMode
-            control.BackColor = _OSColors.Control;
          }
          else if (control is LinkLabel linkLabel)
          {
@@ -579,7 +519,6 @@ namespace ThemeSupport
             Button button = control as Button;
             button.FlatStyle = isDarkMode ? FlatStyle.Flat : FlatStyle.Standard;
             button.FlatAppearance.CheckedBackColor = _OSColors.ButtonBorder;
-            button.BackColor = _OSColors.Control;
             button.FlatAppearance.BorderColor = (_ownerForm.AcceptButton == button) ?
               _OSColors.ButtonBorder : _OSColors.Control;
             control.Paint -= onButtonPaint;
@@ -587,16 +526,17 @@ namespace ThemeSupport
          }
          else if (control is ComboBox comboBox)
          {
-            // Fixing a glitch that makes all instances of the ComboBox showing as having a Selected value, even when they dont
+            // Fixing a glitch that makes all instances of the ComboBox showing as having a Selected value,
+            // even when they dont
             control.BeginInvoke(new Action(() => (control as ComboBox).SelectionLength = 0));
 
-            // Fixes a glitch showing the Combo Background white when the control is Disabled:
+            // Fixes a glitch showing the Combo Background white when the control is Disabled
             if (!control.Enabled && isDarkMode)
             {
                comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             }
 
-            // Apply Windows Color Mode:
+            // Apply Windows Color Mode
             Mode = isDarkMode ? "DarkMode_CFD" : "ClearMode_CFD";
             SetWindowTheme(control.Handle, Mode, null);
          }
@@ -609,11 +549,10 @@ namespace ThemeSupport
          else if (control is GroupBox)
          {
             control.GetType().GetProperty("BackColor")?.SetValue(control, control.Parent.BackColor);
-            control.GetType().GetProperty("ForeColor")?.SetValue(control, _OSColors.TextActive);
          }
          else if (control is TabControl)
          {
-            var tab = control as TabControl;
+            TabControl tab = control as TabControl;
             if (tab.DrawMode != TabDrawMode.OwnerDrawFixed)
             {
                tab.Appearance = TabAppearance.Normal;
@@ -622,23 +561,32 @@ namespace ThemeSupport
                tab.DrawItem += onTabControlDrawItem;
             }
          }
+         else if (control is ListView)
+         {
+            ListView listView = control as ListView;
+            if (listView.View == View.Details && !listView.OwnerDraw)
+            {
+               listView.OwnerDraw = true;
+               listView.DrawColumnHeader -= onListViewDrawColumnHeader;
+               listView.DrawColumnHeader += onListViewDrawColumnHeader;
+               listView.DrawSubItem -= onListViewDrawSubItem;
+               listView.DrawSubItem += onListViewDrawSubItem;
+            }
+         }
          else if (control is PictureBox)
          {
             control.GetType().GetProperty("BackColor")?.SetValue(control, control.Parent.BackColor);
-            control.GetType().GetProperty("ForeColor")?.SetValue(control, _OSColors.TextActive);
             control.GetType().GetProperty("BorderStyle")?.SetValue(control, BorderStyle.None);
          }
          else if (control is CheckBox)
          {
             control.GetType().GetProperty("BackColor")?.SetValue(control, control.Parent.BackColor);
-            control.ForeColor = _OSColors.TextActive;
             control.Paint -= onScaledTextPaint;
             control.Paint += onScaledTextPaint;
          }
          else if (control is RadioButton)
          {
             control.GetType().GetProperty("BackColor")?.SetValue(control, control.Parent.BackColor);
-            control.ForeColor = _OSColors.TextActive;
             control.Paint -= onScaledTextPaint;
             control.Paint += onScaledTextPaint;
          }
@@ -658,32 +606,20 @@ namespace ThemeSupport
          }
          else if (control is ToolStripDropDown)
          {
-            (control as ToolStripDropDown).Opening -= onToolStripDropDownOpening; //just to make sure
+            (control as ToolStripDropDown).Opening -= onToolStripDropDownOpening;
             (control as ToolStripDropDown).Opening += onToolStripDropDownOpening;
          }
          else if (control is ToolStripDropDownMenu)
          {
-            (control as ToolStripDropDownMenu).Opening -= onToolStripDropDownOpening; //just to make sure
+            (control as ToolStripDropDownMenu).Opening -= onToolStripDropDownOpening;
             (control as ToolStripDropDownMenu).Opening += onToolStripDropDownOpening;
          }
          else if (control is ContextMenuStrip)
          {
             (control as ContextMenuStrip).RenderMode = ToolStripRenderMode.Professional;
             (control as ContextMenuStrip).Renderer = new MyRenderer(new CustomColorTable(_OSColors), _OSColors);
-            (control as ContextMenuStrip).Opening -= onToolStripDropDownOpening; //just to make sure
+            (control as ContextMenuStrip).Opening -= onToolStripDropDownOpening;
             (control as ContextMenuStrip).Opening += onToolStripDropDownOpening;
-         }
-         else if (control is ListView)
-         {
-            var lView = control as ListView;
-            if (lView.View == View.Details && !lView.OwnerDraw)
-            {
-               lView.OwnerDraw = true;
-               lView.DrawColumnHeader -= onListViewDrawColumnHeader;
-               lView.DrawColumnHeader += onListViewDrawColumnHeader;
-               lView.DrawSubItem -= onListViewDrawSubItem;
-               lView.DrawSubItem += onListViewDrawSubItem;
-            }
          }
 
          if (control.ContextMenuStrip != null)
@@ -704,8 +640,8 @@ namespace ThemeSupport
          return colorMode == Constants.ColorMode.Dark ? DisplayMode.DarkMode : DisplayMode.ClearMode;
       }
 
-      /// handle hierarchical context menus (otherwise, only the root level gets themed)
-      /// </summary>
+      // handle hierarchical context menus (otherwise, only the root level gets themed)
+      // 
       private void onToolStripDropDownOpening(object sender, CancelEventArgs e)
       {
          ToolStripDropDown tsdd = sender as ToolStripDropDown;
@@ -718,9 +654,9 @@ namespace ThemeSupport
          }
       }
 
-      /// <summary>
-      /// handle hierarchical context menus (otherwise, only the root level gets themed)
-      /// </summary>
+      // 
+      // handle hierarchical context menus (otherwise, only the root level gets themed)
+      // 
       private void onToolStripMenuItemOpening(object sender, EventArgs e)
       {
          ToolStripMenuItem tsmi = sender as ToolStripMenuItem;
@@ -732,9 +668,9 @@ namespace ThemeSupport
          tsmi.DropDownOpening -= onToolStripMenuItemOpening;
       }
 
-      /// <summary>Colorea una imagen usando una Matrix de Color.</summary>
-      /// <param name="bmp">Imagen a Colorear</param>
-      /// <param name="c">Color a Utilizar</param>
+      // Colorea una imagen usando una Matrix de Color.
+      // <param name="bmp">Imagen a Colorear</param>
+      // <param name="c">Color a Utilizar</param>
       internal static Bitmap changeToColor(Bitmap bmp, Color c)
       {
          Bitmap bmp2 = new Bitmap(bmp.Width, bmp.Height);
@@ -766,7 +702,7 @@ namespace ThemeSupport
          return bmp2;
       }
 
-      /// <summary>Attempts to apply Window's Dark Style to the Control and all its childs.</summary>
+      // Attempts to apply Window's Dark Style to the Control and all its childs.
       private static void applySystemDarkTheme(Control control = null, bool IsDarkMode = true)
       {
          // DWMWA_USE_IMMERSIVE_DARK_MODE:   https://learn.microsoft.com/en-us/windows/win32/api/dwmapi/ne-dwmapi-dwmwindowattribute
@@ -811,10 +747,10 @@ namespace ThemeSupport
 
       #region Private members
 
-      /// <summary>The Parent form for them all.</summary>
+      // The Parent form for them all.
       private Form _ownerForm { get; set; }
 
-      /// <summary>Windows Colors. Can be customized.</summary>
+      // Windows Colors. Can be customized.
       private OSThemeColors _OSColors { get; set; }
 
       #endregion
@@ -848,7 +784,7 @@ namespace ThemeSupport
          base.OnRenderToolStripStatusLabelBackground(e);
       }
 
-      // For Normal Buttons on a ToolBar:
+      // For Normal Buttons on a ToolBar
       protected override void OnRenderButtonBackground(ToolStripItemRenderEventArgs e)
       {
          Rectangle bounds = new Rectangle(Point.Empty, e.Item.Size);
@@ -905,7 +841,7 @@ namespace ThemeSupport
          }
       }
 
-      // For the Text Color of all Items:
+      // For the Text Color of all Items
       protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
       {
          if (e.Item is ToolStripMenuItem)
@@ -922,7 +858,7 @@ namespace ThemeSupport
          base.OnRenderItemBackground(e);
       }
 
-      // For Menu Items BackColor:
+      // For Menu Items BackColor
       protected override void OnRenderMenuItemBackground(ToolStripItemRenderEventArgs e)
       {
          Graphics g = e.Graphics;
@@ -932,14 +868,14 @@ namespace ThemeSupport
          Color gradientEnd = MyColors.Background;
 
          bool DrawIt = false;
-         var _menu = e.Item as ToolStripItem;
-         if (_menu.Pressed)
+         ToolStripItem menu = e.Item;
+         if (menu.Pressed)
          {
             gradientBegin = MyColors.ControlDark;
             gradientEnd = MyColors.ControlDark;
             DrawIt = true;
          }
-         else if (_menu.Selected)
+         else if (menu.Selected)
          {
             gradientBegin = MyColors.Control;
             gradientEnd = MyColors.Control;
@@ -985,30 +921,30 @@ namespace ThemeSupport
       private OSThemeColors Colors { get; }
    }
 
-   /// <summary>
-   /// Stores additional info related to the Controls
-   /// </summary>
+   // 
+   // Stores additional info related to the Controls
+   // 
    public class ControlStatusStorage
    {
-      /// <summary>
-      /// Storage for the data. ConditionalWeakTable ensures there are no unnecessary references left, preventing garbage collection.
-      /// </summary>
+      // 
+      // Storage for the data. ConditionalWeakTable ensures there are no unnecessary references left, preventing garbage collection.
+      // 
       private readonly ConditionalWeakTable<Control, ControlStatusInfo> _controlsProcessed = new ConditionalWeakTable<Control, ControlStatusInfo>();
 
-      /// <summary>
-      /// Registers the Control as processed. Prevents applying theme to the Control.
-      /// Call it before applying the theme to your Form (or to any other Control containing (directly or indirectly) this Control)
-      /// </summary>
+      // 
+      // Registers the Control as processed. Prevents applying theme to the Control.
+      // Call it before applying the theme to your Form (or to any other Control containing (directly or indirectly) this Control)
+      // 
       public void ExcludeFromProcessing(Control control)
       {
          _controlsProcessed.Remove(control);
          _controlsProcessed.Add(control, new ControlStatusInfo() { IsExcluded = true });
       }
 
-      /// <summary>
-      /// Gets the additional info associated with a Control
-      /// </summary>
-      /// <returns>a ControlStatusInfo object if the control has been already processed or marked for exclusion, null otherwise</returns>
+      // 
+      // Gets the additional info associated with a Control
+      // 
+      // <returns>a ControlStatusInfo object if the control has been already processed or marked for exclusion, null otherwise</returns>
       public ControlStatusInfo GetControlStatusInfo(Control control)
       {
          _controlsProcessed.TryGetValue(control, out ControlStatusInfo info);
@@ -1022,19 +958,19 @@ namespace ThemeSupport
       }
    }
 
-   /// <summary>
-   /// Additional information related to the Controls
-   /// </summary>
+   // 
+   // Additional information related to the Controls
+   // 
    public class ControlStatusInfo
    {
-      /// <summary>
-      /// true if the user wants to skip theming the Control
-      /// </summary>
+      // 
+      // true if the user wants to skip theming the Control
+      // 
       public bool IsExcluded { get; set; }
 
-      /// <summary>
-      /// whether the last theme applied was dark
-      /// </summary>
+      // 
+      // whether the last theme applied was dark
+      // 
       public bool LastThemeAppliedIsDark { get; set; }
    }
 }
