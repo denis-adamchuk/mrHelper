@@ -41,9 +41,9 @@
          // 
          this.linkLabelResetToFactoryValue.AutoSize = true;
          this.linkLabelResetToFactoryValue.LinkColor = System.Drawing.Color.Black;
-         this.linkLabelResetToFactoryValue.Location = new System.Drawing.Point(370, 97);
+         this.linkLabelResetToFactoryValue.Location = new System.Drawing.Point(576, 97);
          this.linkLabelResetToFactoryValue.Name = "linkLabelResetToFactoryValue";
-         this.linkLabelResetToFactoryValue.Size = new System.Drawing.Size(121, 13);
+         this.linkLabelResetToFactoryValue.Size = new System.Drawing.Size(178, 20);
          this.linkLabelResetToFactoryValue.TabIndex = 3;
          this.linkLabelResetToFactoryValue.TabStop = true;
          this.linkLabelResetToFactoryValue.Text = "Reset background color";
@@ -54,9 +54,9 @@
          // 
          this.linkLabelResetTextToFactoryValue.AutoSize = true;
          this.linkLabelResetTextToFactoryValue.LinkColor = System.Drawing.Color.Black;
-         this.linkLabelResetTextToFactoryValue.Location = new System.Drawing.Point(370, 121);
+         this.linkLabelResetTextToFactoryValue.Location = new System.Drawing.Point(576, 121);
          this.linkLabelResetTextToFactoryValue.Name = "linkLabelResetTextToFactoryValue";
-         this.linkLabelResetTextToFactoryValue.Size = new System.Drawing.Size(81, 13);
+         this.linkLabelResetTextToFactoryValue.Size = new System.Drawing.Size(120, 20);
          this.linkLabelResetTextToFactoryValue.TabIndex = 3;
          this.linkLabelResetTextToFactoryValue.TabStop = true;
          this.linkLabelResetTextToFactoryValue.Text = "Reset text color";
@@ -68,23 +68,22 @@
          this.listBoxColorSchemeItemSelector.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left)));
          this.listBoxColorSchemeItemSelector.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawVariable;
-         this.listBoxColorSchemeItemSelector.FormattingEnabled = true;
+         this.listBoxColorSchemeItemSelector.HorizontalScrollbar = true;
          this.listBoxColorSchemeItemSelector.Location = new System.Drawing.Point(6, 6);
          this.listBoxColorSchemeItemSelector.Name = "listBoxColorSchemeItemSelector";
-         this.listBoxColorSchemeItemSelector.Size = new System.Drawing.Size(350, 220);
+         this.listBoxColorSchemeItemSelector.Size = new System.Drawing.Size(564, 220);
          this.listBoxColorSchemeItemSelector.TabIndex = 0;
          this.listBoxColorSchemeItemSelector.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listBoxColorSchemeItemSelector_DrawItem);
          this.listBoxColorSchemeItemSelector.MeasureItem += new System.Windows.Forms.MeasureItemEventHandler(this.listBoxColorSchemeItemSelector_MeasureItem);
          this.listBoxColorSchemeItemSelector.SelectedIndexChanged += new System.EventHandler(this.listBoxColorSchemeItemSelector_SelectedIndexChanged);
-         this.listBoxColorSchemeItemSelector.Format += new System.Windows.Forms.ListControlConvertEventHandler(this.listBoxColorSchemeItemSelector_Format);
          // 
          // linkLabelChangeColor
          // 
          this.linkLabelChangeColor.AutoSize = true;
          this.linkLabelChangeColor.LinkColor = System.Drawing.Color.Black;
-         this.linkLabelChangeColor.Location = new System.Drawing.Point(370, 6);
+         this.linkLabelChangeColor.Location = new System.Drawing.Point(576, 6);
          this.linkLabelChangeColor.Name = "linkLabelChangeColor";
-         this.linkLabelChangeColor.Size = new System.Drawing.Size(130, 13);
+         this.linkLabelChangeColor.Size = new System.Drawing.Size(191, 20);
          this.linkLabelChangeColor.TabIndex = 1;
          this.linkLabelChangeColor.TabStop = true;
          this.linkLabelChangeColor.Text = "Change background color";
@@ -94,14 +93,14 @@
          // 
          this.linkLabelChangeTextColor.AutoSize = true;
          this.linkLabelChangeTextColor.LinkColor = System.Drawing.Color.Black;
-         this.linkLabelChangeTextColor.Location = new System.Drawing.Point(370, 30);
+         this.linkLabelChangeTextColor.Location = new System.Drawing.Point(576, 30);
          this.linkLabelChangeTextColor.Name = "linkLabelChangeTextColor";
-         this.linkLabelChangeTextColor.Size = new System.Drawing.Size(90, 13);
+         this.linkLabelChangeTextColor.Size = new System.Drawing.Size(133, 20);
          this.linkLabelChangeTextColor.TabIndex = 2;
          this.linkLabelChangeTextColor.TabStop = true;
          this.linkLabelChangeTextColor.Text = "Change text color";
-         this.linkLabelChangeTextColor.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelChangeTextColor_LinkClicked);
          this.linkLabelChangeTextColor.Visible = false;
+         this.linkLabelChangeTextColor.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelChangeTextColor_LinkClicked);
          // 
          // ColorGroupConfigPage
          // 
@@ -112,7 +111,7 @@
          this.Controls.Add(this.linkLabelResetToFactoryValue);
          this.Controls.Add(this.linkLabelResetTextToFactoryValue);
          this.Name = "ColorGroupConfigPage";
-         this.Size = new System.Drawing.Size(511, 233);
+         this.Size = new System.Drawing.Size(783, 233);
          this.ResumeLayout(false);
          this.PerformLayout();
 

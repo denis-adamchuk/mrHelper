@@ -1503,7 +1503,16 @@ namespace mrHelper.App.Controls
          Dictionary<string, int> columnWidths = new Dictionary<string, int>();
          foreach (ColumnHeader column in Columns)
          {
-            columnWidths[column.Tag.ToString()] = column.Width;
+            if (column.Tag != null)
+            {
+               columnWidths[column.Tag.ToString()] = column.Width;
+            }
+         }
+         if (columnWidths.Count != Columns.Count)
+         {
+            // This function is not expected to be called before all Tags are set.
+            Debug.Assert(false);
+            return;
          }
          ConfigurationHelper.SetColumnWidths(Program.Settings, columnWidths, getIdentity());
       }

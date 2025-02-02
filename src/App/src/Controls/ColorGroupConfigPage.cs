@@ -58,11 +58,6 @@ namespace mrHelper.App.Controls
          onResetColorSchemeItemToFactoryValue(ColorType.Text);
       }
 
-      private void listBoxColorSchemeItemSelector_Format(object sender, ListControlConvertEventArgs e)
-      {
-         formatColorSchemeItemSelectorItem(e);
-      }
-
       private void listBoxColorSchemeItemSelector_SelectedIndexChanged(object sender, EventArgs e)
       {
          object selectedItem = (sender as ListBox).SelectedItem;
@@ -164,38 +159,27 @@ namespace mrHelper.App.Controls
          color = isSelected ? ThemeSupport.StockColors.GetThemeColors().SelectionBackground : color;
          WinFormsHelpers.FillRectangle(e, e.Bounds, color);
 
-         StringFormat format =
-            new StringFormat
+         void drawString(Color textColor)
+         {
+            using (Brush brush = new SolidBrush(textColor))
             {
-               Trimming = StringTrimming.EllipsisCharacter,
-               FormatFlags = StringFormatFlags.NoWrap
-            };
+               e.Graphics.DrawString(getDisplayText(colorSchemeItem),
+                  listBox.Font, brush, e.Bounds, getStringFormat());
+            }
+         }
 
          bool useBackgroundColorForLabels =
             ConfigurationHelper.GetColorMode(Program.Settings) == Common.Constants.Constants.ColorMode.Light;
-
-         string text = colorSchemeItem.DisplayName;
-         if (String.IsNullOrEmpty(text))
-         {
-            text = colorSchemeItem.Name;
-         }
-         Font font = listBox.Font;
          if (isSelected && colorSchemeItem.UseForTextColorInConfig && useBackgroundColorForLabels)
          {
-            using (Brush brush = new SolidBrush(colorSchemeItem.Color))
-            {
-               e.Graphics.DrawString(text, font, brush, e.Bounds, format);
-            }
+            drawString(colorSchemeItem.Color);
          }
          else
          {
             Color textColor = colorSchemeItem.TextName == null
                ? ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextActive
                : ColorScheme.GetColor(colorSchemeItem.TextName).Color;
-            using (Brush brush = new SolidBrush(textColor))
-            {
-               e.Graphics.DrawString(text, font, brush, e.Bounds, format);
-            }
+            drawString(textColor);
          }
       }
 
@@ -203,14 +187,16 @@ namespace mrHelper.App.Controls
       {
          if (e.Index >= 0)
          {
-            e.ItemHeight = listBox.Font.Height + scale(2);
-         }
-      }
+            string colorSchemeItemName = listBox.Items[e.Index].ToString();
+            ColorSchemeItem colorSchemeItem = ColorScheme.GetColor(colorSchemeItemName);
+            if (colorSchemeItem == null)
+            {
+               return;
+            }
 
-      private void formatColorSchemeItemSelectorItem(ListControlConvertEventArgs e)
-      {
-         ColorSchemeItem colorSchemeItem = ColorScheme.GetColor(e.ListItem.ToString());
-         e.Value = colorSchemeItem == null ? e.ListItem as string : colorSchemeItem.DisplayName;
+            e.ItemHeight = listBox.Font.Height + scale(2);
+            e.ItemWidth = measureItemWidth(e.Graphics, colorSchemeItem);
+         }
       }
 
       private void fillColorSchemeItemList(IEnumerable<string> groupNames)
@@ -230,6 +216,28 @@ namespace mrHelper.App.Controls
          {
             listBoxColorSchemeItemSelector.SelectedIndex = 0;
          }
+
+         // To show horizontal scroll bar in OwnerDraw mode
+         listBoxColorSchemeItemSelector.HorizontalExtent = findMaximumWidth();
+      }
+
+      private int findMaximumWidth()
+      {
+         int result = 0;
+         using (Graphics g = listBoxColorSchemeItemSelector.CreateGraphics())
+         {
+            foreach (object item in listBoxColorSchemeItemSelector.Items)
+            { 
+               string colorSchemeItemName = item.ToString();
+               ColorSchemeItem colorSchemeItem = ColorScheme.GetColor(colorSchemeItemName);
+               if (colorSchemeItem == null)
+               {
+                  continue;
+               }
+               result = Math.Max(result, measureItemWidth(g, colorSchemeItem));
+            }
+         }
+         return result;
       }
 
       private ColorSchemeItem getSelectedItem(ColorType type)
@@ -274,7 +282,28 @@ namespace mrHelper.App.Controls
          return null;
       }
 
+      private int measureItemWidth(Graphics g, ColorSchemeItem item)
+      {
+         SizeF res = g.MeasureString(getDisplayText(item),
+            listBoxColorSchemeItemSelector.Font, -1 /* maximum width */, getStringFormat());
+         return (int)Math.Ceiling(res.Width);
+      }
+
       private int scale(int px) => (int)WinFormsHelpers.ScalePixelsToNewDpi(96, DeviceDpi, px);
+
+      private static StringFormat getStringFormat()
+      {
+        return new StringFormat
+            {
+               Trimming = StringTrimming.EllipsisCharacter,
+               FormatFlags = StringFormatFlags.NoWrap
+            };
+      }
+
+      private static string getDisplayText(ColorSchemeItem item)
+      {
+         return String.IsNullOrEmpty(item.DisplayName) ? item.Name : item.DisplayName;
+      }
 
       private Action _onSelected;
       private string[] _groupNames;
