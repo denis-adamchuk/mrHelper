@@ -97,29 +97,43 @@ namespace mrHelper.App.Properties {
         ///}
         ///
         ///body div {
-        ///   font-family: Microsoft Sans Serif, Sans Serif;
+        ///   font-family: Segoe UI, Microsoft Sans Serif, Sans Serif;
         ///   padding: 0.2em;
         ///}
         ///
         ///table {
-        ///   border: solid 1px #DDEEEE;
         ///   border-collapse: collapse;
         ///   border-spacing: 0;
         ///}
         ///
         ///table thead th {
-        ///   background-color: #E4E7E6;
-        ///   border: solid 1px #DDEEEE;
-        ///   color: #333;
         ///   text-align: left;
-        ///   text-shadow: 1px 1px 1px #fff;
         ///}
         ///
-        ///table tbody td {
-        ///   background-color: #FBFBF5;
-        ///   border: solid 1px #DDEEEE;
-        ///   color: #333;
-        ///   text-shadow: 1px 1px  [rest of string was truncated]&quot;;.
+        ///p {
+        ///   margin: 0;
+        ///}
+        ///
+        ///ul, ol {
+        ///   padding-left: 1em;
+        ///   margin-top: 0.5em;
+        ///   margin-bottom: 0.5em;
+        ///   margin-left: 0;
+        ///}
+        ///
+        ///.htmltooltip {
+        ///   padding: 0;
+        ///}
+        ///
+        ///.no-border {
+        ///   border: none;
+        ///}
+        ///
+        ///.no-bg {
+        ///   background-color: initial;
+        ///}
+        ///
+        ///.
         /// </summary>
         internal static string Common_CSS {
             get {
@@ -273,6 +287,16 @@ namespace mrHelper.App.Properties {
         internal static System.Drawing.Bitmap pin_transparent_alpha {
             get {
                 object obj = ResourceManager.GetObject("pin_transparent_alpha", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap pin_transparent_alpha_alt {
+            get {
+                object obj = ResourceManager.GetObject("pin_transparent_alpha_alt", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

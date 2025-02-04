@@ -783,7 +783,16 @@ namespace mrHelper.App.Controls
                drawColorColumnEllipse(e.Graphics, bounds, color, null);
                if (isPinnedToMe(fmk))
                {
-                  drawColorColumnImage(e.Graphics, bounds, Properties.Resources.pin_transparent_alpha);
+                  bool useDefaultColorForPin =
+                     ConfigurationHelper.GetColorMode(Program.Settings) == Constants.ColorMode.Light;
+                  if (useDefaultColorForPin)
+                  {
+                     drawColorColumnImage(e.Graphics, bounds, Properties.Resources.pin_transparent_alpha);
+                  }
+                  else
+                  {
+                     drawColorColumnImage(e.Graphics, bounds, Properties.Resources.pin_transparent_alpha_alt);
+                  }
                }
             }
             else if (isClickable)
