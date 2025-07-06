@@ -125,6 +125,12 @@ namespace mrHelper.App.Forms
          updateStaticMergeRequestProperties(mergeRequest);
          updateMergeRequestTitle(mergeRequest);
          updateMergeRequestState(mergeRequest);
+
+         if (IsDisposed) // due to Close()
+         {
+            return;
+         }
+
          updateMergeRequestBranches(mergeRequest);
          updateMergeRequestMergeFlags(mergeRequest);
          updateWorkInProgressStatus(mergeRequest);

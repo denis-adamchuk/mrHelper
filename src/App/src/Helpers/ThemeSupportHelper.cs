@@ -526,6 +526,11 @@ namespace ThemeSupport
          }
          else if (control is ComboBox comboBox)
          {
+            // See #619
+            if ((control as ComboBox).SelectionStart < 0)
+            {
+               (control as ComboBox).SelectionStart = 0;
+            }
             // Fixing a glitch that makes all instances of the ComboBox showing as having a Selected value,
             // even when they dont
             control.BeginInvoke(new Action(() => (control as ComboBox).SelectionLength = 0));
