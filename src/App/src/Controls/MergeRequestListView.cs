@@ -1184,9 +1184,9 @@ namespace mrHelper.App.Controls
 
          Commit latestCommit = mergeRequestCache
             .GetCommits(key)?
-            .OrderByDescending(commit => commit.Created_At)
+            .OrderByDescending(commit => commit.Authored_Date)
             .FirstOrDefault();
-         return latestCommit?.Created_At;
+         return latestCommit?.Authored_Date;
       }
 
       private string getActivities(DateTime createdAt, MergeRequestKey key, bool tooltipText)

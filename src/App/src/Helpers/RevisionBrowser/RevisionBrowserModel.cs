@@ -137,7 +137,7 @@ namespace mrHelper.App.Helpers
          {
             name = commit.Title;
             fullSha = commit.Id;
-            timestamp = commit.Created_At;
+            timestamp = commit.Authored_Date;
             description = commit.Message;
          }
          else
