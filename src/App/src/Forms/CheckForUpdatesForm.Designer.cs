@@ -82,6 +82,7 @@
          this.MinimizeBox = false;
          this.Name = "CheckForUpdatesForm";
          this.Load += new System.EventHandler(this.CheckForUpdatesForm_Load);
+         this.TopMost = true;
          this.ResumeLayout(false);
          this.PerformLayout();
 
