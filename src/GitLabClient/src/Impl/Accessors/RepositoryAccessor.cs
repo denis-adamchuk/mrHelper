@@ -65,13 +65,18 @@ namespace mrHelper.GitLabClient
          Commit headBranchCommit = await LoadCommit(branchName);
          if (headBranchCommit == null)
          {
-            return null;
+            return null; // Operation was canceled
          }
 
-         if (headBranchCommit.Parent_Ids == null || !headBranchCommit.Parent_Ids.Any())
+         if (headBranchCommit.Parent_Ids == null)
          {
             Debug.Assert(false);
             return null;
+         }
+
+         if (!headBranchCommit.Parent_Ids.Any())
+         {
+            return null; // It may happen for the first commit in the repository
          }
 
          string previousCommitSha = headBranchCommit.Id;
@@ -79,7 +84,12 @@ namespace mrHelper.GitLabClient
          {
             string sha = getParentSha(headBranchCommit.Parent_Ids.First(), iDepth);
             IEnumerable<CommitRef> refs = await loadCommitRefs(sha);
-            if (refs == null || !refs.Any())
+            if (refs == null)
+            {
+               return null; // Operation was canceled
+            }
+
+            if (!refs.Any())
             {
                continue;
             }
@@ -113,9 +123,9 @@ namespace mrHelper.GitLabClient
       }
 
       async public Task<IEnumerable<string>> FindPreferredTargetBranchNames(
-         Branch sourceBranch, Commit sourceBranchCommit)
+         string branchName, Commit commit)
       {
-         if (sourceBranchCommit.Parent_Ids == null || !sourceBranchCommit.Parent_Ids.Any())
+         if (commit.Parent_Ids == null || !commit.Parent_Ids.Any())
          {
             Debug.Assert(false);
             return null;
@@ -123,20 +133,25 @@ namespace mrHelper.GitLabClient
 
          for (int iDepth = 0; iDepth < Constants.MaxCommitDepth; ++iDepth)
          {
-            string sha = getParentSha(sourceBranchCommit.Parent_Ids.First(), iDepth);
+            string sha = getParentSha(commit.Parent_Ids.First(), iDepth);
             IEnumerable<CommitRef> refs = await loadCommitRefs(sha);
-            if (refs == null || !refs.Any())
+            if (refs == null)
+            {
+               return null; // Operation was canceled
+            }
+
+            if (!refs.Any())
             {
                continue;
             }
 
             IEnumerable<CommitRef> branchRefs = refs.Where(x => x.Type == "branch");
-            if (branchRefs.Count() == 1 && branchRefs.First().Name == sourceBranch.Name)
+            if (branchRefs.Count() == 1 && branchRefs.First().Name == branchName)
             {
                continue;
             }
 
-            return branchRefs.Where(x => x.Name != sourceBranch.Name).Select(x => x.Name);
+            return branchRefs.Where(x => x.Name != branchName).Select(x => x.Name);
          }
          return null;
       }

@@ -82,18 +82,23 @@ namespace mrHelper.App.Forms
       async private void comboBoxSourceBranch_SelectedIndexChanged(object sender, System.EventArgs e)
       {
          _repositoryAccessor?.Cancel();
+         Branch sourceBranch = getSourceBranch();
+         if (sourceBranch == null)
+         {
+            return;
+         }
 
          Commit commit = null;
          try
          {
-            commit = await loadCommitAsync();
+            commit = await loadCommitAsync(sourceBranch.Name);
          }
          catch (RepositoryAccessorException ex)
          {
-            string message = String.Format("Cannot find a commit for branch {0}", getSourceBranchName());
+            string message = String.Format("Cannot find a commit for branch {0}", sourceBranch.Name);
             ExceptionHandlers.Handle(message, ex);
          }
-         await searchTargetBranchNameAsync(commit);
+         await searchTargetBranchNameAsync(sourceBranch.Name, commit);
       }
 
       async private Task loadBranchListAsync()
@@ -141,13 +146,10 @@ namespace mrHelper.App.Forms
          groupBoxSource.Text = "Source Branch";
       }
 
-      async private Task<Commit> loadCommitAsync()
+      async private Task<Commit> loadCommitAsync(string branchName)
       {
-         Branch sourceBranch = getSourceBranch();
-         Debug.Assert(sourceBranch != null);
-
          onCommitLoading();
-         Commit commit = await _repositoryAccessor.FindFirstBranchCommit(sourceBranch.Name);
+         Commit commit = await _repositoryAccessor.FindFirstBranchCommit(branchName);
          onCommitLoaded(commit);
          return commit;
       }
@@ -190,10 +192,8 @@ namespace mrHelper.App.Forms
          return message;
       }
 
-      async private Task searchTargetBranchNameAsync(Commit sourceBranchCommit)
+      async private Task searchTargetBranchNameAsync(string sourceBranchName, Commit sourceBranchCommit)
       {
-         Branch sourceBranch = getSourceBranch();
-         Debug.Assert(sourceBranch != null);
          if (sourceBranchCommit == null)
          {
             return;
@@ -204,11 +204,11 @@ namespace mrHelper.App.Forms
          try
          {
             targetBranchNames =
-               await _repositoryAccessor.FindPreferredTargetBranchNames(sourceBranch, sourceBranchCommit);
+               await _repositoryAccessor.FindPreferredTargetBranchNames(sourceBranchName, sourceBranchCommit);
          }
          catch (RepositoryAccessorException ex)
          {
-            string message = String.Format("Cannot find a target branch for {0}", sourceBranch.Name);
+            string message = String.Format("Cannot find a target branch for {0}", sourceBranchName);
             ExceptionHandlers.Handle(message, ex);
          }
          onTargetBranchSearchFinish(targetBranchNames);
@@ -273,7 +273,11 @@ namespace mrHelper.App.Forms
                   _repositoryAccessor = createRepositoryAccessor();
                   try
                   {
-                     await loadCommitAsync();
+                     Branch sourceBranch = getSourceBranch();
+                     if (sourceBranch != null)
+                     {
+                        await loadCommitAsync(sourceBranch.Name);
+                     }
                   }
                   catch (RepositoryAccessorException ex)
                   {
