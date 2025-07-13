@@ -327,7 +327,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         toolStripButtonHideMergeRequest.Image = Properties.Resources.hide_100x100;
+         toolStripButtonHideMergeRequest.Image = ToolbarIconSelector.GetHideIcon();
          toolStripButtonHideMergeRequest.ToolTipText = HideButtonTooltip;
 
          if (!connectionPage.CanToggleHideStatus())
@@ -342,7 +342,7 @@ namespace mrHelper.App.Forms
             return;
          }
 
-         toolStripButtonHideMergeRequest.Image = Properties.Resources.unhide_100x100;
+         toolStripButtonHideMergeRequest.Image = ToolbarIconSelector.GetUnhideIcon();
          toolStripButtonHideMergeRequest.ToolTipText = UnhideButtonTooltip;
       }
 
@@ -355,12 +355,12 @@ namespace mrHelper.App.Forms
                toolStripButtonPinMergeRequest.Enabled = connectionPage.CanTogglePinStatus();
                if (connectionPage.IsSelectedMergeRequestPinned())
                {
-                  toolStripButtonPinMergeRequest.Image = Properties.Resources.unpin_100x100;
+                  toolStripButtonPinMergeRequest.Image = ToolbarIconSelector.GetUnpinIcon();
                   toolStripButtonPinMergeRequest.ToolTipText = UnpinButtonTooltip;
                }
                else
                {
-                  toolStripButtonPinMergeRequest.Image = Properties.Resources.pin_100x100;
+                  toolStripButtonPinMergeRequest.Image = ToolbarIconSelector.GetPinIcon();
                   toolStripButtonPinMergeRequest.ToolTipText = PinButtonTooltip;
                }
             }

@@ -95,7 +95,8 @@ namespace mrHelper.App.Forms
       private void initSmartTextBox(string initialText, bool editable, bool multiline, IEnumerable<User> fullUserList)
       {
          textBox.Init(!editable, initialText, multiline,
-            !Program.Settings.DisableSpellChecker, Program.Settings.WPFSoftwareOnlyRenderMode);
+            !Program.Settings.DisableSpellChecker, Program.Settings.WPFSoftwareOnlyRenderMode,
+            ThemeSupport.StockColors.GetThemeColors().TextBoxBorder);
 
          if (fullUserList != null && _avatarImageCache != null)
          {

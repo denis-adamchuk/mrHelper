@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using GitLabSharp.Entities;
-using mrHelper.CommonControls.Tools;
+using mrHelper.Common.Constants;
+using mrHelper.Common.Tools;
 using mrHelper.GitLabClient;
 
 namespace mrHelper.App.Helpers
@@ -34,9 +35,20 @@ namespace mrHelper.App.Helpers
          }
 
          Key key = new Key(user.Id);
-         if (_cached.TryGetValue(key, out Image image))
+         Image image;
+         if (isDarkMode())
          {
-            return image;
+            if (_cachedDark.TryGetValue(key, out image))
+            {
+               return image;
+            }
+         }
+         else
+         {
+            if (_cached.TryGetValue(key, out image))
+            {
+               return image;
+            }
          }
 
          image = convertByteToImage(_dataCache.AvatarCache.GetAvatar(user));
@@ -46,7 +58,8 @@ namespace mrHelper.App.Helpers
          }
 
          _cached[key] = image;
-         return image;
+         _cachedDark[key] = ImageUtils.DarkenImage(image);
+         return isDarkMode() ? _cachedDark[key] : _cached[key];
       }
 
       private Image convertByteToImage(byte[] bytes)
@@ -74,6 +87,12 @@ namespace mrHelper.App.Helpers
             kv.Value.Dispose();
          }
          _cached.Clear();
+
+         foreach (KeyValuePair<Key, Image> kv in _cachedDark)
+         {
+            kv.Value.Dispose();
+         }
+         _cachedDark.Clear();
       }
 
       private DataCache _dataCache;
@@ -104,7 +123,15 @@ namespace mrHelper.App.Helpers
             return hashCode;
          }
       }
+
+      private static bool isDarkMode()
+      {
+         Constants.ColorMode colorMode = ConfigurationHelper.GetColorMode(Program.Settings);
+         return colorMode == Constants.ColorMode.Dark;
+      }
+
       private readonly Dictionary<Key, Image> _cached = new Dictionary<Key, Image>();
+      private readonly Dictionary<Key, Image> _cachedDark = new Dictionary<Key, Image>();
    }
 }
 

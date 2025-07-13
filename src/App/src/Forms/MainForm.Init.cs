@@ -31,6 +31,7 @@ namespace mrHelper.App.Forms
          _loadingConfiguration = true;
          initializeColorScheme(); // Do this before OnHandleCreated() where ThemeSupportHelper can be created
          InitializeComponent();
+         assignImagesToToolbar();
 
          WinFormsHelpers.LogScaleDimensions(this);
          WinFormsHelpers.LogScreenResolution(this);

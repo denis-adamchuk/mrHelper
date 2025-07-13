@@ -162,7 +162,7 @@ namespace mrHelper.App.Forms
          toolStripButtonEditTrackedTime.Enabled = false;
          toolStripButtonCancelTimer.Enabled = true;
          toolStripTextBoxTrackedTime.Text = DefaultTimeTrackingTextBoxText;
-         toolStripButtonStartStopTimer.Image = Properties.Resources.stop_100x100;
+         toolStripButtonStartStopTimer.Image = ToolbarIconSelector.GetStopIcon();
          pullCustomActionToolBar();
 
          addOperationRecord("Time tracking has started");
@@ -178,7 +178,7 @@ namespace mrHelper.App.Forms
          toolStripButtonEditTrackedTime.Enabled = connectionPage != null && connectionPage.CanTrackTime();
          toolStripButtonCancelTimer.Enabled = false;
          toolStripTextBoxTrackedTime.Text = connectionPage?.GetTrackedTimeAsText() ?? DefaultTimeTrackingTextBoxText;
-         toolStripButtonStartStopTimer.Image = Properties.Resources.play_100x100;
+         toolStripButtonStartStopTimer.Image = ToolbarIconSelector.GetPlayIcon();
          toolStripButtonStartStopTimer.Enabled = connectionPage != null && connectionPage.CanTrackTime();
          pullCustomActionToolBar();
 
@@ -1115,6 +1115,37 @@ namespace mrHelper.App.Forms
       private bool isToolStripHostsVisible()
       {
          return toolStripHosts.Items.Count > 1;
+      }
+
+      private void assignImagesToToolbar()
+      {
+         toolStripButtonCreateNew.Image = ToolbarIconSelector.GetCreateNewIcon();
+         toolStripButtonRefreshList.Image = ToolbarIconSelector.GetRefreshIcon();
+         toolStripButtonOpenFromClipboard.Image = ToolbarIconSelector.GetClipboardIcon();
+         toolStripButtonDiffTool.Image = ToolbarIconSelector.GetDiffIcon();
+         toolStripButtonDiscussions.Image = ToolbarIconSelector.GetDiscussionsIcon();
+         toolStripButtonAddComment.Image = ToolbarIconSelector.GetAddCommentIcon();
+         toolStripButtonNewThread.Image = ToolbarIconSelector.GetAddDiscussionIcon();
+         toolStripButtonEditMergeRequest.Image = ToolbarIconSelector.GetEditMRIcon();
+         toolStripButtonMergeMergeRequest.Image = ToolbarIconSelector.GetMergeIcon();
+         toolStripButtonCancelTimer.Image = ToolbarIconSelector.GetCancelIcon();
+         toolStripButtonGoToTimeTracking.Image = ToolbarIconSelector.GetLinkIcon();
+         toolStripButtonEditTrackedTime.Image = ToolbarIconSelector.GetEditIcon();
+
+         if (_timeTrackingHost == null)
+            toolStripButtonStartStopTimer.Image = ToolbarIconSelector.GetPlayIcon();
+         else
+            toolStripButtonStartStopTimer.Image = ToolbarIconSelector.GetStopIcon();
+
+         if (toolStripButtonHideMergeRequest.ToolTipText == HideButtonTooltip)
+            toolStripButtonHideMergeRequest.Image = ToolbarIconSelector.GetHideIcon();
+         else
+            toolStripButtonHideMergeRequest.Image = ToolbarIconSelector.GetUnhideIcon();
+
+         if (toolStripButtonPinMergeRequest.ToolTipText == PinButtonTooltip)
+            toolStripButtonPinMergeRequest.Image = ToolbarIconSelector.GetPinIcon();
+         else
+            toolStripButtonPinMergeRequest.Image = ToolbarIconSelector.GetUnpinIcon();
       }
    }
 }

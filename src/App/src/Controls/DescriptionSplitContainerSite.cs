@@ -60,7 +60,7 @@ namespace mrHelper.App.Controls
 
       private void applyFontAndColors()
       {
-         applyFontAndColors(richTextBoxMergeRequestDescription);
+         applyFontAndColors(htmlPanelMergeRequestDescription);
          applyFontAndColors(htmlPanelAuthorComments);
       }
 
@@ -68,7 +68,7 @@ namespace mrHelper.App.Controls
       {
          if (!_currentMergeRequest.HasValue)
          {
-            richTextBoxMergeRequestDescription.Text = String.Empty;
+            htmlPanelMergeRequestDescription.Text = String.Empty;
          }
          else
          {
@@ -76,18 +76,18 @@ namespace mrHelper.App.Controls
 
             string rawTitle = !String.IsNullOrEmpty(fmk.MergeRequest.Title) ? fmk.MergeRequest.Title : "Title is empty";
             string title = MarkDownUtils.ConvertToHtml(rawTitle, String.Empty, _mdPipeline,
-               richTextBoxMergeRequestDescription);
+               htmlPanelMergeRequestDescription);
 
             string rawDescription = !String.IsNullOrEmpty(fmk.MergeRequest.Description)
                ? fmk.MergeRequest.Description : "Description is empty";
             string uploadsPrefix = StringUtils.GetUploadsPrefix(fmk.ProjectKey.HostName, fmk.MergeRequest.Project_Id);
             string description = MarkDownUtils.ConvertToHtml(rawDescription, uploadsPrefix, _mdPipeline,
-               richTextBoxMergeRequestDescription);
+               htmlPanelMergeRequestDescription);
 
             string body = String.Format("<b>Title</b><br>{0}<br><b>Description</b><br>{1}", title, description);
-            richTextBoxMergeRequestDescription.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
+            htmlPanelMergeRequestDescription.Text = String.Format(MarkDownUtils.HtmlPageTemplate, body);
          }
-         richTextBoxMergeRequestDescription.Update();
+         htmlPanelMergeRequestDescription.Update();
       }
 
       private void updateAuthorComments()

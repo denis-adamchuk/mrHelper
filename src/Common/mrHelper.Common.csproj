@@ -74,6 +74,7 @@
     <Compile Include="Tools\AppFinder.cs" />
     <Compile Include="Tools\AutoStartHelper.cs" />
     <Compile Include="Tools\Base64Helper.cs" />
+    <Compile Include="Tools\ImageUtils.cs" />
     <Compile Include="Tools\CollectionWrapper.cs" />
     <Compile Include="Tools\CryptoHelper.cs" />
     <Compile Include="Tools\CustomTraceListener.cs" />

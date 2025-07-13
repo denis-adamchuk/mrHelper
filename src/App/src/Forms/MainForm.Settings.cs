@@ -317,6 +317,7 @@ namespace mrHelper.App.Forms
          }
 
          initializeColorScheme();
+         assignImagesToToolbar();
       }
 
       private void applyToolbarLayoutChange()

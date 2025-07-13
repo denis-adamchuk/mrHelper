@@ -33,7 +33,7 @@ namespace mrHelper.App.Controls
       private void InitializeComponent()
       {
          this.splitContainer = new System.Windows.Forms.SplitContainer();
-         this.richTextBoxMergeRequestDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
+         this.htmlPanelMergeRequestDescription = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          this.htmlPanelAuthorComments = new TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel();
          ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
          this.splitContainer.Panel1.SuspendLayout();
@@ -53,7 +53,7 @@ namespace mrHelper.App.Controls
          // splitContainer.Panel1
          // 
          this.splitContainer.Panel1.BackColor = System.Drawing.SystemColors.Window;
-         this.splitContainer.Panel1.Controls.Add(this.richTextBoxMergeRequestDescription);
+         this.splitContainer.Panel1.Controls.Add(this.htmlPanelMergeRequestDescription);
          // 
          // splitContainer.Panel2
          // 
@@ -63,19 +63,19 @@ namespace mrHelper.App.Controls
          this.splitContainer.SplitterDistance = 124;
          this.splitContainer.TabIndex = 0;
          // 
-         // richTextBoxMergeRequestDescription
+         // htmlPanelMergeRequestDescription
          // 
-         this.richTextBoxMergeRequestDescription.AutoScroll = true;
-         this.richTextBoxMergeRequestDescription.BackColor = System.Drawing.SystemColors.Window;
-         this.richTextBoxMergeRequestDescription.BaseStylesheet = null;
-         this.richTextBoxMergeRequestDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-         this.richTextBoxMergeRequestDescription.Dock = System.Windows.Forms.DockStyle.Fill;
-         this.richTextBoxMergeRequestDescription.Location = new System.Drawing.Point(0, 0);
-         this.richTextBoxMergeRequestDescription.Name = "richTextBoxMergeRequestDescription";
-         this.richTextBoxMergeRequestDescription.Size = new System.Drawing.Size(396, 124);
-         this.richTextBoxMergeRequestDescription.TabIndex = 3;
-         this.richTextBoxMergeRequestDescription.TabStop = false;
-         this.richTextBoxMergeRequestDescription.Text = null;
+         this.htmlPanelMergeRequestDescription.AutoScroll = true;
+         this.htmlPanelMergeRequestDescription.BackColor = System.Drawing.SystemColors.Window;
+         this.htmlPanelMergeRequestDescription.BaseStylesheet = null;
+         this.htmlPanelMergeRequestDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.htmlPanelMergeRequestDescription.Dock = System.Windows.Forms.DockStyle.Fill;
+         this.htmlPanelMergeRequestDescription.Location = new System.Drawing.Point(0, 0);
+         this.htmlPanelMergeRequestDescription.Name = "htmlPanelMergeRequestDescription";
+         this.htmlPanelMergeRequestDescription.Size = new System.Drawing.Size(396, 124);
+         this.htmlPanelMergeRequestDescription.TabIndex = 3;
+         this.htmlPanelMergeRequestDescription.TabStop = false;
+         this.htmlPanelMergeRequestDescription.Text = null;
          // 
          // htmlPanelAuthorComments
          // 
@@ -108,7 +108,7 @@ namespace mrHelper.App.Controls
       #endregion
 
       private System.Windows.Forms.SplitContainer splitContainer;
-      private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel richTextBoxMergeRequestDescription;
+      private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelMergeRequestDescription;
       private TheArtOfDev.HtmlRenderer.WinForms.HtmlPanel htmlPanelAuthorComments;
    }
 }

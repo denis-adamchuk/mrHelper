@@ -764,7 +764,8 @@ namespace mrHelper.App.Forms
       private void initSmartTextBox()
       {
          textBoxDiscussionBody.Init(false, String.Empty, true,
-            !Program.Settings.DisableSpellChecker, Program.Settings.WPFSoftwareOnlyRenderMode);
+            !Program.Settings.DisableSpellChecker, Program.Settings.WPFSoftwareOnlyRenderMode,
+            ThemeSupport.StockColors.GetThemeColors().TextBoxBorder);
 
          if (_fullUserList != null && _avatarImageCache != null)
          {

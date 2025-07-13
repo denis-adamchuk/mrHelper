@@ -164,6 +164,9 @@
     <Compile Include="src\Controls\FilterTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="src\Controls\FilterTextBoxPanel.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="src\Controls\HostToolbarItem.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -431,6 +434,7 @@
     <Compile Include="src\Helpers\RevisionBrowser\RevisionBrowserModel.cs" />
     <Compile Include="src\Helpers\RevisionPreviewBrowser\RevisionPreviewBrowserItem.cs" />
     <Compile Include="src\Helpers\RevisionPreviewBrowser\RevisionPreviewBrowserModel.cs" />
+    <Compile Include="src\Helpers\ToolbarIconSelector.cs" />
     <Compile Include="src\LaunchOptions.cs" />
     <Compile Include="src\LaunchContext.cs" />
     <Compile Include="src\Program.cs" />
@@ -577,6 +581,24 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\pin-transparent-alpha-alt.png" />
+    <Content Include="Resources\toolbar\add-comment_100x100.dark.png" />
+    <Content Include="Resources\toolbar\cancel_100x100.dark.png" />
+    <Content Include="Resources\toolbar\clipboard_100x100.dark.png" />
+    <Content Include="Resources\toolbar\create-new_100x100.dark.png" />
+    <Content Include="Resources\toolbar\diff_100x100.dark.png" />
+    <Content Include="Resources\toolbar\discussions_100x100.dark.png" />
+    <Content Include="Resources\toolbar\editmr_100x100.dark.png" />
+    <Content Include="Resources\toolbar\edit_100x100.dark.png" />
+    <Content Include="Resources\toolbar\hide_100x100.dark.png" />
+    <Content Include="Resources\toolbar\link_100x100.dark.png" />
+    <Content Include="Resources\toolbar\merge_100x100.dark.png" />
+    <Content Include="Resources\toolbar\pin_100x100.dark.png" />
+    <Content Include="Resources\toolbar\play_100x100.dark.png" />
+    <Content Include="Resources\toolbar\refresh_100x100.dark.png" />
+    <Content Include="Resources\toolbar\stop_100x100.dark.png" />
+    <Content Include="Resources\toolbar\thread_100x100.dark.png" />
+    <Content Include="Resources\toolbar\unhide_100x100.dark.png" />
+    <Content Include="Resources\toolbar\unpin_100x100.dark.png" />
     <None Include="Resources\exclamation-32x32.png" />
     <None Include="Resources\toolbar\unpin_100x100.png" />
     <None Include="Resources\toolbar\unhide_100x100.png" />

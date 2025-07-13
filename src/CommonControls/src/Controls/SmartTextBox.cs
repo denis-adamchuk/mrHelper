@@ -30,9 +30,15 @@ namespace mrHelper.CommonControls.Controls
       }
 
       public void Init(bool isReadOnly, string text, bool multiline,
-         bool isSpellCheckEnabled, bool softwareOnlyRenderMode)
+         bool isSpellCheckEnabled, bool softwareOnlyRenderMode, Color? borderColor)
       {
          textBox.AcceptsReturn = multiline;
+         if (borderColor.HasValue)
+         {
+            System.Windows.Media.Color color = System.Windows.Media.Color.FromArgb(
+               borderColor.Value.A, borderColor.Value.R, borderColor.Value.G, borderColor.Value.B);
+            textBox.BorderBrush = new System.Windows.Media.SolidColorBrush(color);
+         }
          textBox.IsReadOnly = isReadOnly;
          textBox.Text = text;
          textBox.SelectionStart = text.Length;

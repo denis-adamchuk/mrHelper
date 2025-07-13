@@ -1596,6 +1596,8 @@ namespace mrHelper.App.Controls
                   _textboxFilename.BackColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.Control;
                   _textboxFilename.ForeColor = ThemeSupport.StockColors.GetThemeColors().OSThemeColors.TextActive;
                }
+
+               (noteContainer.NoteAvatar as AvatarBox).Image = _avatarImageCache.GetAvatar(note.Author);
             });
 
          if (_panelContext != null)

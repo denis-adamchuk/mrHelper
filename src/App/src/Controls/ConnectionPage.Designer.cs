@@ -87,6 +87,7 @@ namespace mrHelper.App.Controls
          this.tabControlMode = new PlainTabControl();
          this.tabPageLive = new System.Windows.Forms.TabPage();
          this.groupBoxSelectMergeRequest = new System.Windows.Forms.GroupBox();
+         this.panelDisplayFilter = new FilterTextBoxPanel();
          this.textBoxDisplayFilter = new mrHelper.App.Controls.FilterTextBox();
          this.listViewLiveMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
          this.columnHeaderIId = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -122,6 +123,7 @@ namespace mrHelper.App.Controls
          this.columnHeaderFoundProject = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.tabPageRecent = new System.Windows.Forms.TabPage();
          this.groupBoxRecentMergeRequest = new System.Windows.Forms.GroupBox();
+         this.panelDisplayFilterRecent = new FilterTextBoxPanel();
          this.textBoxDisplayFilterRecent = new mrHelper.App.Controls.FilterTextBox();
          this.textBoxRecentMergeRequestsHint = new CommonControls.Controls.MultilineLabel();
          this.listViewRecentMergeRequests = new mrHelper.App.Controls.MergeRequestListView();
@@ -219,7 +221,7 @@ namespace mrHelper.App.Controls
          // groupBoxSelectMergeRequest
          // 
          this.groupBoxSelectMergeRequest.Controls.Add(this.comboBoxFilter);
-         this.groupBoxSelectMergeRequest.Controls.Add(this.textBoxDisplayFilter);
+         this.groupBoxSelectMergeRequest.Controls.Add(this.panelDisplayFilter);
          this.groupBoxSelectMergeRequest.Controls.Add(this.listViewLiveMergeRequests);
          this.groupBoxSelectMergeRequest.Dock = System.Windows.Forms.DockStyle.Fill;
          this.groupBoxSelectMergeRequest.Location = new System.Drawing.Point(3, 3);
@@ -229,10 +231,22 @@ namespace mrHelper.App.Controls
          this.groupBoxSelectMergeRequest.TabStop = false;
          this.groupBoxSelectMergeRequest.Text = "Select Merge Request";
          // 
+         // panelDisplayFilter
+         // 
+         this.panelDisplayFilter.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.panelDisplayFilter.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.panelDisplayFilter.Location = new System.Drawing.Point(160, 17);
+         this.panelDisplayFilter.Controls.Add(this.textBoxDisplayFilter);
+         this.panelDisplayFilter.Name = "panelDisplayFilter";
+         this.panelDisplayFilter.Size = new System.Drawing.Size(676, 20);
+         // 
          // textBoxDisplayFilter
          // 
          this.textBoxDisplayFilter.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+         this.textBoxDisplayFilter.BorderStyle = System.Windows.Forms.BorderStyle.None;
+         this.textBoxDisplayFilter.Dock = System.Windows.Forms.DockStyle.Fill;
          this.textBoxDisplayFilter.Location = new System.Drawing.Point(160, 17);
          this.textBoxDisplayFilter.Multiline = false;
          this.textBoxDisplayFilter.Name = "textBoxDisplayFilter";
@@ -525,7 +539,7 @@ namespace mrHelper.App.Controls
          // groupBoxRecentMergeRequest
          // 
          this.groupBoxRecentMergeRequest.Controls.Add(this.comboBoxFilterRecent);
-         this.groupBoxRecentMergeRequest.Controls.Add(this.textBoxDisplayFilterRecent);
+         this.groupBoxRecentMergeRequest.Controls.Add(this.panelDisplayFilterRecent);
          this.groupBoxRecentMergeRequest.Controls.Add(this.textBoxRecentMergeRequestsHint);
          this.groupBoxRecentMergeRequest.Controls.Add(this.listViewRecentMergeRequests);
          this.groupBoxRecentMergeRequest.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -536,10 +550,22 @@ namespace mrHelper.App.Controls
          this.groupBoxRecentMergeRequest.TabStop = false;
          this.groupBoxRecentMergeRequest.Text = "Recent Merge Requests";
          // 
+         // panelDisplayFilterRecent
+         // 
+         this.panelDisplayFilterRecent.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+         this.panelDisplayFilterRecent.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+         this.panelDisplayFilterRecent.Location = new System.Drawing.Point(160, 17);
+         this.panelDisplayFilterRecent.Controls.Add(this.textBoxDisplayFilterRecent);
+         this.panelDisplayFilterRecent.Name = "panelDisplayFilterRecent";
+         this.panelDisplayFilterRecent.Size = new System.Drawing.Size(676, 20);
+         // 
          // textBoxDisplayFilterRecent
          // 
          this.textBoxDisplayFilterRecent.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+         this.textBoxDisplayFilterRecent.BorderStyle = System.Windows.Forms.BorderStyle.None;
+         this.textBoxDisplayFilterRecent.Dock = System.Windows.Forms.DockStyle.Fill;
          this.textBoxDisplayFilterRecent.Location = new System.Drawing.Point(160, 17);
          this.textBoxDisplayFilterRecent.Multiline = false;
          this.textBoxDisplayFilterRecent.Name = "textBoxDisplayFilterRecent";
@@ -877,5 +903,7 @@ namespace mrHelper.App.Controls
       private mrHelper.App.Controls.FilterTextBox textBoxDisplayFilter;
       private FilterStateComboBox comboBoxFilter;
       private FilterStateComboBox comboBoxFilterRecent;
+      private FilterTextBoxPanel panelDisplayFilter;
+      private FilterTextBoxPanel panelDisplayFilterRecent;
    }
 }

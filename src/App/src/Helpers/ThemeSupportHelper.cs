@@ -35,10 +35,10 @@ namespace ThemeSupport
             Background = Color.FromArgb(26, 26, 26);
             BackgroundSplit = Color.FromArgb(55, 55, 55);
 
-            TextActive = Color.FromArgb(203, 216, 216);
+            TextActive = Color.FromArgb(185, 185, 185);
             TextInactive =  Color.FromArgb(140, 140, 140);
-            TextInSelection = Color.FromArgb(203, 216, 216);
-            ButtonBorder = Color.FromArgb(173, 216, 230);
+            TextInSelection = Color.FromArgb(185, 185, 185);
+            Border = Color.FromArgb(100, 100, 100);
          }
          else
          {
@@ -50,7 +50,7 @@ namespace ThemeSupport
             TextActive = Color.FromArgb(0, 0, 0);
             TextInactive = Color.FromArgb(169, 169, 169);
             TextInSelection = Color.FromArgb(255, 255, 255);
-            ButtonBorder = Color.FromArgb(0, 0, 139);
+            Border = Color.FromArgb(0, 0, 139);
          }
       }
 
@@ -76,21 +76,22 @@ namespace ThemeSupport
       public Color TextInSelection { get; }
 
       // Just a border of a selected button
-      public Color ButtonBorder { get; }
+      public Color Border { get; }
    }
 
    public class StockColors
    {
       public OSThemeColors OSThemeColors { get; }
 
-      public Color SelectionBackground = Color.FromArgb(0, 120, 215);
+      public Color SelectionBackground =>
+         IsDarkMode ? Color.FromArgb(0, 60, 107) : Color.FromArgb(0, 120, 215);
 
       public Color ListViewBackground => OSThemeColors.Control;
 
       public Color TooltipBackground => OSThemeColors.Control;
 
       public Color LinkTextColor =>
-         IsDarkMode ? Color.FromArgb(135, 206, 235) : Color.FromArgb(0, 0, 238);
+         IsDarkMode ? Color.FromArgb(106, 163, 186) : Color.FromArgb(0, 0, 238);
 
       public Color ListViewGroupHeaderBackground => OSThemeColors.ControlDark;
 
@@ -101,6 +102,8 @@ namespace ThemeSupport
       public Color ListViewColumnHeaderTextColor => OSThemeColors.TextActive;
 
       public Color ListViewColumnHeaderGridColor => OSThemeColors.BackgroundSplit;
+
+      public Color? TextBoxBorder => IsDarkMode ? OSThemeColors.Border : new Color?();
 
       public static StockColors GetThemeColors()
       {
@@ -333,6 +336,44 @@ namespace ThemeSupport
          }
       }
 
+      private void onGroupBoxPaint(object sender, PaintEventArgs e)
+      {
+         if (getCurrentDisplayMode() != DisplayMode.DarkMode)
+         {
+            return;
+         }
+
+         Graphics g = e.Graphics;
+         GroupBox box = (GroupBox)sender;
+         Color textColor = box.Enabled ? _OSColors.TextActive : _OSColors.TextInactive;
+         Brush textBrush = new SolidBrush(textColor);
+         Brush borderBrush = new SolidBrush(_OSColors.Border);
+         Pen borderPen = new Pen(borderBrush);
+         SizeF strSize = g.MeasureString(box.Text, box.Font);
+         Rectangle rect = new Rectangle(box.ClientRectangle.X,
+                                        box.ClientRectangle.Y + (int)(strSize.Height / 2),
+                                        box.ClientRectangle.Width - 1,
+                                        box.ClientRectangle.Height - (int)(strSize.Height / 2) - 1);
+
+         // Clear text and border
+         g.Clear(box.BackColor);
+
+         // Draw text
+         g.DrawString(box.Text, box.Font, textBrush, box.Padding.Left, 0);
+
+         // Drawing Border
+         //Left
+         g.DrawLine(borderPen, rect.Location, new Point(rect.X, rect.Y + rect.Height));
+         //Right
+         g.DrawLine(borderPen, new Point(rect.X + rect.Width, rect.Y), new Point(rect.X + rect.Width, rect.Y + rect.Height));
+         //Bottom
+         g.DrawLine(borderPen, new Point(rect.X, rect.Y + rect.Height), new Point(rect.X + rect.Width, rect.Y + rect.Height));
+         //Top1
+         g.DrawLine(borderPen, new Point(rect.X, rect.Y), new Point(rect.X + box.Padding.Left, rect.Y));
+         //Top2
+         g.DrawLine(borderPen, new Point(rect.X + box.Padding.Left + (int)(strSize.Width), rect.Y), new Point(rect.X + rect.Width, rect.Y));
+      }
+
       private void onTabControlDrawItem(object sender, DrawItemEventArgs e)
       {
          TabControl tab = (TabControl)sender;
@@ -461,9 +502,6 @@ namespace ThemeSupport
             controlStatusStorage.RegisterProcessedControl(control, isDarkMode);
          }
 
-         BorderStyle BStyle = (isDarkMode ? BorderStyle.FixedSingle : BorderStyle.Fixed3D);
-         FlatStyle FStyle = (isDarkMode ? FlatStyle.Flat : FlatStyle.Standard);
-
          control.HandleCreated -= onHandleCreated;
          control.HandleCreated += onHandleCreated;
 
@@ -479,8 +517,16 @@ namespace ThemeSupport
          // Here we fine tune individual Controls
          //
          // mrHelper controls derived from common controls shall go first.
-         if (control is mrHelper.App.Controls.DiscussionPanel ||
-             control is mrHelper.App.Controls.DiscussionBox)
+         if (control is Aga.Controls.Tree.TreeViewAdv)
+         {
+            Aga.Controls.Tree.TreeViewAdv treeView = control as Aga.Controls.Tree.TreeViewAdv;
+            if (isDarkMode && treeView.BorderStyle == BorderStyle.Fixed3D)
+            {
+               treeView.BorderStyle = BorderStyle.FixedSingle;
+            }
+         }
+         else if (control is mrHelper.App.Controls.DiscussionPanel ||
+                  control is mrHelper.App.Controls.DiscussionBox)
          {
             // Make panel and boxes have the same background color.
             // Without this customization, Panel override below changes the BackColor.
@@ -518,22 +564,28 @@ namespace ThemeSupport
          {
             Button button = control as Button;
             button.FlatStyle = isDarkMode ? FlatStyle.Flat : FlatStyle.Standard;
-            button.FlatAppearance.CheckedBackColor = _OSColors.ButtonBorder;
+            button.FlatAppearance.CheckedBackColor = _OSColors.Border;
             button.FlatAppearance.BorderColor = (_ownerForm.AcceptButton == button) ?
-              _OSColors.ButtonBorder : _OSColors.Control;
+              _OSColors.Border : _OSColors.Control;
             control.Paint -= onButtonPaint;
             control.Paint += onButtonPaint;
          }
          else if (control is ComboBox comboBox)
          {
-            // See #619
-            if ((control as ComboBox).SelectionStart < 0)
-            {
-               (control as ComboBox).SelectionStart = 0;
-            }
             // Fixing a glitch that makes all instances of the ComboBox showing as having a Selected value,
-            // even when they dont
-            control.BeginInvoke(new Action(() => (control as ComboBox).SelectionLength = 0));
+            // even when they don't
+            control.BeginInvoke(new Action(() =>
+            {
+               if (comboBox.DropDownStyle == ComboBoxStyle.DropDownList)
+               {
+                  // See #619
+                  if ((control as ComboBox).SelectionStart < 0)
+                  {
+                     (control as ComboBox).SelectionStart = 0;
+                  }
+                  (control as ComboBox).SelectionLength = 0;
+               }
+            }));
 
             // Fixes a glitch showing the Combo Background white when the control is Disabled
             if (!control.Enabled && isDarkMode)
@@ -545,6 +597,23 @@ namespace ThemeSupport
             Mode = isDarkMode ? "DarkMode_CFD" : "ClearMode_CFD";
             SetWindowTheme(control.Handle, Mode, null);
          }
+         else if (control is TextBox)
+         {
+            TextBox textBox = control as TextBox;
+            if (isDarkMode && textBox.BorderStyle == BorderStyle.Fixed3D)
+            {
+               textBox.BorderStyle = BorderStyle.FixedSingle;
+            }
+         }
+         else if (control is mrHelper.App.Controls.FilterTextBoxPanel)
+         {
+            Panel panel = control as Panel;
+            panel.BackColor = _OSColors.Background;
+            if (!isDarkMode)
+            {
+               panel.BorderStyle = BorderStyle.None;
+            }
+         }
          else if (control is Panel)
          {
             Panel panel = control as Panel;
@@ -554,6 +623,8 @@ namespace ThemeSupport
          else if (control is GroupBox)
          {
             control.GetType().GetProperty("BackColor")?.SetValue(control, control.Parent.BackColor);
+            control.Paint -= onGroupBoxPaint;
+            control.Paint += onGroupBoxPaint;
          }
          else if (control is TabControl)
          {
@@ -817,7 +888,7 @@ namespace ThemeSupport
 
          if (button.Pressed || button.Checked || button.Selected)
          {
-            using (Pen BordersPencil = new Pen(MyColors.ButtonBorder))
+            using (Pen BordersPencil = new Pen(MyColors.Border))
             {
                Rectangle b = new Rectangle(bounds.X, bounds.Y, bounds.Width - 1, bounds.Height - 1);
                e.Graphics.DrawRectangle(BordersPencil, b);
@@ -849,7 +920,7 @@ namespace ThemeSupport
       // For the Text Color of all Items
       protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
       {
-         if (e.Item is ToolStripMenuItem)
+         if (e.Item is ToolStripMenuItem || e.Item is ToolStripItem)
          {
             e.TextColor = e.Item.Enabled ? MyColors.TextActive : MyColors.TextInactive;
          }
