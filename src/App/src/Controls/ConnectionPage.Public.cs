@@ -314,7 +314,8 @@ namespace mrHelper.App.Controls
          User author = mergeRequestCache.GetMergeRequest(mrk)?.Author;
          bool isTimeTrackingAllowed = TimeTrackingHelpers.IsTimeTrackingAllowed(
             author, mrk.ProjectKey.HostName, CurrentUser);
-         return TimeTrackingHelpers.ConvertTotalTimeToText(totalTimeCache.GetTotalTime(mrk), isTimeTrackingAllowed);
+         return TimeTrackingHelpers.ConvertTotalTimeToText(
+            totalTimeCache.GetTotalTime(mrk), isTimeTrackingAllowed, false);
       }
 
       internal enum EConnectionState

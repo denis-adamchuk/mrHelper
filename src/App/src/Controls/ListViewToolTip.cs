@@ -16,7 +16,7 @@ namespace mrHelper.App.Controls
          Func<ListViewSubItem, string> getToolTipText,
          Func<ListViewSubItem, StringFormatFlags> getFormatFlags,
          Func<ListViewSubItem, Rectangle> getBounds,
-         Func<ListViewSubItem, bool> getForceShowToolTip)
+         Func<ListViewItem, ListViewSubItem, bool> getForceShowToolTip)
       {
          _listView = listView;
          _getText = getText;
@@ -153,7 +153,8 @@ namespace mrHelper.App.Controls
          }
 
          Point location = new Point(_lastMouseLocation.X + TooltipHorzOffsetFromMousePosition, _lastMouseLocation.Y);
-         string text = needShowToolTip(_lastHistTestInfo.SubItem) ? _getToolTipText(_lastHistTestInfo.SubItem) : null;
+         string text = needShowToolTip(_lastHistTestInfo.Item, _lastHistTestInfo.SubItem)
+            ? _getToolTipText(_lastHistTestInfo.SubItem) : null;
          Show(text, _listView, location);
          _toolTipShown = true;
       }
@@ -164,9 +165,9 @@ namespace mrHelper.App.Controls
          Hide(_listView);
       }
 
-      private bool needShowToolTip(ListViewItem.ListViewSubItem subItem)
+      private bool needShowToolTip(ListViewItem item, ListViewItem.ListViewSubItem subItem)
       {
-         if (_getForceShowToolTip(subItem))
+         if (_getForceShowToolTip(item, subItem))
          {
             return true;
          }
@@ -209,7 +210,7 @@ namespace mrHelper.App.Controls
       private readonly Func<ListViewSubItem, string> _getToolTipText;
       private readonly Func<ListViewSubItem, StringFormatFlags> _getFormatFlags;
       private readonly Func<ListViewSubItem, Rectangle> _getBounds;
-      private readonly Func<ListViewSubItem, bool> _getForceShowToolTip;
+      private readonly Func<ListViewItem, ListViewSubItem, bool> _getForceShowToolTip;
       private readonly System.Timers.Timer _toolTipTimer;
 
       private Point _lastMouseLocation = new Point(-1, -1);

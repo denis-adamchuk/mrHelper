@@ -12,6 +12,7 @@ namespace mrHelper.App.Controls
       Labels,
       Size,
       Jira,
+      PlannedTime,
       TotalTime,
       SourceBranch,
       TargetBranch,

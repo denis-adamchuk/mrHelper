@@ -98,6 +98,7 @@ namespace mrHelper.App.Controls
          this.columnHeaderLabels = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderSize = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderJira = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+         this.columnHeaderPlannedTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderTotalTime = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderResolved = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
          this.columnHeaderSourceBranch = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -271,6 +272,7 @@ namespace mrHelper.App.Controls
             this.columnHeaderLabels,
             this.columnHeaderSize,
             this.columnHeaderJira,
+            this.columnHeaderPlannedTime,
             this.columnHeaderTotalTime,
             this.columnHeaderResolved,
             this.columnHeaderSourceBranch,
@@ -341,11 +343,17 @@ namespace mrHelper.App.Controls
          this.columnHeaderJira.Text = "Jira";
          this.columnHeaderJira.Width = 80;
          // 
+         // columnHeaderPlannedTime
+         // 
+         this.columnHeaderPlannedTime.Tag = mrHelper.App.Controls.ColumnType.PlannedTime;
+         this.columnHeaderPlannedTime.Text = "Planned";
+         this.columnHeaderPlannedTime.Width = 60;
+         // 
          // columnHeaderTotalTime
          // 
          this.columnHeaderTotalTime.Tag = mrHelper.App.Controls.ColumnType.TotalTime;
-         this.columnHeaderTotalTime.Text = "Total Time";
-         this.columnHeaderTotalTime.Width = 70;
+         this.columnHeaderTotalTime.Text = "Spent";
+         this.columnHeaderTotalTime.Width = 60;
          // 
          // columnHeaderResolved
          // 
@@ -854,6 +862,7 @@ namespace mrHelper.App.Controls
       private System.Windows.Forms.ColumnHeader columnHeaderLabels;
       private System.Windows.Forms.ColumnHeader columnHeaderSize;
       private System.Windows.Forms.ColumnHeader columnHeaderJira;
+      private System.Windows.Forms.ColumnHeader columnHeaderPlannedTime;
       private System.Windows.Forms.ColumnHeader columnHeaderTotalTime;
       private System.Windows.Forms.ColumnHeader columnHeaderResolved;
       private System.Windows.Forms.ColumnHeader columnHeaderSourceBranch;

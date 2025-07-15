@@ -86,6 +86,11 @@ namespace mrHelper.App.Controls
          _diffStatisticProvider = diffStatisticProvider;
       }
 
+      internal void SetPlannedTimeProvider(DiscussionBasedPlannedTimeProvider plannedTimeProvider)
+      {
+         _plannedTimeProvider = plannedTimeProvider;
+      }
+
       internal void SetCurrentUserGetter(Func<User> funcGetter)
       {
          _getCurrentUser = funcGetter;
@@ -1142,6 +1147,56 @@ namespace mrHelper.App.Controls
          return diffStatistic?.Format() ?? errMsg;
       }
 
+      private string getPlannedTimeText(IEnumerable<MergeRequestKey> keys)
+      {
+         if (_plannedTimeProvider == null)
+         {
+            return String.Empty;
+         }
+
+         TimeSpan summary = new TimeSpan();
+         foreach (MergeRequestKey key in keys)
+         {
+            TimeSpan? plannedTime = _plannedTimeProvider.GetPlannedTime(key, out string _);
+            if (plannedTime.HasValue)
+            {
+               summary = summary.Add(plannedTime.Value);
+            }
+         }
+         return summary == TimeSpan.Zero ? String.Empty : TimeUtils.TimeSpanToString(summary, true);
+      }
+
+      private string getPlannedTimeText(MergeRequestKey key)
+      {
+         if (_plannedTimeProvider == null)
+         {
+            return String.Empty;
+         }
+
+         TimeSpan? plannedTime = _plannedTimeProvider.GetPlannedTime(key, out string errMsg);
+         return plannedTime.HasValue ? TimeUtils.TimeSpanToString(plannedTime.Value, true) : errMsg;
+      }
+
+      private string getTotalTimeText(IEnumerable<MergeRequestKey> keys)
+      {
+         ITotalTimeCache totalTimeCache = _dataCache?.TotalTimeCache;
+         if (totalTimeCache == null)
+         {
+            return String.Empty;
+         }
+
+         TimeSpan summary = new TimeSpan();
+         foreach (MergeRequestKey key in keys)
+         {
+            TrackedTime spentTime = totalTimeCache.GetTotalTime(key);
+            if (spentTime.Status == TrackedTime.EStatus.Ready && spentTime.Amount.HasValue)
+            {
+               summary = summary.Add(spentTime.Amount.Value);
+            }
+         }
+         return summary == TimeSpan.Zero ? String.Empty : TimeUtils.TimeSpanToString(summary, true);
+      }
+
       private string getTotalTimeText(MergeRequestKey key, User author)
       {
          ITotalTimeCache totalTimeCache = _dataCache?.TotalTimeCache;
@@ -1153,7 +1208,8 @@ namespace mrHelper.App.Controls
          User currentUser = _getCurrentUser();
          bool isTimeTrackingAllowed = TimeTrackingHelpers.IsTimeTrackingAllowed(
             author, key.ProjectKey.HostName, currentUser);
-         return TimeTrackingHelpers.ConvertTotalTimeToText(totalTimeCache.GetTotalTime(key), isTimeTrackingAllowed);
+         return TimeTrackingHelpers.ConvertTotalTimeToText(
+            totalTimeCache.GetTotalTime(key), isTimeTrackingAllowed, true);
       }
 
       private DateTime? getRefreshedTime(MergeRequestKey key)
@@ -1315,6 +1371,7 @@ namespace mrHelper.App.Controls
          setSubItemTag(item, ColumnType.Title, x => mr.Title);
          setSubItemTag(item, ColumnType.Labels, x => labels[x]);
          setSubItemTag(item, ColumnType.Size, x => getSize(mrk));
+         setSubItemTag(item, ColumnType.PlannedTime, x => getPlannedTimeText(mrk));
          setSubItemTag(item, ColumnType.Jira, x => getJiraTask(mr), () => getJiraTaskUrl(mr));
          setSubItemTag(item, ColumnType.TotalTime, x => getTotalTimeText(mrk, mr.Author));
          setSubItemTag(item, ColumnType.SourceBranch, x => mr.Source_Branch);
@@ -1397,6 +1454,8 @@ namespace mrHelper.App.Controls
 
          IEnumerable<FullMergeRequestKey> fullKeys = getMatchingFilterProjectItems(getGroupProjectKey(item.Group));
 
+         // Dictionary<bool, string> - `false` for column text, `true` for tooltip text
+
          User currentUser = fullKeys.Any() ? _getCurrentUser() : null;
          Debug.Assert(fullKeys.All(key => _getCurrentUser().Id == (currentUser?.Id ?? 0)));
          IEnumerable<string> groupedLabels = GitLabClient.Helpers.GroupLabels(fullKeys,
@@ -1445,6 +1504,20 @@ namespace mrHelper.App.Controls
             [true] = StringUtils.JoinSubstrings(distinctTargetBranches.OrderBy(branch => branch))
          };
 
+         IEnumerable<MergeRequestKey> allKeys =
+            fullKeys.Select(key => new MergeRequestKey(key.ProjectKey, key.MergeRequest.IId));
+         Dictionary<bool, string> plannedTimeSummary = new Dictionary<bool, string>
+         {
+            [false] = getPlannedTimeText(allKeys),
+            [true] = String.Empty // no tooltip
+         };
+
+         Dictionary<bool, string> totalTimeSummary = new Dictionary<bool, string>
+         {
+            [false] = getTotalTimeText(allKeys),
+            [true] = String.Empty // no tooltip
+         };
+
          setSubItemTag(item, ColumnType.IId);
          setSubItemTag(item, ColumnType.Color);
          setSubItemTag(item, ColumnType.Avatar);
@@ -1452,8 +1525,9 @@ namespace mrHelper.App.Controls
          setSubItemTag(item, ColumnType.Title, x => titles[x]);
          setSubItemTag(item, ColumnType.Labels, x => labels[x]);
          setSubItemTag(item, ColumnType.Size);
+         setSubItemTag(item, ColumnType.PlannedTime, x => plannedTimeSummary[x]);
          setSubItemTag(item, ColumnType.Jira, x => jiraTasks[x]);
-         setSubItemTag(item, ColumnType.TotalTime);
+         setSubItemTag(item, ColumnType.TotalTime, x => totalTimeSummary[x]);
          setSubItemTag(item, ColumnType.SourceBranch, x => sourceBranches[x]);
          setSubItemTag(item, ColumnType.TargetBranch, x => targetBranches[x]);
          setSubItemTag(item, ColumnType.State);
@@ -1720,7 +1794,7 @@ namespace mrHelper.App.Controls
          return new Rectangle(subItem.Bounds.X, subItem.Bounds.Y, width, subItem.Bounds.Height);
       }
 
-      private bool getForceShowToolTip(ListViewItem.ListViewSubItem subItem)
+      private bool getForceShowToolTip(ListViewItem item, ListViewItem.ListViewSubItem subItem)
       {
          ListViewSubItemInfo info = (subItem.Tag as ListViewSubItemInfo);
          ColumnType columnType = info.ColumnType;
@@ -1731,6 +1805,12 @@ namespace mrHelper.App.Controls
                    || getText(subItem).Contains(AllListViewRowsHint);
             case ColumnType.Activities:
                return true;
+            case ColumnType.Jira:
+            case ColumnType.Author:
+            case ColumnType.Title:
+            case ColumnType.SourceBranch:
+            case ColumnType.TargetBranch:
+               return isSummaryItem(item);
          }
          bool containsUrl = !String.IsNullOrWhiteSpace(info.Url);
          return containsUrl;
@@ -2039,6 +2119,17 @@ namespace mrHelper.App.Controls
                   return diffStatistic1.HasValue ? 1 : (diffStatistic2.HasValue ? -1 : fallbackToIIdComparison());
                }
 
+            case ColumnType.PlannedTime:
+               {
+                  double? plannedTime1 = _plannedTimeProvider?.GetPlannedTime(mrk1, out string _)?.TotalSeconds;
+                  double? plannedTime2 = _plannedTimeProvider?.GetPlannedTime(mrk2, out string _)?.TotalSeconds;
+                  if (plannedTime1.HasValue && plannedTime2.HasValue)
+                  {
+                     return plannedTime1 == plannedTime2 ? 0 : (plannedTime1 > plannedTime2 ? 1 : -1);
+                  }
+                  return plannedTime1.HasValue ? 1 : (plannedTime2.HasValue ? -1 : fallbackToIIdComparison());
+               }
+
             case ColumnType.TotalTime:
                {
                   double? totalTime1 = _dataCache?.TotalTimeCache?.GetTotalTime(mrk1).Amount?.TotalSeconds;
@@ -2130,6 +2221,7 @@ namespace mrHelper.App.Controls
 
       private readonly ListViewToolTip _toolTip;
       private IDiffStatisticProvider _diffStatisticProvider;
+      private DiscussionBasedPlannedTimeProvider _plannedTimeProvider;
       private Func<User> _getCurrentUser;
       private DataCache _dataCache;
       private MergeRequestFilter _mergeRequestFilter;

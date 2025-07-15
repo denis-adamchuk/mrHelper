@@ -8,7 +8,7 @@ namespace mrHelper.App.Helpers
 {
    internal static class TimeTrackingHelpers
    {
-      public static string ConvertTotalTimeToText(TrackedTime trackedTime, bool isTimeTrackingAllowed)
+      public static string ConvertTotalTimeToText(TrackedTime trackedTime, bool isTimeTrackingAllowed, bool compact)
       {
          if (trackedTime.Status == TrackedTime.EStatus.NotAvailable)
          {
@@ -23,7 +23,7 @@ namespace mrHelper.App.Helpers
          Debug.Assert(trackedTime.Amount.HasValue);
          if (trackedTime.Amount.Value != TimeSpan.Zero)
          {
-            return trackedTime.Amount.Value.ToString(@"hh\:mm\:ss");
+            return Common.Tools.TimeUtils.TimeSpanToString(trackedTime.Amount.Value, compact);
          }
 
          return isTimeTrackingAllowed ? Constants.NotStartedTimeTrackingText : Constants.NotAllowedTimeTrackingText;

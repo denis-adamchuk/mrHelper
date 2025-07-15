@@ -590,6 +590,10 @@ namespace mrHelper.App.Controls
          }
          _diffStatProvider.Update += onGitStatisticManagerUpdate;
          getListView(EDataCacheType.Live).SetDiffStatisticProvider(_diffStatProvider);
+
+         _plannedTimeProvider = new DiscussionBasedPlannedTimeProvider(dataCache.DiscussionCache);
+         _plannedTimeProvider.Update += onGitStatisticManagerUpdate;
+         getListView(EDataCacheType.Live).SetPlannedTimeProvider(_plannedTimeProvider);
       }
 
       private void disposeGitHelpers()

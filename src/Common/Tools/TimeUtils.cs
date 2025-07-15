@@ -9,6 +9,26 @@ namespace mrHelper.Common.Tools
       public const string DateOnlyTimeStampFormat = "d-MMM-yyyy";
       public const string DateOnlyGitLabFormat = "yyyy-MM-dd";
 
+      public static string TimeSpanToString(TimeSpan span, bool compact)
+      {
+         if (!compact)
+            return span.ToString(@"hh\:mm\:ss");
+
+         // Round up if there are any seconds (1-59)
+         if (span.Seconds > 0)
+         {
+            span = span.Add(TimeSpan.FromSeconds(60 - span.Seconds));
+         }
+
+         if (span.TotalHours < 1)
+         {
+            return $"{span.Minutes}m";
+         }
+
+         // Format as hh:mm with leading zeros
+         return $"{span.Hours}h {span.Minutes}m";
+      }
+
       public static string DateTimeOptToString(DateTime? dateTime)
       {
          return dateTime.HasValue ? DateTimeToString(dateTime.Value) : "N/A";

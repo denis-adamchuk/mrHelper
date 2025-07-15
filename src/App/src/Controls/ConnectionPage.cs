@@ -36,6 +36,7 @@ namespace mrHelper.App.Controls
       private LocalCommitStorageFactory _storageFactory;
       private GitDataUpdater _gitDataUpdater;
       private IDiffStatisticProvider _diffStatProvider;
+      private DiscussionBasedPlannedTimeProvider _plannedTimeProvider;
       private UserNotifier _userNotifier;
       private EventFilter _eventFilter;
       private ExpressionResolver _expressionResolver;
