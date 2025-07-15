@@ -95,7 +95,7 @@ namespace ThemeSupport
 
       public Color ListViewGroupHeaderBackground => OSThemeColors.ControlDark;
 
-      public Color ListViewGroupHeaderTextColor => IsDarkMode ? Color.Cyan : Color.Blue;
+      public Color ListViewGroupHeaderTextColor => IsDarkMode ? Color.FromArgb(0, 204, 204) : Color.Blue;
 
       public Color ListViewColumnHeaderBackground => OSThemeColors.Background;
 
