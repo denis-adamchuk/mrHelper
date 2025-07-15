@@ -611,7 +611,7 @@ namespace ThemeSupport
             panel.BackColor = _OSColors.Background;
             if (!isDarkMode)
             {
-               panel.BorderStyle = BorderStyle.None;
+               panel.BorderStyle = BorderStyle.Fixed3D;
             }
          }
          else if (control is Panel)
