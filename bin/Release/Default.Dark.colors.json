@@ -3,7 +3,7 @@
       "group": "Discussions",
       "name": "Discussions_Comments",
       "display_name": "Comments",
-      "factory": "101,115,131",
+      "factory": "79,89,102",
       "text_name": "Discussions_Comments_Text"
    },
    {
@@ -43,27 +43,27 @@
    },
    {
       "name": "Discussions_Comments_Text",
-      "factory": "WhiteSmoke"
+      "factory": "220,220,220"
    },
    {
       "name": "Discussions_ServiceMessages_Text",
-      "factory": "WhiteSmoke"
+      "factory": "220,220,220"
    },
    {
       "name": "Discussions_Author_Notes_Resolved_Text",
-      "factory": "DarkGray"
+      "factory": "150,150,150"
    },
    {
       "name": "Discussions_NonAuthor_Notes_Resolved_Text",
-      "factory": "DarkGray"
+      "factory": "150,150,150"
    },
    {
       "name": "Discussions_Author_Notes_Unresolved_Text",
-      "factory": "WhiteSmoke"
+      "factory": "220,220,220"
    },
    {
       "name": "Discussions_NonAuthor_Notes_Unresolved_Text",
-      "factory": "WhiteSmoke"
+      "factory": "220,220,220"
    },
    {
       "name": "DiscussionBox_DisabledNote_Background",
@@ -80,36 +80,38 @@
       "name": "Status_Tracking",
       "display_name": "Tracking time",
       "conditions": ["{IsTrackingTime:true}"],
-      "factory": "Turquoise",
+      "factory": "11,128,11",
       "use_for_preview": true,
       "use_for_sorting": false,
-      "use_for_text_color_in_config": true
+      "use_for_text_color_in_config": true,
+      "use_for_muted": true
    },
    {
       "group": "MergeRequests",
       "name": "MergeRequests_excluded",
       "display_name": "Merge requests that would be hidden if Filter was on",
       "conditions": ["{IsExcluded:true}"],
-      "factory": "Gray",
+      "factory": "59,59,59",
       "use_for_preview": false,
       "use_for_sorting": false,
-      "use_for_text_color_in_config": true
+      "use_for_text_color_in_config": true,
+      "use_for_muted": true
    },
    {
       "name": "MergeRequestListView_ResolvedCount_Text",
-      "factory": "Green"
+      "factory": "31,166,72"
    },
    {
       "name": "MergeRequestListView_ResolvedCountHighlighted_Text",
-      "factory": "SpringGreen"
+      "factory": "0,255,127"
    },
    {
       "name": "MergeRequestListView_UnresolvedCount_Text",
-      "factory": "Tomato"
+      "factory": "255,99,71"
    },
    {
       "name": "MergeRequestListView_UnresolvedCountHighlighted_Text",
-      "factory": "Orange"
+      "factory": "255,165,0"
    },
    {
       "name": "MergeRequestListView_Error_Text",
@@ -136,18 +138,18 @@
    },
    {
       "name": "HTML_Diff_LineNumbers_Text",
-      "factory": "Black"
+      "factory": "27,27,27"
    },
    {
       "group": "Discussions",
       "name": "HTML_Diff_LineNumbers_Background",
       "display_name": "Diff context (line numbers)",
-      "factory": "DarkGray",
+      "factory": "133,133,133",
       "text_name": "HTML_Diff_LineNumbers_Text"
    },
    {
       "name": "HTML_Diff_LineNumbers_Right_Border",
-      "factory": "Tomato"
+      "factory": "240,240,240"
    },
    {
       "name": "HTML_Diff_Text",
@@ -157,21 +159,21 @@
       "group": "Discussions",
       "name": "HTML_Diff_Unchanged_Background",
       "display_name": "Diff context (unchanged)",
-      "factory": "Silver",
+      "factory": "153,153,153",
       "text_name": "HTML_Diff_Text"
    },
    {
       "group": "Discussions",
       "name": "HTML_Diff_Removed_Background",
       "display_name": "Diff context (removed)",
-      "factory": "255,142,122",
+      "factory": "204,114,98",
       "text_name": "HTML_Diff_Text"
    },
    {
       "group": "Discussions",
       "name": "HTML_Diff_Added_Background",
       "display_name": "Diff context (added)",
-      "factory": "DarkSeaGreen",
+      "factory": "116,153,116",
       "text_name": "HTML_Diff_Text"
    },
    {

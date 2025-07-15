@@ -83,7 +83,8 @@
       "factory": "PaleGreen",
       "use_for_preview": true,
       "use_for_sorting": false,
-      "use_for_text_color_in_config": true
+      "use_for_text_color_in_config": true,
+      "use_for_muted": true
    },
    {
       "group": "MergeRequests",
@@ -93,7 +94,8 @@
       "factory": "Whitesmoke",
       "use_for_preview": false,
       "use_for_sorting": false,
-      "use_for_text_color_in_config": true
+      "use_for_text_color_in_config": true,
+      "use_for_muted": true
    },
    {
       "name": "MergeRequestListView_ResolvedCount_Text",
