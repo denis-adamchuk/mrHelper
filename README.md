@@ -11,7 +11,7 @@ It is a desktop tool that manages **git** and **GitLab** to support merge reques
 * Search among old MR
 * Show list of recently reviewed/developed MR
 ### Review
-* Beyond Compare 3/4 support: launching a diff tool and reporting new discussions for selected lines of code with hotkey
+* Beyond Compare 3/4/5 support: launching a diff tool and reporting new discussions for selected lines of code with hotkey
 * Color display of context diff
 * Navigation between related discussion threads when reporting a new discussion from diff tool
 * Full list of discussions with search and filters
