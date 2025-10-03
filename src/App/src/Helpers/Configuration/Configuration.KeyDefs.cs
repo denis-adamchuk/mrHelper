@@ -141,7 +141,16 @@ namespace mrHelper.App.Helpers
       private static readonly string CustomColorsDarkDefaultValue = String.Empty;
 
       private static readonly string AutoUpdatePeriodMsKeyName      = "AutoUpdatePeriodMs";
-      private static readonly int    AutoUpdatePeriodMsDefaultValue = 5 * 60 * 1000; // 5 minutes
+      private static readonly int    AutoUpdatePeriodMsDefaultValue = 11 * 60 * 1000; // 11 minutes
+
+      private static readonly string RecentAutoUpdatePeriodMsKeyName      = "RecentAutoUpdatePeriodMs";
+      private static readonly int    RecentAutoUpdatePeriodMsDefaultValue = 23 * 60 * 1000; // 23 minutes
+
+      private static readonly string DiscussionsAutoUpdatePeriodMsKeyName      = "DiscussionsAutoUpdatePeriodMs";
+      private static readonly int    DiscussionsAutoUpdatePeriodMsDefaultValue = 37 * 60 * 1000; // 37 minutes
+
+      private static readonly string CacheRevisionsPeriodMsKeyName        = "CacheRevisionsPeriodMs";
+      private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 43 * 60 * 1000; // 43 minutes
 
       // replaced with "New_..." after introducing default configuration property values
       private static readonly string OneShotUpdateFirstChanceDelayMsKeyName        = "New_OneShotUpdateFirstChanceDelayMs";
@@ -163,9 +172,6 @@ namespace mrHelper.App.Helpers
 
       private static readonly string NewOrClosedMergeRequestRefreshListDelayMsKeyName        = "NewOrClosedMergeRequestRefreshListDelayMs";
       private static readonly int    NewOrClosedMergeRequestRefreshListDelayMsDefaultValue   = 3 * 1000; // 3 seconds
-
-      private static readonly string CacheRevisionsPeriodMsKeyName        = "CacheRevisionsPeriodMs";
-      private static readonly int    CacheRevisionsPeriodMsDefaultValue   = 8 * 60 * 1000; // 8 minutes
 
       private static readonly string UseGitBasedSizeCollectionKeyName      = "UseGitBasedSizeCollection";
       private static readonly bool   UseGitBasedSizeCollectionDefaultValue = false;

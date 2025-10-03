@@ -738,7 +738,7 @@ namespace mrHelper.App.Forms
                : String.Format("{0} seconds", autoUpdateMs / 1000);
 
             string message = String.Format(
-               "Merge Request list updates each {0} and you don't usually need to update it manually", periodicity);
+               "Merge Request list (Live tab) updates each {0} and you don't usually need to update it manually", periodicity);
             MessageBox.Show(message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
             Program.Settings.ShowWarningOnReloadList = false;

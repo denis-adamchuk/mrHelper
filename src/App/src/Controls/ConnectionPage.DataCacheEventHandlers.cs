@@ -110,7 +110,7 @@ namespace mrHelper.App.Controls
             if (e.AddedToCache)
             {
                // some labels may appear within a small delay after new MR is detected
-               requestUpdates(EDataCacheType.Live, mrk, new[] {
+               requestMultipleUpdatesForSingleMergeRequest(EDataCacheType.Live, mrk, new[] {
                   Program.Settings.OneShotUpdateOnNewMergeRequestFirstChanceDelayMs,
                   Program.Settings.OneShotUpdateOnNewMergeRequestSecondChanceDelayMs});
             }

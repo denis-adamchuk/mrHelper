@@ -113,15 +113,15 @@ namespace mrHelper.App.Controls
 
       private void refreshSelectedMergeRequest()
       {
-         EDataCacheType type = getCurrentTabDataCacheType();
-         FullMergeRequestKey? fmk = getListView(type).GetSelectedMergeRequest();
+         EDataCacheType mode = getCurrentTabDataCacheType();
+         FullMergeRequestKey? fmk = getListView(mode).GetSelectedMergeRequest();
          if (!fmk.HasValue)
          {
             return;
          }
 
          MergeRequestKey mrk = new MergeRequestKey(fmk.Value.ProjectKey, fmk.Value.MergeRequest.IId);
-         requestUpdates(getDataCache(type), mrk, PseudoTimerInterval, () =>
+         requestSingleUpdateForSingleMergeRequest(mode, mrk, PseudoTimerInterval, () =>
             addOperationRecord(String.Format("Merge Request !{0} has been refreshed", mrk.IId)));
       }
 
@@ -261,14 +261,18 @@ namespace mrHelper.App.Controls
             () =>
             {
                addOperationRecord(String.Format("Merge Request !{0} has been merged successfully", mrk.IId));
-               requestUpdates(EDataCacheType.Live, null, new int[] {
-                  Program.Settings.NewOrClosedMergeRequestRefreshListDelayMs });
+               requestSingleUpdateForLiveList(Program.Settings.NewOrClosedMergeRequestRefreshListDelayMs, null);
             },
             showDiscussionsFormAsync,
             () => dataCache,
             async () =>
             {
-               await checkForUpdatesAsync(dataCache, mrk, DataCacheUpdateKind.MergeRequest);
+               bool updateReceived = false;
+               // The following call excluded Discussions update because we don't need them to check whether
+               // it is possible to merge a merge request.
+               requestSingleUpdateForSingleMergeRequest(
+                  EDataCacheType.Live, mrk, PseudoTimerInterval, () => updateReceived = true, false);
+               await TaskUtils.WhileAsync(() => !updateReceived);
                return dataCache;
             },
             () => _shortcuts.GetMergeRequestAccessor(mrk.ProjectKey.ProjectName),
@@ -409,8 +413,7 @@ namespace mrHelper.App.Controls
             return;
          }
 
-         requestUpdates(EDataCacheType.Live, null, new int[] {
-            Program.Settings.NewOrClosedMergeRequestRefreshListDelayMs });
+         requestSingleUpdateForLiveList(Program.Settings.NewOrClosedMergeRequestRefreshListDelayMs, null);
 
          addOperationRecord(String.Format("Merge Request !{0} has been created in project {1}",
             mrkOpt.Value.IId, parameters.ProjectKey.ProjectName));
@@ -457,13 +460,12 @@ namespace mrHelper.App.Controls
       async private Task applyChangesToMergeRequestAsync(string hostname, User currentUser,
          FullMergeRequestKey item, IEnumerable<User> fullUserList)
       {
-         EDataCacheType mode = EDataCacheType.Live;
-         DataCache dataCache = getDataCache(mode);
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
          MergeRequestKey mrk = new MergeRequestKey(item.ProjectKey, item.MergeRequest.IId);
          string noteText = await MergeRequestEditHelper.GetLatestSpecialNote(dataCache.DiscussionCache, mrk);
          using (MergeRequestPropertiesForm form = new EditMergeRequestPropertiesForm(hostname,
             _shortcuts.GetProjectAccessor(), currentUser, item.ProjectKey, item.MergeRequest, noteText, fullUserList,
-            _avatarImageCache[mode]))
+            _avatarImageCache[EDataCacheType.Live]))
          {
             if (WinFormsHelpers.ShowDialogOnControl(form, WinFormsHelpers.FindMainForm()) != DialogResult.OK)
             {
@@ -487,9 +489,9 @@ namespace mrHelper.App.Controls
 
             if (modified)
             {
-               requestUpdates(mode, mrk, new int[] {
-               Program.Settings.OneShotUpdateFirstChanceDelayMs,
-               Program.Settings.OneShotUpdateSecondChanceDelayMs });
+               requestMultipleUpdatesForSingleMergeRequest(EDataCacheType.Live, mrk, new int[] {
+                  Program.Settings.OneShotUpdateFirstChanceDelayMs,
+                  Program.Settings.OneShotUpdateSecondChanceDelayMs });
             }
          }
       }
@@ -506,8 +508,7 @@ namespace mrHelper.App.Controls
             string statusMessage = String.Format("Merge Request !{0} has been closed", mrk.IId);
             addOperationRecord(statusMessage);
 
-            requestUpdates(EDataCacheType.Live, null, new int[] {
-               Program.Settings.NewOrClosedMergeRequestRefreshListDelayMs });
+            requestSingleUpdateForLiveList(Program.Settings.NewOrClosedMergeRequestRefreshListDelayMs, null);
          }
          else
          {

@@ -148,7 +148,10 @@ namespace mrHelper.App.Controls
 
          updateRecentDataCacheQueryColletion(mrk.ProjectKey.HostName);
          MergeRequestKey? keyForUpdate = needUpdateFullList ? new Nullable<MergeRequestKey>() : mrk;
-         requestUpdates(EDataCacheType.Recent, keyForUpdate, new[] { PseudoTimerInterval });
+
+         // Optimization: Update merge request list only and not Discussions.
+         // Cached discussions for cleaned up merge requests will be removed by DiscussionManager.OnMergeRequestEvent()
+         getDataCache(EDataCacheType.Recent)?.MergeRequestCache?.RequestUpdate(keyForUpdate, PseudoTimerInterval, null);
       }
 
       private void updateRecentDataCacheQueryColletion(string hostname)

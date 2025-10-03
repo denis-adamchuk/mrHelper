@@ -483,22 +483,26 @@ namespace mrHelper.App.Controls
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-      [Flags]
-      private enum DataCacheUpdateKind
+      private void requestMultipleUpdatesForSingleMergeRequest(
+         EDataCacheType mode, MergeRequestKey mrk, int[] intervals)
       {
-         MergeRequest = 1,
-         Discussions = 2,
-         MergeRequestAndDiscussions = MergeRequest | Discussions
+         DataCache dataCache = getDataCache(mode);
+
+         foreach (int interval in intervals)
+         {
+            dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval, null);
+            dataCache?.DiscussionCache?.RequestUpdate(mrk, interval, null);
+         }
       }
 
-      private void requestUpdates(DataCache dataCache, MergeRequestKey? mrk, int interval, Action onUpdateFinished,
-         DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
+      private void requestSingleUpdateForSingleMergeRequest(
+         EDataCacheType mode, MergeRequestKey mrk, int interval, Action onUpdateFinished, bool includeDiscussions = true)
       {
-         bool needUpdateMergeRequest = kind.HasFlag(DataCacheUpdateKind.MergeRequest);
-         bool needUpdateDiscussions = kind.HasFlag(DataCacheUpdateKind.Discussions);
+         DataCache dataCache = getDataCache(mode);
+         Debug.Assert(mode != EDataCacheType.Search); // Not tested and not used
 
-         bool mergeRequestUpdateFinished = !needUpdateMergeRequest;
-         bool discussionUpdateFinished = !needUpdateDiscussions;
+         bool mergeRequestUpdateFinished = false;
+         bool discussionUpdateFinished = !includeDiscussions;
 
          void onSingleUpdateFinished()
          {
@@ -508,17 +512,14 @@ namespace mrHelper.App.Controls
             }
          }
 
-         if (needUpdateMergeRequest)
-         {
-            dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
-               () =>
-               {
-                  mergeRequestUpdateFinished = true;
-                  onSingleUpdateFinished();
-               });
-         }
+         dataCache?.MergeRequestCache?.RequestUpdate(mrk, interval,
+            () =>
+            {
+               mergeRequestUpdateFinished = true;
+               onSingleUpdateFinished();
+            });
 
-         if (needUpdateDiscussions)
+         if (includeDiscussions)
          {
             dataCache?.DiscussionCache?.RequestUpdate(mrk, interval,
                () =>
@@ -529,24 +530,65 @@ namespace mrHelper.App.Controls
          }
       }
 
-      async private Task checkForUpdatesAsync(DataCache dataCache, MergeRequestKey? mrk,
-         DataCacheUpdateKind kind = DataCacheUpdateKind.MergeRequestAndDiscussions)
+      private void requestSingleUpdateForLiveList(int interval, Action onUpdateFinished)
       {
-         bool updateReceived = false;
-         bool updatingWholeList = !mrk.HasValue;
+         DataCache dataCache = getDataCache(EDataCacheType.Live);
 
-         requestUpdates(dataCache, mrk, PseudoTimerInterval, () => updateReceived = true, kind);
-         await TaskUtils.WhileAsync(() => !updateReceived);
+         bool mergeRequestUpdateFinished = false;
+         bool discussionUpdateFinished = false;
+
+         void onSingleUpdateFinished()
+         {
+            if (mergeRequestUpdateFinished && discussionUpdateFinished)
+            {
+               onUpdateFinished?.Invoke();
+            }
+         }
+
+         dataCache?.MergeRequestCache?.RequestUpdate(null, interval,
+            () =>
+            {
+               mergeRequestUpdateFinished = true;
+               onSingleUpdateFinished();
+            });
+
+         dataCache?.DiscussionCache?.RequestUpdate(null, interval,
+            () =>
+            {
+               discussionUpdateFinished = true;
+               onSingleUpdateFinished();
+            });
       }
 
-      private void reloadMergeRequestsByUserRequest(DataCache dataCache)
+      // Discussions are excluded
+      private void requestSingleUpdateForRecentList(int interval, Action onUpdateFinished)
+      {
+         DataCache dataCache = getDataCache(EDataCacheType.Recent);
+
+         dataCache?.MergeRequestCache?.RequestUpdate(null, interval,
+            () =>
+            {
+               onUpdateFinished?.Invoke();
+            });
+      }
+
+      private void reloadLiveMergeRequestsByUserRequest()
       {
          if (HostName != String.Empty)
          {
-            addOperationRecord("List refresh has started");
+            addOperationRecord("Refresh has started for a list of live merge requests");
+            requestSingleUpdateForLiveList(PseudoTimerInterval,
+               () => addOperationRecord("Refresh has completed for a list of live merge requests"));
+         }
+      }
 
-            requestUpdates(dataCache, null, PseudoTimerInterval,
-               () => addOperationRecord("List refresh has completed"));
+      private void reloadRecentMergeRequestsByUserRequest()
+      {
+         if (HostName != String.Empty)
+         {
+            addOperationRecord("Refresh has started for a list of recently reviewed merge requests");
+            requestSingleUpdateForRecentList(PseudoTimerInterval,
+               () => addOperationRecord("Refresh has completed for a list of recently reviewed merge requests"));
          }
       }
 

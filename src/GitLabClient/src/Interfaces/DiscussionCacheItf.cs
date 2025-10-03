@@ -42,8 +42,6 @@ namespace mrHelper.GitLabClient
 
       void RequestUpdate(MergeRequestKey? mrk, int interval, Action onUpdateFinished);
 
-      void RequestUpdate(MergeRequestKey? mrk, int[] intervals);
-
       event Action<UserEvents.DiscussionEvent> DiscussionEvent;
    }
 }

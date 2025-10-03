@@ -209,7 +209,7 @@ namespace mrHelper.App.Controls
 
       internal void ReloadLive()
       {
-         reloadMergeRequestsByUserRequest(getDataCache(EDataCacheType.Live));
+         reloadLiveMergeRequestsByUserRequest();
       }
 
       internal void ReloadSelected()
@@ -251,7 +251,7 @@ namespace mrHelper.App.Controls
          // In general case MR can belong to multiple DataCache at once
          foreach (EDataCacheType mode in Enum.GetValues(typeof(EDataCacheType)))
          {
-            requestUpdates(mode, mrk, new int[] {
+            requestMultipleUpdatesForSingleMergeRequest(mode, mrk, new int[] {
                Program.Settings.OneShotUpdateFirstChanceDelayMs,
                Program.Settings.OneShotUpdateSecondChanceDelayMs });
          }
@@ -259,8 +259,8 @@ namespace mrHelper.App.Controls
 
       internal void ReloadAllOnConnectionRestore()
       {
-         ReloadLive();
-         reloadMergeRequestsByUserRequest(getDataCache(EDataCacheType.Recent));
+         reloadLiveMergeRequestsByUserRequest();
+         reloadRecentMergeRequestsByUserRequest();
       }
 
       internal void AddComment()

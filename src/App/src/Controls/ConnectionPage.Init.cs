@@ -207,7 +207,7 @@ namespace mrHelper.App.Controls
          getListView(EDataCacheType.Live).AssignContextMenu(new MergeRequestListViewContextMenu(
             this,
             showDiscussionsForSelectedMergeRequest,
-            () => reloadMergeRequestsByUserRequest(getDataCache(EDataCacheType.Live)),
+            () => reloadLiveMergeRequestsByUserRequest(),
             refreshSelectedMergeRequest,
             editSelectedMergeRequest,
             acceptSelectedMergeRequest,
@@ -398,13 +398,16 @@ namespace mrHelper.App.Controls
          switch (mode)
          {
             case EDataCacheType.Live:
-            case EDataCacheType.Recent:
-               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
+               return new DataCacheUpdateRules(Program.Settings.DiscussionsAutoUpdatePeriodMs,
                                                Program.Settings.AutoUpdatePeriodMs);
 
+            case EDataCacheType.Recent:
+               // Disable initial Discussions snapshot and Discussions updates on timer
+               return new DataCacheUpdateRules(null, Program.Settings.RecentAutoUpdatePeriodMs);
+
             case EDataCacheType.Search:
-               return new DataCacheUpdateRules(Program.Settings.AutoUpdatePeriodMs,
-                                               int.MaxValue);
+               // Disable initial Discussions snapshot, Discussions updates on timer and MR list updates on timer
+               return new DataCacheUpdateRules(null, int.MaxValue);
 
             default:
                Debug.Assert(false);

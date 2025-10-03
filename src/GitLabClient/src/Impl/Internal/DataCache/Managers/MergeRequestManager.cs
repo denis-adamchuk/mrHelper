@@ -121,14 +121,6 @@ namespace mrHelper.GitLabClient.Managers
          _updateManager?.RequestOneShotUpdate(mrk, interval, onUpdateFinished);
       }
 
-      /// <summary>
-      /// Request to update the specified MR after the specified time periods (in milliseconds)
-      /// </summary>
-      public void RequestUpdate(MergeRequestKey? mrk, int[] intervals)
-      {
-         _updateManager?.RequestOneShotUpdate(mrk, intervals);
-      }
-
       public DateTime GetListRefreshTime()
       {
          return _listRefreshTimestamp;

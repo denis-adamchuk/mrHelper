@@ -529,6 +529,18 @@ namespace mrHelper.App.Helpers
          set => setIntValue(AutoUpdatePeriodMsKeyName, value);
       }
 
+      public int RecentAutoUpdatePeriodMs
+      {
+         get => getIntValue(RecentAutoUpdatePeriodMsKeyName, RecentAutoUpdatePeriodMsDefaultValue);
+         set => setIntValue(RecentAutoUpdatePeriodMsKeyName, value);
+      }
+
+      public int DiscussionsAutoUpdatePeriodMs
+      {
+         get => getIntValue(DiscussionsAutoUpdatePeriodMsKeyName, DiscussionsAutoUpdatePeriodMsDefaultValue);
+         set => setIntValue(DiscussionsAutoUpdatePeriodMsKeyName, value);
+      }
+
       public int OneShotUpdateFirstChanceDelayMs
       {
          get => getIntValue(OneShotUpdateFirstChanceDelayMsKeyName, OneShotUpdateFirstChanceDelayMsDefaultValue);

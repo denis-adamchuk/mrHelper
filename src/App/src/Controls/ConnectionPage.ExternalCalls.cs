@@ -216,7 +216,11 @@ namespace mrHelper.App.Controls
             // We need to update the MR list here because cached one is possible outdated
             addOperationRecord(String.Format(
                "Merge Request with IId {0} is not found in the cache. List update has started.", mrk.IId));
-            await checkForUpdatesAsync(getDataCache(EDataCacheType.Live), null);
+
+            bool updateReceived = false;
+            requestSingleUpdateForLiveList(PseudoTimerInterval, () => updateReceived = true);
+            await TaskUtils.WhileAsync(() => !updateReceived);
+
             addOperationRecord("Merge request list update has completed");
             if (dataCache.MergeRequestCache == null)
             {

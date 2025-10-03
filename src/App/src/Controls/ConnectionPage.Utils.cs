@@ -272,8 +272,7 @@ namespace mrHelper.App.Controls
             string startMessage = "Live list refresh has started";
             string endMessage = "List refresh has completed";
             addOperationRecord(startMessage);
-            void onUpdateFinished() => addOperationRecord(endMessage);
-            requestUpdates(getDataCache(EDataCacheType.Live), null, PseudoTimerInterval, onUpdateFinished);
+            requestSingleUpdateForLiveList(PseudoTimerInterval, () => addOperationRecord(endMessage));
          }
          else
          {
@@ -284,8 +283,8 @@ namespace mrHelper.App.Controls
                   string startMessage = String.Format("Merge request !{0} refresh has started", mergeRequestKey.IId);
                   string endMessage = String.Format("Merge request !{0} has been refreshed", mergeRequestKey.IId);
                   addOperationRecord(startMessage);
-                  void onUpdateFinished() => addOperationRecord(endMessage);
-                  requestUpdates(getDataCache(EDataCacheType.Live), mergeRequestKey, PseudoTimerInterval, onUpdateFinished);
+                  requestSingleUpdateForSingleMergeRequest(
+                     EDataCacheType.Live, mergeRequestKey, PseudoTimerInterval, () => addOperationRecord(endMessage));
                }
             }
          }
@@ -1291,13 +1290,6 @@ namespace mrHelper.App.Controls
          NewMergeRequestProperties factoryProperties = new NewMergeRequestProperties(
             projectName, null, null, currentUser.Username, true, true, Array.Empty<string>());
          return _newMergeRequestDialogStatesByHosts.Data.TryGetValue(hostname, out var value) ? value : factoryProperties;
-      }
-
-      private void requestUpdates(EDataCacheType mode, MergeRequestKey? mrk, int[] intervals)
-      {
-         DataCache dataCache = getDataCache(mode);
-         dataCache?.MergeRequestCache?.RequestUpdate(mrk, intervals);
-         dataCache?.DiscussionCache?.RequestUpdate(mrk, intervals);
       }
 
       private void showHintAboutIntegrationWithGitUI()

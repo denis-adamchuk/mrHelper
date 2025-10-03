@@ -55,10 +55,6 @@ namespace mrHelper.GitLabClient
 
       /// <summary>
       /// </summary>
-      void RequestUpdate(MergeRequestKey? mrk, int[] intervals);
-
-      /// <summary>
-      /// </summary>
       DateTime GetListRefreshTime();
 
       /// <summary>

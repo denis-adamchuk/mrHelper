@@ -169,27 +169,13 @@ namespace mrHelper.GitLabClient.Managers
 
       public void RequestUpdate(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
       {
-         if (_timer == null)
-         {
-            // updates are disabled
-            return;
-         }
+         // Allow this call if even _timer is null to support F5 in Discussions view for non-Live Discussion Manager,
+         // see ConnectionPage.getDataCacheUpdateRules().
+
+         // Make sure that a list update is not requested for non-Live tabs.
+         Debug.Assert(mrk.HasValue || _tagForLogging == "Live");
 
          enqueueOneShotTimer(mrk, interval, onUpdateFinished);
-      }
-
-      public void RequestUpdate(MergeRequestKey? mrk, int[] intervals)
-      {
-         if (_timer == null)
-         {
-            // updates are disabled
-            return;
-         }
-
-         foreach (int interval in intervals)
-         {
-            enqueueOneShotTimer(mrk, interval, null);
-         }
       }
 
       private void enqueueOneShotTimer(MergeRequestKey? mrk, int interval, Action onUpdateFinished)
